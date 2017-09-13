@@ -1,0 +1,2 @@
+#create 8 NSs and do random read write
+fio --name=fun_nvmeof --ioengine=fun --rw=randrw --bs=4k --size=12m --numjobs=1  --iodepth=8 --group_reporting -source_ip=10.1.20.229 --dest_ip=10.1.50.57 --io_queues=4 --nrfiles=8 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=FULL_TEST

@@ -1,0 +1,221 @@
+table {
+    table-layout: fixed;
+    word-wrap: break-word;
+    width: auto !important;
+}
+
+.resultfail {
+    color : red;
+}
+
+ .resultpass {
+    color : green;
+}
+
+
+.resultblocked {
+    color : blue;
+}
+
+.resultskipped {
+    color : violet;
+}
+
+
+.preformatted {
+    white-space: pre;
+    margin: 0;
+}
+
+#test_suite {
+    //font-size: 24px;
+}
+
+
+
+test_suite_name {
+    padding: 40px;
+}
+
+
+/*!
+ * Start Bootstrap - Simple Sidebar HTML Template (http://startbootstrap.com)
+ * Code licensed under the Apache License v2.0.
+ * For details, see http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+/* Toggle Styles */
+
+#wrapper {
+    padding-left: 0;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+#wrapper.toggled {
+    padding-left: 350px;
+}
+
+/*a{text-decoration: underline}*/
+
+#sidebar-wrapper {
+    top: 30px;
+    z-index: 1000;
+    position: fixed;
+    left: 250px;
+    //width: 0;
+    height: 100%;
+    margin-left: -250px;
+    overflow-y: auto;
+    //background: #000;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    width: 350px;
+}
+
+#side_wrapper_table{
+    width: 20%;
+}
+
+page_content_wrapper {
+    width: 100%;
+    padding: 40px;
+}
+
+wrapper.toggled #page_content_wrapper {
+    position: absolute;
+    margin-right: -350px;
+}
+
+#documentation, #script{
+    margin: 80px;
+}
+
+
+table {
+    font-size: 12px;
+}
+
+
+
+#page-tab {
+    position: fixed;
+    top: 0px;
+
+}
+
+
+@media(min-width:908px) {
+    #wrapper {
+        padding-left: 475px;
+    }
+
+    #wrapper.toggled {
+        padding-left: 0;
+    }
+
+    #sidebar-wrapper {
+        width: 475px;
+        padding-top: 50px;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        width: 0;
+    }
+
+    #page_content_wrapper {
+        padding: 130px;
+    }
+
+    #wrapper.toggled #page_content_wrapper {
+        //position: relative;
+        margin-right: 0;
+    }
+}
+
+
+h4 {
+}
+
+h5 {
+    margin-top: 0px;
+}
+
+.panel-heading {
+    padding: 10px;
+}
+
+.panel {
+    //border: 0px;
+}
+
+table {
+    border:2px;
+}
+
+.nav-item.active {
+    border-bottom: 2px solid red;
+}
+
+.label {
+    border-radius: 0%;
+}
+
+/*
+
+.btn-label {position: relative;left: 0px;display: inline-block;padding: 6px 12px;background: rgba(0,0,0,0.15);border-radius: 3px 0 0 3px;}
+.btn-labeled {padding-top: 0;padding-bottom: 0;} */
+
+
+#fetch-script-button, #test-case-publish-button { margin-top:10px; margin-bottom:10px }
+
+th {
+    background-color: #c6d7f2;
+    //color: white;
+    //text-color: #0;
+}
+
+#documentation-logs-table {
+    margin-bottom: 20px;
+}
+
+
+#publish-progress-bar-div {
+  width: 40%;
+  background-color: #ddd;
+}
+
+#publish-progress-bar {
+  width: 1%;
+  height: 10px;
+  background-color: #4CAF50;
+}
+
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 50px;
+  height: 50px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

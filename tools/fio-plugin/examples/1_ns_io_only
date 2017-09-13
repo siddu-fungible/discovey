@@ -1,0 +1,2 @@
+#do IO for one NS (NS created already), verify checksum
+fio --name=fun_nvmeof --ioengine=fun --rw=write --bs=4k --size=12m --numjobs=1  --iodepth=8 --do_verify=1 --verify=md5 --verify_fatal=1 --group_reporting -source_ip=10.1.20.229 --dest_ip=10.1.50.51 --io_queues=4 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY

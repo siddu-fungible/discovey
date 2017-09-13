@@ -1,0 +1,9 @@
+[
+  {
+    "name": "docker-host1",
+    "host_ip": "10.1.20.67",
+    "mgmt_ssh_username": "root",
+    "mgmt_ssh_password": "fun123",
+    "mgmt_ssh_port": 22
+  }
+]

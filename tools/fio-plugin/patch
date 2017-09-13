@@ -1,0 +1,59 @@
+diff --git a/Makefile b/Makefile
+index 3764da5..568ecad 100644
+--- a/Makefile
++++ b/Makefile
+@@ -23,7 +23,7 @@ endif
+ DEBUGFLAGS = -DFIO_INC_DEBUG
+ CPPFLAGS= -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DFIO_INTERNAL $(DEBUGFLAGS)
+ OPTFLAGS= -g -ffast-math
+-CFLAGS	= -std=gnu99 -Wwrite-strings -Wall -Wdeclaration-after-statement $(OPTFLAGS) $(EXTFLAGS) $(BUILD_CFLAGS) -I. -I$(SRCDIR)
++CFLAGS	= -std=gnu99 -Wwrite-strings -Wall -Wno-declaration-after-statement $(OPTFLAGS) $(EXTFLAGS) $(BUILD_CFLAGS) -I. -I$(SRCDIR)
+ LIBS	+= -lm $(EXTLIBS)
+ PROGS	= fio
+ SCRIPTS = $(addprefix $(SRCDIR)/,tools/fio_generate_plots tools/plot/fio2gnuplot tools/genfio tools/fiologparser.py tools/hist/fiologparser_hist.py tools/fio_jsonplus_clat2csv)
+@@ -65,6 +65,10 @@ endif
+ ifdef CONFIG_32BIT
+   CFLAGS += -DBITS_PER_LONG=32
+ endif
++CONFIG_FUN = 1
++ifdef CONFIG_FUN
++  SOURCE += Integration/tools/fio-plugin/fun_fio.c Integration/tools/fio-plugin/fun_bitmap.c Integration/tools/fio-plugin/fun_nvmeof_client.c Integration/tools/fio-plugin/fun_rdsock.c Integration/tools/fio-plugin/nvme.c
++endif
+ ifdef CONFIG_LIBAIO
+   SOURCE += engines/libaio.c
+ endif
+diff --git a/optgroup.c b/optgroup.c
+index 122d24e..2d0a4b4 100644
+--- a/optgroup.c
++++ b/optgroup.c
+@@ -169,6 +169,10 @@ static const struct opt_group fio_opt_cat_groups[] = {
+ 		.mask	= FIO_OPT_G_HDFS,
+ 	},
+ 	{
++		.name	= "Fun I/O engine", /* fun */
++		.mask	= FIO_OPT_G_FUN,
++	},
++	{
+ 		.name	= NULL,
+ 	},
+ };
+diff --git a/optgroup.h b/optgroup.h
+index 815ac16..56277d1 100644
+--- a/optgroup.h
++++ b/optgroup.h
+@@ -60,6 +60,7 @@ enum opt_category_group {
+         __FIO_OPT_G_MTD,
+ 	__FIO_OPT_G_HDFS,
+ 	__FIO_OPT_G_NR,
++	__FIO_OPT_G_FUN,
+ 
+ 	FIO_OPT_G_RATE		= (1ULL << __FIO_OPT_G_RATE),
+ 	FIO_OPT_G_ZONE		= (1ULL << __FIO_OPT_G_ZONE),
+@@ -93,6 +94,7 @@ enum opt_category_group {
+ 	FIO_OPT_G_GFAPI		= (1ULL << __FIO_OPT_G_GFAPI),
+ 	FIO_OPT_G_MTD		= (1ULL << __FIO_OPT_G_MTD),
+ 	FIO_OPT_G_HDFS		= (1ULL << __FIO_OPT_G_HDFS),
++	FIO_OPT_G_FUN		= (1ULL << __FIO_OPT_G_FUN),
+ 	FIO_OPT_G_INVALID	= (1ULL << __FIO_OPT_G_NR),
+ };
+ 
