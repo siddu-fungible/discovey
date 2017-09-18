@@ -13,8 +13,6 @@ def publish(request):
     response["status"] = RESULT_FAIL
     if request.method == 'POST':
         request_json = json.loads(request.body)
-        setup_summary = ""
-        setup_steps = ""
 
         test_case_id = request_json["id"]
         test_case_summary = request_json["summary"]

@@ -92,7 +92,6 @@ $("#workflow-start-button").click(function(){
 });
 
 
-
 (function() {
   var app;
 
@@ -144,24 +143,40 @@ $("#workflow-start-button").click(function(){
 
 }).call(this);
 
-function Chart(divName) {
-    this.traceCount = 3;
-    let trace1 = {
-      x: [],
-      y: [],
-      type: 'scatter'
-    };
-
+function Chart(divName, f1s) {
+	this.f1s = f1s;
+    this.traceCount = this.f1s.length;
+    var layout = {
+  		title: 'Plot Title',
+  		xaxis: {
+    		title: 'Sample',
+    		titlefont: {
+      		family: 'Courier New, monospace',
+      		size: 18,
+      		color: '#7f7f7f'
+    		}
+  		},
+  		yaxis: {
+    		title: 'Reads/s',
+    		titlefont: {
+      	family: 'Courier New, monospace',
+      	size: 18,
+      	color: '#7f7f7f'
+    		}
+  		}
+		};
     this.divName = divName;
     let data = [];
     for (let i = 0; i < this.traceCount; i++) {
         data.push({
             x: [],
             y: [],
-            type: 'scatter'
+            type: 'scatter',
+            name: f1s[i]
+
       });
     }
-    Plotly.newPlot(this.divName, data);
+    Plotly.newPlot(this.divName, data, layout);
     this.xValue = 0;
 
 }
@@ -202,16 +217,20 @@ function randomNumberFromRange(min, max)
 }
 
 function plotIt() {
-  let ch1 = new Chart('chart1-div');
+	f1s = [];
+	f1s.push("f1");
+	f1s.push("f2");
+	f1s.push("f3");
+  let ch1 = new Chart('chart1-div', f1s);
   ch1.updatePlot();
 
-  let ch2 = new Chart('chart2-div');
+  let ch2 = new Chart('chart2-div', f1s);
   ch2.updatePlot();
 
-  let ch3 = new Chart('chart3-div');
+  let ch3 = new Chart('chart3-div', f1s);
   ch3.updatePlot();
 
-  let ch4 = new Chart('chart4-div');
+  let ch4 = new Chart('chart4-div', f1s);
   ch4.updatePlot();
 
 }
