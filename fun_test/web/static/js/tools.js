@@ -145,18 +145,23 @@ $("#workflow-start-button").click(function(){
 }).call(this);
 
 function Chart(divName) {
+    this.traceCount = 3;
     let trace1 = {
       x: [],
       y: [],
       type: 'scatter'
     };
-    let trace2 = {
-      x: [],
-      y: [],
-      type: 'scatter'
-    };
+
     this.divName = divName;
-    Plotly.newPlot(this.divName, [trace1, trace2]);
+    let data = [];
+    for (let i = 0; i < this.traceCount; i++) {
+        data.push({
+            x: [],
+            y: [],
+            type: 'scatter'
+      });
+    }
+    Plotly.newPlot(this.divName, data);
     this.xValue = 0;
 
 }
@@ -168,13 +173,23 @@ Chart.prototype.updatePlot = function() {
     {
       //console.log("Hi");
       that.xValue = that.xValue + 1;
-      that.y1Value = randomNumberFromRange(0, 10);
-      that.y2Value = randomNumberFromRange(0, 10);
+      //that.y1Value = randomNumberFromRange(0, 10);
+      //that.y2Value = randomNumberFromRange(0, 10);
       //console.log(that.divName + " " + that.y1Value + " " + that.y2Value);
 
+      let xValueList = [];
+      let yValueList = [];
+      let traceList = [];
+      for (let i = 0; i < that.traceCount; i++) {
+        xValueList.push([that.xValue]);
+        yValueList.push([randomNumberFromRange(0, 10)]);
+        traceList.push(i);
+      }
+
       Plotly.extendTraces(that.divName,
-        {x: [[that.xValue], [that.xValue]],
-         y: [[that.y1Value], [that.y2Value]]}, [0, 1]);
+        {x: xValueList,
+         y: yValueList},
+         traceList);
       that.updatePlot();
     }, 2000);
 
