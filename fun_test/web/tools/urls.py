@@ -6,7 +6,8 @@ f1_urls = [
     url(r'^$', views.f1),
     url(r'^/workflows$', views.workflows),
     url(r'^/workflow/(.*)$', views.workflow),
-    url(r'^/start_workflow_step', views.start_workflow_step)
+    url(r'^/start_workflow_step', views.start_workflow_step),
+    url(r'^/(.*)/(.*)$', views.metrics),
 
 ]
 

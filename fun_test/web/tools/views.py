@@ -63,3 +63,7 @@ def tg(request):
 
 def index(request):
     return render(request, 'tools_base.html', locals())
+
+def metrics(request, f1_id, metric_name):
+    value = {"value": random.randint(0, 10)}
+    return HttpResponse(json.dumps(value))

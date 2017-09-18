@@ -73,7 +73,7 @@ $("#workflow-start-button").click(function(){
                                 error: function(data) {
                                     alert("Huh2?");
                                 }
-                          });
+                      });
                     }(selectedF1, stepIndex, progressBar, stepCount));
                 };
               },
@@ -143,11 +143,12 @@ $("#workflow-start-button").click(function(){
 
 }).call(this);
 
-function Chart(divName, f1s) {
+function Chart(divName, f1s, title) {
 	this.f1s = f1s;
+	this.title = title;
     this.traceCount = this.f1s.length;
     var layout = {
-  		title: 'Plot Title',
+  		title: title,
   		xaxis: {
     		title: 'Sample',
     		titlefont: {
@@ -157,7 +158,7 @@ function Chart(divName, f1s) {
     		}
   		},
   		yaxis: {
-    		title: 'Reads/s',
+    		title: title,
     		titlefont: {
       	family: 'Courier New, monospace',
       	size: 18,
@@ -186,27 +187,46 @@ Chart.prototype.updatePlot = function() {
     setTimeout(
     function()
     {
-      //console.log("Hi");
       that.xValue = that.xValue + 1;
-      //that.y1Value = randomNumberFromRange(0, 10);
-      //that.y2Value = randomNumberFromRange(0, 10);
-      //console.log(that.divName + " " + that.y1Value + " " + that.y2Value);
 
-      let xValueList = [];
-      let yValueList = [];
-      let traceList = [];
+
+      that.xValueList = [];
+      that.yValueList = [];
+      that.traceList = [];
       for (let i = 0; i < that.traceCount; i++) {
-        xValueList.push([that.xValue]);
-        yValueList.push([randomNumberFromRange(0, 10)]);
-        traceList.push(i);
-      }
+        that.xValueList.push([that.xValue]);
+        f1Id = that.f1s[i];
 
-      Plotly.extendTraces(that.divName,
-        {x: xValueList,
-         y: yValueList},
-         traceList);
-      that.updatePlot();
+					$.ajax({
+							url: "/tools/f1/" + f1Id + "/" + that.title,
+							dataType: 'json',
+							type: 'get',
+							contentType: 'application/json',
+							async: true,
+							context: that,
+							success: function(data) {
+								yValue = parseInt(data["value"]);
+								//console.log("Value:" + yValue);
+								that.yValueList.push([parseInt(data["value"])]);
+								if (that.yValueList.length == that.traceCount) {
+									Plotly.extendTraces(that.divName,
+									{x: this.xValueList,
+										y: this.yValueList
+									},this.traceList);
+									that.updatePlot();
+								}
+
+							},
+							error: function(data) {
+									alert("Huh3?");
+						}
+					});
+
+
+        that.traceList.push(i);
+      }
     }, 2000);
+
 
 }
 
@@ -221,16 +241,16 @@ function plotIt() {
 	f1s.push("f1");
 	f1s.push("f2");
 	f1s.push("f3");
-  let ch1 = new Chart('chart1-div', f1s);
+  let ch1 = new Chart('chart1-div', f1s, "Read/s");
   ch1.updatePlot();
 
-  let ch2 = new Chart('chart2-div', f1s);
+  let ch2 = new Chart('chart2-div', f1s, "Writes/s");
   ch2.updatePlot();
 
-  let ch3 = new Chart('chart3-div', f1s);
+  let ch3 = new Chart('chart3-div', f1s, "X/s");
   ch3.updatePlot();
 
-  let ch4 = new Chart('chart4-div', f1s);
+  let ch4 = new Chart('chart4-div', f1s, "Y/s");
   ch4.updatePlot();
 
 }
