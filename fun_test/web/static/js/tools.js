@@ -137,12 +137,7 @@ $("#workflow-start-button").click(function(){
         $scope.traffic_generators = result.data;
       });
 
-      return $http.get('/tools/tg').then(function(result) {
-        return angular.forEach(result.data, function(item) {
-          return $scope.posts.push(item);
-        });
-
-      });
+      return $scope;
     }
 
   ]);
