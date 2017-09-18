@@ -1,0 +1,202 @@
+{% load staticfiles %}
+
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <style>
+  .photo img {
+
+    max-width: 150px;
+    vertical-align: top;
+  }
+
+  .close {
+
+    padding: 0 10px;
+  }
+  </style>
+</head>
+<body ng-app="{% block ng_app %}tools{% endblock %}">
+  <div class="tabs-wrapper">
+    <ul class="navbar-nav nav" id="page-tab">
+      <li class="nav-item">
+        <a aria-controls="1" class="nav-link" data-toggle="tab" href="#topology-container" role="tab">Topology</a>
+      </li>
+      <li class="nav-item">
+        <a aria-controls="2" class="nav-link" data-toggle="tab" href="#workflow-container" role="tab">Workflow</a>
+      </li>
+      <li class="nav-item">
+        <a aria-controls="3" class="nav-link" data-toggle="tab" href="#traffic-container" role="tab">Traffic</a>
+      </li>
+      <li class="nav-item active">
+        <a aria-controls="4" class="nav-link" data-toggle="tab" href="#stats-container" role="tab">Stats</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="content ng-cloak" ng-controller="AppController">
+    <div class="tab-content card">
+      <div class="tab-pane" id="topology-container" role="tabpanel">
+        <textarea>ABC</textarea>
+      </div>
+
+      <div class="tab-pane" id="stats-container" role="tabpanel">
+        <div class="row">
+          <div class="col-sm-7" >
+            <div id="chart1-div">
+            </div>
+          </div>
+          <div class="col-sm-5">
+            <div id="chart2-div">
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-7" >
+            <div id="chart3-div">
+            </div>
+          </div>
+          <div class="col-sm-5">
+            <div id="chart4-div">
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="tab-pane active" id="traffic-container" role="tabpanel">
+        <button id="start-traffic-button">Start</button>
+        <div id="traffic-chart-div"></div>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Target IP</th>
+              <th>Target Port</th>
+              <th>Profile</th>
+            </tr>
+          </thead>
+          <tbody id="tg-table-tbody">
+            {% verbatim %}
+            <tr ng-repeat="tg in traffic_generators">
+              <td></td>
+              <td>{{ tg.name }}</td>
+              <td>
+                <select class="form-control">
+                  <option ng-repeat="f1 in f1s" value={{ f1.ip }}>{{ f1.ip }}</option>
+                </select>
+              </td>
+              <td>2002</td>
+              <td>profile</td>
+              {% endverbatim %}
+            </tbody>
+          </table>
+          <!-- /div -->
+        </div>
+
+        <div class="tab-pane" id="workflow-container" role="tabpanel">
+          <div class="col-sm-6">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Name</th>
+                  <th>IP</th>
+                  <th>Progress</th>
+                </tr>
+              </thead>
+              <tbody id="f1-table-tbody">
+                {% verbatim %}
+                <tr ng-repeat="f1 in f1s">
+                  <td><input class="form-check-input" type="checkbox" value="" data-f1-ip="{{ f1.ip }}"></td>
+                  <td>{{ f1.name }}</td>
+                  <td>{{ f1.ip }}</td>
+                  <td>
+                    <span id="workflow-progress-label-{{ replaceIpDot(f1.ip) }}" class="label label-info">IDLE</span>
+                    <span id="workflow-progress-icon-{{ replaceIpDot(f1.ip) }}" class="glyphicon" style="color:green"></span>
+                    <div id="workflow-progress-div-{{ replaceIpDot(f1.ip) }}" class="progress" style="display: none">
+                      <div id="workflow-progress-bar-{{ replaceIpDot(f1.ip) }}" data-f1-ip="{{ f1.ip }}" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                      </div>
+                    </div>
+                  </td>
+
+                </tr>
+                {% endverbatim %}
+              </tbody>
+            </table>
+          </div>
+
+
+          <div class="col-sm-6">
+            <div class="col-sm-2">
+              <button class="btn btn-secondary" id="workflow-start-button">Start</button>
+            </div>
+
+            <div class="dropdown col-sm-10">
+              <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown">
+                Workflows
+              </button>
+              <ul class="dropdown-menu">
+                {% verbatim %}
+                <li ng-repeat="workflow in workflows">
+                  <a ng-click="workFlowClick($event, $window)" class="dropdown-item workflow-item" id="{{ workflow.name | lowercase }}" href="#"> {{ workflow.name }}</a>
+                </li>
+                {% endverbatim %}
+              </ul>
+            </div>
+            <table class="table table-hover" ng-model="currentWorkFlow" ng-if="currentWorkFlow !== null">
+              <thead>
+                <tr>
+                  {% verbatim %}
+                  <th>
+                    {{ currentWorkFlow }}
+                  </th>
+                  {% endverbatim %}
+                </tr>
+              </thead>
+              <tbody>
+                {% verbatim %}
+                <tr ng-repeat="step in steps">
+                  <td>{{ step }}</td>
+                </tr>
+                {% endverbatim %}
+              </tbody>
+
+            </table>
+
+          </div>
+        </div>
+        <!-- /div -->
+      </div> <!-- tabpanel -->
+    </div> <!-- tabcontent card -->
+  </div>
+
+  {% block js %}
+  <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-resource.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="{% static "js/tools.js" %}"></script>
+
+  <style>
+  .tab-pane {
+    margin: 60px;
+
+  }
+  #page-tab {
+    position: fixed;
+    top: 0px;
+
+  }
+
+  </style>
+
+
+  {% endblock %}
+</body>
+</html>
