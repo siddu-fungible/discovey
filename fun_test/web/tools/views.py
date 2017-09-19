@@ -3,6 +3,7 @@ import json
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+# from .models import Session
 
 tgs = [
     {
@@ -29,6 +30,7 @@ f1s = [
         "ip": "10.0.0.3"
     }
 ]
+
 
 
 def f1(request):

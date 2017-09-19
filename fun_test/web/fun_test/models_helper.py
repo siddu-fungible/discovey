@@ -1,4 +1,4 @@
-import sys, os, django, json
+import os, django, json
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 

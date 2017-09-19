@@ -1,5 +1,6 @@
 currentWorkFlow = "demo";
 var charts = [];
+var statsOn = false;
 
 function workFlowComplete(f1Ip) {
   replacedIp = f1Ip.replace(new RegExp("\\.", 'g'), "_");
@@ -146,6 +147,7 @@ $("#workflow-start-button").click(function(){
 function Chart(divName, f1s, title) {
 	this.f1s = f1s;
 	this.title = title;
+	this.statsOn = false;
     this.traceCount = this.f1s.length;
     var layout = {
   		title: title,
@@ -183,51 +185,52 @@ function Chart(divName, f1s, title) {
 }
 
 Chart.prototype.updatePlot = function() {
+	if(!this.statsOn) {
+		return;
+	}
     var that = this;
-    setTimeout(
-    function()
-    {
-      that.xValue = that.xValue + 1;
+			setTimeout(
+			function() {
+					that.xValue = that.xValue + 1;
 
 
-      that.xValueList = [];
-      that.yValueList = [];
-      that.traceList = [];
-      for (let i = 0; i < that.traceCount; i++) {
-        that.xValueList.push([that.xValue]);
-        f1Id = that.f1s[i];
+					that.xValueList = [];
+					that.yValueList = [];
+					that.traceList = [];
+					for (let i = 0; i < that.traceCount; i++) {
+						that.xValueList.push([that.xValue]);
+						f1Id = that.f1s[i];
 
-					$.ajax({
-							url: "/tools/f1/" + f1Id + "/" + that.title,
-							dataType: 'json',
-							type: 'get',
-							contentType: 'application/json',
-							async: true,
-							context: that,
-							success: function(data) {
-								yValue = parseInt(data["value"]);
-								//console.log("Value:" + yValue);
-								that.yValueList.push([parseInt(data["value"])]);
-								if (that.yValueList.length == that.traceCount) {
-									Plotly.extendTraces(that.divName,
-									{x: this.xValueList,
-										y: this.yValueList
-									},this.traceList);
-									that.updatePlot();
+							$.ajax({
+									url: "/tools/f1/" + f1Id + "/" + that.title,
+									dataType: 'json',
+									type: 'get',
+									contentType: 'application/json',
+									async: true,
+									context: that,
+									success: function(data) {
+										yValue = parseInt(data["value"]);
+										//console.log("Value:" + yValue);
+										that.yValueList.push([parseInt(data["value"])]);
+										if (that.yValueList.length == that.traceCount) {
+											Plotly.extendTraces(that.divName,
+											{x: this.xValueList,
+												y: this.yValueList
+											},this.traceList);
+											that.updatePlot();
+										}
+
+									},
+									error: function(data) {
+											//alert("Huh3?");
 								}
-
-							},
-							error: function(data) {
-									alert("Huh3?");
-						}
-					});
+							});
 
 
-        that.traceList.push(i);
-      }
-    }, 2000);
-
-
+						that.traceList.push(i);
+					}
+				}
+			, 2000);
 }
 
 
@@ -236,30 +239,58 @@ function randomNumberFromRange(min, max)
   return Math.floor(Math.random()* (max-min + 1) + min);
 }
 
-function plotIt() {
+function startPlots() {
+	for(var i = 0; i < charts.length; i++) {
+		charts[i].updatePlot();
+	}
+}
+
+function initPlots() {
 	f1s = [];
 	f1s.push("f1");
 	f1s.push("f2");
 	f1s.push("f3");
+
   let ch1 = new Chart('chart1-div', f1s, "Read/s");
-  ch1.updatePlot();
+  charts.push(ch1);
 
   let ch2 = new Chart('chart2-div', f1s, "Writes/s");
-  ch2.updatePlot();
+  charts.push(ch2);
 
   let ch3 = new Chart('chart3-div', f1s, "X/s");
-  ch3.updatePlot();
+  charts.push(ch3)
 
   let ch4 = new Chart('chart4-div', f1s, "Y/s");
-  ch4.updatePlot();
-
+  charts.push(ch4);
 }
 
 
 
-$("#start-traffic-button").click(function () {
-  plotIt();
+$("#stats-play-button").click(function () {
+	statsOn = false;
+  if($("#stats-play-icon").hasClass("glyphicon-play")) {
+  	$("#stats-play-icon").removeClass("glyphicon-play");
+  	$("#stats-play-icon").addClass("glyphicon-pause");
+  	$("#stats-play-icon").text("Pause");
+
+  	statsOn = true;
+  } else {
+  	$("#stats-play-icon").removeClass("glyphicon-pause");
+  	$("#stats-play-icon").addClass("glyphicon-play");
+  	$("#stats-play-icon").text("Start");
+  	statsOn = false;
+  }
+  for(var i = 0; i < charts.length; i++) {
+		charts[i].statsOn = statsOn;
+	}
+	if(statsOn) {
+		startPlots();
+	}
 });
+
+
 $(document).ready(function() {
-  plotIt();
+  initPlots();
+  //startPlots();
 });
+
