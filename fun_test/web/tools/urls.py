@@ -15,8 +15,13 @@ tg_urls = [
     url(r'^$', views.tg),
 ]
 
+topology_urls = [
+    url(r'^$', views.topology)
+]
+
 urlpatterns = [
     url(r'^f1', include(f1_urls)),
     url(r'^tg', include(tg_urls)),
+    url(r'^topology', include(topology_urls)),
     url(r'^$', views.index)
 ]

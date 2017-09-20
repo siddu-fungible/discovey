@@ -117,6 +117,14 @@ $("#workflow-start-button").click(function(){
         return Ip.replace(new RegExp("\\.", 'g'), "_");
       }
 
+      $scope.deployTopologyClick = function(event) {
+      	$http.get('/tools/topology').then(function(result){
+      		var sessionId = result.data["session_id"];
+      		console.log(sessionId);
+      	});
+
+      };
+
 
       $scope.posts = [];
       $scope.f1s = [];
@@ -271,13 +279,21 @@ $("#stats-play-button").click(function () {
   if($("#stats-play-icon").hasClass("glyphicon-play")) {
   	$("#stats-play-icon").removeClass("glyphicon-play");
   	$("#stats-play-icon").addClass("glyphicon-pause");
-  	$("#stats-play-icon").text("Pause");
+  	var icon = $("#stats-play-button").find("i");
+  	//$("#stats-play-button").text("Pause");
+  	$("#stats-play-button").text("");
+  	$("#stats-play-button").append($(icon));
+  	$("#stats-play-button").append("Pause");
+
 
   	statsOn = true;
   } else {
   	$("#stats-play-icon").removeClass("glyphicon-pause");
   	$("#stats-play-icon").addClass("glyphicon-play");
-  	$("#stats-play-icon").text("Start");
+  	var icon = $("#stats-play-button").find("i");
+  	$("#stats-play-button").text("");
+  	$("#stats-play-button").append($(icon));
+  	$("#stats-play-button").append("Resume");
   	statsOn = false;
   }
   for(var i = 0; i < charts.length; i++) {
@@ -293,4 +309,5 @@ $(document).ready(function() {
   initPlots();
   //startPlots();
 });
+
 

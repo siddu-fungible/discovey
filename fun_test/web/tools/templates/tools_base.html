@@ -23,7 +23,7 @@
         <a aria-controls="1" class="nav-link" data-toggle="tab" href="#topology-container" role="tab">Topology</a>
       </li>
       <li class="nav-item">
-        <a aria-controls="2" class="nav-link" data-toggle="tab" href="#workflow-container" role="tab">Workflow</a>
+        <a aria-controls="2" class="nav-link" data-toggle="tab" href="#workflow-container" role="tab">Configure</a>
       </li>
       <li class="nav-item">
         <a aria-controls="3" class="nav-link" data-toggle="tab" href="#traffic-container" role="tab">Traffic</a>
@@ -36,12 +36,12 @@
 
   <div class="content ng-cloak" ng-controller="AppController">
     <div class="tab-content card">
-      <div class="tab-pane" id="topology-container" role="tabpanel">
-        <textarea>ABC</textarea>
+      <div class="tab-pane" ng-click="deployTopologyClick($event, $window)" id="topology-container" role="tabpanel">
+        <button type="button" id="topology-deploy-button" class="btn btn-success"><i class="glyphicon glyphicon-play"></i>Deploy</button>
       </div>
 
       <div class="tab-pane" id="stats-container" role="tabpanel">
-        <button type="button" id="stats-play-button" class="btn btn-success"><i id="stats-play-icon" class="glyphicon glyphicon-play">Start</i></button>
+        <button type="button" id="stats-play-button" class="btn btn-success"><i id="stats-play-icon" class="glyphicon glyphicon-play"></i>Start</button>
 
         <div class="row">
           <div class="col-sm-7" >
