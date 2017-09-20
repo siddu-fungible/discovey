@@ -7,7 +7,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
-enable_celery = False
+enable_celery = True
 
 class CeleryThread(Thread):
     def run(self):
@@ -23,5 +23,3 @@ if __name__ == "__main__":
         celery_thread_obj = CeleryThread()
         celery_thread_obj.start()
     execute_from_command_line(["", "runserver", "0.0.0.0:%d" % WEB_SERVER_PORT])
-    if enable_celery:
-        celery_thread_obj.join()
