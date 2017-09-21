@@ -99,9 +99,11 @@ $("#workflow-start-button").click(function(){
   app = angular.module('tools', []);
 
   app.controller('AppController', [
-    '$scope', '$http', '$window', function($scope, $http, $window) {
+    '$scope', '$http', '$window', '$timeout', function($scope, $http, $window, $timeout) {
+    	pollInterval = 2000; // seconds
       $scope.currentWorkFlow = null;
       $scope.steps = [];
+      $scope.topologySessionId = null;
       $scope.workFlowClick = function(event) {
         //alert(event.target.id);
         workFlowName = event.target.id;
@@ -117,10 +119,32 @@ $("#workflow-start-button").click(function(){
         return Ip.replace(new RegExp("\\.", 'g'), "_");
       }
 
+      var getTopologyStatus = function(sessionId) {
+				$http.get("/tools/topology/status/" + sessionId.toString()).then(function(result) {
+					status = result.data["status"];
+					if((status == "NOT_RUN") || (status == "IN_PROGRESS")) {
+						$timeout(function(){getTopologyStatus(sessionId)}, pollInterval);
+					} else {
+						$http.get('/tools/f1/' + $scope.topologySessionId).then(function(result){
+        			angular.forEach(result.data, function(f1){
+         	 		//console.log(f1["name"]);
+          		$scope.f1s.push(f1);
+        		});
+      });
+
+					}
+				}).catch(function(result) {
+					//alert("Topology status check failed");
+				});
+      };
+
       $scope.deployTopologyClick = function(event) {
       	$http.get('/tools/topology').then(function(result){
       		var sessionId = result.data["session_id"];
-      		console.log(sessionId);
+      		$scope.topologySessionId = sessionId;
+      		//console.log(sessionId);
+      		$timeout(function(){getTopologyStatus(sessionId)}, pollInterval);
+
       	});
 
       };
@@ -130,12 +154,7 @@ $("#workflow-start-button").click(function(){
       $scope.f1s = [];
       $scope.workflows = [];
       $scope.traffic_generators = [];
-      $http.get('/tools/f1').then(function(result){
-        angular.forEach(result.data, function(f1){
-          //console.log(f1["name"]);
-          $scope.f1s.push(f1);
-        });
-      });
+
 
       $http.get('/tools/f1/workflows').then(function(result) {
         $scope.workflows = result.data;

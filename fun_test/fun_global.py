@@ -4,4 +4,5 @@ RESULT_FAIL = "FAIL"
 RESULTS = {"NOT_RUN": "NOT_RUN",
            "PASSED": "PASSED",
            "FAILED": "FAILED",
-           "SKIPPED": "SKIPPED"}
+           "SKIPPED": "SKIPPED",
+           "IN_PROGRESS": "IN_PROGRESS"}

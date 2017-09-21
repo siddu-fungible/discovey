@@ -3,7 +3,7 @@ import json
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from web.tools.models import Session, F1, Tg
+from web.tools.models import Session, F1, Tg, TopologyTask
 from rq import Queue
 from redis import Redis
 from topology_tasks import deploy_topology
@@ -19,28 +19,19 @@ tgs = [
     }
 ]
 
-f1s = [
-    {
-        "name": "F1",
-        "ip": "10.0.0.1"
-    },
-    {
-        "name": "F2",
-        "ip": "10.0.0.2"
-    },
-    {
-        "name": "F3",
-        "ip": "10.0.0.3"
-    }
-]
 
 
 
-def f1(request):
+def f1(request, session_id):
+    f1s = []
+    f1_records = F1.objects.filter(topology_session_id=int(session_id))
+    for f1_record in f1_records:
+        f1 = {"name": f1_record.name, "ip": f1_record.ip}
+        f1s.append(f1)
     return HttpResponse(json.dumps(f1s))
 
 def workflows(request):
-    workflows = [];
+    workflows = []
     workflow = {"name": "Demo"}
     workflows.append(workflow)
     workflow = {"name": "Replication"}
@@ -82,3 +73,9 @@ def topology(request):
     q.enqueue(deploy_topology, session_obj.session_id)
 
     return HttpResponse(json.dumps(session))
+
+def topology_status(request, session_id):
+    result = {}
+    topology_task = TopologyTask.objects.get(session_id=session_id)
+    result["status"] = topology_task.status
+    return HttpResponse(json.dumps(result))

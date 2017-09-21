@@ -3,7 +3,7 @@ from django.conf.urls import url, include
 from . import views
 
 f1_urls = [
-    url(r'^$', views.f1),
+    url(r'^(\d+)$', views.f1),
     url(r'^workflows$', views.workflows),
     url(r'^workflow/(.*)$', views.workflow),
     url(r'^start_workflow_step', views.start_workflow_step),
@@ -16,7 +16,8 @@ tg_urls = [
 ]
 
 topology_urls = [
-    url(r'^$', views.topology)
+    url(r'^$', views.topology),
+    url(r'^status/(.*)$', views.topology_status),
 ]
 
 urlpatterns = [

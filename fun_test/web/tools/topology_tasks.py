@@ -1,7 +1,8 @@
-import os, django, json
+import os, django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
-from web.tools.models import Session, F1, Tg
+from fun_global import RESULTS
+from web.tools.models import Session, F1, Tg, TopologyTask
 
 f1s = [
     {
@@ -21,9 +22,13 @@ f1s = [
 
 def deploy_topology(session_id):
     print(session_id)
+    topology_task = TopologyTask(session_id=session_id)
+    topology_task.save()
     for f1 in f1s:
-        f1_obj = F1(name=f1["name"], ip=f1["ip"])
+        f1_obj = F1(name=f1["name"], ip=f1["ip"], topology_session_id=session_id)
         try:
             f1_obj.save()
         except Exception as ex:
             print(str(ex))
+    topology_task.status = RESULTS["PASSED"]
+    topology_task.save()
