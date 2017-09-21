@@ -3,8 +3,10 @@ import json
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from web.tools.models import Session
-from celery import app
+from web.tools.models import Session, F1, Tg
+from rq import Queue
+from redis import Redis
+from topology_tasks import deploy_topology
 
 tgs = [
     {
@@ -71,15 +73,12 @@ def metrics(request, f1_id, metric_name):
     value = {"value": random.randint(0, 10)}
     return HttpResponse(json.dumps(value))
 
-@app.task
-def deploy_topology():
-    print("ABC")
-
 def topology(request):
-    # print("Topo")
     session_obj = Session.objects.last()
     session_obj.session_id += 1
     session_obj.save()
     session = {"session_id": session_obj.session_id}
-    deploy_topology.delay()
+    q = Queue(connection=Redis())
+    q.enqueue(deploy_topology, session_obj.session_id)
+
     return HttpResponse(json.dumps(session))
