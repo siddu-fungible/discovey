@@ -104,6 +104,9 @@ $("#workflow-start-button").click(function(){
       $scope.currentWorkFlow = null;
       $scope.steps = [];
       $scope.topologySessionId = null;
+      $scope.deployButtonText = "Deploy";
+
+
       $scope.workFlowClick = function(event) {
         //alert(event.target.id);
         workFlowName = event.target.id;
@@ -128,10 +131,10 @@ $("#workflow-start-button").click(function(){
 						$http.get('/tools/f1/' + $scope.topologySessionId).then(function(result){
         			angular.forEach(result.data, function(f1){
          	 		//console.log(f1["name"]);
-          		$scope.f1s.push(f1);
-        		});
-      });
-
+          			$scope.f1s.push(f1);
+        			});
+     				});
+     				$scope.deployButtonText = "Deploy";
 					}
 				}).catch(function(result) {
 					//alert("Topology status check failed");
@@ -142,6 +145,7 @@ $("#workflow-start-button").click(function(){
       	$http.get('/tools/topology').then(function(result){
       		var sessionId = result.data["session_id"];
       		$scope.topologySessionId = sessionId;
+      		$scope.deployButtonText = "Deploying";
       		//console.log(sessionId);
       		$timeout(function(){getTopologyStatus(sessionId)}, pollInterval);
 
