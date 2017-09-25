@@ -24,6 +24,8 @@ def deploy_topology(session_id):
     print(session_id)
     topology_task = TopologyTask(session_id=session_id)
     topology_task.save()
+    # topo.create()
+    # parse json and get list of f1s
     for f1 in f1s:
         f1_obj = F1(name=f1["name"], ip=f1["ip"], topology_session_id=session_id)
         try:

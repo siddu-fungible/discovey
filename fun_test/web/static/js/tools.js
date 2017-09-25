@@ -24,13 +24,13 @@ function workFlowStart(f1Ip) {
 
 $("#workflow-start-button").click(function () {
     selectedF1s = [];
-    selectedWorkFlow = currentWorkFlow;
+    //selectedWorkFlow = currentWorkFlow;
     $("#f1-table-tbody > tr").each(function () {
         //console.log("Hie2");
         $(this).filter(":has(:checkbox:checked)").find("input").each(function () {
             selectedF1Ip = $(this).attr("data-f1-ip");
             selectedF1s.push(selectedF1Ip);
-            console.log(selectedWorkFlow);
+            //console.log(selectedWorkFlow);
         });
     });
     $.map(selectedF1s, function (selectedF1) {
@@ -107,6 +107,8 @@ $("#workflow-start-button").click(function () {
             $scope.steps = [];
             $scope.topologySessionId = null;
             $scope.deployButtonText = "Deploy";
+            //$scope.selectedWorkFlow = null;
+            $scope.commonWorkFlow = null;
 
 
             $scope.workFlowClick = function (event) {
@@ -118,6 +120,10 @@ $("#workflow-start-button").click(function () {
                 $http.get('/tools/f1/workflow/' + workFlowName).then(function (result) {
                     $scope.steps = result.data;
                 });
+            };
+
+            $scope.workFlowSelection = function (selectedWorkFlow) {
+                $scope.commonWorkFlow = selectedWorkFlow["id"];
             };
 
             $scope.replaceIpDot = function (Ip) {
