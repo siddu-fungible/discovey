@@ -18,6 +18,7 @@ if enable_rq_worker:
             pass
     if not rq_found:
         subprocess.Popen(["rq worker"], shell=True, cwd=WEB_DIR)
+        subprocess.Popen(["redis-server"], shell=True, cwd=WEB_DIR)
 
 if __name__ == "__main__":
     execute_from_command_line(["", "runserver", "0.0.0.0:%d" % WEB_SERVER_PORT])
