@@ -150,7 +150,7 @@
                     <span ng-show="deployButtonText == 'Deploy'"><i class="glyphicon glyphicon-play"></i></span>
                     {{ deployButtonText }}
                 </button>
-                <button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button>
+                <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
 
 
 
@@ -167,7 +167,7 @@
                     </thead>
                     <tbody id="f1-table-tbody">
                         <tr ng-repeat="f1 in f1s">
-                            <td><input class="form-check-input" type="checkbox" value="" data-f1-ip="{{ f1.ip }}"></td>
+                            <td><input class="form-check-input" type="checkbox" ng-checked="f1.isRowSelected" ng-click="toggleF1Selection(f1)" data-f1-ip="{{ f1.ip }}"></td>
                             <td>{{ f1.name }}</td>
                             <td>{{ f1.ip }}</td>
                             <td>
@@ -207,7 +207,7 @@
                                 <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
                                         data-toggle="dropdown">Workflows
                                 </button>
-                                <button class="btn btn-secondary" id="workflow-start-button">Start</button>
+                                <button class="btn btn-secondary" id="workflow-start-button" ng-click="startWorkFlow($event)">Start</button>
                                 <ul class="dropdown-menu">
                                     {% verbatim %}
                                     <li ng-repeat="workflow in workflows">

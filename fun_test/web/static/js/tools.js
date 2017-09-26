@@ -22,7 +22,7 @@ function workFlowStart(f1Ip) {
 }
 
 
-$("#workflow-start-button").click(function () {
+$("#workflow-start-button-obs").click(function () {
     selectedF1s = [];
     //selectedWorkFlow = currentWorkFlow;
     $("#f1-table-tbody > tr").each(function () {
@@ -134,6 +134,24 @@ $("#workflow-start-button").click(function () {
 
             $scope.workFlowSelection = function (selectedWorkFlow) {
                 $scope.commonWorkFlow = selectedWorkFlow["id"];
+            };
+
+            $scope.toggleF1Selection = function(f1){
+                f1.isRowSelected = !f1.isRowSelected;
+            };
+
+            $scope.startWorkFlow = function () {
+                console.log($scope.getSelectedF1s());
+            };
+
+            $scope.getSelectedF1s = function () {
+                selectedF1s = [];
+                for(let i = 0; i < $scope.f1s.length; i++){
+                    if($scope.f1s[i].isRowSelected === true){
+                        selectedF1s.push($scope.f1s[i]);
+                    }
+                }
+                return selectedF1s;
             };
 
             $scope.replaceIpDot = function (Ip) {
