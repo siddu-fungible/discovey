@@ -23,7 +23,7 @@
             top: 0;
         }
 
-        #create-volume-div, #attach-volume-div {
+        .workflow-parameters {
             padding: 10px;
         }
 
@@ -165,7 +165,7 @@
                             <td>{{ f1.name }}</td>
                             <td>{{ f1.ip }}</td>
                             <td>
-                                <select class="selectpicker" ng-model="selectedWorkFlow"
+                                <select ng-model="selectedWorkFlow"
                                         ng-options="x.name for x in workflows"
                                         ng-change="workFlowSelection(selectedWorkFlow)">
                                 </select>
@@ -208,7 +208,7 @@
                             </div>
                         </div>
                         {% verbatim %}
-                        <div ng-switch="commonWorkFlow.id">
+                        <div class="panel-body" ng-switch="commonWorkFlow.id">
                             <div ng-switch-when="demo"> Just for demo</div>
 
                             <div ng-switch-when="create_volume">
@@ -216,6 +216,9 @@
                             </div>
                             <div ng-switch-when="attach_volume">
                                 <attach-volume></attach-volume>
+                            </div>
+                            <div ng-switch-when="attach_tg">
+                                <attach-tg obj="attachTgInfo"></attach-tg>
                             </div>
                         </div>
                         {% endverbatim %}
@@ -237,8 +240,8 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="{% static "js/tools.js" %}"></script>
     <script src="{% static "create_volume.js" %}"></script>
-    <script src="{% static "js/example.js" %}"></script>
     <script src="{% static "attach_volume.js" %}"></script>
+    <script src="{% static "attach_tg.js" %}"></script>
 
 
 {% endblock %}

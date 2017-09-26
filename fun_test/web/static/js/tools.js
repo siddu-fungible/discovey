@@ -15,7 +15,6 @@ let statsOn = false;
             $scope.steps = [];
             $scope.topologySessionId = null;
             $scope.deployButtonText = "Deploy";
-            //$scope.selectedWorkFlow = null;
             $scope.commonWorkFlow = null;
 
             $scope.createVolumeInfo = {
@@ -26,18 +25,9 @@ let statsOn = false;
                 "size": 1024
             };
 
-            /*
-            $scope.workFlowClick = function (event) {
-                //alert(event.target.id);
-                workFlowName = event.target.id;
-                $scope.currentWorkFlow = event.target.innerText;
-                $window.currentWorkFlow = $scope.currentWorkFlow;
-                //alert(event.target.innerText);
-                $http.get('/tools/f1/workflow/' + workFlowName).then(function (result) {
-                    $scope.steps = result.data;
-                });
-            };*/
+            $scope.attachTgInfo = {
 
+            };
 
             $scope.workFlowSelection = function (selectedWorkFlow) {
                 $scope.commonWorkFlow = selectedWorkFlow;
