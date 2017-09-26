@@ -32,13 +32,19 @@ def f1(request, session_id):
 
 def workflows(request):
     workflows = []
-    workflow = {"name": "Create Volume", "id": "create_volume"}
+    workflow = {"name": "Create Raw Volume", "id": "create_volume"}
     workflows.append(workflow)
     workflow = {"name": "Attach Volume", "id": "attach_volume"}
     workflows.append(workflow)
     workflow = {"name": "Demo", "id": "demo"}
     workflows.append(workflow)
-    workflow = {"name": "Replication", "id": "replication"}
+    workflow = {"name": "Setup Replication", "id": "replication"}
+    workflows.append(workflow)
+    workflow = {"name": "Upload IKV file", "id": "ikv_upload"}
+    workflows.append(workflow)
+    workflow = {"name": "Fetch IKV file", "id": "ikv_get"}
+    workflows.append(workflow)
+    workflow = {"name": "Attach Traffic", "id": "attach_tg"}
     workflows.append(workflow)
     return HttpResponse(json.dumps(workflows))
 

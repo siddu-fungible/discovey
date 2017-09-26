@@ -2,101 +2,6 @@ currentWorkFlow = "demo";
 let charts = [];
 let statsOn = false;
 
-function workFlowComplete(f1Ip) {
-    replacedIp = f1Ip.replace(new RegExp("\\.", 'g'), "_");
-    $("#workflow-progress-label-" + replacedIp).hide();
-    $("#workflow-progress-div-" + replacedIp).hide();
-    icon = "#workflow-progress-icon-" + replacedIp;
-    $(icon).show();
-    $(icon).removeClass("glyphicon-hourglass");
-    $(icon).addClass("glyphicon-ok");
-}
-
-function workFlowStart(f1Ip) {
-    replacedIp = f1Ip.replace(new RegExp("\\.", 'g'), "_");
-    $("#workflow-progress-label-" + replacedIp).hide();
-    $("#workflow-progress-div-" + replacedIp).show();
-    icon = $("#workflow-progress-icon-" + replacedIp);
-    $(icon).hide();
-    $("#workflow-progress-bar-" + replacedIp).css("width", "0%");
-}
-
-
-$("#workflow-start-button-obs").click(function () {
-    selectedF1s = [];
-    //selectedWorkFlow = currentWorkFlow;
-    $("#f1-table-tbody > tr").each(function () {
-        //console.log("Hie2");
-        $(this).filter(":has(:checkbox:checked)").find("input").each(function () {
-            selectedF1Ip = $(this).attr("data-f1-ip");
-            selectedF1s.push(selectedF1Ip);
-            //console.log(selectedWorkFlow);
-        });
-    });
-    $.map(selectedF1s, function (selectedF1) {
-        console.log(selectedF1);
-        $("#f1-table-tbody > tr").each(function () {
-            $(this).find(".progress-bar").each(function () {
-
-                if ($(this).attr("data-f1-ip") === selectedF1) {
-                    progressBar = $(this);
-                    (function (progressBar) {
-                        workFlowStart(selectedF1);
-                        $.ajax({
-                            url: "/tools/f1/workflow/" + selectedWorkFlow,
-                            type: 'get',
-                            dataType: 'json',
-                            success: function (data) {
-                                stepCount = data.length;
-                                doStuff(0, stepCount);
-
-                                function doStuff(stepIndex, stepCount) {
-                                    payload = {
-                                        "f1_ip": selectedF1,
-                                        "workflow": selectedWorkFlow,
-                                        "step-index": stepIndex
-                                    };
-                                    (function (selectedF1, stepIndex, progressBar, stepCount) {
-
-                                        $.ajax({
-                                            url: "/tools/f1/start_workflow_step",
-                                            dataType: 'text',
-                                            type: 'post',
-                                            contentType: 'application/json',
-                                            async: true,
-                                            data: JSON.stringify(payload),
-                                            success: function (data) {
-                                                console.log("IP:" + selectedF1);
-                                                width = ((stepIndex + 1) / stepCount) * 100;
-                                                $(progressBar).css("width", width.toString() + "%");
-                                                if ((stepIndex + 1) < stepCount) {
-                                                    doStuff(stepIndex + 1, stepCount);
-                                                } else {
-                                                    workFlowComplete(selectedF1);
-                                                }
-                                            },
-                                            error: function (data) {
-                                                alert("Huh2?");
-                                            }
-                                        });
-                                    }(selectedF1, stepIndex, progressBar, stepCount));
-                                }
-                            },
-                            error: function (data) {
-                                alert("Whaaaa?" + data.toString());
-                            }
-                        });
-                    }(progressBar));
-
-
-                }
-            });
-        });
-
-    });
-});
-
-
 (function () {
     let app;
     app = angular.module('tools', []);
@@ -121,6 +26,7 @@ $("#workflow-start-button-obs").click(function () {
                 "size": 1024
             };
 
+            /*
             $scope.workFlowClick = function (event) {
                 //alert(event.target.id);
                 workFlowName = event.target.id;
@@ -130,10 +36,11 @@ $("#workflow-start-button-obs").click(function () {
                 $http.get('/tools/f1/workflow/' + workFlowName).then(function (result) {
                     $scope.steps = result.data;
                 });
-            };
+            };*/
+
 
             $scope.workFlowSelection = function (selectedWorkFlow) {
-                $scope.commonWorkFlow = selectedWorkFlow["id"];
+                $scope.commonWorkFlow = selectedWorkFlow;
             };
 
             $scope.toggleF1Selection = function(f1){
@@ -141,7 +48,35 @@ $("#workflow-start-button-obs").click(function () {
             };
 
             $scope.startWorkFlow = function () {
-                console.log($scope.getSelectedF1s());
+                selectedF1s = $scope.getSelectedF1s();
+                $.map(selectedF1s, function (selectedF1) {
+                    console.log("Sending" + selectedF1);
+                    payload = {"f1": selectedF1, workFlow: $scope.commonWorkFlow};
+                    replacedIp = $scope.replaceIpDot(selectedF1.ip);
+
+                    workFlowProgressLabel = "#workflow-progress-label-" + replacedIp;
+                    workFlowProgressIcon = "#workflow-progress-icon-" + replacedIp;
+                    workFlowProgressDiv = "#workflow-progress-div-" + replacedIp;
+                    workFlowProgressBar = "#workflow-progress-bar-" + replacedIp;
+
+                    angular.element(document.querySelector(workFlowProgressLabel)).hide();
+                    angular.element(document.querySelector(workFlowProgressDiv)).show();
+                    angular.element(document.querySelector(workFlowProgressIcon)).hide();
+                    angular.element(document.querySelector(workFlowProgressBar)).css("width", "50%");
+
+                    $http.post("/tools/f1/start_workflow_step", payload).then(function (result) {
+                        angular.element(document.querySelector(workFlowProgressLabel)).hide();
+                        angular.element(document.querySelector(workFlowProgressDiv)).hide();
+                        let icon = angular.element(document.querySelector(workFlowProgressIcon));
+                        icon.show();
+                        icon.removeClass("glyphicon-hourglass");
+                        icon.addClass("glyphicon-ok");
+                        angular.element(document.querySelector(workFlowProgressBar)).css("width", "100%");
+
+                    })
+
+                });
+
             };
 
             $scope.getSelectedF1s = function () {
@@ -198,7 +133,6 @@ $("#workflow-start-button-obs").click(function () {
               console.log($scope.createVolumeInfo);
             };
 
-            $scope.posts = [];
             $scope.f1s = [];
             $scope.workflows = [];
             $scope.traffic_generators = [];
