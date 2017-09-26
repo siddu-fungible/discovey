@@ -100,6 +100,31 @@ $("#workflow-start-button").click(function () {
 (function () {
     let app;
     app = angular.module('tools', []);
+
+        var example = {
+      bindings: {
+        obj: '<'
+      },
+      template: `
+        <div class="section">
+          <h4>
+            Isolate Component
+          </h4>
+          <p>Object: {{ $ctrl.obj }}</p>
+          <a href="" ng-click="$ctrl.updateValues();">
+            Change Isolate Values
+          </a>
+        </div>
+      `,
+      controller: function () {
+            this.updateValues = function () {
+          this.obj.todd.age = 26;
+        };
+      }
+
+    };
+
+
     app.controller('AppController', [
         '$scope', '$http', '$window', '$timeout', function ($scope, $http, $window, $timeout) {
             pollInterval = 2000; // seconds
@@ -110,6 +135,8 @@ $("#workflow-start-button").click(function () {
             //$scope.selectedWorkFlow = null;
             $scope.commonWorkFlow = null;
 
+            $scope.createVolumeInfo = {
+            };
 
             $scope.workFlowClick = function (event) {
                 //alert(event.target.id);
@@ -165,6 +192,9 @@ $("#workflow-start-button").click(function () {
 
             };
 
+            $scope.testClick = function (event) {
+              console.log("TestClick")
+            };
 
             $scope.posts = [];
             $scope.f1s = [];
@@ -183,7 +213,7 @@ $("#workflow-start-button").click(function () {
             return $scope;
         }
 
-    ]);
+    ]).component('example', example);;
 
 }).call();
 
