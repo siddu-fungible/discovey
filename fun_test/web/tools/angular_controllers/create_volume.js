@@ -5,7 +5,6 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
-            console.log(ctrl);
         };
     }
 

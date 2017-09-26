@@ -101,28 +101,6 @@ $("#workflow-start-button").click(function () {
     let app;
     app = angular.module('tools', []);
 
-        var example = {
-      bindings: {
-        obj: '<'
-      },
-      template: `
-        <div class="section">
-          <h4>
-            Isolate Component
-          </h4>
-          <p>Object: {{ $ctrl.obj }}</p>
-          <a href="" ng-click="$ctrl.updateValues();">
-            Change Isolate Values
-          </a>
-        </div>
-      `,
-      controller: function () {
-            this.updateValues = function () {
-          this.obj.todd.age = 26;
-        };
-      }
-
-    };
 
 
     app.controller('AppController', [
@@ -136,6 +114,11 @@ $("#workflow-start-button").click(function () {
             $scope.commonWorkFlow = null;
 
             $scope.createVolumeInfo = {
+                "name": "default_name",
+                "uuid": "default_uuid",
+                "blockSize": 1024,
+                "nsId": 64,
+                "size": 1024
             };
 
             $scope.workFlowClick = function (event) {
@@ -193,7 +176,8 @@ $("#workflow-start-button").click(function () {
             };
 
             $scope.testClick = function (event) {
-              console.log("TestClick")
+              console.log("TestClick");
+              console.log($scope.createVolumeInfo);
             };
 
             $scope.posts = [];
@@ -213,7 +197,7 @@ $("#workflow-start-button").click(function () {
             return $scope;
         }
 
-    ]).component('example', example);;
+    ]);
 
 }).call();
 
