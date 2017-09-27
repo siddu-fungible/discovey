@@ -1,10 +1,12 @@
 <div class="panel panel-default panel-primary">
-    <div class="panel-heading">
+    <div class="panel-heading" data-toggle="collapse" href="#f1-panel-{{ $ctrl.f1.name }}">
         {{ $ctrl.f1.name }}
+        <i class="glyphicon glyphicon-list pull-right"></i>
     </div>
-    <div class="panel-body">
+    <div class="panel-body panel-collapse collapse" id="f1-panel-{{ $ctrl.f1.name }}">
         <div class="row">
             IP: {{ $ctrl.f1.ip }}
+            <i class="fa fa-bar-chart fa-2x pull-right" style="color:orangered"></i>
         </div>
 
 

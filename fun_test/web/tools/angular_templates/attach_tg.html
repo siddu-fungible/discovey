@@ -1,6 +1,6 @@
 <div id="attach-tg-div" class="workflow-parameters">
     <div class="form-group row">
-        <label>Traffic Type</label>
+        <label class="form-inline">Traffic Type</label>
         <select ng-model="selectedTg"
                 ng-options="mode as name for (mode, name) in tgTypes track by mode"
                 ng-change="tgSelection(selectedTg)">
@@ -8,15 +8,15 @@
     </div>
     <div ng-switch="selectedTg">
         <div ng-switch-when="fio">
-            <label>Input 1</label>
+            <label class="form-inline">Input 1</label>
             <input class="form-control" type="text" value="">
-            <label>Input 2</label>
+            <label class="form-inline">Input 2</label>
             <input class="form-control" type="text" value="">
         </div>
         <div ng-switch-when="iperf">
-            <label>Input 3</label>
+            <label class="form-inline">Input 3</label>
             <input class="form-control" type="text" value="">
-            <label>Input 4</label>
+            <label class="form-inline">Input 4</label>
             <input class="form-control" type="text" value="">
         </div>
     </div>
