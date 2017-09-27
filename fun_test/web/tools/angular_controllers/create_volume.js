@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function CreateVolumeController($scope, $element, $attrs) {
+    function CreateVolumeController($scope) {
         let ctrl = this;
 
         ctrl.$onInit = function () {

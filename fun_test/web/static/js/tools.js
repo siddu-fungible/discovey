@@ -11,11 +11,13 @@ let statsOn = false;
     app.controller('AppController', [
         '$scope', '$http', '$window', '$timeout', function ($scope, $http, $window, $timeout) {
             pollInterval = 2000; // seconds
-            $scope.currentWorkFlow = null;
             $scope.steps = [];
             $scope.topologySessionId = null;
             $scope.deployButtonText = "Deploy";
             $scope.commonWorkFlow = null;
+            $scope.f1s = [];
+            $scope.workFlows = [];
+            $scope.traffic_generators = [];
 
             $scope.createVolumeInfo = {
                 "name": "default_name",
@@ -29,7 +31,8 @@ let statsOn = false;
 
             };
 
-            $scope.workFlowSelection = function (selectedWorkFlow) {
+            $scope.setCommonWorkFlow = function (selectedWorkFlow) {
+                console.log("Parent workflow selection");
                 $scope.commonWorkFlow = selectedWorkFlow;
             };
 
@@ -66,7 +69,6 @@ let statsOn = false;
                     })
 
                 });
-
             };
 
             $scope.getSelectedF1s = function () {
@@ -79,8 +81,8 @@ let statsOn = false;
                 return selectedF1s;
             };
 
-            $scope.replaceIpDot = function (Ip) {
-                return Ip.replace(new RegExp("\\.", 'g'), "_");
+            $scope.replaceIpDot = function (iP) {
+                return iP.replace(new RegExp("\\.", 'g'), "_");
             };
 
             let getTopologyStatus = function (sessionId) {
@@ -120,16 +122,11 @@ let statsOn = false;
 
             $scope.testClick = function (event) {
               console.log("TestClick");
-              console.log($scope.createVolumeInfo);
+              console.log($scope.commonWorkFlow);
             };
 
-            $scope.f1s = [];
-            $scope.workflows = [];
-            $scope.traffic_generators = [];
-
-
             $http.get('/tools/f1/workflows').then(function (result) {
-                $scope.workflows = result.data;
+                $scope.workFlows = result.data;
             });
 
             $http.get('/tools/tg').then(function (result) {

@@ -1,0 +1,30 @@
+<div xmlns="http://www.w3.org/1999/html">
+    <div class="row">
+        <h3>{{ $ctrl.f1.name }}</h3>
+    </div>
+    <div class="row">
+        IP: {{ $ctrl.f1.ip }}
+    </div>
+
+
+    <div class="row">
+        Status: <span ng-show="progressLabel" class="label label-info">IDLE</span>
+
+        <span ng-show="progressIcon" class="glyphicon glyphicon-ok" style="color:green"></span>
+        <div class="progress" ng-show="progressDiv">
+            <div class="progress-bar progress-bar-striped active" role="progressbar"
+                 style="width: {{ progressBarWidth }}%">
+            </div>
+        </div>
+
+        <br>
+        Action
+        <select ng-model="selectedWorkFlow"
+                ng-options="x.name for x in $ctrl.workFlows"
+                ng-change="workFlowSelection(selectedWorkFlow)">
+        </select>
+        <button class="btn btn-secondary" ng-click="startWorkFlow($event)">Apply
+        </button>
+    </div>
+
+</div>

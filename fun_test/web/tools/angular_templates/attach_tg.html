@@ -1,31 +1,23 @@
 <div id="attach-tg-div" class="workflow-parameters">
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Traffic Type</label>
-        <select class="col-sm-5" ng-model="selectedTg"
+        <label>Traffic Type</label>
+        <select ng-model="selectedTg"
                 ng-options="mode as name for (mode, name) in tgTypes track by mode"
                 ng-change="tgSelection(selectedTg)">
         </select>
     </div>
     <div ng-switch="selectedTg">
         <div ng-switch-when="fio">
-            <label class="col-sm-2 col-form-label">Input 1</label>
-            <div class="col-sm-10">
-                <input class="form-control" type="text" value="">
-            </div>
-            <label class="col-sm-2 col-form-label">Input 2</label>
-            <div class="col-sm-10">
-                <input class="form-control" type="text" value="">
-            </div>
+            <label>Input 1</label>
+            <input class="form-control" type="text" value="">
+            <label>Input 2</label>
+            <input class="form-control" type="text" value="">
         </div>
         <div ng-switch-when="iperf">
-            <label class="col-sm-2 col-form-label">Input 3</label>
-            <div class="col-sm-10">
-                <input class="form-control" type="text" value="">
-            </div>
-            <label class="col-sm-2 col-form-label">Input 4</label>
-            <div class="col-sm-10">
-                <input class="form-control" type="text" value="">
-            </div>
+            <label>Input 3</label>
+            <input class="form-control" type="text" value="">
+            <label>Input 4</label>
+            <input class="form-control" type="text" value="">
         </div>
     </div>
 </div>
