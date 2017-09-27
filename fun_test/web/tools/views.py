@@ -44,7 +44,7 @@ def workflows(request):
     workflows.append(workflow)
     workflow = {"name": "Fetch IKV file", "id": "ikv_get"}
     workflows.append(workflow)
-    workflow = {"name": "Attach Traffic", "id": "attach_tg"}
+    workflow = {"name": "Traffic", "id": "attach_tg"}
     workflows.append(workflow)
     return HttpResponse(json.dumps(workflows))
 

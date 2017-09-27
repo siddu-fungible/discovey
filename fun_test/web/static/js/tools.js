@@ -2,6 +2,46 @@ currentWorkFlow = "demo";
 let charts = [];
 let statsOn = false;
 
+    var router = new Image();
+    var f1 = new Image();
+    router.src = 'http://etherealmind.com/wp-content/uploads/2010/01/cisco-router-icon.jpg';
+    f1.src = 'http://icons.iconarchive.com/icons/hydrattz/multipurpose-alphabet/48/Letter-F-black-icon.png';
+
+
+function draw() {
+
+
+
+  var ctx = document.getElementById('topology-canvas').getContext('2d');
+
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.clearRect(0, 0, 2000, 2000); // clear canvas
+
+
+  ctx.drawImage(router, 300, 0, 100, 100);
+  ctx.drawImage(router, 600, 0, 100, 100);
+  ctx.drawImage(router, 900, 0, 100, 100);
+
+
+  ctx.drawImage(f1, 0, 200, 100, 100);
+  ctx.drawImage(f1, 250, 200, 100, 100);
+  ctx.drawImage(f1, 500, 200, 100, 100);
+  ctx.drawImage(f1, 750, 200, 100, 100);
+  ctx.drawImage(f1, 1000, 200, 100, 100);
+
+  /*
+  ctx.beginPath();
+  ctx.moveTo(0, 200);
+  ctx.lineTo(300, 0);
+  ctx.stroke();*/
+  //ctx.drawLine();
+
+  window.requestAnimationFrame(draw);
+
+}
+
+
+
 (function () {
     let app;
     app = angular.module('tools', []);
@@ -296,6 +336,8 @@ $("#stats-play-button").click(function () {
 $(document).ready(function () {
     initPlots();
     //startPlots();
+    window.requestAnimationFrame(draw);
+
 });
 
 
