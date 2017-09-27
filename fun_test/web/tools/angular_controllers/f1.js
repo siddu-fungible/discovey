@@ -11,6 +11,8 @@
             $scope.progressIcon = false;
             $scope.progressDiv = false;
             $scope.progressBarWidth = 0;
+            $scope.hasVolumes = false;
+            $scope.hasReplicatedVolumes = false;
 
         };
 
@@ -35,6 +37,8 @@
                 $scope.progressBarWidth = 100;
                 $scope.progressDiv = false;
                 $scope.progressIcon = true;
+                $scope.hasVolumes = true;
+                $scope.hasReplicatedVolumes = true;
 
             })
 
