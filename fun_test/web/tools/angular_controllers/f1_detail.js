@@ -27,6 +27,8 @@
             }
         };
 
+
+
         $scope.toggleChart = function (event) {
             //console.log($scope.charting);
             if (event.target.checked) {

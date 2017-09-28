@@ -4,8 +4,8 @@
     function FunChartController($scope, $http, $element, $timeout) {
         let ctrl = this;
 
-        $scope.getRandomId = function(){
-            if(!$scope.genId) {
+        $scope.getRandomId = function () {
+            if (!$scope.genId) {
                 let min = Math.ceil(0);
                 let max = Math.floor(10000);
                 $scope.genId = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -19,17 +19,16 @@
 
         $scope.$watch(function () {
             return ctrl.charting === true;
-        }, function(newvalue, oldvalue) {
-            //console.log("Waching");
+        }, function (newvalue, oldvalue) {
             let layout = {
                 showlegend: false,
-                 margin: {
+                margin: {
                     t: 0,
                     l: 0,
                     r: 0,
-                     b: 0,
-                     pad: 0,
-                    }
+                    b: 0,
+                    pad: 0,
+                }
             };
 
             let data = [];
@@ -42,7 +41,7 @@
 
                 });
             }
-            if(ctrl.charting) {
+            if (ctrl.charting) {
                 Plotly.newPlot("c-" + $scope.genId, data, layout, {displayModeBar: false});
                 $timeout($scope.updatePlot, 5000);
             }
@@ -54,7 +53,7 @@
             $scope.traceCount = $scope.inputs.length;
             $scope.xValue = 0;
             $scope.values = {};
-            angular.forEach($scope.inputs, function(input) {
+            angular.forEach($scope.inputs, function (input) {
                 $scope.values[input] = [];
             });
         };
@@ -62,19 +61,19 @@
         $scope.updatePlot = function () {
             //console.log(ctrl.values);
             let traceList = [];
-            for(let i = 0; i < $scope.traceCount; i++) {
+            for (let i = 0; i < $scope.traceCount; i++) {
                 traceList.push(i);
             }
             let xValueList = [];
             let yValueList = [];
 
-            angular.forEach(ctrl.values, function(value, key){
+            angular.forEach(ctrl.values, function (value, key) {
                 yValueList.push([parseInt(value)]);
                 xValueList.push([$scope.xValue]);
             });
 
             let data = {x: xValueList, y: yValueList};
-            if(ctrl.charting) {
+            if (ctrl.charting) {
                 Plotly.extendTraces("c-" + $scope.genId,
                     data, traceList);
                 $timeout($scope.updatePlot, 5000);
