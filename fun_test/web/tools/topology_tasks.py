@@ -7,7 +7,7 @@ from web.tools.models import Session, F1, Tg, TopologyTask
 f1s = [
     {
         "name": "F1",
-        "ip": "10.0.0.1"
+        "ip": "10.1.20.67"
     },
     {
         "name": "F2",

@@ -25,6 +25,10 @@
 
         };
 
+        $scope.detailsViewClick = function () {
+            ctrl.setActiveTab({tabName: "details", f1: ctrl.f1});
+        };
+
         $scope.startWorkFlow = function () {
             $scope.progressLabel = false;
 
@@ -41,7 +45,6 @@
                 $scope.hasReplicatedVolumes = true;
 
             })
-
          };
     }
 
@@ -52,7 +55,8 @@
             f1: '=',
             workFlows: '<',
             replaceIpDot: '&',
-            setCommonWorkFlow: '&'
+            setCommonWorkFlow: '&',
+            setActiveTab: '&'
         }
     });
 

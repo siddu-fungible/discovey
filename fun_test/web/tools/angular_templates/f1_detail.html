@@ -1,0 +1,59 @@
+<div>
+    <!-- Rounded switch -->
+
+
+    <table class="table table-bordered table-nonfluid table-striped">
+        <thead>
+            <td>Attribute</td>
+            <td>Value</td>
+        </thead>
+        <tr>
+            <td>Name</td>
+            <td>{{ f1.name }}</td>
+        </tr>
+        <tr>
+            <td>Management IP</td>
+            <td>{{ f1.ip }}</td>
+        </tr>
+        <tr>
+            <td>Management Port</td>
+            <td>{{ f1.port }}</td>
+        </tr>
+    </table>
+
+    <br>
+    <label class="label label-info label-medium" for="sync-checkbox"><i class="glyphicon glyphicon-refresh"></i></label>
+    <input id="sync-checkbox" type="checkbox" ng-click="toggleSync($event)">
+    <label class="label label-info label-medium" for="chart-checkbox"><i class="glyphicon glyphicon-stats"></i></label>
+    <input id="chart-checkbox" type="checkbox" ng-click="toggleChart($event)">
+    <br>
+    <div ng-if="vpWus">
+        <p class="h4">WUs per VP</p>
+        <table class="table table-bordered table-nonfluid table-striped">
+            <thead>
+                <td>VP</td>
+                <td>Sent</td>
+                <td>Received</td>
+                <td>Plot</td>
+            </thead>
+            <tbody>
+                <tr ng-repeat="(name, properties) in vpWus">
+                    <td>
+                        {{ name }}
+                    </td>
+                    <td>
+                        {{ properties.wus_sent }}
+                    </td>
+                    <td>
+                        {{ properties.wus_received }}
+                    </td>
+                    <td>
+                        <fun-chart syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting"></fun-chart>
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+    </div>
+</div>

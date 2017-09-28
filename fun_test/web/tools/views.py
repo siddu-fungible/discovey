@@ -7,6 +7,8 @@ from web.tools.models import Session, F1, Tg, TopologyTask
 from rq import Queue
 from redis import Redis
 from topology_tasks import deploy_topology
+from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
+from fun_global import RESULTS
 
 tgs = [
     {
@@ -19,8 +21,23 @@ tgs = [
     }
 ]
 
+@csrf_exempt
+def f1_details(request):
+    response = {"status": RESULTS["FAILED"]}
+    if request.method == 'POST':
+        request_json = json.loads(request.body)
+        f1_ip = request_json["ip"]
+        f1_port = request_json["port"]
+        dpcsh_client_obj = DpcshClient(server_address=f1_ip,
+                                       server_port=f1_port)
+        result = dpcsh_client_obj.command(command="peek stats")
+        if result["status"]:
+            response["status"] = RESULTS["PASSED"]
+            response["data"] = result["data"]
+        else:
+            response["error_message"] = result["error_message"]
 
-
+    return HttpResponse(json.dumps(response))
 
 def f1(request, session_id):
     f1s = []

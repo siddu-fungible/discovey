@@ -58,6 +58,7 @@ function draw() {
             $scope.f1s = [];
             $scope.workFlows = [];
             $scope.traffic_generators = [];
+            $scope.currentF1 = null;
 
             $scope.createVolumeInfo = {
                 "name": "default_name",
@@ -67,6 +68,9 @@ function draw() {
                 "size": 1024
             };
 
+            $scope.$onInit = function () {
+                $scope.deployTopologyClick();
+            };
             $scope.attachTgInfo = {
 
             };
@@ -80,35 +84,11 @@ function draw() {
                 f1.isRowSelected = !f1.isRowSelected;
             };
 
-            $scope.startWorkFlow = function () {
-                selectedF1s = $scope.getSelectedF1s();
-                $.map(selectedF1s, function (selectedF1) {
-                    console.log("Sending" + selectedF1);
-                    payload = {"f1": selectedF1, workFlow: $scope.commonWorkFlow};
-                    replacedIp = $scope.replaceIpDot(selectedF1.ip);
-
-                    workFlowProgressLabel = "#workflow-progress-label-" + replacedIp;
-                    workFlowProgressIcon = "#workflow-progress-icon-" + replacedIp;
-                    workFlowProgressDiv = "#workflow-progress-div-" + replacedIp;
-                    workFlowProgressBar = "#workflow-progress-bar-" + replacedIp;
-
-                    angular.element(document.querySelector(workFlowProgressLabel)).hide();
-                    angular.element(document.querySelector(workFlowProgressDiv)).show();
-                    angular.element(document.querySelector(workFlowProgressIcon)).hide();
-                    angular.element(document.querySelector(workFlowProgressBar)).css("width", "50%");
-
-                    $http.post("/tools/f1/start_workflow_step", payload).then(function (result) {
-                        angular.element(document.querySelector(workFlowProgressLabel)).hide();
-                        angular.element(document.querySelector(workFlowProgressDiv)).hide();
-                        let icon = angular.element(document.querySelector(workFlowProgressIcon));
-                        icon.show();
-                        icon.removeClass("glyphicon-hourglass");
-                        icon.addClass("glyphicon-ok");
-                        angular.element(document.querySelector(workFlowProgressBar)).css("width", "100%");
-
-                    })
-
-                });
+            $scope.setActiveTab = function (tabName, f1) {
+                console.log("Setting active tab");
+                angular.element(document.querySelector('#' + tabName + "-nav-link")).tab('show');
+                //angular.element(document.querySelector('#[href="#' + tabName + '-container"]')).tab('show');
+                $scope.currentF1 = f1;
             };
 
             $scope.getSelectedF1s = function () {
@@ -138,15 +118,19 @@ function draw() {
                                 //console.log(f1["name"]);
                                 $scope.f1s.push(f1);
                             });
+                            // TODO:
+                            $scope.setActiveTab("details", $scope.f1s[0]);  // Test purposes only
                         });
                         $scope.deployButtonText = "Deploy";
+
+
                     }
                 }).catch(function (result) {
                     //alert("Topology status check failed");
                 });
             };
 
-            $scope.deployTopologyClick = function (event) {
+            $scope.deployTopologyClick = function () {
                 $http.get('/tools/topology').then(function (result) {
                     let sessionId = result.data["session_id"];
                     $scope.topologySessionId = sessionId;
