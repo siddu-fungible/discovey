@@ -12,6 +12,9 @@ Installation:
 # pip install paramiko_expect
 # pip install docker
 # pip install netaddr
+# pip install psutil
+# pip install rq
+# export PYTHONPATH=`pwd`
 # cd web/fun_test
 
 # python ./start_server.py [OPTIONAL]
