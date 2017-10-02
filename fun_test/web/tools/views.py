@@ -43,7 +43,7 @@ def f1(request, session_id):
     f1s = []
     f1_records = F1.objects.filter(topology_session_id=int(session_id))
     for f1_record in f1_records:
-        f1 = {"name": f1_record.name, "ip": f1_record.ip}
+        f1 = {"name": f1_record.name, "ip": f1_record.ip, "mgmt_ssh_port": f1_record.mgmt_ssh_port, "dataplane_ip": f1_record.dataplane_ip, "dpcsh_port": f1_record.dpcsh_port}
         f1s.append(f1)
     return HttpResponse(json.dumps(f1s))
 

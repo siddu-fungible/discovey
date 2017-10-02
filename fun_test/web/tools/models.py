@@ -8,6 +8,9 @@ class F1(models.Model):
     ip = models.GenericIPAddressField(default="127.0.0.1")
     name = models.CharField(max_length=100, default="unknown")
     topology_session_id = models.IntegerField(default=0)
+    mgmt_ssh_port = models.IntegerField(default=0)
+    dataplane_ip = models.GenericIPAddressField(default="127.0.0.1")
+    dpcsh_port = models.IntegerField(default=0)
 
     def __str__(self):
         return "{}-{}-{}".format(self.topology_session_id, self.ip, self.name)

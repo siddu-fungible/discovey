@@ -5,8 +5,17 @@
     </div>
     <div class="panel-body panel-collapse collapse" id="f1-panel-{{ $ctrl.f1.name }}">
         <div class="row">
-            IP: {{ $ctrl.f1.ip }}
+            Mgmt IP: {{ $ctrl.f1.ip }}
             <a href="#"><i class="fa fa-bar-chart fa-2x pull-right" style="color:orangered"></i></a>
+        </div>
+        <div class="row">
+            Mgmt SSH Port: {{ $ctrl.f1.mgmt_ssh_port }}
+        </div>
+        <div class="row">
+            Dpcsh Port: {{ $ctrl.f1.dpcsh_port }}
+        </div>
+        <div class="row">
+            Dataplane Ip: {{ $ctrl.f1.dataplane_ip }}
         </div>
 
 
