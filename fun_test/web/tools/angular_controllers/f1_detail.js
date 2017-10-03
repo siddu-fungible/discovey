@@ -6,18 +6,22 @@
 
         ctrl.$onInit = function () {
             console.log(ctrl);
-            $scope.f1 = ctrl.f1;
+            //$scope.f1 = ctrl.f1;
             $scope.vpWus = null;
             $scope.syncing = false;
             $scope.syncTimer = null;
             $scope.charting = null;
         };
 
+        $scope.$watch('ctrl.f1', function () {
+            $scope.f1 = ctrl.f1;
+        });
+
         $scope.sync = function () {
             if($scope.syncing) {
                 let payload = {};
-                payload["ip"] = $scope.f1.ip;
-                payload["port"] = 5001;
+                payload["ip"] = ctrl.f1.ip;
+                payload["port"] = parseInt(ctrl.f1.dpcsh_port);
                 $http.post("/tools/f1/detail", payload).then(function (result) {
                     if (result.data.status === "PASSED") {
                         $scope.vpWus = result.data.data["per_vp"];

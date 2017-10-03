@@ -61,9 +61,20 @@ class Topology(object):
                 leaf_dict['dpcsh_port'] = leaf_node.dpcsh_port
                 leaf_dict['dataplane_ip'] = leaf_node.ip
                 leafs_dict[leaf_node.name] = leaf_dict
-
         access_info['F1'] = leafs_dict
 
+        racks_dict = dict()
+        for leaf_vm in self.leaf_vm_objs:
+            for rack in leaf_vm.racks:
+                rack_dict = dict()
+                for node in rack.nodes:
+                    rack_dict[node.name] = []
+                    for k,v in node.interfaces.items():
+                        if v['peer_type'] == 'spine':
+                            rack_dict[node.name].append(k)
+                racks_dict[str(rack.rack_id)] = rack_dict
+        access_info['Racks'] = racks_dict
+ 
         spines_dict = dict()
         for spine_vm in self.spine_vm_objs:
             spine_nodes = spine_vm.get_nodes()
@@ -73,7 +84,6 @@ class Topology(object):
                 spine_dict['mgmt_ssh_port'] = spine_node.host_ssh_port
                 spine_dict['dataplane_ip'] = spine_node.ip
                 spines_dict[spine_node.name] = spine_dict
-
         access_info['CX'] = spines_dict
 
         tgs_dict = dict()
@@ -83,13 +93,12 @@ class Topology(object):
             tg_dict['mgmt_ssh_port'] = tg.host_ssh_port
             tg_dict['dataplane_ip'] = tg.ip
             tgs_dict[tg.name] = tg_dict
- 
         access_info['TG'] =  tgs_dict 
 
         return json.dumps(access_info)
 
 
-    def save(self):
+    def save(self, filename='topology.pkl'):
         
         topo_state = {'leaf_vm_ips': self.leaf_vm_ips,\
                       'spine_vm_ips': self.spine_vm_ips,\
@@ -107,13 +116,13 @@ class Topology(object):
                       'f1_mgmt_ips': f1_mgmt_ips,\
                       }
 
-        pickle.dump(topo_state, open('topology.pkl','wb'))
+        pickle.dump(topo_state, open(filename,'wb'))
 
-    def load(self):
+    def load(self, filename='topology.pkl'):
 
         global f1_mgmt_ips
 
-        topo_state = pickle.load(open('topology.pkl', 'rb'))
+        topo_state = pickle.load(open(filename, 'rb'))
         
         self.leaf_vm_ips = topo_state['leaf_vm_ips']
         self.spine_vm_ips = topo_state['spine_vm_ips']

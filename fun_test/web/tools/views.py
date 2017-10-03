@@ -28,6 +28,7 @@ def f1_details(request):
         request_json = json.loads(request.body)
         f1_ip = request_json["ip"]
         f1_port = request_json["port"]
+        # print(f1_port)
         dpcsh_client_obj = DpcshClient(server_address=f1_ip,
                                        server_port=f1_port)
         result = dpcsh_client_obj.command(command="peek stats")

@@ -69,7 +69,7 @@ function draw() {
             };
 
             $scope.$onInit = function () {
-                $scope.deployTopologyClick();
+                // TODO $scope.deployTopologyClick();
             };
             $scope.attachTgInfo = {
 
@@ -119,7 +119,7 @@ function draw() {
                                 $scope.f1s.push(f1);
                             });
                             // TODO:
-                            $scope.setActiveTab("details", $scope.f1s[0]);  // Test purposes only
+                            //$scope.setActiveTab("details", $scope.f1s[0]);  // Test purposes only
                         });
                         $scope.deployButtonText = "Deploy";
 

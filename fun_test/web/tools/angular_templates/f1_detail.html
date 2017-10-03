@@ -9,15 +9,19 @@
         </thead>
         <tr>
             <td>Name</td>
-            <td>{{ f1.name }}</td>
+            <td>{{ $ctrl.f1.name }}</td>
         </tr>
         <tr>
             <td>Management IP</td>
-            <td>{{ f1.ip }}</td>
+            <td>{{ $ctrl.f1.ip }}</td>
         </tr>
         <tr>
-            <td>Management Port</td>
-            <td>{{ f1.port }}</td>
+            <td>Management SSH Port</td>
+            <td>{{ $ctrl.f1.mgmt_ssh_port }}</td>
+        </tr>
+        <tr>
+            <td>Dpcsh Port</td>
+            <td>{{ $ctrl.f1.dpcsh_port }}</td>
         </tr>
     </table>
 

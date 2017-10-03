@@ -25,9 +25,10 @@ def deploy_topology(session_id):
     topology_task = TopologyTask(session_id=session_id)
     topology_task.save()
     topology_obj = topo.Topology()
-    topology_obj.create(2, 4, 8)
+    topology_obj.create(2, 4, 4)
     info = json.loads(topology_obj.getAccessInfo())
-    topology_obj.cleanup()
+    topology_obj.save()
+    # topology_obj.cleanup()
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
     for f1_name, f1_info in info["F1"].items():
         f1_obj = F1(name=f1_name, ip=f1_info["mgmt_ip"], dpcsh_port=f1_info["dpcsh_port"], mgmt_ssh_port=f1_info["mgmt_ssh_port"], dataplane_ip=f1_info["dataplane_ip"], topology_session_id=session_id)
