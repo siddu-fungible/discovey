@@ -1,0 +1,12 @@
+<div id="ikv-test-div" class="workflow-parameters">
+    <div class="row">
+        <label>Key-hex:</label>
+        {{ key_hex }}
+    </div>
+
+    <div class="row">
+        <label for="file-upload">Upload file:</label>
+        <input id="file-upload" type="file" fileinput="file" filepreview="filepreview"/>
+        <img ng-src="{{ filepreview }}" class="img-responsive" ng-show="filepreview"/>
+    </div>
+</div>

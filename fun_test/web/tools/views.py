@@ -9,6 +9,7 @@ from redis import Redis
 from topology_tasks import deploy_topology
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 from fun_global import RESULTS
+import ikv_tasks
 
 tgs = [
     {
@@ -58,9 +59,7 @@ def workflows(request):
     workflows.append(workflow)
     workflow = {"name": "Setup Replication", "id": "replication"}
     workflows.append(workflow)
-    workflow = {"name": "Upload IKV file", "id": "ikv_upload"}
-    workflows.append(workflow)
-    workflow = {"name": "Fetch IKV file", "id": "ikv_get"}
+    workflow = {"name": "IKV test", "id": "ikv_test"}
     workflows.append(workflow)
     workflow = {"name": "Traffic", "id": "attach_tg"}
     workflows.append(workflow)
@@ -107,3 +106,17 @@ def topology_status(request, session_id):
     topology_task = TopologyTask.objects.get(session_id=session_id)
     result["status"] = topology_task.status
     return HttpResponse(json.dumps(result))
+
+@csrf_exempt
+def upload(request):
+    uploaded_file = request.FILES['upload']
+    data = uploaded_file.read()
+    print data
+    return HttpResponse(str(uploaded_file.data))
+
+@csrf_exempt
+def ikv_put(request):
+    uploaded_file = request.FILES['upload']
+    bite = uploaded_file.read()
+    key_hex = ikv_tasks.ikv_put(bite)
+    return HttpResponse(key_hex)
