@@ -5,12 +5,25 @@ import Queue
 
 POLL_TIMEOUT = 5000
 
+def check_remote_command_result(out, commands):
+
+    if not out:
+        if 'tgen' in commands[0]:
+            return
+        print 'possible zmq timeout\n'
+        print commands
+        return
+
+    command = out[0]['results'][0]['command']
+    error = out[0]['results'][0]['error']
+    if error:
+        if 'docker unpause' not in command and 'add-port' not in command:
+            print 'remote command: %s : execution failed with following error:' % command 
+            print '%s' % error
+    
 def exec_remote_kill(commands, result=None, timeout=120):
 
     context = zmq.Context()
-
-    #mcast_socket = context.socket(zmq.PUB)
-    #mcast_socket.set(zmq.LINGER, 0)
 
     poll = zmq.Poller()
     sockets = {}
@@ -43,7 +56,7 @@ def exec_remote_kill(commands, result=None, timeout=120):
     return result
 
 
-def exec_send_file(commands, result=None, timeout=120):
+def exec_send_file(commands, result=None, timeout=10, q = Queue.Queue()):
 
     context = zmq.Context()
 
@@ -71,28 +84,26 @@ def exec_send_file(commands, result=None, timeout=120):
                 address = sockets.pop(socket, None)
                 if address is None:
                     continue
+                response = socket.recv_json()
+                response['address'] = address
+                result.append(response)
+
+    q.put(result)
+    check_remote_command_result(result, commands)
+    return result
 
 
-def exec_remote_commands(commands, result=None, timeout=1200, q = Queue.Queue()):
+
+def exec_remote_commands(commands, result=None, timeout=10, q = Queue.Queue()):
     
     context = zmq.Context()
-
-    #mcast_socket = context.socket(zmq.PUB)
-    #mcast_socket.set(zmq.LINGER, 0)
 
     poll = zmq.Poller()
     sockets = {}
 
     ip_grouped_commands = commands
-    #ip_grouped_commands = {}
-    #for address, command in commands:
-    #    ip_grouped_commands.setdefault(address, []).append(
-    #        command)
-
  
-    #for address, commands in ip_grouped_commands.items():
     for address, commands in ip_grouped_commands:
-        #mcast_socket.connect('tcp://%s:91' % address)
         ucast_socket = context.socket(zmq.REQ)
         ucast_socket.set(zmq.LINGER, 0)
         ucast_socket.connect('tcp://%s:90' % address)
@@ -103,7 +114,6 @@ def exec_remote_commands(commands, result=None, timeout=1200, q = Queue.Queue())
     deadline = time.time() + timeout
 
     while sockets and (timeout == 0 or time.time() < deadline):
-        #mcast_socket.send_string('begin')
         for socket, event in poll.poll(POLL_TIMEOUT):
             if event & zmq.POLLIN:
                 address = sockets.pop(socket, None)
@@ -114,5 +124,6 @@ def exec_remote_commands(commands, result=None, timeout=1200, q = Queue.Queue())
                 result.append(response)
 
     q.put(result)    
+    check_remote_command_result(result, commands)
     return result 
 

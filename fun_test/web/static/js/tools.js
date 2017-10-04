@@ -60,6 +60,7 @@ function draw() {
             $scope.workFlows = [];
             $scope.trafficWorkFlows = [];
             $scope.currentF1 = null;
+            $scope.currentWorkFlowF1 = null;
 
             $scope.createVolumeInfo = {
                 "name": "default_name",
@@ -81,9 +82,10 @@ function draw() {
                 $scope.commonWorkFlow = selectedWorkFlow;
             };
 
-            $scope.setCommonTrafficWorkFlow = function (selectedWorkFlow) {
+            $scope.setCommonTrafficWorkFlow = function (selectedWorkFlow, f1) {
                 //console.log("Parent workflow selection");
                 $scope.commonTrafficWorkFlow = selectedWorkFlow;
+                $scope.currentWorkFlowF1 = f1;
             };
 
             $scope.toggleF1Selection = function(f1){

@@ -169,7 +169,7 @@
                 <div class="col-sm-4">
                     <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
                     <f1-traffic ng-repeat="f1 in f1s" f1="f1" work-flows="trafficWorkFlows" replace-ip-dot="replaceIpDot"
-                                set-common-traffic-work-flow="setCommonTrafficWorkFlow(selectedWorkFlow)"
+                                set-common-traffic-work-flow="setCommonTrafficWorkFlow(selectedWorkFlow, f1)"
                                 set-active-tab="setActiveTab(tabName, f1)"></f1-traffic>
 
                 </div>
@@ -187,7 +187,7 @@
                                 <attach-tg obj="attachTgInfo"></attach-tg>
                             </div>
                             <div ng-switch-when="ikv_test">
-                                <ikv-test obj="ikvTestInfo"></ikv-test>
+                                <ikv-test f1="currentWorkFlowF1" obj="ikvTestInfo"></ikv-test>
                             </div>
                         </div>
 

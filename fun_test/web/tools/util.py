@@ -4,7 +4,6 @@ import subprocess
 from netaddr import IPNetwork
 from config import *
 
-#docker_images = {'leaf': 'frr:v2', 'spine': 'frr:v2' , 'traffic_gen': 'tgen:v1'}
 docker_images = {'leaf': leaf_container, 'spine': 'frr:v2' , 'traffic_gen': 'tgen:v2'}
 docker_run_cmd = "docker run --privileged=true --rm -d"
 docker_stop_cmd = "docker stop "
@@ -22,13 +21,9 @@ docker_mgmt_net_cmd = 'docker network create --driver overlay --attachable --sub
 netns_del_cmd = "ip netns del "
 ovs_del_br_cmd = 'ovs-vsctl del-br '
 frr_password = 'zebra'
-storage_create_file_cmd = 'dd if=/dev/zero of=nvfile bs=1024k count=1k'
-storage_mdt_test_cmd = 'funos-posix app=mdt_test nvfile=nvfile'
 storage_nvmeof_cmd = 'nohup funos-posix app=nvmeof_target localaddr=0x0A000104 remoteaddr=0x0A000102  --dpc-server > /dev/null 2>&1 &'
 storage_fio_verify = 'fio --name=fun_nvmeof --ioengine=fun --rw=write --bs=4k --size=12m --numjobs=1  --iodepth=8 --do_verify=1 --verify=md5 --verify_fatal=1 --group_reporting -source_ip=10.0.1.2 --dest_ip=10.0.1.4 --io_queues=4 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=FULL_TEST'
 storage_fio_noverify = 'fio --name=fun_nvmeof --ioengine=fun --rw=randrw --bs=4k --size=1m --numjobs=1  --iodepth=8 --group_reporting -source_ip=172.16.0.5 --dest_ip=172.16.0.13 --io_queues=4 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=FULL_TEST'
-etc_orig = '/etc/hosts-orig'
-etc_curr = '/etc/hosts'
 base_port = 10000
 iid = 1
 ssh_retries = 10
@@ -41,7 +36,7 @@ spine_lo_net = '192.170.0.0/16'
 public_net = '10.0.0.0/14'
 f1_spine_net= '192.100.0.0/13'
 inter_f1_net = '192.168.0.0/16'
-f1_mgmt_net= IPNetwork('172.16.0.0/16')
+f1_mgmt_net= '172.16.0.0/16'
 
 spine_lo_subnets = [] 
 f1_public_subnet = []

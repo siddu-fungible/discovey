@@ -3,9 +3,11 @@ offLeafs = 0
 offSpines = 0 
 
 flat_topo = False
+network_only = True 
 
-#leaf_container = 'frr:v2'
-if flat_topo:
+if network_only:
+    leaf_container = 'frr:v2'
+elif flat_topo:
     leaf_container = 'psim:v1'
 else:
     leaf_container = 'demo:v2'

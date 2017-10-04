@@ -18,7 +18,7 @@
 
         $scope.workFlowSelection = function (selectedWorkFlow) {
             $scope.selectedWorkFlow = selectedWorkFlow;
-            ctrl.setCommonTrafficWorkFlow({selectedWorkFlow: selectedWorkFlow});
+            ctrl.setCommonTrafficWorkFlow({selectedWorkFlow: selectedWorkFlow, f1: ctrl.f1});
             //ctrl.setcwf("John");
 
             console.log(selectedWorkFlow);

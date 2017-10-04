@@ -188,7 +188,7 @@ class Topology(object):
             #print '\t\tNum of leaf_spine OVS: %d' % self.spine_vms
             #print '\t\tNum of leaf_spine ports/OVS: %d' % self.max_leaf_spine_ports_per_ovs
             print '\tNumber of Spine VMs: %d. On Each Spine VM:' % self.spine_vms
-            print '\t\tNum of Spines: %d' % self.max_spines_per_vm
+            print '\t\tMax Num of Spines: %d' % self.max_spines_per_vm
             #print '\t\tNum of Spine OVS: %d' % self.leaf_vms
             #print '\t\tNum of spine ports/OVS: %d' % self.max_spine_spine_ports_per_ovs
 
@@ -197,6 +197,30 @@ class Topology(object):
 
         global f1_public_subnet, rack_subnets, spine_subnets, f1_mgmt_ips, spine_lo_subnets
 
+        all_subnets = IPNetwork(public_net).subnet(24)
+        for i in range(1,nRacks+1):
+            rack_subnets.append(all_subnets.next())
+        for rack_subnet in rack_subnets:
+            f1_public_subnet.extend(list(rack_subnet.subnet(28))[:nLeafs])
+        del all_subnets
+
+        all_subnets = IPNetwork(f1_spine_net).subnet(30)
+        for i in range(0,nRacks*nSpines):
+            spine_subnets.append(all_subnets.next())
+        del all_subnets
+
+        all_subnets = IPNetwork(spine_lo_net).subnet(30)
+        for i in range(0,128):
+            spine_lo_subnets.append(all_subnets.next())
+
+        if not flat_topo:
+            f1_mgmt_ips = []
+        else:
+            all_ips= IPNetwork(f1_mgmt_net).iter_hosts()
+            for i in range(1,nRacks*nLeafs*2+nSpines+1):
+                f1_mgmt_ips.append(all_ips.next())
+ 
+        '''
         rack_subnets = list(IPNetwork(public_net).subnet(24))[1:nRacks+1]
         for rack_subnet in rack_subnets:
             f1_public_subnet.extend(list(rack_subnet.subnet(28))[:nLeafs])
@@ -206,7 +230,7 @@ class Topology(object):
         spine_lo_subnets = list(IPNetwork(spine_lo_net).subnet(30))[:128]
 
         f1_mgmt_ips= list((f1_mgmt_net).iter_hosts())[1:nRacks*nLeafs*2+nSpines+1]
-
+        '''
 
     @timeit
     def create(self, nRacks, nLeafs, nSpines):
@@ -215,11 +239,11 @@ class Topology(object):
         self.nLeafs = nLeafs
         self.nSpines = nSpines
 
-        self.configureTopoSubnets(self.nRacks, self.nLeafs, self.nSpines)
-
         self.available_vms = len(vm_ips)
 
         self.sizeUp(self.nRacks, self.nLeafs, self.nSpines)
+
+        self.configureTopoSubnets(self.nRacks, self.nLeafs, self.nSpines)
 
         if flat_topo:
             self.createMgmtOverlay()
@@ -242,7 +266,10 @@ class Topology(object):
             vm.configureLeafLinks()
         
         all_vms = self.leaf_vm_objs + self.spine_vm_objs
-
+        '''
+        for vm in all_vms:
+            out = vm.run()
+        '''
         threads = []
         for vm in all_vms:
             t = threading.Thread(target=vm.run)
@@ -250,7 +277,7 @@ class Topology(object):
             threads.append(t)
         for t in threads:
             t.join()
-
+        
         self.populate_ssh_config()
 
         self.deactivate_partial_topo(offRacks, offLeafs, offSpines)
@@ -308,8 +335,8 @@ class Topology(object):
                 break
 
         for vm_ip in self.vm_ips:
-            out = exec_remote_commands([(vm_ip, [docker_swarm_leave_cmd])], [], 300)
-            out = exec_remote_commands([(vm_ip, [worker_cmd])], [], 300)
+            out = exec_remote_commands([(vm_ip, [docker_swarm_leave_cmd])], [])
+            out = exec_remote_commands([(vm_ip, [worker_cmd])], [])
 
         out = run_commands(commands=[docker_mgmt_net_cmd])
 
@@ -648,40 +675,40 @@ class VM(object):
         else:
             params = {'role': self.role, 'start_spine_id': self.start_spine_id, 'end_spine_id': self.end_spine_id}
 
-        start = time.time()
-        out = exec_send_file([(self.ip, vm_docker_run)], [], 60)
+        if self.role == 'leaf':
+            print 'creating F1 containers\n'
+        else:
+            print 'creating Spine containers\n'
+
+        out = exec_send_file([(self.ip, vm_docker_run)], [])
         out = exec_remote_commands([(self.ip, ['/root/docker.sh'])], [], 300)
-        #print 'docker run took %s on %s' % (time.time()-start, self.role)
-        out = exec_send_file([(self.ip, params)], [], 60)
+        out = exec_send_file([(self.ip, params)], [])
 
         if not flat_topo:
-            time.sleep(30)
-            start = time.time()
+            if self.role == 'leaf' and not network_only:
+                print 'waiting for file based disk to be created\n'
             if self.role == 'leaf':
+                time.sleep(60)
                 for rack in self.racks:
                     rack.configureNodes()
-            else:
-                for spine in self.spines:
-                    spine.configure()
-            # print 'FRR configs took %s %s' % (time.time()-start, self.role)
-            
-            if self.role == 'leaf':
                 self.pauseRacks([rack.rack_id for rack in self.racks])
             else:
+                time.sleep(30)
+                for spine in self.spines:
+                    spine.configure()
                 self.pauseNodes([spine.name for spine in self.spines])
             
-            start = time.time()
             # if self.role == 'leaf':
             #    for bridge in self.leaf_bridges:
             #        bridge.run()
             for bridge in self.spine_bridges:
                 bridge.run()
-            # print 'bridges took %s' % (time.time()-start)
-            
-            start = time.time()
-            out = exec_send_file([(self.ip, vm_links)], [], 60)
+
+            if self.role == 'leaf': 
+                print 'connecting F1/spine containers\n'
+
+            out = exec_send_file([(self.ip, vm_links)], [])
             out = exec_remote_commands([(self.ip, ['/root/links.sh'])], [], 1200)
-            print 'link configs took %s secs: ' % (time.time() - start)
             
             if self.role == 'leaf':
                 self.unpauseRacks([rack.rack_id for rack in self.racks])
@@ -698,7 +725,7 @@ class VM(object):
                 pause_list += ' '
 
         docker_pause = docker_pause_cmd + pause_list
-        out = exec_remote_commands([(self.ip, [docker_pause])], [], 300)
+        out = exec_remote_commands([(self.ip, [docker_pause])], [])
 
     def pauseNodes(self, *nodes):
         pause_list = ''
@@ -709,7 +736,7 @@ class VM(object):
             pause_list += ' '
 
         docker_pause = docker_pause_cmd + pause_list
-        out = exec_remote_commands([(self.ip, [docker_pause])], [], 300)
+        out = exec_remote_commands([(self.ip, [docker_pause])], [])
 
     def unpauseRacks(self, *racks):
         unpause_list = ' '
@@ -721,7 +748,7 @@ class VM(object):
                 unpause_list += ' '
 
         docker_unpause = docker_unpause_cmd + unpause_list
-        out = exec_remote_commands([(self.ip, [docker_unpause])], [], 300)
+        out = exec_remote_commands([(self.ip, [docker_unpause])], [])
 
     def unpauseNodes(self, *nodes):
         unpause_list = ''
@@ -732,7 +759,7 @@ class VM(object):
             unpause_list += ' '
 
         docker_unpause = docker_unpause_cmd + unpause_list
-        out = exec_remote_commands([(self.ip, [docker_unpause])], [], 300)
+        out = exec_remote_commands([(self.ip, [docker_unpause])], [])
 
     def attachTG(self, node):
         node_obj = self.get_node(node)
@@ -783,7 +810,7 @@ class VM(object):
         if peer_type == 'leaf':
             netem_repair_cmd += 'ip netns exec %s tc qdisc del dev %s root \n' % (dst, peer_intf_name)
 
-        out = exec_remote_commands([(self.ip, [netem_repair_cmd])], [], 300)
+        out = exec_remote_commands([(self.ip, [netem_repair_cmd])], [])
         src_node.interfaces[dst]['state'] = 'up'
 
       
@@ -832,7 +859,7 @@ class VM(object):
                 src_node.interfaces[dst]['state'] += 'delay %s ' % param3
             else:
                 pass
-        out = exec_remote_commands([(self.ip, [netem_impair_cmd])], [], 300)
+        out = exec_remote_commands([(self.ip, [netem_impair_cmd])], [])
 
     def flatLinkImpair(self, src, dsts):
         src_node = self.get_node(src) 
@@ -841,7 +868,7 @@ class VM(object):
             iptables_impair_cmd += 'ip netns exec %s iptables -I INPUT -i eth0 -s %s -j DROP \n' % (src_node.name, dst.ip)
             iptables_impair_cmd += 'ip netns exec %s iptables -I OUTPUT -o eth0 -d %s -j DROP \n' % (src_node.name, dst.ip)
 
-        out = exec_remote_commands([(self.ip, [iptables_impair_cmd])], [], 300)
+        out = exec_remote_commands([(self.ip, [iptables_impair_cmd])], [])
 
     def flatLinkRepair(self, src, dsts):
         src_node = self.get_node(src)
@@ -850,7 +877,7 @@ class VM(object):
             iptables_repair_cmd += 'ip netns exec %s iptables -D INPUT -i eth0 -s %s -j DROP \n' % (src_node.name, dst.ip)
             iptables_repair_cmd += 'ip netns exec %s iptables -D OUTPUT -o eth0 -d %s -j DROP \n' % (src_node.name, dst.ip)
 
-        out = exec_remote_commands([(self.ip, [iptables_repair_cmd])], [], 300)      
+        out = exec_remote_commands([(self.ip, [iptables_repair_cmd])], [])
             
     def get_rack_from_id(self, rack_id):
         index = int(rack_id) - ((self.id-1)*self.topo.max_racks_per_vm) -1
@@ -921,7 +948,8 @@ class VM(object):
         all_bridges = self.leaf_bridges + self.spine_bridges
         bridge_cmd = []
         for bridge in all_bridges:
-            bridge_cmd.append(ovs_del_br_cmd + bridge.name)
+            if not 'leaf' in bridge.name:
+                bridge_cmd.append(ovs_del_br_cmd + bridge.name)
         for cmd in bridge_cmd:
            output = exec_remote_commands([(self.ip, [cmd])], [], 300)
 
@@ -946,8 +974,9 @@ class VM(object):
             kill_cmd = docker_kill_cmd + node_names
             for netns in node_names.split():
                 netns_cmd.append(netns_del_cmd + netns)
-            final_cleanup = [unpause_cmd] + [kill_cmd] + netns_cmd + \
-                            docker_mnt_clean_cmd + [docker_swarm_leave_cmd]
+            final_cleanup = [unpause_cmd] + [kill_cmd] + netns_cmd + docker_mnt_clean_cmd
+            if flat_topo:
+                final_cleanup += [docker_swarm_leave_cmd] 
             for cmd in final_cleanup:
                 output = exec_remote_commands([(self.ip, [cmd])], [], 300)
 
@@ -1158,10 +1187,10 @@ class Node(object):
                       self.host_ssh_port, self.zebra_port, self.bgp_port,
                       self.isis_port, self.dpcsh_port, router_image)
 
-        self.docker_run += 'docker exec -ti %s /bin/bash\n' % self.name
-        self.docker_run += 'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter\n'
-        self.docker_run += 'echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter\n'
-        self.docker_run += 'echo 0 > /proc/sys/net/ipv4/tcp_snycookies\n'
+        #self.docker_run += 'docker exec -ti %s /bin/bash\n' % self.name
+        #self.docker_run += 'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter\n'
+        #self.docker_run += 'echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter\n'
+        #self.docker_run += 'echo 0 > /proc/sys/net/ipv4/tcp_syncookies\n'
 
     def configure(self):
         "Generate routing configuration"
@@ -1572,14 +1601,15 @@ class TrafficGenerator(object):
             docker_run = '%s --name %s --hostname %s -p %d:22 %s' % \
                      (docker_run_cmd, self.name, self.name, self.host_ssh_port, router_image)
 
-        out = exec_remote_commands([(self.vm_ip, [docker_run])], [], 300)
+        out = exec_remote_commands([(self.vm_ip, [docker_run])], [])
+        
         self.state = 'init'
         self.add_ns()
 
         command_list = self.commands.split('\n')
         for command in command_list:
             if command:
-                out = exec_remote_commands([(self.vm_ip, [command])], [], 300)
+                out = exec_remote_commands([(self.vm_ip, [command])], [])
 
         self.state = 'running'
  
@@ -1686,10 +1716,10 @@ class TrafficGenerator(object):
             reference to docker netns
         """
         docker_pid = '%s %s' % (docker_pid_cmd, self.name)
-        out = exec_remote_commands([(self.vm_ip, [docker_pid])], [], 300)
+        out = exec_remote_commands([(self.vm_ip, [docker_pid])], [])
         pid = out[0]['results'][0]['output'].strip()
         ns_ln = 'ln -s /proc/%s/ns/net /var/run/netns/%s' % (pid, self.name)
-        out = exec_remote_commands([(self.vm_ip, [ns_ln])], [], 300)
+        out = exec_remote_commands([(self.vm_ip, [ns_ln])], [])
 
     def get_host_port(self):
         return (base_port + get_next_id())

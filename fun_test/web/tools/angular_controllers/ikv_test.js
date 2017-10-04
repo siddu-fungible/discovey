@@ -9,7 +9,7 @@
                 return;
             }
             $scope.processing = true;
-            uploadService.upload(newfile).then(function (response) {
+            uploadService.upload(newfile, ctrl.f1).then(function (response) {
                 //console.log("result", res);
                 $scope.processing = false;
                 $scope.keyHex = response.data;
@@ -43,7 +43,10 @@
     angular.module('tools').component('ikvTest', {
         templateUrl: '/static/ikv_test.html',
         controller: IkvTestController,
-        bindings: {}
+        bindings: {
+            f1: '=',
+            topologySessionId: '='
+        }
     })
         .directive("fileinput", [function () {
             return {
@@ -70,11 +73,11 @@
                 upload: upload
             });
 
-            function upload(file) {
+            function upload(file, f1) {
                 //$scope.processing = true;
                 let upl = $http({
                     method: 'POST',
-                    url: '/tools/tg/ikv_put', // /api/upload
+                    url: '/tools/tg/ikv_put/' + 1 + "/" + f1.name, // /api/upload
                     headers: {
                         'Content-Type': undefined
                     },

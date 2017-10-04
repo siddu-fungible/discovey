@@ -52,8 +52,8 @@ def ikv_get(key_hex):
     result = client_obj.command("likv get " + json.dumps(get_d))
     print result
     ba = bytearray.fromhex(result["data"]["value"])
-    relative_path =  "/uploads/" + key_hex
-    output_file_name = WEB_STATIC_DIR + relative_path
+    relative_path =  UPLOADS_RELATIVE_DIR + key_hex
+    output_file_name = WEB_UPLOADS_DIR + key_hex
     with open(output_file_name, "wb") as f:
         f.write(ba)
-    return "/static" + relative_path
+    return relative_path

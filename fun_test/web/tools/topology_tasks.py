@@ -25,7 +25,6 @@ def deploy_topology(session_id):
     topology_task = TopologyTask(session_id=session_id)
     topology_task.save()
 
-    '''
     topology_obj = topo.Topology()
     topology_obj.create(2, 4, 4)
     info = json.loads(topology_obj.getAccessInfo())
@@ -38,10 +37,7 @@ def deploy_topology(session_id):
             f1_obj.save()
         except Exception as ex:
             print(str(ex))
-    '''
-    
-    # topo.create()
-    # parse json and get list of f1s
+    '''    
 
     for f1 in f1s:
         f1_obj = F1(name=f1["name"], ip=f1["ip"], topology_session_id=session_id, dpcsh_port=5001)
@@ -49,6 +45,7 @@ def deploy_topology(session_id):
             f1_obj.save()
         except Exception as ex:
             print(str(ex))
+    '''
 
     topology_task.status = RESULTS["PASSED"]
     topology_task.save()

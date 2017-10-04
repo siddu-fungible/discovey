@@ -119,8 +119,9 @@ def upload(request):
     return HttpResponse(str(uploaded_file.data))
 
 @csrf_exempt
-def ikv_put(request):
+def ikv_put(request, topology_session_id, f1_id):
     uploaded_file = request.FILES['upload']
+    request_json = json.loads(request.body)
     bite = uploaded_file.read()
     key_hex = ikv_tasks.ikv_put(bite)
     return HttpResponse(key_hex)
