@@ -92,6 +92,7 @@ class FunTest:
         script_file_name_without_extension = self.script_file_name.replace(".py", "")
 
         self.test_metrics = collections.OrderedDict()
+        self.logging_selected_modules = []
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
                                           log_directory=logs_dir,
                                           log_file="{}.html".format(script_file_name_without_extension),
@@ -99,6 +100,12 @@ class FunTest:
         reload(sys)
         sys.setdefaultencoding('UTF8') #Needed for xml
         self.counter = 0  # Mostly used for testing
+
+    def log_selected_module(self, module_name):
+        self.logging_selected_modules.append(module_name.strip("*.py"))
+
+    def log_selected_modules(self, module_names):
+        self.logging_selected_modules.extend(module_names)
 
     def enable_debug(self):
         self.debug_enabled = True
@@ -157,9 +164,27 @@ class FunTest:
         message = "\nTraceback:\n" + message + "\n" + stack_s
         self.log(message=message, level=self.LOG_LEVEL_CRITICAL)
 
+
+    def _get_module_names(self, outer_frames):
+        module_names = [os.path.basename(x[1]).strip(".py") for x in outer_frames]
+        return module_names
+
     def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True):
+
+
         if trace_id:
             self.trace(id=trace_id, log=message)
+        if self.logging_selected_modules:
+            outer_frames = inspect.getouterframes(inspect.currentframe())
+            module_names = self._get_module_names(outer_frames=outer_frames)
+            found_match = False
+            for x in self.logging_selected_modules:
+                if x in module_names:
+                    found_match = True
+                    break
+            if not found_match:
+                return
+
         self.fun_xml_obj.log(log=message, newline=newline)
         if self.time_log:
             message = str(datetime.datetime.now()) + ":" + message
