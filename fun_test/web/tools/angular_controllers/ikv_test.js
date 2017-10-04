@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function IkvTestController($scope, $http, uploadService) {
+    function IkvTestController($scope, $http, uploadService, $sce) {
         let ctrl = this;
 
         $scope.$watch('file', function (newfile, oldfile) {
@@ -11,7 +11,7 @@
 
             uploadService.upload(newfile).then(function (response) {
                 //console.log("result", res);
-                $scope.key_hex = response.data;
+                $scope.keyHex = response.data;
             })
         });
 
@@ -19,9 +19,17 @@
             $scope.key_hex = null;
         };
 
+
+
         $scope.fetchFile = function () {
-            $http.get("/tools/tg/ikv_get/" + $scope.key_hex).then(function (response) {
+            $http.get("/tools/tg/ikv_get/" + $scope.keyHex).then(function (response) {
                 console.log(response.data);
+                $scope.filepreview = response.data;
+                var myVideo = document.getElementsByTagName('video')[0];
+                myVideo.src = $scope.filepreview;
+                myVideo.load();
+                myVideo.play();
+
             });
         }
 
@@ -38,8 +46,7 @@
         .directive("fileinput", [function () {
             return {
                 scope: {
-                    fileinput: "=",
-                    filepreview: "="
+                    fileinput: "="
                 },
                 link: function (scope, element, attributes) {
                     element.bind("change", function (changeEvent) {
@@ -47,7 +54,7 @@
                         let reader = new FileReader();
                         reader.onload = function (loadEvent) {
                             scope.$apply(function () {
-                                scope.filepreview = loadEvent.target.result;
+                                //scope.filepreview = loadEvent.target.result;
                             });
                         };
                         reader.readAsDataURL(scope.fileinput);
@@ -97,5 +104,10 @@
                     return (response);
                 }
             }
-        });
+        })
+    .filter("trustUrl", ['$sce', function ($sce) {
+        return function (recordingUrl) {
+            return $sce.trustAsResourceUrl(recordingUrl);
+        };
+    }]);
 })(window.angular);

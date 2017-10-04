@@ -1,6 +1,6 @@
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 import hashlib, json, os
-
+from fun_settings import WEB_STATIC_DIR
 
 
 def get_sha256_hex(value):
@@ -52,4 +52,8 @@ def ikv_get(key_hex):
     result = client_obj.command("likv get " + json.dumps(get_d))
     print result
     ba = bytearray.fromhex(result["data"]["value"])
-    return ba
+    relative_path =  "/uploads/" + key_hex
+    output_file_name = WEB_STATIC_DIR + relative_path
+    with open(output_file_name, "wb") as f:
+        f.write(ba)
+    return "/static" + relative_path

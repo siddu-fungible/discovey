@@ -44,7 +44,7 @@ def deploy_topology(session_id):
     # parse json and get list of f1s
 
     for f1 in f1s:
-        f1_obj = F1(name=f1["name"], ip=f1["ip"], topology_session_id=session_id)
+        f1_obj = F1(name=f1["name"], ip=f1["ip"], topology_session_id=session_id, dpcsh_port=5001)
         try:
             f1_obj.save()
         except Exception as ex:
