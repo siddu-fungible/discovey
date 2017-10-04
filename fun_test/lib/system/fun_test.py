@@ -133,6 +133,8 @@ class FunTest:
                 stack_found = True
         if not stack_found:
             s = traceback.format_stack()
+            if "format_stack" in s[-1]:
+                s = s[: -1]
 
         asserts_present = None
         s2 = list(s)
@@ -197,7 +199,7 @@ class FunTest:
         sys.stdout.write(str(message) + "\n")
         sys.stdout.flush()
 
-    def sleep(self, message, seconds):
+    def sleep(self, message, seconds=5):
         self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message)
         time.sleep(seconds)
 
