@@ -11,6 +11,22 @@ class DpcshClient:
         self.server_port = server_port
         self.sock = None
 
+    def sendall(self, data, expected_command_duration=3):
+        start = time.time()
+        while data:
+            elapsed_time = time.time() - start
+            if elapsed_time > expected_command_duration:
+                break
+            try:
+                sent = self.sock.send(data)
+                data = data[sent:]
+            except socket.error, e:
+                err = e.args[0]
+                if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
+                    time.sleep(0.1)
+                    continue
+
+
     def _read(self, expected_command_duration=2):
         start = time.time()
         chunk = 1024
@@ -45,7 +61,7 @@ class DpcshClient:
         result = {"status": False, "data": None, "error_message": None, "command": command}
         try:
             self._connect()
-            self.sock.sendall("{}\n".format(command))
+            self.sendall("{}\n".format(command))
             output = self._read(expected_command_duration)
             json_output = json.loads(output)
             result["status"] = True

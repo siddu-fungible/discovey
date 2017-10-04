@@ -120,3 +120,6 @@ def ikv_put(request):
     bite = uploaded_file.read()
     key_hex = ikv_tasks.ikv_put(bite)
     return HttpResponse(key_hex)
+
+def ikv_get(request, key_hex):
+    return HttpResponse(ikv_tasks.ikv_get(key_hex=key_hex))

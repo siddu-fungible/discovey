@@ -18,6 +18,13 @@
         ctrl.$onInit = function () {
             $scope.key_hex = null;
         };
+
+        $scope.fetchFile = function () {
+            $http.get("/tools/tg/ikv_get/" + $scope.key_hex).then(function (response) {
+                console.log(response.data);
+            });
+        }
+
     }
 
 

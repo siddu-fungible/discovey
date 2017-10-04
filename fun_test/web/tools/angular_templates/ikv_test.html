@@ -9,4 +9,8 @@
         <input id="file-upload" type="file" fileinput="file" filepreview="filepreview"/>
         <img ng-src="{{ filepreview }}" class="img-responsive" ng-show="filepreview"/>
     </div>
+
+    <div class="row">
+        <button ng-click="fetchFile()">Fetch file</button>
+    </div>
 </div>

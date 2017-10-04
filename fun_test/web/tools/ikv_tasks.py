@@ -43,5 +43,13 @@ def ikv_put(bite):
     print client_obj.command("likv open " + json.dumps(open_d))
 
     put_d = {"key_hex": key_hex, "value": input_value, "volume_id": 0}
-    client_obj.command("likv put " + json.dumps(put_d, ensure_ascii=False))
+    print client_obj.command("likv put " + json.dumps(put_d, ensure_ascii=False))
     return key_hex
+
+def ikv_get(key_hex):
+    client_obj = DpcshClient(server_address="10.1.20.67", server_port=5001)
+    get_d = {"key_hex": key_hex, "volume_id": 0}
+    result = client_obj.command("likv get " + json.dumps(get_d))
+    print result
+    ba = bytearray.fromhex(result["data"]["value"])
+    return ba

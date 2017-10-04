@@ -14,7 +14,8 @@ f1_urls = [
 
 tg_urls = [
     url(r'^$', views.tg),
-    url(r'^ikv_put', views.ikv_put)
+    url(r'^ikv_put', views.ikv_put),
+    url(r'^ikv_get/(.*)$', views.ikv_get)
 ]
 
 topology_urls = [
