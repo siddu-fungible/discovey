@@ -1,6 +1,7 @@
 {% load staticfiles %}
 
 <html>
+
 <head>
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css"
@@ -64,8 +65,9 @@
         }
 
         .table-nonfluid {
-           width: auto !important;
+            width: auto !important;
         }
+
         thead {
             background-color: #337ab7;
             color: white;
@@ -90,19 +92,24 @@
         <script src="{% static "f1_detail.js" %}"></script>
         <script src="{% static "fun_chart.js" %}"></script>
         <script src="{% static "ikv_test.js" %}"></script>
+        <script src="{% static "f1_traffic.js" %}"></script>
 
 
     {% endblock %}
 </head>
+
+
 <body ng-app="tools">
+
 <div class="tabs-wrapper">
+
     <ul class="navbar-nav nav" id="page-tab">
         <li class="nav-item active">
             <a aria-controls="2" class="nav-link" data-toggle="tab" href="#workflow-container" role="tab">Configure</a>
         </li>
-        <!-- li class="nav-item">
+        <li class="nav-item">
             <a aria-controls="3" class="nav-link" data-toggle="tab" href="#traffic-container" role="tab">Traffic</a>
-        </li-->
+        </li>
         <li class="nav-item">
             <a aria-controls="4" class="nav-link" data-toggle="tab" href="#stats-container" role="tab">Analytics</a>
         </li>
@@ -110,12 +117,15 @@
             <a aria-controls="1" class="nav-link" data-toggle="tab" href="#topology-container" role="tab">Topology</a>
         </li>
         <li class="nav-item">
-            <a aria-controls="5" id="details-nav-link" class="nav-link" data-toggle="tab" href="#details-container" role="tab">Details</a>
+            <a aria-controls="5" id="details-nav-link" class="nav-link" data-toggle="tab" href="#details-container"
+               role="tab">Details</a>
         </li>
     </ul>
 </div>
 
+
 <div class="content ng-cloak" ng-controller="AppController">
+    {% verbatim %}
     <div class="tab-content card">
 
         <div class="tab-pane" id="topology-container" role="tabpanel">
@@ -154,56 +164,58 @@
             </div>
         </div>
 
+        <div class="tab-pane" id="traffic-container" role="tabpanel">
+            <div class="row">
+                <div class="col-sm-4">
+                    <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
+                    <f1-traffic ng-repeat="f1 in f1s" f1="f1" work-flows="trafficWorkFlows" replace-ip-dot="replaceIpDot"
+                                set-common-traffic-work-flow="setCommonTrafficWorkFlow(selectedWorkFlow)"
+                                set-active-tab="setActiveTab(tabName, f1)"></f1-traffic>
 
-        <div class="tab-pane col-sm-4" id="traffic-container" role="tabpanel">
-            <div id="traffic-chart-div"></div>
-            <table class="table table-striped table-bordered table-list">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Target IP</th>
-                    <th>Target Port</th>
-                    <th>Profile</th>
-                </tr>
-                </thead>
-                <tbody id="tg-table-tbody">
-                {% verbatim %}
-                <tr ng-repeat="tg in traffic_generators">
-                    <td></td>
-                    <td>{{ tg.name }}</td>
-                    <td>
-                        <select class="form-control">
-                            <option ng-repeat="f1 in f1s" value={{ f1.ip }}>{{ f1.ip }}</option>
-                        </select>
-                    </td>
-                    <td>2002</td>
-                    <td>profile</td>
-                    {% endverbatim %}
-                </tbody>
-            </table>
+                </div>
+
+                <div class="col-sm-3">
+                    <div ng-if="commonTrafficWorkFlow" class="panel panel-default panel-table">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <label class="label label-primary">Parameters</label>
+                                <span>{{ commonWorkFlow.name }}</span>
+                            </div>
+                        </div>
+                        <div class="panel-body" ng-switch="commonTrafficWorkFlow.id">
+                            <div ng-switch-when="attach_tg">
+                                <attach-tg obj="attachTgInfo"></attach-tg>
+                            </div>
+                            <div ng-switch-when="ikv_test">
+                                <ikv-test obj="ikvTestInfo"></ikv-test>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </div>
 
-        {% verbatim %}
         <div class="tab-pane active" id="workflow-container" role="tabpanel">
             <div class="row">
                 <div class="col-sm-4">
-                <button ng-click="deployTopologyClick($event, $window)" type="button" id="topology-deploy-button"
-                        class="btn btn-success">
+                    <button ng-click="deployTopologyClick($event, $window)" type="button" id="topology-deploy-button"
+                            class="btn btn-success">
                     <span ng-show="deployButtonText == 'Deploying'"><i
                             class="glyphicon glyphicon-refresh spinning"></i></span>
-                    <span ng-show="deployButtonText == 'Deploy'"><i class="glyphicon glyphicon-play"></i></span>
-                    {{ deployButtonText }}
-                </button>
+                        <span ng-show="deployButtonText == 'Deploy'"><i class="glyphicon glyphicon-play"></i></span>
+                        {{ deployButtonText }}
+                    </button>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-4">
                     <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
-                    <f1 ng-repeat="f1 in f1s" f1="f1" work-flows="workFlows" replace-ip-dot="replaceIpDot" set-common-work-flow="setCommonWorkFlow(selectedWorkFlow)" set-active-tab="setActiveTab(tabName, f1)"></f1>
+                    <f1 ng-repeat="f1 in f1s" f1="f1" work-flows="workFlows" replace-ip-dot="replaceIpDot"
+                        set-common-work-flow="setCommonWorkFlow(selectedWorkFlow)"
+                        set-active-tab="setActiveTab(tabName, f1)"></f1>
 
                 </div>
-                {% endverbatim %}
 
 
                 <div class="col-sm-3">
@@ -211,13 +223,10 @@
                     <div ng-if="commonWorkFlow" class="panel panel-default panel-table">
                         <div class="panel-heading">
                             <div class="row">
-                                {% verbatim %}
                                 <label class="label label-primary">Parameters</label>
                                 <span>{{ commonWorkFlow.name }}</span>
-                                {% endverbatim %}
                             </div>
                         </div>
-                        {% verbatim %}
                         <div class="panel-body" ng-switch="commonWorkFlow.id">
                             <div ng-switch-when="demo"> Just for demo</div>
 
@@ -234,13 +243,14 @@
                                 <ikv-test obj="ikvTestInfo"></ikv-test>
                             </div>
                         </div>
-                        {% endverbatim %}
+
                     </div>
                 </div>
             </div>
 
         </div>
     </div> <!-- tabpanel -->
+    {% endverbatim %}
 </div>
 
 </body>

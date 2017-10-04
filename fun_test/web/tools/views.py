@@ -59,6 +59,10 @@ def workflows(request):
     workflows.append(workflow)
     workflow = {"name": "Setup Replication", "id": "replication"}
     workflows.append(workflow)
+    return HttpResponse(json.dumps(workflows))
+
+def traffic_workflows(request):
+    workflows = []
     workflow = {"name": "IKV test", "id": "ikv_test"}
     workflows.append(workflow)
     workflow = {"name": "Traffic", "id": "attach_tg"}

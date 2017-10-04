@@ -5,6 +5,7 @@ from . import views
 f1_urls = [
     url(r'^(\d+)$', views.f1),
     url(r'^workflows$', views.workflows),
+    url(r'^traffic_workflows$', views.traffic_workflows),
     url(r'^workflow/(.*)$', views.workflow),
     url(r'^start_workflow_step', views.start_workflow_step),
     url(r'^(.*)/(.*)$', views.metrics),

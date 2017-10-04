@@ -1,13 +1,17 @@
 <div id="ikv-test-div" class="workflow-parameters">
-    <div class="row">
+    <div class="row" ng-show="keyHex">
         <label>Key-hex:</label>
         {{ keyHex }}
     </div>
 
     <div class="row">
-        <label for="file-upload">Upload file:</label>
-        <input id="file-upload" type="file" fileinput="file"/>
+        <div ng-hide="processing">
+            <label for="file-upload">Upload file:</label>
+            <input id="file-upload" type="file" fileinput="file"/>
+        </div>
 
+
+        <span ng-show="processing"><i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>Processing..</span>
         <video ng-show="filepreview" width="640" height="480" controls="controls">
             <source src="{{filepreview| trustUrl}}" type="video/mp4" />
         </video>

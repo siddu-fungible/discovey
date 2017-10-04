@@ -55,9 +55,10 @@ function draw() {
             $scope.topologySessionId = null;
             $scope.deployButtonText = "Deploy";
             $scope.commonWorkFlow = null;
+            $scope.commonTrafficWorkFlow = null;
             $scope.f1s = [];
             $scope.workFlows = [];
-            $scope.traffic_generators = [];
+            $scope.trafficWorkFlows = [];
             $scope.currentF1 = null;
 
             $scope.createVolumeInfo = {
@@ -76,8 +77,13 @@ function draw() {
             };
 
             $scope.setCommonWorkFlow = function (selectedWorkFlow) {
-                console.log("Parent workflow selection");
+                //console.log("Parent workflow selection");
                 $scope.commonWorkFlow = selectedWorkFlow;
+            };
+
+            $scope.setCommonTrafficWorkFlow = function (selectedWorkFlow) {
+                //console.log("Parent workflow selection");
+                $scope.commonTrafficWorkFlow = selectedWorkFlow;
             };
 
             $scope.toggleF1Selection = function(f1){
@@ -153,8 +159,8 @@ function draw() {
                 $scope.workFlows = result.data;
             });
 
-            $http.get('/tools/tg').then(function (result) {
-                $scope.traffic_generators = result.data;
+            $http.get('/tools/f1/traffic_workflows').then(function (result) {
+                $scope.trafficWorkFlows = result.data;
             });
 
             return $scope;

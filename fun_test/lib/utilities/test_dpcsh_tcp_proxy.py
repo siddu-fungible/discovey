@@ -90,3 +90,6 @@ if __name__ == "__main__":
     result = dpcsh_client_obj.command(command="peek stats", expected_command_duration=3)
     if result["status"]:
         dpcsh_client_obj.print_result(result=result)
+
+    result = dpcsh_client_obj.command(command="peek stats", expected_command_duration=3)
+    i = 0

@@ -8,15 +8,17 @@
             if (angular.equals(newfile, oldfile)) {
                 return;
             }
-
+            $scope.processing = true;
             uploadService.upload(newfile).then(function (response) {
                 //console.log("result", res);
+                $scope.processing = false;
                 $scope.keyHex = response.data;
             })
         });
 
         ctrl.$onInit = function () {
             $scope.key_hex = null;
+            $scope.processing = null;
         };
 
 
@@ -69,6 +71,7 @@
             });
 
             function upload(file) {
+                //$scope.processing = true;
                 let upl = $http({
                     method: 'POST',
                     url: '/tools/tg/ikv_put', // /api/upload
