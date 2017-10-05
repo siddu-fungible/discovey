@@ -79,7 +79,6 @@ class FunTest:
             logs_dir = LOGS_DIR
 
         self.initialized = False
-        self.time_log = None
         self.debug_enabled = False
         self.function_tracing_enabled = False
         self.buf = None
@@ -101,8 +100,19 @@ class FunTest:
         sys.setdefaultencoding('UTF8') #Needed for xml
         self.counter = 0  # Mostly used for testing
 
+        self.log_timestamps = False
+
+    def log_enable_timestamps(self):
+        self.log_timestamps = True
+
+    def log_disable_timestamps(self):
+        self.log_timestamps = False
+
     def log_selected_module(self, module_name):
         self.logging_selected_modules.append(module_name.strip("*.py"))
+
+    def log_disable_selective(self):
+        self.logging_selected_modules = []
 
     def log_selected_modules(self, module_names):
         self.logging_selected_modules.extend(module_names)
@@ -172,6 +182,7 @@ class FunTest:
         return module_name in self.logging_selected_modules
 
     def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True, calling_module=None):
+
         if trace_id:
             self.trace(id=trace_id, log=message)
         if self.logging_selected_modules:
@@ -182,10 +193,10 @@ class FunTest:
                 module_name = calling_module
             if (not module_name == "fun_test") and not self._is_selected_module(module_name=module_name):
                 return
+            else:
+                message = "{}: {}".format(module_name, message)
 
         self.fun_xml_obj.log(log=message, newline=newline)
-        if self.time_log:
-            message = str(datetime.datetime.now()) + ":" + message
 
         level_name = ""
         if level == self.LOG_LEVEL_CRITICAL:
@@ -194,6 +205,10 @@ class FunTest:
             level_name = "DEBUG"
         if level is not self.LOG_LEVEL_NORMAL:
             message = "\n%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
+
+        if self.log_timestamps:
+            message = "[{}] {}".format(str(datetime.datetime.now()), message)
+
         nl = ""
         if newline:
             nl = "\n"
