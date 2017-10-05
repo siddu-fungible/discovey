@@ -6,16 +6,16 @@
                 ng-change="tgSelection(selectedTg)">
         </select>
     </div>
-    <div ng-switch="selectedTg">
+    <div ng-switch="selectedTg" class="row">
         <div ng-switch-when="fio">
             <label class="form-inline">Input 1</label>
             <input class="form-control" type="text" value="">
             <label class="form-inline">Input 2</label>
             <input class="form-control" type="text" value="">
-            <button type="button" class="btn btn-success btn-sm">
+            <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="play()">
                 <span class="glyphicon glyphicon-play"></span> Play
             </button>
-            <button type="button" class="btn btn-danger btn-sm">
+            <button ng-show="playing" type="button" class="btn btn-danger btn-sm" ng-click="stop()">
                 <span class="glyphicon glyphicon-stop"></span> Stop
             </button>
         </div>
@@ -24,10 +24,10 @@
             <input class="form-control" type="text" value="">
             <label class="form-inline">Input 4</label>
             <input class="form-control" type="text" value="">
-            <button type="button" class="btn btn-success btn-sm">
+            <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="play()">
                 <span class="glyphicon glyphicon-play"></span> Play
             </button>
-            <button type="button" class="btn btn-danger btn-sm">
+            <button ng-show="playing" type="button" class="btn btn-danger btn-sm" ng-click="stop()">
                 <span class="glyphicon glyphicon-stop"></span> Stop
             </button>
         </div>

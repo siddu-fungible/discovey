@@ -184,7 +184,7 @@
                         </div>
                         <div class="panel-body" ng-switch="commonTrafficWorkFlow.id">
                             <div ng-switch-when="attach_tg">
-                                <attach-tg obj="attachTgInfo"></attach-tg>
+                                <attach-tg f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="attachTgInfo"></attach-tg>
                             </div>
                             <div ng-switch-when="ikv_test">
                                 <ikv-test f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="ikvTestInfo"></ikv-test>
@@ -235,9 +235,6 @@
                             </div>
                             <div ng-switch-when="attach_volume">
                                 <attach-volume></attach-volume>
-                            </div>
-                            <div ng-switch-when="attach_tg">
-                                <attach-tg obj="attachTgInfo"></attach-tg>
                             </div>
                             <div ng-switch-when="ikv_test">
                                 <ikv-test obj="ikvTestInfo"></ikv-test>

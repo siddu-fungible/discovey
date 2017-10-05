@@ -3,10 +3,11 @@ import json
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from web.tools.models import Session, F1, Tg, TopologyTask
+from web.tools.models import Session, F1, Tg, TopologyTask, TrafficTask
 from rq import Queue
 from redis import Redis
 from topology_tasks import deploy_topology
+from traffic_tasks import start_fio
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 from fun_global import RESULTS
 import ikv_tasks
@@ -48,6 +49,12 @@ def f1(request, session_id):
         f1 = {"name": f1_record.name, "ip": f1_record.ip, "mgmt_ssh_port": f1_record.mgmt_ssh_port, "dataplane_ip": f1_record.dataplane_ip, "dpcsh_port": f1_record.dpcsh_port}
         f1s.append(f1)
     return HttpResponse(json.dumps(f1s))
+
+def traffic_task_status(request, session_id):
+    result = {}
+    traffic_task = TrafficTask.objects.get(session_id=session_id)
+    result["status"] = traffic_task.status
+    return HttpResponse(json.dumps(result))
 
 def workflows(request):
     workflows = []
@@ -118,27 +125,47 @@ def upload(request):
     print data
     return HttpResponse(str(uploaded_file.data))
 
+def _get_f1_record(topology_session_id, f1_id):
+    f1_record = F1.objects.get(topology_session_id=int(topology_session_id), name=f1_id)
+    return f1_record
+
+
 @csrf_exempt
 def ikv_put(request, topology_session_id, f1_id):
     uploaded_file = request.FILES['upload']
     bite = uploaded_file.read()
-    f1_records = F1.objects.filter(topology_session_id=int(topology_session_id))
-    server_ip = None
-    server_port = None
-    for f1_record in f1_records:
-        if f1_id == f1_record.name:
-            server_ip = f1_record.ip
-            server_port = f1_record.dpcsh_port
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
     key_hex = ikv_tasks.ikv_put(bite, server_ip, server_port)
     return HttpResponse(key_hex)
 
+
 def ikv_get(request, key_hex, topology_session_id, f1_id):
-    f1_records = F1.objects.filter(topology_session_id=int(topology_session_id))
-    server_ip = None
-    server_port = None
-    for f1_record in f1_records:
-        if f1_id == f1_record.name:
-            server_ip = f1_record.ip
-            server_port = f1_record.dpcsh_port
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
     
     return HttpResponse(ikv_tasks.ikv_get(key_hex=key_hex, server_ip=server_ip, server_port=server_port))
+
+@csrf_exempt
+def fio(request, topology_session_id, f1_id):
+    if TrafficTask.objects.filter(session_id=topology_session_id).exists():
+        task = TrafficTask.objects.filter(session_id=topology_session_id).delete()
+
+    traffic_task = TrafficTask(session_id=topology_session_id)
+    traffic_task.save()
+    request_json = json.loads(request.body)
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=request_json['f1']['name'])
+    q = Queue(connection=Redis())
+
+
+    f1_info = {}
+    f1_info["name"] = f1_record.name
+    f1_info["ip"] = f1_record.ip
+    f1_info["dataplane_ip"] = f1_record.dataplane_ip
+    f1_info["dpcsh_port"] = f1_record.dpcsh_port
+
+    q.enqueue(start_fio, topology_session_id, f1_info)
+    return HttpResponse("OK")
+
