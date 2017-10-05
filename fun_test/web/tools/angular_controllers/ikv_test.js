@@ -9,7 +9,7 @@
                 return;
             }
             $scope.processing = true;
-            uploadService.upload(newfile, ctrl.f1).then(function (response) {
+            uploadService.upload(newfile, ctrl.f1, ctrl.topologySessionId).then(function (response) {
                 //console.log("result", res);
                 $scope.processing = false;
                 $scope.keyHex = response.data;
@@ -73,11 +73,11 @@
                 upload: upload
             });
 
-            function upload(file, f1) {
+            function upload(file, f1, sessionId) {
                 //$scope.processing = true;
                 let upl = $http({
                     method: 'POST',
-                    url: '/tools/tg/ikv_put/' + 1 + "/" + f1.name, // /api/upload
+                    url: '/tools/tg/ikv_put/' + sessionId + "/" + f1.name, // /api/upload
                     headers: {
                         'Content-Type': undefined
                     },

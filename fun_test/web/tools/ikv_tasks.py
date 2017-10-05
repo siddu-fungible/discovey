@@ -28,8 +28,8 @@ def verifiy_md5sum(file_name1, file_name2):
     return file_name1_md5 == file_name2_md5
 
 
-def ikv_put(bite):
-    client_obj = DpcshClient(server_address="10.1.20.67", server_port=5001)
+def ikv_put(bite, server_ip, server_port):
+    client_obj = DpcshClient(server_address=server_ip, server_port=server_port)
     input_value = get_hex(bite)
     key_hex = get_sha256_hex(value=input_value)
     create_d = {"init_lvs_bytes": 1048576,
