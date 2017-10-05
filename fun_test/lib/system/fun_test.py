@@ -165,24 +165,22 @@ class FunTest:
         self.log(message=message, level=self.LOG_LEVEL_CRITICAL)
 
 
-    def _get_module_names(self, outer_frames):
-        module_names = [os.path.basename(x[1]).strip(".py") for x in outer_frames]
-        return module_names
+    def _get_module_name(self, outer_frames):
+        return os.path.basename(outer_frames[0][1]).strip(".py")
 
-    def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True):
+    def _is_selected_module(self, module_name):
+        return module_name in self.logging_selected_modules
 
-
+    def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True, calling_module=None):
         if trace_id:
             self.trace(id=trace_id, log=message)
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            module_names = self._get_module_names(outer_frames=outer_frames)
-            found_match = False
-            for x in self.logging_selected_modules:
-                if x in module_names:
-                    found_match = True
-                    break
-            if not found_match:
+            if not calling_module:
+                module_name = self._get_module_name(outer_frames=outer_frames[1:])
+            else:
+                module_name = calling_module
+            if (not module_name == "fun_test") and not self._is_selected_module(module_name=module_name):
                 return
 
         self.fun_xml_obj.log(log=message, newline=newline)
@@ -204,16 +202,24 @@ class FunTest:
             sys.stdout.flush()
 
     def log_section(self, message):
+        calling_module = None
+        if self.logging_selected_modules:
+            outer_frames = inspect.getouterframes(inspect.currentframe())
+            calling_module = self._get_module_name(outer_frames=outer_frames[1:])
         s = "\n{}\n{}\n".format(message, "=" * len(message))
-        self.log(s)
+        self.log(s, calling_module=calling_module)
 
     def write(self, message):
         self.buf = message
 
     def flush(self, trace_id=None, stdout=True):
+        calling_module = None
+        if self.logging_selected_modules:
+            outer_frames = inspect.getouterframes(inspect.currentframe())
+            calling_module = self._get_module_name(outer_frames=outer_frames[1:])
         if trace_id:
             self.trace(id=trace_id, log=self.buf)
-        self.log(self.buf, newline=False, stdout=stdout)
+        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module)
         # sys.stdout.write(self.buf)
         self.buf = ""
 

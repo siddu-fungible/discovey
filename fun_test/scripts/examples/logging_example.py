@@ -12,6 +12,8 @@ fun_test.log("No log")
 
 fun_test.log_selected_module("logging_example")
 fun_test.log("Module specific log")
+fun_test.log_section("Hola")
+fun_test._print_summary()
 
 fun_test.test_assert(2 > 1, "Expression 1")
 fun_test.test_assert_expected(actual=3, expected=3, message="Expected Expression")
