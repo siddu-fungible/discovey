@@ -132,5 +132,13 @@ def ikv_put(request, topology_session_id, f1_id):
     key_hex = ikv_tasks.ikv_put(bite, server_ip, server_port)
     return HttpResponse(key_hex)
 
-def ikv_get(request, key_hex):
-    return HttpResponse(ikv_tasks.ikv_get(key_hex=key_hex))
+def ikv_get(request, key_hex, topology_session_id, f1_id):
+    f1_records = F1.objects.filter(topology_session_id=int(topology_session_id))
+    server_ip = None
+    server_port = None
+    for f1_record in f1_records:
+        if f1_id == f1_record.name:
+            server_ip = f1_record.ip
+            server_port = f1_record.dpcsh_port
+    
+    return HttpResponse(ikv_tasks.ikv_get(key_hex=key_hex, server_ip=server_ip, server_port=server_port))

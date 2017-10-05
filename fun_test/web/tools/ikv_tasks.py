@@ -1,6 +1,6 @@
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 import hashlib, json, os
-from fun_settings import WEB_STATIC_DIR
+from fun_settings import *
 
 
 def get_sha256_hex(value):
@@ -46,8 +46,8 @@ def ikv_put(bite, server_ip, server_port):
     print client_obj.command("likv put " + json.dumps(put_d, ensure_ascii=False))
     return key_hex
 
-def ikv_get(key_hex):
-    client_obj = DpcshClient(server_address="10.1.20.67", server_port=5001)
+def ikv_get(key_hex, server_ip, server_port):
+    client_obj = DpcshClient(server_address=server_ip, server_port=server_port)
     get_d = {"key_hex": key_hex, "volume_id": 0}
     result = client_obj.command("likv get " + json.dumps(get_d))
     print result

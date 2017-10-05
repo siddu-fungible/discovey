@@ -24,7 +24,7 @@
 
 
         $scope.fetchFile = function () {
-            $http.get("/tools/tg/ikv_get/" + $scope.keyHex).then(function (response) {
+            $http.get("/tools/tg/ikv_get/" + $scope.keyHex + "/" + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function (response) {
                 console.log(response.data);
                 $scope.filepreview = response.data;
                 var myVideo = document.getElementsByTagName('video')[0];
