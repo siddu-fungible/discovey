@@ -123,13 +123,12 @@ def ikv_put(request, topology_session_id, f1_id):
     uploaded_file = request.FILES['upload']
     bite = uploaded_file.read()
     f1_records = F1.objects.filter(topology_session_id=int(topology_session_id))
-    f1_id = None
     server_ip = None
     server_port = None
     for f1_record in f1_records:
-        if f1_id == f1.record.name:
-            server_ip = f1.ip
-            server_port = f1.port
+        if f1_id == f1_record.name:
+            server_ip = f1_record.ip
+            server_port = f1_record.dpcsh_port
     key_hex = ikv_tasks.ikv_put(bite, server_ip, server_port)
     return HttpResponse(key_hex)
 

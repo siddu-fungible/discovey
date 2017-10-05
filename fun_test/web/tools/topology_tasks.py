@@ -2,6 +2,7 @@ import os, django, topo, json
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 from fun_global import RESULTS
+from fun_settings import *
 from web.tools.models import Session, F1, Tg, TopologyTask
 
 f1s = [
@@ -26,9 +27,16 @@ def deploy_topology(session_id):
     topology_task.save()
 
     topology_obj = topo.Topology()
+    pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
+    topology_obj.load(filename=pickle_file)
+    try:
+        topology_obj.cleanup()
+    except:
+        pass
+    topology_obj = topo.Topology()
     topology_obj.create(2, 4, 4)
     info = json.loads(topology_obj.getAccessInfo())
-    topology_obj.save()
+    topology_obj.save(filename=pickle_file)
     # topology_obj.cleanup()
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
     for f1_name, f1_info in info["F1"].items():

@@ -3,7 +3,7 @@ offLeafs = 0
 offSpines = 0 
 
 flat_topo = False
-network_only = True 
+network_only = False 
 
 if network_only:
     leaf_container = 'frr:v2'

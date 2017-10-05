@@ -54,6 +54,7 @@ class DpcshClient:
     def _connect(self):
         if not self.sock:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print("Connecting to {} {}".format(self.server_address, self.server_port))
             self.sock.connect((self.server_address, self.server_port))
             fcntl.fcntl(self.sock, fcntl.F_SETFL, os.O_NONBLOCK)
 
