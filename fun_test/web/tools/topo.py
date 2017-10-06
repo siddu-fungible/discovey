@@ -691,7 +691,7 @@ class VM(object):
             if self.role == 'leaf' and not network_only:
                 print 'waiting for file based disk to be created\n'
             if self.role == 'leaf':
-                time.sleep(10)
+                time.sleep(60)
                 for rack in self.racks:
                     rack.configureNodes()
                 self.pauseRacks([rack.rack_id for rack in self.racks])

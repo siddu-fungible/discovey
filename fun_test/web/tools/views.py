@@ -205,7 +205,7 @@ def create_blt_volume(request, topology_session_id, f1_id):
     capacity = request_json["capacity"]
     block_size = request_json["block_size"]
     name = request_json["name"]
-    this_uuid = str(uuid.uuid4())
+    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
 
     create_dict = OrderedDict()
     create_dict["class"] = "volume"
@@ -312,3 +312,12 @@ def attach_volume(request, topology_session_id, f1_id):
     if result["status"]:
         i = result["data"]
     return HttpResponse("OK")
+
+def storage_volumes(request, topology_session_id, f1_id):
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+    return HttpResponse(json.dumps(dpcsh_client.command(command="peek storage/volumes")))
+

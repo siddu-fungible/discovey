@@ -25,4 +25,13 @@
             <input class="form-control" type="number" value={{ capacity }} ng-model="capacity">
         </div>
     </form>
+    <div ng-if="volumeUuids.length" class="row">
+        <label>Raw Volumes</label>
+        <table class="table table-bordered">
+            <th>UUID</th>
+            <tr ng-repeat="volumeUuid in volumeUuids">
+                <td>{{ volumeUuid }}</td>
+            </tr>
+        </table>
+    </div>
 </div>

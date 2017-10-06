@@ -10,6 +10,7 @@
             $scope.capacity = 1073741824;
             $scope.blockSize = 4096;
             $scope.errorMessage = null;
+            $scope.volumeUuids = [];
            
         };
 
@@ -25,8 +26,19 @@
                 if (!response.data["status"]) {
                     $scope.errorMessage = response.data["error_message"];
                     $scope.status = "fail";
+                } else {
+                    $http.get('/tools/f1/storage_volumes/' + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function(volumeResponse) {
+                        let localBlock = volumeResponse.data.data.VOL_TYPE_BLK_LOCAL_THIN;
+                        angular.forEach(localBlock, function (value, key) {
+                            $scope.volumeUuids.push(key);
+                        });
+                    });
                 }
             })
+            .catch(function(data) {
+                $scope.status = "fail";
+                $scope.errorMessage = data;
+            });
         };
 
     }
