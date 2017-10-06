@@ -94,6 +94,7 @@
         <script src="{% static "ikv_test.js" %}"></script>
         <script src="{% static "f1_traffic.js" %}"></script>
         <script src="{% static "create_rds_volume.js" %}"></script>
+        <script src="{% static "create_replica_volume.js" %}"></script>
 
 
     {% endblock %}
@@ -241,6 +242,9 @@
                             </div>
                             <div ng-switch-when="create_rds_volume">
                                 <create-rds-volume f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></create-rds-volume>
+                            </div>
+                            <div ng-switch-when="create_replica_volume">
+                                <create-replica-volume f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></create-replica-volume>
                             </div>
                             <div ng-switch-when="attach_volume">
                                 <attach-volume></attach-volume>

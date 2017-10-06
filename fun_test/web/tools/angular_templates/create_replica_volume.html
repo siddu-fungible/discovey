@@ -1,0 +1,18 @@
+<div id="create-volume-div" class="workflow-parameters">
+
+    <button class="btn btn-secondary" ng-click="clickApply()">Apply</button>
+    <form>
+        <div class="form-group row">
+            <label>Name</label>
+            <input class="form-control" type="text" value={{ name }} ng-model="name">
+        </div>
+        <div class="form-group row">
+            <label>Block Size</label>
+            <input class="form-control" type="number" value={{ blockSize }} ng-model="blockSize">
+        </div>
+        <div class="form-group row">
+            <label>Size</label>
+            <input class="form-control" type="number" value={{ capacity }} ng-model="capacity">
+        </div>
+    </form>
+</div>
