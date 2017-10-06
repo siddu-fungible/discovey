@@ -60,13 +60,13 @@ def traffic_task_status(request, session_id):
 
 def workflows(request):
     workflows = []
-    workflow = {"name": "Create Raw Volume", "id": "create_volume"}
+    workflow = {"name": "Create BLT Volume", "id": "create_volume"}
+    workflows.append(workflow)
+    workflow = {"name": "Create RDS Volume", "id": "create_rds_volume"}
     workflows.append(workflow)
     workflow = {"name": "Attach Volume", "id": "attach_volume"}
     workflows.append(workflow)
-    workflow = {"name": "Demo", "id": "demo"}
-    workflows.append(workflow)
-    workflow = {"name": "Setup Replication", "id": "replication"}
+    workflow = {"name": "Create Replica Volume", "id": "create_replica_volume"}
     workflows.append(workflow)
     return HttpResponse(json.dumps(workflows))
 
@@ -233,6 +233,63 @@ def create_rds_volume(request, topology_session_id, f1_id):
                               "remote_ip": remote_ip,
                               "remote_nsid": remote_nsid}}
 
+    command = "storage {}".format(json.dumps(create_dict))
+    result = dpcsh_client.command(command=command)
+    if result["status"]:
+        i = result["data"]
+    return HttpResponse("OK")
+
+@csrf_exempt
+def create_replica_volume(request, topology_session_id, f1_id):
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+
+    request_json = json.loads(request.body)
+    capacity = request_json["capacity"]
+    block_size = request_json["block_size"]
+    name = request_json["name"]
+    this_uuid = str(uuid.uuid4())
+    pvol_id = request_json["pvol_id"]
+
+    create_dict = {"class": "volume",
+                   "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                   "params": {"type": "VOL_TYPE_BLK_REPLICA",
+                              "capacity": capacity,
+                              "block_size": block_size,
+                              "uuid": this_uuid,
+                              "name": name,
+                              "min_replicas_insync": 1,
+                              "pvol_type": "VOL_TYPE_BLK_RDS",
+                              "pvol_id": pvol_id}}
+    command = "storage {}".format(json.dumps(create_dict))
+    result = dpcsh_client.command(command=command)
+    if result["status"]:
+        i = result["data"]
+    return HttpResponse("OK")
+
+
+@csrf_exempt
+def attach_volume(request, topology_session_id, f1_id):
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+
+    request_json = json.loads(request.body)
+    this_uuid = request_json["uuid"]
+    nsid = request_json["nsid"]
+    remote_ip = request_json["remote_ip"]
+
+    create_dict = {"class": "controller",
+                   "opcode": "ATTACH",
+                   "params": {"huid": 0,
+                              "ctlid": 0,
+                              "fnid": 5,
+                              "nsid": nsid,
+                              "uuid": this_uuid,
+                              "remote_ip": remote_ip}}
     command = "storage {}".format(json.dumps(create_dict))
     result = dpcsh_client.command(command=command)
     if result["status"]:
