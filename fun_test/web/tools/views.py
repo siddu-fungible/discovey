@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-import json
+import json, uuid
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -169,3 +169,61 @@ def fio(request, topology_session_id, f1_id):
     q.enqueue(start_fio, topology_session_id, f1_info)
     return HttpResponse("OK")
 
+
+@csrf_exempt
+def create_blt_volume(request, topology_session_id, f1_id):
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+
+    request_json = json.loads(request.body)
+    capacity = request_json["capacity"]
+    block_size = request_json["block_size"]
+    name = request_json["name"]
+    this_uuid = str(uuid.uuid4())
+
+    create_dict = {"class": "volume",
+                   "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                   "params": {"type": "VOL_TYPE_BLK_LOCAL_THIN",
+                              "capacity": capacity,
+                              "block_size": block_size,
+                              "uuid": this_uuid,
+                              "name": name}}
+    command = "storage {}".format(json.dumps(create_dict))
+    result = dpcsh_client.command(command=command)
+    if result["status"]:
+        i = result["data"]
+    return HttpResponse("OK")
+
+
+@csrf_exempt
+def create_rds_volume(request, topology_session_id, f1_id):
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+
+    request_json = json.loads(request.body)
+    capacity = request_json["capacity"]
+    block_size = request_json["block_size"]
+    name = request_json["name"]
+    remote_ip = request_json["remote_ip"]
+    remote_nsid = request_json["remote_nsid"]
+    this_uuid = str(uuid.uuid4())
+
+    create_dict = {"class": "volume",
+                   "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                   "params": {"type": "VOL_TYPE_BLK_RDS",
+                              "capacity": capacity,
+                              "block_size": block_size,
+                              "uuid": this_uuid,
+                              "name": name,
+                              "remote_ip": remote_ip,
+                              "remote_nsid": remote_nsid}}
+
+    command = "storage {}".format(json.dumps(create_dict))
+    result = dpcsh_client.command(command=command)
+    if result["status"]:
+        i = result["data"]
+    return HttpResponse("OK")

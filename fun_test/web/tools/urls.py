@@ -8,10 +8,12 @@ f1_urls = [
     url(r'^traffic_workflows$', views.traffic_workflows),
     url(r'^workflow/(.*)$', views.workflow),
     url(r'^start_workflow_step', views.start_workflow_step),
+    url(r'^create_blt_volume/(.*)/(.*)$', views.create_blt_volume),
     url(r'^(.*)/(.*)$', views.metrics),
     url(r'^detail$', views.f1_details),
     url(r'^upload$', views.upload)
 ]
+
 
 tg_urls = [
     url(r'^$', views.tg),

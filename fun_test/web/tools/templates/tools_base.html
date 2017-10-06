@@ -212,7 +212,7 @@
                 <div class="col-sm-4">
                     <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
                     <f1 ng-repeat="f1 in f1s" f1="f1" work-flows="workFlows" replace-ip-dot="replaceIpDot"
-                        set-common-work-flow="setCommonWorkFlow(selectedWorkFlow)"
+                        set-common-work-flow="setCommonWorkFlow(selectedWorkFlow, f1)"
                         set-active-tab="setActiveTab(tabName, f1)"></f1>
 
                 </div>
@@ -231,7 +231,7 @@
                             <div ng-switch-when="demo"> Just for demo</div>
 
                             <div ng-switch-when="create_volume">
-                                <create-volume obj="createVolumeInfo"></create-volume>
+                                <create-volume f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="createVolumeInfo"></create-volume>
                             </div>
                             <div ng-switch-when="attach_volume">
                                 <attach-volume></attach-volume>

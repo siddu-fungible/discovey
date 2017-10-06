@@ -77,9 +77,10 @@ function draw() {
 
             };
 
-            $scope.setCommonWorkFlow = function (selectedWorkFlow) {
+            $scope.setCommonWorkFlow = function (selectedWorkFlow, f1) {
                 //console.log("Parent workflow selection");
                 $scope.commonWorkFlow = selectedWorkFlow;
+                $scope.currentWorkFlowF1 = f1;
             };
 
             $scope.setCommonTrafficWorkFlow = function (selectedWorkFlow, f1) {
