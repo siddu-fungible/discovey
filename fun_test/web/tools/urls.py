@@ -24,6 +24,7 @@ tg_urls = [
 topology_urls = [
     url(r'^$', views.topology),
     url(r'^status/(.*)$', views.topology_status),
+    url(r'^cleanup$', views.topology_cleanup)
 ]
 
 urlpatterns = [

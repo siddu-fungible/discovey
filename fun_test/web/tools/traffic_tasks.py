@@ -11,6 +11,21 @@ def start_fio(session_id, f1_record):
     traffic_task = TrafficTask.objects.get(session_id=session_id)
     time.sleep(5)
     print(f1_record)
+
+
+
+    topology_obj = topo.Topology()
+    pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
+    topology_obj.load(filename=pickle_file)
+
+    info = json.loads(topology_obj.getAccessInfo())
+    topology_obj.save(filename=pickle_file)
+
+    print "Info:" + json.dumps(info, indent=4) + ":EINFO"
+
+    tg = topology_obj.attachTG(f1_record["name"])
+    out = tg.exec_command('fio --help')
+    print("Output:" + out)
     traffic_task.status = RESULTS["PASSED"]
     traffic_task.save()
 

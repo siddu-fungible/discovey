@@ -10,7 +10,9 @@ from topology_tasks import deploy_topology
 from traffic_tasks import start_fio
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 from fun_global import RESULTS
+from fun_settings import *
 import ikv_tasks
+import topo
 
 tgs = [
     {
@@ -109,8 +111,17 @@ def topology(request):
     session = {"session_id": session_obj.session_id}
     q = Queue(connection=Redis())
     q.enqueue(deploy_topology, session_obj.session_id)
-
     return HttpResponse(json.dumps(session))
+
+def topology_cleanup(request):
+    topology_obj = topo.Topology()
+    pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
+    topology_obj.load(filename=pickle_file)
+    try:
+        topology_obj.cleanup()
+    except:
+        pass
+    return HttpResponse("OK")
 
 def topology_status(request, session_id):
     result = {}
