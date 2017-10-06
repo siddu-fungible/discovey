@@ -153,6 +153,10 @@ function draw() {
 
             };
 
+            $scope.cleanupTopologyClick = function () {
+                $http.get('/tools/topology/cleanup').then(function (result) {
+                });
+            };
             $scope.testClick = function (event) {
               console.log("TestClick");
               console.log($scope.commonWorkFlow);

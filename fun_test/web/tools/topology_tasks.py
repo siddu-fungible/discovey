@@ -26,7 +26,6 @@ def deploy_topology(session_id):
     topology_task = TopologyTask(session_id=session_id)
     topology_task.save()
 
-    '''
     topology_obj = topo.Topology()
     pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
     topology_obj.load(filename=pickle_file)
@@ -48,13 +47,13 @@ def deploy_topology(session_id):
             
     '''
 
-
     for f1 in f1s:
         f1_obj = F1(name=f1["name"], ip=f1["ip"], topology_session_id=session_id, dpcsh_port=5001)
         try:
             f1_obj.save()
         except Exception as ex:
             print(str(ex))
+    '''
 
 
     topology_task.status = RESULTS["PASSED"]
