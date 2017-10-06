@@ -10,7 +10,7 @@ if network_only:
 elif flat_topo:
     leaf_container = 'psim:v1'
 else:
-    leaf_container = 'demo:v2'
+    leaf_container = 'demo:v4'
 #leaf_container = 'text:latest'
 
 vm_ips = ['10.138.0.3', '10.138.0.4', '10.138.0.5'] 

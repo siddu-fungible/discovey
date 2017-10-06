@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-import json, uuid
+import json, uuid, os
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -13,6 +13,7 @@ from fun_global import RESULTS
 from fun_settings import *
 import ikv_tasks
 import topo
+from collections import OrderedDict
 
 tgs = [
     {
@@ -119,8 +120,13 @@ def topology_cleanup(request):
     topology_obj.load(filename=pickle_file)
     try:
         topology_obj.cleanup()
+        os.remove(pickle_file)
     except:
         pass
+    try:
+        os.remove(pickle_file)
+    except Exception as ex:
+        print(str(ex))
     return HttpResponse("OK")
 
 def topology_status(request, session_id):
@@ -189,23 +195,34 @@ def create_blt_volume(request, topology_session_id, f1_id):
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
 
     request_json = json.loads(request.body)
+
+
+    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.ip}}
+    command = "storage {}".format(json.dumps(ctrl_dict))
+    result = dpcsh_client.command(command=command)
+    print("ctrl command: " + str(result))
+
     capacity = request_json["capacity"]
     block_size = request_json["block_size"]
     name = request_json["name"]
     this_uuid = str(uuid.uuid4())
 
-    create_dict = {"class": "volume",
-                   "opcode": "VOL_ADMIN_OPCODE_CREATE",
-                   "params": {"type": "VOL_TYPE_BLK_LOCAL_THIN",
-                              "capacity": capacity,
-                              "block_size": block_size,
-                              "uuid": this_uuid,
-                              "name": name}}
+    create_dict = OrderedDict()
+    create_dict["class"] = "volume"
+    create_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
+    create_dict["params"] = OrderedDict()
+    create_dict["params"]["type"] = "VOL_TYPE_BLK_LOCAL_THIN"
+    create_dict["params"]["capacity"] = capacity
+    create_dict["params"]["block_size"] = block_size
+    create_dict["params"]["uuid"] = this_uuid
+    create_dict["params"]["name"] = name
     command = "storage {}".format(json.dumps(create_dict))
     result = dpcsh_client.command(command=command)
+    data = {}
     if result["status"]:
-        i = result["data"]
-    return HttpResponse("OK")
+        data = result["data"]
+    print("create command: " + str(result))
+    return HttpResponse(json.dumps(result))
 
 
 @csrf_exempt

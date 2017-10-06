@@ -25,7 +25,8 @@ def start_fio(session_id, f1_record):
 
     tg = topology_obj.attachTG(f1_record["name"])
     out = tg.exec_command('fio --help')
-    print("Output:" + out)
+    topology_obj.save(filename=pickle_file)
+    print("Output:" + str(out))
     traffic_task.status = RESULTS["PASSED"]
     traffic_task.save()
 

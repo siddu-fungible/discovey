@@ -1214,7 +1214,7 @@ sg109
 S'en\n conf t\nhostname node-1-2\npassword zebra \nline vty\nrouter bgp 64513 \n  bgp router-id 10.0.0.17 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.168.0.1 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.1 addpath-tx-all-paths \n  neighbor 192.168.0.14 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.14 addpath-tx-all-paths \n  neighbor 192.168.0.18 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.18 addpath-tx-all-paths \n  neighbor 192.96.0.6 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.0.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.6 next-hop-self \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64513:1\nip community-list expanded FILTER_E_I_E permit 64513:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64513:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64513:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p378
 sg111
-S'docker run --privileged=true --rm -d --name 1-2 --hostname node-1-2 -p 10009:22 -p 10006:2601 -p 10007:2605 -p 10008:2608 -p 10010:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 1-2 --hostname node-1-2 -p 10009:22 -p 10006:2601 -p 10007:2605 -p 10008:2608 -p 10010:5001 demo:v4 &\n'
 p379
 sg113
 g142
@@ -1416,7 +1416,7 @@ sg109
 S'en\n conf t\nhostname node-1-1\npassword zebra \nline vty\nrouter bgp 64513 \n  bgp router-id 10.0.0.1 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.168.0.6 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.6 addpath-tx-all-paths \n  neighbor 192.168.0.2 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.2 addpath-tx-all-paths \n  neighbor 192.96.0.2 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.0.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.2 next-hop-self \n  neighbor 192.168.0.10 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.10 addpath-tx-all-paths \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64513:1\nip community-list expanded FILTER_E_I_E permit 64513:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64513:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64513:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p414
 sg111
-S'docker run --privileged=true --rm -d --name 1-1 --hostname node-1-1 -p 10004:22 -p 10001:2601 -p 10002:2605 -p 10003:2608 -p 10005:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 1-1 --hostname node-1-1 -p 10004:22 -p 10001:2601 -p 10002:2605 -p 10003:2608 -p 10005:5001 demo:v4 &\n'
 p415
 sg113
 g76
@@ -1620,7 +1620,7 @@ sg109
 S'en\n conf t\nhostname node-1-3\npassword zebra \nline vty\nrouter bgp 64513 \n  bgp router-id 10.0.0.33 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.168.0.5 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.5 addpath-tx-all-paths \n  neighbor 192.168.0.13 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.13 addpath-tx-all-paths \n  neighbor 192.168.0.22 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.22 addpath-tx-all-paths \n  neighbor 192.96.0.10 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.0.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.10 next-hop-self \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64513:1\nip community-list expanded FILTER_E_I_E permit 64513:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64513:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64513:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p446
 sg111
-S'docker run --privileged=true --rm -d --name 1-3 --hostname node-1-3 -p 10014:22 -p 10011:2601 -p 10012:2605 -p 10013:2608 -p 10015:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 1-3 --hostname node-1-3 -p 10014:22 -p 10011:2601 -p 10012:2605 -p 10013:2608 -p 10015:5001 demo:v4 &\n'
 p447
 sg113
 g177
@@ -1828,7 +1828,7 @@ sg109
 S'en\n conf t\nhostname node-1-4\npassword zebra \nline vty\nrouter bgp 64513 \n  bgp router-id 10.0.0.49 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.96.0.14 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.0.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.14 next-hop-self \n  neighbor 192.168.0.9 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.9 addpath-tx-all-paths \n  neighbor 192.168.0.21 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.21 addpath-tx-all-paths \n  neighbor 192.168.0.17 remote-as 64513 \n  address-family ipv4 unicast \n    network 10.0.0.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.17 addpath-tx-all-paths \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64513:1\nip community-list expanded FILTER_E_I_E permit 64513:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64513:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64513:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p474
 sg111
-S'docker run --privileged=true --rm -d --name 1-4 --hostname node-1-4 -p 10019:22 -p 10016:2601 -p 10017:2605 -p 10018:2608 -p 10020:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 1-4 --hostname node-1-4 -p 10019:22 -p 10016:2601 -p 10017:2605 -p 10018:2608 -p 10020:5001 demo:v4 &\n'
 p475
 sg113
 g204
@@ -2138,7 +2138,7 @@ sg109
 S'en\n conf t\nhostname node-2-2\npassword zebra \nline vty\nrouter bgp 64514 \n  bgp router-id 10.0.1.17 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.168.0.14 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.14 addpath-tx-all-paths \n  neighbor 192.168.0.1 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.1 addpath-tx-all-paths \n  neighbor 192.168.0.18 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.18 addpath-tx-all-paths \n  neighbor 192.96.0.22 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.1.16/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.22 next-hop-self \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64514:1\nip community-list expanded FILTER_E_I_E permit 64514:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64514:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64514:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p538
 sg111
-S'docker run --privileged=true --rm -d --name 2-2 --hostname node-2-2 -p 10029:22 -p 10026:2601 -p 10027:2605 -p 10028:2608 -p 10030:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 2-2 --hostname node-2-2 -p 10029:22 -p 10026:2601 -p 10027:2605 -p 10028:2608 -p 10030:5001 demo:v4 &\n'
 p539
 sg113
 g134
@@ -2336,7 +2336,7 @@ sg109
 S'en\n conf t\nhostname node-2-1\npassword zebra \nline vty\nrouter bgp 64514 \n  bgp router-id 10.0.1.1 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.168.0.2 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.2 addpath-tx-all-paths \n  neighbor 192.168.0.6 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.6 addpath-tx-all-paths \n  neighbor 192.96.0.18 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.1.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.18 next-hop-self \n  neighbor 192.168.0.10 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.0/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.10 addpath-tx-all-paths \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64514:1\nip community-list expanded FILTER_E_I_E permit 64514:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64514:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64514:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p570
 sg111
-S'docker run --privileged=true --rm -d --name 2-1 --hostname node-2-1 -p 10024:22 -p 10021:2601 -p 10022:2605 -p 10023:2608 -p 10025:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 2-1 --hostname node-2-1 -p 10024:22 -p 10021:2601 -p 10022:2605 -p 10023:2608 -p 10025:5001 demo:v4 &\n'
 p571
 sg113
 g94
@@ -2540,7 +2540,7 @@ sg109
 S'en\n conf t\nhostname node-2-3\npassword zebra \nline vty\nrouter bgp 64514 \n  bgp router-id 10.0.1.33 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.168.0.13 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.13 addpath-tx-all-paths \n  neighbor 192.168.0.5 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.5 addpath-tx-all-paths \n  neighbor 192.168.0.22 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.22 addpath-tx-all-paths \n  neighbor 192.96.0.26 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.1.32/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.26 next-hop-self \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64514:1\nip community-list expanded FILTER_E_I_E permit 64514:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64514:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64514:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p602
 sg111
-S'docker run --privileged=true --rm -d --name 2-3 --hostname node-2-3 -p 10034:22 -p 10031:2601 -p 10032:2605 -p 10033:2608 -p 10035:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 2-3 --hostname node-2-3 -p 10034:22 -p 10031:2601 -p 10032:2605 -p 10033:2608 -p 10035:5001 demo:v4 &\n'
 p603
 sg113
 g169
@@ -2748,7 +2748,7 @@ sg109
 S'en\n conf t\nhostname node-2-4\npassword zebra \nline vty\nrouter bgp 64514 \n  bgp router-id 10.0.1.49 \n  bgp bestpath as-path multipath-relax \n  timers bgp 5 15 \n  neighbor 192.96.0.30 remote-as 64512 \n  address-family ipv4 unicast \n    network 10.0.1.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.96.0.30 next-hop-self \n  neighbor 192.168.0.17 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.17 addpath-tx-all-paths \n  neighbor 192.168.0.9 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.9 addpath-tx-all-paths \n  neighbor 192.168.0.21 remote-as 64514 \n  address-family ipv4 unicast \n    network 10.0.1.48/28 \n    maximum-paths 8 \n    maximum-paths ibgp 16 \n    neighbor 192.168.0.21 addpath-tx-all-paths \nip prefix-list REMOTE_RACK_PREFIX_MATCH_ALL permit 0.0.0.0/0\nip community-list expanded FILTER_E_I permit 64514:1\nip community-list expanded FILTER_E_I_E permit 64514:2\nroute-map REMOTE_RACK_RMAP_IN permit 10 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n      set community 64514:1\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 10 \n   match community FILTER_E_I \n      set community 64514:2\nroute-map REMOTE_RACK_RMAP_IBGP_OUT permit 20 \n match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nroute-map REMOTE_RACK_RMAP_OUT deny 10 \n   match community FILTER_E_I_E \n route-map REMOTE_RACK_RMAP_OUT permit 20 \n   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \nwr mem\n'
 p630
 sg111
-S'docker run --privileged=true --rm -d --name 2-4 --hostname node-2-4 -p 10039:22 -p 10036:2601 -p 10037:2605 -p 10038:2608 -p 10040:5001 demo:v2 &\n'
+S'docker run --privileged=true --rm -d --name 2-4 --hostname node-2-4 -p 10039:22 -p 10036:2601 -p 10037:2605 -p 10038:2608 -p 10040:5001 demo:v4 &\n'
 p631
 sg113
 g212
@@ -5267,52 +5267,55 @@ g613
 sbasS'max_spines_per_vm'
 p1427
 I4
-sS'vm_ips'
+sS'iid'
 p1428
-(lp1429
+I61
+sS'vm_ips'
+p1429
+(lp1430
 g240
 ag19
 aS'10.138.0.5'
-p1430
-asS'offSpines'
 p1431
+asS'offSpines'
+p1432
 I0
 sS'leaf_vms'
-p1432
+p1433
 I1
 sg113
 S'0_Racks__0_Leafs/rack__0_Spines'
-p1433
-sS'total_vms'
 p1434
+sS'total_vms'
+p1435
 I2
 sS'leaf_leaf_ovs'
-p1435
+p1436
 I1
 sS'all_spines'
-p1436
-(lp1437
+p1437
+(lp1438
 sS'offLeafs'
-p1438
+p1439
 I0
 sS'available_vms'
-p1439
+p1440
 I3
 sS'leaf_vm_objs'
-p1440
-(lp1441
+p1441
+(lp1442
 g275
 asS'max_leaf_spine_ports_per_ovs'
-p1442
+p1443
 I8
 sS'spine_vms'
-p1443
-I1
-sbsS'start_spine_id'
 p1444
 I1
+sbsS'start_spine_id'
+p1445
+I1
 sg659
-(lp1445
+(lp1446
 sg662
 g37
 sg1374
@@ -5325,23 +5328,25 @@ sg1427
 I4
 sg250
 g251
+sg1428
+I61
 sg252
 I2
 sg254
 I2
-sg1432
+sg1433
 I1
 sS'f1_mgmt_ips'
-p1446
-(lp1447
-sg1436
-g1437
+p1447
+(lp1448
+sg1437
+g1438
 sg255
 g256
 sg24
 I4
-sg1440
-g1441
-sg1443
+sg1441
+g1442
+sg1444
 I1
 s.

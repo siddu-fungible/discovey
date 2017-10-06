@@ -20,7 +20,6 @@
 
 
         <div class="row">
-            Status: <span ng-show="progressLabel" class="label label-info">IDLE</span>
 
             <span ng-show="progressIcon" class="glyphicon glyphicon-ok" style="color:green"></span>
             <div class="progress" ng-show="progressDiv">
@@ -35,8 +34,6 @@
                     ng-options="x.name for x in $ctrl.workFlows"
                     ng-change="workFlowSelection(selectedWorkFlow)">
             </select>
-            <button class="btn btn-secondary" ng-click="startWorkFlow($event)">Apply
-            </button>
         </div>
         <div class="row">
             <i ng-show="hasVolumes" class="fa fa-database" style="font-size:36px"></i>
