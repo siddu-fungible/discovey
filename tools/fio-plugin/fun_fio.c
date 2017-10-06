@@ -198,8 +198,6 @@ static int fio_fun_init(struct thread_data *td)
 
 	if (rc) goto init_failed;
 
-	if (!strcmp(foptions->nvme_mode,"IO_ONLY")) return 0;  
-
 	sem_init(&sem_fun1, 0, 0);
 
 	rc = fun_admin_io_connect(0,64,100,0xFFFF,foptions->nqn); //qid, sqsize, keep alive, ctrlr id, nqn
@@ -210,17 +208,21 @@ static int fio_fun_init(struct thread_data *td)
 	if (rc) goto init_failed;
 	sem_wait(&sem_fun1);
 
+	if (!strcmp(foptions->nvme_mode,"IO_ONLY")) {
+		for(i=1; i<=io_queues; i++){
+			rc = fun_admin_io_connect(i,64,100,0xFFFF,foptions->nqn); //qid, sqsize, kato, ctrlr id, nqn
+			if (rc) goto init_failed;
+			sem_wait(&sem_fun1);
+		}
+		return 0;  
+	}
+
 	for (i=1; i <= td->o.nr_files; i++){ 
         	rc = fun_nvmf_ns_create();
 		if (rc) goto init_failed;
 		sem_wait(&sem_fun1);
 
         	rc = fun_nvmf_ns_attach(i);
-		if (rc) goto init_failed;
-		sem_wait(&sem_fun1);
-	}
-	for(i=1; i<=io_queues; i++){
-		rc = fun_admin_io_connect(i,64,100,0xFFFF,foptions->nqn); //qid, sqsize, kato, ctrlr id, nqn
 		if (rc) goto init_failed;
 		sem_wait(&sem_fun1);
 	}

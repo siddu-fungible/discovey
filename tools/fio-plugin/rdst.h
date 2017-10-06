@@ -9,7 +9,7 @@
  * @brief NVMeoF Target Implementation
  */
 
-#include "host_rds.h"
+#include "fun_rds.h"
 
 #define fabricst_rds_transport_info fabrics_disc_log_page_entry
 
