@@ -197,7 +197,8 @@ def create_blt_volume(request, topology_session_id, f1_id):
     request_json = json.loads(request.body)
 
 
-    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.ip}}
+    # ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.ip}}
+    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
     command = "storage {}".format(json.dumps(ctrl_dict))
     result = dpcsh_client.command(command=command)
     print("ctrl command: " + str(result))
@@ -311,7 +312,7 @@ def attach_volume(request, topology_session_id, f1_id):
     result = dpcsh_client.command(command=command)
     if result["status"]:
         i = result["data"]
-    return HttpResponse("OK")
+    return HttpResponse(json.dumps(result))
 
 def storage_volumes(request, topology_session_id, f1_id):
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)

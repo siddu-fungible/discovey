@@ -13,6 +13,7 @@
             $scope.progressBarWidth = 0;
             $scope.hasVolumes = false;
             $scope.hasReplicatedVolumes = false;
+            ctrl.f1.volumeUuids = [];
 
         };
 

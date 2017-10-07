@@ -247,7 +247,7 @@
                                 <create-replica-volume f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></create-replica-volume>
                             </div>
                             <div ng-switch-when="attach_volume">
-                                <attach-volume></attach-volume>
+                                <attach-volume f1="currentWorkFlowF1"  f1s="f1s" topology-session-id="topologySessionId"></attach-volume>
                             </div>
                             <div ng-switch-when="ikv_test">
                                 <ikv-test obj="ikvTestInfo"></ikv-test>

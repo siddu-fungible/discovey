@@ -31,6 +31,7 @@
                         let localBlock = volumeResponse.data.data.VOL_TYPE_BLK_LOCAL_THIN;
                         angular.forEach(localBlock, function (value, key) {
                             $scope.volumeUuids.push(key);
+                            ctrl.f1.volumeUuids.push(key);
                         });
                     });
                 }
