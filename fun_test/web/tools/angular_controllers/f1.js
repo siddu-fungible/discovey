@@ -14,6 +14,7 @@
             $scope.hasVolumes = false;
             $scope.hasReplicatedVolumes = false;
             ctrl.f1.volumeUuids = [];
+            ctrl.f1.rdsVolumeUuids = [];
 
         };
 

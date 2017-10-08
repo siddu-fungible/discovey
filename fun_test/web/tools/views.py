@@ -61,7 +61,7 @@ def traffic_task_status(request, session_id):
 
 def workflows(request):
     workflows = []
-    workflow = {"name": "Create BLT Volume", "id": "create_volume"}
+    workflow = {"name": "Create Raw Volume", "id": "create_volume"}
     workflows.append(workflow)
     workflow = {"name": "Create RDS Volume", "id": "create_rds_volume"}
     workflows.append(workflow)
@@ -201,7 +201,7 @@ def create_blt_volume(request, topology_session_id, f1_id):
     ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
     command = "storage {}".format(json.dumps(ctrl_dict))
     result = dpcsh_client.command(command=command)
-    print("ctrl command: " + str(result))
+    print("ctrl command result: " + str(result))
 
     capacity = request_json["capacity"]
     block_size = request_json["block_size"]
@@ -222,16 +222,22 @@ def create_blt_volume(request, topology_session_id, f1_id):
     data = {}
     if result["status"]:
         data = result["data"]
-    print("create command: " + str(result))
+    print("create command result: " + str(result))
     return HttpResponse(json.dumps(result))
 
 
 @csrf_exempt
 def create_rds_volume(request, topology_session_id, f1_id):
+    print("Create RDS volume")
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+
+    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
+    command = "storage {}".format(json.dumps(ctrl_dict))
+    result = dpcsh_client.command(command=command)
+    print("ctrl command result: " + str(result))
 
     request_json = json.loads(request.body)
     capacity = request_json["capacity"]
@@ -253,9 +259,10 @@ def create_rds_volume(request, topology_session_id, f1_id):
 
     command = "storage {}".format(json.dumps(create_dict))
     result = dpcsh_client.command(command=command)
+    print("create command result: " + str(result))
     if result["status"]:
         i = result["data"]
-    return HttpResponse("OK")
+    return HttpResponse(json.dumps(result))
 
 @csrf_exempt
 def create_replica_volume(request, topology_session_id, f1_id):
@@ -310,6 +317,7 @@ def attach_volume(request, topology_session_id, f1_id):
                               "remote_ip": remote_ip}}
     command = "storage {}".format(json.dumps(create_dict))
     result = dpcsh_client.command(command=command)
+    print("attach command result: " + str(result))
     if result["status"]:
         i = result["data"]
     return HttpResponse(json.dumps(result))
