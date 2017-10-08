@@ -173,7 +173,7 @@ def fio(request, topology_session_id, f1_id):
     traffic_task = TrafficTask(session_id=topology_session_id)
     traffic_task.save()
     request_json = json.loads(request.body)
-    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=request_json['f1']['name'])
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     q = Queue(connection=Redis())
 
 
