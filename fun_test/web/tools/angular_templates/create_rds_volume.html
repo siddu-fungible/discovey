@@ -36,4 +36,13 @@
         </div>
 
     </form>
+    <div ng-if="rdsVolumeUuids.length" class="row">
+        <label>RDS Volumes</label>
+        <table class="table table-bordered">
+            <th>UUID</th>
+            <tr ng-repeat="volumeUuid in rdsVolumeUuids">
+                <td>{{ volumeUuid }}</td>
+            </tr>
+        </table>
+    </div>
 </div>

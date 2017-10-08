@@ -250,7 +250,7 @@ def create_rds_volume(request, topology_session_id, f1_id):
     name = request_json["name"]
     remote_ip = request_json["remote_ip"]
     remote_nsid = request_json["remote_nsid"]
-    this_uuid = str(uuid.uuid4())
+    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
 
     create_dict = {"class": "volume",
                    "opcode": "VOL_ADMIN_OPCODE_CREATE",
