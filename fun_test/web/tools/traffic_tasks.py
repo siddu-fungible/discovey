@@ -9,7 +9,7 @@ from web.tools.models import Session, F1, Tg, TrafficTask
 
 def start_fio(session_id, f1_record, fio_info):
     traffic_task = TrafficTask.objects.get(session_id=session_id)
-    time.sleep(5)
+    # time.sleep(5)
     print(f1_record)
 
 
