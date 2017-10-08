@@ -17,6 +17,27 @@
             ctrl.f1.rdsVolumeUuids = [];
             ctrl.f1.replicaVolumeUuids = [];
 
+
+                    $http.get('/tools/f1/storage_volumes/' + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function(volumeResponse) {
+                        let localBlock = volumeResponse.data.data.VOL_TYPE_BLK_LOCAL_THIN;
+                        ctrl.f1.volumeUuids = [];
+                        angular.forEach(localBlock, function (value, key) {
+                            ctrl.f1.volumeUuids.push(key);
+                        });
+                    });
+                    $http.get('/tools/f1/storage_volumes/' + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function(volumeResponse) {
+                        let localBlock = volumeResponse.data.data.VOL_TYPE_BLK_RDS;
+                        ctrl.f1.rdsVolumeUuids = [];
+                        angular.forEach(localBlock, function (value, key) {
+                            ctrl.f1.rdsVolumeUuids.push(key);
+                        });
+                    });
+                    $http.get('/tools/f1/storage_volumes/' + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function(volumeResponse) {
+                        let localBlock = volumeResponse.data.data.VOL_TYPE_BLK_REPLICA;
+                        angular.forEach(localBlock, function (value, key) {
+                            ctrl.f1.replicaVolumeUuids.push(key);
+                        });
+                    });
         };
 
         $scope.workFlowSelection = function (selectedWorkFlow) {
@@ -59,7 +80,8 @@
             workFlows: '<',
             replaceIpDot: '&',
             setCommonWorkFlow: '&',
-            setActiveTab: '&'
+            setActiveTab: '&',
+            topologySessionId: '<'
         }
     });
 
