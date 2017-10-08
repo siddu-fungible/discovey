@@ -30,6 +30,7 @@ def start_fio(session_id, f1_record, fio_info):
 
     fio_command = "fio --name=fun_nvmeof --ioengine=fun --rw=write --bs={} --size={} --numjobs=1  --iodepth=8 --do_verify=1 --verify=md5 --verify_fatal=1 --group_reporting --source_ip={} --dest_ip={} --io_queues=4 --nrfiles={} --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY".format(block_size, size, nr_files, tg.ip, f1_record["dataplane_ip"])
 
+    print("FIO command: {}", fio_command)
     out = tg.exec_command(fio_command)
     topology_obj.save(filename=pickle_file)
     print("Output:" + str(out))

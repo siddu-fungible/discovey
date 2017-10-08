@@ -280,7 +280,7 @@ def create_replica_volume(request, topology_session_id, f1_id):
     capacity = request_json["capacity"]
     block_size = request_json["block_size"]
     name = request_json["name"]
-    this_uuid = str(uuid.uuid4())
+    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
     pvol_id = request_json["pvol_id"]
 
     create_dict = {"class": "volume",
@@ -295,9 +295,10 @@ def create_replica_volume(request, topology_session_id, f1_id):
                               "pvol_id": pvol_id}}
     command = "storage {}".format(json.dumps(create_dict))
     result = dpcsh_client.command(command=command)
+    print("replica command result: " + str(result))
     if result["status"]:
         i = result["data"]
-    return HttpResponse("OK")
+    return HttpResponse(json.dumps(result))
 
 
 @csrf_exempt
