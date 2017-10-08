@@ -6,6 +6,9 @@
         let ctrl = this;
         $scope.tgTypes = {"fio": "FIO", "iperf": "IPerf"};
         $scope.selectedTg = null;
+        $scope.fioNrFiles = null;
+        $scope.fioBlockSize = "4k";
+        $scope.fioSize = "128k";
 
         ctrl.$onInit = function () {
             $scope.playing = false;
@@ -17,7 +20,9 @@
 
         $scope.play = function () {
             let payload = {};
-            payload["f1"] = ctrl.f1;
+            payload["block_size"] = $scope.fioBlockSize;
+            payload["size"] = $scope.fioSize;
+            payload["nr_files"] = $scope.fioNrFiles;
             $http.post('/tools/tg/fio/' + ctrl.topologySessionId + "/" + ctrl.f1.name, payload).then(function (response) {
                 $scope.playing = true;
                 getTrafficTaskStatus(ctrl.topologySessionId);

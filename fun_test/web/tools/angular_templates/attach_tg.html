@@ -8,10 +8,15 @@
     </div>
     <div ng-switch="selectedTg" class="row">
         <div ng-switch-when="fio">
-            <label class="form-inline">Input 1</label>
-            <input class="form-control" type="text" value="">
-            <label class="form-inline">Input 2</label>
-            <input class="form-control" type="text" value="">
+            <label class="form-inline">Block Size</label>
+            <input class="form-control" type="text" value="4k" ng-model="fioBlockSize">
+
+            <label class="form-inline">Size</label>
+            <input class="form-control" type="text" value="128k" ng-model="fioSize">
+
+            <label class="form-inline">Number of files</label>
+            <input class="form-control" type="text" value="1" ng-model="fioNrFiles">
+
             <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="play()">
                 <span class="glyphicon glyphicon-play"></span> Play
             </button>

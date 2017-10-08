@@ -183,7 +183,12 @@ def fio(request, topology_session_id, f1_id):
     f1_info["dataplane_ip"] = f1_record.dataplane_ip
     f1_info["dpcsh_port"] = f1_record.dpcsh_port
 
-    q.enqueue(start_fio, topology_session_id, f1_info)
+    fio_info = {}
+    fio_info["block_size"] = request_json["block_size"]
+    fio_info["size"] = request_json["size"]
+    fio_info["nr_files"] = request_json["nr_files"]
+
+    q.enqueue(start_fio, topology_session_id, f1_info, fio_info)
     return HttpResponse("OK")
 
 
