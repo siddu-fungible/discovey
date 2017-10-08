@@ -6,7 +6,7 @@
         let ctrl = this;
         $scope.tgTypes = {"fio": "FIO", "iperf": "IPerf"};
         $scope.selectedTg = null;
-        $scope.fioNrFiles = null;
+        $scope.fioNrFiles = 1;
         $scope.fioBlockSize = "4k";
         $scope.fioSize = "128k";
 
