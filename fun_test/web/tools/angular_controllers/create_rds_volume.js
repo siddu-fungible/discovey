@@ -18,6 +18,7 @@
         };
 
         $scope.clickApply = function () {
+            $scope.logs = [];
             $scope.errorMessage = null;
             let payload = {};
             payload["name"] = $scope.name;
