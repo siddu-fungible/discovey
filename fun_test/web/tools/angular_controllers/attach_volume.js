@@ -10,6 +10,7 @@
             $scope.status = "idle";
             $scope.selectedUuid = null;
             $scope.selectedRemoteIp = null;
+            $scope.logs = [];
         };
         $scope.clickApply = function () {
             $scope.errorMessage = null;
@@ -20,6 +21,12 @@
             $scope.status = "processing";
             $http.post('/tools/f1/attach_volume/' + ctrl.topologySessionId + "/" + ctrl.f1.name, payload).then(function(response){
                 $scope.status = "pass";
+                $scope.logs = [];
+                let responseLogs = response.data.logs;
+                for (let i = 0; i < responseLogs.length; i++) {
+                    $scope.logs.push(responseLogs[i] + "\n");
+                    $scope.logs.push("-----------------------------------\n");
+                }
                 if (!response.data["status"]) {
                     $scope.errorMessage = response.data["error_message"];
                     $scope.status = "fail";
