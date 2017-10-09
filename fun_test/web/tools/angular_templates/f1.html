@@ -40,5 +40,14 @@
             <label ng-show="hasReplicatedVolumes" class="label label-warning">3</label>
 
         </div>
+        <div class="row">
+            Raw Volumes: {{ $ctrl.f1.volumeUuids.length }}
+        </div>
+        <div class="row">
+            RDS Volumes: {{ $ctrl.f1.rdsVolumeUuids.length }}
+        </div>
+        <div class="row">
+            Replica Volumes: {{ $ctrl.f1.replicaVolumeUuids.length }}
+        </div>
     </div>
 </div>

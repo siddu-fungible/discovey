@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function F1Controller($scope, $http) {
+    function F1Controller($scope, $http, $timeout) {
         let ctrl = this;
 
         ctrl.$onInit = function () {
@@ -16,9 +16,41 @@
             ctrl.f1.volumeUuids = [];
             ctrl.f1.rdsVolumeUuids = [];
             ctrl.f1.replicaVolumeUuids = [];
+            $scope.checkVolumes();
+            
 
 
         };
+        
+        $scope.checkVolumes = function () {
+                            $http.get('/tools/f1/storage_volumes/' + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function(volumeResponse) {
+                                if(volumeResponse.data.data) {
+					if('VOL_TYPE_BLK_RDS' in volumeResponse.data.data) {
+						let rdsBlock = volumeResponse.data.data.VOL_TYPE_BLK_RDS;
+						ctrl.f1.rdsVolumeUuids = [];
+						angular.forEach(rdsBlock, function (value, key) {
+						    ctrl.f1.rdsVolumeUuids.push(key);
+						});
+					}
+					if('VOL_TYPE_BLK_LOCAL_THIN' in volumeResponse.data.data) {
+						let localBlock = volumeResponse.data.data.VOL_TYPE_BLK_LOCAL_THIN;
+						ctrl.f1.volumeUuids = [];
+						angular.forEach(localBlock, function (value, key) {
+						    ctrl.f1.volumeUuids.push(key);
+						});
+					}
+					if('VOL_TYPE_BLK_REPLICA' in volumeResponse.data.data) {
+						let replicaBlock = volumeResponse.data.data.VOL_TYPE_BLK_REPLICA;
+						ctrl.f1.replicaVolumeUuids = [];
+						angular.forEach(replicaBlock, function (value, key) {
+						    ctrl.f1.replicaVolumeUuids.push(key);
+						});
+					}
+                                }
+                            });
+            $timeout($scope.checkVolumes, 10000);
+        }
+       
 
         $scope.workFlowSelection = function (selectedWorkFlow) {
             $scope.selectedWorkFlow = selectedWorkFlow;
