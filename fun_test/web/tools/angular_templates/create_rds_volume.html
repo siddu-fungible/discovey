@@ -29,7 +29,7 @@
         <div class="form-group row">
             <label>Remote IP</label>
             <select
-                ng-options="f1.name as [f1.name, f1.ip].join(' -- ') for f1 in $ctrl.f1s"
+                ng-options="f1.dataplane_ip as [f1.name, f1.ip, f1.dataplane_ip].join(' -- ') for f1 in $ctrl.f1s"
       ng-model="selectedRemoteIp" required></select>
         </div>
         <div class="form-group row">

@@ -63,9 +63,11 @@ def workflows(request):
     workflows = []
     workflow = {"name": "Create Raw Volume", "id": "create_volume"}
     workflows.append(workflow)
-    workflow = {"name": "Create RDS Volume", "id": "create_rds_volume"}
-    workflows.append(workflow)
     workflow = {"name": "Attach Volume", "id": "attach_volume"}
+    workflows.append(workflow)
+    workflow = {"name": "Set IP config", "id": "set_ip_cfg"}
+    workflows.append(workflow)
+    workflow = {"name": "Create RDS Volume", "id": "create_rds_volume"}
     workflows.append(workflow)
     workflow = {"name": "Create Replica Volume", "id": "create_replica_volume"}
     workflows.append(workflow)
@@ -239,10 +241,12 @@ def create_rds_volume(request, topology_session_id, f1_id):
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
 
+    '''
     ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
     command = "storage {}".format(json.dumps(ctrl_dict))
     result = dpcsh_client.command(command=command)
     print("ctrl command result: " + str(result))
+    '''
 
     request_json = json.loads(request.body)
     capacity = request_json["capacity"]
@@ -267,6 +271,18 @@ def create_rds_volume(request, topology_session_id, f1_id):
     print("create command result: " + str(result))
     if result["status"]:
         i = result["data"]
+    return HttpResponse(json.dumps(result))
+
+@csrf_exempt
+def set_ip_cfg(request, topology_session_id, f1_id):
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
+    command = "storage {}".format(json.dumps(ctrl_dict))
+    result = dpcsh_client.command(command=command)
+    print("ctrl command result: " + str(result))
     return HttpResponse(json.dumps(result))
 
 @csrf_exempt

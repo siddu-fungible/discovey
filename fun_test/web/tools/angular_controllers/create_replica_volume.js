@@ -13,15 +13,6 @@
             $scope.replicaVolumeUuids = [];
             $scope.selectedUuids = null;
                     ctrl.f1.rdsVolumeUuids = [];
-                    $http.get('/tools/f1/storage_volumes/' + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function(volumeResponse) {
-                        let localBlock = volumeResponse.data.data.VOL_TYPE_BLK_RDS;
-                        $scope.rdsVolumeUuids = [];
-                        ctrl.f1.rdsVolumeUuids = [];
-                        angular.forEach(localBlock, function (value, key) {
-                            $scope.rdsVolumeUuids.push(key);
-                            ctrl.f1.rdsVolumeUuids.push(key);
-                        });
-                    });
            
         };
 
