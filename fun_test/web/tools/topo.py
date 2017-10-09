@@ -687,16 +687,18 @@ class VM(object):
         out = exec_remote_commands([(self.ip, ['/root/docker.sh'])], [], 300)
         out = exec_send_file([(self.ip, params)], [])
 
+        if self.role == 'leaf' and not network_only:
+            print 'waiting for PSIMs to be ready\n'
+            self.waitOnPsim()
+
         if not flat_topo:
-            if self.role == 'leaf' and not network_only:
-                print 'waiting for file based disk to be created\n'
             if self.role == 'leaf':
-                time.sleep(60)
+                time.sleep(20)
                 for rack in self.racks:
                     rack.configureNodes()
                 self.pauseRacks([rack.rack_id for rack in self.racks])
             else:
-                time.sleep(10)
+                time.sleep(20)
                 for spine in self.spines:
                     spine.configure()
                 self.pauseNodes([spine.name for spine in self.spines])
@@ -881,6 +883,14 @@ class VM(object):
             iptables_repair_cmd += 'ip netns exec %s iptables -D OUTPUT -o eth0 -d %s -j DROP \n' % (src_node.name, dst.ip)
 
         out = exec_remote_commands([(self.ip, [iptables_repair_cmd])], [])
+
+    @retry(tries=100, delay=20)
+    def waitOnPsim(self):
+        out = exec_remote_commands([(self.ip, [psim_process_count])], [])
+        if int(out[0]['results'][0]['output']) == self.nRacks*self.nLeafs:
+            return True
+        else:
+            return False
             
     def get_rack_from_id(self, rack_id):
         index = int(rack_id) - ((self.id-1)*self.topo.max_racks_per_vm) -1

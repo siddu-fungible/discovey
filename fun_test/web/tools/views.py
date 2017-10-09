@@ -113,7 +113,7 @@ def topology(request):
     session_obj.save()
     session = {"session_id": session_obj.session_id}
     q = Queue(connection=Redis())
-    q.enqueue(deploy_topology, session_obj.session_id)
+    q.enqueue(deploy_topology, session_obj.session_id, timeout=600)
     return HttpResponse(json.dumps(session))
 
 def topology_cleanup(request):
@@ -241,12 +241,11 @@ def create_rds_volume(request, topology_session_id, f1_id):
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
 
-    '''
     ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
     command = "storage {}".format(json.dumps(ctrl_dict))
     result = dpcsh_client.command(command=command)
     print("ctrl command result: " + str(result))
-    '''
+    time.sleep(5)
 
     request_json = json.loads(request.body)
     capacity = request_json["capacity"]

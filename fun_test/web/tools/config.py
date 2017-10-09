@@ -8,12 +8,13 @@ network_only = False
 if network_only:
     leaf_container = 'frr:v2'
 elif flat_topo:
-    leaf_container = 'psim:v1'
+    leaf_container = 'demo:v6'
 else:
-    leaf_container = 'demo:v4'
-#leaf_container = 'text:latest'
+    leaf_container = 'demo:v6'
 
-vm_ips = ['10.138.0.3', '10.138.0.4', '10.138.0.5'] 
+tg_container = 'tgen:v3'
+
+vm_ips = ['10.138.0.3', '10.138.0.4']
 vm_user = 'amit.surana'
 vm_passwd = 'fun123'
 
