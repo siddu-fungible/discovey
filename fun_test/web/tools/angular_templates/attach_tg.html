@@ -6,16 +6,23 @@
                 ng-change="tgSelection(selectedTg)">
         </select>
     </div>
+
+
+
     <div ng-switch="selectedTg" class="row">
         <div ng-switch-when="fio">
+            <label class="form-inline">Replica Volume UUID</label>
+            <select class="form-control" ng-model="$parent.selectedUuid"
+                    ng-options="volumeUuid for volumeUuid in $ctrl.f1.replicaVolumeUuids track by volumeUuid" ng-change="tgUuidSelection(selectedUuid)">
+            </select>
             <label class="form-inline">Block Size</label>
-            <input class="form-control" type="text" value="4k" ng-model="fioBlockSize">
+            <input class="form-control" type="text" value="4k" ng-model="$parent.fioBlockSize">
 
             <label class="form-inline">Size</label>
-            <input class="form-control" type="text" value="128k" ng-model="fioSize">
+            <input class="form-control" type="text" value="128k" ng-model="$parent.fioSize">
 
             <label class="form-inline">Number of files</label>
-            <input class="form-control" type="text" value="1" ng-model="fioNrFiles">
+            <input class="form-control" type="text" value="1" ng-model="$parent.fioNrFiles">
 
             <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="play()">
                 <span class="glyphicon glyphicon-play"></span> Play
@@ -23,6 +30,7 @@
             <button ng-show="playing" type="button" class="btn btn-danger btn-sm" ng-click="stop()">
                 <span class="glyphicon glyphicon-stop"></span> Stop
             </button>
+
         </div>
         <div ng-switch-when="iperf">
             <label class="form-inline">Input 3</label>

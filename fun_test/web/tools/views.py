@@ -175,6 +175,7 @@ def fio(request, topology_session_id, f1_id):
     traffic_task = TrafficTask(session_id=topology_session_id)
     traffic_task.save()
     request_json = json.loads(request.body)
+    uuid = request_json["uuid"]
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     q = Queue(connection=Redis())
 
@@ -190,7 +191,7 @@ def fio(request, topology_session_id, f1_id):
     fio_info["size"] = request_json["size"]
     fio_info["nr_files"] = request_json["nr_files"]
 
-    q.enqueue(start_fio, topology_session_id, f1_info, fio_info)
+    q.enqueue(start_fio, topology_session_id, f1_info, fio_info, uuid)
     return HttpResponse("OK")
 
 

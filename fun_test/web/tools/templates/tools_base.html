@@ -169,7 +169,7 @@
 
         <div class="tab-pane" id="traffic-container" role="tabpanel">
             <div class="row">
-                <div class="col-sm-4">
+                <div class="col-sm-4" style="max-width:20%">
                     <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
                     <f1-traffic ng-repeat="f1 in f1s" f1="f1" work-flows="trafficWorkFlows" replace-ip-dot="replaceIpDot"
                                 set-common-traffic-work-flow="setCommonTrafficWorkFlow(selectedWorkFlow, f1)"
@@ -182,7 +182,7 @@
                         <div class="panel-heading">
                             <div class="row">
                                 <label class="label label-primary">Parameters</label>
-                                <span>{{ commonWorkFlow.name }}</span>
+                                <span>{{ commonTrafficWorkFlow.name }}</span>
                             </div>
                         </div>
                         <div class="panel-body" ng-switch="commonTrafficWorkFlow.id">
@@ -217,7 +217,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-sm-4">
+                <div class="col-sm-4" style="max-width:20%">
                     <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
                     <f1 ng-repeat="f1 in f1s" topology-session-id="topologySessionId" f1="f1" work-flows="workFlows" replace-ip-dot="replaceIpDot"
                         set-common-work-flow="setCommonWorkFlow(selectedWorkFlow, f1)"
