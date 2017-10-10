@@ -6,11 +6,14 @@
 
         ctrl.$onInit = function () {
             $scope.charting = false;
-            $scope.series = ['2-1', '2-2', '2-3', '2-4'];
+            //$scope.series = ['2-1', '2-2', '2-3', '2-4'];
+            $scope.series = ['2-2', '2-3'];
             $scope.buttonText = "Start";
             $scope.playIcon = "glyphicon-play";
-            $scope.currentValues = {};
-            $scope.title = "Reads";
+            $scope.currentReadValues = {};
+            $scope.currentWriteValues = {};
+            $scope.readsTitle = "Reads";
+            $scope.writesTitle = "Writes";
             $scope.width = "100px";
             $scope.height = "100px";
 
@@ -34,15 +37,30 @@
 
         $scope.pullStats = function () {
             console.log("Pulling");
-            let newStats = {};
+            $scope.newReadStats = {};
+            $scope.newWriteStats = {};
             angular.forEach($scope.series, function (seriesName) {
-                $scope.currentValues[seriesName] = $scope.getRandomId();
                 $http.get("/tools/f1/storage_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
                     if (result.data.status === "PASSED") {
-                        
+                        let d = result.data.data;
+                        if(d) {
+                            if('VOL_TYPE_BLK_LOCAL_THIN' in d) {
+                                let numReads = 0;
+                                let numWrites = 0;
+                                angular.forEach(d.VOL_TYPE_BLK_LOCAL_THIN, function(value, key) {
+                                    numReads += value.num_reads;
+                                    numWrites += value.num_writes;
+                                });
+                                $scope.newReadStats[seriesName] = numReads;
+                                $scope.newWriteStats[seriesName] = numWrites;
+                            }
+                        }
                     }
-                    if(newStats.length == $scope.series.length) {
-                        $scope.currentValues = newStats;
+                    if(Object.keys($scope.newReadStats).length === $scope.series.length) {
+                        $scope.currentReadValues = $scope.newReadStats;
+                    };
+                    if(Object.keys($scope.newWriteStats).length === $scope.series.length) {
+                        $scope.currentWriteValues = $scope.newWriteStats;
                     };
                 });
             });
