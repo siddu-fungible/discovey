@@ -62,6 +62,7 @@ class DpcshClient:
         result = {"status": False, "data": None, "error_message": None, "command": command}
         try:
             self._connect()
+            print ("Sending:" + command + "\n")
             self.sendall("{}\n".format(command))
             output = self._read(expected_command_duration)
             json_output = json.loads(output)
@@ -74,6 +75,7 @@ class DpcshClient:
             result["error_message"] = msg
         except Exception as ex:
             print (str(ex))
+            print ("result from read:" + str(output))
             result["error_message"] = str(ex)
         return result
 

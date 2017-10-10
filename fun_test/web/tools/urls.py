@@ -11,7 +11,9 @@ f1_urls = [
     url(r'^create_blt_volume/(.*)/(.*)$', views.create_blt_volume),
     url(r'^create_rds_volume/(.*)/(.*)$', views.create_rds_volume),
     url(r'^create_replica_volume/(.*)/(.*)$', views.create_replica_volume),
-    url(r'^attach_volume/(.*)/(.*)$', views.create_replica_volume),
+    url(r'^attach_volume/(.*)/(.*)$', views.attach_volume),
+    url(r'^set_ip_cfg/(.*)/(.*)$', views.set_ip_cfg),
+    url(r'^storage_volumes/(.*)/(.*)$', views.storage_volumes),
     url(r'^(.*)/(.*)$', views.metrics),
     url(r'^detail$', views.f1_details),
     url(r'^upload$', views.upload)

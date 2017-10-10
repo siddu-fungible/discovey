@@ -95,6 +95,8 @@
         <script src="{% static "f1_traffic.js" %}"></script>
         <script src="{% static "create_rds_volume.js" %}"></script>
         <script src="{% static "create_replica_volume.js" %}"></script>
+        <script src="{% static "set_ip_cfg.js" %}"></script>
+        <script src="{% static "stats.js" %}"></script>
 
 
     {% endblock %}
@@ -111,9 +113,6 @@
         </li>
         <li class="nav-item">
             <a aria-controls="3" class="nav-link" data-toggle="tab" href="#traffic-container" role="tab">Traffic</a>
-        </li>
-        <li class="nav-item">
-            <a aria-controls="4" class="nav-link" data-toggle="tab" href="#stats-container" role="tab">Analytics</a>
         </li>
         <li class="nav-item">
             <a aria-controls="1" class="nav-link" data-toggle="tab" href="#topology-container" role="tab">Topology</a>
@@ -138,37 +137,10 @@
             <f1-detail ng-if="currentF1" f1="currentF1"></f1-detail>
         </div>
 
-        <div class="tab-pane" id="stats-container" role="tabpanel">
-            <button type="button" id="stats-play-button" class="btn btn-success">
-                <i id="stats-play-icon" class="glyphicon glyphicon-play">
-                </i>Start
-            </button>
-
-            <div class="row">
-                <div class="col-sm-7">
-                    <div id="chart1-div">
-                    </div>
-                </div>
-                <div class="col-sm-5">
-                    <div id="chart2-div">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-7">
-                    <div id="chart3-div">
-                    </div>
-                </div>
-                <div class="col-sm-5">
-                    <div id="chart4-div">
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="tab-pane" id="traffic-container" role="tabpanel">
             <div class="row">
-                <div class="col-sm-4">
+                <div class="col-sm-4" style="max-width:20%">
                     <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
                     <f1-traffic ng-repeat="f1 in f1s" f1="f1" work-flows="trafficWorkFlows" replace-ip-dot="replaceIpDot"
                                 set-common-traffic-work-flow="setCommonTrafficWorkFlow(selectedWorkFlow, f1)"
@@ -181,7 +153,7 @@
                         <div class="panel-heading">
                             <div class="row">
                                 <label class="label label-primary">Parameters</label>
-                                <span>{{ commonWorkFlow.name }}</span>
+                                <span>{{ commonTrafficWorkFlow.name }}</span>
                             </div>
                         </div>
                         <div class="panel-body" ng-switch="commonTrafficWorkFlow.id">
@@ -194,6 +166,9 @@
                         </div>
 
                     </div>
+                </div>
+                <div class="col-sm-5">
+                    <stats></stats>
                 </div>
             </div>
         </div>
@@ -216,16 +191,16 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-sm-4">
+                <div class="col-sm-4" style="max-width:20%">
                     <!-- button ng-click="testClick($event)" type="button" id="topology-deploy-button">TEST</button -->
-                    <f1 ng-repeat="f1 in f1s" f1="f1" work-flows="workFlows" replace-ip-dot="replaceIpDot"
+                    <f1 ng-repeat="f1 in f1s" topology-session-id="topologySessionId" f1="f1" work-flows="workFlows" replace-ip-dot="replaceIpDot"
                         set-common-work-flow="setCommonWorkFlow(selectedWorkFlow, f1)"
                         set-active-tab="setActiveTab(tabName, f1)"></f1>
 
                 </div>
 
 
-                <div class="col-sm-3">
+                <div class="col-sm-8">
 
                     <div ng-if="commonWorkFlow" class="panel panel-default panel-table">
                         <div class="panel-heading">
@@ -243,11 +218,14 @@
                             <div ng-switch-when="create_rds_volume">
                                 <create-rds-volume f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></create-rds-volume>
                             </div>
+                            <div ng-switch-when="set_ip_cfg">
+                                <set-ip-cfg f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></set-ip-cfg>
+                            </div>
                             <div ng-switch-when="create_replica_volume">
                                 <create-replica-volume f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></create-replica-volume>
                             </div>
                             <div ng-switch-when="attach_volume">
-                                <attach-volume></attach-volume>
+                                <attach-volume f1="currentWorkFlowF1"  f1s="f1s" topology-session-id="topologySessionId"></attach-volume>
                             </div>
                             <div ng-switch-when="ikv_test">
                                 <ikv-test obj="ikvTestInfo"></ikv-test>

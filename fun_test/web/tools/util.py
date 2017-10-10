@@ -1,10 +1,11 @@
 import os
 import time
+import math
 import subprocess
 from netaddr import IPNetwork
 from config import *
 
-docker_images = {'leaf': leaf_container, 'spine': 'frr:v2' , 'traffic_gen': 'tgen:v2'}
+docker_images = {'leaf': leaf_container, 'spine': 'frr:v2' , 'traffic_gen': tg_container}
 docker_run_cmd = "docker run --privileged=true --rm -d"
 docker_stop_cmd = "docker stop "
 docker_kill_cmd ='docker kill '
@@ -20,13 +21,13 @@ docker_swarm_leave_force_cmd = 'docker swarm leave --force'
 docker_mgmt_net_cmd = 'docker network create --driver overlay --attachable --subnet=172.16.0.0/16 mgmt'
 netns_del_cmd = "ip netns del "
 ovs_del_br_cmd = 'ovs-vsctl del-br '
+psim_process_count = 'ps ax | grep load_mods | egrep -v grep | wc -l'
 frr_password = 'zebra'
-storage_nvmeof_cmd = 'nohup funos-posix app=nvmeof_target localaddr=0x0A000104 remoteaddr=0x0A000102  --dpc-server > /dev/null 2>&1 &'
-storage_fio_verify = 'fio --name=fun_nvmeof --ioengine=fun --rw=write --bs=4k --size=12m --numjobs=1  --iodepth=8 --do_verify=1 --verify=md5 --verify_fatal=1 --group_reporting -source_ip=10.0.1.2 --dest_ip=10.0.1.4 --io_queues=4 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=FULL_TEST'
-storage_fio_noverify = 'fio --name=fun_nvmeof --ioengine=fun --rw=randrw --bs=4k --size=1m --numjobs=1  --iodepth=8 --group_reporting -source_ip=172.16.0.5 --dest_ip=172.16.0.13 --io_queues=4 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=FULL_TEST'
 base_port = 10000
-iid = 1
 ssh_retries = 10
+
+docker_run_sh = os.path.expanduser('~')+'/docker.sh'
+links_sh = os.path.expanduser('~')+'/links.sh'
 
 max_containers_per_leaf_vm = 32.0 
 max_links_per_spine_vm = 128.0 
@@ -43,12 +44,6 @@ f1_public_subnet = []
 rack_subnets = []
 spine_subnets = []
 f1_mgmt_ips = []
-
-def get_next_id():
-    global iid
-    res = iid
-    iid += 1
-    return res
 
 def create_ip_prefix_list(name, action, prefix):
     ip_prefix_list = 'ip prefix-list ' + name + ' ' + action + ' ' + prefix + '\n'
@@ -140,3 +135,32 @@ def timeit(method):
               (method.__name__, args, kw, te-ts)
         return result
     return timed
+
+def retry(tries=100, delay=20):
+    '''Retries a function or method until it returns True.
+    delay sets the initial delay in seconds.
+    '''
+    tries = tries * 1.0
+    tries = math.floor(tries)
+    if tries < 0:
+        raise ValueError("tries must be 0 or greater")
+
+    if delay <= 0:
+        raise ValueError("delay must be greater than 0")
+
+    def deco_retry(f):
+        def f_retry(*args, **kwargs):
+            mtries, mdelay = tries, delay  # make mutable
+
+            rv = f(*args, **kwargs)  # first attempt
+            while mtries > 0:
+                if rv is True:  # Done on success
+                    return True
+                mtries -= 1      # consume an attempt
+                time.sleep(mdelay)  # wait...
+
+                rv = f(*args, **kwargs)  # Try again
+            return False  # Ran out of tries :-(
+
+        return f_retry  # true decorator -> decorated function
+    return deco_retry  # @retry(arg[, ...]) -> true decorator

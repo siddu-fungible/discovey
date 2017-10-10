@@ -27,17 +27,32 @@ def deploy_topology(session_id):
     topology_task.save()
 
 
-    topology_obj = topo.Topology()
     pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
-    topology_obj.load(filename=pickle_file)
-    try:
-        topology_obj.cleanup()
-    except:
-        pass
-    topology_obj = topo.Topology()
-    topology_obj.create(2, 4, 4)
-    info = json.loads(topology_obj.getAccessInfo())
-    topology_obj.save(filename=pickle_file)
+    '''
+    if os.path.exists(pickle_file):
+        topology_obj = topo.Topology()
+        topology_obj.load(filename=pickle_file)
+        try:
+            topology_obj.cleanup()
+        except:
+            pass
+        try:
+            os.remove(pickle_file)
+        except:
+            pass
+    '''
+    if not os.path.exists(pickle_file):
+    
+        topology_obj = topo.Topology()
+        topology_obj.create(2, 4, 4)
+        info = json.loads(topology_obj.getAccessInfo())
+        topology_obj.save(filename=pickle_file)
+    else:
+        topology_obj = topo.Topology()
+        topology_obj.load(filename=pickle_file)
+        info = json.loads(topology_obj.getAccessInfo())
+        topology_obj.save(filename=pickle_file)
+         
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
     for f1_name, f1_info in info["F1"].items():
         f1_obj = F1(name=f1_name, ip=f1_info["mgmt_ip"], dpcsh_port=f1_info["dpcsh_port"], mgmt_ssh_port=f1_info["mgmt_ssh_port"], dataplane_ip=f1_info["dataplane_ip"], topology_session_id=session_id)

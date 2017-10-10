@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-import json, uuid
+import json, uuid, os
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -13,6 +13,7 @@ from fun_global import RESULTS
 from fun_settings import *
 import ikv_tasks
 import topo
+from collections import OrderedDict
 
 tgs = [
     {
@@ -44,6 +45,8 @@ def f1_details(request):
 
     return HttpResponse(json.dumps(response))
 
+
+
 def f1(request, session_id):
     f1s = []
     f1_records = F1.objects.filter(topology_session_id=int(session_id))
@@ -60,11 +63,13 @@ def traffic_task_status(request, session_id):
 
 def workflows(request):
     workflows = []
-    workflow = {"name": "Create BLT Volume", "id": "create_volume"}
-    workflows.append(workflow)
-    workflow = {"name": "Create RDS Volume", "id": "create_rds_volume"}
+    workflow = {"name": "Create Raw Volume", "id": "create_volume"}
     workflows.append(workflow)
     workflow = {"name": "Attach Volume", "id": "attach_volume"}
+    workflows.append(workflow)
+    workflow = {"name": "Set IP config", "id": "set_ip_cfg"}
+    workflows.append(workflow)
+    workflow = {"name": "Create RDS Volume", "id": "create_rds_volume"}
     workflows.append(workflow)
     workflow = {"name": "Create Replica Volume", "id": "create_replica_volume"}
     workflows.append(workflow)
@@ -110,7 +115,7 @@ def topology(request):
     session_obj.save()
     session = {"session_id": session_obj.session_id}
     q = Queue(connection=Redis())
-    q.enqueue(deploy_topology, session_obj.session_id)
+    q.enqueue(deploy_topology, session_obj.session_id, timeout=600)
     return HttpResponse(json.dumps(session))
 
 def topology_cleanup(request):
@@ -119,8 +124,13 @@ def topology_cleanup(request):
     topology_obj.load(filename=pickle_file)
     try:
         topology_obj.cleanup()
+        os.remove(pickle_file)
     except:
         pass
+    try:
+        os.remove(pickle_file)
+    except Exception as ex:
+        print(str(ex))
     return HttpResponse("OK")
 
 def topology_status(request, session_id):
@@ -167,7 +177,8 @@ def fio(request, topology_session_id, f1_id):
     traffic_task = TrafficTask(session_id=topology_session_id)
     traffic_task.save()
     request_json = json.loads(request.body)
-    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=request_json['f1']['name'])
+    uuid = request_json["uuid"]
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     q = Queue(connection=Redis())
 
 
@@ -177,7 +188,12 @@ def fio(request, topology_session_id, f1_id):
     f1_info["dataplane_ip"] = f1_record.dataplane_ip
     f1_info["dpcsh_port"] = f1_record.dpcsh_port
 
-    q.enqueue(start_fio, topology_session_id, f1_info)
+    fio_info = {}
+    fio_info["block_size"] = request_json["block_size"]
+    fio_info["size"] = request_json["size"]
+    fio_info["nr_files"] = request_json["nr_files"]
+
+    q.enqueue(start_fio, topology_session_id, f1_info, fio_info, uuid)
     return HttpResponse("OK")
 
 
@@ -189,31 +205,59 @@ def create_blt_volume(request, topology_session_id, f1_id):
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
 
     request_json = json.loads(request.body)
+
+    logs = []
+
+    # ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.ip}}
+    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
+    command = "storage {}".format(json.dumps(ctrl_dict))
+    logs.append("Sending: " + command)
+    result = dpcsh_client.command(command=command)
+    print("ctrl command result: " + str(result))
+    logs.append("ctrl command result: " + json.dumps(result, indent=4))
+
     capacity = request_json["capacity"]
     block_size = request_json["block_size"]
     name = request_json["name"]
-    this_uuid = str(uuid.uuid4())
+    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
 
-    create_dict = {"class": "volume",
-                   "opcode": "VOL_ADMIN_OPCODE_CREATE",
-                   "params": {"type": "VOL_TYPE_BLK_LOCAL_THIN",
-                              "capacity": capacity,
-                              "block_size": block_size,
-                              "uuid": this_uuid,
-                              "name": name}}
+    create_dict = OrderedDict()
+    create_dict["class"] = "volume"
+    create_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
+    create_dict["params"] = OrderedDict()
+    create_dict["params"]["type"] = "VOL_TYPE_BLK_LOCAL_THIN"
+    create_dict["params"]["capacity"] = capacity
+    create_dict["params"]["block_size"] = block_size
+    create_dict["params"]["uuid"] = this_uuid
+    create_dict["params"]["name"] = name
     command = "storage {}".format(json.dumps(create_dict))
+    logs.append("Sending: " + command)
     result = dpcsh_client.command(command=command)
+    data = {}
     if result["status"]:
-        i = result["data"]
-    return HttpResponse("OK")
+        data = result["data"]
+    print("create command result: " + str(result))
+    logs.append("create command result: " + json.dumps(result, indent=4))
+    result["logs"] = logs
+    return HttpResponse(json.dumps(result))
 
 
 @csrf_exempt
 def create_rds_volume(request, topology_session_id, f1_id):
+    logs = []
+    print("Create RDS volume")
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+
+    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
+    command = "storage {}".format(json.dumps(ctrl_dict))
+    logs.append("Sending: " + command)
+    result = dpcsh_client.command(command=command)
+    print("ctrl command result: " + str(result))
+    logs.append("command result: " + json.dumps(result, indent=4))
+    time.sleep(5)
 
     request_json = json.loads(request.body)
     capacity = request_json["capacity"]
@@ -221,7 +265,7 @@ def create_rds_volume(request, topology_session_id, f1_id):
     name = request_json["name"]
     remote_ip = request_json["remote_ip"]
     remote_nsid = request_json["remote_nsid"]
-    this_uuid = str(uuid.uuid4())
+    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
 
     create_dict = {"class": "volume",
                    "opcode": "VOL_ADMIN_OPCODE_CREATE",
@@ -234,13 +278,34 @@ def create_rds_volume(request, topology_session_id, f1_id):
                               "remote_nsid": remote_nsid}}
 
     command = "storage {}".format(json.dumps(create_dict))
+    logs.append("Sending: " + command)
     result = dpcsh_client.command(command=command)
+    logs.append("command result: " + json.dumps(result, indent=4))
+    print("create command result: " + str(result))
     if result["status"]:
         i = result["data"]
-    return HttpResponse("OK")
+    result["logs"] = logs
+    return HttpResponse(json.dumps(result))
+
+@csrf_exempt
+def set_ip_cfg(request, topology_session_id, f1_id):
+    logs = []
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+    ctrl_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": f1_record.dataplane_ip}}
+    command = "storage {}".format(json.dumps(ctrl_dict))
+    logs.append("Sending: " + command)
+    result = dpcsh_client.command(command=command)
+    print("ctrl command result: " + str(result))
+    logs.append("command result: " + json.dumps(result, indent=4))
+    result["logs"] = logs
+    return HttpResponse(json.dumps(result))
 
 @csrf_exempt
 def create_replica_volume(request, topology_session_id, f1_id):
+    logs = []
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
@@ -250,7 +315,7 @@ def create_replica_volume(request, topology_session_id, f1_id):
     capacity = request_json["capacity"]
     block_size = request_json["block_size"]
     name = request_json["name"]
-    this_uuid = str(uuid.uuid4())
+    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
     pvol_id = request_json["pvol_id"]
 
     create_dict = {"class": "volume",
@@ -264,14 +329,19 @@ def create_replica_volume(request, topology_session_id, f1_id):
                               "pvol_type": "VOL_TYPE_BLK_RDS",
                               "pvol_id": pvol_id}}
     command = "storage {}".format(json.dumps(create_dict))
+    logs.append("Sending: " + command)
     result = dpcsh_client.command(command=command)
+    logs.append("command result: " + json.dumps(result, indent=4))
+    print("replica command result: " + str(result))
     if result["status"]:
         i = result["data"]
-    return HttpResponse("OK")
+    result["logs"] = logs
+    return HttpResponse(json.dumps(result))
 
 
 @csrf_exempt
 def attach_volume(request, topology_session_id, f1_id):
+    logs = []
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
@@ -291,7 +361,20 @@ def attach_volume(request, topology_session_id, f1_id):
                               "uuid": this_uuid,
                               "remote_ip": remote_ip}}
     command = "storage {}".format(json.dumps(create_dict))
+    logs.append("Sending: " + command)
     result = dpcsh_client.command(command=command)
+    logs.append("command result: " + json.dumps(result, indent=4))
+    print("attach command result: " + str(result))
     if result["status"]:
         i = result["data"]
-    return HttpResponse("OK")
+    result["logs"] = logs
+    return HttpResponse(json.dumps(result))
+
+def storage_volumes(request, topology_session_id, f1_id):
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+    return HttpResponse(json.dumps(dpcsh_client.command(command="peek storage/volumes")))
+

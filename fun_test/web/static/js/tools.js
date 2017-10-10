@@ -143,6 +143,7 @@ function draw() {
                 $http.get('/tools/topology').then(function (result) {
                     let sessionId = result.data["session_id"];
                     $scope.topologySessionId = sessionId;
+                    console.log("Topology session id:" + $scope.topologySessionId);
                     $scope.deployButtonText = "Deploying";
                     //console.log(sessionId);
                     $timeout(function () {
@@ -331,7 +332,7 @@ $("#stats-play-button").click(function () {
 
 
 $(document).ready(function () {
-    initPlots();
+    //initPlots();
     //startPlots();
     window.requestAnimationFrame(draw);
 

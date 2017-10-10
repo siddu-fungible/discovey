@@ -45,9 +45,15 @@ class Topology(object):
         self.all_spines = []
         self.tgs = []
 
+        self.iid = 1 
+
         self.name = '%d_Racks__%d_Leafs/rack__%d_Spines' % (self.nRacks, self.nLeafs, self.nSpines)
 
-
+    def get_next_id(self):
+        res = self.iid
+        self.iid += 1
+        return res
+ 
     def getAccessInfo(self):
       
         access_info = {}
@@ -113,7 +119,8 @@ class Topology(object):
                       'max_racks_per_vm': self.max_racks_per_vm,\
                       'max_spines_per_vm': self.max_spines_per_vm,\
                       'tgs': self.tgs,\
-                      'f1_mgmt_ips': f1_mgmt_ips,\
+                      'iid': self.iid, \
+                      'f1_mgmt_ips': f1_mgmt_ips
                       }
 
         pickle.dump(topo_state, open(filename,'wb'))
@@ -137,6 +144,7 @@ class Topology(object):
         self.max_racks_per_vm = topo_state['max_racks_per_vm']  
         self.max_spines_per_vm = topo_state['max_spines_per_vm']
         self.tgs = topo_state['tgs']
+        self.iid = topo_state['iid']
         f1_mgmt_ips = topo_state['f1_mgmt_ips']
  
     def sizeUp(self, nRacks, nLeafs, nSpines):
@@ -266,10 +274,11 @@ class Topology(object):
             vm.configureLeafLinks()
         
         all_vms = self.leaf_vm_objs + self.spine_vm_objs
-        '''
+       
+        ''' 
         for vm in all_vms:
             out = vm.run()
-        '''
+        ''' 
         threads = []
         for vm in all_vms:
             t = threading.Thread(target=vm.run)
@@ -277,7 +286,7 @@ class Topology(object):
             threads.append(t)
         for t in threads:
             t.join()
-        
+         
         self.populate_ssh_config()
 
         self.deactivate_partial_topo(offRacks, offLeafs, offSpines)
@@ -664,36 +673,32 @@ class VM(object):
                 rack_docker_run, rack_links = rack.run()
                 vm_docker_run += rack_docker_run
                 vm_links += rack_links
+            params = {'role': self.role, 'start_rack_id': self.start_rack_id, 'end_rack_id': self.end_rack_id, 'nLeafs': self.nLeafs}
+            print 'creating F1 containers\n'
         else:
             for spine in  self.spines:
                 spine.run()
                 vm_docker_run += spine.docker_run
                 vm_links += spine.link_config
-
-        if self.role == 'leaf':
-            params = {'role': self.role, 'start_rack_id': self.start_rack_id, 'end_rack_id': self.end_rack_id, 'nLeafs': self.nLeafs}
-        else:
             params = {'role': self.role, 'start_spine_id': self.start_spine_id, 'end_spine_id': self.end_spine_id}
-
-        if self.role == 'leaf':
-            print 'creating F1 containers\n'
-        else:
             print 'creating Spine containers\n'
 
         out = exec_send_file([(self.ip, vm_docker_run)], [])
         out = exec_remote_commands([(self.ip, ['/root/docker.sh'])], [], 300)
         out = exec_send_file([(self.ip, params)], [])
 
+        if self.role == 'leaf' and not network_only:
+            print 'waiting for PSIMs to be ready\n'
+            self.waitOnPsim()
+
         if not flat_topo:
-            if self.role == 'leaf' and not network_only:
-                print 'waiting for file based disk to be created\n'
             if self.role == 'leaf':
-                time.sleep(60)
+                time.sleep(20)
                 for rack in self.racks:
                     rack.configureNodes()
                 self.pauseRacks([rack.rack_id for rack in self.racks])
             else:
-                time.sleep(30)
+                time.sleep(20)
                 for spine in self.spines:
                     spine.configure()
                 self.pauseNodes([spine.name for spine in self.spines])
@@ -878,6 +883,14 @@ class VM(object):
             iptables_repair_cmd += 'ip netns exec %s iptables -D OUTPUT -o eth0 -d %s -j DROP \n' % (src_node.name, dst.ip)
 
         out = exec_remote_commands([(self.ip, [iptables_repair_cmd])], [])
+
+    @retry(tries=100, delay=20)
+    def waitOnPsim(self):
+        out = exec_remote_commands([(self.ip, [psim_process_count])], [])
+        if int(out[0]['results'][0]['output']) == self.nRacks*self.nLeafs:
+            return True
+        else:
+            return False
             
     def get_rack_from_id(self, rack_id):
         index = int(rack_id) - ((self.id-1)*self.topo.max_racks_per_vm) -1
@@ -1301,7 +1314,8 @@ class Node(object):
         output = run_commands(self.vm_conn_handle, [ns_ln])
 
     def get_host_port(self):
-        return (base_port + get_next_id())
+        #self.vm_obj.topo.iid = base_port + self.vm_obj.topo.get_next_id()
+        return (base_port + self.vm_obj.topo.get_next_id()) 
 
     # Given name of peer node, return local interface details
     def get_interface(self, node_name):
@@ -1572,7 +1586,6 @@ class TrafficGenerator(object):
     def __init__(self, node):
         TrafficGenerator._tg_id += 1
         self.id = str(TrafficGenerator._tg_id)
-        #self.name = 'TG%s-%s' % (self.id, node.name)
         self.name = 'TG-%s' % (node.name)
         self.node = node
         self.asn = node.asn
@@ -1722,9 +1735,9 @@ class TrafficGenerator(object):
         out = exec_remote_commands([(self.vm_ip, [ns_ln])], [])
 
     def get_host_port(self):
-        return (base_port + get_next_id())
-
-
+        #self.node.vm_obj.topo.iid = base_port + get_next_id()
+        return (base_port+self.node.vm_obj.topo.get_next_id())
+        #return (base_port + get_next_id())
 
 def main():
     topo = Topology()
