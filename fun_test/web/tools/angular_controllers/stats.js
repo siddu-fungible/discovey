@@ -7,11 +7,12 @@
         ctrl.$onInit = function () {
             $scope.charting = false;
             //$scope.series = ['2-1', '2-2', '2-3', '2-4'];
+            //$scope.series = ['2-2', '2-3', '2-1'];
             $scope.series = ['2-2', '2-3'];
             $scope.buttonText = "Start";
             $scope.playIcon = "glyphicon-play";
-            $scope.currentReadValues = {};
-            $scope.currentWriteValues = {};
+            //$scope.currentReadValues = {};
+            //$scope.currentWriteValues = {};
             $scope.readsTitle = "Reads";
             $scope.writesTitle = "Writes";
             $scope.width = "100px";
