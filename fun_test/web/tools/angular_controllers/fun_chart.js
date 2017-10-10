@@ -23,6 +23,7 @@
 
             let layout = {
                 showlegend: ctrl.showLegend,
+                autosize: true
             };
 
             if(ctrl.minimal) {

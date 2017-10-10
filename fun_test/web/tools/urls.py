@@ -14,6 +14,7 @@ f1_urls = [
     url(r'^attach_volume/(.*)/(.*)$', views.attach_volume),
     url(r'^set_ip_cfg/(.*)/(.*)$', views.set_ip_cfg),
     url(r'^storage_volumes/(.*)/(.*)$', views.storage_volumes),
+    url(r'^storage_stats/(.*)/(.*)$', views.storage_stats),
     url(r'^(.*)/(.*)$', views.metrics),
     url(r'^detail$', views.f1_details),
     url(r'^upload$', views.upload)

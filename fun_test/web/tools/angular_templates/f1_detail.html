@@ -33,7 +33,7 @@
     <br>
     <div ng-if="vpWus">
         <p class="h4">WUs per VP</p>
-        <table class="table table-bordered table-nonfluid table-striped">
+        <table class="table table-bordered table-nonfluid table-striped" style="min-width: 500px">
             <thead>
                 <td>VP</td>
                 <td>Sent</td>
@@ -51,8 +51,8 @@
                     <td>
                         {{ properties.wus_received }}
                     </td>
-                    <td>
-                        <fun-chart series="series" style="width: 50px; height: 50px" syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting"></fun-chart>
+                    <td style="min-width: 400px; max-height: 50px">
+                        <fun-chart series="series" syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting" minimal="true" show-legend="true"></fun-chart>
                     </td>
                 </tr>
 

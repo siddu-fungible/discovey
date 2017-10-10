@@ -6,11 +6,13 @@
 
         ctrl.$onInit = function () {
             $scope.charting = false;
-            $scope.series = ['F1', 'F2', 'F3'];
+            $scope.series = ['2-1', '2-2', '2-3', '2-4'];
             $scope.buttonText = "Start";
             $scope.playIcon = "glyphicon-play";
             $scope.currentValues = {};
             $scope.title = "Reads";
+            $scope.width = "100px";
+            $scope.height = "100px";
 
         };
 
@@ -32,9 +34,19 @@
 
         $scope.pullStats = function () {
             console.log("Pulling");
+            let newStats = {};
             angular.forEach($scope.series, function (seriesName) {
                 $scope.currentValues[seriesName] = $scope.getRandomId();
+                $http.get("/tools/f1/storage_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
+                    if (result.data.status === "PASSED") {
+                        
+                    }
+                    if(newStats.length == $scope.series.length) {
+                        $scope.currentValues = newStats;
+                    };
+                });
             });
+          
             if($scope.charting) {
                 $timeout($scope.pullStats, 3000);
             }
