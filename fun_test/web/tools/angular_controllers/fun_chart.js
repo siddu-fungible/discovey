@@ -20,16 +20,25 @@
         $scope.$watch(function () {
             return ctrl.charting === true;
         }, function (newvalue, oldvalue) {
+
             let layout = {
-                showlegend: false,
-                margin: {
+                showlegend: ctrl.showLegend,
+            };
+
+            if(ctrl.minimal) {
+                layout["margin"] = {
                     t: 0,
                     l: 0,
                     r: 0,
                     b: 0,
                     pad: 0,
                 }
-            };
+            }
+
+
+            if(ctrl.title) {
+                layout["title"] = ctrl.title;
+            }
 
             let data = [];
             for (let i = 0; i < $scope.traceCount; i++) {
@@ -37,7 +46,7 @@
                     x: [],
                     y: [],
                     type: 'scatter',
-                    name: $scope.inputs[i]
+                    name: ctrl.series[i]
 
                 });
             }
@@ -49,11 +58,11 @@
 
         ctrl.$onInit = function () {
 
-            $scope.inputs = ["Sent", "Received"];
-            $scope.traceCount = $scope.inputs.length;
+             //["Sent", "Received"];
+            $scope.traceCount = ctrl.series.length;
             $scope.xValue = 0;
             $scope.values = {};
-            angular.forEach($scope.inputs, function (input) {
+            angular.forEach(ctrl.series, function (input) {
                 $scope.values[input] = [];
             });
         };
@@ -89,7 +98,11 @@
         bindings: {
             syncing: '<',
             charting: '<',
-            values: '<'
+            values: '<',
+            showLegend: '<',
+            series: '<',
+            title: '<',
+            minimal: '<'
         }
     });
 

@@ -332,7 +332,7 @@ $("#stats-play-button").click(function () {
 
 
 $(document).ready(function () {
-    initPlots();
+    //initPlots();
     //startPlots();
     window.requestAnimationFrame(draw);
 

@@ -96,6 +96,7 @@
         <script src="{% static "create_rds_volume.js" %}"></script>
         <script src="{% static "create_replica_volume.js" %}"></script>
         <script src="{% static "set_ip_cfg.js" %}"></script>
+        <script src="{% static "stats.js" %}"></script>
 
 
     {% endblock %}
@@ -112,9 +113,6 @@
         </li>
         <li class="nav-item">
             <a aria-controls="3" class="nav-link" data-toggle="tab" href="#traffic-container" role="tab">Traffic</a>
-        </li>
-        <li class="nav-item">
-            <a aria-controls="4" class="nav-link" data-toggle="tab" href="#stats-container" role="tab">Analytics</a>
         </li>
         <li class="nav-item">
             <a aria-controls="1" class="nav-link" data-toggle="tab" href="#topology-container" role="tab">Topology</a>
@@ -139,13 +137,6 @@
             <f1-detail ng-if="currentF1" f1="currentF1"></f1-detail>
         </div>
 
-        <div class="tab-pane" id="stats-container" role="tabpanel">
-            <button type="button" id="stats-play-button" class="btn btn-success">
-                <i id="stats-play-icon" class="glyphicon glyphicon-play">
-                </i>Start
-            </button>
-
-        </div>
 
         <div class="tab-pane" id="traffic-container" role="tabpanel">
             <div class="row">
@@ -175,6 +166,9 @@
                         </div>
 
                     </div>
+                </div>
+                <div class="col-sm-5">
+                    <stats></stats>
                 </div>
             </div>
         </div>

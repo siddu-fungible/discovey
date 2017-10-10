@@ -11,6 +11,7 @@
             $scope.syncing = false;
             $scope.syncTimer = null;
             $scope.charting = null;
+            $scope.series = ['Sent', 'Received'];
         };
 
         $scope.$watch('ctrl.f1', function () {

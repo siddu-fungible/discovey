@@ -45,6 +45,8 @@ def f1_details(request):
 
     return HttpResponse(json.dumps(response))
 
+
+
 def f1(request, session_id):
     f1s = []
     f1_records = F1.objects.filter(topology_session_id=int(session_id))

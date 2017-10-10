@@ -8,12 +8,12 @@
     </div>
 
 
-
     <div ng-switch="selectedTg" class="row">
         <div ng-switch-when="fio">
             <label class="form-inline">Replica Volume UUID</label>
             <select class="form-control" ng-model="$parent.selectedUuid"
-                    ng-options="volumeUuid for volumeUuid in $ctrl.f1.replicaVolumeUuids track by volumeUuid" ng-change="tgUuidSelection(selectedUuid)">
+                    ng-options="volumeUuid for volumeUuid in $ctrl.f1.replicaVolumeUuids track by volumeUuid"
+                    ng-change="tgUuidSelection(selectedUuid)">
             </select>
             <label class="form-inline">Block Size</label>
             <input class="form-control" type="text" value="4k" ng-model="$parent.fioBlockSize">
