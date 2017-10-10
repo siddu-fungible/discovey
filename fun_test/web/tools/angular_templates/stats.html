@@ -1,0 +1,13 @@
+<div>
+    <button type="button" class="btn btn-success" ng-click="startChart()">
+        <i class="glyphicon {{ playIcon }}">
+        </i>{{ buttonText }}
+    </button>
+    <fun-chart style="width: 100px; height: 100px"
+               values="currentValues"
+               series="series"
+               show-legend="true"
+               title="title"
+               charting="charting"></fun-chart>
+
+</div>
