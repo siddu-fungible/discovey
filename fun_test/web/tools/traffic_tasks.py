@@ -56,5 +56,6 @@ def start_fio(session_id, f1_record, fio_info, uuid):
     topology_obj.save(filename=pickle_file)
     print("Output:" + str(out))
     traffic_task.status = RESULTS["PASSED"]
+    traffic_task.logs = str(out)
     traffic_task.save()
 

@@ -61,6 +61,7 @@ def traffic_task_status(request, session_id):
     result = {}
     traffic_task = TrafficTask.objects.get(session_id=session_id)
     result["status"] = traffic_task.status
+    result["logs"] = traffic_task.logs
     return HttpResponse(json.dumps(result))
 
 def workflows(request):

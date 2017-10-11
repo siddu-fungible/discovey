@@ -51,6 +51,7 @@
                     }, pollInterval);
                 } else {
                     $scope.playing = false;
+                    $scope.logs = result.data.logs;
                 }
             }).catch(function (result) {
                 // task error TODO

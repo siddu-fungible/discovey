@@ -35,6 +35,10 @@
             <button ng-show="playing" type="button" class="btn btn-danger btn-sm" ng-click="stop()">
                 <span class="glyphicon glyphicon-stop"></span> Stop
             </button>
+            <div class="row">
+                <label>Logs</label>
+                <textarea ng-model="logs" class="form-control" style="min-width: 100%; min-height: 100%"></textarea>
+            </div>
 
         </div>
         <div ng-switch-when="iperf">
