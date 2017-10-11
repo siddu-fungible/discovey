@@ -398,3 +398,20 @@ def storage_stats(request, topology_session_id, f1_id):
     else:
         response["error_message"] = result["error_message"]
     return HttpResponse(json.dumps(response))
+
+def storage_repvol_stats(request, topology_session_id, f1_id):
+    print("****")
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+    result = dpcsh_client.command(command="enable_counters")
+    result = dpcsh_client.command(command="peek stats/repvol/0")
+    response = {"status": RESULTS["FAILED"]}
+    if result["status"]:
+        response["status"] = RESULTS["PASSED"]
+        response["data"] = result["data"]
+        print(json.dumps(response["data"], indent=4))
+    else:
+        response["error_message"] = result["error_message"]
+    return HttpResponse(json.dumps(response))

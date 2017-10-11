@@ -7,8 +7,8 @@
         ctrl.$onInit = function () {
             $scope.charting = false;
             //$scope.series = ['2-1', '2-2', '2-3', '2-4'];
-            //$scope.series = ['2-2', '2-3', '2-1'];
             $scope.series = ['2-2', '2-3'];
+            //$scope.series = ['2-2', '2-3', '2-1'];
             $scope.buttonText = "Start";
             $scope.playIcon = "glyphicon-play";
             //$scope.currentReadValues = {};
@@ -54,6 +54,26 @@
                                 });
                                 $scope.newReadStats[seriesName] = numReads;
                                 $scope.newWriteStats[seriesName] = numWrites;
+                            } else {
+            
+                                $http.get("/tools/f1/storage_repvol_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
+                                    let d = result.data.data;
+                                    let numReads = 0;
+                                    let numWrites = 0;
+                                    if("plexes" in d) {
+                                        angular.forEach(d.plexes, function (plex) {
+                                            if("total_reads" in plex) {
+                                                numReads += plex.total_reads;
+                                            }
+                                            if("total_writes" in plex) {
+                                                numWrites += plex.total_writes;
+                                            }
+                                        });
+                                        $scope.newReadStats[seriesName] = numReads;
+                                        $scope.newWriteStats[seriesName] = numWrites;
+                                    }
+                                });
+
                             }
                         }
                     }
