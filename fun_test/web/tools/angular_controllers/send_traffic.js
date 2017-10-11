@@ -40,7 +40,12 @@
                     }, pollInterval);
                 } else {
                     $scope.playing = false;
-                    $scope.logs = result.data.logs;
+                    $scope.logs = result.data.logs.toString();
+                    const regex = /Run status group.*',/g;
+                    let s = regex.exec($scope.logs);
+                    if(s.length) {
+                        $scope.logs = s[0].replace(/\\n/g, "\n");
+                    } 
                 }
             }).catch(function (result) {
                 // task error TODO

@@ -47,7 +47,7 @@
                     }
                 }
             });
-            $timeout($scope.checkVolumes, 30000);
+            $timeout($scope.checkVolumes, 5000);
         };
 
 
