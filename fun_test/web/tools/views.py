@@ -473,7 +473,7 @@ def ikv_stats(request, topology_session_id, f1_id):
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
     result = dpcsh_client.command(command="enable_counters")
-    result = dpcsh_client.command(command="peek stats/repvol/0")
+    result = dpcsh_client.command(command="peek stats/likv")
     response = {"status": RESULTS["FAILED"]}
     if result["status"]:
         response["status"] = RESULTS["PASSED"]
