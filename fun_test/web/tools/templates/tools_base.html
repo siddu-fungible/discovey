@@ -158,20 +158,20 @@
                         </div>
                         <div class="panel-body" ng-switch="commonTrafficWorkFlow.id">
                             <div ng-switch-when="attach_tg">
-                                <attach-tg f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="attachTgInfo"></attach-tg>
+                                <attach-tg common-traffic-workflow="commonTrafficWorkFlow" f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="attachTgInfo"></attach-tg>
                             </div>
                             <div ng-switch-when="ikv_test">
-                                <ikv-test f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="ikvTestInfo"></ikv-test>
+                                <ikv-test common-traffic-workflow="commonTrafficWorkFlow" f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="ikvTestInfo"></ikv-test>
                             </div>
                             <div ng-switch-when="send_traffic">
-                                <send-traffic f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></send-traffic>
+                                <send-traffic common-traffic-workflow="commonTrafficWorkFlow" f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></send-traffic>
                             </div>
                         </div>
 
                     </div>
                 </div>
                 <div class="col-sm-5">
-                    <stats topology-session-id="topologySessionId"></stats>
+                    <stats common-traffic-work-flow="commonTrafficWorkFlow" topology-session-id="topologySessionId"></stats>
                 </div>
             </div>
         </div>

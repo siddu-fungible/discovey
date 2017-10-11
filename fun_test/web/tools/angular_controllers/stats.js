@@ -115,7 +115,8 @@
             replaceIpDot: '&',
             setCommonWorkFlow: '&',
             setActiveTab: '&',
-            topologySessionId: '<'
+            topologySessionId: '<',
+            commonTrafficWorkFlow: '<'
         }
     });
 
