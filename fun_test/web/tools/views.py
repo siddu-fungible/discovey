@@ -53,6 +53,8 @@ def f1(request, session_id):
     for f1_record in f1_records:
         f1 = {"name": f1_record.name, "ip": f1_record.ip, "mgmt_ssh_port": f1_record.mgmt_ssh_port, "dataplane_ip": f1_record.dataplane_ip, "dpcsh_port": f1_record.dpcsh_port}
         f1s.append(f1)
+    f1s = sorted(f1s, key=lambda f1: f1["name"])
+    # f1s.reverse()
     return HttpResponse(json.dumps(f1s))
 
 def traffic_task_status(request, session_id):
@@ -257,7 +259,6 @@ def create_rds_volume(request, topology_session_id, f1_id):
     result = dpcsh_client.command(command=command)
     print("ctrl command result: " + str(result))
     logs.append("command result: " + json.dumps(result, indent=4))
-    time.sleep(5)
 
     request_json = json.loads(request.body)
     capacity = request_json["capacity"]

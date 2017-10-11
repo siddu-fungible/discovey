@@ -16,7 +16,7 @@
             ctrl.f1.volumeUuids = [];
             ctrl.f1.rdsVolumeUuids = [];
             ctrl.f1.replicaVolumeUuids = [];
-            //$scope.checkVolumes();  //TODO
+            $scope.checkVolumes();  //TODO
 
 
         };
