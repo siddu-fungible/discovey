@@ -15,16 +15,6 @@ import ikv_tasks
 import topo
 from collections import OrderedDict
 
-tgs = [
-    {
-        "name": "tg1",
-        "ip": "11.0.0.1"
-    },
-    {
-        "name": "tg2",
-        "ip": "11.0.0.2"
-    }
-]
 
 @csrf_exempt
 def f1_details(request):
@@ -105,7 +95,7 @@ def start_workflow_step(request):
     return HttpResponse("Ok")
 
 def tg(request):
-    return HttpResponse(json.dumps(tgs))
+    return HttpResponse(json.dumps([]))
 
 def index(request):
     return render(request, 'tools_base.html', locals())
@@ -194,11 +184,20 @@ def attach_tg(request, topology_session_id, f1_id):
     topology_obj.save(filename=pickle_file)
 
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
+    tg = None
+    tg_found = False
     if topology_obj.tgs:
-        tg = topology_obj.tgs[0]
-    else:
+        print("Searching for {}".format(f1_id))
+        for tg in topology_obj.tgs:
+            if tg.node.name == f1_id:
+                print("Found {} in tg list".format(f1_id))
+                tg_found = True
+                break
+    if not tg_found:
+        print("No TG found, attaching a new one")
         tg = topology_obj.attachTG(f1_id)
-    print("tg.ip: " + tg.ip)
+    print("**** tg.ip: " + tg.ip)
+    topology_obj.save(filename=pickle_file)
 
     create_dict = {"class": "controller",
                    "opcode": "ATTACH",
@@ -433,6 +432,7 @@ def storage_stats(request, topology_session_id, f1_id):
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
+    print("Storage stats for {} {}".format(server_ip, server_port))
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
     result = dpcsh_client.command(command="enable_counters")
     # print("Repvol on {} {}".format(server_ip, server_port))
@@ -440,6 +440,7 @@ def storage_stats(request, topology_session_id, f1_id):
     # if result["status"]:
     #    print(json.dumps(result["data"], indent=4))
 
+    
     result = dpcsh_client.command(command="peek storage/volumes")
     response = {"status": RESULTS["FAILED"]}
     if result["status"]:
@@ -468,12 +469,14 @@ def storage_repvol_stats(request, topology_session_id, f1_id):
 
 
 def ikv_stats(request, topology_session_id, f1_id):
+    print("****")
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
     result = dpcsh_client.command(command="enable_counters")
     result = dpcsh_client.command(command="peek stats/likv")
+    print("command result: " + str(result))
     response = {"status": RESULTS["FAILED"]}
     if result["status"]:
         response["status"] = RESULTS["PASSED"]

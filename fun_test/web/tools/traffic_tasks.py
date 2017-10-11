@@ -24,9 +24,13 @@ def start_fio(session_id, f1_record, fio_info):
 
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
     tg = None
+    tg_found = False
     if topology_obj.tgs:
-        tg = topology_obj.tgs[0]
-    else:
+        for tg in topology_obj.tgs:
+            if tg.node.name == f1_record["name"]:
+                tg_found = True
+                break
+    if not tg_found:
         print("ERROR no TG attached")
         return #tg = topology_obj.attachTG(f1_record["name"])
     print("tg.ip: " + tg.ip)
@@ -34,7 +38,7 @@ def start_fio(session_id, f1_record, fio_info):
     size = fio_info["size"]
     nr_files = fio_info["nr_files"]
 
-    fio_command = "fio --name=fun_nvmeof --ioengine=fun --rw=randrw --bs={} --size={} --numjobs=1  --iodepth=8 --do_verify=0 --verify=md5 --verify_fatal=1 --group_reporting --source_ip={} --dest_ip={} --io_queues=4 --nrfiles={} --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY".format(block_size, size, tg.ip, f1_record["dataplane_ip"], nr_files)
+    fio_command = "fio --name=fun_nvmeof --ioengine=fun --rw=readwrite --bs={} --size={} --numjobs=1  --iodepth=8 --do_verify=0 --verify=md5 --verify_fatal=1 --source_ip={} --dest_ip={} --io_queues=1 --nrfiles={} --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY".format(block_size, size, tg.ip, f1_record["dataplane_ip"], nr_files)
 
     print("FIO command: {}".format(fio_command))
     out = tg.exec_command(fio_command)

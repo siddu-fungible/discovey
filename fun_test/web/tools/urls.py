@@ -16,6 +16,7 @@ f1_urls = [
     url(r'^set_ip_cfg/(.*)/(.*)$', views.set_ip_cfg),
     url(r'^storage_volumes/(.*)/(.*)$', views.storage_volumes),
     url(r'^storage_stats/(.*)/(.*)$', views.storage_stats),
+    url(r'^ikv_stats/(.*)/(.*)$', views.ikv_stats),
     url(r'^storage_repvol_stats/(.*)/(.*)$', views.storage_repvol_stats),
     url(r'^(.*)/(.*)$', views.metrics),
     url(r'^detail$', views.f1_details),

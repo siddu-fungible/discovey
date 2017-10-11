@@ -30,7 +30,7 @@
             <div class="form-group row">
                 <label>Remote IP</label>
                 <select
-                        ng-options="f1.dataplane_ip as [f1.name, f1.ip, f1.dataplane_ip].join(' -- ') for f1 in $ctrl.f1s"
+                        ng-options="f1.dataplane_ip as [f1.name, f1.dataplane_ip].join(' -- ') for f1 in $ctrl.f1s"
                         ng-model="selectedRemoteIp" required></select>
             </div>
             <div class="form-group row">
@@ -40,7 +40,7 @@
 
         </form>
         <div ng-if="rdsVolumeUuids.length" class="row">
-            <label>RDS Volumes</label>
+            <label>Remote Volumes</label>
             <table class="table table-bordered">
                 <th>UUID</th>
                 <tr ng-repeat="volumeUuid in rdsVolumeUuids">
