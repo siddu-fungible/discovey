@@ -37,7 +37,7 @@
             payload["uuid"] = $scope.selectedUuid;
             $scope.status = "processing";
 
-            $http.post('/tools/f1/create_blt_volume/' + ctrl.topologySessionId + "/" + ctrl.f1.name, payload).then(function(response){
+            $http.post('/tools/f1/attach_tg/' + ctrl.topologySessionId + "/" + ctrl.f1.name, payload).then(function(response){
                 $scope.status = "pass";
                 $scope.logs = [];
                 let responseLogs = response.data.logs;

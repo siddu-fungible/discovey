@@ -8,7 +8,7 @@ from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 
 
 
-def start_fio(session_id, f1_record, fio_info, uuid):
+def start_fio(session_id, f1_record, fio_info):
     traffic_task = TrafficTask.objects.get(session_id=session_id)
     # time.sleep(5)
     print("F1 record: " + str(f1_record))
@@ -39,7 +39,7 @@ def start_fio(session_id, f1_record, fio_info, uuid):
     print("FIO command: {}".format(fio_command))
     out = tg.exec_command(fio_command)
     topology_obj.save(filename=pickle_file)
-    print("Output:" + str(out))
+    print("Output:" + str(json.dumps(out, indent=4)))
     traffic_task.status = RESULTS["PASSED"]
     traffic_task.logs = str(out)
     traffic_task.save()

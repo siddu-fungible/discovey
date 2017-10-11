@@ -245,7 +245,7 @@ def fio(request, topology_session_id, f1_id):
     fio_info["size"] = request_json["size"]
     fio_info["nr_files"] = request_json["nr_files"]
 
-    q.enqueue(start_fio, topology_session_id, f1_info, fio_info, uuid)
+    q.enqueue(start_fio, topology_session_id, f1_info, fio_info)
     return HttpResponse("OK")
 
 
