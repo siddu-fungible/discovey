@@ -78,17 +78,21 @@
                             }
                         }
                     }
-                    if(Object.keys($scope.newReadStats).length === $scope.series.length) {
-                        $scope.currentReadValues = $scope.newReadStats;
-                    };
-                    if(Object.keys($scope.newWriteStats).length === $scope.series.length) {
-                        $scope.currentWriteValues = $scope.newWriteStats;
-                    };
+                    //if(Object.keys($scope.newReadStats).length === $scope.series.length) {
+                        if(Object.keys($scope.newReadStats).length) {
+                            $scope.currentReadValues = JSON.parse(JSON.stringify($scope.newReadStats));
+                        }
+                    //};
+                    //if(Object.keys($scope.newWriteStats).length === $scope.series.length) {
+                        if(Object.keys($scope.newWriteStats).length) {
+                            $scope.currentWriteValues = JSON.parse(JSON.stringify($scope.newWriteStats));
+                        }
+                    //};
                 });
             });
           
             if($scope.charting) {
-                $timeout($scope.pullStats, 3000);
+                $timeout($scope.pullStats, 5000);
             }
 
         };

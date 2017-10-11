@@ -3,7 +3,21 @@
         <i class="glyphicon {{ playIcon }}">
         </i>{{ buttonText }}
     </button>
-        <fun-chart style="width: 500px; height: 500px" values="currentReadValues" series="series" show-legend="true" title="readsTitle" charting="charting"></fun-chart>
-        <fun-chart style="width: 500px; height: 500px" values="currentWriteValues" series="series" show-legend="true" title="writesTitle" charting="charting"></fun-chart>
+
+    <table class="table table-bordered">
+        <tr>
+            <th style="background-color: #E4EFF2">F1</th>
+            <th style="background-color: #E4EFF2">Reads</th>
+            <th style="background-color: #E4EFF2">Writes</th>
+        </tr>
+        <tr ng-repeat="f1 in series">
+             <td>{{ f1 }}</td>
+             <td>{{ currentReadValues[f1] }}</td>
+             <td>{{ currentWriteValues[f1] }}</td>
+             
+        </tr>
+    </table>
+        <!-- fun-chart style="width: 500px; height: 500px" values="currentReadValues" series="series" show-legend="true" title="readsTitle" charting="charting"></fun-chart -->
+        <!-- fun-chart style="width: 500px; height: 500px" values="currentWriteValues" series="series" show-legend="true" title="writesTitle" charting="charting"></fun-chart -->
 
 </div>

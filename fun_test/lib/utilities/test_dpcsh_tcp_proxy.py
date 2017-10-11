@@ -11,7 +11,7 @@ class DpcshClient:
         self.server_port = server_port
         self.sock = None
 
-    def sendall(self, data, expected_command_duration=2):
+    def sendall(self, data, expected_command_duration=1):
         start = time.time()
         while data:
             elapsed_time = time.time() - start
@@ -27,7 +27,7 @@ class DpcshClient:
                     continue
 
 
-    def _read(self, expected_command_duration=2):
+    def _read(self, expected_command_duration=1):
         start = time.time()
         chunk = 1024
 
