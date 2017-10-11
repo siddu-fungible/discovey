@@ -32,6 +32,7 @@
         };
 
         $scope.play = function () {
+            $scope.logs = "";
             let payload = {};
             payload["block_size"] = $scope.fioBlockSize;
             payload["size"] = $scope.fioSize;
