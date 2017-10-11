@@ -1,6 +1,6 @@
 {% load staticfiles %}
 
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 
 <head>
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -97,7 +97,7 @@
         <script src="{% static "create_replica_volume.js" %}"></script>
         <script src="{% static "set_ip_cfg.js" %}"></script>
         <script src="{% static "stats.js" %}"></script>
-
+        <script src="{% static "send_traffic.js" %}"></script>
 
     {% endblock %}
 </head>
@@ -229,6 +229,9 @@
                             </div>
                             <div ng-switch-when="ikv_test">
                                 <ikv-test obj="ikvTestInfo"></ikv-test>
+                            </div>
+                            <div ng-switch-when="send_traffic">
+                                <send-traffic f1="currentWorkFlowF1" f1s="f1s" topology-session-id="topologySessionId"></send-traffic>
                             </div>
                         </div>
 

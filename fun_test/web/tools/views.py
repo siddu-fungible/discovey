@@ -175,6 +175,55 @@ def ikv_get(request, key_hex, topology_session_id, f1_id):
     return HttpResponse(ikv_tasks.ikv_get(key_hex=key_hex, server_ip=server_ip, server_port=server_port))
 
 @csrf_exempt
+def attach_tg(request, topology_session_id, f1_id):
+    logs = []
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+
+    request_json = json.loads(request.body)
+    uuid = request_json["uuid"]
+    this_uuid = uuid
+
+    topology_obj = topo.Topology()
+    pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
+    topology_obj.load(filename=pickle_file)
+
+    info = json.loads(topology_obj.getAccessInfo())
+    topology_obj.save(filename=pickle_file)
+
+    print "Info:" + json.dumps(info, indent=4) + ":EINFO"
+    if topology_obj.tgs:
+        tg = topology_obj.tgs[0]
+    else:
+        tg = topology_obj.attachTG(f1_id)
+    print("tg.ip: " + tg.ip)
+
+    create_dict = {"class": "controller",
+                   "opcode": "ATTACH",
+                   "params": {"huid": 0,
+                              "ctlid": 0,
+                              "fnid": 5,
+                              "nsid": 1,   # TODO
+                              "uuid": this_uuid,
+                              "remote_ip": tg.ip}}
+    command = "storage {}".format(json.dumps(create_dict))
+    logs.append("Sending: " + command)
+    result = dpcsh_client.command(command=command)
+    logs.append("command result: " + json.dumps(result, indent=4))
+    print("attach command result: " + str(result))
+
+
+    if result["status"]:
+        data = result["data"]
+    print("create command result: " + str(result))
+    logs.append("create command result: " + json.dumps(result, indent=4))
+    result["logs"] = logs
+    return HttpResponse(json.dumps(result))
+
+
+@csrf_exempt
 def fio(request, topology_session_id, f1_id):
     if TrafficTask.objects.filter(session_id=topology_session_id).exists():
         task = TrafficTask.objects.filter(session_id=topology_session_id).delete()
@@ -182,10 +231,8 @@ def fio(request, topology_session_id, f1_id):
     traffic_task = TrafficTask(session_id=topology_session_id)
     traffic_task.save()
     request_json = json.loads(request.body)
-    uuid = request_json["uuid"]
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     q = Queue(connection=Redis())
-
 
     f1_info = {}
     f1_info["name"] = f1_record.name

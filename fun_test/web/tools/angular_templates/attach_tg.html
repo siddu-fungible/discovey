@@ -7,6 +7,18 @@
         </select>
     </div>
 
+    <br>
+    <div ng-switch="status">
+        Status:
+        <span ng-switch-when="processing"><i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>Processing..</span>
+        <span ng-switch-when="idle" class="label label-info">IDLE</span>
+        <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
+        <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
+    </div>
+    <div ng-if="errorMessage" style="border-style: solid; border-color: red">
+        {{ errorMessage }}
+    </div>
+
 
     <div ng-switch="selectedTg" class="row">
         <div ng-switch-when="fio">
@@ -29,11 +41,8 @@
             <label class="form-inline">Number of files</label>
             <input class="form-control" type="text" value="1" ng-model="$parent.fioNrFiles">
 
-            <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="play()">
-                <span class="glyphicon glyphicon-play"></span> Play
-            </button>
-            <button ng-show="playing" type="button" class="btn btn-danger btn-sm" ng-click="stop()">
-                <span class="glyphicon glyphicon-stop"></span> Stop
+            <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="attach()">
+                <span class="glyphicon glyphicon-play"></span>Attach TG
             </button>
             <div class="row">
                 <label>Logs</label>

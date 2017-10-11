@@ -23,28 +23,13 @@ def start_fio(session_id, f1_record, fio_info, uuid):
     topology_obj.save(filename=pickle_file)
 
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
+    tg = None
     if topology_obj.tgs:
         tg = topology_obj.tgs[0]
     else:
-        tg = topology_obj.attachTG(f1_record["name"])
+        print("ERROR no TG attached")
+        return #tg = topology_obj.attachTG(f1_record["name"])
     print("tg.ip: " + tg.ip)
-    this_uuid = uuid
-    create_dict = {"class": "controller",
-                   "opcode": "ATTACH",
-                   "params": {"huid": 0,
-                              "ctlid": 0,
-                              "fnid": 5,
-                              "nsid": 1,   # TODO
-                              "uuid": this_uuid,
-                              "remote_ip": tg.ip}}
-    command = "storage {}".format(json.dumps(create_dict))
-    logs.append("Sending: " + command)
-    server_ip = f1_record["ip"]
-    server_port = f1_record["dpcsh_port"]
-    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
-    result = dpcsh_client.command(command=command)
-    logs.append("command result: " + json.dumps(result, indent=4))
-    print("attach command result: " + str(result))
     block_size = fio_info["block_size"]
     size = fio_info["size"]
     nr_files = fio_info["nr_files"]
