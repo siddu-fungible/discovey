@@ -72,7 +72,7 @@ def workflows(request):
     workflows.append(workflow)
     # workflow = {"name": "Set IP config", "id": "set_ip_cfg"}
     # workflows.append(workflow)
-    workflow = {"name": "Import Volume", "id": "create_rds_volume"}
+    workflow = {"name": "Import Remote Volume", "id": "create_rds_volume"}
     workflows.append(workflow)
     workflow = {"name": "Create Replica Volume", "id": "create_replica_volume"}
     workflows.append(workflow)
@@ -82,7 +82,9 @@ def traffic_workflows(request):
     workflows = []
     workflow = {"name": "IKV test", "id": "ikv_test"}
     workflows.append(workflow)
-    workflow = {"name": "Traffic", "id": "attach_tg"}
+    workflow = {"name": "Attach Traffic generator", "id": "attach_tg"}
+    workflows.append(workflow)
+    workflow = {"name": "Send Traffic", "id": "send_traffic"}
     workflows.append(workflow)
     return HttpResponse(json.dumps(workflows))
 
