@@ -27,10 +27,11 @@
             $http.get("/tools/tg/ikv_get/" + $scope.keyHex + "/" + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function (response) {
                 console.log(response.data);
                 $scope.filepreview = response.data;
+                /*
                 var myVideo = document.getElementsByTagName('video')[0];
                 myVideo.src = $scope.filepreview;
                 myVideo.load();
-                myVideo.play();
+                myVideo.play();*/
 
             });
         }

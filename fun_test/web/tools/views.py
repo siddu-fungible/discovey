@@ -67,11 +67,11 @@ def workflows(request):
     workflows = []
     workflow = {"name": "Create Raw Volume", "id": "create_volume"}
     workflows.append(workflow)
-    workflow = {"name": "Attach Volume", "id": "attach_volume"}
+    workflow = {"name": "Export Volume", "id": "attach_volume"}
     workflows.append(workflow)
-    workflow = {"name": "Set IP config", "id": "set_ip_cfg"}
-    workflows.append(workflow)
-    workflow = {"name": "Create RDS Volume", "id": "create_rds_volume"}
+    # workflow = {"name": "Set IP config", "id": "set_ip_cfg"}
+    # workflows.append(workflow)
+    workflow = {"name": "Import Volume", "id": "create_rds_volume"}
     workflows.append(workflow)
     workflow = {"name": "Create Replica Volume", "id": "create_replica_volume"}
     workflows.append(workflow)
