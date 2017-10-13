@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function IkvTestController($scope, $http, uploadService, $sce) {
+    function IkvTestController($scope, $http, uploadService, $sce, $timeout) {
         let ctrl = this;
 
         $scope.$watch('file', function (newfile, oldfile) {
@@ -9,12 +9,38 @@
                 return;
             }
             $scope.processing = true;
-            uploadService.upload(newfile, ctrl.f1, ctrl.topologySessionId).then(function (response) {
+            uploadService.upload(newfile, ctrl.f1, ctrl.topologySessionId, "/tools/tg/ikv_put/").then(function (response) {
                 //console.log("result", res);
                 $scope.processing = false;
                 $scope.keyHex = response.data;
             })
         });
+        $scope.$watch('filevideo', function (newfile, oldfile) {
+            if (angular.equals(newfile, oldfile)) {
+                return;
+            }
+            $scope.processing = true;
+            uploadService.upload(newfile, ctrl.f1, ctrl.topologySessionId, "/tools/tg/ikv_video_put/").then(function (response) {
+                //console.log("result", res);
+                $scope.processing = false;
+                $scope.keyHex = response.data;
+                $scope.getIkvVideoStatus(ctrl.topologySessionId);
+            })
+        });
+
+        $scope.getIkvVideoStatus = function (sessionId) {
+                $http.get("/tools/tg/ikv_video_task_status/" + sessionId.toString()).then(function (result) {
+                    status = result.data["status"];
+                    if ((status === "NOT_RUN") || (status === "IN_PROGRESS")) {
+                        $timeout(function () {
+                            $scope.getIkvVideoStatus(sessionId)
+                        }, 2000);
+                    } else {
+                    }
+                }).catch(function (result) {
+                    alert("Ikv video put status check failed");
+                });
+        };
 
         ctrl.$onInit = function () {
             $scope.key_hex = null;
@@ -74,11 +100,11 @@
                 upload: upload
             });
 
-            function upload(file, f1, sessionId) {
+            function upload(file, f1, sessionId, baseUrl) {
                 //$scope.processing = true;
                 let upl = $http({
                     method: 'POST',
-                    url: '/tools/tg/ikv_put/' + sessionId + "/" + f1.name, // /api/upload
+                    url: baseUrl + sessionId + "/" + f1.name, // /api/upload
                     headers: {
                         'Content-Type': undefined
                     },

@@ -27,9 +27,11 @@ f1_urls = [
 tg_urls = [
     url(r'^$', views.tg),
     url(r'^ikv_put/(.*)/(.*)$', views.ikv_put),
+    url(r'^ikv_video_put/(.*)/(.*)$', views.ikv_video_put),
     url(r'^ikv_get/(.*)/(.*)/(.*)$', views.ikv_get),
     url(r'^fio/(.*)/(.*)$', views.fio),
-    url(r'^traffic_task_status/(.*)$', views.traffic_task_status)
+    url(r'^traffic_task_status/(.*)$', views.traffic_task_status),
+    url(r'^ikv_video_task_status/(.*)$', views.ikv_video_task_status),
 ]
 
 topology_urls = [

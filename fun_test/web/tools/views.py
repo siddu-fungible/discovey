@@ -3,7 +3,7 @@ import json, uuid, os
 import time, random
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from web.tools.models import Session, F1, Tg, TopologyTask, TrafficTask
+from web.tools.models import Session, F1, Tg, TopologyTask, TrafficTask, IkvVideoTask
 from rq import Queue
 from redis import Redis
 from topology_tasks import deploy_topology
@@ -62,6 +62,13 @@ def traffic_task_status(request, session_id):
     traffic_task = TrafficTask.objects.get(session_id=session_id)
     result["status"] = traffic_task.status
     result["logs"] = traffic_task.logs
+    return HttpResponse(json.dumps(result))
+
+def ikv_video_task_status(request, session_id):
+    result = {}
+    ikv_video_task = IkvVideoTask.objects.get(session_id=session_id)
+    result["status"] = ikv_video_task.status
+    result["logs"] = ikv_video_task.logs
     return HttpResponse(json.dumps(result))
 
 def workflows(request):
@@ -155,6 +162,30 @@ def _get_f1_record(topology_session_id, f1_id):
     f1_record = F1.objects.get(topology_session_id=int(topology_session_id), name=f1_id)
     return f1_record
 
+@csrf_exempt
+def ikv_video_put(request, topology_session_id, f1_id):
+    if IkvVideoTask.objects.filter(session_id=topology_session_id).exists():
+        task = IkvVideoTask.objects.filter(session_id=topology_session_id).delete()
+
+    ikv_video_task = IkvVideoTask(session_id=topology_session_id)
+    ikv_video_task.save()
+    uploaded_file = request.FILES['upload']
+    bite = uploaded_file.read()
+    video_file = WEB_UPLOADS_DIR + "/video.mp4" #TODO
+    with open(video_file, 'wb') as outfile:
+        outfile.write(bite) 
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    f1_info = {}
+    f1_info["name"] = f1_record.name
+    f1_info["ip"] = f1_record.ip
+    f1_info["dataplane_ip"] = f1_record.dataplane_ip
+    f1_info["dpcsh_port"] = f1_record.dpcsh_port
+
+   
+    q = Queue(connection=Redis())
+    q.enqueue(ikv_tasks.ikv_video_put, f1_info=f1_info, session_id=topology_session_id)
+    # key_hex = ikv_tasks.ikv_put(bite, server_ip, server_port)
+    return HttpResponse("Ok")
 
 @csrf_exempt
 def ikv_put(request, topology_session_id, f1_id):

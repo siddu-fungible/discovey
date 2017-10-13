@@ -62,7 +62,7 @@ class DpcshClient:
         result = {"status": False, "data": None, "error_message": None, "command": command}
         try:
             self._connect()
-            print ("Sending:" + command + "\n")
+            # print ("Sending:" + command + "\n")
             self.sendall("{}\n".format(command))
             output = self._read(expected_command_duration)
             json_output = json.loads(output)

@@ -43,3 +43,8 @@ class TrafficTask(models.Model):
 
     def __str__(self):
         return "{}-{}".format(self.session_id, self.status)
+
+class IkvVideoTask(models.Model):
+    session_id = models.IntegerField(unique=True, default=10)
+    status = models.CharField(max_length=15, default=RESULTS["NOT_RUN"])
+    logs = models.CharField(max_length=2048, default="")
