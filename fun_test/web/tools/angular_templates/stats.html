@@ -1,37 +1,5 @@
 <div>
 
-<<<<<<< HEAD
-        <table class="table table-bordered">
-            <tr>
-                <th style="background-color: #E4EFF2">F1</th>
-                <th style="background-color: #E4EFF2">Reads</th>
-                <th style="background-color: #E4EFF2">Writes</th>
-            </tr>
-            <tr ng-repeat="f1 in series">
-                 <td>{{ f1 }}</td>
-                 <td>{{ currentReadValues[f1] }}</td>
-                 <td>{{ currentWriteValues[f1] }}</td>
-
-            </tr>
-        </table>
-        <br>
-    <!-- button type="button" class="btn btn-success" ng-click="startIkvStats()">
-        <i class="glyphicon {{ playIcon }}">
-        </i>{{ buttonText }}
-    </button -->
-        <!-- table class="table table-bordered">
-            <tr>
-                <th style="background-color: #E4EFF2">F1</th>
-                <th style="background-color: #E4EFF2">IKV Reads</th>
-                <th style="background-color: #E4EFF2">IKV Writes</th>
-            </tr>
-            <tr ng-repeat="f1 in series">
-                 <td>{{ f1 }}</td>
-                 <td>{{ currentWriteValues[f1] }}</td>
-            </tr>
-        </table -->
-
-=======
         <div ng-switch="$ctrl.commonTrafficWorkFlow.id">
             <div ng-switch-when="send_traffic">
 		    <button type="button" class="btn btn-success" ng-click="startChart()">
@@ -62,9 +30,9 @@
 			{{ buttonText }}
 		    </button>
                     <div>
-		<table class="table table-bordered" ng-if="ikvInfo">
+		<table class="table table-bordered">
 		    <tr>
-			<th style="background-color: #E4EFF2">Key-value Store Property</th>
+			<th style="background-color: #E4EFF2">Key-value Property</th>
 			<th style="background-color: #E4EFF2">Value</th>
 		    </tr>
 		    <tr ng-repeat="(key, value) in ikvInfo">
@@ -78,7 +46,6 @@
         <br>
         
 
->>>>>>> demo-work
             <!-- fun-chart style="width: 500px; height: 500px" values="currentReadValues" series="series" show-legend="true" title="readsTitle" charting="charting"></fun-chart -->
             <!-- fun-chart style="width: 500px; height: 500px" values="currentWriteValues" series="series" show-legend="true" title="writesTitle" charting="charting"></fun-chart -->
 </div>

@@ -19,15 +19,11 @@
 	    ng-options="volumeUuid for volumeUuid in $ctrl.f1.replicaVolumeUuids track by volumeUuid"
 	    ng-change="tgUuidSelection(selectedUuid)">
     </select>
-    <br>
-
     <label class="form-inline">Raw Volume UUID</label>
     <select class="form-control" ng-model="selectedUuid"
 	    ng-options="volumeUuid for volumeUuid in $ctrl.f1.volumeUuids track by volumeUuid"
 	    ng-change="tgUuidSelection(selectedUuid)">
     </select>
-    <br>
-
     <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="attach()">
 	<span class="glyphicon glyphicon-play"></span>Attach TG
     </button>
