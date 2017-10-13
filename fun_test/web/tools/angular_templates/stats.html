@@ -30,9 +30,9 @@
 			{{ buttonText }}
 		    </button>
                     <div>
-		<table class="table table-bordered">
+		<table class="table table-bordered" ng-if="ikvInfo">
 		    <tr>
-			<th style="background-color: #E4EFF2">Key-value Property</th>
+			<th style="background-color: #E4EFF2">Key-value Store Property</th>
 			<th style="background-color: #E4EFF2">Value</th>
 		    </tr>
 		    <tr ng-repeat="(key, value) in ikvInfo">
