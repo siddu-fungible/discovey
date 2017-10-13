@@ -70,7 +70,7 @@ def workflows(request):
 
 def traffic_workflows(request):
     workflows = []
-    workflow = {"name": "IKV test", "id": "ikv_test"}
+    workflow = {"name": "Key-value store test", "id": "ikv_test"}
     workflows.append(workflow)
     workflow = {"name": "Attach Traffic generator", "id": "attach_tg"}
     workflows.append(workflow)
@@ -184,6 +184,11 @@ def attach_tg(request, topology_session_id, f1_id):
     topology_obj.save(filename=pickle_file)
 
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> demo-work
     tg = None
     tg_found = False
     if topology_obj.tgs:
@@ -198,6 +203,10 @@ def attach_tg(request, topology_session_id, f1_id):
         tg = topology_obj.attachTG(f1_id)
     print("**** tg.ip: " + tg.ip)
     topology_obj.save(filename=pickle_file)
+<<<<<<< HEAD
+=======
+
+>>>>>>> demo-work
 
     create_dict = {"class": "controller",
                    "opcode": "ATTACH",

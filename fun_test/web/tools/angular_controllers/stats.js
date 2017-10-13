@@ -11,12 +11,17 @@
             //$scope.series = ['2-2', '2-3'];
             //$scope.series = ['2-2', '2-3', '2-1'];
             $scope.series = ['1-1', '1-2', '1-3', '1-4'];
+<<<<<<< HEAD
             $scope.ikvSeries = ['1-4'];
 
             $scope.buttonText = "Start";
+=======
+            //$scope.buttonText = "Start";
+            $scope.buttonText = "Fetch stats";
+>>>>>>> demo-work
             $scope.playIcon = "glyphicon-play";
-            //$scope.currentReadValues = {};
-            //$scope.currentWriteValues = {};
+            $scope.currentReadValues = {};
+            $scope.currentWriteValues = {};
             $scope.readsTitle = "Reads";
             $scope.writesTitle = "Writes";
             $scope.width = "100px";
@@ -29,17 +34,45 @@
         };
         
         $scope.startChart = function () {
+            //console.log(ctrl);
             $scope.charting = !$scope.charting;
-            if($scope.charting) {
+            $scope.pullStats();
+            /*if($scope.charting) {
                 $scope.buttonText = "Stop";
                 $scope.playIcon = "glyphicon-pause";
                 $scope.pullStats();
             } else {
                 $scope.buttonText = "Start";
                 $scope.playIcon = "glyphicon-play";
-            }
+            }*/
         };
 
+        $scope.startIkvChart = function () {
+            $scope.pullIkvStats(); 
+        }
+
+        $scope.pullIkvStats = function () {
+            console.log("Pulling");
+            $scope.newReadStats = {};
+            $scope.newWriteStats = {};
+            angular.forEach($scope.series, function (seriesName) {
+                $http.get("/tools/f1/ikv_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
+                    if (result.data.status === "PASSED") {
+                        let d = result.data.data;
+                        if(d) {
+                            $scope.ikvInfo = d[0];
+                        }
+                    }
+                });
+            });
+          
+            if($scope.charting) {
+                $timeout($scope.pullStats, 5000);
+            }
+
+        };
+
+<<<<<<< HEAD
         $scope.startIkvStats = function () {
             $scope.ikvCharting = !$scope.ikvCharting;
             if($scope.ikvCharting) {
@@ -58,6 +91,8 @@
                  });
             });
         }
+=======
+>>>>>>> demo-work
 
         $scope.pullStats = function () {
             console.log("Pulling");
@@ -75,8 +110,8 @@
                                     numReads += value.num_reads;
                                     numWrites += value.num_writes;
                                 });
-                                $scope.newReadStats[seriesName] = numReads;
-                                $scope.newWriteStats[seriesName] = numWrites;
+                                $scope.currentReadValues[seriesName] = numReads;
+                                $scope.currentWriteValues[seriesName] = numWrites;
                             } else {
             
                                 $http.get("/tools/f1/storage_repvol_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
@@ -92,24 +127,25 @@
                                                 numWrites += plex.total_writes;
                                             }
                                         });
-                                        $scope.newReadStats[seriesName] = numReads;
-                                        $scope.newWriteStats[seriesName] = numWrites;
+                                        $scope.currentReadValues[seriesName] = numReads;
+                                        $scope.currentWriteValues[seriesName] = numWrites;
                                     }
                                 });
 
                             }
                         }
                     }
-                    //if(Object.keys($scope.newReadStats).length === $scope.series.length) {
-                        if(Object.keys($scope.newReadStats).length) {
+                    /*
+                    if(Object.keys($scope.newReadStats).length === $scope.series.length) {
+                        if(Object.keys($scope.newReadStats).length > 0) {
                             $scope.currentReadValues = JSON.parse(JSON.stringify($scope.newReadStats));
                         }
-                    //};
-                    //if(Object.keys($scope.newWriteStats).length === $scope.series.length) {
-                        if(Object.keys($scope.newWriteStats).length) {
+                    };
+                    if(Object.keys($scope.newWriteStats).length === $scope.series.length) {
+                        if(Object.keys($scope.newWriteStats).length > 0) {
                             $scope.currentWriteValues = JSON.parse(JSON.stringify($scope.newWriteStats));
                         }
-                    //};
+                    };*/
                 });
             });
           
@@ -133,6 +169,7 @@
         controller: StatsController,
         bindings: {
             f1: '=',
+            f1s: '=',
             workFlows: '<',
             replaceIpDot: '&',
             setCommonWorkFlow: '&',
