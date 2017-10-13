@@ -23,9 +23,11 @@
             <select class="form-control" ng-model="selectedUuid"
                     ng-options="volumeUuid for volumeUuid in $ctrl.f1.volumeUuids track by volumeUuid">
             </select>
+            <br>
             <label class="form-inline">NS ID</label>
             <input class="form-control" type="number" value="nsid" ng-model="nsid">
 
+            <br>
                 <label>Remote IP</label>
                 <select
                         ng-options="f1.dataplane_ip as [f1.name, f1.dataplane_ip].join(' -- ') for f1 in $ctrl.f1s"

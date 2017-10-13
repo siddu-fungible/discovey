@@ -16,6 +16,7 @@
             ctrl.f1.volumeUuids = [];
             ctrl.f1.rdsVolumeUuids = [];
             ctrl.f1.replicaVolumeUuids = [];
+            ctrl.f1.attached_ns_id = false;
             $scope.checkVolumes();  //TODO
 
 
@@ -36,6 +37,11 @@
                         ctrl.f1.volumeUuids = [];
                         angular.forEach(localBlock, function (value, key) {
                             ctrl.f1.volumeUuids.push(key);
+                            if("attach_nsid" in value) {
+                                if(value.attach_nsid === 1) {
+                                    ctrl.f1.attached_ns_id = true;
+                                }
+                            }
                         });
                     }
                     if ('VOL_TYPE_BLK_REPLICA' in volumeResponse.data.data) {
