@@ -44,10 +44,7 @@ def deploy_topology(session_id):
     if not os.path.exists(pickle_file):
     
         topology_obj = topo.Topology()
-<<<<<<< HEAD
-=======
         # topology_obj.create(2, 4, 4)
->>>>>>> demo-work
         topology_obj.create(1, 4, 4)
         info = json.loads(topology_obj.getAccessInfo())
         topology_obj.save(filename=pickle_file)

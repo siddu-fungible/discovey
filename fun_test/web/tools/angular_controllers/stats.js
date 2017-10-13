@@ -6,19 +6,12 @@
 
         ctrl.$onInit = function () {
             $scope.charting = false;
-            $scope.ikvCharting = false;
             //$scope.series = ['2-1', '2-2', '2-3', '2-4'];
             //$scope.series = ['2-2', '2-3'];
             //$scope.series = ['2-2', '2-3', '2-1'];
             $scope.series = ['1-1', '1-2', '1-3', '1-4'];
-<<<<<<< HEAD
-            $scope.ikvSeries = ['1-4'];
-
-            $scope.buttonText = "Start";
-=======
             //$scope.buttonText = "Start";
             $scope.buttonText = "Fetch stats";
->>>>>>> demo-work
             $scope.playIcon = "glyphicon-play";
             $scope.currentReadValues = {};
             $scope.currentWriteValues = {};
@@ -72,35 +65,14 @@
 
         };
 
-<<<<<<< HEAD
-        $scope.startIkvStats = function () {
-            $scope.ikvCharting = !$scope.ikvCharting;
-            if($scope.ikvCharting) {
-                $scope.buttonText = "Stop";
-                $scope.playIcon = "glyphicon-pause";
-                $scope.pullIkvStats();
-            } else {
-                $scope.buttonText = "Start";
-                $scope.playIcon = "glyphicon-play";
-            }
-        };
-       
-        $scope.pullIkvStats = function() {
-            angular.forEach($scope.series, function (seriesName) { 
-                 $http.get("/tools/f1/ikv_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) { 
-                 });
-            });
-        }
-=======
->>>>>>> demo-work
 
         $scope.pullStats = function () {
             console.log("Pulling");
             $scope.newReadStats = {};
             $scope.newWriteStats = {};
-            angular.forEach($scope.series, function (seriesName) { 
-                 $http.get("/tools/f1/storage_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) { 
-                     if (result.data.status === "PASSED") {
+            angular.forEach($scope.series, function (seriesName) {
+                $http.get("/tools/f1/storage_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
+                    if (result.data.status === "PASSED") {
                         let d = result.data.data;
                         if(d) {
                             if('VOL_TYPE_BLK_LOCAL_THIN' in d) {

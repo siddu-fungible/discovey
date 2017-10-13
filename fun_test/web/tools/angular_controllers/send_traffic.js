@@ -10,7 +10,7 @@
 		$scope.selectedTg = null;
 		$scope.fioNrFiles = 1;
 		$scope.fioBlockSize = "4k";
-		$scope.fioSize = "1m";
+		$scope.fioSize = "128k";
 		$scope.playing = false;
 
         };
