@@ -73,7 +73,6 @@ function draw() {
             $scope.$onInit = function () {
                 // TODO $scope.deployTopologyClick();
             };
-
             $scope.attachTgInfo = {
 
             };
@@ -85,8 +84,8 @@ function draw() {
             };
 
             $scope.setCommonTrafficWorkFlow = function (selectedWorkFlow, f1) {
+                //console.log("Parent workflow selection");
                 $scope.commonTrafficWorkFlow = selectedWorkFlow;
-                console.log("Parent workflow selection:" + $scope.commonTrafficWorkFlow);
                 $scope.currentWorkFlowF1 = f1;
             };
 
@@ -335,7 +334,7 @@ $("#stats-play-button").click(function () {
 $(document).ready(function () {
     //initPlots();
     //startPlots();
-    window.requestAnimationFrame(draw);
+    //window.requestAnimationFrame(draw);
 
 });
 
