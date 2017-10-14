@@ -8,7 +8,7 @@
             $scope.status = "idle";
             $scope.logs = [];
             $scope.errorMessage = null;
-            $scope.selectedUuids = null;
+            $scope.selectedUuid = null;
             $http.get('/tools/f1/storage_volumes/' + ctrl.topologySessionId + "/" + ctrl.f1.name).then(function (volumeResponse) {
                 if (volumeResponse.data.data) {
                     if ('VOL_TYPE_BLK_LOCAL_THIN' in volumeResponse.data.data) {
@@ -31,8 +31,8 @@
         $scope.clickInjectFault = function () {
             $scope.errorMessage = null;
             let payload = {};
-            payload["uuid"] = $scope.selectedUuids;
-            console.log($scope.selectedUuids);
+            payload["uuid"] = $scope.selectedUuid;
+            console.log($scope.selectedUuid);
             $scope.status = "processing";
             $http.post('/tools/f1/fault_injection/' + ctrl.topologySessionId + "/" + ctrl.f1.name, payload).then(function(response){
                 $scope.status = "pass";
