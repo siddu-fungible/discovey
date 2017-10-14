@@ -19,6 +19,9 @@
         <!--video ng-show="filepreview" width="400" height="400" controls="controls">
             <source src="{{filepreview| trustUrl}}" type="video/mp4" />
         </video-->
+        <video ng-if="playlist" video width="300" height="200" controls autoplay src="{{playlist| trustUrl}}" />
+        </video>
+
         <img ng-show="filepreview" width="200" height="200"
             ng-src="{{filepreview| trustUrl}}">
         </img>

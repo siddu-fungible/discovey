@@ -22,7 +22,6 @@
             $scope.processing = true;
             uploadService.upload(newfile, ctrl.f1, ctrl.topologySessionId, "/tools/tg/ikv_video_put/").then(function (response) {
                 //console.log("result", res);
-                $scope.processing = false;
                 $scope.keyHex = response.data;
                 $scope.getIkvVideoStatus(ctrl.topologySessionId);
             })
@@ -36,6 +35,8 @@
                             $scope.getIkvVideoStatus(sessionId)
                         }, 2000);
                     } else {
+                        $scope.processing = false;
+                        $scope.playlist = result.data.logs;
                     }
                 }).catch(function (result) {
                     alert("Ikv video put status check failed");

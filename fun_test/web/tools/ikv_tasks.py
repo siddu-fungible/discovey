@@ -59,6 +59,26 @@ def convert_to_ts(file_name, session_id):
         result["status"] = True
     return result
 
+def prepare_manifest(keys, session_id, f1_id):
+    key_urls = ""
+    for k in keys:
+        key_urls += """#EXTINF:2,
+http://35.197.93.68:5000/tools/tg/ikv_video_get/{}/{}/{}.ts\n""".format(session_id, f1_id, k)
+        #key_urls += """#EXTINF:2,
+#http://35.197.93.68:5000/static/uploads/{}\n""".format(k)
+
+    key_urls = key_urls.strip()
+    s = """#EXTM3U
+#EXT-X-VERSION:6
+#EXT-X-TARGETDURATION:12
+#EXT-X-MEDIA-SEQUENCE:0
+#EXT-X-PLAYLIST-TYPE:VOD
+#EXT-X-INDEPENDENT-SEGMENTS
+{}
+#EXT-X-ENDLIST""".format(key_urls)
+    return s
+
+
 def segmenting_ts(ts_file_name, session_id):
     files = glob.glob(WEB_UPLOADS_DIR + "/ikv_{}_*ts".format(session_id))
     for f in files:
@@ -89,19 +109,28 @@ def ikv_video_put(f1_info, session_id):
     server_ip = f1_info["ip"]
     server_port = f1_info["dpcsh_port"]
     ikv_create(server_ip=server_ip, server_port=server_port)
+    relative_paths = []
     if result["status"]:
         files = segmenting_ts(ts_file_name=result["ts_file_name"], session_id=session_id)
         files.sort(key=os.path.getmtime)
         if files:
             print("IKV files to put: {}".format(len(files)))
             for f in files:
+                #relative_paths.append(os.path.basename(f))
+                relative_paths.append(os.path.basename(f))
                 with open(f, "rb") as infile:
                     contents = infile.read()
                     keys.append(ikv_put(bite=contents, server_ip=server_ip, server_port=server_port, create=False))
                     print("IKV files put: {}".format(f))
     video_task.status = RESULTS["PASSED"]
     video_task.logs = json.dumps(keys)
-    print("Keys:" + json.dumps(keys))
+    # print("Keys:" + json.dumps(keys))
+    # manifest = prepare_manifest(relative_paths, session_id, f1_info["name"])
+    manifest = prepare_manifest(keys, session_id, f1_info["name"])
+    with open(WEB_UPLOADS_DIR + "/manifest.m3u8", "w") as outfile:
+        outfile.write(manifest)
+    #video_task.logs = manifest
+    video_task.logs = "/static/uploads/manifest.m3u8"
     video_task.save()
 
 
@@ -136,7 +165,7 @@ def ikv_put(bite, server_ip, server_port, create=True):
     client_obj.command("likv put " + json.dumps(put_d, ensure_ascii=False))
     return key_hex
 
-def ikv_get(key_hex, server_ip, server_port):
+def ikv_get(key_hex, server_ip, server_port, get_bytes=False):
     client_obj = DpcshClient(server_address=server_ip, server_port=server_port)
     get_d = {"key_hex": key_hex, "volume_id": 0}
     result = client_obj.command("likv get " + json.dumps(get_d))
@@ -146,4 +175,6 @@ def ikv_get(key_hex, server_ip, server_port):
     output_file_name = WEB_UPLOADS_DIR + key_hex
     with open(output_file_name, "wb") as f:
         f.write(ba)
+    if get_bytes:
+        return ba
     return relative_path

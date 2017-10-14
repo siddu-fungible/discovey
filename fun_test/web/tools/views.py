@@ -197,6 +197,15 @@ def ikv_put(request, topology_session_id, f1_id):
     key_hex = ikv_tasks.ikv_put(bite, server_ip, server_port)
     return HttpResponse(key_hex)
 
+def ikv_video_get(request, topology_session_id, f1_id, key_hex):
+    key_hex = key_hex.strip(".ts")
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    ba = ikv_tasks.ikv_get(key_hex=key_hex, server_ip=server_ip, server_port=server_port, get_bytes=True) 
+    #with open(WEB_UPLOADS_DIR + "/" + key_hex, "wb") as outfile:
+    #    outfile.write(ba)
+    return HttpResponse(str(ba),  content_type="video/mp2t")
 
 def ikv_get(request, key_hex, topology_session_id, f1_id):
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
