@@ -169,7 +169,7 @@ def ikv_get(key_hex, server_ip, server_port, get_bytes=False):
     client_obj = DpcshClient(server_address=server_ip, server_port=server_port)
     get_d = {"key_hex": key_hex, "volume_id": 0}
     result = client_obj.command("likv get " + json.dumps(get_d))
-    print result
+    #print result
     ba = bytearray.fromhex(result["data"]["value"])
     relative_path =  UPLOADS_RELATIVE_DIR + key_hex
     output_file_name = WEB_UPLOADS_DIR + key_hex

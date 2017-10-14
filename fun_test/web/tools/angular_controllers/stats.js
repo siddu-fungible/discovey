@@ -84,7 +84,19 @@
                                 });
                                 $scope.currentReadValues[seriesName] = numReads;
                                 $scope.currentWriteValues[seriesName] = numWrites;
-                            } else {
+                            } else if('VOL_TYPE_BLK_REPLICA' in d) {
+                                let numReads = 0;
+                                let numWrites = 0;
+                                angular.forEach(d.VOL_TYPE_BLK_REPLICA, function(value, key) {
+                                    numReads += value.num_reads;
+                                    numWrites += value.num_writes;
+                                });
+                                $scope.currentReadValues[seriesName] = numReads;
+                                $scope.currentWriteValues[seriesName] = numWrites;
+                               
+                            }
+                            /*
+                            else {
             
                                 $http.get("/tools/f1/storage_repvol_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
                                     let d = result.data.data;
@@ -104,7 +116,7 @@
                                     }
                                 });
 
-                            }
+                            }*/
                         }
                     }
                     /*

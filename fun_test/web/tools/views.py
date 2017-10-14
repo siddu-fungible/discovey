@@ -83,6 +83,8 @@ def workflows(request):
     workflows.append(workflow)
     workflow = {"name": "Create Replica Volume", "id": "create_replica_volume"}
     workflows.append(workflow)
+    workflow = {"name": "Fault Injection", "id": "fault_injection"}
+    workflows.append(workflow)
     return HttpResponse(json.dumps(workflows))
 
 def traffic_workflows(request):

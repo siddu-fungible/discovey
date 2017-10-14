@@ -8,9 +8,9 @@ network_only = False
 if network_only:
     leaf_container = 'frr:v2'
 elif flat_topo:
-    leaf_container = 'demo:v10'
+    leaf_container = 'demo:v11'
 else:
-    leaf_container = 'demo:v10'
+    leaf_container = 'demo:v11'
 
 tg_container = 'tgen:v3'
 
