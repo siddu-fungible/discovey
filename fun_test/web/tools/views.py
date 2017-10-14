@@ -445,6 +445,29 @@ def create_replica_volume(request, topology_session_id, f1_id):
 
 
 @csrf_exempt
+def fault_injection(request, topology_session_id, f1_id):
+    logs = []
+
+    request_json = json.loads(request.body)
+    this_uuid = request_json["uuid"]
+
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
+    server_port = f1_record.dpcsh_port
+    dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
+    inject_dict = {"class":"volume", "opcode":"VOL_ADMIN_OPCODE_INJECT_FAULT", "params": {"uuid" : this_uuid}}
+    command = "storage {}".format(json.dumps(inject_dict))
+    logs.append("Sending: " + command)
+    result = dpcsh_client.command(command=command)
+    logs.append("command result: " + json.dumps(result, indent=4))
+    print("attach command result: " + str(result))
+    if result["status"]:
+        i = result["data"]
+    result["logs"] = logs
+    return HttpResponse(json.dumps(result))
+
+
+@csrf_exempt
 def attach_volume(request, topology_session_id, f1_id):
     logs = []
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)

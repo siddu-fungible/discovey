@@ -12,6 +12,7 @@ f1_urls = [
     url(r'^create_rds_volume/(.*)/(.*)$', views.create_rds_volume),
     url(r'^create_replica_volume/(.*)/(.*)$', views.create_replica_volume),
     url(r'^attach_volume/(.*)/(.*)$', views.attach_volume),
+    url(r'^fault_injection/(.*)/(.*)$', views.fault_injection),
     url(r'^attach_tg/(.*)/(.*)$', views.attach_tg),
     url(r'^set_ip_cfg/(.*)/(.*)$', views.set_ip_cfg),
     url(r'^storage_volumes/(.*)/(.*)$', views.storage_volumes),
