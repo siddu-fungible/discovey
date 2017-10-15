@@ -44,7 +44,7 @@ function draw() {
 
 (function () {
     let app;
-    app = angular.module('tools', []);
+    app = angular.module('tools', ['nvd3']);
 
 
 

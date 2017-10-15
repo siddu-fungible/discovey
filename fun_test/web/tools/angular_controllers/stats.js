@@ -20,7 +20,32 @@
             $scope.width = "100px";
             $scope.height = "100px";
 
+
+
+  $scope.options = {
+            chart: {
+                type: 'pieChart',
+                height: 500,
+                width: 500,
+                x: function(d){return d.key;},
+                y: function(d){return d.y;},
+                showLabels: true,
+                duration: 500,
+                labelThreshold: 0.01,
+                labelSunbeamLayout: true,
+                legend: {
+                    margin: {
+                        top: 5,
+                        right: 35,
+                        bottom: 5,
+                        left: 0
+                    }
+                }
+            }
         };
+        $scope.data = [];
+        };
+        
 
         $scope.checkVolumes = function () {
 
@@ -45,6 +70,10 @@
         }
 
         $scope.pullIkvStats = function () {
+
+
+
+
             console.log("Pulling");
             $scope.newReadStats = {};
             $scope.newWriteStats = {};
@@ -54,6 +83,10 @@
                         let d = result.data.data;
                         if(d) {
                             $scope.ikvInfo = d[0];
+                            let availableSpace = $scope.ikvInfo["LIKV space"];
+                            let usedSpace = $scope.ikvInfo["LIKV used space"];
+                            let freeSpace = availableSpace - usedSpace;
+		            $scope.data = [{key: "Used Space", y: usedSpace}, {key: "Free Space", y: freeSpace}];
                         }
                     }
                 });
@@ -119,17 +152,6 @@
                             }*/
                         }
                     }
-                    /*
-                    if(Object.keys($scope.newReadStats).length === $scope.series.length) {
-                        if(Object.keys($scope.newReadStats).length > 0) {
-                            $scope.currentReadValues = JSON.parse(JSON.stringify($scope.newReadStats));
-                        }
-                    };
-                    if(Object.keys($scope.newWriteStats).length === $scope.series.length) {
-                        if(Object.keys($scope.newWriteStats).length > 0) {
-                            $scope.currentWriteValues = JSON.parse(JSON.stringify($scope.newWriteStats));
-                        }
-                    };*/
                 });
             });
           

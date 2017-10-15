@@ -138,7 +138,7 @@ def ikv_create(server_ip, server_port):
     client_obj = DpcshClient(server_address=server_ip, server_port=server_port)
     create_d = {"init_lvs_bytes": 1048576,
 		"max_keys": 16384,
-		"max_lvs_bytes": 1073741824,
+		"max_lvs_bytes": 107374182,
 		"init_keys": 4096,
 		"volume_id": 0}
     print client_obj.command("likv create " + json.dumps(create_d))
@@ -153,7 +153,7 @@ def ikv_put(bite, server_ip, server_port, create=True):
     if create:
 	    create_d = {"init_lvs_bytes": 1048576,
 			"max_keys": 16384,
-			"max_lvs_bytes": 1073741824,
+			"max_lvs_bytes": 107374182,
 			"init_keys": 4096,
 			"volume_id": 0}
 	    print client_obj.command("likv create " + json.dumps(create_d))
