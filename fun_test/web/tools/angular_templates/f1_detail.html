@@ -33,7 +33,7 @@
     <br>
 
 
-    <p ng-if="$ctrl.f1.volumeThin" class="h4">Local Volumes</p>
+    <p ng-if="$ctrl.f1.volumeThin && charting" class="h4">Local Volumes</p>
     <table id="thin-table" class="table table-bordered" ng-if="$ctrl.f1.volumeThin" style="max-width:30%">
 	    <tr>
 		<th style="background-color: #E4EFF2">UUID</th>
@@ -50,7 +50,7 @@
 		 <td>{{ properties.attach_nsid }}</td>
 	    </tr>
     </table>
-    <p ng-if="$ctrl.f1.volumeReplica" class="h4">Replica Volumes</p>
+    <p ng-if="$ctrl.f1.volumeReplica && charting" class="h4">Replica Volumes</p>
     <table id="thin-table" class="table table-bordered" ng-if="$ctrl.f1.volumeReplica" style="max-width:30%">
 	    <tr>
 		<th style="background-color: #E4EFF2">UUID</th>
@@ -67,7 +67,7 @@
 		 <td>{{ properties.attach_nsid }}</td>
 	    </tr>
     </table>
-    <p ng-if="$ctrl.f1.volumeRds" class="h4">RDS Volumes</p>
+    <p ng-if="$ctrl.f1.volumeRds && charting" class="h4">RDS Volumes</p>
     <table id="thin-table" class="table table-bordered" ng-if="$ctrl.f1.volumeRds" style="max-width:30%">
 	    <tr>
 		<th style="background-color: #E4EFF2">UUID</th>
