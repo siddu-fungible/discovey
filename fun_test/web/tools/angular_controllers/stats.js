@@ -19,6 +19,7 @@
             $scope.writesTitle = "Writes";
             $scope.width = "100px";
             $scope.height = "100px";
+            $scope.ikvInfo = null;
 
 
 
@@ -66,6 +67,7 @@
         };
 
         $scope.startIkvChart = function () {
+            $scope.ikvInfo = null;
             $scope.pullIkvStats(); 
         }
 
@@ -78,7 +80,7 @@
             $scope.newReadStats = {};
             $scope.newWriteStats = {};
             angular.forEach($scope.series, function (seriesName) {
-                $http.get("/tools/f1/ikv_stats/" + ctrl.topologySessionId + "/" + '1-1').then(function (result) {
+                $http.get("/tools/f1/ikv_stats/" + ctrl.topologySessionId + "/" + ctrl.currentWorkFlowF1.name).then(function (result) {
                     if (result.data.status === "PASSED") {
                         let d = result.data.data;
                         if(d) {
@@ -181,7 +183,8 @@
             setCommonWorkFlow: '&',
             setActiveTab: '&',
             topologySessionId: '<',
-            commonTrafficWorkFlow: '<'
+            commonTrafficWorkFlow: '<',
+            currentWorkFlowF1: '<'
         }
     });
 
