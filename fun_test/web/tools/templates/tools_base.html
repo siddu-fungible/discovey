@@ -167,7 +167,7 @@
                                 <span>{{ commonTrafficWorkFlow.name }}</span>
                             </div>
                         </div>
-                        <div class="panel-body" ng-switch="commonTrafficWorkFlow.id">
+                        <div class="panel-body" ng-switch="commonTrafficWorkFlow.id" style="background-color:#E4EFF2">
                             <div ng-switch-when="attach_tg">
                                 <attach-tg common-traffic-workflow="commonTrafficWorkFlow" f1="currentWorkFlowF1" topology-session-id="topologySessionId" obj="attachTgInfo"></attach-tg>
                             </div>
@@ -223,7 +223,7 @@
                                 <span>{{ commonWorkFlow.name }}</span>
                             </div>
                         </div>
-                        <div class="panel-body" ng-switch="commonWorkFlow.id">
+                        <div class="panel-body" ng-switch="commonWorkFlow.id" style="background-color:#E4EFF2">
                             <div ng-switch-when="demo"> Just for demo</div>
 
                             <div ng-switch-when="create_volume">
