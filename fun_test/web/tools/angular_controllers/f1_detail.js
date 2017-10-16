@@ -28,10 +28,6 @@
                 $http.post("/tools/f1/detail", payload).then(function (result) {
                     if (result.data.status === "PASSED") {
                         $scope.vpWus = result.data.data["per_vp"];
-                        /*$scope.vpWusArray = Object.keys($scope.vpWus).map(function(key) {
-                            return $scope.vpWus[key];
-                        });*/
-                        let i = 0;
                     }
                 });
                 $scope.syncTimer = $timeout($scope.sync, 5000);

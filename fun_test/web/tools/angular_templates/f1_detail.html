@@ -31,6 +31,59 @@
     <label class="label label-info label-medium" for="chart-checkbox"><i class="glyphicon glyphicon-stats"></i></label>
     <input id="chart-checkbox" type="checkbox" ng-click="toggleChart($event)">
     <br>
+
+
+    <p ng-if="$ctrl.f1.volumeThin" class="h4">Local Volumes</p>
+    <table id="thin-table" class="table table-bordered" ng-if="$ctrl.f1.volumeThin" style="max-width:30%">
+	    <tr>
+		<th style="background-color: #E4EFF2">UUID</th>
+		<th style="background-color: #E4EFF2">Reads</th>
+		<th style="background-color: #E4EFF2">Writes</th>
+		<th style="background-color: #E4EFF2">Fault</th>
+		<th style="background-color: #E4EFF2">Attached</th>
+	    </tr>
+	    <tr ng-repeat="(uuid, properties) in $ctrl.f1.volumeThin">
+		 <td>{{ uuid }}</td>
+		 <td>{{ properties.num_reads }}</td>
+		 <td>{{ properties.num_writes }}</td>
+		 <td>{{ properties.fault_injection }}</td>
+		 <td>{{ properties.attach_nsid }}</td>
+	    </tr>
+    </table>
+    <p ng-if="$ctrl.f1.volumeReplica" class="h4">Replica Volumes</p>
+    <table id="thin-table" class="table table-bordered" ng-if="$ctrl.f1.volumeReplica" style="max-width:30%">
+	    <tr>
+		<th style="background-color: #E4EFF2">UUID</th>
+		<th style="background-color: #E4EFF2">Reads</th>
+		<th style="background-color: #E4EFF2">Writes</th>
+		<th style="background-color: #E4EFF2">Fault</th>
+		<th style="background-color: #E4EFF2">Attached</th>
+	    </tr>
+	    <tr ng-repeat="(uuid, properties) in $ctrl.f1.volumeReplica">
+		 <td>{{ uuid }}</td>
+		 <td>{{ properties.num_reads }}</td>
+		 <td>{{ properties.num_writes }}</td>
+		 <td>{{ properties.fault_injection }}</td>
+		 <td>{{ properties.attach_nsid }}</td>
+	    </tr>
+    </table>
+    <p ng-if="$ctrl.f1.volumeRds" class="h4">RDS Volumes</p>
+    <table id="thin-table" class="table table-bordered" ng-if="$ctrl.f1.volumeRds" style="max-width:30%">
+	    <tr>
+		<th style="background-color: #E4EFF2">UUID</th>
+		<th style="background-color: #E4EFF2">Reads</th>
+		<th style="background-color: #E4EFF2">Writes</th>
+		<th style="background-color: #E4EFF2">Fault</th>
+		<th style="background-color: #E4EFF2">Attached</th>
+	    </tr>
+	    <tr ng-repeat="(uuid, properties) in $ctrl.f1.volumeRds">
+		 <td>{{ uuid }}</td>
+		 <td>{{ properties.num_reads }}</td>
+		 <td>{{ properties.num_writes }}</td>
+		 <td>{{ properties.fault_injection }}</td>
+		 <td>{{ properties.attach_nsid }}</td>
+	    </tr>
+    </table>
     
     <div ng-if="vpWus">
         <div class="row">
