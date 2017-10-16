@@ -28,6 +28,10 @@
                 $http.post("/tools/f1/detail", payload).then(function (result) {
                     if (result.data.status === "PASSED") {
                         $scope.vpWus = result.data.data["per_vp"];
+                        /*$scope.vpWusArray = Object.keys($scope.vpWus).map(function(key) {
+                            return $scope.vpWus[key];
+                        });*/
+                        let i = 0;
                     }
                 });
                 $scope.syncTimer = $timeout($scope.sync, 5000);
@@ -44,6 +48,7 @@
                 $scope.charting = false;
             }
         };
+
 
         $scope.toggleSync = function (event) {
             if (event.target.checked) {
@@ -64,6 +69,22 @@
         bindings: {
             f1: '='
         }
+    })
+    .filter('toArray', function () {
+        return function (obj, addKey) {
+            if (!angular.isObject(obj)) return obj;
+            if ( addKey === false ) {
+                return Object.keys(obj).map(function(key) {
+                    return obj[key];
+               });
+            } else {
+               return Object.keys(obj).map(function (key) {
+                   var value = obj[key];
+                   //return angular.isObject(value) ? Object.defineProperty(value, '$key', { enumerable: false, value: key}) : { $key: key, $value: value };
+                   return { $key: key, $value: value };
+               });
+            }
+        };
     });
 
 })(window.angular);

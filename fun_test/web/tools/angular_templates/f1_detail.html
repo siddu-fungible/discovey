@@ -31,14 +31,38 @@
     <label class="label label-info label-medium" for="chart-checkbox"><i class="glyphicon glyphicon-stats"></i></label>
     <input id="chart-checkbox" type="checkbox" ng-click="toggleChart($event)">
     <br>
+    
     <div ng-if="vpWus">
+        <div class="row">
+            <div ng-repeat="(name, properties) in vpWus" ng-if="['VP0.0.0', 'VP0.0.1', 'VP0.1.0', 'VP0.1.1'].indexOf(name) > -1" class="col-sm-2 well"> 
+                <fun-chart series="series" title="name" syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting" minimal="false" show-legend="true"></fun-chart>
+            </div>
+
+        </div>
+        <div class="row">
+            <div ng-repeat="(name, properties) in vpWus" ng-if="['VP0.2.0', 'VP0.2.1', 'VP0.3.0', 'VP0.3.1'].indexOf(name) > -1" class="col-sm-2 well"> 
+                <fun-chart series="series" title="name" syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting" minimal="false" show-legend="true"></fun-chart>
+            </div>
+
+        </div>
+        <div class="row">
+            <div ng-repeat="(name, properties) in vpWus" ng-if="['VP1.0.0', 'VP1.0.1', 'VP1.1.0', 'VP1.1.1'].indexOf(name) > -1" class="col-sm-2 well"> 
+                <fun-chart series="series" title="name" syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting" minimal="false" show-legend="true"></fun-chart>
+            </div>
+
+        </div>
+        <div class="row">
+            <div ng-repeat="(name, properties) in vpWus" ng-if="['VP1.2.0', 'VP1.2.1', 'VP1.3.0', 'VP1.3.1'].indexOf(name) > -1" class="col-sm-2 well"> 
+                <fun-chart series="series" title="name" syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting" minimal="false" show-legend="true"></fun-chart>
+            </div>
+
+        </div>
         <p class="h4">WUs per VP</p>
         <table class="table table-bordered table-nonfluid table-striped" style="min-width: 500px">
             <thead>
                 <td>VP</td>
                 <td>Sent</td>
                 <td>Received</td>
-                <td>Plot</td>
             </thead>
             <tbody>
                 <tr ng-repeat="(name, properties) in vpWus">
@@ -51,11 +75,7 @@
                     <td>
                         {{ properties.wus_received }}
                     </td>
-                    <td style="min-width: 400px; max-height: 50px">
-                        <fun-chart series="series" syncing="syncing" values="{'Sent': properties.wus_sent, 'Received': properties.wus_received }" charting="charting" minimal="true" show-legend="true"></fun-chart>
-                    </td>
                 </tr>
-
             </tbody>
 
         </table>
