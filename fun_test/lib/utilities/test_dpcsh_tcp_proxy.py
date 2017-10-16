@@ -85,14 +85,16 @@ class DpcshClient:
         print json.dumps(result["data"], indent=4)
 
 if __name__ == "__main__":
-    dpcsh_client_obj = DpcshClient(server_address="10.1.20.67", server_port=5001)
+    dpcsh_client_obj = DpcshClient(server_address="10.138.0.3", server_port=10005)
     result = dpcsh_client_obj.command(command="peek stats")
     if result["status"]:
         dpcsh_client_obj.print_result(result=result)
 
-    result = dpcsh_client_obj.command(command="peek stats", expected_command_duration=3)
-    if result["status"]:
-        dpcsh_client_obj.print_result(result=result)
+    #result = dpcsh_client_obj.command(command="peek stats", expected_command_duration=3)
+    #if result["status"]:
+    #    dpcsh_client_obj.print_result(result=result)
 
-    result = dpcsh_client_obj.command(command="peek stats", expected_command_duration=3)
-    i = 0
+    #result = dpcsh_client_obj.command(command="peek stats", expected_command_duration=3)
+    #i = 0
+    result = dpcsh_client_obj.command(command="peek stats/likv", expected_command_duration=3)
+    dpcsh_client_obj.print_result(result)

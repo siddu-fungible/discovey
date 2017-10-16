@@ -78,7 +78,7 @@
             $scope.newReadStats = {};
             $scope.newWriteStats = {};
             angular.forEach($scope.series, function (seriesName) {
-                $http.get("/tools/f1/ikv_stats/" + ctrl.topologySessionId + "/" + seriesName).then(function (result) {
+                $http.get("/tools/f1/ikv_stats/" + ctrl.topologySessionId + "/" + '1-1').then(function (result) {
                     if (result.data.status === "PASSED") {
                         let d = result.data.data;
                         if(d) {
