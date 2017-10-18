@@ -1,0 +1,25 @@
+<div>
+    <div class="panel panel-primary">
+      <div class="panel-heading">Suite Executions</div>
+        <div class="panel-body">
+                <table ng-if="suite_executions" class="table table-responsive">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Path</th>
+                <th>Test-cases</th>
+
+            </tr>
+        </thead>
+        <tr ng-repeat="suite_execution in suite_executions">
+            <td>{{ suite_execution.fields.execution_id }}</td>
+            <td>{{ suite_execution.fields.suite_path }}</td>
+            <td>{{ suite_execution.fields.test_case_execution_ids }}</td>
+        </tr>
+    </table>
+</div>
+        </div>
+
+    </div>
+
+</div>
