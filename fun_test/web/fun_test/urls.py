@@ -19,7 +19,8 @@ from . import views, regression_views
 
 regression_urls = [
     url(r'^$', regression_views.index),
-    url(r'^suite_executions', regression_views.suite_executions)
+    url(r'^suite_executions', regression_views.suite_executions),
+    url(r'^suite_detail/(\d+)$', regression_views.suite_detail)
 ]
 
 urlpatterns = [

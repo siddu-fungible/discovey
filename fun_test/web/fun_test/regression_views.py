@@ -37,7 +37,7 @@ def suite_executions(request):
             elif te_result == RESULTS["IN_PROGRESS"]:
                 num_in_progress += 1
 
-        if (num_passed == len(test_case_execution_ids)) and (test_case_execution_ids):
+        if (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
             suite_result = RESULTS["PASSED"]
         if num_failed:
             suite_result = RESULTS["FAILED"]
@@ -49,3 +49,10 @@ def suite_executions(request):
         suite_execution["num_in_progress"] = num_in_progress
 
     return HttpResponse(json.dumps(all_objects_dict))
+
+def suite_detail(request, execution_id):
+    # suite_execution = SuiteExecution.objects.get(execution_id=execution_id)
+    # data = serializers.serialize("json", suite_execution)
+    # return HttpResponse(data)
+    return render(request, 'qa_dashboard/suite_detail.html', locals())
+

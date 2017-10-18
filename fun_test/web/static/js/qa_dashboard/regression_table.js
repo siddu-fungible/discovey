@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function RegressionTableController($scope, $http, $timeout) {
+    function RegressionTableController($scope, $http, $window) {
         let ctrl = this;
 
 
@@ -33,14 +33,18 @@
             return buttonClass;
         };
 
+        $scope.getSuiteDetail = function (suiteId) {
+            console.log(suiteId);
+            $window.location.href = "/regression/suite_detail/" + suiteId;
+        }
+
 
     }
 
     angular.module('qa-dashboard').component('regressionTable', {
-        templateUrl: '/static/qa_dashboard/regression_table.html',
+        templateUrl: '/static/qa_dashboard/suites_table.html',
         controller: RegressionTableController,
         bindings: {
-            f1: '='
         }
     })
 
