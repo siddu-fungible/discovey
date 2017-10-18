@@ -13,8 +13,26 @@
                 let i = 0;
 
             });
-
         };
+
+        $scope.testCaseLength = function(testCases) {
+            return angular.fromJson(testCases).length;
+        };
+
+        $scope.getResultButtonClass = function (result) {
+            let buttonClass = "btn-default";
+            if(result === "FAILED") {
+                buttonClass = "btn-danger";
+            } else if(result === "PASSED") {
+                buttonClass = "btn-success"
+            } else if(result === "SKIPPED") {
+                buttonClass = "btn-warning"
+            } else if(result === "NOT_RUN") {
+                buttonClass = "btn-info"
+            }
+            return buttonClass;
+        };
+
 
     }
 

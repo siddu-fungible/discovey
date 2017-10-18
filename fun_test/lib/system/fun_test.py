@@ -42,10 +42,10 @@ class FunTimer:
 
 
 class FunTest:
-    PASSED = RESULTS["PASSED"].title()
-    FAILED = RESULTS["FAILED"].title()
-    SKIPPED = RESULTS["SKIPPED"].title()
-    NOT_RUN = RESULTS["NOT_RUN"].title()
+    PASSED = RESULTS["PASSED"]
+    FAILED = RESULTS["FAILED"]
+    SKIPPED = RESULTS["SKIPPED"]
+    NOT_RUN = RESULTS["NOT_RUN"]
 
     LOG_LEVEL_DEBUG = 0
     LOG_LEVEL_CRITICAL = 1

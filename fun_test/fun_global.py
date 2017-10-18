@@ -5,4 +5,5 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "PASSED": "PASSED",
            "FAILED": "FAILED",
            "SKIPPED": "SKIPPED",
-           "IN_PROGRESS": "IN_PROGRESS"}
+           "IN_PROGRESS": "IN_PROGRESS",
+           "UNKNOWN": "UNKNOWN"}
