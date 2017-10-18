@@ -15,12 +15,18 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-from . import views
+from . import views, regression_views
+
+regression_urls = [
+    url(r'^$', regression_views.index),
+]
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     url(r'^tools/', include('tools.urls')),
+    url(r'^regression/', include(regression_urls)),
+    url(r'^$', views.index)
 
 ]

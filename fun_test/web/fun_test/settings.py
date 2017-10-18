@@ -138,7 +138,9 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),
                     os.path.join(BASE_DIR, 'tools/angular_templates'),
-                    os.path.join(BASE_DIR, 'tools/angular_controllers'))
+                    os.path.join(BASE_DIR, 'tools/angular_controllers'),
+                    os.path.join(BASE_DIR, 'static/js/qa-dashboard'),
+                    os.path.join(BASE_DIR, 'static/css/qa-dashboard'))
 
 CSRF_COOKIE_SECURE = False
 

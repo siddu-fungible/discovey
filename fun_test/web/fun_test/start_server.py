@@ -22,4 +22,3 @@ if enable_rq_worker:
 
 if __name__ == "__main__":
     execute_from_command_line(["", "runserver", "0.0.0.0:%d" % WEB_SERVER_PORT])
-    execute_from_command_line(["", "runserver", "0.0.0.0:%d" % WEB_SERVER_PORT])

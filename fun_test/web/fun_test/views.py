@@ -1,5 +1,6 @@
 import json
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.script_fixup import fix
@@ -59,3 +60,7 @@ def get_script_content(request):
         except Exception as ex:
             contents = str(ex)
     return HttpResponse(contents)
+
+
+def index(request):
+    return render(request, 'base.html', locals())
