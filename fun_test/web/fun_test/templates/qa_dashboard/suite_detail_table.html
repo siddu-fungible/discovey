@@ -19,7 +19,7 @@
                     <td>{{ testCaseExecution.fields.execution_id }}</td>
                     <td>{{ testCaseExecution.fields.test_case_id }}</td>
                     <td>
-                        <button class="btn {{ getResultButtonClass(testCaseExecution.fields.result)}}">{{ testCaseExecution.fields.result }}</button>
+                        <button class="btn {{ resultToButtonClass(testCaseExecution.fields.result)}}">{{ testCaseExecution.fields.result }}</button>
                     </td>
                     <td>Scheduled At</td>
                     <td>Path</td>

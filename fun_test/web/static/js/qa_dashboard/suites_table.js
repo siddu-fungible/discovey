@@ -1,51 +1,34 @@
-(function (angular) {
-    'use strict';
+function SuitesTableController($scope, $http, resultToButtonClass, $window) {
+    let ctrl = this;
 
-    function RegressionTableController($scope, $http, $window) {
-        let ctrl = this;
+    $scope.resultToButtonClass = function (result) {
+        return resultToButtonClass(result);
+    };
 
+    ctrl.$onInit = function () {
+        //console.log(ctrl);
+        $scope.suite_executions = null;
+        $http.get("/regression/suite_executions").then(function (result) {
+            $scope.suiteExecutions = result.data; // TODO: validate
+            let i = 0;
 
-        ctrl.$onInit = function () {
-            console.log(ctrl);
-            $scope.suite_executions = null;
-            $http.get("/regression/suite_executions").then(function (result) {
-                $scope.suiteExecutions = result.data; // TODO: validate
-                let i = 0;
+        });
+    };
 
-            });
-        };
+    $scope.testCaseLength = function (testCases) {
+        return angular.fromJson(testCases).length;
+    };
 
-        $scope.testCaseLength = function(testCases) {
-            return angular.fromJson(testCases).length;
-        };
-
-        $scope.getResultButtonClass = function (result) {
-            let buttonClass = "btn-default";
-            if(result === "FAILED") {
-                buttonClass = "btn-danger";
-            } else if(result === "PASSED") {
-                buttonClass = "btn-success"
-            } else if(result === "SKIPPED") {
-                buttonClass = "btn-warning"
-            } else if(result === "NOT_RUN") {
-                buttonClass = "btn-info"
-            }
-            return buttonClass;
-        };
-
-        $scope.getSuiteDetail = function (suiteId) {
-            console.log(suiteId);
-            $window.location.href = "/regression/suite_detail/" + suiteId;
-        }
-
-
+    $scope.getSuiteDetail = function (suiteId) {
+        console.log(suiteId);
+        $window.location.href = "/regression/suite_detail/" + suiteId;
     }
 
-    angular.module('qa-dashboard').component('regressionTable', {
-        templateUrl: '/static/qa_dashboard/suites_table.html',
-        controller: RegressionTableController,
-        bindings: {
-        }
-    })
+}
 
-})(window.angular);
+angular.module('qa-dashboard')
+    .component('suitesTable', {
+        templateUrl: '/static/qa_dashboard/suites_table.html',
+        controller: SuitesTableController,
+        bindings: {}
+    });

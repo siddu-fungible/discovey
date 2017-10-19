@@ -23,7 +23,7 @@
 
                     <td>
                         <button ng-click="getSuiteDetail(suiteExecution.fields.execution_id)" class="btn
-                                {{ getResultButtonClass(suiteExecution.suite_result)}}">{{ suiteExecution.suite_result }}</button>
+                                {{ resultToButtonClass(suiteExecution.suite_result)}}">{{ suiteExecution.suite_result }}</button>
                     </td>
                     <td>{{ suiteExecution.num_passed }}</td>
                     <td>{{ suiteExecution.num_failed }}</td>

@@ -1,9 +1,12 @@
 (function (angular) {
     'use strict';
 
-    function SuiteDetailTableController($scope, $http, $timeout) {
+    function SuiteDetailTableController($scope, $http, $timeout, resultToButtonClass) {
         let ctrl = this;
 
+        $scope.resultToButtonClass = function (result) {
+            return resultToButtonClass(result);
+        };
 
         ctrl.$onInit = function () {
             console.log(ctrl);
