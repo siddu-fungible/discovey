@@ -9,7 +9,7 @@
             console.log(ctrl);
             $scope.suite_executions = null;
             $http.get("/regression/suite_executions").then(function (result) {
-                $scope.suite_executions = result.data; // TODO: validate
+                $scope.suiteExecutions = result.data; // TODO: validate
                 let i = 0;
 
             });

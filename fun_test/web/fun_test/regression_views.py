@@ -8,9 +8,12 @@ from web.fun_test.models import SuiteExecution, TestCaseExecution
 def index(request):
     return render(request, 'qa_dashboard/regression.html', locals())
 
-
-def suite_executions(request):
-    all_objects = SuiteExecution.objects.all()
+def _get_suite_executions(execution_id):
+    all_objects = None
+    if not execution_id:
+        all_objects = SuiteExecution.objects.all()
+    else:
+        all_objects = SuiteExecution.objects.filter(execution_id=execution_id)
     data = serializers.serialize("json", all_objects)
     all_objects_dict = json.loads(data)
 
@@ -47,12 +50,35 @@ def suite_executions(request):
         suite_execution["num_skipped"] = num_skipped
         suite_execution["num_not_run"] = num_not_run
         suite_execution["num_in_progress"] = num_in_progress
+    return all_objects_dict
 
+def suite_executions(request):
+    all_objects_dict = _get_suite_executions(execution_id=None)
     return HttpResponse(json.dumps(all_objects_dict))
 
+def suite_execution(request, execution_id):
+    all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
+    return HttpResponse(json.dumps(all_objects_dict[0])) #TODO: Validate
+
 def suite_detail(request, execution_id):
-    # suite_execution = SuiteExecution.objects.get(execution_id=execution_id)
-    # data = serializers.serialize("json", suite_execution)
-    # return HttpResponse(data)
+    all_objects_dict = _get_suite_executions(execution_id=execution_id)
+    suite_execution = all_objects_dict[0]
+    suite_execution_attributes = []
+    suite_execution_attributes.append({"name": "Result", "value": suite_execution["suite_result"]})
+    suite_execution_attributes.append({"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
+    suite_execution_attributes.append({"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
+    suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})
+    suite_execution_attributes.append({"name": "Passed", "value": suite_execution["num_passed"]})
+    suite_execution_attributes.append({"name": "Failed", "value": suite_execution["num_failed"]})
+    suite_execution_attributes.append({"name": "Not Run", "value": suite_execution["num_not_run"]})
+    suite_execution_attributes.append({"name": "In Progress", "value": suite_execution["num_in_progress"]})
+    suite_execution_attributes.append({"name": "Skipped", "value": suite_execution["num_skipped"]})
+
     return render(request, 'qa_dashboard/suite_detail.html', locals())
+
+def test_case_execution(request, suite_execution_id, test_case_execution_id):
+    test_case_execution_obj = TestCaseExecution.objects.get(suite_execution_id=suite_execution_id,
+                                                        execution_id=test_case_execution_id)
+    data = serializers.serialize('json', [test_case_execution_obj])
+    return HttpResponse(data)
 

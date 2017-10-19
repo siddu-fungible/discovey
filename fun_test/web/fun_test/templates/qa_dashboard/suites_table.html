@@ -2,7 +2,7 @@
     <div class="panel panel-primary">
         <div class="panel-heading">Suite Executions</div>
         <div class="panel-body">
-            <table ng-if="suite_executions" class="table table-nonfluid">
+            <table ng-if="suiteExecutions" class="table table-nonfluid">
                 <thead>
                 <tr>
                     <th>Id</th>
@@ -18,21 +18,21 @@
 
                 </tr>
                 </thead>
-                <tr ng-repeat="suite_execution in suite_executions">
-                    <td>{{ suite_execution.fields.execution_id }}</td>
+                <tr ng-repeat="suiteExecution in suiteExecutions">
+                    <td>{{ suiteExecution.fields.execution_id }}</td>
 
                     <td>
-                        <button ng-click="getSuiteDetail(suite_execution.fields.execution_id)" class="btn
-                                {{ getResultButtonClass(suite_execution.suite_result)}}">{{ suite_execution.suite_result }}</button>
+                        <button ng-click="getSuiteDetail(suiteExecution.fields.execution_id)" class="btn
+                                {{ getResultButtonClass(suiteExecution.suite_result)}}">{{ suiteExecution.suite_result }}</button>
                     </td>
-                    <td>{{ suite_execution.num_passed }}</td>
-                    <td>{{ suite_execution.num_failed }}</td>
-                    <td>{{ suite_execution.num_not_run }}</td>
-                    <td>{{ suite_execution.num_in_progress }}</td>
-                    <td>{{ suite_execution.num_skipped }}</td>
-                    <td>{{ testCaseLength(suite_execution.fields.test_case_execution_ids) }}</td>
-                    <td>{{ suite_execution.fields.scheduled_time }}</td>
-                    <td>{{ suite_execution.fields.suite_path }}</td>
+                    <td>{{ suiteExecution.num_passed }}</td>
+                    <td>{{ suiteExecution.num_failed }}</td>
+                    <td>{{ suiteExecution.num_not_run }}</td>
+                    <td>{{ suiteExecution.num_in_progress }}</td>
+                    <td>{{ suiteExecution.num_skipped }}</td>
+                    <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
+                    <td>{{ suiteExecution.fields.scheduled_time }}</td>
+                    <td>{{ suiteExecution.fields.suite_path }}</td>
                 </tr>
             </table>
         </div>
