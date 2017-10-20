@@ -6,39 +6,26 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
     };
 
     ctrl.$onInit = function () {
-        //console.log(ctrl);
-
-
-
-
-        function initController() {
-            // initialize to page 1
-            ctrl.setPage(1);
-            let i = 0;
-        }
-
-        $scope.suite_executions = null;
-        $http.get("/regression/suite_executions").then(function (result) {
-            $scope.suiteExecutions = result.data; // TODO: validate
-            ctrl.dummyItems = $scope.suiteExecutions;
-            ctrl.pager = {};
-            ctrl.setPage = setPage;
-            initController();
-
+        $scope.recordsPerPage = 10;
+        $scope.suiteExecutionsCount = 0;
+        $http.get("/regression/suite_executions_count").then(function(result) {
+            $scope.suiteExecutionsCount = (parseInt(result.data));
+            $scope.setPage(1);
 
         });
+
     };
 
 
-    function setPage(page) {
-        if (page < 0 || page > ctrl.pager.totalPages) {
+    $scope.setPage = function(page) {
+        $scope.pager = PagerService.GetPager($scope.suiteExecutionsCount, page, $scope.recordsPerPage);
+        if (page === 0 || (page > $scope.pager.pages.length)) {
             return;
         }
-
-        ctrl.pager = PagerService.GetPager(ctrl.dummyItems.length, page);
-
-        ctrl.items = ctrl.dummyItems.slice(ctrl.pager.startIndex, ctrl.pager.endIndex + 1);
-    }
+        $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page).then(function (result) {
+            $scope.items = result.data;
+        });
+    };
 
     $scope.testCaseLength = function (testCases) {
         return angular.fromJson(testCases).length;
@@ -48,17 +35,12 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         console.log(suiteId);
         $window.location.href = "/regression/suite_detail/" + suiteId;
     };
-
-
 }
-
 
 function PagerService() {
     // service definition
-    var service = {};
-
+    let service = {};
     service.GetPager = GetPager;
-
     return service;
 
     // service implementation
@@ -66,13 +48,10 @@ function PagerService() {
         // default to first page
         currentPage = currentPage || 1;
 
-        // default page size is 10
-        pageSize = pageSize || 10;
-
         // calculate total pages
-        var totalPages = Math.ceil(totalItems / pageSize);
+        let totalPages = Math.ceil(totalItems / pageSize);
 
-        var startPage, endPage;
+        let startPage, endPage;
         if (totalPages <= 10) {
             // less than 10 total pages so show all
             startPage = 1;
@@ -92,11 +71,11 @@ function PagerService() {
         }
 
         // calculate start and end item indexes
-        var startIndex = (currentPage - 1) * pageSize;
-        var endIndex = Math.min(startIndex + pageSize - 1, totalItems - 1);
+        let startIndex = (currentPage - 1) * pageSize;
+        let endIndex = Math.min(startIndex + pageSize - 1, totalItems - 1);
 
         // create an array of pages to ng-repeat in the pager control
-        var pages = [];
+        let pages = [];
         for (let i = startPage; i <= endPage; i++) {
             pages.push(i);
         }

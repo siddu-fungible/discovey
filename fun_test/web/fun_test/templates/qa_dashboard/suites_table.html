@@ -3,29 +3,26 @@
         <div class="panel-heading">Suite Executions</div>
             <div class="panel-body">
                 <div class="text-center">
-                    <!-- items being paged -->
-                    <div ng-repeat="item in ctrl.items">Item {{item}}</div>
-
                     <!-- pager -->
-                    <ul ng-if="$ctrl.pager.pages.length" class="pagination">
-                        <li ng-class="{disabled:$ctrl.pager.currentPage === 1}">
-                            <a ng-click="$ctrl.setPage(1)">First</a>
+                    <ul ng-if="pager.pages.length" class="pagination">
+                        <li ng-class="{disabled:pager.currentPage === 1}">
+                            <a ng-click="setPage(1)">First</a>
                         </li>
-                        <li ng-class="{disabled:$ctrl.pager.currentPage === 1}">
-                            <a ng-click="$ctrl.setPage($ctrl.pager.currentPage - 1)">Previous</a>
+                        <li ng-class="{disabled:pager.currentPage === 1}">
+                            <a ng-click="setPage(pager.currentPage - 1)">Previous</a>
                         </li>
-                        <li ng-repeat="page in $ctrl.pager.pages" ng-class="{active:$ctrl.pager.currentPage === page}">
-                            <a ng-click="$ctrl.setPage(page)">{{page}}</a>
+                        <li ng-repeat="page in pager.pages" ng-class="{active:pager.currentPage === page}">
+                            <a ng-click="setPage(page)">{{page}}</a>
                         </li>
-                        <li ng-class="{disabled:$ctrl.pager.currentPage === $ctrl.pager.totalPages}">
-                            <a ng-click="$ctrl.setPage($ctrl.pager.currentPage + 1)">Next</a>
+                        <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                            <a ng-click="setPage(pager.currentPage + 1)">Next</a>
                         </li>
-                        <li ng-class="{disabled:$ctrl.pager.currentPage === $ctrl.pager.totalPages}">
-                            <a ng-click="$ctrl.setPage($ctrl.pager.totalPages)">Last</a>
+                        <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                            <a ng-click="setPage(pager.totalPages)">Last</a>
                         </li>
                     </ul>
                 </div>
-            <table ng-if="suiteExecutions" class="table table-nonfluid">
+            <table ng-if="items" class="table table-nonfluid">
                 <thead>
                 <tr>
                     <th>Id</th>
@@ -41,7 +38,7 @@
 
                 </tr>
                 </thead>
-                <tr ng-repeat="suiteExecution in $ctrl.items">
+                <tr ng-repeat="suiteExecution in items">
                     <td>{{ suiteExecution.fields.execution_id }}</td>
 
                     <td>

@@ -1,21 +1,26 @@
 import json
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.core import serializers
+from django.core import serializers, paginator
 from fun_global import RESULTS
 from fun_settings import LOGS_RELATIVE_DIR
 from scheduler.scheduler_helper import LOG_DIR_PREFIX
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 
+
 def index(request):
     return render(request, 'qa_dashboard/regression.html', locals())
 
-def _get_suite_executions(execution_id):
+def _get_suite_executions(execution_id, page=None, records_per_page=10):
     all_objects = None
     if not execution_id:
         all_objects = SuiteExecution.objects.all()
     else:
         all_objects = SuiteExecution.objects.filter(execution_id=execution_id)
+    if page:
+        p = paginator.Paginator(all_objects, records_per_page)
+        all_objects = p.page(page)
+
     data = serializers.serialize("json", all_objects)
     all_objects_dict = json.loads(data)
 
@@ -54,8 +59,11 @@ def _get_suite_executions(execution_id):
         suite_execution["num_in_progress"] = num_in_progress
     return all_objects_dict
 
-def suite_executions(request):
-    all_objects_dict = _get_suite_executions(execution_id=None)
+def suite_executions_count(request):
+    return HttpResponse(SuiteExecution.objects.count())
+
+def suite_executions(request, records_per_page=10, page=None):
+    all_objects_dict = _get_suite_executions(execution_id=None, page=page, records_per_page=records_per_page)
     return HttpResponse(json.dumps(all_objects_dict))
 
 def suite_execution(request, execution_id):
