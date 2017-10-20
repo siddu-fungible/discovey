@@ -3,20 +3,20 @@
     app = angular.module('qa-dashboard', []);
     app.controller('QaDashBoardController', ['$scope', '$http', '$window', '$timeout', function ($scope, $http, $window, $timeout) {
     }]);
-    app.factory('resultToButtonClass', [function (result) {
+    app.factory('resultToClass', [function (result) {
         return function (result) {
             result = result.toUpperCase();
-            let buttonClass = "btn-default";
+            let klass = "default";
             if (result === "FAILED") {
-                buttonClass = "btn-danger";
+                klass = "danger";
             } else if (result === "PASSED") {
-                buttonClass = "btn-success"
+                klass = "success"
             } else if (result === "SKIPPED") {
-                buttonClass = "btn-warning"
+                klass = "warning"
             } else if (result === "NOT_RUN") {
-                buttonClass = "btn-info"
+                klass = "info"
             }
-            return buttonClass;
+            return klass;
         }
     }]);
 }).call();

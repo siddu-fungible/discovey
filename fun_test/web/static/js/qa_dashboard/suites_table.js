@@ -1,8 +1,8 @@
-function SuitesTableController($scope, $http, resultToButtonClass, $window) {
+function SuitesTableController($scope, $http, resultToClass, $window) {
     let ctrl = this;
 
-    $scope.resultToButtonClass = function (result) {
-        return resultToButtonClass(result);
+    $scope.resultToClass = function (result) {
+        return resultToClass(result);
     };
 
     ctrl.$onInit = function () {
