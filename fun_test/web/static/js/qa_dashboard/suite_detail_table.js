@@ -4,11 +4,25 @@
     function SuiteDetailTableController($scope, $http, $timeout, resultToClass) {
         let ctrl = this;
 
+
         $scope.resultToClass = function (result) {
             return resultToClass(result);
         };
 
         ctrl.$onInit = function () {
+            $scope.logDir = null;
+            $scope.CONSOLE_LOG_EXTENSION = ".logs.txt";  //TIED to scheduler_helper.py  TODO
+            $scope.HTML_LOG_EXTENSION = ".html";         //TIED to scheduler_helper.py  TODO
+
+
+            if(!$scope.logDir) {
+                $http.get("/regression/log_path").then(function (result) {
+                    $scope.logDir = result.data;
+                }).catch(function () {
+                    $scope.logDir = "/static/logs/s_"
+                });
+            }
+
             console.log(ctrl);
             $scope.testCaseExecutions = [];
             $http.get("/regression/suite_execution/" + ctrl.executionId).then(function (result) {
@@ -24,6 +38,26 @@
                 });
 
             });
+        };
+
+        let _getFlatPath = function (path) {
+
+            let httpPath = $scope.logDir + ctrl.executionId;
+            let parts = path.split("/");
+            let flat = path;
+            let numParts = parts.length;
+            if (numParts > 2) {
+                flat = parts[numParts - 2] + "_" + parts[numParts - 1];
+            }
+            return httpPath + "/" + flat.replace(/^\//g, '');
+        };
+
+        $scope.getHtmlLogPath = function (path) {
+            return _getFlatPath(path) + $scope.HTML_LOG_EXTENSION;
+        };
+
+        $scope.getConsoleLogPath = function (path) {
+            return _getFlatPath(path) + $scope.CONSOLE_LOG_EXTENSION;
         };
 
     }

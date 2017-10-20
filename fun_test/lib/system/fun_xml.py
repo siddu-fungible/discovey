@@ -17,8 +17,8 @@ RESULT_TYPES = ['PASSED',
                'INFO']
 replacement_logs = []
 
-JS_DIR_DEFAULT = "../js"
-CSS_DIR_DEFAULT = "../css"
+JS_DIR_DEFAULT = "/static/js"
+CSS_DIR_DEFAULT = "/static/css"
 
 NG_APP_NAME = "FUN_XML"
 
@@ -820,12 +820,7 @@ class FunXml:
         # Prepare HTML
 
         self.html = GenericElement('html')
-        mdb_script = GenericElement("script")
-        mdb_script.set("src", "https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.4.1/js/mdb.js")
-        mdb_script.text = " "
-        # self.body.append(mdb_script)
         self.html.append(self.head)
-
         self.html.append(self.body)
 
         self.summary_chart = summary_chart
@@ -875,7 +870,7 @@ class FunXml:
 
     def get_xml_filename(self):
         filename = self.log_directory + "/" + self.log_file
-        filename = filename.replace(".py", ".html")
+        # filename = filename.replace(".py", ".html")
         return filename
 
     def end_test(self, result, bugs=None):

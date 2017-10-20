@@ -23,8 +23,8 @@
                     </td>
                     <td>{{ testCaseExecution.fields.started_time }}</td>
                     <td>{{ testCaseExecution.fields.script_path }}</td>
-                    <td>HTML</td>
-                    <td>Flat</td>
+                    <td><a target="_blank" href="{{ getHtmlLogPath(testCaseExecution.fields.script_path) }}">html</a></td>
+                    <td><a target="_blank" href="{{ getConsoleLogPath(testCaseExecution.fields.script_path) }}">flat</a></td>
                     <td>Action</td>
                 </tr>
             </table>

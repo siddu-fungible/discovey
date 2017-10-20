@@ -10,6 +10,7 @@ import fun_xml
 import argparse
 import web.fun_test.models_helper as models_helper
 from fun_global import RESULTS
+from scheduler.scheduler_helper import *
 
 class TestException(Exception):
     def __str__(self):
@@ -100,9 +101,13 @@ class FunTest:
 
         self.test_metrics = collections.OrderedDict()
         self.logging_selected_modules = []
+
+        html_log_file = "{}.html".format(script_file_name_without_extension)
+        if self.relative_path:
+            html_log_file = get_flat_html_log_file_name(self.relative_path)
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
                                           log_directory=logs_dir,
-                                          log_file="{}.html".format(script_file_name_without_extension),
+                                          log_file=html_log_file,
                                           full_script_path=absolute_script_file_name)
         reload(sys)
         sys.setdefaultencoding('UTF8') #Needed for xml

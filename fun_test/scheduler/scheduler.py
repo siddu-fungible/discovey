@@ -5,18 +5,18 @@ import glob
 import time, subprocess, datetime
 from threading import Thread
 import web.fun_test.models_helper as models_helper
+from scheduler_helper import *
 
 DEBUG = True
 
 LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
-LOG_DIR_PREFIX = "s_"
+
 TEN_MB = 1e7
 QUEUED_JOB_EXTENSION = "queued.json"
 
 TEST_CASE_SPEC_DIR = SCRIPTS_DIR + "/test_case_spec"
 SUITES_DIR = TEST_CASE_SPEC_DIR + "/suites"
 
-CONSOLE_LOG_EXTENSION = ".logs.txt"
 JSON_EXTENSION = ".json"
 
 scheduler_logger = logging.getLogger("scheduler_log")
@@ -105,7 +105,9 @@ class SuiteWorker(Thread):
         for script_path in script_paths:
 
             crashed = False
-            console_log_file_name = self.job_dir + "/{}{}".format(os.path.basename(script_path), CONSOLE_LOG_EXTENSION)
+            # console_log_file_name = self.job_dir + "/{}{}".format(os.path.basename(script_path), CONSOLE_LOG_EXTENSION)
+            console_log_file_name = self.job_dir + "/" + get_flat_console_log_file_name("/{}".format(script_path))
+
             with open(console_log_file_name, "w") as console_log:
                 self.local_scheduler_logger.info("Executing: {}".format(script_path))
                 script_process = subprocess.Popen(["python",

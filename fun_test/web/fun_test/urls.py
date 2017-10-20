@@ -22,7 +22,8 @@ regression_urls = [
     url(r'^suite_executions', regression_views.suite_executions),
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),
-    url(r'^test_case_execution/(\d+)/(\d+)$', regression_views.test_case_execution)
+    url(r'^test_case_execution/(\d+)/(\d+)$', regression_views.test_case_execution),
+    url(r'^log_path$', regression_views.log_path)
 ]
 
 urlpatterns = [

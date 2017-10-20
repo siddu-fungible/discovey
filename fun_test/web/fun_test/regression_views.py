@@ -3,6 +3,8 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers
 from fun_global import RESULTS
+from fun_settings import LOGS_RELATIVE_DIR
+from scheduler.scheduler_helper import LOG_DIR_PREFIX
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 
 def index(request):
@@ -82,3 +84,5 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
     data = serializers.serialize('json', [test_case_execution_obj])
     return HttpResponse(data)
 
+def log_path(request):
+    return HttpResponse(LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX)
