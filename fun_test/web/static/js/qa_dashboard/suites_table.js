@@ -7,12 +7,21 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     ctrl.$onInit = function () {
         $scope.recordsPerPage = 10;
+        $scope.logDir = null;
         $scope.suiteExecutionsCount = 0;
         $http.get("/regression/suite_executions_count").then(function(result) {
             $scope.suiteExecutionsCount = (parseInt(result.data));
             $scope.setPage(1);
 
         });
+
+        if(!$scope.logDir) {
+            $http.get("/regression/log_path").then(function (result) {
+                $scope.logDir = result.data;
+            }).catch(function () {
+                $scope.logDir = "/static/logs/s_"
+            });
+        }
 
     };
 
@@ -35,6 +44,13 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         console.log(suiteId);
         $window.location.href = "/regression/suite_detail/" + suiteId;
     };
+
+    $scope.getSchedulerLog = function (suiteId) {
+        if($scope.logDir) {
+            return $scope.logDir + suiteId + "/scheduler.log"; // TODO
+        }
+
+    }
 }
 
 function PagerService() {

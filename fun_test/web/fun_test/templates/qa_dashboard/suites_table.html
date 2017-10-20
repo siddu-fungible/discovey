@@ -35,6 +35,7 @@
                     <th># TC</th>
                     <th>Scheduled At</th>
                     <th>Path</th>
+                    <th>Log</th>
 
                 </tr>
                 </thead>
@@ -53,6 +54,7 @@
                     <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
                     <td>{{ suiteExecution.fields.scheduled_time }}</td>
                     <td>{{ suiteExecution.fields.suite_path }}</td>
+                    <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) }}">Log</a></td>
                 </tr>
             </table>
         </div>
