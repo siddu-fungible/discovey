@@ -111,7 +111,8 @@ class SuiteWorker(Thread):
                 script_process = subprocess.Popen(["python",
                                                    script_path,
                                                    "--" + "logs_dir={}".format(self.job_dir),
-                                                   "--" + "suite_execution_id={}".format(suite_execution_id)],
+                                                   "--" + "suite_execution_id={}".format(suite_execution_id),
+                                                   "--" + "relative_path={}".format(script_path.replace(SCRIPTS_DIR, ""))],
                                                   close_fds=True,
                                                   stdout=console_log,
                                                   stderr=console_log)

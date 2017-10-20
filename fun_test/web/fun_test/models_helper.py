@@ -1,4 +1,4 @@
-import os, django, json
+import os, django, json, datetime
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
@@ -59,15 +59,23 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
         raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
     return result
 
-def add_test_case_execution(test_case_id, suite_execution_id, result=RESULT_CHOICES[0][0]):
+def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULT_CHOICES[0][0]):
     te = TestCaseExecution(execution_id=get_next_test_case_execution_id(), test_case_id=test_case_id,
                            suite_execution_id=suite_execution_id,
-                           result=result)
+                           result=result,
+                           started_time=datetime.datetime.now(),
+                           script_path=path)
     te.save()
     add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                test_case_execution_id=te.execution_id)
     return te
 
+def report_test_case_execution_result(execution_id, result):
+    test_execution = get_test_case_execution(execution_id=execution_id)
+    # fun_test.simple_assert(test_execution, "Test-execution") # TODO
+    test_execution.result = result
+    test_execution.end_time = datetime.datetime.now()
+    test_execution.save()
 
 def get_test_case_executions_by_suite_execution(suite_execution_id):
     results = TestCaseExecution.objects.filter(suite_execution_id=suite_execution_id)

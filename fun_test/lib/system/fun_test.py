@@ -67,14 +67,22 @@ class FunTest:
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="FunTest")
-        parser.add_argument('--logs_dir', dest="logs_dir", default=None, help="To be used only by the scheduler")
+        parser.add_argument('--logs_dir',
+                            dest="logs_dir",
+                            default=None,
+                            help="To be used only by the scheduler")
         parser.add_argument('--suite_execution_id',
                             dest="suite_execution_id",
                             default=None,
                             help="To be used only by the scheduler")
+        parser.add_argument('--relative_path',
+                            dest="relative_path",
+                            default="",
+                            help="To be used only by the scheduler")
         args = parser.parse_args()
         logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
+        self.relative_path = args.relative_path
         if not logs_dir:
             logs_dir = LOGS_DIR
 
@@ -454,7 +462,8 @@ class FunTestScript(object):
                     test_case.describe()
                     te = models_helper.add_test_case_execution(test_case_id=test_case.id,
                                                                suite_execution_id=fun_test.suite_execution_id,
-                                                               result=fun_test.NOT_RUN)
+                                                               result=fun_test.NOT_RUN,
+                                                               path=fun_test.relative_path)
                     test_case.execution_id = te.execution_id
             self.setup()
             script_result = FunTest.PASSED
@@ -510,10 +519,8 @@ class FunTestScript(object):
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
                     fun_test.end_test(result=test_result)
                     if fun_test.suite_execution_id:
-                        test_execution = models_helper.get_test_case_execution(execution_id=test_case.execution_id)
-                        fun_test.simple_assert(test_execution, "Test-execution")
-                        test_execution.result = test_result
-                        test_execution.save()
+                        models_helper.report_test_case_execution_result(execution_id=test_case.execution_id,
+                                                                        result=test_result)
 
                     if test_result == FunTest.FAILED:
                         self.at_least_one_failed = True

@@ -31,14 +31,21 @@ class LastTestCaseExecution(models.Model):
     last_test_case_execution_id = models.IntegerField(unique=True, default=10)
 
 class TestCaseExecution(models.Model):
+    script_path = models.CharField(max_length=128)
     execution_id = models.IntegerField(unique=True)
     test_case_id = models.IntegerField()
     suite_execution_id = models.IntegerField()
     result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="NOTRUN")
+    started_time = models.DateTimeField()
+    end_time = models.DateTimeField(null=True)
+
 
     def __str__(self):
-        s = "E: {} S: {} T: {} R: {}".format(self.execution_id, self.suite_execution_id,
-                                             self.test_case_id, self.result)
+        s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
+                                                   self.suite_execution_id,
+                                                   self.test_case_id,
+                                                   self.result,
+                                                   self.script_path)
         return s
 
 
