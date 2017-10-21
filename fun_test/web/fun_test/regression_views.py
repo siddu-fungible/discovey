@@ -14,9 +14,9 @@ def index(request):
 def _get_suite_executions(execution_id, page=None, records_per_page=10):
     all_objects = None
     if not execution_id:
-        all_objects = SuiteExecution.objects.all()
+        all_objects = SuiteExecution.objects.all().order_by('-id')
     else:
-        all_objects = SuiteExecution.objects.filter(execution_id=execution_id)
+        all_objects = SuiteExecution.objects.filter(execution_id=execution_id).order_by('-id')
     if page:
         p = paginator.Paginator(all_objects, records_per_page)
         all_objects = p.page(page)
