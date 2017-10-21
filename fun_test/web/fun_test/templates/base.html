@@ -32,11 +32,13 @@
         <div class="menu-list">
 
             <ul id="menu-content" class="menu-content collapse out">
-                <li>
-                  <a href="/regression">
-                  <i class="fa fa-dashboard fa-lg"></i>Regression
-                  </a>
+                <li data-toggle="collapse" data-target="#regression-tasks">
+                  <a href="#" ><i class="fa fa-dashboard fa-lg"></i>Regression<span class="arrow"></span></a>
                 </li>
+                <ul class="sub-menu collapse" id="regression-tasks">
+                    <li class="active"><a href="/regression">Execution Status</a></li>
+                    <li><a href="#">Submit Jobs</a></li>
+                </ul>
 
                 <li  data-toggle="collapse" data-target="#products" class="collapsed active">
                   <a href="#"><i class="fa fa-gift fa-lg"></i> UI Elements <span class="arrow"></span></a>
