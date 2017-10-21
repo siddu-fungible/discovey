@@ -14,8 +14,7 @@ LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
 TEN_MB = 1e7
 QUEUED_JOB_EXTENSION = "queued.json"
 
-TEST_CASE_SPEC_DIR = SCRIPTS_DIR + "/test_case_spec"
-SUITES_DIR = TEST_CASE_SPEC_DIR + "/suites"
+
 
 JSON_EXTENSION = ".json"
 

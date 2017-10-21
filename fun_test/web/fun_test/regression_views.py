@@ -1,15 +1,33 @@
-import json
+import json, os
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS
-from fun_settings import LOGS_RELATIVE_DIR
+from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR
 from scheduler.scheduler_helper import LOG_DIR_PREFIX
 from web.fun_test.models import SuiteExecution, TestCaseExecution
-
+import glob, collections
 
 def index(request):
     return render(request, 'qa_dashboard/regression.html', locals())
+
+def submit_job_page(request):
+    return render(request, 'qa_dashboard/submit_job_page.html')
+
+def suites(request):
+    suites_info = collections.OrderedDict()
+    suite_files = glob.glob(SUITES_DIR + "/*.json")
+    for suite_file in suite_files:
+        try:
+            with open(suite_file, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents)
+                suites_info[os.path.basename(suite_file)] = result
+
+        except Exception as ex:
+            pass
+    return HttpResponse(json.dumps(suites_info))
+
 
 def _get_suite_executions(execution_id, page=None, records_per_page=10):
     all_objects = None

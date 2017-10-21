@@ -1,0 +1,16 @@
+<div>
+    <select ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteInfo" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
+
+    <h2>{{ selectedSuite }}</h2>
+    <table ng-if="selectedInfo" class="table table-nonfluid">
+        <tr>
+            <th style="background-color: #E4EFF2">
+                Scripts
+            </th>
+        </tr>
+        <tr ng-repeat="scriptInfo in selectedInfo">
+            <td>{{ scriptInfo.path }}</td>
+
+        </tr>
+    </table>
+</div>

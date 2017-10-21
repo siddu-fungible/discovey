@@ -17,6 +17,8 @@ JOBS_DIR = WEB_STATIC_DIR + "/jobs"
 SCRIPTS_DIR = FUN_TEST_DIR + "/scripts"
 
 DOCKER_REMOTE_API_PORT = 4243
+TEST_CASE_SPEC_DIR = SCRIPTS_DIR + "/test_case_spec"
+SUITES_DIR = TEST_CASE_SPEC_DIR + "/suites"
 
 JIRA_URL = "http://jira.fungible.local"
 TCMS_PROJECT = "TCM"
