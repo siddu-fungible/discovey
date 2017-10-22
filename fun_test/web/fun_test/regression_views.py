@@ -18,8 +18,16 @@ def submit_job_page(request):
 def suite_re_run(request, suite_execution_id):
     return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id))
 
-def test_case_re_run(request, suite_execution_id, test_case_execution_id):
-    return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id, test_case_execution_id=test_case_execution_id))
+@csrf_exempt
+def test_case_re_run(request):
+    request_json = json.loads(request.body)
+    suite_execution_id = request_json["suite_execution_id"]
+    test_case_execution_id = request_json["test_case_execution_id"]
+    script_path = request_json["script_path"]
+
+    return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id,
+                                     test_case_execution_id=test_case_execution_id,
+                                     script_path=script_path))
 
 @csrf_exempt
 def submit_job(request):

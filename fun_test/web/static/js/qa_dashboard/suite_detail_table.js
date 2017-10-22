@@ -60,8 +60,12 @@
             return _getFlatPath(path) + $scope.CONSOLE_LOG_EXTENSION;
         };
 
-        $scope.rerunClick = function(suiteExecutionId, testCaseExecutionId) {
-            $http.get("/regression/test_case_re_run/" + suiteExecutionId + "/" + testCaseExecutionId).then(function (result) {
+        $scope.rerunClick = function(suiteExecutionId, testCaseExecutionId, scriptPath) {
+            let payload = {};
+            payload["suite_execution_id"] = suiteExecutionId;
+            payload["test_case_execution_id"] = testCaseExecutionId;
+            payload["script_path"] = scriptPath;
+            $http.post("/regression/test_case_re_run", payload).then(function (result) {
                 let jobId = parseInt(result.data);
                 $window.location.href = "/regression/suite_detail/" + jobId;
             });

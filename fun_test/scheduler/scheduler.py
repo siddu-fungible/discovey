@@ -27,6 +27,7 @@ class SuiteWorker(Thread):
         self.job_id = job_spec["job_id"]
         self.job_dir = None
         self.job_test_case_ids = None
+        self.job_script_path = job_spec["script_path"]
         if "test_case_ids" in job_spec:
             self.job_test_case_ids = job_spec["test_case_ids"]
 
@@ -72,21 +73,23 @@ class SuiteWorker(Thread):
         suite_execution.save()
 
         for script_path in script_paths:
-
+            relative_path = script_path.replace(SCRIPTS_DIR, "")
+            if self.job_test_case_ids:
+                if not self.job_script_path in relative_path:
+                    continue
             crashed = False
             # console_log_file_name = self.job_dir + "/{}{}".format(os.path.basename(script_path), CONSOLE_LOG_EXTENSION)
             console_log_file_name = self.job_dir + "/" + get_flat_console_log_file_name("/{}".format(script_path))
-
             with open(console_log_file_name, "w") as console_log:
                 self.local_scheduler_logger.info("Executing: {}".format(script_path))
                 popens = ["python",
                           script_path,
                           "--" + "logs_dir={}".format(self.job_dir),
                           "--" + "suite_execution_id={}".format(suite_execution_id),
-                          "--" + "relative_path={}".format(script_path.replace(SCRIPTS_DIR, ""))]
+                          "--" + "relative_path={}".format(relative_path)]
 
                 if self.job_test_case_ids:
-                    popens.append("--test_case_ids=" + ','.join(self.job_test_case_ids))
+                    popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
                 script_process = subprocess.Popen(popens,
                                                   close_fds=True,
                                                   stdout=console_log,
