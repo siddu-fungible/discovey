@@ -1,48 +1,17 @@
 from fun_settings import *
-import logging, logging.handlers
 import json, os, sys
-import glob
+import glob, re
 import time, subprocess, datetime
 from threading import Thread
 import web.fun_test.models_helper as models_helper
 from scheduler_helper import *
 
-DEBUG = True
-
-LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
-
-TEN_MB = 1e7
-
-
-
-
-
-scheduler_logger = logging.getLogger("scheduler_log")
-scheduler_logger.setLevel(logging.INFO)
-
-if not DEBUG:
-    handler = logging.handlers.RotatingFileHandler(LOG_FILE_NAME, maxBytes=TEN_MB, backupCount=5)
-    handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-else:
-    handler = logging.StreamHandler(sys.stdout)
-    scheduler_logger.addHandler(hdlr=handler)
 
 threads = []
 
 
-class SchedulerException(Exception):
-    pass
 
 
-def parse_file_to_json(file_name):
-    result = None
-    try:
-        with open(file_name, "r") as infile:
-            contents = infile.read()
-            result = json.loads(contents)
-    except Exception as ex:
-        scheduler_logger.critical(str(ex))
-    return result
 
 def get_scripts_in_suite(suite_name):
     suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
@@ -155,18 +124,18 @@ def process_queue():
         else:
             raise SchedulerException("Unable to parse {}".format(job_file))
         de_queue_job(job_file)
-    #for thread in threads:
-    #    thread.join()
-
-
 
 
 def de_queue_job(job_file):
     try:
-        os.remove(job_file)
+        archived_file = ARCHIVED_JOBS_DIR + "/" + os.path.basename(job_file)
+        archived_file = re.sub('(\d+).{}'.format(QUEUED_JOB_EXTENSION),
+                               "\\1.{}".format(ARCHIVED_JOB_EXTENSION),
+                               archived_file)
+        os.rename(job_file, archived_file)
     except Exception as ex:
         scheduler_logger.critical(str(ex))
-
+        #TODO: Ensure job_file is removed
 
 if __name__ == "__main1__":
     queue_job(suite_name="storage_basic")

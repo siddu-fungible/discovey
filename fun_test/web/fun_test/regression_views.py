@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
@@ -14,6 +14,9 @@ def index(request):
 
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
+
+def suite_re_run(request, suite_execution_id):
+    return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id))
 
 @csrf_exempt
 def submit_job(request):

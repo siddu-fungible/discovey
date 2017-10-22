@@ -49,8 +49,15 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         if($scope.logDir) {
             return $scope.logDir + suiteId + "/scheduler.log"; // TODO
         }
+    };
 
+    $scope.rerunClick = function(suiteId) {
+        $http.get("/regression/suite_re_run/" + suiteId).then(function (result) {
+            let jobId = parseInt(result.data);
+            $window.location.href = "/regression/suite_detail/" + jobId;
+        });
     }
+
 }
 
 function PagerService() {
