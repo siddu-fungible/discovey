@@ -12,11 +12,10 @@ DEBUG = True
 LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
 
 TEN_MB = 1e7
-QUEUED_JOB_EXTENSION = "queued.json"
 
 
 
-JSON_EXTENSION = ".json"
+
 
 scheduler_logger = logging.getLogger("scheduler_log")
 scheduler_logger.setLevel(logging.INFO)
@@ -160,21 +159,7 @@ def process_queue():
     #    thread.join()
 
 
-def queue_job(job_id, suite_name):
-    time.sleep(0.1)  # enough time to keep the creation timestamp unique
-    f = open("{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION), "w")
-    job_spec = {}
 
-    job_spec["suite_name"] = suite_name
-    suite_execution = models_helper.add_suite_execution(submitted_time=datetime.datetime.now(),
-                                      scheduled_time=datetime.datetime.max,
-                                      completed_time=datetime.datetime.max
-                                    )
-    job_spec["job_id"] = suite_execution.execution_id
-    # job_spec["suite_execution_id"] = suite_execution.execution_id
-    f.write(json.dumps(job_spec))
-    f.close()
-    scheduler_logger.info("Job Id: {} suite: {} Queued".format(job_id, suite_name))
 
 def de_queue_job(job_file):
     try:
@@ -183,8 +168,8 @@ def de_queue_job(job_file):
         scheduler_logger.critical(str(ex))
 
 
-if __name__ == "__main__":
-    queue_job(job_id=1, suite_name="storage_basic")
+if __name__ == "__main1__":
+    queue_job(suite_name="storage_basic")
     #queue_job(job_id=2, suite="suite2")
     #queue_job(job_id=4, suite="suite3")
     #queue_job(job_id=3, suite="suite4")
@@ -195,4 +180,14 @@ if __name__ == "__main__":
     # wait
     pass
 
+if __name__ == "__main__":
+    #queue_job(job_id=2, suite="suite2")
+    #queue_job(job_id=4, suite="suite3")
+    #queue_job(job_id=3, suite="suite4")
+    #queue_job(job_id=5, suite="suite5")
+    while True:
+        process_queue()
+    # process killed jobs
+    # wait
+    pass
 # if __name__ == "__main1__":

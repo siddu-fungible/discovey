@@ -26,6 +26,7 @@ regression_urls = [
     url(r'^test_case_execution/(\d+)/(\d+)$', regression_views.test_case_execution),
     url(r'^log_path$', regression_views.log_path),
     url(r'^submit_job_page', regression_views.submit_job_page),
+    url(r'^submit_job$', regression_views.submit_job),
     url(r'^suites$', regression_views.suites)
 ]
 

@@ -4,15 +4,25 @@ from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR
-from scheduler.scheduler_helper import LOG_DIR_PREFIX
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 import glob, collections
+from django.views.decorators.csrf import csrf_exempt
 
 def index(request):
     return render(request, 'qa_dashboard/regression.html', locals())
 
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
+
+@csrf_exempt
+def submit_job(request):
+    job_id = 0
+    if request.method == 'POST':
+        request_json = json.loads(request.body)
+        suite_path = request_json["suite_path"]
+        job_id = queue_job(suite_path=suite_path)
+    return HttpResponse(job_id)
 
 def suites(request):
     suites_info = collections.OrderedDict()
