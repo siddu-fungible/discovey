@@ -25,7 +25,8 @@
                     <td>{{ testCaseExecution.fields.script_path }}</td>
                     <td><a target="_blank" href="{{ getHtmlLogPath(testCaseExecution.fields.script_path) }}">html</a></td>
                     <td><a target="_blank" href="{{ getConsoleLogPath(testCaseExecution.fields.script_path) }}">flat</a></td>
-                    <td>Action</td>
+                    <td><button ng-click="rerunClick($ctrl.executionId, testCaseExecution.fields.test_case_id)" class="btn
+                                btn-warning"><i class="glyphicon glyphicon-refresh"></i>&nbspRe-run</button></td>
                 </tr>
             </table>
         </div>

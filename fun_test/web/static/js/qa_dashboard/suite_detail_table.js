@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function SuiteDetailTableController($scope, $http, $timeout, resultToClass) {
+    function SuiteDetailTableController($scope, $http, $timeout, resultToClass, $window) {
         let ctrl = this;
 
 
@@ -58,6 +58,13 @@
 
         $scope.getConsoleLogPath = function (path) {
             return _getFlatPath(path) + $scope.CONSOLE_LOG_EXTENSION;
+        };
+
+        $scope.rerunClick = function(suiteExecutionId, testCaseExecutionId) {
+            $http.get("/regression/test_case_re_run/" + suiteExecutionId + "/" + testCaseExecutionId).then(function (result) {
+                let jobId = parseInt(result.data);
+                $window.location.href = "/regression/suite_detail/" + jobId;
+            });
         };
 
     }

@@ -80,10 +80,18 @@ class FunTest:
                             dest="relative_path",
                             default="",
                             help="To be used only by the scheduler")
+        parser.add_argument('--test_case_ids',
+                            dest="test_case_ids",
+                            default=None,
+                            help="To be used only by the scheduler")
         args = parser.parse_args()
         logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
+        self.selected_test_case_ids = None
+        if args.test_case_ids:
+            self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
+            # print("***" + str(self.selected_test_case_ids))
         if not logs_dir:
             logs_dir = LOGS_DIR
 
@@ -465,6 +473,9 @@ class FunTestScript(object):
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
                 for test_case in self.test_cases:
                     test_case.describe()
+                    if fun_test.selected_test_case_ids:
+                        if not test_case.id in fun_test.selected_test_case_ids:
+                            continue
                     te = models_helper.add_test_case_execution(test_case_id=test_case.id,
                                                                suite_execution_id=fun_test.suite_execution_id,
                                                                result=fun_test.NOT_RUN,
@@ -506,7 +517,11 @@ class FunTestScript(object):
         try:
             if super(self.__class__, self).setup():
                 for test_case in self.test_cases:
+
                     test_case.describe()
+                    if fun_test.selected_test_case_ids:
+                        if not test_case.id in fun_test.selected_test_case_ids:
+                            continue
                     fun_test.start_test(id=test_case.id,
                                            summary=test_case.summary,
                                            steps=test_case.steps)

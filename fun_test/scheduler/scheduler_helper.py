@@ -68,9 +68,11 @@ def get_archived_file_name(suite_execution_id):
     files = glob.glob(glob_str)
     return files[0]
 
-def re_queue_job(suite_execution_id):
+def re_queue_job(suite_execution_id, test_case_execution_id=None):
     archived_job_file = get_archived_file_name(suite_execution_id=suite_execution_id)
     job_spec = parse_file_to_json(file_name=archived_job_file)
+    if test_case_execution_id:
+        job_spec["test_case_ids"] = [test_case_execution_id]
     return queue_job(job_spec=job_spec)
 
 def parse_file_to_json(file_name):

@@ -26,7 +26,9 @@ class SuiteWorker(Thread):
         self.job_spec = job_spec
         self.job_id = job_spec["job_id"]
         self.job_dir = None
-
+        self.job_test_case_ids = None
+        if "test_case_ids" in job_spec:
+            self.job_test_case_ids = job_spec["test_case_ids"]
 
     def prepare_job_folder(self):
         self.job_dir = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(self.job_id)
@@ -77,11 +79,15 @@ class SuiteWorker(Thread):
 
             with open(console_log_file_name, "w") as console_log:
                 self.local_scheduler_logger.info("Executing: {}".format(script_path))
-                script_process = subprocess.Popen(["python",
-                                                   script_path,
-                                                   "--" + "logs_dir={}".format(self.job_dir),
-                                                   "--" + "suite_execution_id={}".format(suite_execution_id),
-                                                   "--" + "relative_path={}".format(script_path.replace(SCRIPTS_DIR, ""))],
+                popens = ["python",
+                          script_path,
+                          "--" + "logs_dir={}".format(self.job_dir),
+                          "--" + "suite_execution_id={}".format(suite_execution_id),
+                          "--" + "relative_path={}".format(script_path.replace(SCRIPTS_DIR, ""))]
+
+                if self.job_test_case_ids:
+                    popens.append("--test_case_ids=" + ','.join(self.job_test_case_ids))
+                script_process = subprocess.Popen(popens,
                                                   close_fds=True,
                                                   stdout=console_log,
                                                   stderr=console_log)
@@ -110,6 +116,7 @@ class SuiteWorker(Thread):
                                                        str(script_metrics["crashed"])))
 
 def process_queue():
+    time.sleep(1)
     # sort by date
     job_files = glob.glob("{}/*{}".format(JOBS_DIR, QUEUED_JOB_EXTENSION))
     job_files.sort(key=os.path.getmtime)
