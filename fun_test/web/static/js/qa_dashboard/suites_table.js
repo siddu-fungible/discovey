@@ -1,4 +1,4 @@
-function SuitesTableController($scope, $http, resultToClass, $window, PagerService) {
+function SuitesTableController($scope, $http, resultToClass, $window, PagerService, commonAlert) {
     let ctrl = this;
 
     $scope.resultToClass = function (result) {
@@ -40,6 +40,10 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         return angular.fromJson(testCases).length;
     };
 
+    $scope.test = function() {
+        commonAlert.showSuccess("john");
+
+    };
     $scope.getSuiteDetail = function (suiteId) {
         console.log(suiteId);
         $window.location.href = "/regression/suite_detail/" + suiteId;

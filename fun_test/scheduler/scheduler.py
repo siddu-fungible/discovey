@@ -27,7 +27,8 @@ class SuiteWorker(Thread):
         self.job_id = job_spec["job_id"]
         self.job_dir = None
         self.job_test_case_ids = None
-        self.job_script_path = job_spec["script_path"]
+        if 'script_path' in job_spec:
+            self.job_script_path = job_spec["script_path"]
         if "test_case_ids" in job_spec:
             self.job_test_case_ids = job_spec["test_case_ids"]
 

@@ -5,6 +5,6 @@
     <script src="{% static "js/qa_dashboard/suite_detail_table.js" %}"></script>
     <script src="{% static "js/qa_dashboard/simple_attribute_value_list.js"  %}"></script>
     <simple-attribute-value-list attributes="{{ suite_execution_attributes }}"></simple-attribute-value-list>
-    <suite-detail-table class="col-sm-8" execution-id="{{ execution_id }}"></suite-detail-table>
+    <suite-detail-table execution-id="{{ execution_id }}"></suite-detail-table>
  </div>
 {% endblock %}

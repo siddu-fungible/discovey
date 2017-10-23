@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function SubmitJob($scope, $http, $window) {
+    function SubmitJob($scope, $http, $window, commonAlert) {
         let ctrl = this;
 
         ctrl.$onInit = function () {
@@ -27,7 +27,9 @@
             $http.post('/regression/submit_job', payload).then(function(result){
                 $scope.jobId = parseInt(result.data);
                 $window.location.href = "/regression/suite_detail/" + $scope.jobId;
-
+                commonAlert.showSuccess("Job " + $scope.jobId + " Submitted");
+            }).catch(function(result) {
+                commonAlert.showError("Unable to submit job");
             });
         }
 

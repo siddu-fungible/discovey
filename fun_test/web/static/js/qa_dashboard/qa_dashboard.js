@@ -1,8 +1,19 @@
 (function () {
     let app;
     app = angular.module('qa-dashboard', []);
-    app.controller('QaDashBoardController', ['$scope', '$http', '$window', '$timeout', function ($scope, $http, $window, $timeout) {
+    app.controller('QaDashBoardController', ['$rootScope', '$scope', '$http', '$window', '$timeout', function ($rootScope, $scope, $http, $window, $timeout) {
+
+        $scope.closeCommonError = function () {
+            $rootScope.showCommonError = false;
+        };
+
+        $scope.closeCommonSuccess = function () {
+            $rootScope.showCommonSuccess = false;
+        };
+
     }]);
+
+
     app.factory('resultToClass', [function (result) {
         return function (result) {
             result = result.toUpperCase();
@@ -18,6 +29,27 @@
             }
             return klass;
         }
+    }]);
+    app.factory('commonAlert', ["$rootScope", function ($rootScope) {
+        function showError (message) {
+            $rootScope.showCommonError = true;
+            $rootScope.commonErrorMessage = message;
+        }
+        function showSuccess (message) {
+            $rootScope.showCommonSuccess = true;
+            $rootScope.commonSuccessMessage = message;
+        }
+
+        function closeAllAlerts () {
+            $rootScope.showCommonError = false;
+            $rootScope.showCommonSuccess = false;
+        }
+
+        return {
+            showError: showError,
+            showSuccess: showSuccess,
+            closeAllAlerts: closeAllAlerts
+        };
     }]);
 }).call();
 
