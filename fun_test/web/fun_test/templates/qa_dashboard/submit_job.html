@@ -1,23 +1,29 @@
-<form>
-    <div class="form-group">
-        <select ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteInfo" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
-    </div>
+<div class="panel panel-primary">
+    <div class="panel-heading">Submit Job</div>
+    <div class="panel-body">
+        <form>
+            <div class="form-group">
+                <label for="suite-select">Select a suite</label>
+                <select id="suite-select" ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteInfo" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
+            </div>
 
-    <div class="form-group">
-        <h2>{{ selectedSuite }}</h2>
-        <button ng-if="selectedInfo" ng-click="submitClick()" class="btn btn-primary">Submit</button>
-    </div>
-    <div class="form-group">
-        <table ng-if="selectedInfo" class="table table-nonfluid">
-            <tr>
-                <th style="background-color: #E4EFF2">
-                    Scripts
-                </th>
-            </tr>
-            <tr ng-repeat="scriptInfo in selectedInfo">
-                <td>{{ scriptInfo.path }}</td>
+            <div class="form-group">
+                <h2>{{ selectedSuite }}</h2>
+                <button ng-if="selectedInfo" ng-click="submitClick()" class="btn btn-primary">Submit</button>
+            </div>
+            <div class="form-group">
+                <table ng-if="selectedInfo" class="table table-nonfluid">
+                    <tr>
+                        <th style="background-color: #E4EFF2">
+                            Scripts
+                        </th>
+                    </tr>
+                    <tr ng-repeat="scriptInfo in selectedInfo">
+                        <td>{{ scriptInfo.path }}</td>
 
-            </tr>
-        </table>
+                    </tr>
+                </table>
+            </div>
+        </form>
     </div>
-</form>
+</div>
