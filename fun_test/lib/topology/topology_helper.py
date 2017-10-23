@@ -234,7 +234,7 @@ class TopologyHelper:
             orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
             instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
                                                         ssh_port=ssh_redir_port)
-            fun_test.test_assert(instance, "Launched host instance")
+            fun_test.test_assert(instance, "allocate_bare_metal: Launched host instance")
             bare_metal_end_point.instance = instance
             bare_metal_end_point.orchestrator = orchestrator_obj
 
@@ -247,7 +247,7 @@ class TopologyHelper:
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
             dut_instance = orchestrator_obj.launch_dut_instance(
                 dpcsh_only=(dut_obj.simulation_start_mode == dut_obj.SIMULATION_START_MODE_DPCSH_ONLY))
-            fun_test.test_assert(dut_instance, "Launch DUT instance")
+            fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
             dut_obj.instance = dut_instance
             dut_instance.orchestrator = orchestrator_obj
 
@@ -266,7 +266,7 @@ class TopologyHelper:
                     orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
                     instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
                                                                 ssh_port=ssh_redir_port)
-                    fun_test.test_assert(instance, "Launched host instance")
+                    fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))
                     instances.append(instance)
                     fun_test.counter += 1
             hypervisor_end_point.instances = instances

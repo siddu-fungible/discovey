@@ -47,6 +47,7 @@ class FunTest:
     FAILED = RESULTS["FAILED"]
     SKIPPED = RESULTS["SKIPPED"]
     NOT_RUN = RESULTS["NOT_RUN"]
+    IN_PROGRESS = RESULTS["IN_PROGRESS"]
 
     LOG_LEVEL_DEBUG = 0
     LOG_LEVEL_CRITICAL = 1
@@ -89,6 +90,8 @@ class FunTest:
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
         self.selected_test_case_ids = None
+        if self.suite_execution_id:
+            self.suite_execution_id = int(self.suite_execution_id)
         if args.test_case_ids:
             self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
             # print("***" + str(self.selected_test_case_ids))
@@ -467,10 +470,14 @@ class FunTestScript(object):
                                steps=self.steps)
         script_result = FunTest.FAILED
 
-
-
+        setup_te = None
         try:
+
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
+                setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
+                                                           suite_execution_id=fun_test.suite_execution_id,
+                                                           result=fun_test.IN_PROGRESS,
+                                                           path=fun_test.relative_path)
                 for test_case in self.test_cases:
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
@@ -481,11 +488,19 @@ class FunTestScript(object):
                                                                result=fun_test.NOT_RUN,
                                                                path=fun_test.relative_path)
                     test_case.execution_id = te.execution_id
+
             self.setup()
+            models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
+                                                       suite_execution_id=fun_test.suite_execution_id,
+                                                       result=fun_test.PASSED)
             script_result = FunTest.PASSED
         except (TestException) as ex:
             pass
         except (Exception) as ex:
+            if setup_te:
+                models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
+                                                       suite_execution_id=fun_test.suite_execution_id,
+                                                       result=fun_test.FAILED)
             fun_test.critical(str(ex))
         fun_test.end_test(result=script_result)
 
@@ -527,6 +542,9 @@ class FunTestScript(object):
                                            steps=test_case.steps)
                     test_result = FunTest.FAILED
                     try:
+                        models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
+                                                                 suite_execution_id=fun_test.suite_execution_id,
+                                                                 result=fun_test.IN_PROGRESS)
                         test_case.setup()
                         test_case.run()
                         test_case.cleanup()

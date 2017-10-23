@@ -21,11 +21,13 @@
             if (result === "FAILED") {
                 klass = "danger";
             } else if (result === "PASSED") {
-                klass = "success"
+                klass = "success";
             } else if (result === "SKIPPED") {
-                klass = "warning"
+                klass = "warning";
             } else if (result === "NOT_RUN") {
-                klass = "info"
+                klass = "default";
+            } else if (result === "IN_PROGRESS") {
+                klass = "info";
             }
             return klass;
         }

@@ -70,6 +70,13 @@ def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESUL
                                test_case_execution_id=te.execution_id)
     return te
 
+def update_test_case_execution(test_case_execution_id, suite_execution_id, result):
+    te = TestCaseExecution.objects.get(execution_id=test_case_execution_id,
+                                       suite_execution_id=suite_execution_id)
+    te.result = result
+    te.save()
+    return te
+
 def report_test_case_execution_result(execution_id, result):
     test_execution = get_test_case_execution(execution_id=execution_id)
     # fun_test.simple_assert(test_execution, "Test-execution") # TODO

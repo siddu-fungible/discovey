@@ -143,6 +143,22 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),
                     os.path.join(BASE_DIR, 'static/css/qa_dashboard'),
                     os.path.join(BASE_DIR, 'fun_test/templates'))
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'fun_test.regression_views': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
+
 CSRF_COOKIE_SECURE = False
 
 # REDIS related settings

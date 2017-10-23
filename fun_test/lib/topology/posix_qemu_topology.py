@@ -32,7 +32,7 @@ class PosixQemuTopology:
             self.duts.append(f1_obj)
 
             # Start FunOS
-            fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=self.dpcsh_only), "Start FunOS")
+            fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=self.dpcsh_only), "PosixQemuTopology: Start FunOS")
 
             # Request host to Launch QEMU instances
             for index in range(0, self.num_vm_instances):

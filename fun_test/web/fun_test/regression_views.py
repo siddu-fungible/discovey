@@ -8,6 +8,9 @@ from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
+import logging
+
+logger = logging.getLogger(__name__)
 
 def index(request):
     return render(request, 'qa_dashboard/regression.html', locals())
@@ -93,6 +96,8 @@ def _get_suite_executions(execution_id, page=None, records_per_page=10):
             suite_result = RESULTS["PASSED"]
         if num_failed:
             suite_result = RESULTS["FAILED"]
+        if num_in_progress:
+            suite_result = RESULTS["IN_PROGRESS"]
         suite_execution["suite_result"] = suite_result
         suite_execution["num_passed"] = num_passed
         suite_execution["num_failed"] = num_failed

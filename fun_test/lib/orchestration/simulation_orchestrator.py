@@ -73,7 +73,7 @@ class SimulationOrchestrator(Linux):
 
 
         # Start FunOS
-        fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=dpcsh_only), "Start FunOS")
+        fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=dpcsh_only), "SimulationOrchestrator: Start FunOS")
         return f1_obj
 
     @fun_test.log_parameters
@@ -96,7 +96,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                     ssh_port=self.ssh_port)
 
         # Start FunOS
-        fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=dpcsh_only), "Start FunOS")
+        fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=dpcsh_only), "DockerContainerOrchestrator: Start FunOS")
         return f1_obj
 
 
