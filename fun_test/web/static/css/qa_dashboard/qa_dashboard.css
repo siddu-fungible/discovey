@@ -166,3 +166,8 @@ body {
 .table-nonfluid {
     width: auto !important;
 }
+
+.content {
+    margin-left: 20%;
+    margin-right: 10%
+}
