@@ -171,3 +171,7 @@ body {
     margin-left: 20%;
     margin-right: 10%
 }
+
+.panel-with-table {
+    width: 1000px;
+}
