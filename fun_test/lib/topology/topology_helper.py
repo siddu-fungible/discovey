@@ -193,12 +193,14 @@ class TopologyHelper:
 
             # Fetch storage container orchestrator
 
-            storage_container_orchestrator = asset_manager.get_orchestrator()
-            fun_test.simple_assert(storage_container_orchestrator, "Topology retrieved container orchestrator")
+
 
             for dut_index, dut_obj in duts.items():
                 dut_type = dut_obj.type
                 fun_test.debug("Setting up DUT {}".format(dut_index))
+
+                storage_container_orchestrator = asset_manager.get_orchestrator(index=dut_index)
+                fun_test.simple_assert(storage_container_orchestrator, "Topology retrieved container orchestrator")
 
                 fun_test.debug("Allocating the DUT")
                 self.allocate_dut(dut_obj=dut_obj, orchestrator_obj=storage_container_orchestrator)

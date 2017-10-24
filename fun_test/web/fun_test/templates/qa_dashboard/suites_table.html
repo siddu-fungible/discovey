@@ -37,6 +37,7 @@
                     <th>Scheduled At</th>
                     <th>Path</th>
                     <th>Log</th>
+                    <th>Log Dir</th>
                     <th>Action</th>
 
                 </tr>
@@ -57,9 +58,10 @@
                     <td>{{ suiteExecution.fields.scheduled_time }}</td>
                     <td>{{ suiteExecution.fields.suite_path }}</td>
                     <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) }}">Log</a></td>
+                    <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) }}">s_{{suiteExecution.fields.execution_id}}</a></td>
                     <td>
                         <button ng-click="rerunClick(suiteExecution.fields.execution_id)" class="btn
-                                btn-warning"><i class="glyphicon glyphicon-refresh"></i>&nbspRe-run</button>
+                                btn-warning"><i class="glyphicon glyphicon-refresh"></i></button>
                     </td>
                 </tr>
             </table>

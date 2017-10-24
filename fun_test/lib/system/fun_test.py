@@ -126,6 +126,12 @@ class FunTest:
 
         self.log_timestamps = False
 
+    def get_instance_id(self):
+        instance_id = 100
+        if self.suite_execution_id:
+            instance_id = self.suite_execution_id
+        return instance_id
+
     def log_enable_timestamps(self):
         self.log_timestamps = True
 

@@ -40,7 +40,7 @@ class AssetManager:
         return asset
 
     @fun_test.log_parameters
-    def get_orchestrator(self, type=ORCHESTRATOR_TYPE_DOCKER_SIMULATION):
+    def get_orchestrator(self, type=ORCHESTRATOR_TYPE_DOCKER_SIMULATION, index=0):
         orchestrator = None
         try:
             all_assets = fun_test.parse_file_to_json(file_name=self.ORCHESTRATOR_SPEC)
@@ -57,10 +57,10 @@ class AssetManager:
                             funos_url = "http://172.17.0.1:8080/fs/funos-posix"  #TODO
                             fun_test.log("Setting up the integration container")
                             container_asset = self.docker_host.setup_integration_basic_container(base_name="integration_basic",
-                                                                                                    id=1,
-                                                                                                    funos_url=funos_url,
-                                                                                                    image_name=self.INTEGRATION_IMAGE_NAME,
-                                                                                                    qemu_port_redirects=[])
+                                                                                                id=index + fun_test.get_instance_id(),
+                                                                                                funos_url=funos_url,
+                                                                                                image_name=self.INTEGRATION_IMAGE_NAME,
+                                                                                                qemu_port_redirects=[])
 
                             fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
                             orchestrator = DockerContainerOrchestrator.get(container_asset)

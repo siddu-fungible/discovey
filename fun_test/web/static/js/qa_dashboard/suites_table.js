@@ -55,6 +55,12 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         }
     };
 
+    $scope.getSchedulerLogDir = function (suiteId) {
+        if($scope.logDir) {
+            return $scope.logDir + suiteId;
+        }
+    }
+
     $scope.rerunClick = function(suiteId) {
         $http.get("/regression/suite_re_run/" + suiteId).then(function (result) {
             let jobId = parseInt(result.data);
