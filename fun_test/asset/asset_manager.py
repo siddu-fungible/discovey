@@ -12,6 +12,7 @@ class AssetManager:
     ORCHESTRATOR_TYPE_DOCKER_HOST = "ORCHESTRATOR_TYPE_DOCKER_HOST"
     ASSET_SPEC = ASSET_DIR + "/assets.json"
     ORCHESTRATOR_SPEC = ASSET_DIR + "/orchestrators.json"
+    INTEGRATION_IMAGE_NAME = "integration_yocto_arg"
 
 
     def __init__(self):
@@ -43,7 +44,7 @@ class AssetManager:
         orchestrator = None
         try:
             all_assets = fun_test.parse_file_to_json(file_name=self.ORCHESTRATOR_SPEC)
-            fun_test.test_assert(all_assets, "Retrieve at least one orchestrator")
+            fun_test.simple_assert(all_assets, "Retrieve at least one orchestrator")
             for one_asset in all_assets:
                 if one_asset['type'] == type:
                     fun_test.debug("Found asset {}".format(one_asset['name']))
@@ -56,11 +57,12 @@ class AssetManager:
                             funos_url = "http://172.17.0.1:8080/fs/funos-posix"  #TODO
                             fun_test.log("Setting up the integration container")
                             container_asset = self.docker_host.setup_integration_basic_container(base_name="integration_basic",
-                                                                                                    id=0,
+                                                                                                    id=1,
                                                                                                     funos_url=funos_url,
+                                                                                                    image_name=self.INTEGRATION_IMAGE_NAME,
                                                                                                     qemu_port_redirects=[])
 
-                            fun_test.simple_assert(container_asset, "One container setup")
+                            fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
                             orchestrator = DockerContainerOrchestrator.get(container_asset)
                     else:
                         orchestrator = DockerHost.get(one_asset)

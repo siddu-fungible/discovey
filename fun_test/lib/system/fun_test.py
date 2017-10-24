@@ -490,12 +490,16 @@ class FunTestScript(object):
                     test_case.execution_id = te.execution_id
 
             self.setup()
-            models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                       suite_execution_id=fun_test.suite_execution_id,
-                                                       result=fun_test.PASSED)
+            if setup_te:
+                models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
+                                                           suite_execution_id=fun_test.suite_execution_id,
+                                                           result=fun_test.PASSED)
             script_result = FunTest.PASSED
         except (TestException) as ex:
-            pass
+            if setup_te:
+                models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
+                                                       suite_execution_id=fun_test.suite_execution_id,
+                                                       result=fun_test.FAILED)
         except (Exception) as ex:
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
@@ -542,9 +546,10 @@ class FunTestScript(object):
                                            steps=test_case.steps)
                     test_result = FunTest.FAILED
                     try:
-                        models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
-                                                                 suite_execution_id=fun_test.suite_execution_id,
-                                                                 result=fun_test.IN_PROGRESS)
+                        if fun_test.suite_execution_id:
+                            models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
+                                                                     suite_execution_id=fun_test.suite_execution_id,
+                                                                     result=fun_test.IN_PROGRESS)
                         test_case.setup()
                         test_case.run()
                         test_case.cleanup()

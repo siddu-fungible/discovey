@@ -87,6 +87,7 @@ class SimulationOrchestrator(Linux):
 class DockerContainerOrchestrator(SimulationOrchestrator):
     QEMU_PATH = "/qemu"
     QEMU_PROCESS = "qemu-system-x86_64"
+    docker_host = None
 
     @fun_test.safe
     def launch_dut_instance(self, dpcsh_only):
@@ -117,6 +118,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         return obj
 
     def post_init(self):
+        # self.docker_host = self.host_ip
         self.ip_route_add(network="10.1.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
         self.ip_route_add(network="10.2.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
 

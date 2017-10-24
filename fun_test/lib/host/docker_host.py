@@ -9,7 +9,7 @@ import re, collections
 
 
 class DockerHost(Linux):
-    INTEGRATION_IMAGE_NAME = "integration_yocto_arg"
+
     BASE_CONTAINER_SSH_PORT = 3219
     BASE_QEMU_SSH_PORT = 2219
     CONTAINER_START_UP_TIME_DEFAULT = 30
@@ -44,8 +44,8 @@ class DockerHost(Linux):
         return container
 
     @fun_test.safe
-    def get_integration_basic_container(self, launch=True):
-        container = self.get_container_by_image(image_name=self.INTEGRATION_IMAGE_NAME)
+    def get_integration_basic_container(self, image_name, launch=True):
+        container = self.get_container_by_image(image_name=image_name)
         return container
 
     @fun_test.safe
@@ -86,12 +86,12 @@ class DockerHost(Linux):
         return next_port + 1
 
     @fun_test.safe
-    def setup_integration_basic_container(self, base_name, id, funos_url, qemu_port_redirects):
+    def setup_integration_basic_container(self, image_name, base_name, id, funos_url, qemu_port_redirects):
         container_asset = {}
         allocated_container = None
 
         self.connect()   #TODO validate connect
-        container = self.get_integration_basic_container()
+        container = self.get_integration_basic_container(image_name)
         if container:
             fun_test.simple_assert(container, "Atleast one integration basic container")
             container = container[0]
@@ -104,6 +104,7 @@ class DockerHost(Linux):
         while port_retries < max_port_retries:
             container = self.get_container_by_name(name=container_name)
             if container:
+
                 try:
                     container.stop()
                     fun_test.debug("Stopped Container: {}".format(container.name))
@@ -111,6 +112,7 @@ class DockerHost(Linux):
                     fun_test.debug("Removed Container: {}".format(container.name))
                 except Exception as ex:
                     fun_test.critical(str(ex))
+
             if port_retries:
                 fun_test.debug("Retrying container creation with a different port: port_retries: {}, max_retries: {}".format(port_retries, max_port_retries))
             try:
@@ -127,7 +129,7 @@ class DockerHost(Linux):
                     ports_dict[str(qemu_port_redirect)] = qemu_ssh_port
                     fun_test.debug("Container SSH port: {}".format(qemu_ssh_port))
 
-                allocated_container = self.client.containers.run(self.INTEGRATION_IMAGE_NAME,
+                allocated_container = self.client.containers.run(image_name,
                                            command=funos_url,
                                            detach=True,
                                            privileged=True,
