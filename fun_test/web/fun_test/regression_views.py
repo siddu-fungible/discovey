@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS
-from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR
+from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 import glob, collections
@@ -40,6 +40,12 @@ def submit_job(request):
         suite_path = request_json["suite_path"]
         job_id = queue_job(suite_path=suite_path)
     return HttpResponse(job_id)
+
+def static_serve_log_directory(request, suite_execution_id):
+    path = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(suite_execution_id) + "/*"
+    files = glob.glob(path)
+    files = [os.path.basename(f) for f in files]
+    return render(request, 'qa_dashboard/list_directory.html', locals())
 
 def suites(request):
     suites_info = collections.OrderedDict()

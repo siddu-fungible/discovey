@@ -57,7 +57,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     $scope.getSchedulerLogDir = function (suiteId) {
         if($scope.logDir) {
-            return $scope.logDir + suiteId;
+            return "/regression/static_serve_log_directory/" + suiteId;
         }
     }
 

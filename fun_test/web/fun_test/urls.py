@@ -16,18 +16,7 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from . import views, regression_views
-from django.conf.urls.static import static
-from django.conf import settings
-from django.views.static import serve
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
-import django.views.static
-original_serve = django.views.static.serve
-
-def my_serve(request, path, document_root=None, show_indexes=False):
-    return original_serve(request=request, path=path, document_root=document_root, show_indexes=True)
-django.views.static.serve = my_serve
-
 
 regression_urls = [
     url(r'^$', regression_views.index),
@@ -41,7 +30,8 @@ regression_urls = [
     url(r'^log_path$', regression_views.log_path),
     url(r'^submit_job_page', regression_views.submit_job_page),
     url(r'^submit_job$', regression_views.submit_job),
-    url(r'^suites$', regression_views.suites)
+    url(r'^suites$', regression_views.suites),
+    url(r'^static_serve_log_directory/(\d+)$', regression_views.static_serve_log_directory)
 ]
 
 urlpatterns = [
