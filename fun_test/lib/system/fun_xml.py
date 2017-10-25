@@ -405,6 +405,7 @@ class TestSection(GenericElement):
         self.checkpoint_table = None
         self.one_checkpoint = None
         self.enable_checkpoint_table = enable_checkpoint_table
+        self.addendums = {}
 
         #  Actions
 
@@ -429,28 +430,37 @@ class TestSection(GenericElement):
         self.append(self.body)
 
     def add_addendum(self, header, text=None):
-        addendum_heading = GenericElement("span", class_name="panel-heading")
+        if not header in self.addendums:
+            addendum_heading = GenericElement("span", class_name="panel-heading")
 
-        # anchor
-        addendum_heading_anchor = GenericElement("a", class_name="accordion-toggle collapsed")
-        addendum_heading_anchor.set("data-toggle", "collapse")
-        addendum_heading_anchor.set("data-parent", "#accordion")
-        ts = get_timestamp_string() + "addendum"
-        addendum_heading_anchor.set("href", "#" + ts)
+            # anchor
+            addendum_heading_anchor = GenericElement("a", class_name="accordion-toggle collapsed")
+            addendum_heading_anchor.set("data-toggle", "collapse")
+            addendum_heading_anchor.set("data-parent", "#accordion")
+            ts = get_timestamp_string() + "addendum"
+            addendum_heading_anchor.set("href", "#" + ts)
 
-        addendum_heading.append(addendum_heading_anchor)
-        addendum_heading_anchor.text = header
-        self.append(addendum_heading)
+            addendum_heading.append(addendum_heading_anchor)
+            addendum_heading_anchor.text = header
+            self.append(addendum_heading)
 
-        addendum = GenericElement("div", class_name="accordion-body collapse", id=ts)
-        if text:
-            addendum.text = "<pre>" + text + "</pre>"
-        self.append(addendum)
-        return addendum
+            addendum = GenericElement("div", class_name="accordion-body collapse", id=ts)
+            if text:
+                addendum.text = "<pre>" + text + "</pre>"
+            self.append(addendum)
+            self.addendums[header] = {"addendum": addendum}
 
-    def _add_tab_panel(self, panel_items):
-        tab_panel = GenericElement("div")
-        tab_panel.set("role", "tab_panel")
+        return self.addendums[header]["addendum"]
+
+    def _add_tab_panel(self, header):
+        if not "tab_panel" in self.addendums[header]:
+            tab_panel = GenericElement("div")
+            tab_panel.set("role", "tab_panel")
+            self.addendums[header]["tab_panel"] = tab_panel
+            self.addendums[header]["addendum"].append(tab_panel)
+        return self.addendums[header]["tab_panel"]
+
+    def _add_panel_items(self, tab_panel, panel_items):
         ul = GenericElement("ul", class_name="nav nav-tabs")
         ul.set("role", "tab_list")
         ts = get_timestamp_string()
@@ -501,22 +511,25 @@ class TestSection(GenericElement):
         return tab_panel
 
 
-    def _add_tab_panel_table(self, panel_items):
-        tab_panel = GenericElement("div")
-        tab_panel.set("role", "tab_panel")
-        ul = GenericElement("ul", class_name="nav nav-tabs")
-        ul.set("role", "tab_list")
+    def _add_table_panel_items(self, header, panel_items):
+        addendum = self.addendums[header]
+        tab_panel = addendum["tab_panel"]
+        if not "ul" in addendum:
+            ul = GenericElement("ul", class_name="nav nav-tabs")
+            ul.set("role", "tab_list")
+            addendum["ul"] = ul
+            addendum["li_count"] = 0
+            tab_panel.append(ul)
+        ul = addendum["ul"]
         ts = get_timestamp_string()
         href_dict = {}
-        index = 0
         for k in panel_items:
             li = GenericElement("li")
             li.set("role", "presentation")
             anchor = GenericElement("a")
             anchor.set("role", "tab")
-            if index == 0:
+            if not addendum["li_count"]:
                 li.set_attribute(attribute="class", attribute_value="active")
-                index += 1
             href = ts + k.replace(" ", "_")
             href_dict[k] = href
             anchor.set("href", "#" + href)
@@ -525,16 +538,19 @@ class TestSection(GenericElement):
             anchor.text = k
             li.append(anchor)
             ul.append(li)
-        tab_panel.append(ul)
+            addendum["li_count"] += 1
 
-        tab_content = GenericElement("div", class_name="tab-content")
-        index = 0
+        if not "tab_content" in addendum:
+            tab_content = GenericElement("div", class_name="tab-content")
+            addendum["tab_content"] = tab_content
+            tab_panel.append(tab_content)
+
+        tab_content = addendum["tab_content"]
         for k in panel_items:
             tab_pane = GenericElement("div", id=href_dict[k])
             tab_pane.set("role", "tab_panel")
-            if index == 0:
+            if addendum["li_count"] == 1:
                 tab_pane.set("class", "tab-pane active")
-                index += 1
             else:
                 tab_pane.set("class", "tab-pane")
 
@@ -548,7 +564,7 @@ class TestSection(GenericElement):
             tab_pane.append(table)
             tab_content.append(tab_pane)
 
-        tab_panel.append(tab_content)
+        # tab_panel.append(tab_content)
         return tab_panel
 
     def get_table(self, headers, rows_list):
@@ -573,13 +589,14 @@ class TestSection(GenericElement):
 
 
     def add_collapsible_tab_panel(self, header, panel_items):
-        addendum = self.add_addendum(header=header)
-        addendum.append(self._add_tab_panel(panel_items=panel_items))
-
+        self.add_addendum(header=header)
+        tab_panel = self._add_tab_panel(header=header)
+        self._add_panel_items(tab_panel=tab_panel, panel_items=panel_items)
 
     def add_collapsible_tab_panel_tables(self, header, panel_items):
-        addendum = self.add_addendum(header=header)
-        addendum.append(self._add_tab_panel_table(panel_items=panel_items))
+        self.add_addendum(header=header)
+        tab_panel = self._add_tab_panel(header=header)
+        self._add_table_panel_items(header=header, panel_items=panel_items)
 
     def set_href_id(self, id, summary):
         self.href_id = get_timestamp_string()
