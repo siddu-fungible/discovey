@@ -12,6 +12,8 @@ class SimulationOrchestrator(Linux):
     INSTANCE_TYPE_QEMU = "INSTANCE_TYPE_QEMU"
     INSTANCE_TYPE_FSU = "INSTANCE_TYPE_FSU"
 
+    ORCHESTRATOR_TYPE = "SimulationOrchestrator"
+
     @staticmethod
     def get(asset_properties):
         prop = asset_properties
@@ -89,6 +91,11 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
     QEMU_PROCESS = "qemu-system-x86_64"
     docker_host = None
 
+    ORCHESTRATOR_TYPE = "DockerContainerOrchestrator"
+
+    def describe(self):
+        pass
+
     @fun_test.safe
     def launch_dut_instance(self, dpcsh_only):
         f1_obj = DockerF1(host_ip=self.host_ip,
@@ -152,4 +159,4 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         docker_host.allocate_qemu_ssh_port(port=port)
 
 class DockerHostOrchestrator(SimulationOrchestrator):
-    pass
+    ORCHESTRATOR_TYPE = "DockerHostOrchestrator"

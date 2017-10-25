@@ -246,6 +246,28 @@ class FunTest:
             sys.stdout.write(str(message) + nl)
             sys.stdout.flush()
 
+    def print_key_value(self, title, data, max_chars_per_column=50):
+        if title:
+            self.log_section(title)
+        for k, v in data.items():
+            k = str(k)
+            len_k = len(k)
+            start = 0
+            end = min(len_k, max_chars_per_column)
+            while start < len_k:
+                format = "{:<" + str(max_chars_per_column) + "} {}"
+                this_k = k[start: end]
+                if not start:
+                    print format.format(this_k, v)
+                else:
+                    print format.format(this_k, "")
+                if len_k > max_chars_per_column:
+                    start += min(len_k - start, max_chars_per_column)
+                    end += min(len_k - end, max_chars_per_column)
+                else:
+                    break
+        self.log("")
+
     def log_section(self, message):
         calling_module = None
         if self.logging_selected_modules:
@@ -362,6 +384,10 @@ class FunTest:
 
         self.fun_xml_obj.add_collapsible_tab_panel_tables(header="Topology",
                                                           panel_items={str(topology_obj): table_data})
+
+    def add_table(self, panel_header, table_name, table_data):
+        self.fun_xml_obj.add_collapsible_tab_panel_tables(header=panel_header,
+                                                          panel_items={table_name: table_data})
 
     def add_xml_trace(self):
         if self.current_test_case_id in self.traces:

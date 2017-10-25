@@ -17,6 +17,13 @@ class AssetManager:
 
     def __init__(self):
         self.docker_host = None  #TODO
+        self.orchestrators = []
+
+    def describe(self):
+        fun_test.log_section("Printing assets")
+        for orchestrator in self.orchestrators:
+            orchestrator.describe()
+
 
     @fun_test.log_parameters
     def get_asset(self, name):
@@ -39,8 +46,9 @@ class AssetManager:
         asset = DockerHost.get(docker_hosts[0])
         return asset
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def get_orchestrator(self, type=ORCHESTRATOR_TYPE_DOCKER_SIMULATION, index=0):
+        fun_test.debug("Getting orchestrator")
         orchestrator = None
         try:
             all_assets = fun_test.parse_file_to_json(file_name=self.ORCHESTRATOR_SPEC)
@@ -69,6 +77,7 @@ class AssetManager:
                     break
         except Exception as ex:
             fun_test.critical(str(ex))
+        self.orchestrators.append(orchestrator)
         return orchestrator
 
 

@@ -15,9 +15,16 @@ fun_test.log_selected_module("logging_example")
 fun_test.log("Module specific log")
 fun_test.log_disable_selective()
 
+d = {}
+d["Attribute1"] = "Value1"
+d[2] = "Value2"
+d["Attr3"] = "ValueThree"
+fun_test.print_key_value(title="Attribute Value Table", data=d)
+
 fun_test.log_enable_timestamps()
 fun_test.log("With Timestamp")
 fun_test.log_disable_timestamps()
+
 
 
 fun_test.test_assert(2 > 1, "Expression 1")

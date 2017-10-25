@@ -16,7 +16,14 @@ class DockerHost(Linux):
 
     DOCKER_STATUS_RUNNING = "running"
 
+    def describe(self):
+        fun_test.log_section("DockerHost Info: {}".format(self.host_ip))
+        fun_test.log("Container Info")
+        for container_asset in self.containers_assets:
+            fun_test.log(container_asset["name"])  #TODO log_table
+
     def post_init(self):
+        self.containers_assets = []
         self.client = None
         self.current_docker_host_asset = None
         self.allocated_container_ssh_ports = {self.BASE_CONTAINER_SSH_PORT}
@@ -151,7 +158,8 @@ class DockerHost(Linux):
                 container_asset["qemu_ssh_ports"] = qemu_ssh_ports
                 container_asset["docker_host"] = self
                 container_asset["internal_ip"] = allocated_container.attrs["NetworkSettings"]["IPAddress"]
-
+                container_asset["name"] = container_name
+                self.containers_assets.append(container_asset)
                 break
             except APIError as ex:
                 message = str(ex)

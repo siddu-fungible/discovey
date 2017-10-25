@@ -222,6 +222,11 @@ class TopologyHelper:
                                                      orchestrator_obj=storage_container_orchestrator)
         else:
             pass  # Networking style, where hosts can be separate containers
+
+        fun_test.log("Completed allocating topology")
+        ##### Let us print out the topology
+
+
         return True  # TODO
 
 
