@@ -156,7 +156,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                              append_chain_rule=Linux.IPTABLES_CHAIN_RULE_DOCKER
                              )
         # docker_host.command("iptables -A DOCKER -j ACCEPT -p tcp --destination 172.17.0.2 --dport 2220")
-        docker_host.allocate_qemu_ssh_port(port=port)
+        docker_host.allocate_qemu_ssh_port(port=port, internal_ip=internal_ip)
 
 class DockerHostOrchestrator(SimulationOrchestrator):
     ORCHESTRATOR_TYPE = "DockerHostOrchestrator"

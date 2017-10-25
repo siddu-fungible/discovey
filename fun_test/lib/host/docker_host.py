@@ -19,22 +19,31 @@ class DockerHost(Linux):
     def describe(self):
         fun_test.log_section("DockerHost Info: {}".format(self.host_ip))
         fun_test.log("Container Info")
-        for container in self.containers_assets:
-            fun_test.print_key_value(title="Container Asset {}".format(container["name"]), data=container)
+        for container_name, container_asset in self.containers_assets.items():
+            fun_test.print_key_value(title="Container Asset {}".format(container_name), data=container_asset)
             table_data_headers = ["Attribute", "Value"]
             table_data_rows = []
-            for key, value in container.items():
+            for key, value in container_asset.items():
                 table_data_rows.append([str(key), str(value)])
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
             fun_test.add_table(panel_header="Docker Host Info",
-                               table_name=container["name"], table_data=table_data)
+                               table_name=container_name, table_data=table_data)
 
     def post_init(self):
-        self.containers_assets = []
+        self.containers_assets = collections.OrderedDict()
         self.client = None
         self.current_docker_host_asset = None
         self.allocated_container_ssh_ports = {self.BASE_CONTAINER_SSH_PORT}
         self.allocated_qemu_ssh_ports = {self.BASE_QEMU_SSH_PORT}
+
+    @fun_test.safe
+    def get_container_asset_by_internal_ip(self, internal_ip):
+        result = None
+        for container_name, container_asset in self.containers_assets.items():
+            if internal_ip == container_asset["internal_ip"]:
+                result = container_asset
+                break
+        return result
 
     def connect(self):
         if not self.client:
@@ -72,9 +81,11 @@ class DockerHost(Linux):
         self.allocated_container_ssh_ports = set(sorted(self.allocated_container_ssh_ports))  #TODO: Expensive
 
 
-    def allocate_qemu_ssh_port(self, port):
+    def allocate_qemu_ssh_port(self, port, internal_ip):
         self.allocated_qemu_ssh_ports.add(port)
         self.allocated_qemu_ssh_ports = set(sorted(self.allocated_qemu_ssh_ports))  # TODO: Expensive
+        container_asset = self.get_container_asset_by_internal_ip(internal_ip=internal_ip)
+        container_asset["qemu_ssh_ports"].append(port)
 
     def get_next_container_ssh_port(self):
         next_port = self._get_next_port(source=self.allocated_container_ssh_ports)
@@ -166,7 +177,7 @@ class DockerHost(Linux):
                 container_asset["docker_host"] = self
                 container_asset["internal_ip"] = allocated_container.attrs["NetworkSettings"]["IPAddress"]
                 container_asset["name"] = container_name
-                self.containers_assets.append(container_asset)
+                self.containers_assets[container_name] = container_asset
                 break
             except APIError as ex:
                 message = str(ex)
