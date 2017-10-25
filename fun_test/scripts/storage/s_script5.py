@@ -14,7 +14,8 @@ topology_dict = {
             "type": Dut.DUT_TYPE_FSU,
             "interface_info": {
                 0: {
-                    "vms": 2
+                    "vms": 2,
+                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL

@@ -1,4 +1,4 @@
-from lib.system.fun_test import fun_test
+from lib.system.fun_test import fun_test, FunTestLibException
 from lib.topology.posix_qemu_topology import PosixQemuTopology
 from lib.topology.posix_docker_topology import PosixDockerTopology
 from asset.asset_manager import *
@@ -31,10 +31,13 @@ class EndPoint(object):
     END_POINT_TYPE_VM = "END_POINT_TYPE_VM"
     END_POINT_TYPE_SSD = "END_POINT_TYPE_SSD"
     END_POINT_TYPE_HYPERVISOR = "END_POINT_TYPE_HYPERVISOR"
+    END_POINT_TYPE_QEMU_HYPERVISOR = "END_POINT_TYPE_QEMU_HYPERVISOR"
+    MODE_SIMULATION = "MODE_SIMULATION"
 
     def __init__(self):
         self.type = self.END_POINT_TYPE_MINE
         self.instance = None
+        self.mode = self.MODE_SIMULATION
 
     def __repr__(self):
         return str(self.type)
@@ -56,7 +59,6 @@ class VmEndPoint(EndPoint):
 
 class BareMetalEndPoint(EndPoint):
     END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_BARE_METAL
-    MODE_SIMULATION = "MODE_SIMULATION"
 
     def __init__(self):
         super(BareMetalEndPoint, self).__init__()
@@ -65,13 +67,18 @@ class BareMetalEndPoint(EndPoint):
 
 class HypervisorEndPoint(EndPoint):
     END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_HYPERVISOR
-    MODE_SIMULATION = "MODE_SIMULATION"
 
     def __init__(self, num_vms=None):
         super(HypervisorEndPoint, self).__init__()
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
 
+class QemuHypervisorEndPoint(EndPoint):
+    END_POINT_TYPE_QEMU_HYPERVISOR = EndPoint.END_POINT_TYPE_QEMU_HYPERVISOR
+    def __init__(self, num_vms=None):
+        super(QemuHypervisorEndPoint, self).__init__()
+        self.num_vms = num_vms
+        self.mode = self.MODE_SIMULATION
 
 class SsdEndPoint(EndPoint):
     END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_SSD
@@ -120,12 +127,28 @@ class Dut:
             fun_test.debug("User intended baremetal for Interface: {}".format(interface_index))
             dut_interface_obj.peer_info = BareMetalEndPoint()
 
-    def add_hypervisor_to_interface(self, interface_index, num_vms=0):
+    def add_qemu_hypervisor_to_interface(self,
+                                         interface_index,
+                                         num_vms=0,
+                                        ):
         dut_interface_obj = self.DutInterface(index=interface_index)
         self.interfaces[interface_index] = dut_interface_obj
         if num_vms:
-            dut_interface_obj.peer_info = HypervisorEndPoint(num_vms=num_vms)
-            fun_test.debug("User intended hypervisor for Interface: {}".format(interface_index))
+            pass
+
+    def add_hypervisor_to_interface(self,
+                                    interface_index,
+                                    num_vms=0,
+                                    interface_type=DutInterface.INTERFACE_TYPE_PCIE):
+        dut_interface_obj = self.DutInterface(index=interface_index)
+        self.interfaces[interface_index] = dut_interface_obj
+        if num_vms:
+            if interface_type == Dut.DutInterface.INTERFACE_TYPE_PCIE:
+                dut_interface_obj.peer_info = HypervisorEndPoint(num_vms=num_vms)
+                fun_test.debug("User intended hypervisor for Interface: {}".format(interface_index))
+            elif interface_type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
+                dut_interface_obj.peer_info = HypervisorEndPoint(num_vms=num_vms)
+                fun_test.debug("User intended hypervisor for Interface: {}".format(interface_index))
 
     def add_drives_to_interface(self, interface_index, num_ssds=0):
         dut_interface_obj = self.DutInterface(index=interface_index)
@@ -166,7 +189,16 @@ class TopologyHelper:
                 if "hosts" in interface_info:
                     dut_obj.add_hosts_to_interface(interface_index=interface_index, num_hosts=interface_info["hosts"])
                 elif 'vms' in interface_info:
-                    dut_obj.add_hypervisor_to_interface(interface_index=interface_index, num_vms=interface_info["vms"])
+                    if not 'type' in interface_info:
+                        raise FunTestLibException("We must define an interface type")
+                    if interface_info["type"] == Dut.DutInterface.INTERFACE_TYPE_PCIE:
+                        dut_obj.add_qemu_hypervisor_to_interface(interface_index=interface_index,
+                                                                 num_vms=interface_info["vms"])
+                    elif interface_info['type'] == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
+                        dut_obj.add_hypervisor_to_interface(interface_index=interface_index,
+                                                                num_vms=interface_info["vms"])
+
+
                 elif 'ssds' in interface_info:
                     dut_obj.add_drives_to_interface(interface_index=interface_index, num_ssds=interface_info["ssds"])
 
@@ -220,6 +252,9 @@ class TopologyHelper:
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                      orchestrator_obj=storage_container_orchestrator)
+                        elif peer_info.type == peer_info.END_POINT_TYPE_QEMU_HYPERVISOR:
+                            self.allocate_qemu_hypervisor(hypervisor_end_point=peer_info,
+                                                     orchestrator_obj=storage_container_orchestrator)
         else:
             pass  # Networking style, where hosts can be separate containers
 
@@ -259,9 +294,12 @@ class TopologyHelper:
             dut_obj.instance = dut_instance
             dut_instance.orchestrator = orchestrator_obj
 
-
     @fun_test.safe
     def allocate_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO
+        raise FunTestLibException("Not implemented")
+
+    @fun_test.safe
+    def allocate_qemu_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO
         if hypervisor_end_point.mode == hypervisor_end_point.MODE_SIMULATION:
             if not orchestrator_obj:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
