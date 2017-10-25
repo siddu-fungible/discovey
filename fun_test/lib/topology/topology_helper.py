@@ -225,6 +225,7 @@ class TopologyHelper:
 
         fun_test.log("Completed allocating topology")
         ##### Let us print out the topology
+        asset_manager.describe()
 
 
         return True  # TODO

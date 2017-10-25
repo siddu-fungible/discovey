@@ -94,7 +94,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
     ORCHESTRATOR_TYPE = "DockerContainerOrchestrator"
 
     def describe(self):
-        pass
+        self.docker_host.describe()
 
     @fun_test.safe
     def launch_dut_instance(self, dpcsh_only):

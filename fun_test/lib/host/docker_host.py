@@ -19,8 +19,15 @@ class DockerHost(Linux):
     def describe(self):
         fun_test.log_section("DockerHost Info: {}".format(self.host_ip))
         fun_test.log("Container Info")
-        for container_asset in self.containers_assets:
-            fun_test.log(container_asset["name"])  #TODO log_table
+        for container in self.containers_assets:
+            fun_test.print_key_value(title="Container Asset {}".format(container["name"]), data=container)
+            table_data_headers = ["Attribute", "Value"]
+            table_data_rows = []
+            for key, value in container.items():
+                table_data_rows.append([str(key), str(value)])
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
+            fun_test.add_table(panel_header="Docker Host Info",
+                               table_name=container["name"], table_data=table_data)
 
     def post_init(self):
         self.containers_assets = []
