@@ -17,8 +17,8 @@ RESULT_TYPES = ['PASSED',
                'INFO']
 replacement_logs = []
 
-JS_DIR_DEFAULT = "/static/js"
-CSS_DIR_DEFAULT = "/static/css"
+JS_DIR_DEFAULT = "/static/js/common"
+CSS_DIR_DEFAULT = "/static/css/common"
 
 NG_APP_NAME = "FUN_XML"
 
@@ -88,6 +88,7 @@ class _XmlHead(Element):
 
         self.add_script(src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js")
         self.add_script(src="{}/bootstrap.min.js".format(JS_DIR_DEFAULT))
+        self.add_script(src="{}/jsoneditor.js".format(JS_DIR_DEFAULT))
         self.add_script(src="http://code.highcharts.com/highcharts.js")
         self.add_script(src="http://code.highcharts.com/modules/exporting.js")
         # self.add_script(src="https://cdn.plot.ly/plotly-latest.min.js")
@@ -106,6 +107,7 @@ class _XmlHead(Element):
         #              rel="stylesheet")
         # self.add_link(href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.2/css/mdb.min.css", rel="stylesheet")
         self.add_link(href="{}/bootstrap.min.css".format(CSS_DIR_DEFAULT), rel="stylesheet")
+        self.add_link(href="{}/jsoneditor.css".format(CSS_DIR_DEFAULT), rel="stylesheet")
         # self.add_link(href="https://fonts.googleapis.com/icon?family=Material+Icons", rel="stylesheet")
         self.add_link(href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css", rel="stylesheet")
         self.add_link(href="{}/script_result.css".format(CSS_DIR_DEFAULT), rel="stylesheet")
@@ -133,6 +135,20 @@ class _XmlHead(Element):
         element = GenericElement("style")
         element.text = local_style
         self.append(element)
+
+
+class TopologyPageContent:
+    def __init__(self):
+        self.tree = GenericElement("div", id="topology", class_name="tab-pane")
+        self.tree.text = ""
+
+    def get(self):
+        return self.tree
+
+    def set_topology_json_filename(self, filename):
+        json_editor = GenericElement("div", id="topology-json")
+        json_editor.set_attribute(attribute="data-path", attribute_value=filename)
+        self.tree.append(json_editor)
 
 class ScriptContent:
     def __init__(self):
@@ -802,10 +818,12 @@ class FunXml:
         page_tab1 = self.get_page_tab(name="Results", index=1, href_id="#wrapper")
         page_tab2 = self.get_page_tab(name="Documentation", index=2, href_id="#documentation")
         page_tab3 = self.get_page_tab(name="Script", index=3, href_id="#script")
+        page_tab4 = self.get_page_tab(name="Topology", index=4, href_id="#topology")
 
         self.nav_tab.append(page_tab1)
         self.nav_tab.append(page_tab2)
         self.nav_tab.append(page_tab3)
+        self.nav_tab.append(page_tab4)
         tabs_wrapper.append(self.nav_tab)
 
         self.tab_content = GenericElement("div", class_name="tab-content card")
@@ -816,11 +834,12 @@ class FunXml:
 
         self.script_page_content = ScriptContent()
 
+        self.topology_page_content = TopologyPageContent()
 
         self.tab_content.append(self.result_page_content.get())
         self.tab_content.append(self.documentation_page_content.get())
         self.tab_content.append(self.script_page_content.get())
-
+        self.tab_content.append(self.topology_page_content.get())
 
         self.body = GenericElement('body')
         # self.body.set("ng-app", NG_APP_NAME)
@@ -856,6 +875,9 @@ class FunXml:
         tab_a.set("data-toggle", "tab")
         tab_li.append(tab_a)
         return tab_li
+
+    def set_topology_json_filename(self, filename):
+        self.topology_page_content.set_topology_json_filename(filename)
 
     def set_log_directory(self, log_directory):
         self.log_directory = log_directory

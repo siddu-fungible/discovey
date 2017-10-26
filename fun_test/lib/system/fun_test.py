@@ -86,17 +86,18 @@ class FunTest:
                             default=None,
                             help="To be used only by the scheduler")
         args = parser.parse_args()
-        logs_dir = args.logs_dir
+        self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
         self.selected_test_case_ids = None
+        self.current_test_case_execution_id = None
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
         if args.test_case_ids:
             self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
             # print("***" + str(self.selected_test_case_ids))
-        if not logs_dir:
-            logs_dir = LOGS_DIR
+        if not self.logs_dir:
+            self.logs_dir = LOGS_DIR
 
         self.initialized = False
         self.debug_enabled = False
@@ -117,7 +118,7 @@ class FunTest:
         if self.relative_path:
             html_log_file = get_flat_html_log_file_name(self.relative_path)
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
-                                          log_directory=logs_dir,
+                                          log_directory=self.logs_dir,
                                           log_file=html_log_file,
                                           full_script_path=absolute_script_file_name)
         reload(sys)
@@ -126,11 +127,20 @@ class FunTest:
 
         self.log_timestamps = False
 
-    def get_instance_id(self):
-        instance_id = 100
-        if self.suite_execution_id:
-            instance_id = self.suite_execution_id
-        return instance_id
+    def create_test_case_artifact_file(self, post_fix_name, contents):
+        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        with open(artifact_file, "w") as f:
+            f.write(contents)
+        return os.path.basename(artifact_file)
+
+    def set_topology_json_filename(self, filename):
+        self.fun_xml_obj.set_topology_json_filename(filename=filename)
+
+    def get_suite_execution_id(self):
+        return self.suite_execution_id if self.suite_execution_id else 100
+
+    def get_test_case_execution_id(self):
+        return self.current_test_case_execution_id if self.current_test_case_execution_id else 100
 
     def log_enable_timestamps(self):
         self.log_timestamps = True

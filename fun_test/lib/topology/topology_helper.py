@@ -2,9 +2,11 @@ from lib.system.fun_test import fun_test, FunTestLibException
 from lib.topology.posix_qemu_topology import PosixQemuTopology
 from lib.topology.posix_docker_topology import PosixDockerTopology
 from asset.asset_manager import *
+from lib.system.utils import ToDictMixin
+import json
 
-
-class ExpandedTopology:
+class ExpandedTopology(ToDictMixin):
+    TO_DICT_VARS = ["duts"]
     def __init__(self):
         self.duts = {}
 
@@ -25,7 +27,7 @@ class ExpandedTopology:
         dut = self.get_dut(index=dut_index)
         return dut.get_host_on_interface(interface_index=interface_index).get_instance()
 
-class EndPoint(object):
+class EndPoint(object, ToDictMixin):
     END_POINT_TYPE_MINE = "Unknown end-point type"
     END_POINT_TYPE_BARE_METAL = "END_POINT_TYPE_BARE_METAL"
     END_POINT_TYPE_VM = "END_POINT_TYPE_VM"
@@ -34,6 +36,7 @@ class EndPoint(object):
     END_POINT_TYPE_QEMU_HYPERVISOR = "END_POINT_TYPE_QEMU_HYPERVISOR"
     MODE_SIMULATION = "MODE_SIMULATION"
 
+    TO_DICT_VARS = ["mode", "type", "instance"]
     def __init__(self):
         self.type = self.END_POINT_TYPE_MINE
         self.instance = None
@@ -45,7 +48,7 @@ class EndPoint(object):
     def get_instance(self):
         return self.instance
 
-class VmEndPoint(EndPoint):
+class VmEndPoint(EndPoint, ToDictMixin):
     END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_VM
 
     def __init__(self, centos7=0, ubuntu14=0):
@@ -57,7 +60,7 @@ class VmEndPoint(EndPoint):
             self.centos7 = 1
 
 
-class BareMetalEndPoint(EndPoint):
+class BareMetalEndPoint(EndPoint, ToDictMixin):
     END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_BARE_METAL
 
     def __init__(self):
@@ -65,7 +68,7 @@ class BareMetalEndPoint(EndPoint):
         self.mode = self.MODE_SIMULATION
 
 
-class HypervisorEndPoint(EndPoint):
+class HypervisorEndPoint(EndPoint, ToDictMixin):
     END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_HYPERVISOR
 
     def __init__(self, num_vms=None):
@@ -73,8 +76,10 @@ class HypervisorEndPoint(EndPoint):
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
 
-class QemuHypervisorEndPoint(EndPoint):
+class QemuHypervisorEndPoint(EndPoint, ToDictMixin):
     END_POINT_TYPE_QEMU_HYPERVISOR = EndPoint.END_POINT_TYPE_QEMU_HYPERVISOR
+
+    TO_DICT_VARS = ["mode", "num_vms"]
     def __init__(self, num_vms=None):
         super(QemuHypervisorEndPoint, self).__init__()
         self.num_vms = num_vms
@@ -84,7 +89,7 @@ class SsdEndPoint(EndPoint):
     END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_SSD
 
 
-class Dut:
+class Dut(ToDictMixin):
     DUT_TYPE_FSU = "DUT_TYPE_FSU"
     DUT_TYPE_FM8 = "DUT_TYPE_FM8"
 
@@ -95,10 +100,13 @@ class Dut:
     MODE_EMULATION = "MODE_EMULATION"
     MODE_REAL = "MODE_REAL"
 
-    class DutInterface:
+    TO_DICT_VARS = ["type", "index", "interfaces", "simulation_start_mode", "instance"]
+
+    class DutInterface(ToDictMixin):
         INTERFACE_TYPE_PCIE = "INTERFACE_TYPE_PCIE"
         INTERFACE_TYPE_ETHERNET = "INTERFACE_TYPE_ETHERNET"
 
+        TO_DICT_VARS = ["index", "type", "peer_info"]
         def __init__(self, index):
             self.index = index  # interface index
             self.peer_info = None
@@ -170,6 +178,9 @@ class Dut:
 class TopologyHelper:
     def __init__(self, spec):
         self.spec = spec
+
+    def get_resource_requirements(self):
+        pass
 
     @fun_test.safe
     def get_expanded_topology(self):
@@ -262,7 +273,10 @@ class TopologyHelper:
         ##### Let us print out the topology
         asset_manager.describe()
 
-
+        d = topology.to_dict()
+        topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
+                                                                         contents=json.dumps(d))
+        fun_test.set_topology_json_filename(filename=topology_json_artifact)
         return True  # TODO
 
 

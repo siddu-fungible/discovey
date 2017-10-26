@@ -66,7 +66,7 @@ class AssetManager:
                         fun_test.simple_assert(self.docker_host, "Docker host available")
                         fun_test.log("Setting up the integration container for index: {}".format(index))
                         container_asset = self.docker_host.setup_integration_basic_container(base_name="integration_basic",
-                                                                                            id=index + fun_test.get_instance_id(),
+                                                                                            id=index + fun_test.get_suite_execution_id(),
                                                                                             funos_url=funos_url,
                                                                                             image_name=self.INTEGRATION_IMAGE_NAME,
                                                                                             qemu_port_redirects=[])

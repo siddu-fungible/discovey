@@ -1,8 +1,9 @@
 from lib.system.fun_test import fun_test
+from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
 import re, json
 
-class F1(Linux):
+class F1(Linux, ToDictMixin):
     SIMULATION_FUNOS_BUILD_PATH = "/home/jabraham/FunOS/build"
     DPCSH_PATH = "/home/jabraham/FunTools/dpcsh/dpcsh"
     FUN_OS_SIMULATION_PROCESS = "funos-posix"
@@ -11,13 +12,15 @@ class F1(Linux):
     @staticmethod
     def get(asset_properties):
         prop = asset_properties
-        return F1(host_ip=prop["host_ip"],
+        f1 = F1(host_ip=prop["host_ip"],
                      ssh_username=prop["mgmt_ssh_username"],
                      ssh_password=prop["mgmt_ssh_password"],
                      ssh_port=prop["mgmt_ssh_port"])
+        return f1
 
     def post_init(self):
         self.fun_os_process_id = None
+        self.TO_DICT_VARS.append("fun_os_process_id")
 
     def start(self, dpcsh=False, dpcsh_only=False):
         started = False
@@ -94,6 +97,6 @@ class F1(Linux):
         super(F1, self).disconnect()
 
 
-class DockerF1(F1):
+class DockerF1(F1, ToDictMixin):
     SIMULATION_FUNOS_BUILD_PATH = "/"
     DPCSH_PATH = "/"

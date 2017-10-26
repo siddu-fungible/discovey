@@ -44,6 +44,17 @@ function setup_ajax() {
 
 }
 
+function loadTopologyJson() {
+    var container = document.getElementById('topology-json');
+    dataPath = container.getAttribute("data-path");
+    var options = {};
+    var editor = new JSONEditor(container, options);
+    console.log(dataPath);
+    $.getJSON( dataPath, function( data ) {
+        editor.set(data);
+    });
+}
+
 jQuery(function($){
 
     $("#summary_toggle").click(function(e) {
@@ -229,9 +240,13 @@ jQuery(function($){
            $(longDescriptionId).show();
          }
     });
+
+
+
     $(document).ready(function() {
          /*angular
             .module('FUN_XML', ['ngMaterial'])*/
+         loadTopologyJson();
     });
 
     $("#test-button").click(function(){

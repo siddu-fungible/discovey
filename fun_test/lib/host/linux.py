@@ -6,7 +6,7 @@ import sys
 import os
 import time
 from lib.system.fun_test import fun_test
-
+from lib.system.utils import ToDictMixin
 
 class NoLogger:
     def __init__(self):
@@ -62,7 +62,7 @@ class LinuxLogger:
         fun_test.log(message=message, trace_id=self.trace_id)
 
 
-class Linux(object):
+class Linux(object, ToDictMixin):
     ROOT_PROMPT_TERMINATOR_DEFAULT = "# "
     NON_ROOT_PROMPT_TERMINATOR_DEFAULT = r'\$ '
     SSH_PORT_DEFAULT = 22
@@ -82,7 +82,7 @@ class Linux(object):
     IPTABLES_ACTION_MASQUERADE = "MASQUERADE"
     IPTABLES_PROTOCOL_TCP = "tcp"
 
-
+    TO_DICT_VARS = ["host_ip", "ssh_username", "ssh_password", "ssh_port"]
 
     def __init__(self,
                  host_ip,
