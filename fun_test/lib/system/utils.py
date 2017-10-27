@@ -4,6 +4,8 @@ class ToDictMixin:
     def to_dict(self):
         d = {}
         for x in self.TO_DICT_VARS:
+            if not hasattr(self, x):
+                continue
             val = getattr(self, x)
             t = type(val)
             if t == types.InstanceType:

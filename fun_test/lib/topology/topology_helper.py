@@ -28,7 +28,7 @@ class ExpandedTopology(ToDictMixin):
         return dut.get_host_on_interface(interface_index=interface_index).get_instance()
 
 class EndPoint(object, ToDictMixin):
-    END_POINT_TYPE_MINE = "Unknown end-point type"
+    end_point_type = "Unknown end-point type"
     END_POINT_TYPE_BARE_METAL = "END_POINT_TYPE_BARE_METAL"
     END_POINT_TYPE_VM = "END_POINT_TYPE_VM"
     END_POINT_TYPE_SSD = "END_POINT_TYPE_SSD"
@@ -38,7 +38,7 @@ class EndPoint(object, ToDictMixin):
 
     TO_DICT_VARS = ["mode", "type", "instance"]
     def __init__(self):
-        self.type = self.END_POINT_TYPE_MINE
+        self.type = self.end_point_type
         self.instance = None
         self.mode = self.MODE_SIMULATION
 
@@ -49,7 +49,7 @@ class EndPoint(object, ToDictMixin):
         return self.instance
 
 class VmEndPoint(EndPoint, ToDictMixin):
-    END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_VM
+    end_point_type = EndPoint.END_POINT_TYPE_VM
 
     def __init__(self, centos7=0, ubuntu14=0):
         super(VmEndPoint, self).__init__()
@@ -61,7 +61,7 @@ class VmEndPoint(EndPoint, ToDictMixin):
 
 
 class BareMetalEndPoint(EndPoint, ToDictMixin):
-    END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_BARE_METAL
+    end_point_type = EndPoint.END_POINT_TYPE_BARE_METAL
 
     def __init__(self):
         super(BareMetalEndPoint, self).__init__()
@@ -69,7 +69,7 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
 
 
 class HypervisorEndPoint(EndPoint, ToDictMixin):
-    END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_HYPERVISOR
+    end_point_type = EndPoint.END_POINT_TYPE_HYPERVISOR
 
     def __init__(self, num_vms=None):
         super(HypervisorEndPoint, self).__init__()
@@ -77,16 +77,16 @@ class HypervisorEndPoint(EndPoint, ToDictMixin):
         self.mode = self.MODE_SIMULATION
 
 class QemuHypervisorEndPoint(EndPoint, ToDictMixin):
-    END_POINT_TYPE_QEMU_HYPERVISOR = EndPoint.END_POINT_TYPE_QEMU_HYPERVISOR
+    end_point_type = EndPoint.END_POINT_TYPE_QEMU_HYPERVISOR
 
-    TO_DICT_VARS = ["mode", "num_vms"]
     def __init__(self, num_vms=None):
         super(QemuHypervisorEndPoint, self).__init__()
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
+        self.TO_DICT_VARS.extend(["mode", "num_vms", "end_point_type", "instances", "orchestrator"])
 
 class SsdEndPoint(EndPoint):
-    END_POINT_TYPE_MINE = EndPoint.END_POINT_TYPE_SSD
+    end_point_type = EndPoint.END_POINT_TYPE_SSD
 
 
 class Dut(ToDictMixin):
@@ -142,7 +142,8 @@ class Dut(ToDictMixin):
         dut_interface_obj = self.DutInterface(index=interface_index)
         self.interfaces[interface_index] = dut_interface_obj
         if num_vms:
-            pass
+            dut_interface_obj.peer_info = QemuHypervisorEndPoint(num_vms=num_vms)
+            fun_test.debug("User intended hypervisor for Interface: {}".format(interface_index))
 
     def add_hypervisor_to_interface(self,
                                     interface_index,
@@ -151,10 +152,7 @@ class Dut(ToDictMixin):
         dut_interface_obj = self.DutInterface(index=interface_index)
         self.interfaces[interface_index] = dut_interface_obj
         if num_vms:
-            if interface_type == Dut.DutInterface.INTERFACE_TYPE_PCIE:
-                dut_interface_obj.peer_info = HypervisorEndPoint(num_vms=num_vms)
-                fun_test.debug("User intended hypervisor for Interface: {}".format(interface_index))
-            elif interface_type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
+            if interface_type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
                 dut_interface_obj.peer_info = HypervisorEndPoint(num_vms=num_vms)
                 fun_test.debug("User intended hypervisor for Interface: {}".format(interface_index))
 
