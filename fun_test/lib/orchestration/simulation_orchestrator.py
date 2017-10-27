@@ -1,10 +1,11 @@
 from lib.system.fun_test import fun_test
+from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
 from lib.host.host import Qemu
 from lib.fun.f1 import F1, DockerF1
 
 
-class SimulationOrchestrator(Linux):
+class SimulationOrchestrator(Linux, ToDictMixin):
     QEMU_PATH = "/home/jabraham/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     QEMU_INSTANCE_PORT = 2220
@@ -17,10 +18,12 @@ class SimulationOrchestrator(Linux):
     @staticmethod
     def get(asset_properties):
         prop = asset_properties
-        return SimulationOrchestrator(host_ip=prop["host_ip"],
+        s = SimulationOrchestrator(host_ip=prop["host_ip"],
                                       ssh_username=prop["mgmt_ssh_username"],
                                       ssh_password=prop["mgmt_ssh_password"],
                                       ssh_port=prop["mgmt_ssh_port"])
+        s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
+        return s
 
 
     @fun_test.log_parameters
@@ -128,6 +131,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         # self.docker_host = self.host_ip
         self.ip_route_add(network="10.1.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
         self.ip_route_add(network="10.2.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
+        self.port_redirections = []
+        self.TO_DICT_VARS.extend(["port_redirections", "ORCHESTRATOR_TYPE", "docker_host"])
 
     def add_port_redir(self, port, internal_ip):
         docker_host = self.docker_host
@@ -156,6 +161,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                              append_chain_rule=Linux.IPTABLES_CHAIN_RULE_DOCKER
                              )
         # docker_host.command("iptables -A DOCKER -j ACCEPT -p tcp --destination 172.17.0.2 --dport 2220")
+        self.port_redirections = [[port, internal_ip]]
         docker_host.allocate_qemu_ssh_port(port=port, internal_ip=internal_ip)
 
 class DockerHostOrchestrator(SimulationOrchestrator):
