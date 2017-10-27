@@ -15,6 +15,42 @@ class DockerHost(Linux):
     CONTAINER_START_UP_TIME_DEFAULT = 30
 
     DOCKER_STATUS_RUNNING = "running"
+    def __init__(self,
+                 properties):
+        super(DockerHost, self).__init__(host_ip=properties["host_ip"],
+                                         ssh_username=properties["mgmt_ssh_username"],
+                                         ssh_password=properties["mgmt_ssh_password"],
+                                         ssh_port=properties["mgmt_ssh_port"])
+        self.remote_api_port = properties["remote_api_port"]
+        self.spec = properties
+
+    def health(self):
+        fun_test.debug("Health of {}".format(self.name))
+        health_result = {"result": False,
+                         "error_message": None}
+        images = self.get_images()
+        expected_images = [x["name"] for x in self.spec["images"]]
+        for expected_image in expected_images:
+            if not expected_image in images:
+                error_message = "Health: Unable to find image: {} in docker host: {}".format(expected_image,
+                               self.host_ip)
+                fun_test.debug(error_message)
+                health_result["result"] = False
+                health_result["error_message"] = error_message
+                break
+            else:
+                health_result["result"] = True
+
+        return health_result
+
+    def get_images(self):
+        images = []
+        try:
+            self.connect()
+            images = [y[0].split(":")[0] for y in [x.tags for x in self.client.images.list(all=True)] if y]
+        except Exception as ex:
+            print ("get_images:" + str(ex))  #TODO: we use print as non fun-test code can access this
+        return images
 
     def describe(self):
         fun_test.log_section("DockerHost Info: {}".format(self.host_ip))
@@ -30,6 +66,7 @@ class DockerHost(Linux):
                                table_name=container_name, table_data=table_data)
 
     def post_init(self):
+        self.name = "DockerHost: {}".format(self.host_ip)
         self.containers_assets = collections.OrderedDict()
         self.client = None
         self.current_docker_host_asset = None
@@ -47,7 +84,7 @@ class DockerHost(Linux):
 
     def connect(self):
         if not self.client:
-            self.client = DockerClient(base_url='tcp://{}:{}'.format(self.host_ip, DOCKER_REMOTE_API_PORT))
+            self.client = DockerClient(base_url='tcp://{}:{}'.format(self.host_ip, self.remote_api_port))
         return None  #TODO: validate this
 
     @fun_test.safe
@@ -220,15 +257,13 @@ class DockerHost(Linux):
 
         :rtype: object
         """
-        prop = asset_properties
-        return DockerHost(host_ip=prop["host_ip"],
-                     ssh_username=prop["mgmt_ssh_username"],
-                     ssh_password=prop["mgmt_ssh_password"],
-                     ssh_port=prop["mgmt_ssh_port"])
+        return DockerHost(properties=asset_properties)
 
 if __name__ == "__main__":
     funos_url = "http://172.17.0.1:8080/fs/funos-posix"
-    dm = DockerHost(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123")
-    i = dm.setup_integration_basic_container(base_name="integration_john", id=0, funos_url=funos_url, qemu_port_redirects=[2220])
-    i = dm.setup_integration_basic_container(base_name="integration_john", id=1, funos_url=funos_url, qemu_port_redirects=[2220])
-    i = dm.setup_integration_basic_container(base_name="integration_john", id=2, funos_url=funos_url, qemu_port_redirects=[2220])
+    import asset.asset_manager
+    dm = asset.asset_manager.AssetManager().get_any_docker_host()
+    print dm.health()
+    #i = dm.setup_integration_basic_container(base_name="integration_john", id=0, funos_url=funos_url, qemu_port_redirects=[2220])
+    #i = dm.setup_integration_basic_container(base_name="integration_john", id=1, funos_url=funos_url, qemu_port_redirects=[2220])
+    #i = dm.setup_integration_basic_container(base_name="integration_john", id=2, funos_url=funos_url, qemu_port_redirects=[2220])
