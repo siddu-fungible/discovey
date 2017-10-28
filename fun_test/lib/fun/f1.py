@@ -9,6 +9,8 @@ class F1(Linux, ToDictMixin):
     FUN_OS_SIMULATION_PROCESS = "funos-posix"
     DPCSH_PROCESS = "dpcsh"
 
+    INTERNAL_DPCSH_PORT = 5000
+
     @staticmethod
     def get(asset_properties):
         prop = asset_properties
@@ -61,10 +63,18 @@ class F1(Linux, ToDictMixin):
                             command="{}/{} app=prem_test nvfile=nvfile".format(
                                 self.SIMULATION_FUNOS_BUILD_PATH,
                                 self.FUN_OS_SIMULATION_PROCESS))
+                        fun_test.sleep("Ensure FunOS is started", seconds=10)
+
                     else:
                         new_process_id = self.start_bg_process(
                             command="{}/{} --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
                                                                 self.FUN_OS_SIMULATION_PROCESS))
+                        fun_test.sleep("Ensure FunOS is started", seconds=10)
+                        dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
+                                                                            self.DPCSH_PROCESS,
+                                                                            self.INTERNAL_DPCSH_PORT),
+                                                                           output_file="/tmp/dpcsh.bg.log")
+                        fun_test.test_assert(dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
 
                     fun_test.test_assert(new_process_id, "Started FunOs")
                     self.fun_os_process_id = new_process_id

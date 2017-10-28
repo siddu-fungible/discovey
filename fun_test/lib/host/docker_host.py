@@ -17,7 +17,6 @@ class DockerHost(Linux, ToDictMixin):
     CONTAINER_START_UP_TIME_DEFAULT = 30
 
     CONTAINER_INTERNAL_SSH_PORT = 22
-    CONTAINER_INTERNAL_DPCSH_PORT = 5000
 
     DOCKER_STATUS_RUNNING = "running"
     def __init__(self,
@@ -175,7 +174,8 @@ class DockerHost(Linux, ToDictMixin):
                                           base_name,
                                           id,
                                           funos_url,
-                                          qemu_port_redirects):
+                                          qemu_port_redirects,
+                                          internal_dpcsh_port):
         container_asset = {}
         allocated_container = None
 
@@ -221,7 +221,7 @@ class DockerHost(Linux, ToDictMixin):
                 '''
 
                 dpcsh_port = self.get_next_dpcsh_port()
-                ports_dict[str(self.CONTAINER_INTERNAL_DPCSH_PORT)] = dpcsh_port
+                ports_dict[str(internal_dpcsh_port)] = dpcsh_port
                 allocated_container = self.client.containers.run(image_name,
                                            command=funos_url,
                                            detach=True,

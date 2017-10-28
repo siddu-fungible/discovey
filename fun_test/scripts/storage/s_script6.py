@@ -18,7 +18,7 @@ topology_dict = {
                     "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
-            "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
+            "simulation_start_mode": Dut.SIMULATION_START_MODE_DPCSH_ONLY
         }
 
     }

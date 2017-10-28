@@ -1,5 +1,6 @@
 from fun_settings import *
 from lib.host.docker_host import DockerHost
+from lib.fun.f1 import F1
 from lib.orchestration.simulation_orchestrator import SimulationOrchestrator, DockerContainerOrchestrator
 from lib.system.fun_test import fun_test
 
@@ -70,7 +71,8 @@ class AssetManager:
                                                                                             id=index + fun_test.get_suite_execution_id(),
                                                                                             funos_url=funos_url,
                                                                                             image_name=self.INTEGRATION_IMAGE_NAME,
-                                                                                            qemu_port_redirects=[])
+                                                                                            qemu_port_redirects=[],
+                                                                                            internal_dpcsh_port=F1.INTERNAL_DPCSH_PORT)
 
                         fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
                         orchestrator = DockerContainerOrchestrator.get(container_asset, self.docker_host)

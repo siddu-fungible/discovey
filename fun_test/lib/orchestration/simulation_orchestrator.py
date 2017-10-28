@@ -78,7 +78,8 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
 
         # Start FunOS
-        fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=dpcsh_only), "SimulationOrchestrator: Start FunOS")
+        fun_test.test_assert(f1_obj.start(dpcsh=True,
+                                          dpcsh_only=dpcsh_only), "SimulationOrchestrator: Start FunOS")
         return f1_obj
 
     @fun_test.log_parameters
@@ -107,7 +108,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                     ssh_port=self.ssh_port)
 
         # Start FunOS
-        fun_test.test_assert(f1_obj.start(dpcsh=True, dpcsh_only=dpcsh_only), "DockerContainerOrchestrator: Start FunOS")
+        fun_test.test_assert(f1_obj.start(dpcsh=True,
+                                          dpcsh_only=dpcsh_only), "DockerContainerOrchestrator: Start FunOS")
         return f1_obj
 
 
@@ -125,6 +127,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                                       ssh_port=prop["mgmt_ssh_port"])
         obj.docker_host = docker_host
         obj.internal_ip = asset_properties["internal_ip"]
+        obj.dpcsh_port = asset_properties["dpcsh_port"]
         return obj
 
     def post_init(self):
