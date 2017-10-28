@@ -1,4 +1,5 @@
 from lib.system.fun_test import fun_test, FunTimer, FunTestLibException
+from lib.system.utils import ToDictMixin
 from fun_settings import *
 from lib.host.linux import Linux
 from docker.errors import APIError
@@ -8,11 +9,15 @@ import re, collections
 # fun_test.enable_debug()
 
 
-class DockerHost(Linux):
+class DockerHost(Linux, ToDictMixin):
 
     BASE_CONTAINER_SSH_PORT = 3219
     BASE_QEMU_SSH_PORT = 2219
+    BASE_DPCSH_PORT = 40219
     CONTAINER_START_UP_TIME_DEFAULT = 30
+
+    CONTAINER_INTERNAL_SSH_PORT = 22
+    CONTAINER_INTERNAL_DPCSH_PORT = 5000
 
     DOCKER_STATUS_RUNNING = "running"
     def __init__(self,
@@ -23,6 +28,9 @@ class DockerHost(Linux):
                                          ssh_port=properties["mgmt_ssh_port"])
         self.remote_api_port = properties["remote_api_port"]
         self.spec = properties
+        self.TO_DICT_VARS.extend(["allocated_container_ssh_ports",
+                                 "allocated_qemu_ssh_ports",
+                                 "allocated_qemu_dpcsh_ports"])
 
     def health(self):
         fun_test.debug("Health of {}".format(self.name))
@@ -34,7 +42,7 @@ class DockerHost(Linux):
             if not expected_image in images:
                 error_message = "Health: Unable to find image: {} in docker host: {}".format(expected_image,
                                self.host_ip)
-                fun_test.debug(error_message)
+                fun_test.critical(error_message)
                 health_result["result"] = False
                 health_result["error_message"] = error_message
                 break
@@ -72,6 +80,7 @@ class DockerHost(Linux):
         self.current_docker_host_asset = None
         self.allocated_container_ssh_ports = {self.BASE_CONTAINER_SSH_PORT}
         self.allocated_qemu_ssh_ports = {self.BASE_QEMU_SSH_PORT}
+        self.allocated_dpcsh_ports = {self.BASE_DPCSH_PORT}
 
     @fun_test.safe
     def get_container_asset_by_internal_ip(self, internal_ip):
@@ -118,11 +127,18 @@ class DockerHost(Linux):
         self.allocated_container_ssh_ports = set(sorted(self.allocated_container_ssh_ports))  #TODO: Expensive
 
 
-    def allocate_qemu_ssh_port(self, port, internal_ip):
+    def allocate_qemu_ssh_port(self, port, internal_ip=None):
         self.allocated_qemu_ssh_ports.add(port)
         self.allocated_qemu_ssh_ports = set(sorted(self.allocated_qemu_ssh_ports))  # TODO: Expensive
+        if internal_ip:
+            container_asset = self.get_container_asset_by_internal_ip(internal_ip=internal_ip)
+            container_asset["qemu_ssh_ports"].append(port)
+
+    def allocate_dpcsh_port(self, port, internal_ip):
+        self.allocated_dpcsh_ports.add(port)
+        self.allocated_dpcsh_ports = set(sorted(self.allocated_dpcsh_ports))  # TODO: Expensive
         container_asset = self.get_container_asset_by_internal_ip(internal_ip=internal_ip)
-        container_asset["qemu_ssh_ports"].append(port)
+        container_asset["dpcsh_ports"].append(port)
 
     def get_next_container_ssh_port(self):
         next_port = self._get_next_port(source=self.allocated_container_ssh_ports)
@@ -134,7 +150,14 @@ class DockerHost(Linux):
         # self.allocate_qemu_ssh_port(port=next_port)
         return next_port
 
+    def get_next_dpcsh_port(self):
+        next_port = self._get_next_port(source=self.allocated_dpcsh_ports)
+        return next_port
+
     def _get_next_port(self, source):
+        """Given a list of ports, finds and returns the first gap
+        in the list. If there are no gaps, just return a new port from the tail
+        """
         l = list(source)
         next_port = l[0]
         for index in range(0, len(l) - 1):  # TODO: Upper limits
@@ -182,14 +205,16 @@ class DockerHost(Linux):
 
                 fun_test.debug("Container SSH port: {}".format(container_ssh_port))
 
-                ports_dict["22"] = str(container_ssh_port)
+                ports_dict[str(self.CONTAINER_INTERNAL_SSH_PORT)] = str(container_ssh_port)
 
+                '''
                 qemu_ssh_ports = []
                 for qemu_port_redirect in qemu_port_redirects:
                     qemu_ssh_port = self.get_next_qemu_ssh_port()
                     qemu_ssh_ports.append(qemu_ssh_port)
                     ports_dict[str(qemu_port_redirect)] = qemu_ssh_port
                     fun_test.debug("Container SSH port: {}".format(qemu_ssh_port))
+                '''
 
                 allocated_container = self.client.containers.run(image_name,
                                            command=funos_url,
@@ -202,7 +227,7 @@ class DockerHost(Linux):
                                        "Ensure container is started")
                 allocated_container = self.client.containers.get(container_name)
                 self.allocate_container_ssh_port(container_ssh_port) #TODO: allocate qemu
-                map(lambda x: self.allocate_qemu_ssh_port(x), qemu_ssh_ports)
+                # map(lambda x: self.allocate_qemu_ssh_port(x), qemu_ssh_ports)
                 fun_test.log("Launched container: {}".format(container_name))
 
                 port_retries += 1
@@ -210,7 +235,7 @@ class DockerHost(Linux):
                 container_asset["mgmt_ssh_username"] = "root"
                 container_asset["mgmt_ssh_password"] = "fun123"
                 container_asset["mgmt_ssh_port"] = container_ssh_port
-                container_asset["qemu_ssh_ports"] = qemu_ssh_ports
+                container_asset["qemu_ssh_ports"] = []
                 container_asset["docker_host"] = self
                 container_asset["internal_ip"] = allocated_container.attrs["NetworkSettings"]["IPAddress"]
                 container_asset["name"] = container_name
@@ -219,13 +244,12 @@ class DockerHost(Linux):
             except APIError as ex:
                 message = str(ex)
                 fun_test.critical("Container creation error: {}". format(message))
-                if re.search("{}\s+failed:\s+port\s+is\s+already".format(container_ssh_port), message):
-                    self.allocate_container_ssh_port(container_ssh_port)
-                else:
-                    m = re.search("(\d+)\s+failed:\s+port\s+is\s+already", message)
-                    if m:
-                        used_up_port = int(m.group(1))
-                        self.allocate_qemu_ssh_port(used_up_port)
+                m = re.search("(\d+)\s+failed:\s+port\s+is\s+already", message)
+                if m:
+                    used_up_port = int(m.group(1))
+                    self.allocate_qemu_ssh_port(used_up_port)
+                    self.allocate_container_ssh_port(used_up_port)
+
                 port_retries += 1
                 if port_retries >= max_port_retries:
                     raise FunTestLibException("Unable to bind to any port, max_retries: {} reached".format(max_port_retries))

@@ -1,12 +1,15 @@
 import types
 class ToDictMixin:
     TO_DICT_VARS = []
+
     def to_dict(self):
         d = {}
         for x in self.TO_DICT_VARS:
             if not hasattr(self, x):
                 continue
             val = getattr(self, x)
+            d[x] = self.get_val(val)
+            """
             t = type(val)
             if t == types.InstanceType:
                 d[x] = val.to_dict()
@@ -15,7 +18,7 @@ class ToDictMixin:
                 for key in val:
                     d2[key] = self.get_val(val[key])
                 d[x] = d2
-            elif (t == types.ListType):
+            elif (t == types.ListType) or (isinstance(val, set)):
                 l = []
                 for element in val:
                     l.append(self.get_val(element))
@@ -24,6 +27,7 @@ class ToDictMixin:
                 d[x] = val.to_dict()
             else:
                 d[x] = val
+            """
         return d
 
     def get_val(self, val):
@@ -36,7 +40,7 @@ class ToDictMixin:
             for key in val:
                 d2[key] = self.get_val(val[key])
             result = d2
-        elif (t == types.ListType):
+        elif (t == types.ListType) or (isinstance(val, set)):
             l = []
             for element in val:
                 l.append(self.get_val(element))
