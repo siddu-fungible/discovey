@@ -117,13 +117,13 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         return ssh_port
 
     @staticmethod
-    def get(asset_properties):
+    def get(asset_properties, docker_host):
         prop = asset_properties
         obj = DockerContainerOrchestrator(host_ip=prop["host_ip"],
                                       ssh_username=prop["mgmt_ssh_username"],
                                       ssh_password=prop["mgmt_ssh_password"],
                                       ssh_port=prop["mgmt_ssh_port"])
-        obj.docker_host = asset_properties["docker_host"]
+        obj.docker_host = docker_host
         obj.internal_ip = asset_properties["internal_ip"]
         return obj
 

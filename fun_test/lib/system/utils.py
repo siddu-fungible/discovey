@@ -1,4 +1,4 @@
-import types
+import types, collections
 class ToDictMixin:
     TO_DICT_VARS = []
 
@@ -9,25 +9,6 @@ class ToDictMixin:
                 continue
             val = getattr(self, x)
             d[x] = self.get_val(val)
-            """
-            t = type(val)
-            if t == types.InstanceType:
-                d[x] = val.to_dict()
-            elif (t == types.DictionaryType) or (t == types.DictType):
-                d2 = {}
-                for key in val:
-                    d2[key] = self.get_val(val[key])
-                d[x] = d2
-            elif (t == types.ListType) or (isinstance(val, set)):
-                l = []
-                for element in val:
-                    l.append(self.get_val(element))
-                d[x] = l
-            elif (str(t).startswith("<class")):
-                d[x] = val.to_dict()
-            else:
-                d[x] = val
-            """
         return d
 
     def get_val(self, val):
@@ -35,7 +16,7 @@ class ToDictMixin:
         t = type(val)
         if t == types.InstanceType:
             result = val.to_dict()
-        elif (t == types.DictionaryType) or (t == types.DictType):
+        elif (t == types.DictionaryType) or (t == types.DictType) or (isinstance(val, collections.OrderedDict)):
             d2 = {}
             for key in val:
                 d2[key] = self.get_val(val[key])

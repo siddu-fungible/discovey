@@ -19,32 +19,36 @@ topology_dict = {
                 }
             },
             "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
-        },
-        1: {
-            "mode": Dut.MODE_SIMULATION,
-            "type": Dut.DUT_TYPE_FSU,
-            "interface_info": {
-                0: {
-                    "vms": 1,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
-                }
-            },
-            "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
-        },
-        2: {
-            "mode": Dut.MODE_SIMULATION,
-            "type": Dut.DUT_TYPE_FSU,
-            "interface_info": {
-                0: {
-                    "vms": 1,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
-                }
-            },
-            "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
         }
+
     }
 }
 
+""",
+1: {
+    "mode": Dut.MODE_SIMULATION,
+    "type": Dut.DUT_TYPE_FSU,
+    "interface_info": {
+        0: {
+            "vms": 1,
+            "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+        }
+    },
+    "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
+},
+2: {
+    "mode": Dut.MODE_SIMULATION,
+    "type": Dut.DUT_TYPE_FSU,
+    "interface_info": {
+        0: {
+            "vms": 1,
+            "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+        }
+    },
+    "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
+}
+}
+"""
 
 class MyScript(FunTestScript):
     def describe(self):

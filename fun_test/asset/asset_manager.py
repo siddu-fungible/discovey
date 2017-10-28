@@ -73,7 +73,7 @@ class AssetManager:
                                                                                             qemu_port_redirects=[])
 
                         fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
-                        orchestrator = DockerContainerOrchestrator.get(container_asset)
+                        orchestrator = DockerContainerOrchestrator.get(container_asset, self.docker_host)
                     else:
                         orchestrator = DockerHost.get(one_asset)
                     break
