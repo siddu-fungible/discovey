@@ -70,7 +70,9 @@ class SimulationOrchestrator(Linux, ToDictMixin):
         return instance
 
     @fun_test.safe
-    def launch_dut_instance(self, dpcsh_only):
+    def launch_dut_instance(self,
+                            dpcsh_only,
+                            external_dpcsh_port):
         f1_obj = F1(host_ip=self.host_ip,
                     ssh_username=self.ssh_username,
                     ssh_password=self.ssh_password,
@@ -79,7 +81,8 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
         # Start FunOS
         fun_test.test_assert(f1_obj.start(dpcsh=True,
-                                          dpcsh_only=dpcsh_only), "SimulationOrchestrator: Start FunOS")
+                                          dpcsh_only=dpcsh_only),
+                             "SimulationOrchestrator: Start FunOS")
         return f1_obj
 
     @fun_test.log_parameters
@@ -101,7 +104,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         self.docker_host.describe()
 
     @fun_test.safe
-    def launch_dut_instance(self, dpcsh_only):
+    def launch_dut_instance(self, dpcsh_only, external_dpcsh_port):
         f1_obj = DockerF1(host_ip=self.host_ip,
                     ssh_username=self.ssh_username,
                     ssh_password=self.ssh_password,
@@ -109,7 +112,9 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
 
         # Start FunOS
         fun_test.test_assert(f1_obj.start(dpcsh=True,
-                                          dpcsh_only=dpcsh_only), "DockerContainerOrchestrator: Start FunOS")
+                                          dpcsh_only=dpcsh_only,
+                                            external_dpcsh_port = external_dpcsh_port),
+                             "DockerContainerOrchestrator: Start FunOS")
         return f1_obj
 
 

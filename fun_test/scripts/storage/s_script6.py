@@ -1,7 +1,8 @@
 from lib.system.fun_test import *
 from lib.templates.storage.storage_template import StorageTemplate
 from lib.topology.topology_helper import TopologyHelper, Dut
-
+from lib.host.storage_controller import StorageController
+import uuid
 # fun_test.enable_debug()
 
 
@@ -84,9 +85,25 @@ class FunTestCase1(FunTestCase):
         pass
 
     def run(self):
-        pass
+        dut_instance = self.script_obj.topology.get_dut_instance(index=0)
+        fun_test.test_assert(dut_instance, "Retrieved dut instance")
+        storage_controller = StorageController(target_ip=dut_instance.host_ip,
+                                               target_port=dut_instance.external_dpcsh_port)
 
+        result = storage_controller.ip_cfg(ip=dut_instance.host_ip)
+        fun_test.test_assert(result["status"], "ip_cfg {}".format(dut_instance.host_ip))
 
+        this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+        result = storage_controller.create_blt_volume(capacity=1073741824,
+                                                      block_size=4096,
+                                                      name="volume1",
+                                                      uuid=this_uuid)
+        fun_test.test_assert(result["status"], "create_blt_volume")
+
+        result = storage_controller.command("peek storage/volumes")
+        i = 0
+        # result = storage_controller.command("peek stats")
+        # storage_controller.print_result(result)
 
 if __name__ == "__main__":
 

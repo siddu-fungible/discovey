@@ -22,9 +22,12 @@ class F1(Linux, ToDictMixin):
 
     def post_init(self):
         self.fun_os_process_id = None
+        self.external_dpcsh_port = None
         self.TO_DICT_VARS.append("fun_os_process_id")
 
-    def start(self, dpcsh=False, dpcsh_only=False):
+    def start(self, dpcsh=False, dpcsh_only=False, external_dpcsh_port=None):
+        if external_dpcsh_port:
+            self.external_dpcsh_port = external_dpcsh_port
         started = False
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
@@ -66,9 +69,13 @@ class F1(Linux, ToDictMixin):
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
 
                     else:
+
+                        self.command("{}/{} app=mdt_test nvfile=nvfile".format(self.SIMULATION_FUNOS_BUILD_PATH,
+                                                                               self.FUN_OS_SIMULATION_PROCESS))
                         new_process_id = self.start_bg_process(
                             command="{}/{} --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                                                                self.FUN_OS_SIMULATION_PROCESS))
+                                                                self.FUN_OS_SIMULATION_PROCESS),
+                        output_file="/tmp/f1_dpc_server.log")
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
                         dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
                                                                             self.DPCSH_PROCESS,

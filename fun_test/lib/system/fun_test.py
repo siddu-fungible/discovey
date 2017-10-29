@@ -221,8 +221,11 @@ class FunTest:
     def _is_selected_module(self, module_name):
         return module_name in self.logging_selected_modules
 
-    def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True, calling_module=None):
+    def dict_to_json_string(self, d):
+        return json.dumps(d, indent=4)
 
+    def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True, calling_module=None):
+        message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
         if self.logging_selected_modules:

@@ -301,7 +301,8 @@ class TopologyHelper:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
             dut_instance = orchestrator_obj.launch_dut_instance(
-                dpcsh_only=(dut_obj.simulation_start_mode == dut_obj.SIMULATION_START_MODE_DPCSH_ONLY))
+                dpcsh_only=(dut_obj.simulation_start_mode == dut_obj.SIMULATION_START_MODE_DPCSH_ONLY),
+            external_dpcsh_port=orchestrator_obj.dpcsh_port)
             fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
             dut_obj.instance = dut_instance
             dut_instance.orchestrator = orchestrator_obj
