@@ -30,9 +30,12 @@ Topo_manager can be run on standalone (single) physical server/VM or on a cluste
    (f) Start ZMQ agent on all the VM.
        (i) screen -d -S cmd_agent -m /usr/bin/python2.7 topology_manager/topolib/recv_zmq.py
 ```
-To run the example scripts in topology_manager/examples, do the following (from topology_manager directory):
+To run the example scripts in topology_manager/examples, do either of the following: (from topology_manager directory):
 
 ```
+    From topology_manager directory:
+
     python -m topology_manager.examples.hier
 ```
-To execute your own script, set PYTHONPATH to include topology_manager and import topolib: "from topolib import *"
+
+or, set PYTHONPATH appropriately and import topolib (from topolib import *)
