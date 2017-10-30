@@ -37,8 +37,15 @@ frr_password = 'zebra'
 base_port = 10000
 ssh_retries = 10
 
-docker_run_sh = os.path.expanduser('~')+'/docker.sh'
-links_sh = os.path.expanduser('~')+'/links.sh'
+#docker_run_sh = os.path.expanduser('~')+'/docker.sh'
+#links_sh = os.path.expanduser('~')+'/links.sh'
+
+if vm_user == 'root':
+    docker_run_sh = '/'+vm_user+'/docker.sh'
+    links_sh = '/'+vm_user+'/links.sh'
+else:
+    docker_run_sh = '/home/'+vm_user+'/docker.sh'
+    links_sh = '/home/'+vm_user+'/links.sh'
 
 max_containers_per_leaf_vm = 24.0 
 max_links_per_spine_vm = 8000.0 

@@ -1,8 +1,10 @@
-from ..topolib import *
+from ..topo_manager import *
 
 def main():
             
     topo = Topology()
+    topo.create(2,2,4)
+    import pdb; pdb.set_trace()
     topo.create(5,8,32)
     topo.save()
     topo.printRacks([1])

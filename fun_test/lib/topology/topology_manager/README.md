@@ -13,7 +13,7 @@ Topo_manager can be run on standalone (single) physical server/VM or on a cluste
 **Usage:**
 
 ```
-1. Clone this repo.
+1. Clone Integration repo. 
 2. Make changes to config.py to suit your environment.
 3. On all the compute engines, do the following:
    (a) Install Docker:
@@ -25,17 +25,17 @@ Topo_manager can be run on standalone (single) physical server/VM or on a cluste
    (b) Install OVS:
          (i) sudo apt-get install -qy openvswitch-switch openvswitch-common
    (c) sudo apt-get install -y python-pip
-   (d) sudo pip install -y paramiko zmq netaddr
+   (d) sudo pip install paramiko zmq netaddr
    (e) Pull relevant docker images
-   (f) Start ZMQ agent on all the VM.
-       (i) screen -d -S cmd_agent -m /usr/bin/python2.7 topology_manager/topolib/recv_zmq.py
+   (f) Start ZMQ agent on all the VM (recv_zmq.py should be copied to each VM).
+       (i) sudo screen -d -S cmd_agent -m /usr/bin/python2.7 topology_manager/topo_manager/recv_zmq.py
 ```
-To run the example scripts in topology_manager/examples, do either of the following: (from topology_manager directory):
+To run the example scripts in topology_manager/examples, do either of the following: 
 
 ```
-    From topology_manager directory:
+    From topology directory:
 
     python -m topology_manager.examples.hier
 ```
 
-or, set PYTHONPATH appropriately and import topolib (from topolib import *)
+or, set PYTHONPATH appropriately and import topo_manager (from topo_manager import *)

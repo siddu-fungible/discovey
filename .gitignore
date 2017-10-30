@@ -1,4 +1,5 @@
 *.pyc
+*.log
 fun_test/web/static/logs/*.html
 .DS_Store
 fun_test/web/static/logs/scheduler.*
