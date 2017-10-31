@@ -9,10 +9,10 @@ class MyScript(FunTestScript):
         3. Step 3""")
 
     def setup(self):
-        pass
+        fun_test.log("Script-level setup")
 
     def cleanup(self):
-        pass
+        fun_test.log("Script-level cleanup")
 
 class FunTestCase1(FunTestCase):
     def describe(self):

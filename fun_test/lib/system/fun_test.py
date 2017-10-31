@@ -600,9 +600,15 @@ class FunTestScript(object):
                         test_case.cleanup()
                         test_result = FunTest.PASSED
                     except TestException:
-                        pass
+                        try:
+                            test_case.cleanup()
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                     except Exception as ex:
-                        fun_test.critical(str(ex))
+                        try:
+                            test_case.cleanup()
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                     fun_test.add_xml_trace()
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
                     fun_test.end_test(result=test_result)
@@ -615,6 +621,10 @@ class FunTestScript(object):
                 super(self.__class__, self).cleanup()
         except Exception as ex:
             fun_test.critical(str(ex))
+            try:
+                super(self.__class__, self).cleanup()
+            except Exception as ex:
+                fun_test.critical(str(ex))
         self._close()
 
 

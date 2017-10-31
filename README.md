@@ -14,6 +14,7 @@ Installation:
 # pip install netaddr
 # pip install psutil
 # pip install rq
+# pip install zmq
 # export PYTHONPATH=`pwd`
 # cd web/fun_test
 
