@@ -215,11 +215,12 @@ class DockerHost(Linux, ToDictMixin):
 
                 qemu_ssh_ports = []
                 for index in range(num_qemu_ports):
+                    internal_port = self.CONTAINER_INTERNAL_QEMU_PORTS[index]
                     qemu_ssh_port = self.get_next_qemu_ssh_port() + index
-                    ports_dict[str(self.CONTAINER_INTERNAL_QEMU_PORTS[index])] = str(qemu_ssh_port)
-                    fun_test.debug("Container QEMU SSH port: {}".format(qemu_ssh_port))
-                    qemu_ssh_ports.append(qemu_ssh_port)
-
+                    external_port = qemu_ssh_port
+                    ports_dict[str(internal_port)] = str()
+                    fun_test.debug("Container QEMU SSH port: {}".format(external_port))
+                    qemu_ssh_ports.append({"internal": internal_port, "external": external_port})
 
                 '''
                 qemu_ssh_ports = []
@@ -245,7 +246,7 @@ class DockerHost(Linux, ToDictMixin):
                 self.allocate_container_ssh_port(container_ssh_port) #TODO: allocate qemu
                 internal_ip = allocated_container.attrs["NetworkSettings"]["IPAddress"]
 
-                map(lambda x: self.allocate_qemu_ssh_port(x), qemu_ssh_ports)
+                map(lambda x: self.allocate_qemu_ssh_port(x["external"]), qemu_ssh_ports)
                 fun_test.log("Launched container: {}".format(container_name))
 
                 port_retries += 1

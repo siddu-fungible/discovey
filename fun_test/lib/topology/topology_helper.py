@@ -320,11 +320,15 @@ class TopologyHelper:
 
             instances = []
             if hypervisor_end_point.num_vms:
+                qemu_ssh_ports = orchestrator_obj.qemu_ssh_ports
                 for i in range(hypervisor_end_point.num_vms):
-                    ssh_redir_port = orchestrator_obj.get_redir_port()
-                    orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
+                    # ssh_redir_port = orchestrator_obj.get_redir_port()
+                    # orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
+                    internal_ssh_port = qemu_ssh_ports[i]["internal"]
+                    external_ssh_port = qemu_ssh_ports[i]["external"]
                     instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
-                                                                ssh_port=ssh_redir_port)
+                                                                external_ssh_port=internal_ssh_port,
+                                                                internal_ssh_port=internal_ssh_port)
                     fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))
                     instances.append(instance)
                     fun_test.counter += 1
