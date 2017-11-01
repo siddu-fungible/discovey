@@ -327,7 +327,7 @@ class TopologyHelper:
                     internal_ssh_port = qemu_ssh_ports[i]["internal"]
                     external_ssh_port = qemu_ssh_ports[i]["external"]
                     instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
-                                                                external_ssh_port=internal_ssh_port,
+                                                                external_ssh_port=external_ssh_port,
                                                                 internal_ssh_port=internal_ssh_port)
                     fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))
                     instances.append(instance)
