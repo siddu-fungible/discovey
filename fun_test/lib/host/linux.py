@@ -207,9 +207,13 @@ class Linux(object, ToDictMixin):
                                                                                     self.ssh_username,
                                                                                     self.ssh_password))
                     fun_test.debug("Prompt terminator:%s" % self.prompt_terminator)
-                    ssh_command = 'ssh -o UserKnownHostsFile=/dev/null %s@%s -p %d' % (self.ssh_username,
-                                                                                       self.host_ip,
-                                                                                       int(self.ssh_port))
+                    if self.ssh_port:
+                        ssh_command = 'ssh -o UserKnownHostsFile=/dev/null %s@%s -p %d' % (self.ssh_username,
+                                                                                           self.host_ip,
+                                                                                           int(self.ssh_port))
+                    else:
+                        ssh_command = 'ssh -o UserKnownHostsFile=/dev/null %s@%s' % (self.ssh_username,
+                                                                                     self.host_ip)
                     self.logger.log(ssh_command)
                     self.handle = pexpect.spawn(ssh_command,
                                                 env={"TERM": "dumb"},
