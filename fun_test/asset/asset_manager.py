@@ -61,12 +61,15 @@ class AssetManager:
                         orchestrator = SimulationOrchestrator.get(one_asset)
                     elif type == self.ORCHESTRATOR_TYPE_DOCKER_SIMULATION:
                         # Ensure a docker container is running
-                        funos_url = "http://172.17.0.1:8080/fs/funos-posix"  # TODO
+                        if not fun_test.funos_posix_url:
+                            funos_url = "http://172.17.0.1:8080/fs/funos-posix"  # TODO
+                        else:
+                            funos_url = fun_test.funos_posix_url
                         if not self.docker_host:
                             self.docker_host = self.get_any_docker_host()
                         fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                         fun_test.simple_assert(self.docker_host, "Docker host available")
-                        fun_test.log("Setting up the integration container for index: {}".format(index))
+                        fun_test.log("Setting up the integration container for index: {} url: {}".format(index, funos_url))
                         container_asset = self.docker_host.setup_integration_basic_container(base_name="integration_basic",
                                                                                             id=index + fun_test.get_suite_execution_id(),
                                                                                             funos_url=funos_url,

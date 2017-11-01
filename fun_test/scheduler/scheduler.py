@@ -5,13 +5,13 @@ import time, subprocess, datetime
 from threading import Thread
 import web.fun_test.models_helper as models_helper
 from scheduler_helper import *
-
+import urllib, tarfile, requests
 
 threads = []
 
 
 
-
+FUNOS_POSIX_PATH_IN_TGZ = 'build/funos-f1'
 
 def get_scripts_in_suite(suite_name):
     suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
@@ -32,7 +32,7 @@ class SuiteWorker(Thread):
         if "test_case_ids" in job_spec:
             self.job_test_case_ids = job_spec["test_case_ids"]
 
-    def prepare_job_folder(self):
+    def prepare_job_directory(self):
         self.job_dir = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(self.job_id)
         try:
             if not os.path.exists(self.job_dir):
@@ -40,9 +40,71 @@ class SuiteWorker(Thread):
         except Exception as ex:
             raise SchedulerException(str(ex))
 
+    def get_test_artifacts_directory(self, relative=False):
+        if not relative:
+            directory = TEST_ARTIFACTS_DIR + "/s_" + str(self.job_id)
+        else:
+            directory = TEST_ARTIFACTS_RELATIVE_DIR + "/s_" + str(self.job_id)
+        return directory
+
+    def get_test_artifacts_url(self):
+        relative_dir = self.get_test_artifacts_directory(relative=True)
+        url = "http://0.0.0.0:%d" % WEB_SERVER_PORT + STATIC_RELATIVE_DIR + relative_dir
+        return url
+
+    def get_funos_posix_url(self):
+        url = self.get_test_artifacts_url()
+        url += "/" + FUNOS_POSIX_PATH_IN_TGZ
+        return url
+
+    def remove_test_artifacts_directory(self):
+        directory = self.get_test_artifacts_directory()
+        if os.path.exists(directory):
+            os.removedirs(path=directory)
+
+    def prepare_test_artifacts_directory(self):
+        result = None
+        directory = self.get_test_artifacts_directory()
+        try:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            result = directory
+        except Exception as ex:
+            raise SchedulerException(str(ex))
+        return result
+
+    def extract_funos_posix(self, tar_url):
+        tmp_directory = self.prepare_test_artifacts_directory()
+        file_tmp, http_message = urllib.urlretrieve(tar_url, tmp_directory + "/funos.tgz")
+        tgz_file = tarfile.open(name=file_tmp, mode="r:gz")
+        members = tgz_file.getmembers()
+        f = filter(lambda x: x.path == FUNOS_POSIX_PATH_IN_TGZ, members)
+        if not f:
+            SchedulerException("Unable to find {} in tgz".format(FUNOS_POSIX_PATH_IN_TGZ))
+        extraction_path = tmp_directory
+        tgz_file.extract(member=f[0], path=extraction_path)
+        if not os.path.exists(extraction_path):
+            raise SchedulerException("Extraction to {} failed".format(extraction_path))
+        try:
+            os.remove(file_tmp)
+        except:
+            pass
+        return extraction_path
+
     def run(self):
-        scheduler_logger.info("Running Job: {}".format(self.job_spec["job_id"]))
-        self.prepare_job_folder()
+        scheduler_logger.info("Running Job: {}".format(self.job_id))
+        suite_execution_id = self.job_id
+        self.prepare_job_directory()
+        # extraction_path = self.extract_funos_posix(tar_url="http://dochub.fungible.local/doc/jenkins/funos/940/funos.tgz")
+        funos_posix_url = ""# self.get_funos_posix_url()
+        r = requests.post("http://10.1.20.67:5001/extract", data=json.dumps({'suite_execution_id': str(self.job_id),
+                                                                  'tgz_url': 'http://dochub.fungible.local/doc/jenkins/funos/940/funos.tgz'}))
+        if r.status_code == 200:
+            scheduler_logger.debug("Extract funos-posix-url successful")
+            funos_posix_url = r.text
+        else:
+            raise Exception("Unable to retrieve funos-posix-url")
+        scheduler_logger.debug("FunOs Url:" + funos_posix_url)
 
         # Setup the suites own logger
         local_scheduler_logger = logging.getLogger("scheduler_log")
@@ -65,7 +127,7 @@ class SuiteWorker(Thread):
 
         self.local_scheduler_logger.info("Starting Job-id: {}".format(self.job_id))
 
-        suite_execution_id = self.job_id
+
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         if not suite_execution:
             raise SchedulerException("Unable to retrieve suite execution id: {}".format(suite_execution_id))
@@ -87,7 +149,8 @@ class SuiteWorker(Thread):
                           script_path,
                           "--" + "logs_dir={}".format(self.job_dir),
                           "--" + "suite_execution_id={}".format(suite_execution_id),
-                          "--" + "relative_path={}".format(relative_path)]
+                          "--" + "relative_path={}".format(relative_path),
+                          "--" + "funos_posix_url={}".format(funos_posix_url)]
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
@@ -161,6 +224,7 @@ if __name__ == "__main1__":
     pass
 
 if __name__ == "__main__":
+    scheduler_logger.debug("Started Scheduler")
     #queue_job(job_id=2, suite="suite2")
     #queue_job(job_id=4, suite="suite3")
     #queue_job(job_id=3, suite="suite4")

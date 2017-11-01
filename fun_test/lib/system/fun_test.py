@@ -85,14 +85,20 @@ class FunTest:
                             dest="test_case_ids",
                             default=None,
                             help="To be used only by the scheduler")
+        parser.add_argument('--funos_posix_url',
+                            dest="funos_posix_url",
+                            default=None,
+                            help="To be used only by the scheduler")
         args = parser.parse_args()
         self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
         self.selected_test_case_ids = None
         self.current_test_case_execution_id = None
+        self.funos_posix_url = args.funos_posix_url
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
+
         if args.test_case_ids:
             self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
             # print("***" + str(self.selected_test_case_ids))

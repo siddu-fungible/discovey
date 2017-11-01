@@ -4,7 +4,7 @@
         <form>
             <div class="form-group">
                 <label for="suite-select">Select a suite</label>
-                <select id="suite-select" ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteInfo" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
+                <select id="suite-select" ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteName" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
             </div>
 
             <div class="form-group">

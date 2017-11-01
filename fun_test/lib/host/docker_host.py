@@ -78,9 +78,9 @@ class DockerHost(Linux, ToDictMixin):
         self.containers_assets = collections.OrderedDict()
         self.client = None
         self.current_docker_host_asset = None
-        self.allocated_container_ssh_ports = {self.BASE_CONTAINER_SSH_PORT}
-        self.allocated_qemu_ssh_ports = {self.BASE_QEMU_SSH_PORT}
-        self.allocated_dpcsh_ports = {self.BASE_DPCSH_PORT}
+        self.allocated_container_ssh_ports = [self.BASE_CONTAINER_SSH_PORT]
+        self.allocated_qemu_ssh_ports = [self.BASE_QEMU_SSH_PORT]
+        self.allocated_dpcsh_ports = [self.BASE_DPCSH_PORT]
 
     @fun_test.safe
     def get_container_asset_by_internal_ip(self, internal_ip):
@@ -123,20 +123,21 @@ class DockerHost(Linux, ToDictMixin):
         # TODO
 
     def allocate_container_ssh_port(self, port):
-        self.allocated_container_ssh_ports.add(port)
-        self.allocated_container_ssh_ports = set(sorted(self.allocated_container_ssh_ports))  #TODO: Expensive
+        self.allocated_container_ssh_ports.append(port)
+        self.allocated_container_ssh_ports = sorted(list(set(self.allocated_container_ssh_ports)))
 
 
     def allocate_qemu_ssh_port(self, port, internal_ip=None): #If called from outside this class, pass internal_ip as container_names are not known outside
-        self.allocated_qemu_ssh_ports.add(port)
-        self.allocated_qemu_ssh_ports = set(sorted(self.allocated_qemu_ssh_ports))  # TODO: Expensive
+        self.allocated_qemu_ssh_ports.append(port)
+        self.allocated_qemu_ssh_ports = sorted(list(set(self.allocated_qemu_ssh_ports)))  #TODO Expensive
+
         if internal_ip:
             container_asset = self.get_container_asset_by_internal_ip(internal_ip=internal_ip)
             container_asset["qemu_ssh_ports"].append(port)
 
     def allocate_dpcsh_port(self, port):
-        self.allocated_dpcsh_ports.add(port)
-        self.allocated_dpcsh_ports = set(sorted(self.allocated_dpcsh_ports))  # TODO: Expensive
+        self.allocated_dpcsh_ports.append(port)
+        self.allocated_dpcsh_ports = sorted(list(set(self.allocated_dpcsh_ports)))
 
     def get_next_container_ssh_port(self):
         next_port = self._get_next_port(source=self.allocated_container_ssh_ports)
@@ -156,7 +157,7 @@ class DockerHost(Linux, ToDictMixin):
         """Given a list of ports, finds and returns the first gap
         in the list. If there are no gaps, just return a new port from the tail
         """
-        l = list(source)
+        l = source
         next_port = l[0]
         for index in range(0, len(l) - 1):  # TODO: Upper limits
             a = l[index]
@@ -266,6 +267,7 @@ class DockerHost(Linux, ToDictMixin):
                     fun_test.log("Docker logs:\n {}".format(logs))
                     fun_test.critical(ex)
                     break
+
 
 
         return container_asset
