@@ -74,7 +74,7 @@ class AssetManager:
                                                                                             id=index + fun_test.get_suite_execution_id(),
                                                                                             funos_url=funos_url,
                                                                                             image_name=self.INTEGRATION_IMAGE_NAME,
-                                                                                            qemu_port_redirects=[],
+                                                                                            num_qemu_ports=2,  #TODO
                                                                                             internal_dpcsh_port=F1.INTERNAL_DPCSH_PORT)
 
                         fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
