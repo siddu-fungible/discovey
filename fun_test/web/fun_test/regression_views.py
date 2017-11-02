@@ -38,7 +38,7 @@ def submit_job(request):
     if request.method == 'POST':
         request_json = json.loads(request.body)
         suite_path = request_json["suite_path"]
-        build_tgz_url = request_json["build_tgz_url"]
+        build_url = request_json["build_url"]
         job_id = queue_job(suite_path=suite_path)
     return HttpResponse(job_id)
 
