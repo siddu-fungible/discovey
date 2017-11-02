@@ -39,7 +39,7 @@ def submit_job(request):
         request_json = json.loads(request.body)
         suite_path = request_json["suite_path"]
         build_url = request_json["build_url"]
-        job_id = queue_job(suite_path=suite_path)
+        job_id = queue_job(suite_path=suite_path, build_url=build_url)
     return HttpResponse(job_id)
 
 def static_serve_log_directory(request, suite_execution_id):
