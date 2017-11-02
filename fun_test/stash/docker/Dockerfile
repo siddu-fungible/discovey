@@ -1,17 +1,23 @@
-# Use an official Python runtime as a parent image
-FROM ubuntu:latest
+FROM ubuntu:17.04
 
-RUN apt-get update && apt-get install -y python libasan2 libpixman-1-dev libglib2.0-dev ssh net-tools
+# ##### All SSH Related stuff
+RUN apt-get update && apt-get install -y libasan3 iproute2 libpixman-1-dev libglib2.0-dev net-tools openssh-server curl
+# python sudo
+RUN mkdir /var/run/sshd
+RUN echo 'root:fun123' | chpasswd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
+EXPOSE 22
 
-COPY funos-posix funos-posix
-COPY my.py my.py
-COPY qemu-system-x86_64 qemu-system-x86_64
-COPY ubuntu_min.img  ubuntu_min.img
+# QEMU
+ADD qemu qemu
+
+# Add startup script
 COPY startup.sh startup.sh
-ADD pc-bios .
+COPY dpcsh dpcsh
 
-RUN dd if=/dev/zero of=nvfile bs=4096 count=256
-RUN ./funos-posix app=mdt_test nvfile=nvfile
-# RUN nohup ./funos-posix app=prem_test nvfile=nvfile &
-
-CMD ["./startup.sh"]
+ENTRYPOINT ["./startup.sh"]
