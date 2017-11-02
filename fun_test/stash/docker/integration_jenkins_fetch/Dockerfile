@@ -1,5 +1,9 @@
 FROM ubuntu:17.04
 
+# jabraham@server17:~/docker-fetch-build$ ls qemu/
+# bzImage  core-image-full-cmdline-qemux86-64.ext4  funeth.ko  nvme-core.ko  nvme.ko
+
+
 # ##### All SSH Related stuff
 RUN apt-get update && apt-get install -y libasan3 iproute2 libpixman-1-dev libglib2.0-dev net-tools openssh-server curl libpng-dev libsdl1.2debian libfdt-dev
 # python sudo
