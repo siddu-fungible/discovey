@@ -738,6 +738,8 @@ class Topology(object):
             time.sleep(2)
             out = run_commands(commands=[docker_swarm_leave_force_cmd])
 
+        self.state = ''
+
     def printRacks(self, rack_ids):
         output = 'Topology Summary:\n\tFull: %s Racks, %s Leafs/Rack, %s Spines \n' % \
                    (self.nRacks, self.nLeafs, self.nSpines)
