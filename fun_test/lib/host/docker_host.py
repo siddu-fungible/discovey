@@ -178,7 +178,7 @@ class DockerHost(Linux, ToDictMixin):
                                           image_name,
                                           base_name,
                                           id,
-                                          funos_url,
+                                          build_url,
                                           num_qemu_ports,
                                           internal_dpcsh_port):
         container_asset = {}
@@ -243,7 +243,7 @@ class DockerHost(Linux, ToDictMixin):
                 dpcsh_port = self.get_next_dpcsh_port()
                 ports_dict[str(internal_dpcsh_port)] = dpcsh_port
                 allocated_container = self.client.containers.run(image_name,
-                                           command=funos_url,
+                                           command=build_url,
                                            detach=True,
                                            privileged=True,
                                            ports=ports_dict,

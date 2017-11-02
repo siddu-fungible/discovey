@@ -62,8 +62,8 @@ class SimulationOrchestrator(Linux, ToDictMixin):
             # i.command("date")
             self.command("cd {}".format(self.QEMU_PATH))
             fun_test.sleep(seconds=30, message="Bring up Qemu instance")
-            self.command("scp -P 2220  nvme*.ko root@127.0.0.1:/", custom_prompts={"(yes/no)\?*": "yes"}) #TODO
-            self.command("scp -P 2220  nvme*.ko root@127.0.0.1:/", custom_prompts={"(yes/no)\?*": "yes"})
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(external_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(external_ssh_port), custom_prompts={"(yes/no)\?*": "yes"})
 
             instance = i
         except Exception as ex:

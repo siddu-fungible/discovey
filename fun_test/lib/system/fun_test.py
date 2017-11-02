@@ -85,8 +85,8 @@ class FunTest:
                             dest="test_case_ids",
                             default=None,
                             help="To be used only by the scheduler")
-        parser.add_argument('--funos_posix_url',
-                            dest="funos_posix_url",
+        parser.add_argument('--build_url',
+                            dest="build_url",
                             default=None,
                             help="To be used only by the scheduler")
         args = parser.parse_args()
@@ -95,7 +95,7 @@ class FunTest:
         self.relative_path = args.relative_path
         self.selected_test_case_ids = None
         self.current_test_case_execution_id = None
-        self.funos_posix_url = args.funos_posix_url
+        self.build_url = args.build_url
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
 
