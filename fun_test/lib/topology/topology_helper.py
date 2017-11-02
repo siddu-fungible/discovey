@@ -285,8 +285,8 @@ class TopologyHelper:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
 
-            ssh_redir_port = orchestrator_obj.get_redir_port()
-            orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
+            #ssh_redir_port = orchestrator_obj.get_redir_port()
+            #orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
             instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
                                                         ssh_port=ssh_redir_port)
             fun_test.test_assert(instance, "allocate_bare_metal: Launched host instance")
