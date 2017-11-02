@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from fun_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -141,7 +142,8 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),
                     os.path.join(BASE_DIR, 'tools/angular_controllers'),
                     os.path.join(BASE_DIR, 'static/js/qa_dashboard'),
                     os.path.join(BASE_DIR, 'static/css/qa_dashboard'),
-                    os.path.join(BASE_DIR, 'fun_test/templates'))
+                    os.path.join(BASE_DIR, 'fun_test/templates'),
+                    TEST_ARTIFACTS_DIR)
 
 LOGGING = {
     'version': 1,

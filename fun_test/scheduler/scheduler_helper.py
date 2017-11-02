@@ -13,7 +13,7 @@ JSON_EXTENSION = ".json"
 LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
 
 scheduler_logger = logging.getLogger("scheduler_log")
-scheduler_logger.setLevel(logging.INFO)
+scheduler_logger.setLevel(logging.DEBUG)
 
 TEN_MB = 1e7
 DEBUG = True
@@ -27,7 +27,9 @@ else:
     scheduler_logger.addHandler(hdlr=handler)
 
 class SchedulerException(Exception):
-    pass
+    def __init__(self, *args):
+        super(SchedulerException, self).__init__(*args)
+        scheduler_logger.critical(*args)
 
 def get_flat_file_name(path):
     parts = path.split("/")
