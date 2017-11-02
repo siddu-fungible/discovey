@@ -30,4 +30,6 @@ TCMS_PROJECT = "TCM"
 SYSTEM_TMP_DIR = "/tmp"
 sys.path.append(WEB_DIR)
 
+MICROSERVICE_TGZ_EXTRACTION_URL = "http://10.1.20.67:5001/extract"
+
 

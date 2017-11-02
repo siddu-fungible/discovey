@@ -57,10 +57,6 @@ def extract():
     suite_execution_id = request_json["suite_execution_id"]
     extract_funos_posix(tgz_url=tgz_url, suite_execution_id=suite_execution_id)
     path_to_funos_posix = get_test_artifacts_directory(suite_execution_id, relative=True) + "/" + FUNOS_POSIX_PATH_IN_TGZ
-    #new_path = path_to_funos_posix.replace(FUNOS_POSIX_PATH_IN_TGZ, FINAL_FUNOS_POSIX_NAME)
-    #print("Renaming from {} to {}".format(path_to_funos_posix, new_path))
-    #os.rename("." + path_to_funos_posix, "." + new_path)
-    #path_to_funos_posix = new_path
     return_url = "http://10.1.20.67:5001" + path_to_funos_posix
     print return_url
     return return_url
