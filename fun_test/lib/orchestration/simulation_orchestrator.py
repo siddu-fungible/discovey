@@ -3,6 +3,7 @@ from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
 from lib.host.host import Qemu
 from lib.fun.f1 import F1, DockerF1
+from orchestrator import OrchestratorType
 
 
 class SimulationOrchestrator(Linux, ToDictMixin):
@@ -13,7 +14,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
     INSTANCE_TYPE_QEMU = "INSTANCE_TYPE_QEMU"
     INSTANCE_TYPE_FSU = "INSTANCE_TYPE_FSU"
 
-    ORCHESTRATOR_TYPE = "SimulationOrchestrator"
+    ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION
 
     @staticmethod
     def get(asset_properties):
@@ -25,7 +26,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
         return s
 
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def launch_host_instance(self,
                         instance_type=INSTANCE_TYPE_QEMU,
                         internal_ssh_port=None,
@@ -59,7 +60,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                       ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
 
             self.command("cd {}".format(self.QEMU_PATH))
-            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO: Why is this here?
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"})
 
             instance = i
@@ -92,11 +93,38 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
 
 class DockerContainerOrchestrator(SimulationOrchestrator):
+    # Container that is capable of spinning an F1 and multiple Qemu instances, all within one container
     QEMU_PATH = "/qemu"
     QEMU_PROCESS = "qemu-system-x86_64"
     docker_host = None
 
-    ORCHESTRATOR_TYPE = "DockerContainerOrchestrator"
+    ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER
+
+    def __init__(self,
+                 host_ip,
+                 ssh_username,
+                 ssh_password,
+                 ssh_port,
+                 dpcsh_port,
+                 qemu_ssh_ports):
+        super(SimulationOrchestrator, self).__init__(host_ip=host_ip,
+                                                     ssh_username=ssh_username,
+                                                     ssh_password=ssh_password,
+                                                     ssh_port=ssh_port)
+        self.dpcsh_port = dpcsh_port
+        self.qemu_ssh_ports = qemu_ssh_ports
+
+    @staticmethod
+    def get(asset_properties):
+        s = DockerContainerOrchestrator(host_ip=asset_properties["host_ip"],
+                                        ssh_username=asset_properties["mgmt_ssh_username"],
+                                        ssh_password=asset_properties["mgmt_ssh_password"],
+                                        ssh_port=asset_properties["mgmt_ssh_port"],
+                                        dpcsh_port=asset_properties["dpcsh_port"],
+                                        qemu_ssh_ports=asset_properties["qemu_ssh_ports"])
+        s.TO_DICT_VARS.append("dpcsh_port", "qemu_ssh_ports")
+        return s
+
 
     def describe(self):
         self.docker_host.describe()
@@ -111,65 +139,26 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         # Start FunOS
         fun_test.test_assert(f1_obj.start(dpcsh=True,
                                           dpcsh_only=dpcsh_only,
-                                            external_dpcsh_port = external_dpcsh_port),
+                                          external_dpcsh_port=external_dpcsh_port),
                              "DockerContainerOrchestrator: Start FunOS")
         return f1_obj
 
-
-    def get_redir_port(self):
-        docker_host = self.docker_host
-        ssh_port = docker_host.get_next_qemu_ssh_port()
-        return ssh_port
-
     @staticmethod
-    def get(asset_properties, docker_host):
-        prop = asset_properties
-        obj = DockerContainerOrchestrator(host_ip=prop["host_ip"],
-                                      ssh_username=prop["mgmt_ssh_username"],
-                                      ssh_password=prop["mgmt_ssh_password"],
-                                      ssh_port=prop["mgmt_ssh_port"])
-        obj.docker_host = docker_host
-        obj.internal_ip = asset_properties["internal_ip"]
-        obj.dpcsh_port = asset_properties["dpcsh_port"]
-        obj.qemu_ssh_ports = asset_properties["qemu_ssh_ports"]
+    def get(asset_properties):
+        obj = DockerContainerOrchestrator(host_ip=asset_properties["host_ip"],
+                                          ssh_username=asset_properties["mgmt_ssh_username"],
+                                          ssh_password=asset_properties["mgmt_ssh_password"],
+                                          ssh_port=asset_properties["mgmt_ssh_port"],
+                                          dpcsh_port=asset_properties["dpcsh_port"],
+                                          qemu_ssh_ports=asset_properties["qemu_ssh_ports"])
         return obj
 
     def post_init(self):
-        # self.docker_host = self.host_ip
-        self.ip_route_add(network="10.1.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
+        self.ip_route_add(network="10.1.0.0/16", gateway="172.17.0.1", outbound_interface="eth0") #Required to hack around automatic tap interface installation
         self.ip_route_add(network="10.2.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
         self.port_redirections = []
         self.TO_DICT_VARS.extend(["port_redirections", "ORCHESTRATOR_TYPE", "docker_host"])
 
-    def add_port_redir(self, port, internal_ip):
-        docker_host = self.docker_host
-        docker_host.iptables(table=Linux.IPTABLES_TABLE_NAT,
-                             append_chain_rule=Linux.IPTABLES_CHAIN_RULE_DOCKER,
-                             protocol=Linux.IPTABLES_PROTOCOL_TCP,
-                             destination_port=port,
-                             action=Linux.IPTABLES_ACTION_DNAT, nat_to_destination="{}:{}".format(internal_ip, port))
-
-        # docker_host.command("iptables -t nat -A DOCKER -p tcp --dport 2220 -j DNAT --to-destination 172.17.0.2:2220")
-        #docker_host.command(
-        #    "iptables -t nat -A POSTROUTING -j MASQUERADE -p tcp --source 172.17.0.2 --destination 172.17.0.2 --dport 2220")
-
-        docker_host.iptables(table=Linux.IPTABLES_TABLE_NAT,
-                             append_chain_rule=Linux.IPTABLES_CHAIN_RULE_POSTROUTING,
-                             protocol=Linux.IPTABLES_PROTOCOL_TCP,
-                             source_ip=internal_ip,
-                             action=Linux.IPTABLES_ACTION_MASQUERADE,
-                             destination_ip=internal_ip,
-                             destination_port=port)
-
-        docker_host.iptables(action=Linux.IPTABLES_ACTION_ACCEPT,
-                             protocol=Linux.IPTABLES_PROTOCOL_TCP,
-                             destination_ip=internal_ip,
-                             destination_port=port,
-                             append_chain_rule=Linux.IPTABLES_CHAIN_RULE_DOCKER
-                             )
-        # docker_host.command("iptables -A DOCKER -j ACCEPT -p tcp --destination 172.17.0.2 --dport 2220")
-        self.port_redirections = [[port, internal_ip]]
-        docker_host.allocate_qemu_ssh_port(port=port, internal_ip=internal_ip)
-
 class DockerHostOrchestrator(SimulationOrchestrator):
-    ORCHESTRATOR_TYPE = "DockerHostOrchestrator"
+    # A Docker Linux Host capable of launching docker container instances
+    ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST

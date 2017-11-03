@@ -22,9 +22,9 @@ class AssetManager:
 
     def describe(self):
         fun_test.log_section("Printing assets")
-        for orchestrator in self.orchestrators:
-            orchestrator.describe()
-
+        # for orchestrator in self.orchestrators:
+        #    orchestrator.describe()
+        self.docker_host.describe()
 
     @fun_test.log_parameters
     def get_asset(self, name):
@@ -78,7 +78,7 @@ class AssetManager:
                                                                                             internal_dpcsh_port=F1.INTERNAL_DPCSH_PORT)
 
                         fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
-                        orchestrator = DockerContainerOrchestrator.get(container_asset, self.docker_host)
+                        orchestrator = DockerContainerOrchestrator.get(container_asset)
                     else:
                         orchestrator = DockerHost.get(one_asset)
                     break
