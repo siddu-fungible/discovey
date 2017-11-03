@@ -19,18 +19,17 @@ class SimulationOrchestrator(Linux, ToDictMixin):
     @staticmethod
     def get(asset_properties):
         s = SimulationOrchestrator(host_ip=asset_properties["host_ip"],
-                                      ssh_username=asset_properties["mgmt_ssh_username"],
-                                      ssh_password=asset_properties["mgmt_ssh_password"],
-                                      ssh_port=asset_properties["mgmt_ssh_port"])
+                                   ssh_username=asset_properties["mgmt_ssh_username"],
+                                   ssh_password=asset_properties["mgmt_ssh_password"],
+                                   ssh_port=asset_properties["mgmt_ssh_port"])
         s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
         return s
 
-
     @fun_test.safe
     def launch_host_instance(self,
-                        instance_type=INSTANCE_TYPE_QEMU,
-                        internal_ssh_port=None,
-                        external_ssh_port=None):
+                             instance_type=INSTANCE_TYPE_QEMU,
+                             internal_ssh_port=None,
+                             external_ssh_port=None):
         instance = None
         if not internal_ssh_port:
             internal_ssh_port = self.QEMU_INSTANCE_PORT
@@ -49,19 +48,22 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                 function = 4
 
             # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
-            command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, internal_ssh_port)
+            command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(
+                self.QEMU_PROCESS, internal_ssh_port)
 
             self.start_bg_process(command=command, output_file="/tmp/qemu.log")
 
             fun_test.sleep("Qemu startup", seconds=65)
             i = Qemu(host_ip=self.host_ip,
-                      ssh_username="root", # stack
-                      ssh_password="stack",
-                      ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
+                     ssh_username="root",  # stack
+                     ssh_password="stack",
+                     ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
 
             self.command("cd {}".format(self.QEMU_PATH))
-            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO: Why is this here?
-            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"})
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
+                         custom_prompts={"(yes/no)\?*": "yes"})  # TODO: Why is this here?
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
+                         custom_prompts={"(yes/no)\?*": "yes"})
 
             instance = i
         except Exception as ex:
@@ -76,7 +78,6 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                     ssh_username=self.ssh_username,
                     ssh_password=self.ssh_password,
                     ssh_port=self.ssh_port)
-
 
         # Start FunOS
         fun_test.test_assert(f1_obj.start(dpcsh=True,
@@ -125,16 +126,15 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         s.TO_DICT_VARS.append("dpcsh_port", "qemu_ssh_ports")
         return s
 
-
     def describe(self):
         self.docker_host.describe()
 
     @fun_test.safe
     def launch_dut_instance(self, dpcsh_only, external_dpcsh_port):
         f1_obj = DockerF1(host_ip=self.host_ip,
-                    ssh_username=self.ssh_username,
-                    ssh_password=self.ssh_password,
-                    ssh_port=self.ssh_port)
+                          ssh_username=self.ssh_username,
+                          ssh_password=self.ssh_password,
+                          ssh_port=self.ssh_port)
 
         # Start FunOS
         fun_test.test_assert(f1_obj.start(dpcsh=True,
@@ -154,10 +154,12 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         return obj
 
     def post_init(self):
-        self.ip_route_add(network="10.1.0.0/16", gateway="172.17.0.1", outbound_interface="eth0") #Required to hack around automatic tap interface installation
+        self.ip_route_add(network="10.1.0.0/16", gateway="172.17.0.1",
+                          outbound_interface="eth0")  # Required to hack around automatic tap interface installation
         self.ip_route_add(network="10.2.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
         self.port_redirections = []
         self.TO_DICT_VARS.extend(["port_redirections", "ORCHESTRATOR_TYPE", "docker_host"])
+
 
 class DockerHostOrchestrator(SimulationOrchestrator):
     # A Docker Linux Host capable of launching docker container instances
