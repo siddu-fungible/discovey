@@ -36,7 +36,7 @@ class PosixQemuTopology:
 
             # Request host to Launch QEMU instances
             for index in range(0, self.num_vm_instances):
-                self.instances.append(simulation_orchestrator.launch_instance(name="VM_{}".format(index)))
+                self.instances.append(simulation_orchestrator.launch_host_instance(name="VM_{}".format(index)))
 
             # self.instances.append(self.f1_obj)
             fun_test.test_assert(True, "Instances deployed")

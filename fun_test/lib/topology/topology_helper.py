@@ -23,8 +23,12 @@ class TopologyHelper:
             simulation_start_mode = Dut.SIMULATION_START_MODE_NORMAL
             if "simulation_start_mode" in dut_info:
                 simulation_start_mode = dut_info["simulation_start_mode"]
+
+            # Create DUT object
             dut_obj = Dut(type=dut_type, index=dut_index, simulation_start_mode=simulation_start_mode)
             interfaces = dut_info["interface_info"]
+
+            # Assign endpoints on interfaces
             for interface_index, interface_info in interfaces.items():
                 dut_interface_obj = dut_obj.add_interface(index=interface_index, type=interface_info['type'])
                 if "hosts" in interface_info:
@@ -89,11 +93,11 @@ class TopologyHelper:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                      orchestrator_obj=storage_container_orchestrator)
         else:
-            pass  # Networking style, where hosts can be separate containers
+            pass  # Networking style,
 
         fun_test.log("Completed allocating topology")
         ##### Let us print out the topology
-        asset_manager.describe()
+        asset_manager.describe()  #TODO Just for debugging
 
         d = topology.to_dict()
         topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
@@ -114,9 +118,9 @@ class TopologyHelper:
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
             dut_instance = orchestrator_obj.launch_dut_instance(
                 dpcsh_only=(dut_obj.simulation_start_mode == dut_obj.SIMULATION_START_MODE_DPCSH_ONLY),
-            external_dpcsh_port=orchestrator_obj.dpcsh_port)
+                external_dpcsh_port=orchestrator_obj.dpcsh_port)
             fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
-            dut_obj.instance = dut_instance
+            dut_obj.set_instance(dut_instance)
 
     @fun_test.safe
     def allocate_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO
@@ -125,20 +129,17 @@ class TopologyHelper:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
 
-            instances = []
             if hypervisor_end_point.num_vms:
                 qemu_ssh_ports = orchestrator_obj.qemu_ssh_ports
                 for i in range(hypervisor_end_point.num_vms):
                     internal_ssh_port = qemu_ssh_ports[i]["internal"]
                     external_ssh_port = qemu_ssh_ports[i]["external"]
-                    instance = orchestrator_obj.launch_instance(instance_type=SimulationOrchestrator.INSTANCE_TYPE_QEMU,
+                    instance = orchestrator_obj.launch_host_instance(instance_type=SimulationOrchestrator.INSTANCE_TYPE_QEMU,
                                                                 external_ssh_port=external_ssh_port,
                                                                 internal_ssh_port=internal_ssh_port)
                     fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))
-                    instances.append(instance)
+                    hypervisor_end_point.add_instance(instance=instance)
                     fun_test.counter += 1
-            hypervisor_end_point.instances = instances
-            # hypervisor_end_point.orchestrator = orchestrator_obj
 
 
 if __name__ == "__main__":

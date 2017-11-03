@@ -50,17 +50,19 @@ class HypervisorEndPoint(EndPoint, ToDictMixin):
         super(HypervisorEndPoint, self).__init__()
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
+        self.instances = []
 
-class QemuColocatedHypervisorEndPoint(EndPoint, ToDictMixin):
+class QemuColocatedHypervisorEndPoint(HypervisorEndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED
 
     def __init__(self, num_vms=None):
         super(QemuColocatedHypervisorEndPoint, self).__init__()
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
-        self.instances = []
         self.TO_DICT_VARS.extend(["mode", "num_vms", "end_point_type", "instances", "orchestrator"])
 
+    def add_instance(self, instance):
+        self.instances.append(instance)
 
     def get_host_instance(self, host_index):
         return self.instances[host_index]

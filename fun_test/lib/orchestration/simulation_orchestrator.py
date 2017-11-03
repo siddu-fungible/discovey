@@ -26,7 +26,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
 
     @fun_test.log_parameters
-    def launch_instance(self,
+    def launch_host_instance(self,
                         instance_type=INSTANCE_TYPE_QEMU,
                         internal_ssh_port=None,
                         external_ssh_port=None):

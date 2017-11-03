@@ -131,7 +131,7 @@ class FunTest:
         sys.setdefaultencoding('UTF8') #Needed for xml
         self.counter = 0  # Mostly used for testing
 
-        self.log_timestamps = False
+        self.log_timestamps = True
 
     def create_test_case_artifact_file(self, post_fix_name, contents):
         artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
@@ -230,7 +230,14 @@ class FunTest:
     def dict_to_json_string(self, d):
         return json.dumps(d, indent=4)
 
-    def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True, calling_module=None):
+    def log(self,
+            message,
+            level=LOG_LEVEL_NORMAL,
+            newline=True,
+            trace_id=None,
+            stdout=True,
+            calling_module=None,
+            pexpect_log=False):
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
@@ -255,7 +262,7 @@ class FunTest:
         if level is not self.LOG_LEVEL_NORMAL:
             message = "\n%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
-        if self.log_timestamps:
+        if self.log_timestamps and (not pexpect_log):
             message = "[{}] {}".format(str(datetime.datetime.now()), message)
 
         nl = ""
@@ -305,7 +312,7 @@ class FunTest:
             calling_module = self._get_module_name(outer_frames=outer_frames[1:])
         if trace_id:
             self.trace(id=trace_id, log=self.buf)
-        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module)
+        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, pexpect_log=True)
         # sys.stdout.write(self.buf)
         self.buf = ""
 

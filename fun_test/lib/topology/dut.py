@@ -59,6 +59,9 @@ class Dut(ToDictMixin):
     def __repr__(self):
         return str(self.index) + " : " + str(self.type)
 
+    def set_instance(self, instance):
+        self.instance = instance
+
     def add_interface(self, index, type):
         dut_interface_obj = self.DutInterface(index=index, type=type)
         self.interfaces[index] = dut_interface_obj
