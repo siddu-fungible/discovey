@@ -23,9 +23,9 @@ class ExpandedTopology(ToDictMixin):
             result = dut.get_instance()
         return result
 
-    def get_host_instance(self, dut_index, interface_index):
+    def get_host_instance(self, dut_index, interface_index, host_index):
         dut = self.get_dut(index=dut_index)
-        return dut.get_host_on_interface(interface_index=interface_index).get_instance()
+        return dut.get_host_on_interface(interface_index=interface_index, host_index=host_index)
 
 class EndPoint(object, ToDictMixin):
     end_point_type = "Unknown end-point type"
@@ -84,6 +84,9 @@ class QemuHypervisorEndPoint(EndPoint, ToDictMixin):
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
         self.TO_DICT_VARS.extend(["mode", "num_vms", "end_point_type", "instances", "orchestrator"])
+
+    def get_host_instance(self, host_index):
+        return self.instances[host_index]
 
 class SsdEndPoint(EndPoint):
     end_point_type = EndPoint.END_POINT_TYPE_SSD
@@ -170,8 +173,8 @@ class Dut(ToDictMixin):
     def get_interface(self, interface_index):
         return self.interfaces[interface_index]
 
-    def get_host_on_interface(self, interface_index):
-        return self.interfaces[interface_index].get_peer_instance()
+    def get_host_on_interface(self, interface_index, host_index):
+        return self.interfaces[interface_index].get_peer_instance().get_host_instance(host_index=host_index)
 
 class TopologyHelper:
     def __init__(self, spec):
@@ -280,18 +283,24 @@ class TopologyHelper:
 
     @fun_test.safe
     def allocate_bare_metal(self, bare_metal_end_point, orchestrator_obj=None):
+        raise Exception("Not Implemented")
+        '''
         if bare_metal_end_point.mode == bare_metal_end_point.MODE_SIMULATION:
+            qemu_ssh_ports = orchestrator_obj.qemu_ssh_ports
             if not orchestrator_obj:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
+            for i in range(bare_metal_end_point.num_vms):
 
-            #ssh_redir_port = orchestrator_obj.get_redir_port()
-            #orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
-            instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
-                                                        ssh_port=ssh_redir_port)
-            fun_test.test_assert(instance, "allocate_bare_metal: Launched host instance")
+                internal_ssh_port = qemu_ssh_ports[i]["internal"]
+                external_ssh_port = qemu_ssh_ports[i]["external"]
+                instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
+                                                            internal_ssh_port=internal_ssh_port,
+                                                            external_ssh_port=external_ssh_port)
+                fun_test.test_assert(instance, "allocate_bare_metal: Launched host instance")
             bare_metal_end_point.instance = instance
             bare_metal_end_point.orchestrator = orchestrator_obj
+        '''
 
 
     @fun_test.safe

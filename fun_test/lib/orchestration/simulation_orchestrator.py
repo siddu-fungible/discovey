@@ -50,10 +50,11 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                 function = 4
 
             # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
-            command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, internal_ssh_port)
+            command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, internal_ssh_port)
 
-            self.command(command=command, timeout=60)
+            self.start_bg_process(command=command, output_file="/tmp/qemu.log")
 
+            fun_test.sleep("Qemu startup", seconds=65)
             i = Qemu(host_ip=self.host_ip,
                       ssh_username="root", # stack
                       ssh_password="stack",
@@ -61,9 +62,9 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
             # i.command("date")
             self.command("cd {}".format(self.QEMU_PATH))
-            fun_test.sleep(seconds=30, message="Bring up Qemu instance")
-            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(external_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO
-            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(external_ssh_port), custom_prompts={"(yes/no)\?*": "yes"})
+            # fun_test.sleep(seconds=30, message="Bring up Qemu instance")
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"})
 
             instance = i
         except Exception as ex:

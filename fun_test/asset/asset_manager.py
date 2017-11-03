@@ -62,7 +62,7 @@ class AssetManager:
                     elif type == self.ORCHESTRATOR_TYPE_DOCKER_SIMULATION:
                         # Ensure a docker container is running
                         if not fun_test.build_url:
-                            raise Exception("Not Implemented")  # TODO
+                            build_url = DEFAULT_BUILD_URL
                         else:
                             build_url = fun_test.build_url
                         if not self.docker_host:
