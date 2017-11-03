@@ -14,7 +14,8 @@ topology_dict = {
             "type": Dut.DUT_TYPE_FSU,
             "interface_info": {
                 0: {
-                    "hosts": 1
+                    "vms": 1,
+                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
@@ -61,7 +62,7 @@ class FunTestCase1(FunTestCase):
         # fun_test.test_assert(StorageTemplate(topology=self.script_obj.topology).deploy(),
         #                      "Deploying a storage template")
         storage_template = StorageTemplate(topology=self.script_obj.topology)
-        host = self.script_obj.topology.get_host_instance(dut_index=0, interface_index=0)
+        host = self.script_obj.topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
         storage_template.create_volume(host_obj=host)
         storage_template.attach_volume(host_obj=host)
 

@@ -17,23 +17,22 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
     @staticmethod
     def get(asset_properties):
-        prop = asset_properties
-        s = SimulationOrchestrator(host_ip=prop["host_ip"],
-                                      ssh_username=prop["mgmt_ssh_username"],
-                                      ssh_password=prop["mgmt_ssh_password"],
-                                      ssh_port=prop["mgmt_ssh_port"])
+        s = SimulationOrchestrator(host_ip=asset_properties["host_ip"],
+                                      ssh_username=asset_properties["mgmt_ssh_username"],
+                                      ssh_password=asset_properties["mgmt_ssh_password"],
+                                      ssh_port=asset_properties["mgmt_ssh_port"])
         s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
         return s
 
 
     @fun_test.log_parameters
     def launch_instance(self,
-                        name,
                         instance_type=INSTANCE_TYPE_QEMU,
-                        ssh_port=None):
+                        internal_ssh_port=None,
+                        external_ssh_port=None):
         instance = None
-        if not ssh_port:
-            ssh_port = self.QEMU_INSTANCE_PORT
+        if not internal_ssh_port:
+            internal_ssh_port = self.QEMU_INSTANCE_PORT
         try:
 
             qemu_process_id = self.get_process_id(process_name=self.QEMU_PROCESS)
@@ -49,20 +48,19 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                 function = 4
 
             # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
-            command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, ssh_port)
+            command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, internal_ssh_port)
 
-            self.command(command=command, timeout=60)
+            self.start_bg_process(command=command, output_file="/tmp/qemu.log")
 
+            fun_test.sleep("Qemu startup", seconds=65)
             i = Qemu(host_ip=self.host_ip,
                       ssh_username="root", # stack
                       ssh_password="stack",
-                      ssh_port=ssh_port, connect_retry_timeout_max=300)  # TODO
+                      ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
 
-            # i.command("date")
             self.command("cd {}".format(self.QEMU_PATH))
-            fun_test.sleep(seconds=30, message="Bring up Qemu instance")
-            self.command("scp -P 2220  nvme*.ko root@127.0.0.1:/", custom_prompts={"(yes/no)\?*": "yes"}) #TODO
-            self.command("scp -P 2220  nvme*.ko root@127.0.0.1:/", custom_prompts={"(yes/no)\?*": "yes"})
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO
+            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"})
 
             instance = i
         except Exception as ex:
@@ -133,6 +131,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         obj.docker_host = docker_host
         obj.internal_ip = asset_properties["internal_ip"]
         obj.dpcsh_port = asset_properties["dpcsh_port"]
+        obj.qemu_ssh_ports = asset_properties["qemu_ssh_ports"]
         return obj
 
     def post_init(self):

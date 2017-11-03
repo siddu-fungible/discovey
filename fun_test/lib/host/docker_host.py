@@ -136,6 +136,9 @@ class DockerHost(Linux, ToDictMixin):
             container_asset = self.get_container_asset_by_internal_ip(internal_ip=internal_ip)
             container_asset["qemu_ssh_ports"].append(port)
 
+    def de_allocate_qemu_ssh_ports(self, ports):
+        map(lambda x: self.allocated_qemu_ssh_ports.remove(x), ports)
+
     def allocate_dpcsh_port(self, port):
         self.allocated_dpcsh_ports.append(port)
         self.allocated_dpcsh_ports = sorted(list(set(self.allocated_dpcsh_ports)))
@@ -175,7 +178,7 @@ class DockerHost(Linux, ToDictMixin):
                                           image_name,
                                           base_name,
                                           id,
-                                          funos_url,
+                                          build_url,
                                           num_qemu_ports,
                                           internal_dpcsh_port):
         container_asset = {}
@@ -192,6 +195,7 @@ class DockerHost(Linux, ToDictMixin):
 
         port_retries = 0
         max_port_retries = 100
+
         while port_retries < max_port_retries:
             container = self.get_container_by_name(name=container_name)
             if container:
@@ -206,6 +210,10 @@ class DockerHost(Linux, ToDictMixin):
 
             if port_retries:
                 fun_test.debug("Retrying container creation with a different port: port_retries: {}, max_retries: {}".format(port_retries, max_port_retries))
+
+            container_ssh_port = 0
+            dpcsh_port = 0
+            external_qemu_ssh_ports = []
             try:
                 container_ssh_port = self.get_next_container_ssh_port()
 
@@ -215,12 +223,14 @@ class DockerHost(Linux, ToDictMixin):
 
                 qemu_ssh_ports = []
                 for index in range(num_qemu_ports):
-                    qemu_ssh_port = self.get_next_qemu_ssh_port() + index
-                    ports_dict[str(self.CONTAINER_INTERNAL_QEMU_PORTS[index])] = str(qemu_ssh_port)
-                    fun_test.debug("Container QEMU SSH port: {}".format(qemu_ssh_port))
-                    qemu_ssh_ports.append(qemu_ssh_port)
-
-
+                    internal_port = self.CONTAINER_INTERNAL_QEMU_PORTS[index]
+                    qemu_ssh_port = self.get_next_qemu_ssh_port()
+                    self.allocate_qemu_ssh_port(qemu_ssh_port)
+                    external_port = qemu_ssh_port
+                    ports_dict[str(internal_port)] = str(external_port)
+                    fun_test.debug("Container QEMU SSH port: {}".format(external_port))
+                    qemu_ssh_ports.append({"internal": internal_port, "external": external_port})
+                    external_qemu_ssh_ports.append(external_port)
                 '''
                 qemu_ssh_ports = []
                 for qemu_port_redirect in qemu_port_redirects:
@@ -233,7 +243,7 @@ class DockerHost(Linux, ToDictMixin):
                 dpcsh_port = self.get_next_dpcsh_port()
                 ports_dict[str(internal_dpcsh_port)] = dpcsh_port
                 allocated_container = self.client.containers.run(image_name,
-                                           command=funos_url,
+                                           command=build_url,
                                            detach=True,
                                            privileged=True,
                                            ports=ports_dict,
@@ -245,7 +255,7 @@ class DockerHost(Linux, ToDictMixin):
                 self.allocate_container_ssh_port(container_ssh_port) #TODO: allocate qemu
                 internal_ip = allocated_container.attrs["NetworkSettings"]["IPAddress"]
 
-                map(lambda x: self.allocate_qemu_ssh_port(x), qemu_ssh_ports)
+                # map(lambda x: self.allocate_qemu_ssh_port(x["external"]), qemu_ssh_ports)
                 fun_test.log("Launched container: {}".format(container_name))
 
                 port_retries += 1
@@ -262,12 +272,32 @@ class DockerHost(Linux, ToDictMixin):
             except APIError as ex:
                 message = str(ex)
                 fun_test.critical("Container creation error: {}". format(message))
+
+                container = self.get_container_by_name(name=container_name)
+                if container:
+
+                    try:
+                        container.stop()
+                        fun_test.debug("Stopped Container: {}".format(container.name))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
+                    try:
+                        container.remove()
+                        fun_test.debug("Removed Container: {}".format(container.name))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
                 m = re.search("(\d+)\s+failed:\s+port\s+is\s+already", message)
+                self.de_allocate_qemu_ssh_ports(external_qemu_ssh_ports)
                 if m:
                     used_up_port = int(m.group(1))
-                    self.allocate_qemu_ssh_port(used_up_port)
-                    self.allocate_container_ssh_port(used_up_port)
-                    self.allocate_dpcsh_port(used_up_port)
+                    if used_up_port == container_ssh_port:
+                        self.allocate_container_ssh_port(used_up_port)
+                    if used_up_port == dpcsh_port:
+                        self.allocate_dpcsh_port(used_up_port)
+                    if used_up_port in external_qemu_ssh_ports:
+                        self.allocate_qemu_ssh_port(used_up_port)
 
                 port_retries += 1
                 if port_retries >= max_port_retries:

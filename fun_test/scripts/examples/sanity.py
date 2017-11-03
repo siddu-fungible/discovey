@@ -36,6 +36,8 @@ class FunTestCase1(FunTestCase):
         for i in range(0, 50):
             fun_test.log("Some log")
 
+
+
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
 
 

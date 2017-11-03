@@ -19,11 +19,16 @@
         };
 
 
-        $scope.submitClick = function () {
+        $scope.submitClick = function (formIsValid) {
+            if(!formIsValid) {
+               commonAlert.showError("Form is invalid");
+               return;
+            }
             console.log($scope.selectedSuite);
             $scope.jobId = null;
             let payload = {};
             payload["suite_path"] = $scope.selectedSuite;
+            payload["build_url"] = $scope.buildUrl;
             $http.post('/regression/submit_job', payload).then(function(result){
                 $scope.jobId = parseInt(result.data);
                 $window.location.href = "/regression/suite_detail/" + $scope.jobId;
