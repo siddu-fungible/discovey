@@ -117,7 +117,6 @@ class TopologyHelper:
             external_dpcsh_port=orchestrator_obj.dpcsh_port)
             fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
             dut_obj.instance = dut_instance
-            dut_instance.orchestrator = orchestrator_obj
 
     @fun_test.safe
     def allocate_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO
@@ -132,7 +131,7 @@ class TopologyHelper:
                 for i in range(hypervisor_end_point.num_vms):
                     internal_ssh_port = qemu_ssh_ports[i]["internal"]
                     external_ssh_port = qemu_ssh_ports[i]["external"]
-                    instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
+                    instance = orchestrator_obj.launch_instance(instance_type=SimulationOrchestrator.INSTANCE_TYPE_QEMU,
                                                                 external_ssh_port=external_ssh_port,
                                                                 internal_ssh_port=internal_ssh_port)
                     fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))

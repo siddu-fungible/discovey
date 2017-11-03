@@ -28,7 +28,6 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
     @fun_test.log_parameters
     def launch_instance(self,
-                        name,
                         instance_type=INSTANCE_TYPE_QEMU,
                         internal_ssh_port=None,
                         external_ssh_port=None):
@@ -60,9 +59,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                       ssh_password="stack",
                       ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
 
-            # i.command("date")
             self.command("cd {}".format(self.QEMU_PATH))
-            # fun_test.sleep(seconds=30, message="Bring up Qemu instance")
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"}) #TODO
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port), custom_prompts={"(yes/no)\?*": "yes"})
 
