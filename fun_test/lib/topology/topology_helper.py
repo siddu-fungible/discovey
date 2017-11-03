@@ -32,8 +32,10 @@ class EndPoint(object, ToDictMixin):
     END_POINT_TYPE_BARE_METAL = "END_POINT_TYPE_BARE_METAL"
     END_POINT_TYPE_VM = "END_POINT_TYPE_VM"
     END_POINT_TYPE_SSD = "END_POINT_TYPE_SSD"
+
+    # Hypervisor Endpoint types indicate Containers capable of carrying multiple hosts
     END_POINT_TYPE_HYPERVISOR = "END_POINT_TYPE_HYPERVISOR"
-    END_POINT_TYPE_QEMU_HYPERVISOR = "END_POINT_TYPE_QEMU_HYPERVISOR"
+    END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED = "END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED"  # A container where the DUT and multiple QEMU instances are colocated
     MODE_SIMULATION = "MODE_SIMULATION"
 
     TO_DICT_VARS = ["mode", "type", "instance"]
@@ -76,11 +78,11 @@ class HypervisorEndPoint(EndPoint, ToDictMixin):
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
 
-class QemuHypervisorEndPoint(EndPoint, ToDictMixin):
-    end_point_type = EndPoint.END_POINT_TYPE_QEMU_HYPERVISOR
+class QemuColocatedHypervisorEndPoint(EndPoint, ToDictMixin):
+    end_point_type = EndPoint.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED
 
     def __init__(self, num_vms=None):
-        super(QemuHypervisorEndPoint, self).__init__()
+        super(QemuColocatedHypervisorEndPoint, self).__init__()
         self.num_vms = num_vms
         self.mode = self.MODE_SIMULATION
         self.instances = []
@@ -112,30 +114,27 @@ class Dut(ToDictMixin):
         INTERFACE_TYPE_ETHERNET = "INTERFACE_TYPE_ETHERNET"
 
         TO_DICT_VARS = ["index", "type", "peer_info"]
-        def __init__(self, index):
+        def __init__(self, index, type):
             self.index = index  # interface index
             self.peer_info = None
-            self.type = self.INTERFACE_TYPE_PCIE  # pcie, ethernet
+            self.type = type # pcie, ethernet
 
         def get_peer_instance(self):
             return self.peer_info
 
-        def add_hosts_to_interface(self, num_hosts=0):
+        def add_hosts(self, num_hosts=0):
             # fun_test.simple_assert(num_hosts or num_vms, "num hosts or num vms")
 
             if num_hosts:
                 fun_test.debug("User intended baremetal for Interface: {}".format(self.index))
                 self.peer_info = BareMetalEndPoint()
 
-        def add_qemu_hypervisor(self,
-                                             num_vms=0,
-                                             ):
+        def add_qemu_colocated_hypervisor(self, num_vms=0):
             if num_vms:
-                self.peer_info = QemuHypervisorEndPoint(num_vms=num_vms)
+                self.peer_info = QemuColocatedHypervisorEndPoint(num_vms=num_vms)
                 fun_test.debug("User intended hypervisor for Interface: {}".format(self.index))
 
-        def add_hypervisor(self,
-                                        num_vms=0):
+        def add_hypervisor(self, num_vms=0):
             if num_vms:
                 if self.type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
                     self.peer_info = HypervisorEndPoint(num_vms=num_vms)
@@ -155,12 +154,10 @@ class Dut(ToDictMixin):
     def __repr__(self):
         return str(self.index) + " : " + str(self.type)
 
-    def add_interface(self, index):
-        dut_interface_obj = self.DutInterface(index=index)
+    def add_interface(self, index, type):
+        dut_interface_obj = self.DutInterface(index=index, type=type)
         self.interfaces[index] = dut_interface_obj
         return dut_interface_obj
-
-
 
     def start(self):
         pass
@@ -196,21 +193,18 @@ class TopologyHelper:
             dut_obj = Dut(type=dut_type, index=dut_index, simulation_start_mode=simulation_start_mode)
             interfaces = dut_info["interface_info"]
             for interface_index, interface_info in interfaces.items():
-                dut_interface_obj = dut_obj.add_interface(index=interface_index)
+                dut_interface_obj = dut_obj.add_interface(index=interface_index, type=interface_info['type'])
                 if "hosts" in interface_info:
-                    dut_interface_obj.add_hosts_to_interface(num_hosts=interface_info["hosts"])
+                    dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"])
                 elif 'vms' in interface_info:
                     if not 'type' in interface_info:
                         raise FunTestLibException("We must define an interface type")
-
-                    if interface_info["type"] == Dut.DutInterface.INTERFACE_TYPE_PCIE:
-                        dut_interface_obj.add_qemu_hypervisor(num_vms=interface_info["vms"])
-                    elif interface_info['type'] == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
+                    if dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_PCIE:
+                        dut_interface_obj.add_qemu_colocated_hypervisor(num_vms=interface_info["vms"])
+                    elif dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
                         dut_interface_obj.add_hypervisor(num_vms=interface_info["vms"])
-
                 elif 'ssds' in interface_info:
                     dut_interface_obj.add_drives_to_interface(num_ssds=interface_info["ssds"])
-
             expanded_topology.duts[dut_index] = dut_obj
 
         return expanded_topology
@@ -234,8 +228,6 @@ class TopologyHelper:
 
             # Fetch storage container orchestrator
 
-
-
             for dut_index, dut_obj in duts.items():
                 dut_type = dut_obj.type
                 fun_test.debug("Setting up DUT {}".format(dut_index))
@@ -257,11 +249,10 @@ class TopologyHelper:
                         if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
                             self.allocate_bare_metal(bare_metal_end_point=peer_info,
                                                      orchestrator_obj=storage_container_orchestrator)
-
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                      orchestrator_obj=storage_container_orchestrator)
-                        elif peer_info.type == peer_info.END_POINT_TYPE_QEMU_HYPERVISOR:
+                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                      orchestrator_obj=storage_container_orchestrator)
         else:
@@ -306,8 +297,6 @@ class TopologyHelper:
             if hypervisor_end_point.num_vms:
                 qemu_ssh_ports = orchestrator_obj.qemu_ssh_ports
                 for i in range(hypervisor_end_point.num_vms):
-                    # ssh_redir_port = orchestrator_obj.get_redir_port()
-                    # orchestrator_obj.add_port_redir(port=ssh_redir_port, internal_ip=orchestrator_obj.internal_ip)
                     internal_ssh_port = qemu_ssh_ports[i]["internal"]
                     external_ssh_port = qemu_ssh_ports[i]["external"]
                     instance = orchestrator_obj.launch_instance(SimulationOrchestrator.INSTANCE_TYPE_QEMU,
