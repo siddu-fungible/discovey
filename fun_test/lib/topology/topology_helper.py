@@ -138,7 +138,7 @@ class TopologyHelper:
                     instances.append(instance)
                     fun_test.counter += 1
             hypervisor_end_point.instances = instances
-            hypervisor_end_point.orchestrator = orchestrator_obj
+            # hypervisor_end_point.orchestrator = orchestrator_obj
 
 
 if __name__ == "__main__":

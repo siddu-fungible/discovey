@@ -17,11 +17,10 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
     @staticmethod
     def get(asset_properties):
-        prop = asset_properties
-        s = SimulationOrchestrator(host_ip=prop["host_ip"],
-                                      ssh_username=prop["mgmt_ssh_username"],
-                                      ssh_password=prop["mgmt_ssh_password"],
-                                      ssh_port=prop["mgmt_ssh_port"])
+        s = SimulationOrchestrator(host_ip=asset_properties["host_ip"],
+                                      ssh_username=asset_properties["mgmt_ssh_username"],
+                                      ssh_password=asset_properties["mgmt_ssh_password"],
+                                      ssh_port=asset_properties["mgmt_ssh_port"])
         s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
         return s
 
