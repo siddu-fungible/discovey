@@ -237,7 +237,7 @@ class FunTest:
             trace_id=None,
             stdout=True,
             calling_module=None,
-            pexpect_log=False):
+            no_timestamp=False):
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
@@ -262,7 +262,7 @@ class FunTest:
         if level is not self.LOG_LEVEL_NORMAL:
             message = "\n%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
-        if self.log_timestamps and (not pexpect_log):
+        if self.log_timestamps and (not no_timestamp):
             message = "[{}] {}".format(str(datetime.datetime.now()), message)
 
         nl = ""
@@ -312,7 +312,7 @@ class FunTest:
             calling_module = self._get_module_name(outer_frames=outer_frames[1:])
         if trace_id:
             self.trace(id=trace_id, log=self.buf)
-        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, pexpect_log=True)
+        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, no_timestamp=True)
         # sys.stdout.write(self.buf)
         self.buf = ""
 
@@ -361,11 +361,12 @@ class FunTest:
     def _print_summary(self):
         self.log_section(message="Summary")
         format = "{:<4} {:<10} {:<100}"
-        self.log(format.format("Id", "Result", "Description"))
+        self.log(format.format("Id", "Result", "Description"), no_timestamp=True)
         for k, v in self.test_metrics.items():
             self.log(format.format(k, v["result"], v["summary"]))
 
-        self.log("http://127.0.0.1:{}/static/logs/".format(WEB_SERVER_PORT) + self.script_file_name.replace(".py", ".html"))
+        self.log("http://127.0.0.1:{}/static/logs/".format(WEB_SERVER_PORT) + self.script_file_name.replace(".py", ".html"),
+                 no_timestamp=True)
 
     def print_test_case_summary(self, test_case_id):
         metrics = self.test_metrics[test_case_id]

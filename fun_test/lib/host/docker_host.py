@@ -231,14 +231,6 @@ class DockerHost(Linux, ToDictMixin):
                     fun_test.debug("Container QEMU SSH port: {}".format(external_port))
                     qemu_ssh_ports.append({"internal": internal_port, "external": external_port})
                     external_qemu_ssh_ports.append(external_port)
-                '''
-                qemu_ssh_ports = []
-                for qemu_port_redirect in qemu_port_redirects:
-                    qemu_ssh_port = self.get_next_qemu_ssh_port()
-                    qemu_ssh_ports.append(qemu_ssh_port)
-                    ports_dict[str(qemu_port_redirect)] = qemu_ssh_port
-                    fun_test.debug("Container SSH port: {}".format(qemu_ssh_port))
-                '''
 
                 dpcsh_port = self.get_next_dpcsh_port()
                 ports_dict[str(internal_dpcsh_port)] = dpcsh_port
