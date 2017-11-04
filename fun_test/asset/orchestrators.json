@@ -8,16 +8,8 @@
     "mgmt_ssh_port": 22
   },
   {
-    "name": "docker1",
-    "type": "ORCHESTRATOR_TYPE_DOCKER_SIMULATION",
-    "host_ip": "10.1.20.67",
-    "mgmt_ssh_username": "root",
-    "mgmt_ssh_password": "fun123",
-    "mgmt_ssh_port": 3220
-  },
-  {
     "name": "docker-host1",
-    "type": "ORCHESTRATOR_TYPE_DOCKER_HOST",
+    "type": "ORCHESTRATOR_TYPE_DOCKER_CONTAINER",
     "host_ip": "10.1.20.67",
     "mgmt_ssh_username": "root",
     "mgmt_ssh_password": "fun123",

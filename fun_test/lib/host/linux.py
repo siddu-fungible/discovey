@@ -792,6 +792,32 @@ class Linux(object, ToDictMixin):
                  destination_port=None,
                  table=None,
                  nat_to_destination=None):
+        """
+        docker_host.iptables(table=Linux.IPTABLES_TABLE_NAT,
+                             append_chain_rule=Linux.IPTABLES_CHAIN_RULE_DOCKER,
+                             protocol=Linux.IPTABLES_PROTOCOL_TCP,
+                             destination_port=port,
+                             action=Linux.IPTABLES_ACTION_DNAT, nat_to_destination="{}:{}".format(internal_ip, port))
+
+        # docker_host.command("iptables -t nat -A DOCKER -p tcp --dport 2220 -j DNAT --to-destination 172.17.0.2:2220")
+        #docker_host.command(
+        #    "iptables -t nat -A POSTROUTING -j MASQUERADE -p tcp --source 172.17.0.2 --destination 172.17.0.2 --dport 2220")
+
+        docker_host.iptables(table=Linux.IPTABLES_TABLE_NAT,
+                             append_chain_rule=Linux.IPTABLES_CHAIN_RULE_POSTROUTING,
+                             protocol=Linux.IPTABLES_PROTOCOL_TCP,
+                             source_ip=internal_ip,
+                             action=Linux.IPTABLES_ACTION_MASQUERADE,
+                             destination_ip=internal_ip,
+                             destination_port=port)
+
+        docker_host.iptables(action=Linux.IPTABLES_ACTION_ACCEPT,
+                             protocol=Linux.IPTABLES_PROTOCOL_TCP,
+                             destination_ip=internal_ip,
+                             destination_port=port,
+                             append_chain_rule=Linux.IPTABLES_CHAIN_RULE_DOCKER
+                             )
+        """
         result = True
         iptables_command = "iptables "
         try:

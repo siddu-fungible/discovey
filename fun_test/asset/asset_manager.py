@@ -3,14 +3,12 @@ from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1
 from lib.orchestration.simulation_orchestrator import SimulationOrchestrator, DockerContainerOrchestrator
 from lib.system.fun_test import fun_test
+from lib.orchestration.orchestrator import OrchestratorType
 
 SPEC_FILE = ASSET_DIR + "/" + "docker_hosts.json"
 
 
 class AssetManager:
-    ORCHESTRATOR_TYPE_SIMULATION = "ORCHESTRATOR_TYPE_SIMULATION"
-    ORCHESTRATOR_TYPE_DOCKER_SIMULATION = "ORCHESTRATOR_TYPE_DOCKER_SIMULATION"
-    ORCHESTRATOR_TYPE_DOCKER_HOST = "ORCHESTRATOR_TYPE_DOCKER_HOST"
     ASSET_SPEC = ASSET_DIR + "/assets.json"
     ORCHESTRATOR_SPEC = ASSET_DIR + "/orchestrators.json"
     INTEGRATION_IMAGE_NAME = "integration_jenkins_fetch"
@@ -22,9 +20,9 @@ class AssetManager:
 
     def describe(self):
         fun_test.log_section("Printing assets")
-        for orchestrator in self.orchestrators:
-            orchestrator.describe()
-
+        # for orchestrator in self.orchestrators:
+        #    orchestrator.describe()
+        self.docker_host.describe()
 
     @fun_test.log_parameters
     def get_asset(self, name):
@@ -48,7 +46,7 @@ class AssetManager:
         return asset
 
     @fun_test.safe
-    def get_orchestrator(self, type=ORCHESTRATOR_TYPE_DOCKER_SIMULATION, index=0):
+    def get_orchestrator(self, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, index=0):
         fun_test.debug("Getting orchestrator")
         orchestrator = None
         try:
@@ -57,9 +55,9 @@ class AssetManager:
             for one_asset in all_assets:
                 if one_asset['type'] == type:
                     fun_test.debug("Found asset {}".format(one_asset['name']))
-                    if type == self.ORCHESTRATOR_TYPE_SIMULATION:
+                    if type == OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION:
                         orchestrator = SimulationOrchestrator.get(one_asset)
-                    elif type == self.ORCHESTRATOR_TYPE_DOCKER_SIMULATION:
+                    elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
                         # Ensure a docker container is running
                         if not fun_test.build_url:
                             build_url = DEFAULT_BUILD_URL
@@ -78,7 +76,7 @@ class AssetManager:
                                                                                             internal_dpcsh_port=F1.INTERNAL_DPCSH_PORT)
 
                         fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
-                        orchestrator = DockerContainerOrchestrator.get(container_asset, self.docker_host)
+                        orchestrator = DockerContainerOrchestrator.get(container_asset)
                     else:
                         orchestrator = DockerHost.get(one_asset)
                     break
