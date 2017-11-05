@@ -48,7 +48,7 @@ class MultiProcessingTasks:
 
     @fun_test.safe
     def run(self, max_parallel_processes=cpu_count(), parallel=True):
-        p = ProcessingPool(max_parallel_processes, parallel=True)
+        p = ProcessingPool(nodes=max_parallel_processes)
         p_func = p.apipe if parallel else p.pipe
 
         for func_args in self.task_list:
