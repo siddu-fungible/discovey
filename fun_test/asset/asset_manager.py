@@ -72,6 +72,7 @@ class AssetManager:
                                                                                             id=index + fun_test.get_suite_execution_id(),
                                                                                             build_url=build_url,
                                                                                             image_name=self.INTEGRATION_IMAGE_NAME,
+                                                                                            pool0_internal_ports=[22],
                                                                                             pool1_internal_ports=[50001, 50002, 50003, 50004],
                                                                                             pool2_internal_ports=[F1.INTERNAL_DPCSH_PORT])
 

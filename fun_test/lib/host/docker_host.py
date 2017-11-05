@@ -1,12 +1,56 @@
 from lib.system.fun_test import fun_test, FunTimer, FunTestLibException
 from lib.system.utils import ToDictMixin
-from fun_settings import *
 from lib.host.linux import Linux
 from docker.errors import APIError
 from docker import DockerClient
 import re, collections
 
 # fun_test.enable_debug()
+
+
+class PortAllocator:
+    def __init__(self, base_port, internal_ports):
+        self.internal_ports = internal_ports
+        self.allocated_ports = [base_port]
+
+    def prepare_ports_dict(self, ports_dict):
+        allocation = []
+        for index in range(len(self.internal_ports)):
+            internal_port = self.internal_ports[index]
+            external_port = self.get_next_port()
+            self.allocate_port(port=external_port)
+            ports_dict[str(internal_port)] = str(external_port)
+            fun_test.debug("Container Port: {}".format(external_port))
+            allocation.append({"internal": internal_port, "external": external_port})
+        return allocation
+
+    def allocate_port(self, port):
+        fun_test.debug("Allocating port {}".format(port))
+        self.allocated_ports.append(port)
+        self.allocated_ports = sorted(list(set(self.allocated_ports))) #TODO Expensive
+
+    def get_next_port(self):
+        next_port = self._get_next_port(source=self.allocated_ports)
+        return next_port
+
+    def _get_next_port(self, source):
+        """Given a list of ports, finds and returns the first gap
+        in the list. If there are no gaps, just return a new port from the tail
+        """
+        l = source
+        next_port = l[0]
+        for index in range(0, len(l) - 1):  # TODO: Upper limits
+            a = l[index]
+            b = l[index + 1]
+            if (b - a) > 1:
+                next_port = a
+                break
+            if index == len(l) - 2:
+                next_port = b
+        return next_port + 1
+
+    def de_allocate_ports(self, ports):
+        map(lambda x: self.allocated_ports.remove(x), ports)
 
 
 class DockerHost(Linux, ToDictMixin):
@@ -77,7 +121,6 @@ class DockerHost(Linux, ToDictMixin):
         self.name = "DockerHost: {}".format(self.host_ip)
         self.containers_assets = collections.OrderedDict()
         self.client = None
-        self.current_docker_host_asset = None
         self.allocated_container_ssh_ports = [self.BASE_CONTAINER_SSH_PORT]
         self.allocated_pool1_ports = [self.BASE_POOL1_PORT]
         self.allocated_pool2_ports = [self.BASE_POOL2_PORT]
@@ -117,59 +160,13 @@ class DockerHost(Linux, ToDictMixin):
         container = self.get_container_by_image(image_name=image_name)
         return container
 
-    @fun_test.safe
-    def remove_all_integration_containers(self):
-        self.connect()
-        # TODO
-
     def allocate_container_ssh_port(self, port):
         self.allocated_container_ssh_ports.append(port)
         self.allocated_container_ssh_ports = sorted(list(set(self.allocated_container_ssh_ports)))
 
 
-    def allocate_pool1_port(self, port, internal_ip=None): #If called from outside this class, pass internal_ip as container_names are not known outside
-        self.allocated_pool1_ports.append(port)
-        self.allocated_pool1_ports = sorted(list(set(self.allocated_pool1_ports)))  #TODO Expensive
 
-        if internal_ip:
-            container_asset = self.get_container_asset_by_internal_ip(internal_ip=internal_ip)
-            container_asset["pool1_ports"].append(port)
 
-    def de_allocate_pool1_ports(self, ports):
-        map(lambda x: self.allocated_pool1_ports.remove(x), ports)
-
-    def allocate_pool2_port(self, port):
-        self.allocated_pool2_ports.append(port)
-        self.allocated_pool2_ports = sorted(list(set(self.allocated_pool2_ports)))
-
-    def get_next_container_ssh_port(self):
-        next_port = self._get_next_port(source=self.allocated_container_ssh_ports)
-        # self.allocate_container_ssh_port(port=next_port)
-        return next_port
-
-    def get_next_pool1_port(self):
-        next_port = self._get_next_port(source=self.allocated_pool1_ports)
-        return next_port
-
-    def get_next_pool2_port(self):
-        next_port = self._get_next_port(source=self.allocated_pool2_ports)
-        return next_port
-
-    def _get_next_port(self, source):
-        """Given a list of ports, finds and returns the first gap
-        in the list. If there are no gaps, just return a new port from the tail
-        """
-        l = source
-        next_port = l[0]
-        for index in range(0, len(l) - 1):  # TODO: Upper limits
-            a = l[index]
-            b = l[index + 1]
-            if (b - a) > 1:
-                next_port = a
-                break
-            if index == len(l) - 2:
-                next_port = b
-        return next_port + 1
 
     @fun_test.safe
     def setup_integration_basic_container(self,
@@ -177,6 +174,7 @@ class DockerHost(Linux, ToDictMixin):
                                           base_name,
                                           id,
                                           build_url,
+                                          pool0_internal_ports,
                                           pool1_internal_ports,
                                           pool2_internal_ports):
         container_asset = {}
@@ -209,39 +207,19 @@ class DockerHost(Linux, ToDictMixin):
             if port_retries:
                 fun_test.debug("Retrying container creation with a different port: port_retries: {}, max_retries: {}".format(port_retries, max_port_retries))
 
-            container_ssh_port = 0
-            pool2_port = 0
-            external_pool1_ports = []
-            external_pool2_ports = []
+            port0_allocator = PortAllocator(base_port=self.BASE_CONTAINER_SSH_PORT,
+                                            internal_ports=pool0_internal_ports)
+            port1_allocator = PortAllocator(base_port=self.BASE_POOL1_PORT,
+                                            internal_ports=pool1_internal_ports)
+            port2_allocator = PortAllocator(base_port=self.BASE_POOL2_PORT,
+                                            internal_ports=pool2_internal_ports)
 
             try:
-                container_ssh_port = self.get_next_container_ssh_port()
-
-                fun_test.debug("Container SSH port: {}".format(container_ssh_port))
-
-                ports_dict[str(self.CONTAINER_INTERNAL_SSH_PORT)] = str(container_ssh_port)
-
-                pool1_ports = []
-                for index in range(len(pool1_internal_ports)):
-                    internal_port = pool1_internal_ports[index]
-                    external_port = self.get_next_pool1_port()
-                    self.allocate_pool1_port(external_port)
-                    ports_dict[str(internal_port)] = str(external_port)
-                    fun_test.debug("Container Pool1 Port: {}".format(external_port))
-                    pool1_ports.append({"internal": internal_port, "external": external_port})
-                    external_pool1_ports.append(external_port)
-
-                pool2_ports = []
-                for index in range(len(pool2_internal_ports)):
-                    internal_port = pool2_internal_ports[index]
-                    external_port = self.get_next_pool2_port()
-                    self.allocate_pool2_port(external_port)
-                    ports_dict[str(internal_port)] = str(external_port)
-                    fun_test.debug("Container Pool2 Port: {}".format(external_port))
-                    pool2_ports.append({"internal": internal_port, "external": external_port})
-                    external_pool2_ports.append(external_port)
 
 
+                pool0_allocation = port0_allocator.prepare_ports_dict(ports_dict=ports_dict)
+                pool1_allocation = port1_allocator.prepare_ports_dict(ports_dict=ports_dict)
+                pool2_allocation = port2_allocator.prepare_ports_dict(ports_dict=ports_dict)
 
                 allocated_container = self.client.containers.run(image_name,
                                            command=build_url,
@@ -253,7 +231,6 @@ class DockerHost(Linux, ToDictMixin):
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
                 allocated_container = self.client.containers.get(container_name)
-                self.allocate_container_ssh_port(container_ssh_port)
                 internal_ip = allocated_container.attrs["NetworkSettings"]["IPAddress"]
 
                 fun_test.log("Launched container: {}".format(container_name))
@@ -262,10 +239,10 @@ class DockerHost(Linux, ToDictMixin):
                 container_asset = {"host_ip": self.host_ip}
                 container_asset["mgmt_ssh_username"] = "root"
                 container_asset["mgmt_ssh_password"] = "fun123"
-                container_asset["mgmt_ssh_port"] = container_ssh_port
-                container_asset["pool1_ports"] = pool1_ports
+                container_asset["mgmt_ssh_port"] = pool0_allocation[0]["external"]
+                container_asset["pool1_ports"] = pool1_allocation
                 container_asset["internal_ip"] = internal_ip
-                container_asset["pool2_ports"] = pool2_ports
+                container_asset["pool2_ports"] = pool2_allocation
                 container_asset["name"] = container_name
                 self.containers_assets[container_name] = container_asset
                 break
@@ -288,25 +265,27 @@ class DockerHost(Linux, ToDictMixin):
                     except Exception as ex:
                         fun_test.critical(str(ex))
 
+                port0_allocator.de_allocate_ports([x["external"] for x in pool0_allocation])
+                port1_allocator.de_allocate_ports([x["external"] for x in pool1_allocation])
+                port2_allocator.de_allocate_ports([x["external"] for x in pool2_allocation])
                 m = re.search("(\d+)\s+failed:\s+port\s+is\s+already", message)
-                self.de_allocate_pool1_ports(external_pool1_ports)
                 if m:
                     used_up_port = int(m.group(1))
-                    if used_up_port == container_ssh_port:
-                        self.allocate_container_ssh_port(used_up_port)
-                    if used_up_port in external_pool2_ports:
-                        self.allocate_pool2_port(used_up_port)
-                    if used_up_port in external_pool1_ports:
-                        self.allocate_pool1_port(used_up_port)
+                    if used_up_port in [x["external"] for x in pool0_allocation]:
+                        port0_allocator.allocate_port(used_up_port)
+                    if used_up_port in [x["external"] for x in pool2_allocation]:
+                        port1_allocator.allocate_port(used_up_port)
+                    if used_up_port in [x["external"] for x in pool1_allocation]:
+                        port2_allocator.allocate_port(used_up_port)
 
                 port_retries += 1
                 if port_retries >= max_port_retries:
                     raise FunTestLibException("Unable to bind to any port, max_retries: {} reached".format(max_port_retries))
             except Exception as ex:
+                fun_test.critical(ex)
                 if allocated_container:
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
-                    fun_test.critical(ex)
                     break
 
 
