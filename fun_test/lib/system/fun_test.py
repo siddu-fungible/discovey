@@ -177,7 +177,9 @@ class FunTest:
 
     def debug(self, message):
         if self.debug_enabled:
-            self.log(message=message, level=self.LOG_LEVEL_DEBUG)
+            outer_frames = inspect.getouterframes(inspect.currentframe())
+            calling_module = self._get_calling_module(outer_frames)
+            self.log(message=message, level=self.LOG_LEVEL_DEBUG, calling_module=calling_module)
 
     def log_function(self):
         pass
@@ -218,11 +220,24 @@ class FunTest:
 
         stack_s = "".join(s)
         message = "\nTraceback:\n" + message + "\n" + stack_s
-        self.log(message=message, level=self.LOG_LEVEL_CRITICAL)
+        outer_frames = inspect.getouterframes(inspect.currentframe())
+        # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+        calling_module = self._get_calling_module(outer_frames)
+        self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
 
 
     def _get_module_name(self, outer_frames):
-        return os.path.basename(outer_frames[0][1]).strip(".py")
+        module_name = os.path.basename(outer_frames[0][1]).strip(".py")
+        line_number = outer_frames[0][2]
+        return (module_name, line_number)
+
+    def _get_calling_module(self, outer_frames):
+        module_info = None
+        for f in outer_frames:
+            if not f[1].endswith("fun_test.py"):
+                module_info = (os.path.basename(f[1]).strip(".py"), f[2])
+                break
+        return module_info
 
     def _is_selected_module(self, module_name):
         return module_name in self.logging_selected_modules
@@ -241,12 +256,17 @@ class FunTest:
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
+        module_line_info = ""
+        if level in [self.LOG_LEVEL_DEBUG, self.LOG_LEVEL_CRITICAL]:
+            if calling_module:
+                module_line_info = "{}.py:{} ".format(calling_module[0], calling_module[1])
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             if not calling_module:
-                module_name = self._get_module_name(outer_frames=outer_frames[1:])
+                # module_name = self._get_module_name(outer_frames=outer_frames[1:])
+                module_name = self._get_calling_module(outer_frames=outer_frames)
             else:
-                module_name = calling_module
+                module_name = calling_module[0]
             if (not module_name == "fun_test") and not self._is_selected_module(module_name=module_name):
                 return
             else:
@@ -256,9 +276,9 @@ class FunTest:
 
         level_name = ""
         if level == self.LOG_LEVEL_CRITICAL:
-            level_name = "CRITICAL"
+            level_name = "CRITICAL: {}".format(module_line_info)
         elif level == self.LOG_LEVEL_DEBUG:
-            level_name = "DEBUG"
+            level_name = "DEBUG: {}".format(module_line_info)
         if level is not self.LOG_LEVEL_NORMAL:
             message = "%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
@@ -298,7 +318,8 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            calling_module = self._get_calling_module(outer_frames=outer_frames)
         s = "\n{}\n{}\n".format(message, "=" * len(message))
         self.log(s, calling_module=calling_module)
 
@@ -309,7 +330,8 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            calling_module = self._get_calling_module(outer_frames=outer_frames)
         if trace_id:
             self.trace(id=trace_id, log=self.buf)
         self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, no_timestamp=True)
