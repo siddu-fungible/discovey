@@ -11,7 +11,6 @@ SPEC_FILE = ASSET_DIR + "/" + "docker_hosts.json"
 class AssetManager:
     ASSET_SPEC = ASSET_DIR + "/assets.json"
     ORCHESTRATOR_SPEC = ASSET_DIR + "/orchestrators.json"
-    INTEGRATION_IMAGE_NAME = "integration_jenkins_fetch"
 
 
     def __init__(self):
@@ -68,15 +67,18 @@ class AssetManager:
                         fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                         fun_test.simple_assert(self.docker_host, "Docker host available")
                         fun_test.log("Setting up the integration container for index: {} url: {}".format(index, build_url))
-                        container_asset = self.docker_host.setup_integration_basic_container(base_name="integration_basic",
-                                                                                            id=index + fun_test.get_suite_execution_id(),
-                                                                                            build_url=build_url,
-                                                                                            image_name=self.INTEGRATION_IMAGE_NAME,
-                                                                                            pool0_internal_ports=[22],
-                                                                                            pool1_internal_ports=[50001, 50002, 50003, 50004],
-                                                                                            pool2_internal_ports=[F1.INTERNAL_DPCSH_PORT])
+                        id = index + fun_test.get_suite_execution_id()
+                        container_name = "{}_{}".format("integration_basic", id)
 
-                        fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
+                        container_asset = self.docker_host.setup_storage_container(build_url=build_url,
+                                                                                   container_name=container_name,
+                                                                                   ssh_internal_ports=[22],
+                                                                                   qemu_internal_ports=[50001, 50002,
+                                                                                                        50003, 50004],
+                                                                                   dpcsh_internal_ports=[
+                                                                                       F1.INTERNAL_DPCSH_PORT])
+
+                        fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(id))
                         orchestrator = DockerContainerOrchestrator.get(container_asset)
                     else:
                         orchestrator = DockerHost.get(one_asset)

@@ -60,7 +60,11 @@ class DockerHost(Linux, ToDictMixin):
     BASE_POOL2_PORT = 40219
     CONTAINER_START_UP_TIME_DEFAULT = 30
 
-    CONTAINER_INTERNAL_SSH_PORT = 22
+    SSH_USERNAME = "root"
+    SSH_PASSWORD = "fun123"
+
+    STORAGE_IMAGE_NAME = "integration_jenkins_fetch"
+
 
     DOCKER_STATUS_RUNNING = "running"
     def __init__(self,
@@ -71,10 +75,7 @@ class DockerHost(Linux, ToDictMixin):
                                          ssh_port=properties["mgmt_ssh_port"])
         self.remote_api_port = properties["remote_api_port"]
         self.spec = properties
-        self.TO_DICT_VARS.extend(["allocated_container_ssh_ports",
-                                  "allocated_pool1_ports",
-                                  "allocated_pool2_ports",
-                                  "containers_assets"])
+        self.TO_DICT_VARS.extend(["containers_assets"])
 
     def health(self):
         fun_test.debug("Health of {}".format(self.name))
@@ -121,9 +122,6 @@ class DockerHost(Linux, ToDictMixin):
         self.name = "DockerHost: {}".format(self.host_ip)
         self.containers_assets = collections.OrderedDict()
         self.client = None
-        self.allocated_container_ssh_ports = [self.BASE_CONTAINER_SSH_PORT]
-        self.allocated_pool1_ports = [self.BASE_POOL1_PORT]
-        self.allocated_pool2_ports = [self.BASE_POOL2_PORT]
 
     @fun_test.safe
     def get_container_asset_by_internal_ip(self, internal_ip):
@@ -156,38 +154,33 @@ class DockerHost(Linux, ToDictMixin):
         return container
 
     @fun_test.safe
-    def get_integration_basic_container(self, image_name, launch=True):
-        container = self.get_container_by_image(image_name=image_name)
-        return container
-
-    def allocate_container_ssh_port(self, port):
-        self.allocated_container_ssh_ports.append(port)
-        self.allocated_container_ssh_ports = sorted(list(set(self.allocated_container_ssh_ports)))
-
-
-
-
+    def setup_storage_container(self,
+                               container_name,
+                               build_url,
+                               ssh_internal_ports,
+                               qemu_internal_ports,
+                               dpcsh_internal_ports):
+        return self.setup_container(image_name=self.STORAGE_IMAGE_NAME,
+                                    container_name=container_name,
+                                    pool0_internal_ports=ssh_internal_ports,
+                                    pool1_internal_ports=qemu_internal_ports,
+                                    pool2_internal_ports=dpcsh_internal_ports,
+                                    command=build_url)
 
     @fun_test.safe
-    def setup_integration_basic_container(self,
-                                          image_name,
-                                          base_name,
-                                          id,
-                                          build_url,
-                                          pool0_internal_ports,
-                                          pool1_internal_ports,
-                                          pool2_internal_ports):
+    def setup_container(self,
+                        image_name,
+                        container_name,
+                        command,
+                        pool0_internal_ports,
+                        pool1_internal_ports,
+                        pool2_internal_ports):
         container_asset = {}
         allocated_container = None
 
         self.connect()   #TODO validate connect
-        container = self.get_integration_basic_container(image_name)
-        if container:
-            fun_test.simple_assert(container, "Atleast one integration basic container")
-            container = container[0]
 
         ports_dict = collections.OrderedDict()
-        container_name = "{}_{}".format(base_name, id)
 
         port_retries = 0
         max_port_retries = 100
@@ -195,7 +188,6 @@ class DockerHost(Linux, ToDictMixin):
         while port_retries < max_port_retries:
             container = self.get_container_by_name(name=container_name)
             if container:
-
                 try:
                     container.stop()
                     fun_test.debug("Stopped Container: {}".format(container.name))
@@ -222,7 +214,7 @@ class DockerHost(Linux, ToDictMixin):
                 pool2_allocation = port2_allocator.prepare_ports_dict(ports_dict=ports_dict)
 
                 allocated_container = self.client.containers.run(image_name,
-                                           command=build_url,
+                                           command=command,
                                            detach=True,
                                            privileged=True,
                                            ports=ports_dict,
@@ -237,12 +229,12 @@ class DockerHost(Linux, ToDictMixin):
 
                 port_retries += 1
                 container_asset = {"host_ip": self.host_ip}
-                container_asset["mgmt_ssh_username"] = "root"
-                container_asset["mgmt_ssh_password"] = "fun123"
+                container_asset["mgmt_ssh_username"] = self.SSH_USERNAME
+                container_asset["mgmt_ssh_password"] = self.SSH_PASSWORD
                 container_asset["mgmt_ssh_port"] = pool0_allocation[0]["external"]
                 container_asset["pool1_ports"] = pool1_allocation
-                container_asset["internal_ip"] = internal_ip
                 container_asset["pool2_ports"] = pool2_allocation
+                container_asset["internal_ip"] = internal_ip
                 container_asset["name"] = container_name
                 self.containers_assets[container_name] = container_asset
                 break
