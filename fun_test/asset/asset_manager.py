@@ -72,8 +72,8 @@ class AssetManager:
                                                                                             id=index + fun_test.get_suite_execution_id(),
                                                                                             build_url=build_url,
                                                                                             image_name=self.INTEGRATION_IMAGE_NAME,
-                                                                                            num_qemu_ports=2,  #TODO
-                                                                                            internal_dpcsh_port=F1.INTERNAL_DPCSH_PORT)
+                                                                                            pool1_internal_ports=[50001, 50002, 50003, 50004],
+                                                                                            pool2_internal_ports=[F1.INTERNAL_DPCSH_PORT])
 
                         fun_test.test_assert(container_asset, "Setup integration basic container: {}".format(id))
                         orchestrator = DockerContainerOrchestrator.get(container_asset)

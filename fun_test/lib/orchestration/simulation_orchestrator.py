@@ -115,17 +115,6 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         self.dpcsh_port = dpcsh_port
         self.qemu_ssh_ports = qemu_ssh_ports
 
-    @staticmethod
-    def get(asset_properties):
-        s = DockerContainerOrchestrator(host_ip=asset_properties["host_ip"],
-                                        ssh_username=asset_properties["mgmt_ssh_username"],
-                                        ssh_password=asset_properties["mgmt_ssh_password"],
-                                        ssh_port=asset_properties["mgmt_ssh_port"],
-                                        dpcsh_port=asset_properties["dpcsh_port"],
-                                        qemu_ssh_ports=asset_properties["qemu_ssh_ports"])
-        s.TO_DICT_VARS.append("dpcsh_port", "qemu_ssh_ports")
-        return s
-
     def describe(self):
         self.docker_host.describe()
 
@@ -149,8 +138,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                                           ssh_username=asset_properties["mgmt_ssh_username"],
                                           ssh_password=asset_properties["mgmt_ssh_password"],
                                           ssh_port=asset_properties["mgmt_ssh_port"],
-                                          dpcsh_port=asset_properties["dpcsh_port"],
-                                          qemu_ssh_ports=asset_properties["qemu_ssh_ports"])
+                                          dpcsh_port=asset_properties["pool2_ports"][0]["external"],
+                                          qemu_ssh_ports=asset_properties["pool1_ports"])
         return obj
 
     def post_init(self):

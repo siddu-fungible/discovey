@@ -12,12 +12,11 @@ import re, collections
 class DockerHost(Linux, ToDictMixin):
 
     BASE_CONTAINER_SSH_PORT = 3219
-    BASE_QEMU_SSH_PORT = 2219
-    BASE_DPCSH_PORT = 40219
+    BASE_POOL1_PORT = 2219
+    BASE_POOL2_PORT = 40219
     CONTAINER_START_UP_TIME_DEFAULT = 30
 
     CONTAINER_INTERNAL_SSH_PORT = 22
-    CONTAINER_INTERNAL_QEMU_PORTS = [50001, 50002, 50003, 50004]
 
     DOCKER_STATUS_RUNNING = "running"
     def __init__(self,
@@ -29,8 +28,8 @@ class DockerHost(Linux, ToDictMixin):
         self.remote_api_port = properties["remote_api_port"]
         self.spec = properties
         self.TO_DICT_VARS.extend(["allocated_container_ssh_ports",
-                                  "allocated_qemu_ssh_ports",
-                                  "allocated_qemu_dpcsh_ports",
+                                  "allocated_pool1_ports",
+                                  "allocated_pool2_ports",
                                   "containers_assets"])
 
     def health(self):
@@ -80,8 +79,8 @@ class DockerHost(Linux, ToDictMixin):
         self.client = None
         self.current_docker_host_asset = None
         self.allocated_container_ssh_ports = [self.BASE_CONTAINER_SSH_PORT]
-        self.allocated_qemu_ssh_ports = [self.BASE_QEMU_SSH_PORT]
-        self.allocated_dpcsh_ports = [self.BASE_DPCSH_PORT]
+        self.allocated_pool1_ports = [self.BASE_POOL1_PORT]
+        self.allocated_pool2_ports = [self.BASE_POOL2_PORT]
 
     @fun_test.safe
     def get_container_asset_by_internal_ip(self, internal_ip):
@@ -128,33 +127,32 @@ class DockerHost(Linux, ToDictMixin):
         self.allocated_container_ssh_ports = sorted(list(set(self.allocated_container_ssh_ports)))
 
 
-    def allocate_qemu_ssh_port(self, port, internal_ip=None): #If called from outside this class, pass internal_ip as container_names are not known outside
-        self.allocated_qemu_ssh_ports.append(port)
-        self.allocated_qemu_ssh_ports = sorted(list(set(self.allocated_qemu_ssh_ports)))  #TODO Expensive
+    def allocate_pool1_port(self, port, internal_ip=None): #If called from outside this class, pass internal_ip as container_names are not known outside
+        self.allocated_pool1_ports.append(port)
+        self.allocated_pool1_ports = sorted(list(set(self.allocated_pool1_ports)))  #TODO Expensive
 
         if internal_ip:
             container_asset = self.get_container_asset_by_internal_ip(internal_ip=internal_ip)
-            container_asset["qemu_ssh_ports"].append(port)
+            container_asset["pool1_ports"].append(port)
 
-    def de_allocate_qemu_ssh_ports(self, ports):
-        map(lambda x: self.allocated_qemu_ssh_ports.remove(x), ports)
+    def de_allocate_pool1_ports(self, ports):
+        map(lambda x: self.allocated_pool1_ports.remove(x), ports)
 
-    def allocate_dpcsh_port(self, port):
-        self.allocated_dpcsh_ports.append(port)
-        self.allocated_dpcsh_ports = sorted(list(set(self.allocated_dpcsh_ports)))
+    def allocate_pool2_port(self, port):
+        self.allocated_pool2_ports.append(port)
+        self.allocated_pool2_ports = sorted(list(set(self.allocated_pool2_ports)))
 
     def get_next_container_ssh_port(self):
         next_port = self._get_next_port(source=self.allocated_container_ssh_ports)
         # self.allocate_container_ssh_port(port=next_port)
         return next_port
 
-    def get_next_qemu_ssh_port(self):
-        next_port = self._get_next_port(source=self.allocated_qemu_ssh_ports)
-        # self.allocate_qemu_ssh_port(port=next_port)
+    def get_next_pool1_port(self):
+        next_port = self._get_next_port(source=self.allocated_pool1_ports)
         return next_port
 
-    def get_next_dpcsh_port(self):
-        next_port = self._get_next_port(source=self.allocated_dpcsh_ports)
+    def get_next_pool2_port(self):
+        next_port = self._get_next_port(source=self.allocated_pool2_ports)
         return next_port
 
     def _get_next_port(self, source):
@@ -179,8 +177,8 @@ class DockerHost(Linux, ToDictMixin):
                                           base_name,
                                           id,
                                           build_url,
-                                          num_qemu_ports,
-                                          internal_dpcsh_port):
+                                          pool1_internal_ports,
+                                          pool2_internal_ports):
         container_asset = {}
         allocated_container = None
 
@@ -212,8 +210,10 @@ class DockerHost(Linux, ToDictMixin):
                 fun_test.debug("Retrying container creation with a different port: port_retries: {}, max_retries: {}".format(port_retries, max_port_retries))
 
             container_ssh_port = 0
-            dpcsh_port = 0
-            external_qemu_ssh_ports = []
+            pool2_port = 0
+            external_pool1_ports = []
+            external_pool2_ports = []
+
             try:
                 container_ssh_port = self.get_next_container_ssh_port()
 
@@ -221,19 +221,28 @@ class DockerHost(Linux, ToDictMixin):
 
                 ports_dict[str(self.CONTAINER_INTERNAL_SSH_PORT)] = str(container_ssh_port)
 
-                qemu_ssh_ports = []
-                for index in range(num_qemu_ports):
-                    internal_port = self.CONTAINER_INTERNAL_QEMU_PORTS[index]
-                    qemu_ssh_port = self.get_next_qemu_ssh_port()
-                    self.allocate_qemu_ssh_port(qemu_ssh_port)
-                    external_port = qemu_ssh_port
+                pool1_ports = []
+                for index in range(len(pool1_internal_ports)):
+                    internal_port = pool1_internal_ports[index]
+                    external_port = self.get_next_pool1_port()
+                    self.allocate_pool1_port(external_port)
                     ports_dict[str(internal_port)] = str(external_port)
-                    fun_test.debug("Container QEMU SSH port: {}".format(external_port))
-                    qemu_ssh_ports.append({"internal": internal_port, "external": external_port})
-                    external_qemu_ssh_ports.append(external_port)
+                    fun_test.debug("Container Pool1 Port: {}".format(external_port))
+                    pool1_ports.append({"internal": internal_port, "external": external_port})
+                    external_pool1_ports.append(external_port)
 
-                dpcsh_port = self.get_next_dpcsh_port()
-                ports_dict[str(internal_dpcsh_port)] = dpcsh_port
+                pool2_ports = []
+                for index in range(len(pool2_internal_ports)):
+                    internal_port = pool2_internal_ports[index]
+                    external_port = self.get_next_pool2_port()
+                    self.allocate_pool2_port(external_port)
+                    ports_dict[str(internal_port)] = str(external_port)
+                    fun_test.debug("Container Pool2 Port: {}".format(external_port))
+                    pool2_ports.append({"internal": internal_port, "external": external_port})
+                    external_pool2_ports.append(external_port)
+
+
+
                 allocated_container = self.client.containers.run(image_name,
                                            command=build_url,
                                            detach=True,
@@ -244,10 +253,9 @@ class DockerHost(Linux, ToDictMixin):
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
                 allocated_container = self.client.containers.get(container_name)
-                self.allocate_container_ssh_port(container_ssh_port) #TODO: allocate qemu
+                self.allocate_container_ssh_port(container_ssh_port)
                 internal_ip = allocated_container.attrs["NetworkSettings"]["IPAddress"]
 
-                # map(lambda x: self.allocate_qemu_ssh_port(x["external"]), qemu_ssh_ports)
                 fun_test.log("Launched container: {}".format(container_name))
 
                 port_retries += 1
@@ -255,9 +263,9 @@ class DockerHost(Linux, ToDictMixin):
                 container_asset["mgmt_ssh_username"] = "root"
                 container_asset["mgmt_ssh_password"] = "fun123"
                 container_asset["mgmt_ssh_port"] = container_ssh_port
-                container_asset["qemu_ssh_ports"] = qemu_ssh_ports
+                container_asset["pool1_ports"] = pool1_ports
                 container_asset["internal_ip"] = internal_ip
-                container_asset["dpcsh_port"] = dpcsh_port
+                container_asset["pool2_ports"] = pool2_ports
                 container_asset["name"] = container_name
                 self.containers_assets[container_name] = container_asset
                 break
@@ -281,15 +289,15 @@ class DockerHost(Linux, ToDictMixin):
                         fun_test.critical(str(ex))
 
                 m = re.search("(\d+)\s+failed:\s+port\s+is\s+already", message)
-                self.de_allocate_qemu_ssh_ports(external_qemu_ssh_ports)
+                self.de_allocate_pool1_ports(external_pool1_ports)
                 if m:
                     used_up_port = int(m.group(1))
                     if used_up_port == container_ssh_port:
                         self.allocate_container_ssh_port(used_up_port)
-                    if used_up_port == dpcsh_port:
-                        self.allocate_dpcsh_port(used_up_port)
-                    if used_up_port in external_qemu_ssh_ports:
-                        self.allocate_qemu_ssh_port(used_up_port)
+                    if used_up_port in external_pool2_ports:
+                        self.allocate_pool2_port(used_up_port)
+                    if used_up_port in external_pool1_ports:
+                        self.allocate_pool1_port(used_up_port)
 
                 port_retries += 1
                 if port_retries >= max_port_retries:
@@ -330,6 +338,3 @@ if __name__ == "__main__":
     import asset.asset_manager
     dm = asset.asset_manager.AssetManager().get_any_docker_host()
     print dm.health()
-    #i = dm.setup_integration_basic_container(base_name="integration_john", id=0, funos_url=funos_url, qemu_port_redirects=[2220])
-    #i = dm.setup_integration_basic_container(base_name="integration_john", id=1, funos_url=funos_url, qemu_port_redirects=[2220])
-    #i = dm.setup_integration_basic_container(base_name="integration_john", id=2, funos_url=funos_url, qemu_port_redirects=[2220])

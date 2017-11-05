@@ -260,7 +260,7 @@ class FunTest:
         elif level == self.LOG_LEVEL_DEBUG:
             level_name = "DEBUG"
         if level is not self.LOG_LEVEL_NORMAL:
-            message = "\n%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
+            message = "%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
         if self.log_timestamps and (not no_timestamp):
             message = "[{}] {}".format(str(datetime.datetime.now()), message)
