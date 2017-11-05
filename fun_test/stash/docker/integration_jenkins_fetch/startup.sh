@@ -66,6 +66,7 @@ funos_posix_name=funos-posix
 tar -xf $funos_tgz_name build/$funos_posix_name
 mv build/$funos_posix_name $funos_posix_name
 rm -rf build
+chmod 777 $dpcsh_name
 
 
 echo "-------------------"
@@ -80,6 +81,3 @@ while [ 1 ]
     do
         sleep 1
     done
-
-
-

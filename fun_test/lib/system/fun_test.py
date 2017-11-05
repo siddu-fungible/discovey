@@ -473,9 +473,9 @@ class FunTest:
         if not (type(actual) is dict) and (type(expected) is dict):
             expected = str(expected)
             actual = str(actual)
-        assert_message = "\nASSERT PASSED: expected={} actual={}, {}".format(expected, actual, message)
+        assert_message = "ASSERT PASSED: expected={} actual={}, {}".format(expected, actual, message)
         if not expected == actual:
-            assert_message = "\nASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
+            assert_message = "ASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
             self._append_assert_test_metric(assert_message)
             self.fun_xml_obj.add_checkpoint(checkpoint=message,
                                             expected=expected,
