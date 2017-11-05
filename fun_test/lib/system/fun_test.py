@@ -338,15 +338,20 @@ class FunTest:
         # sys.stdout.write(self.buf)
         self.buf = ""
 
-    def _print_log_green(self, message):
-        pass
-        message = "\n%s%s: %s%s" % (self.LOG_COLORS["GREEN"], "", message, self.LOG_COLORS['RESET'])
+    def _print_log_green(self, message, calling_module=None):
+        module_info = ""
+        if calling_module:
+            module_info = "{}.py: {}".format(calling_module[0], calling_module[1])
+        message = "\n%s%s: %s %s%s" % (self.LOG_COLORS["GREEN"], "", module_info, message, self.LOG_COLORS['RESET'])
 
         sys.stdout.write(str(message) + "\n")
         sys.stdout.flush()
 
     def sleep(self, message, seconds=5):
-        self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message)
+        outer_frames = inspect.getouterframes(inspect.currentframe())
+        calling_module = self._get_calling_module(outer_frames)
+        self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message,
+                              calling_module=calling_module)
         time.sleep(seconds)
 
     def log_parameters(self, the_function):  #TODO: should we replace this with def safe?
