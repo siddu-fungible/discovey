@@ -23,7 +23,7 @@ class F1(Linux, ToDictMixin):
     def post_init(self):
         self.fun_os_process_id = None
         self.external_dpcsh_port = None
-        self.TO_DICT_VARS.append("fun_os_process_id")
+        self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
     def start(self, dpcsh=False, dpcsh_only=False, external_dpcsh_port=None):
         if external_dpcsh_port:
