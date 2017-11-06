@@ -383,7 +383,7 @@ class FunTest:
         format = "{:<4} {:<10} {:<100}"
         self.log(format.format("Id", "Result", "Description"), no_timestamp=True)
         for k, v in self.test_metrics.items():
-            self.log(format.format(k, v["result"], v["summary"]))
+            self.log(format.format(k, v["result"], v["summary"]), no_timestamp=True)
 
         self.log("http://127.0.0.1:{}/static/logs/".format(WEB_SERVER_PORT) + self.script_file_name.replace(".py", ".html"),
                  no_timestamp=True)
@@ -393,7 +393,7 @@ class FunTest:
         assert_list = metrics["asserts"]
         self.log_section("Testcase {} summary".format(test_case_id))
         for assert_result in assert_list:
-            self.log(assert_result)
+            self.log(assert_result, no_timestamp=True)
 
     def _initialize(self):
         if self.initialized:
