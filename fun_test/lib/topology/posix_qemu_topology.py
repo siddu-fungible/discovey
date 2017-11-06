@@ -2,6 +2,7 @@ from lib.system.fun_test import fun_test
 from lib.fun.f1 import F1
 from lib.orchestration.simulation_orchestrator import SimulationOrchestrator
 from asset.asset_manager import AssetManager
+from lib.orchestration.orchestrator import OrchestratorType
 
 class PosixQemuTopology:
 
@@ -24,10 +25,10 @@ class PosixQemuTopology:
         result = None
         try:
             asset_manager = AssetManager()
-            simulation_orchestrator = SimulationOrchestrator.get(asset_manager.get_orchestrator(type=asset_manager.ORCHESTRATOR_TYPE_SIMULATION))
+            simulation_orchestrator = SimulationOrchestrator.get(asset_manager.get_orchestrator(type=OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION))
             self.orchestrators.append(simulation_orchestrator)
 
-            f1_obj = F1.get(asset_manager.get_asset(name="ubuntu1"))
+            f1_obj = F1.get(asset_manager.get_any_simple_host(name="ubuntu1"))
 
             self.duts.append(f1_obj)
 
