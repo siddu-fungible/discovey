@@ -27,13 +27,13 @@ class SuiteWorker(Thread):
         self.job_id = job_spec["job_id"]
         self.job_dir = None
         self.job_test_case_ids = None
-        self.job_build_tgz_url = "http://dochub.fungible.local/doc/jenkins/funos/940/funos.tgz"
+        self.job_build_url = "http://dochub.fungible.local/doc/jenkins/funos/940"
         if 'script_path' in job_spec:
             self.job_script_path = job_spec["script_path"]
         if "test_case_ids" in job_spec:
             self.job_test_case_ids = job_spec["test_case_ids"]
-        if "build_tgz_url" in job_spec:
-            self.job_build_tgz_url = job_spec["build_tgz_url"]
+        if "build_url" in job_spec:
+            self.job_build_url = job_spec["build_url"]
 
     def prepare_job_directory(self):
         self.job_dir = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(self.job_id)
@@ -98,6 +98,8 @@ class SuiteWorker(Thread):
         scheduler_logger.info("Running Job: {}".format(self.job_id))
         suite_execution_id = self.job_id
         self.prepare_job_directory()
+        build_url = self.job_build_url
+        '''
         r = requests.post(MICROSERVICE_TGZ_EXTRACTION_URL,
                           data=json.dumps({'suite_execution_id': str(self.job_id),
                                            'tgz_url': self.job_build_tgz_url}))
@@ -107,6 +109,8 @@ class SuiteWorker(Thread):
         else:
             raise Exception("Unable to retrieve funos-posix-url")
         scheduler_logger.debug("FunOs Url:" + funos_posix_url)
+        '''
+
 
         # Setup the suites own logger
         local_scheduler_logger = logging.getLogger("scheduler_log")
@@ -152,7 +156,7 @@ class SuiteWorker(Thread):
                           "--" + "logs_dir={}".format(self.job_dir),
                           "--" + "suite_execution_id={}".format(suite_execution_id),
                           "--" + "relative_path={}".format(relative_path),
-                          "--" + "funos_posix_url={}".format(funos_posix_url)]
+                          "--" + "build_url={}".format(self.job_build_url)]
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))

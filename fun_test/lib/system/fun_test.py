@@ -85,8 +85,8 @@ class FunTest:
                             dest="test_case_ids",
                             default=None,
                             help="To be used only by the scheduler")
-        parser.add_argument('--funos_posix_url',
-                            dest="funos_posix_url",
+        parser.add_argument('--build_url',
+                            dest="build_url",
                             default=None,
                             help="To be used only by the scheduler")
         args = parser.parse_args()
@@ -95,7 +95,7 @@ class FunTest:
         self.relative_path = args.relative_path
         self.selected_test_case_ids = None
         self.current_test_case_execution_id = None
-        self.funos_posix_url = args.funos_posix_url
+        self.build_url = args.build_url
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
 
@@ -131,7 +131,7 @@ class FunTest:
         sys.setdefaultencoding('UTF8') #Needed for xml
         self.counter = 0  # Mostly used for testing
 
-        self.log_timestamps = False
+        self.log_timestamps = True
 
     def create_test_case_artifact_file(self, post_fix_name, contents):
         artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
@@ -177,7 +177,9 @@ class FunTest:
 
     def debug(self, message):
         if self.debug_enabled:
-            self.log(message=message, level=self.LOG_LEVEL_DEBUG)
+            outer_frames = inspect.getouterframes(inspect.currentframe())
+            calling_module = self._get_calling_module(outer_frames)
+            self.log(message=message, level=self.LOG_LEVEL_DEBUG, calling_module=calling_module)
 
     def log_function(self):
         pass
@@ -218,11 +220,24 @@ class FunTest:
 
         stack_s = "".join(s)
         message = "\nTraceback:\n" + message + "\n" + stack_s
-        self.log(message=message, level=self.LOG_LEVEL_CRITICAL)
+        outer_frames = inspect.getouterframes(inspect.currentframe())
+        # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+        calling_module = self._get_calling_module(outer_frames)
+        self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
 
 
     def _get_module_name(self, outer_frames):
-        return os.path.basename(outer_frames[0][1]).strip(".py")
+        module_name = os.path.basename(outer_frames[0][1]).strip(".py")
+        line_number = outer_frames[0][2]
+        return (module_name, line_number)
+
+    def _get_calling_module(self, outer_frames):
+        module_info = None
+        for f in outer_frames:
+            if not f[1].endswith("fun_test.py"):
+                module_info = (os.path.basename(f[1]).strip(".py"), f[2])
+                break
+        return module_info
 
     def _is_selected_module(self, module_name):
         return module_name in self.logging_selected_modules
@@ -230,16 +245,28 @@ class FunTest:
     def dict_to_json_string(self, d):
         return json.dumps(d, indent=4)
 
-    def log(self, message, level=LOG_LEVEL_NORMAL, newline=True, trace_id=None, stdout=True, calling_module=None):
+    def log(self,
+            message,
+            level=LOG_LEVEL_NORMAL,
+            newline=True,
+            trace_id=None,
+            stdout=True,
+            calling_module=None,
+            no_timestamp=False):
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
+        module_line_info = ""
+        if level in [self.LOG_LEVEL_DEBUG, self.LOG_LEVEL_CRITICAL]:
+            if calling_module:
+                module_line_info = "{}.py:{} ".format(calling_module[0], calling_module[1])
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             if not calling_module:
-                module_name = self._get_module_name(outer_frames=outer_frames[1:])
+                # module_name = self._get_module_name(outer_frames=outer_frames[1:])
+                module_name = self._get_calling_module(outer_frames=outer_frames)
             else:
-                module_name = calling_module
+                module_name = calling_module[0]
             if (not module_name == "fun_test") and not self._is_selected_module(module_name=module_name):
                 return
             else:
@@ -249,13 +276,13 @@ class FunTest:
 
         level_name = ""
         if level == self.LOG_LEVEL_CRITICAL:
-            level_name = "CRITICAL"
+            level_name = "CRITICAL: {}".format(module_line_info)
         elif level == self.LOG_LEVEL_DEBUG:
-            level_name = "DEBUG"
+            level_name = "DEBUG: {}".format(module_line_info)
         if level is not self.LOG_LEVEL_NORMAL:
-            message = "\n%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
+            message = "%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
-        if self.log_timestamps:
+        if self.log_timestamps and (not no_timestamp):
             message = "[{}] {}".format(str(datetime.datetime.now()), message)
 
         nl = ""
@@ -291,7 +318,8 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            calling_module = self._get_calling_module(outer_frames=outer_frames)
         s = "\n{}\n{}\n".format(message, "=" * len(message))
         self.log(s, calling_module=calling_module)
 
@@ -302,22 +330,28 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
+            calling_module = self._get_calling_module(outer_frames=outer_frames)
         if trace_id:
             self.trace(id=trace_id, log=self.buf)
-        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module)
+        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, no_timestamp=True)
         # sys.stdout.write(self.buf)
         self.buf = ""
 
-    def _print_log_green(self, message):
-        pass
-        message = "\n%s%s: %s%s" % (self.LOG_COLORS["GREEN"], "", message, self.LOG_COLORS['RESET'])
+    def _print_log_green(self, message, calling_module=None):
+        module_info = ""
+        if calling_module:
+            module_info = "{}.py: {}".format(calling_module[0], calling_module[1])
+        message = "\n%s%s: %s %s%s" % (self.LOG_COLORS["GREEN"], "", module_info, message, self.LOG_COLORS['RESET'])
 
         sys.stdout.write(str(message) + "\n")
         sys.stdout.flush()
 
     def sleep(self, message, seconds=5):
-        self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message)
+        outer_frames = inspect.getouterframes(inspect.currentframe())
+        calling_module = self._get_calling_module(outer_frames)
+        self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message,
+                              calling_module=calling_module)
         time.sleep(seconds)
 
     def log_parameters(self, the_function):  #TODO: should we replace this with def safe?
@@ -354,11 +388,12 @@ class FunTest:
     def _print_summary(self):
         self.log_section(message="Summary")
         format = "{:<4} {:<10} {:<100}"
-        self.log(format.format("Id", "Result", "Description"))
+        self.log(format.format("Id", "Result", "Description"), no_timestamp=True)
         for k, v in self.test_metrics.items():
             self.log(format.format(k, v["result"], v["summary"]))
 
-        self.log("http://127.0.0.1:{}/static/logs/".format(WEB_SERVER_PORT) + self.script_file_name.replace(".py", ".html"))
+        self.log("http://127.0.0.1:{}/static/logs/".format(WEB_SERVER_PORT) + self.script_file_name.replace(".py", ".html"),
+                 no_timestamp=True)
 
     def print_test_case_summary(self, test_case_id):
         metrics = self.test_metrics[test_case_id]
@@ -462,9 +497,12 @@ class FunTest:
         self.test_assert(expression=expression, message=message, ignore_on_success=True)
 
     def test_assert_expected(self, expected, actual, message, ignore_on_success=False):
-        assert_message = "\nASSERT PASSED: expected={} actual={}, {}".format(expected, actual, message)
-        if not str(expected) == str(actual):
-            assert_message = "\nASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
+        if not (type(actual) is dict) and (type(expected) is dict):
+            expected = str(expected)
+            actual = str(actual)
+        assert_message = "ASSERT PASSED: expected={} actual={}, {}".format(expected, actual, message)
+        if not expected == actual:
+            assert_message = "ASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
             self._append_assert_test_metric(assert_message)
             self.fun_xml_obj.add_checkpoint(checkpoint=message,
                                             expected=expected,
@@ -611,6 +649,7 @@ class FunTestScript(object):
                         except Exception as ex:
                             fun_test.critical(str(ex))
                     except Exception as ex:
+                        fun_test.critical(str(ex))
                         try:
                             test_case.cleanup()
                         except Exception as ex:

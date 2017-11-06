@@ -15,6 +15,7 @@ Installation:
 # pip install psutil
 # pip install rq
 # pip install zmq
+# pip install pathos
 # export PYTHONPATH=`pwd`
 # cd web/fun_test
 

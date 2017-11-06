@@ -21,9 +21,10 @@ d[2] = "Value2"
 d["Attr3"] = "ValueThree"
 fun_test.print_key_value(title="Attribute Value Table", data=d)
 
-fun_test.log_enable_timestamps()
-fun_test.log("With Timestamp")
 fun_test.log_disable_timestamps()
+fun_test.log("Without Timestamp")
+
+fun_test.log_enable_timestamps()
 
 
 

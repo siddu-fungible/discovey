@@ -28,7 +28,7 @@
             $scope.jobId = null;
             let payload = {};
             payload["suite_path"] = $scope.selectedSuite;
-            payload["build_tgz_url"] = $scope.buildTgzUrl;
+            payload["build_url"] = $scope.buildUrl;
             $http.post('/regression/submit_job', payload).then(function(result){
                 $scope.jobId = parseInt(result.data);
                 $window.location.href = "/regression/suite_detail/" + $scope.jobId;
