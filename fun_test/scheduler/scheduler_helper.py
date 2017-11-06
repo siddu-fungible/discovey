@@ -97,7 +97,6 @@ def process_list(process_name):
     processes = []
 
     for proc in psutil.process_iter():
-        result = False
         try:
             proc_name = proc.name()
             result = process_name in proc_name
