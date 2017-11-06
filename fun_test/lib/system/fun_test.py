@@ -142,8 +142,18 @@ class FunTest:
     def set_topology_json_filename(self, filename):
         self.fun_xml_obj.set_topology_json_filename(filename=filename)
 
+    def get_environment_variable(self, variable):
+        result = None
+        if variable in os.environ:
+            result = os.environ[variable]
+        return result
+
     def get_suite_execution_id(self):
-        return self.suite_execution_id if self.suite_execution_id else 100
+        env_sid = self.get_environment_variable("SUITE_EXECUTION_ID")
+        if not env_sid:
+            env_sid = 100
+        sid = self.suite_execution_id if self.suite_execution_id else env_sid
+        return sid
 
     def get_test_case_execution_id(self):
         return self.current_test_case_execution_id if self.current_test_case_execution_id else 100
@@ -180,9 +190,6 @@ class FunTest:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             calling_module = self._get_calling_module(outer_frames)
             self.log(message=message, level=self.LOG_LEVEL_DEBUG, calling_module=calling_module)
-
-    def log_function(self):
-        pass
 
     def critical(self, message):
         message = str(message)
@@ -221,7 +228,6 @@ class FunTest:
         stack_s = "".join(s)
         message = "\nTraceback:\n" + message + "\n" + stack_s
         outer_frames = inspect.getouterframes(inspect.currentframe())
-        # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
         calling_module = self._get_calling_module(outer_frames)
         self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
 
@@ -353,19 +359,6 @@ class FunTest:
         self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message,
                               calling_module=calling_module)
         time.sleep(seconds)
-
-    def log_parameters(self, the_function):  #TODO: should we replace this with def safe?
-        def inner(*args, **kwargs):
-            if self.debug_enabled:
-                args_s = "args:" + ",".join([str(x) for x in args])
-                args_s += " kwargs:" + ",".join([(k + ":" + str(v)) + " " for k, v in kwargs.items()])
-                self.debug(args_s)
-                return_value = the_function(*args, **kwargs)
-                self.debug("Return:" + str(return_value) + "End Return\n")
-                return return_value
-            else:
-                return the_function(*args, **kwargs)
-        return inner
 
     def safe(self, the_function):
         def inner(*args, **kwargs):

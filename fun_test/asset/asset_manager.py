@@ -21,7 +21,7 @@ class AssetManager:
         #    orchestrator.describe()
         self.docker_host.describe()
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def get_any_simple_host(self, name):
         asset = None
         try:

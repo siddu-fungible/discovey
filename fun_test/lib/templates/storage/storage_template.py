@@ -10,7 +10,7 @@ class StorageTemplate:
     def __init__(self, topology):
         self.topology = topology
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def create_volume(self,
                       host_obj=None,
                       size=32768,
@@ -39,7 +39,7 @@ class StorageTemplate:
         #        pass # open-stack style
         return volume_id
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def attach_volume(self, host_obj):
         if True: # TODO self.topology.mode == fun_test.MODE_SIMULATION:
 
@@ -54,7 +54,7 @@ class StorageTemplate:
             fun_test.sleep("Attach Namespace", 10)
         return True
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def deploy(self):
         deploy_result = False
 

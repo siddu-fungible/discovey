@@ -4,6 +4,9 @@ from lib.host.linux import Linux
 import re, json
 
 class F1(Linux, ToDictMixin):
+    '''
+    F1 class encapsulating ways to start the funos-posix simulator
+    '''
     SIMULATION_FUNOS_BUILD_PATH = "/home/jabraham/FunOS/build"
     DPCSH_PATH = "/home/jabraham/FunTools/dpcsh/dpcsh"
     FUN_OS_SIMULATION_PROCESS = "funos-posix"

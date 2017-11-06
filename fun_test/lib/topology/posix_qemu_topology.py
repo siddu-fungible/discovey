@@ -6,7 +6,7 @@ from lib.orchestration.orchestrator import OrchestratorType
 
 class PosixQemuTopology:
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def __init__(self,
                  num_vm_instances,
                  dpcsh_only=False):
@@ -20,7 +20,7 @@ class PosixQemuTopology:
     def __repr__(self):
         return str(self.__class__)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def deploy(self):
         result = None
         try:
@@ -46,14 +46,14 @@ class PosixQemuTopology:
             fun_test.critical(str(ex))
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def get_vms(self):
         return self.instances
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def get_duts(self):
         return self.duts
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def get_orchestrators(self):
         return self.orchestrators
