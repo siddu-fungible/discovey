@@ -62,6 +62,7 @@ class MultiProcessingTasks:
                 task_key = (func, args, kwargs)
             self.p_results[task_key] = result
         p.close()
+        p.clear()
         p.join()
 
         return True
