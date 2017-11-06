@@ -269,7 +269,6 @@ class FunTest:
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             if not calling_module:
-                # module_name = self._get_module_name(outer_frames=outer_frames[1:])
                 module_name = self._get_calling_module(outer_frames=outer_frames)
             else:
                 module_name = calling_module[0]
@@ -324,7 +323,6 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
             calling_module = self._get_calling_module(outer_frames=outer_frames)
         s = "\n{}\n{}\n".format(message, "=" * len(message))
         self.log(s, calling_module=calling_module)
@@ -336,12 +334,10 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
             calling_module = self._get_calling_module(outer_frames=outer_frames)
         if trace_id:
             self.trace(id=trace_id, log=self.buf)
         self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, no_timestamp=True)
-        # sys.stdout.write(self.buf)
         self.buf = ""
 
     def _print_log_green(self, message, calling_module=None):

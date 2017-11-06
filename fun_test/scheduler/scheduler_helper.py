@@ -1,5 +1,5 @@
 import time, datetime, json, glob
-import logging, logging.handlers, sys
+import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR
 
@@ -92,6 +92,29 @@ def parse_file_to_json(file_name):
     except Exception as ex:
         scheduler_logger.critical(str(ex))
     return result
+
+def process_list(process_name):
+    processes = []
+
+    for proc in psutil.process_iter():
+        result = False
+        try:
+            proc_name = proc.name()
+            result = process_name in proc_name
+            proc_cmd_line = proc.cmdline()
+
+            if result:
+                processes.append((proc_name, proc_cmd_line))
+                continue
+            else:
+                for s in proc_cmd_line:
+                    result = process_name in s
+                    if result:
+                        processes.append((proc_name, proc_cmd_line))
+                        break
+        except:
+            pass
+    return processes
 
 if __name__ == "__main__":
     print get_flat_console_log_file_name(path="/clean_sanity.py")
