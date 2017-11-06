@@ -85,7 +85,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                              "SimulationOrchestrator: Start FunOS")
         return f1_obj
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def launch_docker_instances(self,
                                 type,
                                 ):
