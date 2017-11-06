@@ -395,7 +395,7 @@ class FunTest:
         for assert_result in assert_list:
             self.log(assert_result)
 
-    def initialize(self):
+    def _initialize(self):
         if self.initialized:
             raise FunTestSystemException("FunTest obj initialized twice")
         self.initialized = True
@@ -403,7 +403,7 @@ class FunTest:
     def close(self):
         self._print_summary()
 
-    def get_test_case_text(self,
+    def _get_test_case_text(self,
                                id,
                                summary,
                                steps="None",
@@ -420,23 +420,11 @@ class FunTest:
 
         return s
 
-    def add_topology_table(self, topology_obj):
-        header_labels = ["Name", "IP", "Status"]
-        data_rows = []
-        for node in topology_obj.instances:
-            one_row = [str(node), node.host_ip, "Unknown"]
-            data_rows.append(one_row)
-
-        table_data = {"headers": header_labels, "rows": data_rows}
-
-        self.fun_xml_obj.add_collapsible_tab_panel_tables(header="Topology",
-                                                          panel_items={str(topology_obj): table_data})
-
     def add_table(self, panel_header, table_name, table_data):
         self.fun_xml_obj.add_collapsible_tab_panel_tables(header=panel_header,
                                                           panel_items={table_name: table_data})
 
-    def add_xml_trace(self):
+    def _add_xml_trace(self):
         if self.current_test_case_id in self.traces:
             trace_items = self.traces[self.current_test_case_id]
             self.fun_xml_obj.add_collapsible_tab_panel(header="Traces", panel_items=trace_items)
@@ -448,11 +436,11 @@ class FunTest:
             self.traces[self.current_test_case_id][id] = log
         self.traces[self.current_test_case_id][id] += log
 
-    def start_test(self, id, summary, steps):
+    def _start_test(self, id, summary, steps):
         self.fun_xml_obj.start_test(id=id, summary=summary, steps=steps)
-        self.fun_xml_obj.set_long_summary(long_summary=self.get_test_case_text(id=id,
-                                                                                       summary=summary,
-                                                                                       steps=steps))
+        self.fun_xml_obj.set_long_summary(long_summary=self._get_test_case_text(id=id,
+                                                                                summary=summary,
+                                                                                steps=steps))
         self.log_section("Testcase: Id: {} Description: {}".format(id, summary))
         self.test_metrics[id] = {"summary": summary,
                                  "steps": steps,
@@ -460,19 +448,9 @@ class FunTest:
         self.current_test_case_id = id
         self.test_metrics[self.current_test_case_id]["asserts"] = []
 
-    def end_test(self, result):
+    def _end_test(self, result):
         self.fun_xml_obj.end_test(result=result)
         self.test_metrics[self.current_test_case_id]["result"] = result
-
-    def parse_file_to_json(self, file_name):
-        result = None
-        try:
-            with open(file_name, "r") as infile:
-                contents = infile.read()
-                result = json.loads(contents)
-        except Exception as ex:
-            self.critical("{} has an invalid json format".format(file_name))
-        return result
 
     def _append_assert_test_metric(self, assert_message):
         if self.current_test_case_id in self.test_metrics:
@@ -525,7 +503,7 @@ fun_test = FunTest()
 class FunTestScript(object):
     __metaclass__ = abc.ABCMeta
     def __init__(self):
-        fun_test.initialize()
+        fun_test._initialize()
         self.test_cases = []
         self.summary = "Setup"
         self.steps = ""
@@ -547,7 +525,7 @@ class FunTestScript(object):
 
     @abc.abstractmethod
     def setup(self):
-        fun_test.start_test(id=self.id,
+        fun_test._start_test(id=self.id,
                                summary="Script setup",
                                steps=self.steps)
         script_result = FunTest.FAILED
@@ -588,13 +566,13 @@ class FunTestScript(object):
                                                        suite_execution_id=fun_test.suite_execution_id,
                                                        result=fun_test.FAILED)
             fun_test.critical(str(ex))
-        fun_test.end_test(result=script_result)
+        fun_test._end_test(result=script_result)
 
         return script_result == FunTest.PASSED
 
     @abc.abstractmethod
     def cleanup(self):
-        fun_test.start_test(id=FunTest.CLEANUP_TC_ID,
+        fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
                                summary="Script cleanup",
                                steps=self.steps)
         result = FunTest.FAILED
@@ -603,7 +581,7 @@ class FunTestScript(object):
             result = FunTest.PASSED
         except TestException as ex:
             fun_test.critical(ex)
-        fun_test.end_test(result=result)
+        fun_test._end_test(result=result)
 
     def _close(self):
         fun_test.close()
@@ -623,7 +601,7 @@ class FunTestScript(object):
                     if fun_test.selected_test_case_ids:
                         if not test_case.id in fun_test.selected_test_case_ids:
                             continue
-                    fun_test.start_test(id=test_case.id,
+                    fun_test._start_test(id=test_case.id,
                                            summary=test_case.summary,
                                            steps=test_case.steps)
                     test_result = FunTest.FAILED
@@ -647,9 +625,9 @@ class FunTestScript(object):
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
-                    fun_test.add_xml_trace()
+                    fun_test._add_xml_trace()
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
-                    fun_test.end_test(result=test_result)
+                    fun_test._end_test(result=test_result)
                     if fun_test.suite_execution_id:
                         models_helper.report_test_case_execution_result(execution_id=test_case.execution_id,
                                                                         result=test_result)

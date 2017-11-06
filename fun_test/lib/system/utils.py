@@ -1,5 +1,5 @@
 from lib.system.fun_test import fun_test
-import types, collections
+import types, collections, json
 from pathos.multiprocessing import ProcessingPool, cpu_count
 
 
@@ -70,3 +70,13 @@ class MultiProcessingTasks:
     def get_result(self, task_key):
         return self.p_results[task_key].get(timeout=1)
 
+
+def parse_file_to_json(file_name):
+    result = None
+    try:
+        with open(file_name, "r") as infile:
+            contents = infile.read()
+            result = json.loads(contents)
+    except Exception as ex:
+        fun_test.critical("{} has an invalid json format".format(file_name))
+    return result
