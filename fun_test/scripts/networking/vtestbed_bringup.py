@@ -17,13 +17,13 @@ class BringUpTestBed(FunTestScript):
                     R: number of racks, F: number of F1s per rack, S: number of spines
         2. Step 2: Verify BGP neighbors' ip addrs and ASNs match what are configured, and prefixes received match 
                     expected number
-        3. Step 3: Verify ISIS neighbors are up
+        3. Step 3: Verify ISIS neighbors' system id, interface match what are configured, and state is up
         4. Step 4: Verify number of routes learnt
         """)
 
     def setup(self):
         self.topo = Topology()
-        self.topo.create(NUM_OF_RACKS, NUM_OF_F1_PER_RACK, NUM_OF_SPINES)  # TODO: put testbed parameters in yml file
+        self.topo.create(NUM_OF_RACKS, NUM_OF_F1_PER_RACK, NUM_OF_SPINES)  # TODO: put testbed parameters in json/yml
         fun_test.sleep("Wait for BGP/ISIS to converge", seconds=2)
 
     def cleanup(self):
@@ -33,9 +33,9 @@ class BringUpTestBed(FunTestScript):
 class VerifyBgpNeighborState(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Verify all F1s' BGP neighbor state and number of prefixes received",
+                              summary="Verify all F1s' BGP neighbor IP, ASN, and state or number of prefixes received",
                               steps="""
-        1. Step 1: Go through every node(F1) in every rack, get each BGP neighbor's ip addr, AS#, and state or # of 
+        1. Step 1: Go through every node(F1) in every rack, get each BGP neighbor's ip addr, ASN, and state or # of 
                     prefixes received
         2. Step 2: Verify BGP neighbor ip addr and ASN match what are configured, and # of prefixes received match below
                     2.1 # of prefixes from spine == (# of racks - 1) * # of F1 per rack
@@ -80,12 +80,13 @@ class VerifyBgpNeighborState(FunTestCase):
             fun_test.test_assert_expected(expected=expected_dict[key], actual=mp_task_obj.get_result(key), message=msg)
 
 
-class VerifyBgpNeighborStateQuick2(VerifyBgpNeighborState):
+class VerifyBgpNeighborStateQuick(VerifyBgpNeighborState):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Verify one F1's BGP neighbor state and number of prefixes received",
+                              summary="Verify one F1s' BGP neighbor IP, ASN, and state or number of prefixes received",
                               steps="""
-        1. Step 1: From one F1 (e.g. rack 1 node 1), get each BGP neighbor state and number of prefixes
+        1. Step 1: From one F1 (e.g. rack 1 node 1), get each BGP neighbor's ip addr, ASN, and state or # of prefixes 
+                    received
         2. Step 2: Verify BGP neighbor ip addr and ASN match what are configured, and # of prefixes received match below
                     2.1 # of prefixes from spine == (# of racks - 1) * # of F1 per rack
                     2.2 # of prefixes from F1 == # of prefixes from spine * (# of spines / # of F1 per rack) + 1
@@ -98,10 +99,10 @@ class VerifyBgpNeighborStateQuick2(VerifyBgpNeighborState):
 class VerifyIsisNeighborState(FunTestCase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Verify all F1s' ISIS neighbor state is up",
+                              summary="Verify all F1s' ISIS neighbors' system id, interface, and state is up",
                               steps="""
         1. Step 1: Go through every node(F1) in every rack, get each ISIS neighbor's state
-        2. Step 2: Verify the state is 'Up'
+        2. Step 2: Verify neighbor's system id, interface, and state is 'Up'
         """)
 
     def setup(self):
@@ -130,7 +131,7 @@ class VerifyIsisNeighborState(FunTestCase):
                                                 'Interface': node.interfaces[p]['my_intf_name'],
                                                 'State': 'Up'})
             expected_dict[key] = isis_neigh_expected
-        fun_test.test_assert(mp_task_obj.run(), "Get ISIS neighbor state")
+        fun_test.test_assert(mp_task_obj.run(), "Get ISIS neighbor info")
         for key in sorted(expected_dict):
             msg = 'Rack %s Node %s' % key
             fun_test.test_assert_expected(expected=expected_dict[key], actual=mp_task_obj.get_result(key), message=msg)
@@ -140,5 +141,5 @@ if __name__ == "__main__":
     tb = BringUpTestBed()
     tb.add_test_case(VerifyBgpNeighborState(tb))
     tb.add_test_case(VerifyIsisNeighborState(tb))
-    tb.add_test_case(VerifyBgpNeighborStateQuick2(tb))
+    tb.add_test_case(VerifyBgpNeighborStateQuick(tb))
     tb.run()
