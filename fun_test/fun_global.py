@@ -12,5 +12,5 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
 
 
 def get_current_time():
-    utc_now = pytz.utc.localize(datetime.datetime.utcnow())
-    return utc_now.astimezone(pytz.timezone(TIME_ZONE))
+    utc = pytz.utc.localize(datetime.datetime.utcnow())
+    return utc.astimezone(pytz.timezone(TIME_ZONE))

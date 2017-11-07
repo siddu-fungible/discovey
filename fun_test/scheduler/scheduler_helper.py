@@ -48,7 +48,7 @@ def queue_job(suite_path=None,
               build_url=None,
               job_spec=None,
               schedule_at=None,
-              schedule_in=None):
+              schedule_in_minutes=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
     suite_execution = models_helper.add_suite_execution(submitted_time=datetime.datetime.now(),
@@ -60,7 +60,7 @@ def queue_job(suite_path=None,
         job_spec["suite_name"] = suite_path.replace(JSON_EXTENSION, "")
         job_spec["build_url"] = build_url
         job_spec["schedule_at"] = schedule_at
-        job_spec["schedule_in"] = schedule_in
+        job_spec["schedule_in_minutes"] = schedule_in_minutes
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
 
