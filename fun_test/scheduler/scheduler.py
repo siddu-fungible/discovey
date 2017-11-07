@@ -235,13 +235,7 @@ if __name__ == "__main1__":
 if __name__ == "__main__":
     ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
-    #queue_job(job_id=2, suite="suite2")
-    #queue_job(job_id=4, suite="suite3")
-    #queue_job(job_id=3, suite="suite4")
-    #queue_job(job_id=5, suite="suite5")
     while True:
         process_queue()
-    # process killed jobs
-    # wait
-    pass
-# if __name__ == "__main1__":
+        # process killed jobs
+        # wait

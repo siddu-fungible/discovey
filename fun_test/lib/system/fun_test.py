@@ -8,8 +8,8 @@ import inspect
 from fun_settings import *
 import fun_xml
 import argparse
-import web.fun_test.models_helper as models_helper
-from fun_global import RESULTS
+import pytz
+from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 
 class TestException(Exception):
@@ -259,6 +259,7 @@ class FunTest:
             stdout=True,
             calling_module=None,
             no_timestamp=False):
+        current_time = get_current_time()
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
@@ -288,7 +289,7 @@ class FunTest:
             message = "%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
         if self.log_timestamps and (not no_timestamp):
-            message = "[{}] {}".format(str(datetime.datetime.now()), message)
+            message = "[{}] {}".format(current_time, message)
 
         nl = ""
         if newline:
