@@ -8,8 +8,8 @@ import inspect
 from fun_settings import *
 import fun_xml
 import argparse
-import web.fun_test.models_helper as models_helper
-from fun_global import RESULTS
+import pytz
+from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 
 class TestException(Exception):
@@ -259,6 +259,7 @@ class FunTest:
             stdout=True,
             calling_module=None,
             no_timestamp=False):
+        current_time = get_current_time()
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
@@ -269,7 +270,6 @@ class FunTest:
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             if not calling_module:
-                # module_name = self._get_module_name(outer_frames=outer_frames[1:])
                 module_name = self._get_calling_module(outer_frames=outer_frames)
             else:
                 module_name = calling_module[0]
@@ -289,7 +289,7 @@ class FunTest:
             message = "%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
         if self.log_timestamps and (not no_timestamp):
-            message = "[{}] {}".format(str(datetime.datetime.now()), message)
+            message = "[{}] {}".format(current_time, message)
 
         nl = ""
         if newline:
@@ -324,7 +324,6 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
             calling_module = self._get_calling_module(outer_frames=outer_frames)
         s = "\n{}\n{}\n".format(message, "=" * len(message))
         self.log(s, calling_module=calling_module)
@@ -336,12 +335,10 @@ class FunTest:
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
-            # calling_module = self._get_module_name(outer_frames=outer_frames[1:])
             calling_module = self._get_calling_module(outer_frames=outer_frames)
         if trace_id:
             self.trace(id=trace_id, log=self.buf)
         self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, no_timestamp=True)
-        # sys.stdout.write(self.buf)
         self.buf = ""
 
     def _print_log_green(self, message, calling_module=None):

@@ -1,5 +1,5 @@
 import time, datetime, json, glob
-import logging, logging.handlers, sys
+import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR
 
@@ -44,7 +44,11 @@ def get_flat_console_log_file_name(path):
 def get_flat_html_log_file_name(path):
     return get_flat_file_name(path=path) + HTML_LOG_EXTENSION
 
-def queue_job(suite_path=None, build_url=None, job_spec=None):
+def queue_job(suite_path=None,
+              build_url=None,
+              job_spec=None,
+              schedule_at=None,
+              schedule_in=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
     suite_execution = models_helper.add_suite_execution(submitted_time=datetime.datetime.now(),
@@ -55,6 +59,8 @@ def queue_job(suite_path=None, build_url=None, job_spec=None):
         suite_path = suite_path.replace(JSON_EXTENSION, "")
         job_spec["suite_name"] = suite_path.replace(JSON_EXTENSION, "")
         job_spec["build_url"] = build_url
+        job_spec["schedule_at"] = schedule_at
+        job_spec["schedule_in"] = schedule_in
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
 
@@ -92,6 +98,28 @@ def parse_file_to_json(file_name):
     except Exception as ex:
         scheduler_logger.critical(str(ex))
     return result
+
+def process_list(process_name):
+    processes = []
+
+    for proc in psutil.process_iter():
+        try:
+            proc_name = proc.name()
+            result = process_name in proc_name
+            proc_cmd_line = proc.cmdline()
+
+            if result:
+                processes.append((proc_name, proc_cmd_line))
+                continue
+            else:
+                for s in proc_cmd_line:
+                    result = process_name in s
+                    if result:
+                        processes.append((proc_name, proc_cmd_line))
+                        break
+        except:
+            pass
+    return processes
 
 if __name__ == "__main__":
     print get_flat_console_log_file_name(path="/clean_sanity.py")

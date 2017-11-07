@@ -1,11 +1,10 @@
 from fun_settings import *
-import json, os, sys
-import glob, re
-import time, subprocess, datetime
+import os
+import re
+import subprocess
 from threading import Thread
-import web.fun_test.models_helper as models_helper
 from scheduler_helper import *
-import urllib, tarfile, requests
+import urllib, tarfile
 
 threads = []
 
@@ -217,6 +216,10 @@ def de_queue_job(job_file):
         scheduler_logger.critical(str(ex))
         #TODO: Ensure job_file is removed
 
+def ensure_singleton():
+    if len(process_list(process_name=os.path.basename(__file__))) > 1:
+        raise SchedulerException("Only one instance of scheduler.py is permitted")
+
 if __name__ == "__main1__":
     queue_job(suite_name="storage_basic")
     #queue_job(job_id=2, suite="suite2")
@@ -230,14 +233,9 @@ if __name__ == "__main1__":
     pass
 
 if __name__ == "__main__":
+    ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
-    #queue_job(job_id=2, suite="suite2")
-    #queue_job(job_id=4, suite="suite3")
-    #queue_job(job_id=3, suite="suite4")
-    #queue_job(job_id=5, suite="suite5")
     while True:
         process_queue()
-    # process killed jobs
-    # wait
-    pass
-# if __name__ == "__main1__":
+        # process killed jobs
+        # wait
