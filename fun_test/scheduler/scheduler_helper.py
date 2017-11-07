@@ -12,7 +12,7 @@ ARCHIVED_JOB_EXTENSION = "archived.json"
 JSON_EXTENSION = ".json"
 LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
 
-scheduler_logger = logging.getLogger("scheduler_log")
+scheduler_logger = logging.getLogger("main_scheduler_log")
 scheduler_logger.setLevel(logging.DEBUG)
 
 TEN_MB = 1e7
@@ -25,6 +25,7 @@ if not DEBUG:
 else:
     handler = logging.StreamHandler(sys.stdout)
     scheduler_logger.addHandler(hdlr=handler)
+    scheduler_logger.setLevel(logging.DEBUG)
 
 class SchedulerException(Exception):
     def __init__(self, *args):

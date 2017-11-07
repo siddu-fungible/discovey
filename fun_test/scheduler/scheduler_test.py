@@ -27,4 +27,4 @@ if __name__ == "__main__":
 
 
 
-    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes)
+    queue_job(suite_path=suite_path, build_url=build_url) #, schedule_in_minutes=schedule_in_minutes)

@@ -130,16 +130,20 @@ def process_queue():
         job_spec = parse_file_to_json(file_name=job_file)
         current_time = get_current_time()
         if "schedule_in_minutes" in job_spec and (not "schedule_in_minutes_at" in job_spec):
-            job_spec["schedule_in_minutes_at"] = str(current_time + datetime.timedelta(minutes=int(job_spec["schedule_in_minutes"])))
-            with open(job_file, "w") as f:
-                f.write(json.dumps(job_spec))
-        if "schedule_in_minutes_at" in job_spec:
-            scheduling_time = dateutil.parser.parse(job_spec["schedule_in_minutes_at"])
+            if job_spec["schedule_in_minutes"]:
+                job_spec["schedule_in_minutes_at"] = str(current_time + datetime.timedelta(minutes=int(job_spec["schedule_in_minutes"])))
+                with open(job_file, "w") as f:
+                    f.write(json.dumps(job_spec))
+
+        scheduling_time = dateutil.parser.parse(job_spec["schedule_in_minutes_at"]) if "schedule_in_minutes_at" in job_spec else None
+        if not scheduling_time:
+            if "schedule_at" in job_spec and job_spec["schedule_at"]:
+                scheduling_time = dateutil.parser.parse(job_spec["schedule_at"])
+        if scheduling_time:
             if not current_time >= scheduling_time:
                 continue
             else:
-                scheduler_logger.debug("Job {}: schedule_in_minutes_at ready to run".format(job_spec["job_id"]))
-
+                scheduler_logger.debug("Job {}: ready to run".format(job_spec["job_id"]))
 
         if job_spec:
             t = SuiteWorker(job_spec=job_spec)
