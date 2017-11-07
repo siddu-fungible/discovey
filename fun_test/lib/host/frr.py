@@ -7,6 +7,7 @@ PAT_IP_BGP_LOCAL_AS = re.compile(r'local AS number (\d+)')
 PAT_IP_BGP_NEIGH = re.compile(
     r'((?:\d{1,3}\.){3}\d{1,3})\s+4\s+(\d+).*?(?:(?:\d{2}:){2}\d{2}|[a-zA-Z]+)\s+(\d+|[a-zA-Z]+)')
 PAT_ISIS_NEIGH = re.compile(r'(node\S+)\s+(\S+)\s+.*1\s+(\w+)')
+PAT_IP_ROUTE_SUM = re.compile(r'(connected|isis|ebgp|ibgp)\s+(\d+)\s+(\d+)')
 
 
 class Frr(Linux):
@@ -51,7 +52,10 @@ class Frr(Linux):
         if m:
             result.update({'neighbors': []})
             for ip_addr, asn, state_prefixes in m:
-                result['neighbors'].append({'ip_addr': ip_addr, 'ASN': asn, 'state_prefixes': state_prefixes})
+                result['neighbors'].append(
+                    {'ip_addr': ip_addr,
+                     'ASN': asn,
+                     'state_prefixes': int(state_prefixes) if state_prefixes.isdigit() else state_prefixes})
         result['neighbors'].sort()
         return result
 
@@ -77,6 +81,32 @@ class Frr(Linux):
                 result.update({'System_Id': system_id, 'Interface': interface, 'State': state})
         return result
 
+    def get_ip_route_sum(self):
+        """Do 'show ip route sum' and get number of routes from each protocol
+
+        root@node-1-1:~# vtysh -c 'show ip route sum'
+        Route Source         Routes               FIB  (vrf Default-IP-Routing-Table)
+        kernel               1                    1
+        connected            7                    7
+        isis                 6                    3
+        ebgp                 16                   16
+        ibgp                 3                    3
+        ------
+        Totals               33                   30
+
+        root@node-1-1:~# 
+
+        :return: dict {'connected': {'Routes': 1, 'FIB': 1}, 'isis': {'Routes': 7, 'FIB': 3}}, ..}
+        """
+        output = self.vtysh_command('show ip route sum')
+        result = {}
+
+        m = PAT_IP_ROUTE_SUM.findall(output)
+        if m:
+            for protocol, rib, fib in m:
+                result.update({protocol: {'Routes': int(rib), 'FIB': int(fib)}})
+        return result
+
 
 if __name__ == "__main__":
     frr_obj = Frr(host_ip="1-1",
@@ -87,10 +117,13 @@ if __name__ == "__main__":
     fun_test.log("\nOutput:" + output)
     output = frr_obj.vtysh_command('show isis neighbor')
     fun_test.log("\nOutput:" + output)
+    output = frr_obj.vtysh_command('show ip route sum')
+    fun_test.log("\nOutput:" + output)
 
     import pprint
     result = frr_obj.get_ip_bgp_sum()
     pprint.pprint(result)
     result = frr_obj.get_isis_neighbor()
     pprint.pprint(result)
-
+    result = frr_obj.get_ip_route_sum()
+    pprint.pprint(result)

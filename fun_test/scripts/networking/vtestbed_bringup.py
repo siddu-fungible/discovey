@@ -6,8 +6,33 @@ import math
 
 
 NUM_OF_RACKS = 5
-NUM_OF_F1_PER_RACK = 4
+NUM_OF_F1_PER_RACK = 8
 NUM_OF_SPINES = 8
+
+SSH_USERNAME = 'root'
+SSH_PASSWORD = 'fun123'
+
+# number of BGP prefixes from spine, which is eBGP
+NUM_OF_EBGP_PREFIXES = (NUM_OF_RACKS - 1) * NUM_OF_F1_PER_RACK
+# number of BGP prefixes from peer F1, which is iBGP
+NUM_OF_SPINE_LINKS = int(math.ceil(float(NUM_OF_SPINES) / NUM_OF_F1_PER_RACK))
+NUM_OF_IBGP_PREFIXES = NUM_OF_EBGP_PREFIXES * NUM_OF_SPINE_LINKS + 1
+
+# number of connected routes == connected to spines + connected to all F1 peers + local SVI connected to HU + eth0
+NUM_OF_CONNECTED_ROUTES = NUM_OF_SPINE_LINKS + (NUM_OF_F1_PER_RACK - 1) + 2
+NUM_OF_CONNECTED_FIB = NUM_OF_CONNECTED_ROUTES
+
+# the connected routes are installed as connected FIB, not ISIS
+NUM_OF_ISIS_ROUTES = NUM_OF_F1_PER_RACK * (NUM_OF_F1_PER_RACK - 1) / 2
+NUM_OF_ISIS_FIB = NUM_OF_ISIS_ROUTES - (NUM_OF_F1_PER_RACK - 1)
+
+NUM_OF_EBGP_ROUTES = NUM_OF_EBGP_PREFIXES
+NUM_OF_EBGP_FIB = NUM_OF_EBGP_ROUTES
+
+NUM_OF_IBGP_ROUTES = NUM_OF_F1_PER_RACK - 1
+NUM_OF_IBGP_FIB = NUM_OF_IBGP_ROUTES
+
+CONVERGE_TIME = 90
 
 
 class BringUpTestBed(FunTestScript):
@@ -24,7 +49,7 @@ class BringUpTestBed(FunTestScript):
     def setup(self):
         self.topo = Topology()
         self.topo.create(NUM_OF_RACKS, NUM_OF_F1_PER_RACK, NUM_OF_SPINES)  # TODO: put testbed parameters in json/yml
-        fun_test.sleep("Wait for BGP/ISIS to converge", seconds=2)
+        fun_test.sleep("Wait for BGP/ISIS to converge", seconds=CONVERGE_TIME)
 
     def cleanup(self):
         self.topo.cleanup()
@@ -60,18 +85,17 @@ class VerifyBgpNeighborState(FunTestCase):
             node_list = node_list[:1]
         for node in node_list:
             key = (node.rack_id, node.node_id)
-            frr_obj = Frr(host_ip=node.vm_ip, ssh_username="root", ssh_password="fun123", ssh_port=node.host_ssh_port)
+            frr_obj = Frr(host_ip=node.vm_ip, ssh_username=SSH_USERNAME, ssh_password=SSH_PASSWORD, ssh_port=node.host_ssh_port)
             mp_task_obj.add_task(func=frr_obj.get_ip_bgp_sum, task_key=key)
             bgp_neigh_expected = {'local_ASN': node.asn, 'neighbors': []}
             for p in node.interfaces:
                 if node.interfaces[p]['peer_type'] == 'spine':
-                    num_of_prefixes = (NUM_OF_RACKS - 1) * NUM_OF_F1_PER_RACK
+                    num_of_prefixes = NUM_OF_EBGP_PREFIXES
                 elif node.interfaces[p]['peer_type'] == 'leaf':
-                    num_of_prefixes = ((NUM_OF_RACKS - 1) * NUM_OF_F1_PER_RACK) * int(
-                        math.ceil(float(NUM_OF_SPINES) / NUM_OF_F1_PER_RACK)) + 1
+                    num_of_prefixes = NUM_OF_IBGP_PREFIXES
                 bgp_neigh_expected['neighbors'].append({'ip_addr': node.interfaces[p]['peer_ip'],
                                                         'ASN': node.interfaces[p]['peer_asn'],
-                                                        'state_prefixes': str(num_of_prefixes)})
+                                                        'state_prefixes': num_of_prefixes})
             bgp_neigh_expected['neighbors'].sort()
             expected_dict[key] = bgp_neigh_expected
         fun_test.test_assert(mp_task_obj.run(), "Get BGP neighbor summary")
@@ -122,7 +146,7 @@ class VerifyIsisNeighborState(FunTestCase):
         for node in node_list:
             key = (node.rack_id, node.node_id)
             frr_obj = Frr(
-                host_ip=node.vm_ip, ssh_username="root", ssh_password="fun123", ssh_port=node.host_ssh_port)
+                host_ip=node.vm_ip, ssh_username=SSH_USERNAME, ssh_password=SSH_PASSWORD, ssh_port=node.host_ssh_port)
             mp_task_obj.add_task(func=frr_obj.get_isis_neighbor, task_key=key)
             isis_neigh_expected = {}
             for p in node.interfaces:
@@ -137,9 +161,49 @@ class VerifyIsisNeighborState(FunTestCase):
             fun_test.test_assert_expected(expected=expected_dict[key], actual=mp_task_obj.get_result(key), message=msg)
 
 
+class VerifyIpRouteSum(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Verify all F1s' number of Routes/FIB learnt from all the protocols",
+                              steps="""
+        1. Step 1: Go through every node(F1) in every rack, get ip route summary
+        2. Step 2: Verify number of Routes and FIB learnt from connected/isis/ebgp/ibgp
+        """)
+
+    def setup(self):
+        fun_test.log("Testcase setup")
+
+    def cleanup(self):
+        fun_test.log("Testcase cleanup")
+
+    def run(self):
+        mp_task_obj = MultiProcessingTasks()
+        expected_dict = {}
+        node_list = []
+        for vm in self.script_obj.topo.leaf_vm_objs:
+            for rack in vm.racks:
+                for node in rack.nodes:
+                    node_list.append(node)
+        for node in node_list:
+            key = (node.rack_id, node.node_id)
+            frr_obj = Frr(
+                host_ip=node.vm_ip, ssh_username=SSH_USERNAME, ssh_password=SSH_PASSWORD, ssh_port=node.host_ssh_port)
+            mp_task_obj.add_task(func=frr_obj.get_ip_route_sum, task_key=key)
+            ip_route_sum_expected = {'connected': {'Routes': NUM_OF_CONNECTED_ROUTES, 'FIB': NUM_OF_CONNECTED_FIB},
+                                     'isis': {'Routes': NUM_OF_ISIS_ROUTES, 'FIB': NUM_OF_ISIS_FIB},
+                                     'ebgp': {'Routes': NUM_OF_EBGP_ROUTES, 'FIB': NUM_OF_EBGP_FIB},
+                                     'ibgp': {'Routes': NUM_OF_IBGP_ROUTES, 'FIB': NUM_OF_IBGP_FIB}}
+            expected_dict[key] = ip_route_sum_expected
+        fun_test.test_assert(mp_task_obj.run(), "Get ip route summary")
+        for key in sorted(expected_dict):
+            msg = 'Rack %s Node %s' % key
+            fun_test.test_assert_expected(expected=expected_dict[key], actual=mp_task_obj.get_result(key), message=msg)
+
+
 if __name__ == "__main__":
     tb = BringUpTestBed()
     tb.add_test_case(VerifyBgpNeighborState(tb))
     tb.add_test_case(VerifyIsisNeighborState(tb))
     tb.add_test_case(VerifyBgpNeighborStateQuick(tb))
+    tb.add_test_case(VerifyIpRouteSum(tb))
     tb.run()
