@@ -4,10 +4,16 @@ import os
 import re
 import subprocess
 from threading import Thread
+import threading
 from scheduler_helper import *
 import dateutil.parser
 
 threads = []
+
+def timed_dispatcher(suite_worker_obj):
+    threads.append(suite_worker_obj)
+    suite_worker_obj.start()
+
 
 def get_scripts_in_suite(suite_name):
     suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
@@ -119,6 +125,9 @@ class SuiteWorker(Thread):
                                                        str(script_metrics["result"]),
                                                        str(script_metrics["crashed"])))
 
+        if "repeat" in self.job_spec:
+            queue_job(job_spec=self.job_spec)
+
 def process_queue():
     time.sleep(1)
     # sort by date
@@ -129,6 +138,8 @@ def process_queue():
         # Execute
         job_spec = parse_file_to_json(file_name=job_file)
         current_time = get_current_time()
+
+        '''
         if "schedule_in_minutes" in job_spec and (not "schedule_in_minutes_at" in job_spec):
             if job_spec["schedule_in_minutes"]:
                 job_spec["schedule_in_minutes_at"] = str(current_time + datetime.timedelta(minutes=int(job_spec["schedule_in_minutes"])))
@@ -144,10 +155,26 @@ def process_queue():
                 continue
             else:
                 scheduler_logger.debug("Job {}: ready to run".format(job_spec["job_id"]))
-
-        if job_spec:
-            t = SuiteWorker(job_spec=job_spec)
-            threads.append(t)
+        '''
+        schedule_it = True
+        scheduling_time = 1
+        if "schedule_in_minutes" in job_spec:
+            scheduling_time = 60 * job_spec["schedule_in_minutes"]
+        elif "schedule_at" in job_spec and job_spec["schedule_at"]:
+            total_seconds = (dateutil.parser.parse(job_spec["schedule_at"]) - get_current_time()).total_seconds()
+            if total_seconds < 0:
+                if (abs(total_seconds) < 10):
+                # We can allow a 10 second tolerance, #TODO: is hard-coded
+                    scheduling_time = 0
+                else:
+                    pass #TODO: Email, report a scheduling failure
+            elif total_seconds >= 0:
+                scheduling_time = total_seconds
+            else:
+                schedule_it = False #TODO: Email, report a scheduling failure
+        if job_spec and schedule_it:
+            suite_worker_obj = SuiteWorker(job_spec=job_spec)
+            t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
             t.start()
         else:
             raise SchedulerException("Unable to parse {}".format(job_file))

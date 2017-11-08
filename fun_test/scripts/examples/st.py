@@ -1,26 +1,20 @@
-import psutil
+import threading, datetime, time
 
-def process_exists(process_name):
-    result = False
-    for proc in psutil.process_iter():
-        if result:
-            break
-        try:
-            proc_name = proc.name()
-            result = process_name in proc_name
-            proc_cmd_line = proc.cmdline()
+def f(a):
+    print('thread {}'.format(a))
+    return
 
-            if result:
-                break
-            else:
-                for s in proc_cmd_line:
-                    result = process_name in s
-                    if result:
-                        break
-        except:
-            pass
-    return result
+if __name__ == '__main__':
+    '''
+    t1 = threading.Timer(1, f, (5, ))
+    t1.setName('t1')
+    t2 = threading.Timer(2, f, (6, ))
+    t2.setName('t2')
+    t1.start()
+    t2.start()
+    '''
+    t1 = datetime.datetime.now()
+    time.sleep(2)
+    t2 = datetime.datetime.now()
 
-
-if __name__ == "__main__":
-    print process_exists(process_name="scheduler.py")
+    print (t1-t2).total_seconds()

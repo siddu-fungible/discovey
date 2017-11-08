@@ -49,7 +49,8 @@ def queue_job(suite_path=None,
               build_url=None,
               job_spec=None,
               schedule_at=None,
-              schedule_in_minutes=None):
+              schedule_in_minutes=None,
+              repeat=False):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
     suite_execution = models_helper.add_suite_execution(submitted_time=datetime.datetime.now(),
@@ -62,6 +63,7 @@ def queue_job(suite_path=None,
         job_spec["build_url"] = build_url
         job_spec["schedule_at"] = schedule_at
         job_spec["schedule_in_minutes"] = schedule_in_minutes
+        job_spec["repeat"] = repeat
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
 
@@ -88,6 +90,11 @@ def re_queue_job(suite_execution_id,
         job_spec["test_case_ids"] = [test_case_execution_id]
         job_spec["suite_path"] = suite_path
         job_spec["script_path"] = script_path
+    for k in ["schedule_at", "schedule_in_minutes", "schedule_in_minutes_at"]:
+        try:
+            del job_spec[k]
+        except:
+            pass
     return queue_job(job_spec=job_spec)
 
 def parse_file_to_json(file_name):
