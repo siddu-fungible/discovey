@@ -55,7 +55,8 @@ def queue_job(suite_path=None,
 
     suite_execution = models_helper.add_suite_execution(submitted_time=datetime.datetime.now(),
                                       scheduled_time=datetime.datetime.max,
-                                      completed_time=datetime.datetime.max)
+                                      completed_time=datetime.datetime.max,
+                                                        suite_path=suite_path)
     if not job_spec:
         job_spec = {}
         suite_path = suite_path.replace(JSON_EXTENSION, "")
