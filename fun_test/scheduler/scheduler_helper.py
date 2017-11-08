@@ -90,7 +90,7 @@ def re_queue_job(suite_execution_id,
         job_spec["test_case_ids"] = [test_case_execution_id]
         job_spec["suite_path"] = suite_path
         job_spec["script_path"] = script_path
-    for k in ["schedule_at", "schedule_in_minutes", "schedule_in_minutes_at"]:
+    for k in ["schedule_at", "schedule_in_minutes", "schedule_in_minutes_at", "repeat"]:
         try:
             del job_spec[k]
         except:

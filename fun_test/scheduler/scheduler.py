@@ -164,7 +164,6 @@ def process_queue():
             schedule_at_time_offset = dateutil.parser.parse(job_spec["schedule_at"]).replace(year=1, month=1, day=1)
             current_time_offset = current_time.replace(year=1, month=1, day=1)
 
-
             total_seconds = (schedule_at_time_offset - current_time_offset).total_seconds()
             if total_seconds < 0:
                 scheduling_time = (24 * 60 * 3600) + total_seconds
