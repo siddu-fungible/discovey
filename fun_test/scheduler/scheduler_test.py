@@ -30,7 +30,8 @@ if __name__ == "__main__":
     #queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes, repeat=True)
     schedule_in_minutes = 2
     #queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes, repeat=True)
-    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=1, repeat=True)
+    #queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=1, repeat=True)
+    queue_job(suite_path=suite_path, build_url=build_url)
 
 
     #queue_job(suite_path=suite_path, build_url=build_url)# , schedule_in_minutes=schedule_in_minutes, repeat=True)

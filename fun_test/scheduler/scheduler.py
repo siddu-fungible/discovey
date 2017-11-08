@@ -107,6 +107,7 @@ class SuiteWorker(Thread):
                 poll_status = script_process.poll()
             if poll_status:  #
                 scheduler_logger.critical("CRASH: Script {}".format(os.path.basename(script_path)))
+                local_scheduler_logger.critical("CRASH")
                 crashed = True  #TODO: Need to re-check this based on exit code
             script_result = False
             if script_process.returncode == 0:
@@ -125,7 +126,7 @@ class SuiteWorker(Thread):
                                                        str(script_metrics["result"]),
                                                        str(script_metrics["crashed"])))
 
-        if "repeat" in self.job_spec:
+        if "repeat" in self.job_spec and self.job_spec["repeat"]:
             queue_job(job_spec=self.job_spec)
 
 def process_queue():
@@ -158,7 +159,7 @@ def process_queue():
         '''
         schedule_it = True
         scheduling_time = 1
-        if "schedule_in_minutes" in job_spec:
+        if "schedule_in_minutes" in job_spec and job_spec["schedule_in_minutes"]:
             scheduling_time = 60 * job_spec["schedule_in_minutes"]
         elif "schedule_at" in job_spec and job_spec["schedule_at"]:
             schedule_at_time_offset = dateutil.parser.parse(job_spec["schedule_at"]).replace(year=1, month=1, day=1)
