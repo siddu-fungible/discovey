@@ -161,13 +161,13 @@ def process_queue():
         if "schedule_in_minutes" in job_spec:
             scheduling_time = 60 * job_spec["schedule_in_minutes"]
         elif "schedule_at" in job_spec and job_spec["schedule_at"]:
-            total_seconds = (dateutil.parser.parse(job_spec["schedule_at"]) - get_current_time()).total_seconds()
+            schedule_at_time_offset = dateutil.parser.parse(job_spec["schedule_at"]).replace(year=1, month=1, day=1)
+            current_time_offset = current_time.replace(year=1, month=1, day=1)
+
+
+            total_seconds = (schedule_at_time_offset - current_time_offset).total_seconds()
             if total_seconds < 0:
-                if (abs(total_seconds) < 10):
-                # We can allow a 10 second tolerance, #TODO: is hard-coded
-                    scheduling_time = 0
-                else:
-                    pass #TODO: Email, report a scheduling failure
+                scheduling_time = (24 * 60 * 3600) + total_seconds
             elif total_seconds >= 0:
                 scheduling_time = total_seconds
             else:
