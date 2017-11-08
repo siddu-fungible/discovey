@@ -98,7 +98,7 @@ class FunTestClient:
 if __name__ == "__main__":
     '''
     suites = {
-        "suite_name": "storage_basic.json",
+        "suite_name": "storage_sanity.json",
         "build_url": "http://dochub.fungible.local/doc/jenkins/funos/940/"
     }'''
     fun_test_client = FunTestClient(base_url='http://127.0.0.1:5000')
