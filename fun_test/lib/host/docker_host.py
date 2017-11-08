@@ -185,6 +185,13 @@ class DockerHost(Linux, ToDictMixin):
         port_retries = 0
         max_port_retries = 100
 
+        port0_allocator = PortAllocator(base_port=self.BASE_CONTAINER_SSH_PORT,
+                                        internal_ports=pool0_internal_ports)
+        port1_allocator = PortAllocator(base_port=self.BASE_POOL1_PORT,
+                                        internal_ports=pool1_internal_ports)
+        port2_allocator = PortAllocator(base_port=self.BASE_POOL2_PORT,
+                                        internal_ports=pool2_internal_ports)
+
         while port_retries < max_port_retries:
             container = self.get_container_by_name(name=container_name)
             if container:
@@ -198,13 +205,6 @@ class DockerHost(Linux, ToDictMixin):
 
             if port_retries:
                 fun_test.debug("Retrying container creation with a different port: port_retries: {}, max_retries: {}".format(port_retries, max_port_retries))
-
-            port0_allocator = PortAllocator(base_port=self.BASE_CONTAINER_SSH_PORT,
-                                            internal_ports=pool0_internal_ports)
-            port1_allocator = PortAllocator(base_port=self.BASE_POOL1_PORT,
-                                            internal_ports=pool1_internal_ports)
-            port2_allocator = PortAllocator(base_port=self.BASE_POOL2_PORT,
-                                            internal_ports=pool2_internal_ports)
 
             try:
 
@@ -265,9 +265,9 @@ class DockerHost(Linux, ToDictMixin):
                     used_up_port = int(m.group(1))
                     if used_up_port in [x["external"] for x in pool0_allocation]:
                         port0_allocator.allocate_port(used_up_port)
-                    if used_up_port in [x["external"] for x in pool2_allocation]:
-                        port1_allocator.allocate_port(used_up_port)
                     if used_up_port in [x["external"] for x in pool1_allocation]:
+                        port1_allocator.allocate_port(used_up_port)
+                    if used_up_port in [x["external"] for x in pool2_allocation]:
                         port2_allocator.allocate_port(used_up_port)
 
                 port_retries += 1

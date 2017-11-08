@@ -149,7 +149,7 @@ class FunTest:
         return result
 
     def get_suite_execution_id(self):
-        env_sid = self.get_environment_variable("SUITE_EXECUTION_ID")
+        env_sid = int(self.get_environment_variable("SUITE_EXECUTION_ID"))
         if not env_sid:
             env_sid = 100
         sid = self.suite_execution_id if self.suite_execution_id else env_sid
