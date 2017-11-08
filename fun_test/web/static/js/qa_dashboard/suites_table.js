@@ -51,7 +51,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     $scope.getSchedulerLog = function (suiteId) {
         if($scope.logDir) {
-            return $scope.logDir + suiteId + "/scheduler.log"; // TODO
+            return $scope.logDir + suiteId + "/scheduler.log.txt"; // TODO
         }
     };
 
