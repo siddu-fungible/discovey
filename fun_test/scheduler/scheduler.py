@@ -53,7 +53,7 @@ class SuiteWorker(Thread):
 
         # Setup the suites own logger
         local_scheduler_logger = logging.getLogger("scheduler_log")
-        local_scheduler_logger.setLevel(logging.ERROR)
+        local_scheduler_logger.setLevel(logging.INFO)
         handler = logging.handlers.RotatingFileHandler(self.job_dir + "/scheduler.log", maxBytes=TEN_MB, backupCount=5)
         handler.setFormatter(
             logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
@@ -69,7 +69,7 @@ class SuiteWorker(Thread):
         map(lambda f: self.local_scheduler_logger.debug("{}: {}".format(f[0], f[1])), enumerate(script_paths))
 
 
-        self.local_scheduler_logger.debug("Starting Job-id: {}".format(self.job_id))
+        self.local_scheduler_logger.info("Starting Job-id: {}".format(self.job_id))
 
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         if not suite_execution:
@@ -87,7 +87,7 @@ class SuiteWorker(Thread):
             # console_log_file_name = self.job_dir + "/{}{}".format(os.path.basename(script_path), CONSOLE_LOG_EXTENSION)
             console_log_file_name = self.job_dir + "/" + get_flat_console_log_file_name("/{}".format(script_path))
             with open(console_log_file_name, "w") as console_log:
-                self.local_scheduler_logger.debug("Executing: {}".format(script_path))
+                self.local_scheduler_logger.info("Executing: {}".format(script_path))
                 popens = ["python",
                           script_path,
                           "--" + "logs_dir={}".format(self.job_dir),
@@ -113,7 +113,7 @@ class SuiteWorker(Thread):
             if script_process.returncode == 0:
                 script_result = True
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
-        scheduler_logger.debug("Job Id: {} complete".format(self.job_id))
+        scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         suite_execution.completed_time = datetime.datetime.now()
         suite_execution.save()
