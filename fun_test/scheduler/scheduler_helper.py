@@ -45,7 +45,7 @@ def get_flat_console_log_file_name(path):
 def get_flat_html_log_file_name(path):
     return get_flat_file_name(path=path) + HTML_LOG_EXTENSION
 
-def queue_job(suite_path=None,
+def queue_job(suite_path="unknown",
               build_url=None,
               job_spec=None,
               schedule_at=None,
