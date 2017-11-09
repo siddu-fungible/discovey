@@ -53,6 +53,9 @@ class FunTestCase2(FunTestCase):
     def run(self):
         print("The Testcase")
 
+        import time
+        time.sleep(200)
+
         fun_test.test_assert(expression=1 > 2, message="1 > 2")
         fun_test.test_assert(expression=2 > 1, message="2 > 1")
 

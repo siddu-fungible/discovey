@@ -222,8 +222,15 @@ class DockerHost(Linux, ToDictMixin):
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
+                fun_test.sleep("Really Ensuring container is started", seconds=15)
+                fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
+                                                                     max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
+                                       "Ensure container is started")
+
+
                 allocated_container = self.client.containers.get(container_name)
                 internal_ip = allocated_container.attrs["NetworkSettings"]["IPAddress"]
+
 
                 fun_test.log("Launched container: {}".format(container_name))
 

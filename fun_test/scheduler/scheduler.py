@@ -6,12 +6,13 @@ import subprocess
 from threading import Thread
 import threading
 from scheduler_helper import *
-import dateutil.parser
+import dateutil.parser, signal, psutil
 
-threads = []
+job_id_threads = {}
+job_id_timers = {}
 
 def timed_dispatcher(suite_worker_obj):
-    threads.append(suite_worker_obj)
+    job_id_threads[suite_worker_obj.job_id] = (suite_worker_obj)
     suite_worker_obj.start()
 
 
@@ -36,6 +37,25 @@ class SuiteWorker(Thread):
             self.job_test_case_ids = job_spec["test_case_ids"]
         if "build_url" in job_spec:
             self.job_build_url = job_spec["build_url"]
+        self.current_script_process = None
+
+        self.suite_shutdown = False
+
+    def shutdown_suite(self):
+        scheduler_logger.info("Shutdown_suite")
+        if self.current_script_process:
+            try:
+                os.kill(self.current_script_process.pid, signal.SIGINT)
+                time.sleep(5)
+            except Exception as ex:
+                scheduler_logger.error(str(ex))
+            if psutil.pid_exists(self.current_script_process.pid):
+                try:
+                    os.kill(self.current_script_process.pid, signal.SIGKILL)
+                except Exception as ex:
+                    scheduler_logger.error(str(ex))
+
+
 
     def prepare_job_directory(self):
         self.job_dir = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(self.job_id)
@@ -79,6 +99,13 @@ class SuiteWorker(Thread):
         suite_execution.save()
 
         for script_path in script_paths:
+
+            if self.suite_shutdown:
+                scheduler_logger.critical("{}: SUITE shutdown requested".format(self.job_id))
+                local_scheduler_logger.critical("SUITE shutdown requested")
+                suite_summary[os.path.basename(script_path)] = {"crashed": True, "result": False}
+                continue
+
             relative_path = script_path.replace(SCRIPTS_DIR, "")
             if self.job_test_case_ids:
                 if not self.job_script_path in relative_path:
@@ -97,20 +124,20 @@ class SuiteWorker(Thread):
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
-                script_process = subprocess.Popen(popens,
+                self.current_script_process = subprocess.Popen(popens,
                                                   close_fds=True,
                                                   stdout=console_log,
                                                   stderr=console_log)
             poll_status = None
             while poll_status is None:
                 # print("Still working...")
-                poll_status = script_process.poll()
+                poll_status = self.current_script_process.poll()
             if poll_status:  #
                 scheduler_logger.critical("CRASH: Script {}".format(os.path.basename(script_path)))
                 local_scheduler_logger.critical("CRASH")
                 crashed = True  #TODO: Need to re-check this based on exit code
             script_result = False
-            if script_process.returncode == 0:
+            if self.current_script_process.returncode == 0:
                 script_result = True
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
         scheduler_logger.info("Job Id: {} complete".format(self.job_id))
@@ -128,6 +155,32 @@ class SuiteWorker(Thread):
 
         if "repeat" in self.job_spec and self.job_spec["repeat"]:
             queue_job(job_spec=self.job_spec)
+        elif "repeat_in_minutes" in self.job_spec and self.job_spec["repeat_in_minutes"]:
+            repeat_in_minutes_value = self.job_spec["repeat_in_minutes"]
+            new_job_spec = self.job_spec
+            new_job_spec["schedule_in_minutes"] = repeat_in_minutes_value
+            queue_job(job_spec=new_job_spec)
+
+def process_killed_jobs():
+    job_files = glob.glob("{}/*{}".format(KILLED_JOBS_DIR, KILLED_JOB_EXTENSION))
+    job_files.sort(key=os.path.getmtime)
+
+    for job_file in job_files:
+        with open(job_file, "r") as f:
+            contents = f.read()
+            job_id = int(contents)
+            if job_id in job_id_threads:
+                t = job_id_threads[job_id]
+                scheduler_logger.info("Killing Job: {}".format(job_id))
+                try:
+                    t.shutdown_suite()
+                except Exception as ex:
+                    scheduler_logger.error(str(ex))
+                finally:
+                    del job_id_threads[job_id]
+        os.remove(job_file)
+
+
 
 def process_queue():
     time.sleep(1)
@@ -136,27 +189,11 @@ def process_queue():
     job_files.sort(key=os.path.getmtime)
 
     for job_file in job_files:
+
         # Execute
         job_spec = parse_file_to_json(file_name=job_file)
         current_time = get_current_time()
 
-        '''
-        if "schedule_in_minutes" in job_spec and (not "schedule_in_minutes_at" in job_spec):
-            if job_spec["schedule_in_minutes"]:
-                job_spec["schedule_in_minutes_at"] = str(current_time + datetime.timedelta(minutes=int(job_spec["schedule_in_minutes"])))
-                with open(job_file, "w") as f:
-                    f.write(json.dumps(job_spec))
-
-        scheduling_time = dateutil.parser.parse(job_spec["schedule_in_minutes_at"]) if "schedule_in_minutes_at" in job_spec else None
-        if not scheduling_time:
-            if "schedule_at" in job_spec and job_spec["schedule_at"]:
-                scheduling_time = dateutil.parser.parse(job_spec["schedule_at"])
-        if scheduling_time:
-            if not current_time >= scheduling_time:
-                continue
-            else:
-                scheduler_logger.debug("Job {}: ready to run".format(job_spec["job_id"]))
-        '''
         schedule_it = True
         scheduling_time = 1
         if "schedule_in_minutes" in job_spec and job_spec["schedule_in_minutes"]:
@@ -176,6 +213,7 @@ def process_queue():
             suite_worker_obj = SuiteWorker(job_spec=job_spec)
             t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
             t.start()
+            job_id_timers[job_spec["job_id"]] = t
         else:
             raise SchedulerException("Unable to parse {}".format(job_file))
         de_queue_job(job_file)
@@ -212,6 +250,6 @@ if __name__ == "__main__":
     ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
     while True:
+        process_killed_jobs()
         process_queue()
-        # process killed jobs
         # wait

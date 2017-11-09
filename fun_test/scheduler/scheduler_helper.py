@@ -1,7 +1,7 @@
 import time, datetime, json, glob
 import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR
 
 
 CONSOLE_LOG_EXTENSION = ".logs.txt"
@@ -9,6 +9,7 @@ HTML_LOG_EXTENSION = ".html"
 LOG_DIR_PREFIX = "s_"
 QUEUED_JOB_EXTENSION = "queued.json"
 ARCHIVED_JOB_EXTENSION = "archived.json"
+KILLED_JOB_EXTENSION = "killed_job"
 JSON_EXTENSION = ".json"
 LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
 
@@ -45,14 +46,23 @@ def get_flat_console_log_file_name(path):
 def get_flat_html_log_file_name(path):
     return get_flat_file_name(path=path) + HTML_LOG_EXTENSION
 
+def kill_job(job_id):
+    filename = "{}/{}_{}".format(KILLED_JOBS_DIR, job_id, KILLED_JOB_EXTENSION)
+    with open(filename, "w") as f:
+        f.write(str(job_id))
+
 def queue_job(suite_path="unknown",
               build_url=None,
               job_spec=None,
               schedule_at=None,
+              repeat=False,
               schedule_in_minutes=None,
-              repeat=False):
+              repeat_in_minutes=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
+    if suite_path == "unknown":
+        if job_spec:
+            suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
     suite_execution = models_helper.add_suite_execution(submitted_time=datetime.datetime.now(),
                                       scheduled_time=datetime.datetime.max,
                                       completed_time=datetime.datetime.max,
@@ -63,8 +73,9 @@ def queue_job(suite_path="unknown",
         job_spec["suite_name"] = suite_path.replace(JSON_EXTENSION, "")
         job_spec["build_url"] = build_url
         job_spec["schedule_at"] = schedule_at
-        job_spec["schedule_in_minutes"] = schedule_in_minutes
         job_spec["repeat"] = repeat
+        job_spec["schedule_in_minutes"] = schedule_in_minutes
+        job_spec["repeat_in_minutes"] = repeat_in_minutes
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
 

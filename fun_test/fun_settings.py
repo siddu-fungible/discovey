@@ -17,6 +17,7 @@ WEB_SERVER_PORT = 5000
 ASSET_DIR = FUN_TEST_DIR + "/asset"
 JOBS_DIR = WEB_STATIC_DIR + "/jobs"
 ARCHIVED_JOBS_DIR = JOBS_DIR + "/archived"
+KILLED_JOBS_DIR = JOBS_DIR + "/killed"
 SCRIPTS_DIR = FUN_TEST_DIR + "/scripts"
 
 TEST_CASE_SPEC_DIR = SCRIPTS_DIR + "/test_case_spec"

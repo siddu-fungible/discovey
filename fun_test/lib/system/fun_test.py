@@ -11,6 +11,7 @@ import argparse
 import pytz
 from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
+import signal
 
 class TestException(Exception):
     def __str__(self):
@@ -104,6 +105,9 @@ class FunTest:
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
+
+        signal.signal(signal.SIGINT, self.exit_gracefully)
+        signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.initialized = False
         self.debug_enabled = False
@@ -496,6 +500,13 @@ class FunTest:
                            actual=""):
 
         self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint, result=result, expected=expected, actual=actual)
+
+    def exit_gracefully(self, sig, _):
+        fun_test.critical("Unexpected Exit")
+        if fun_test.suite_execution_id:
+            models_helper.update_test_case_execution(test_case_execution_id=fun_test.current_test_case_execution_id,
+                                                     suite_execution_id=fun_test.suite_execution_id,
+                                                     result=fun_test.FAILED)
 
 fun_test = FunTest()
 
