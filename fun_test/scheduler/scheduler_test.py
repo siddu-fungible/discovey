@@ -51,5 +51,8 @@ if __name__ == "__main__":
 
 
     queue_job(suite_path=suite_path, build_url=build_url)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=4)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=2)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+
 
     # process_killed_jobs()

@@ -9,7 +9,6 @@ from scheduler_helper import *
 import dateutil.parser, signal, psutil
 
 job_id_threads = {}
-job_id_timers = {}
 
 def timed_dispatcher(suite_worker_obj):
     job_id_threads[suite_worker_obj.job_id] = (suite_worker_obj)
@@ -74,7 +73,7 @@ class SuiteWorker(Thread):
         # Setup the suites own logger
         local_scheduler_logger = logging.getLogger("scheduler_log.txt")
         local_scheduler_logger.setLevel(logging.INFO)
-        handler = logging.handlers.RotatingFileHandler(selfgit.job_dir + "/scheduler.log.txt", maxBytes=TEN_MB, backupCount=5)
+        handler = logging.handlers.RotatingFileHandler(self.job_dir + "/scheduler.log.txt", maxBytes=TEN_MB, backupCount=5)
         handler.setFormatter(
             logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         local_scheduler_logger.addHandler(hdlr=handler)
@@ -161,6 +160,8 @@ class SuiteWorker(Thread):
             new_job_spec["schedule_in_minutes"] = repeat_in_minutes_value
             queue_job(job_spec=new_job_spec)
 
+        del job_id_threads[self.job_id]
+
 def process_killed_jobs():
     job_files = glob.glob("{}/*{}".format(KILLED_JOBS_DIR, KILLED_JOB_EXTENSION))
     job_files.sort(key=os.path.getmtime)
@@ -213,7 +214,6 @@ def process_queue():
             suite_worker_obj = SuiteWorker(job_spec=job_spec)
             t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
             t.start()
-            job_id_timers[job_spec["job_id"]] = t
         else:
             raise SchedulerException("Unable to parse {}".format(job_file))
         de_queue_job(job_file)
