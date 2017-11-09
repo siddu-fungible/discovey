@@ -107,7 +107,7 @@ class FunTest:
             self.logs_dir = LOGS_DIR
 
         signal.signal(signal.SIGINT, self.exit_gracefully)
-        signal.signal(signal.SIGTERM, self.exit_gracefully)
+        # signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.initialized = False
         self.debug_enabled = False

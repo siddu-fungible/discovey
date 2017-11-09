@@ -31,6 +31,8 @@ class FunTestCase1(FunTestCase):
         print("Testcase cleanup")
 
     def run(self):
+        import time
+        time.sleep(200)
         fun_test.add_checkpoint("Some checkpoint")
         for i in range(0, 50):
             fun_test.log("Some log")
@@ -53,8 +55,7 @@ class FunTestCase2(FunTestCase):
     def run(self):
         print("The Testcase")
 
-        import time
-        time.sleep(200)
+
 
         fun_test.test_assert(expression=1 > 2, message="1 > 2")
         fun_test.test_assert(expression=2 > 1, message="2 > 1")
