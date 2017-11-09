@@ -1151,6 +1151,46 @@ class Linux(object, ToDictMixin):
                 result[name_alpha] = result_d
         return result
 
+    @fun_test.safe
+    def get_ip_route(self, netns=None):
+        """Do 'ip -n <netns> route' to get kernel FIB info
+
+        root@ubuntu:~# ip -n 1-1 route show
+        default via 172.17.0.1 dev eth0
+        ..
+        10.0.0.48/28 via 192.168.0.10 dev p-69  proto 186  metric 20
+        10.0.1.0/28  proto 186  metric 20
+        	nexthop via 192.96.0.2  dev p-1 weight 1
+        	nexthop via 192.96.0.6  dev p-3 weight 1
+        192.96.0.0/30 dev p-1  proto kernel  scope link  src 192.96.0.1
+        ..
+
+        :return: dict {'0.0.0.0/0': {'172.17.0.1': 'eth0'},
+                       '10.0.0.48/28': {'192.168.0.10': 'p-69'},
+                       '10.0.1.0/28': {'192.96.0.2': 'p-1', '192.96.0.6': 'p-3'},
+                       '192.96.0.0/30': {'directly connected': 'p-1'},
+                        ..}
+        """
+        result = {}
+        command = "ip -n %s route show" % netns if netns else 'ip route show'
+        output = self.command(command)
+
+        pat_ip_addr = r'(?:\d{1,3}\.){3}\d{1,3}'
+        m = re.findall(r'^(%s/\d{1,2}|default|).*?(?:via )?(%s|)\s+dev\s+(\S+)' % (pat_ip_addr, pat_ip_addr), output,
+                       re.S | re.M)
+        if m:
+            for prefix, nhp, interface in m:
+                if prefix == 'default':  # format it to match FRR's FIB
+                    prefix = '0.0.0.0/0'
+                if nhp == '':
+                    nhp = 'directly connected'  # format it to match FRR's FIB
+                if prefix:
+                    prefix_cache = prefix
+                else:
+                    prefix = prefix_cache
+                result.setdefault(prefix, {}).update({nhp: interface})
+        return result
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
