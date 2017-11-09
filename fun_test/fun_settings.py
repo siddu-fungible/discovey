@@ -32,3 +32,6 @@ sys.path.append(WEB_DIR)
 
 DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funos/940/"
 TIME_ZONE = "America/Los_Angeles"
+
+
+MAIL_SERVER = "smtp.gmail.com"
