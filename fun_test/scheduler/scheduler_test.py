@@ -22,7 +22,7 @@ def process_killed_jobs():
 
 if __name__ == "__main__":
     suite_path = "storage_sanity.json"
-    build_url = "url"
+    build_url = "http://dochub.fungible.local/doc/jenkins/funos/latest/"
     schedule_in_minutes = 1
 
 
@@ -50,9 +50,9 @@ if __name__ == "__main__":
     #queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=0, repeat_in_minutes=1)
 
 
-    queue_job(suite_path=suite_path, build_url=build_url)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
-    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=4)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
-    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=2)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+    #queue_job(suite_path=suite_path, build_url=build_url)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=0, repeat_in_minutes=60)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+    #queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=2)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
 
 
     # process_killed_jobs()
