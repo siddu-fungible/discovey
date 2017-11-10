@@ -16,6 +16,13 @@ class AssetManager:
         self.docker_host = None  #TODO
         self.orchestrators = []
 
+    @fun_test.safe
+    def cleanup(self):
+        for orchestrator in self.orchestrators:
+            self.docker_host.stop_container(orchestrator.container_name)
+            fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
+            self.docker_host.remove_container(orchestrator.container_name)
+
     def describe(self):
         fun_test.log_section("Printing assets")
         # for orchestrator in self.orchestrators:

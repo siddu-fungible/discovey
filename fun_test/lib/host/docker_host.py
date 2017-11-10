@@ -168,6 +168,19 @@ class DockerHost(Linux, ToDictMixin):
                                     command=build_url)
 
     @fun_test.safe
+    def stop_container(self, container_name, container=None):
+        if container_name:
+            container = self.get_container_by_name(name=container_name)
+        container.stop()
+
+    @fun_test.safe
+    def remove_container(self, container_name, container=None):
+        if container_name:
+            container = self.get_container_by_name(name=container_name)
+        container.remove()
+
+
+    @fun_test.safe
     def setup_container(self,
                         image_name,
                         container_name,
@@ -196,10 +209,10 @@ class DockerHost(Linux, ToDictMixin):
             container = self.get_container_by_name(name=container_name)
             if container:
                 try:
-                    container.stop()
-                    fun_test.debug("Stopped Container: {}".format(container.name))
-                    container.remove()
-                    fun_test.debug("Removed Container: {}".format(container.name))
+                    self.stop_container(container_name=container_name)
+                    fun_test.debug("Stopped Container: {}".format(container_name))
+                    self.remove_container(container_name=container_name)
+                    fun_test.debug("Removed Container: {}".format(container_name))
                 except Exception as ex:
                     fun_test.critical(str(ex))
 

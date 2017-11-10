@@ -79,6 +79,7 @@ class FunTestCase1(FunTestCase):
 
 
         result = storage_controller.command("peek storage/volumes")
+        TopologyHelper(spec=self.script_obj.topology).cleanup()
 
 if __name__ == "__main__":
 
