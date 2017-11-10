@@ -34,7 +34,7 @@ NUM_OF_EBGP_FIB = NUM_OF_EBGP_ROUTES
 NUM_OF_IBGP_ROUTES = NUM_OF_F1_PER_RACK - 1
 NUM_OF_IBGP_FIB = NUM_OF_IBGP_ROUTES
 
-CONVERGE_TIME = 90
+CONVERGE_TIME = 100
 
 
 class BringUpTestBed(FunTestScript):
@@ -50,7 +50,7 @@ class BringUpTestBed(FunTestScript):
         5. Step 5: Verify all F1s' FRR RIB and FIB are consistent in 'show ip route' and 'show ip fib'
         6. Step 6: Verify all F1s' FRR FIB and Linux kernel FIB are consistent in 'show ip fib' and 'ip -n <netns> route
                     show'
-        7. Step 7: Verify bi-directional traffic from one F1 to all other F1s
+        7. Step 7: Verify bi-directional traffic between one F1 and all other F1s
         """)
 
     def setup(self):
