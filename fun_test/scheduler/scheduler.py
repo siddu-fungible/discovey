@@ -14,7 +14,8 @@ job_id_timers = {}
 def timed_dispatcher(suite_worker_obj):
     job_id_threads[suite_worker_obj.job_id] = (suite_worker_obj)
     suite_worker_obj.start()
-    del job_id_timers[suite_worker_obj.job_id]
+    if suite_worker_obj.job_id in job_id_timers:
+        del job_id_timers[suite_worker_obj.job_id]
 
 
 def get_scripts_in_suite(suite_name):
@@ -153,16 +154,16 @@ class SuiteWorker(Thread):
             scheduler_logger.debug("{:50} {} {}".format(script_path,
                                                        str(script_metrics["result"]),
                                                        str(script_metrics["crashed"])))
+        if not self.suite_shutdown:
+            if "repeat" in self.job_spec and self.job_spec["repeat"]:
+                queue_job(job_spec=self.job_spec)
+            elif "repeat_in_minutes" in self.job_spec and self.job_spec["repeat_in_minutes"]:
+                repeat_in_minutes_value = self.job_spec["repeat_in_minutes"]
+                new_job_spec = self.job_spec
+                new_job_spec["schedule_in_minutes"] = repeat_in_minutes_value
+                queue_job(job_spec=new_job_spec)
 
-        if "repeat" in self.job_spec and self.job_spec["repeat"]:
-            queue_job(job_spec=self.job_spec)
-        elif "repeat_in_minutes" in self.job_spec and self.job_spec["repeat_in_minutes"]:
-            repeat_in_minutes_value = self.job_spec["repeat_in_minutes"]
-            new_job_spec = self.job_spec
-            new_job_spec["schedule_in_minutes"] = repeat_in_minutes_value
-            queue_job(job_spec=new_job_spec)
-
-        del job_id_threads[self.job_id]
+            del job_id_threads[self.job_id]
 
 def process_killed_jobs():
     job_files = glob.glob("{}/*{}".format(KILLED_JOBS_DIR, KILLED_JOB_EXTENSION))
@@ -182,15 +183,15 @@ def process_killed_jobs():
                 finally:
                     del job_id_threads[job_id]
 
+            if job_id in job_id_timers:
                 try:
                     if job_id in job_id_timers:
                         t = job_id_timers[job_id]
-                        if t.is_active():
-                            t.cancel()
-                        del job_id_timers[job_id]
+                        t.cancel()
                 except Exception as ex:
                     scheduler_logger.error(str(ex))
-
+                finally:
+                    del job_id_timers[job_id]
                 suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
                 suite_execution.completed_time = datetime.datetime.now()
                 suite_execution.result = RESULTS["KILLED"]
@@ -229,7 +230,9 @@ def process_queue():
         if job_spec and schedule_it:
             suite_worker_obj = SuiteWorker(job_spec=job_spec)
             t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
+            job_id_timers[suite_worker_obj.job_id] = t
             t.start()
+
         else:
             raise SchedulerException("Unable to parse {}".format(job_file))
         de_queue_job(job_file)

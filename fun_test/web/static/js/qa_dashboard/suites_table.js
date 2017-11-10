@@ -28,7 +28,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     $scope.setPage = function(page) {
         $scope.pager = PagerService.GetPager($scope.suiteExecutionsCount, page, $scope.recordsPerPage);
-        if (page === 0 || (page > $scope.pager.pages.length)) {
+        if (page === 0 || (page > $scope.pager.endPage)) {
             return;
         }
         $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page).then(function (result) {

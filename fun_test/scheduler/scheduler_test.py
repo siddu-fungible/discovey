@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
 
     #queue_job(suite_path=suite_path, build_url=build_url)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
-    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=0, repeat_in_minutes=60)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=0, repeat_in_minutes=3)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
     #queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=2)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
 
 
