@@ -68,7 +68,7 @@ class VerifyBgpNeighborState(FunTestCase):
                               summary="Verify all F1s' BGP neighbor IP, ASN, and state or number of prefixes received",
                               steps="""
         1. Step 1: Go through every node(F1) in every rack, get each BGP neighbor's ip addr, ASN, and state or # of 
-                    prefixes received
+                    prefixes received in 'show ip bgp sum'
         2. Step 2: Verify BGP neighbor ip addr and ASN match what are configured, and # of prefixes received match below
                     2.1 # of prefixes from spine == (# of racks - 1) * # of F1 per rack
                     2.2 # of prefixes from F1 == # of prefixes from spine * (# of spines / # of F1 per rack) + 1
@@ -121,7 +121,7 @@ class VerifyBgpNeighborStateQuick(VerifyBgpNeighborState):
                               summary="Verify one F1s' BGP neighbor IP, ASN, and state or number of prefixes received",
                               steps="""
         1. Step 1: From one F1 (e.g. rack 1 node 1), get each BGP neighbor's ip addr, ASN, and state or # of prefixes 
-                    received
+                    received in 'show ip bgp sum'
         2. Step 2: Verify BGP neighbor ip addr and ASN match what are configured, and # of prefixes received match below
                     2.1 # of prefixes from spine == (# of racks - 1) * # of F1 per rack
                     2.2 # of prefixes from F1 == # of prefixes from spine * (# of spines / # of F1 per rack) + 1
@@ -136,7 +136,7 @@ class VerifyIsisNeighborState(FunTestCase):
         self.set_test_details(id=3,
                               summary="Verify all F1s' ISIS neighbors' system id, interface, and state is up",
                               steps="""
-        1. Step 1: Go through every F1 in every rack, get each ISIS neighbor's state
+        1. Step 1: Go through every F1 in every rack, get each ISIS neighbor's state in 'show isis neighbor'
         2. Step 2: Verify neighbor's system id, interface, and state is 'Up'
         """)
 
@@ -177,7 +177,7 @@ class VerifyIpRouteSum(FunTestCase):
         self.set_test_details(id=4,
                               summary="Verify all F1s' number of Routes/FIB learnt from all the protocols",
                               steps="""
-        1. Step 1: Go through every F1 in every rack, get ip route summary
+        1. Step 1: Go through every F1 in every rack, get 'show ip route summary'
         2. Step 2: Verify number of Routes and FIB learnt from connected/isis/ebgp/ibgp
         """)
 
@@ -216,7 +216,7 @@ class VerifyIpRibAndFib(FunTestCase):
         self.set_test_details(id=5,
                               summary="Verify all F1s' FRR RIB and FIB are consistent",
                               steps="""
-        1. Step 1: Go through every F1 in every rack, get FRR RIB info and FIB info
+        1. Step 1: Go through every F1 in every rack, get FRR RIB info ('show ip route') and FIB info ('show ip fib')
         2. Step 2: Verify prefixes/nexthops/interfaces are consistent
         """)
 
@@ -269,7 +269,8 @@ class VerifyIpFibAndLinuxFib(FunTestCase):
         self.set_test_details(id=6,
                               summary="Verify all F1s' FRR FIB and Linux kernel FIB are consistent",
                               steps="""
-        1. Step 1: Go through every F1 in every rack, get FRR FIB and Linux kernel FIB
+        1. Step 1: Go through every F1 in every rack, get FRR FIB ('show ip fib') and Linux kernel FIB ('ip -n <netns> 
+                    route show')
         2. Step 2: Verify prefixes/nexthops/interfaces are consistent
         """)
 
