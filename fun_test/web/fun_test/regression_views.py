@@ -5,6 +5,7 @@ from django.core import serializers, paginator
 from fun_global import RESULTS
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
+import scheduler.scheduler_helper
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
@@ -47,6 +48,13 @@ def static_serve_log_directory(request, suite_execution_id):
     files = glob.glob(path)
     files = [os.path.basename(f) for f in files]
     return render(request, 'qa_dashboard/list_directory.html', locals())
+
+def kill_job(request, suite_execution_id):
+    scheduler.scheduler_helper.kill_job(job_id=suite_execution_id)
+    suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
+    suite_execution.result = RESULTS["KILLED"]
+    suite_execution.save()
+    return HttpResponse("OK")
 
 def suites(request):
     suites_info = collections.OrderedDict()

@@ -31,7 +31,8 @@ regression_urls = [
     url(r'^submit_job_page', regression_views.submit_job_page),
     url(r'^submit_job$', regression_views.submit_job),
     url(r'^suites$', regression_views.suites),
-    url(r'^static_serve_log_directory/(\d+)$', regression_views.static_serve_log_directory)
+    url(r'^static_serve_log_directory/(\d+)$', regression_views.static_serve_log_directory),
+    url(r'^kill_job/(\d+)$', regression_views.kill_job)
 ]
 
 urlpatterns = [

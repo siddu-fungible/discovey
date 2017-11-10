@@ -68,6 +68,13 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         });
     }
 
+    $scope.killClick = function(suiteId) {
+        $http.get("/regression/kill_job/" + suiteId).then(function (result) {
+            let jobId = parseInt(result.data);
+            $window.location.href = "/regression/";
+        });
+    }
+
 }
 
 function PagerService() {

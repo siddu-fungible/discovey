@@ -8,7 +8,8 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "FAILED": "FAILED",
            "SKIPPED": "SKIPPED",
            "IN_PROGRESS": "IN_PROGRESS",
-           "UNKNOWN": "UNKNOWN"}
+           "UNKNOWN": "UNKNOWN",
+           "KILLED": "KILLED"}
 
 
 def get_current_time():
