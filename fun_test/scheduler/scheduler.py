@@ -1,5 +1,5 @@
 from fun_settings import *
-from fun_global import get_current_time
+from fun_global import get_current_time, RESULTS
 import os
 import re
 import subprocess
@@ -9,10 +9,12 @@ from scheduler_helper import *
 import dateutil.parser, signal, psutil
 
 job_id_threads = {}
+job_id_timers = {}
 
 def timed_dispatcher(suite_worker_obj):
     job_id_threads[suite_worker_obj.job_id] = (suite_worker_obj)
     suite_worker_obj.start()
+    del job_id_timers[suite_worker_obj.job_id]
 
 
 def get_scripts_in_suite(suite_name):
@@ -179,6 +181,20 @@ def process_killed_jobs():
                     scheduler_logger.error(str(ex))
                 finally:
                     del job_id_threads[job_id]
+
+                try:
+                    if job_id in job_id_timers:
+                        t = job_id_timers[job_id]
+                        if t.is_active():
+                            t.cancel()
+                        del job_id_timers[job_id]
+                except Exception as ex:
+                    scheduler_logger.error(str(ex))
+
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+                suite_execution.completed_time = datetime.datetime.now()
+                suite_execution.result = RESULTS["KILLED"]
+                suite_execution.save()
         os.remove(job_file)
 
 

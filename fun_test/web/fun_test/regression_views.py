@@ -113,6 +113,9 @@ def _get_suite_executions(execution_id, page=None, records_per_page=10):
             suite_result = RESULTS["FAILED"]
         if num_in_progress:
             suite_result = RESULTS["IN_PROGRESS"]
+        if "result" in suite_execution["fields"]:
+            if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
+                suite_result = RESULTS["KILLED"]
         suite_execution["suite_result"] = suite_result
         suite_execution["num_passed"] = num_passed
         suite_execution["num_failed"] = num_failed
