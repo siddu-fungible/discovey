@@ -164,6 +164,11 @@ class SuiteWorker(Thread):
                 queue_job(job_spec=new_job_spec)
 
             del job_id_threads[self.job_id]
+            send_summary_mail(job_id=self.job_id)
+        else:
+            pass #TODO: Send error report
+
+
 
 def process_killed_jobs():
     job_files = glob.glob("{}/*{}".format(KILLED_JOBS_DIR, KILLED_JOB_EXTENSION))

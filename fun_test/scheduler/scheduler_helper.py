@@ -1,8 +1,9 @@
 import time, datetime, json, glob
 import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR
-
+from web.fun_test.web_interface import get_suite_detail_url
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR
+from fun_global import RESULTS
 
 CONSOLE_LOG_EXTENSION = ".logs.txt"
 HTML_LOG_EXTENSION = ".html"
@@ -140,6 +141,70 @@ def process_list(process_name):
         except:
             pass
     return processes
+
+def _get_table(header_list, list_of_rows):
+    s = '<table class="table table-nonfluid"\n'
+    s += "\t<tr>\n"
+    for header in header_list:
+        s += "\t\t<th>" + header + "</th>\n"
+    s += "\t</tr>"
+    s += "\n"
+
+    for row in list_of_rows:
+        s += "\t<tr>\n"
+        s += "\t\t"
+        elements = row
+        if type(row) is dict:
+            elements = row.values()
+        for element in elements:
+            klass = ""
+            if element == RESULTS["PASSED"]:
+                klass = ' class="passed"'
+            elif element == RESULTS["FAILED"]:
+                klass = ' class="failed"'
+            s += "<td{}>".format(klass)
+            s += str(element)
+            s += "</td>"
+        s += "\n\t</tr>\n"
+    s += "</table>"
+
+    return s
+
+def send_summary_mail(job_id):
+    suite_executions = models_helper._get_suite_executions(execution_id=job_id, save_test_case_info=True)
+    suite_execution = suite_executions[0]
+    suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
+    header_list = ["Metric", "Value"]
+    table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
+    header_list = ["TC-ID", "Path", "Result"]
+    list_of_rows = [[x["test_case_id"], x["script_path"], x["result"]] for x in suite_execution["test_case_info"]]
+    table2 = _get_table(header_list=header_list, list_of_rows=list_of_rows)
+
+    suite_detail_url = """
+    <p>
+        <a href="%s">Details Link</a>
+    </p>
+    """ % (get_suite_detail_url(suite_execution_id=job_id))
+
+    css_file = WEB_STATIC_DIR + "/css/common/mail.css"
+    with open(css_file, "r") as f:
+        css = f.read()
+        html = """
+        <head>
+        <style>
+        %s
+        </style>
+        </head>
+        %s
+        <br>
+        %s
+        <br>
+        <br>
+        %s
+        """ % (css, suite_detail_url, table1, table2)
+
+        print html
+
 
 if __name__ == "__main__":
     print get_flat_console_log_file_name(path="/clean_sanity.py")
