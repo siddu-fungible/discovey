@@ -1,5 +1,4 @@
 from lib.system.fun_test import *
-fun_test.enable_pause_on_failure()
 
 class MyScript(FunTestScript):
     def describe(self):

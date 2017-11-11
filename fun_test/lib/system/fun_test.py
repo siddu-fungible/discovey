@@ -150,8 +150,7 @@ class FunTest:
             fun_test.critical("Pause on failure not allowed on a regression server")
 
     def disable_pause_on_failure(self):
-        if not is_regression_server():
-            self.pause_on_failure = False
+        self.pause_on_failure = False
 
     def set_topology_json_filename(self, filename):
         self.fun_xml_obj.set_topology_json_filename(filename=filename)
