@@ -213,6 +213,7 @@ def send_summary_mail(job_id):
 
         if is_regression_server():
             result = send_mail(subject=subject, content=html)
+            scheduler_logger.info("Sent mail")
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))
 
