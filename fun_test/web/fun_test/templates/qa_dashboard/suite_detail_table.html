@@ -7,6 +7,7 @@
                 <tr>
                     <th>E Id</th>
                     <th>T Id</th>
+                    <th>Summary</th>
                     <th>Result</th>
                     <th>Scheduled At</th>
                     <th>Path</th>
@@ -18,6 +19,7 @@
                 <tr ng-repeat="testCaseExecution in testCaseExecutions | orderBy: 'fields.execution_id'">
                     <td>{{ testCaseExecution.fields.execution_id }}</td>
                     <td>{{ testCaseExecution.fields.test_case_id }}</td>
+                    <td>Test-case summary</td>
                     <td>
                         <button class="btn btn-{{ resultToClass(testCaseExecution.fields.result)}}">{{ testCaseExecution.fields.result }}</button>
                     </td>

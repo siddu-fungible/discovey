@@ -3,7 +3,8 @@ import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR
-from fun_global import RESULTS
+from fun_global import RESULTS, is_regression_server
+from lib.utilities.send_mail import send_mail
 
 CONSOLE_LOG_EXTENSION = ".logs.txt"
 HTML_LOG_EXTENSION = ".html"
@@ -176,8 +177,8 @@ def send_summary_mail(job_id):
     suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
-    header_list = ["TC-ID", "Path", "Result"]
-    list_of_rows = [[x["test_case_id"], x["script_path"], x["result"]] for x in suite_execution["test_case_info"]]
+    header_list = ["TC-ID", "Summary", "Path", "Result"]
+    list_of_rows = [[x["test_case_id"], "Summary1", x["script_path"], x["result"]] for x in suite_execution["test_case_info"]]
     table2 = _get_table(header_list=header_list, list_of_rows=list_of_rows)
 
     suite_detail_url = """
@@ -203,8 +204,17 @@ def send_summary_mail(job_id):
         %s
         """ % (css, suite_detail_url, table1, table2)
 
-        print html
+        # print html
 
+        subject = "Automation: {}: {} P:{} F:{}".format(suite_execution["suite_result"],
+                                            suite_execution["fields"]["suite_path"],
+                                            suite_execution["num_passed"],
+                                            suite_execution["num_failed"])
+
+        if is_regression_server():
+            result = send_mail(subject=subject, content=html)
+            if not result["status"]:
+                scheduler_logger.error("Send Mail: {}".format(result["error_message"]))
 
 if __name__ == "__main__":
     print get_flat_console_log_file_name(path="/clean_sanity.py")

@@ -12,6 +12,7 @@ import pytz
 from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 import signal
+from web.fun_test.web_interface import get_homepage_url
 
 class TestException(Exception):
     def __str__(self):
@@ -388,7 +389,7 @@ class FunTest:
         for k, v in self.test_metrics.items():
             self.log(format.format(k, v["result"], v["summary"]), no_timestamp=True)
 
-        self.log("http://127.0.0.1:{}/static/logs/".format(WEB_SERVER_PORT) + self.script_file_name.replace(".py", ".html"),
+        self.log("{}{}/".format(get_homepage_url(), LOGS_RELATIVE_DIR) + self.script_file_name.replace(".py", ".html"),
                  no_timestamp=True)
 
     def print_test_case_summary(self, test_case_id):
