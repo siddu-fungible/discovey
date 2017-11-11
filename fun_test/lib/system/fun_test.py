@@ -1,14 +1,12 @@
-import datetime
 import sys, os
 import traceback
 import collections
 import abc
-import time, json
+import time, json, pdb
 import inspect
 from fun_settings import *
 import fun_xml
 import argparse
-import pytz
 from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 import signal
@@ -137,12 +135,23 @@ class FunTest:
         self.counter = 0  # Mostly used for testing
 
         self.log_timestamps = True
+        self.pause_on_failure = False
 
     def create_test_case_artifact_file(self, post_fix_name, contents):
         artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         with open(artifact_file, "w") as f:
             f.write(contents)
         return os.path.basename(artifact_file)
+
+    def enable_pause_on_failure(self):
+        if not is_regression_server():
+            self.pause_on_failure = True
+        else:
+            fun_test.critical("Pause on failure not allowed on a regression server")
+
+    def disable_pause_on_failure(self):
+        if not is_regression_server():
+            self.pause_on_failure = False
 
     def set_topology_json_filename(self, filename):
         self.fun_xml_obj.set_topology_json_filename(filename=filename)
@@ -484,6 +493,8 @@ class FunTest:
                                             actual=actual,
                                             result=FunTest.FAILED)
             self.critical(assert_message)
+            if self.pause_on_failure:
+                pdb.set_trace()
             raise TestException(assert_message)
         if not ignore_on_success:
             self.log(assert_message)
