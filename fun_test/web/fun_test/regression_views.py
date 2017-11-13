@@ -16,6 +16,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 def index(request):
+    filter_string = "ALL"
+    return render(request, 'qa_dashboard/regression.html', locals())
+
+def completed_jobs(request):
+    filter_string = "COMPLETED"
     return render(request, 'qa_dashboard/regression.html', locals())
 
 def submit_job_page(request):

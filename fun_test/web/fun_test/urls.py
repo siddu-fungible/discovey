@@ -20,6 +20,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 regression_urls = [
     url(r'^$', regression_views.index),
+    url(r'^$', regression_views.completed_jobs),
     url(r'^suite_executions/(\d+)/(\d+)$', regression_views.suite_executions),
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),

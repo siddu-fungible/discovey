@@ -577,11 +577,13 @@ class FunTestScript(object):
                                                            result=fun_test.PASSED)
             script_result = FunTest.PASSED
         except (TestException) as ex:
+            self.at_least_one_failed = True
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
                                                        suite_execution_id=fun_test.suite_execution_id,
                                                        result=fun_test.FAILED)
         except (Exception) as ex:
+            self.at_least_one_failed = True
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
                                                        suite_execution_id=fun_test.suite_execution_id,

@@ -111,20 +111,30 @@ def _get_suite_executions(execution_id,
                           records_per_page=10,
                           save_test_case_info=False,
                           save_suite_info=True,
-                          filter_string="ALL"
-                          ):
+                          filter_string="ALL",
+                          get_count=False):
     all_objects = None
-    if not execution_id:
-        if filter_string == "ALL":
-            all_objects = SuiteExecution.objects.all().order_by('-id')
-        else:
-            all_objects = SuiteExecution.objects.filter((Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"]))).order_by('-id')
+    q = Q(result=RESULTS["UNKNOWN"])
 
-    else:
-        if filter_string == "ALL":
+    if filter_string == "PENDING":
+        q = Q(result=RESULTS["UNKNOWN"])
+    elif filter_string == "IN_PROGRESS":
+        q = Q(result=RESULTS["IN_PROGRESS"])
+    elif filter_string == "COMPLETED":
+        q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"])
+    if execution_id:
+        q = Q(execution_id=execution_id) & q
+
+    if filter_string == "ALL":
+        if execution_id:
             all_objects = SuiteExecution.objects.filter(execution_id=execution_id).order_by('-id')
         else:
-            all_objects = SuiteExecution.objects.filter(Q(execution_id=execution_id) & (Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"])) ).order_by('-id')
+            all_objects = SuiteExecution.objects.all().order_by('-id')
+    else:
+        all_objects = SuiteExecution.objects.filter(q)
+
+
+
     if page:
         p = paginator.Paginator(all_objects, records_per_page)
         all_objects = p.page(page)
