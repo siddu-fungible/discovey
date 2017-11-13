@@ -6,7 +6,7 @@ from fun_global import RESULTS
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 import scheduler.scheduler_helper
-from models_helper import _get_suite_executions, _get_suite_execution_attributes
+from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
@@ -16,11 +16,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 def index(request):
-    filter_string = "ALL"
+    filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     return render(request, 'qa_dashboard/regression.html', locals())
 
 def completed_jobs(request):
-    filter_string = "COMPLETED"
+    filter_string = SUITE_EXECUTION_FILTERS["COMPLETED"]
+    return render(request, 'qa_dashboard/regression.html', locals())
+
+def pending_jobs(request):
+    filter_string = SUITE_EXECUTION_FILTERS["PENDING"]
     return render(request, 'qa_dashboard/regression.html', locals())
 
 def submit_job_page(request):
@@ -79,11 +83,15 @@ def suites(request):
 
 
 
-def suite_executions_count(request):
-    return HttpResponse(SuiteExecution.objects.count())
+def suite_executions_count(request, filter_string):
+    count = _get_suite_executions(get_count=True, filter_string=filter_string)
+    return HttpResponse(count)
 
-def suite_executions(request, records_per_page=10, page=None):
-    all_objects_dict = _get_suite_executions(execution_id=None, page=page, records_per_page=records_per_page)
+def suite_executions(request, records_per_page=10, page=None, filter_string="ALL"):
+    all_objects_dict = _get_suite_executions(execution_id=None,
+                                             page=page,
+                                             records_per_page=records_per_page,
+                                             filter_string=filter_string)
     return HttpResponse(json.dumps(all_objects_dict))
 
 def suite_execution(request, execution_id):

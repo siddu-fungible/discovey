@@ -10,7 +10,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         $scope.recordsPerPage = 10;
         $scope.logDir = null;
         $scope.suiteExecutionsCount = 0;
-        $http.get("/regression/suite_executions_count").then(function(result) {
+        $http.get("/regression/suite_executions_count/"  + ctrl.filterString).then(function(result) {
             $scope.suiteExecutionsCount = (parseInt(result.data));
             $scope.setPage(1);
 
@@ -32,7 +32,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         if (page === 0 || (page > $scope.pager.endPage)) {
             return;
         }
-        $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page).then(function (result) {
+        $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page + "/" + ctrl.filterString).then(function (result) {
             $scope.items = result.data;
         });
     };

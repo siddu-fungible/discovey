@@ -5,6 +5,7 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
+            $scope.buildUrl = "http://dochub.fungible.local/doc/jenkins/funos/latest/";
             console.log(ctrl);
             $scope.selectedSuite = null;
             $scope.selectedInfo = null;

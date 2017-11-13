@@ -20,11 +20,12 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 regression_urls = [
     url(r'^$', regression_views.index),
-    url(r'^$', regression_views.completed_jobs),
-    url(r'^suite_executions/(\d+)/(\d+)$', regression_views.suite_executions),
+    url(r'^completed_jobs$', regression_views.completed_jobs),
+    url(r'^pending_jobs$', regression_views.pending_jobs),
+    url(r'^suite_executions/(\d+)/(\d+)/(.*)$', regression_views.suite_executions),
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),
-    url(r'^suite_executions_count$', regression_views.suite_executions_count),
+    url(r'^suite_executions_count/(.*)$', regression_views.suite_executions_count),
     url(r'^test_case_execution/(\d+)/(\d+)$', regression_views.test_case_execution),
     url(r'^suite_re_run/(\d+)$', regression_views.suite_re_run),
     url(r'^test_case_re_run$', regression_views.test_case_re_run),

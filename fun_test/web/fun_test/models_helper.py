@@ -15,6 +15,10 @@ from web.fun_test.models import (
     TestCaseExecution
 )
 
+SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
+                           "COMPLETED": "COMPLETED",
+                           "ALL": "ALL"}
+
 
 def update_suite_execution(suite_execution_id, result):
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
@@ -106,7 +110,7 @@ def get_test_case_execution(execution_id):
     results = TestCaseExecution.objects.filter(execution_id=execution_id)
     return results[0]  #TODO: what if len(results) > 1
 
-def _get_suite_executions(execution_id,
+def _get_suite_executions(execution_id=None,
                           page=None,
                           records_per_page=10,
                           save_test_case_info=False,
@@ -116,11 +120,9 @@ def _get_suite_executions(execution_id,
     all_objects = None
     q = Q(result=RESULTS["UNKNOWN"])
 
-    if filter_string == "PENDING":
-        q = Q(result=RESULTS["UNKNOWN"])
-    elif filter_string == "IN_PROGRESS":
-        q = Q(result=RESULTS["IN_PROGRESS"])
-    elif filter_string == "COMPLETED":
+    if filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
+        q = Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"])
+    elif filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
         q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"])
     if execution_id:
         q = Q(execution_id=execution_id) & q
@@ -134,6 +136,8 @@ def _get_suite_executions(execution_id,
         all_objects = SuiteExecution.objects.filter(q)
 
 
+    if get_count:
+        return all_objects.count()
 
     if page:
         p = paginator.Paginator(all_objects, records_per_page)
