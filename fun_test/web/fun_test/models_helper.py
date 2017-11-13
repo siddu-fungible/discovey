@@ -3,6 +3,7 @@ from django.core import serializers, paginator
 from fun_global import RESULTS, get_current_time
 from django.utils import timezone
 import dateutil.parser
+from django.db.models import Q
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
@@ -14,6 +15,15 @@ from web.fun_test.models import (
     TestCaseExecution
 )
 
+
+def update_suite_execution(suite_execution_id, result):
+    te = SuiteExecution.objects.get(execution_id=suite_execution_id)
+    te.result = result
+    te.save()
+    return te
+
+def finalize_suite_execution(suite_execution_id):
+    _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True)
 
 def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_path="unknown"):
 
@@ -96,12 +106,25 @@ def get_test_case_execution(execution_id):
     results = TestCaseExecution.objects.filter(execution_id=execution_id)
     return results[0]  #TODO: what if len(results) > 1
 
-def _get_suite_executions(execution_id, page=None, records_per_page=10, save_test_case_info=False):
+def _get_suite_executions(execution_id,
+                          page=None,
+                          records_per_page=10,
+                          save_test_case_info=False,
+                          save_suite_info=True,
+                          filter_string="ALL"
+                          ):
     all_objects = None
     if not execution_id:
-        all_objects = SuiteExecution.objects.all().order_by('-id')
+        if filter_string == "ALL":
+            all_objects = SuiteExecution.objects.all().order_by('-id')
+        else:
+            all_objects = SuiteExecution.objects.filter((Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"]))).order_by('-id')
+
     else:
-        all_objects = SuiteExecution.objects.filter(execution_id=execution_id).order_by('-id')
+        if filter_string == "ALL":
+            all_objects = SuiteExecution.objects.filter(execution_id=execution_id).order_by('-id')
+        else:
+            all_objects = SuiteExecution.objects.filter(Q(execution_id=execution_id) & (Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"])) ).order_by('-id')
     if page:
         p = paginator.Paginator(all_objects, records_per_page)
         all_objects = p.page(page)
@@ -146,12 +169,22 @@ def _get_suite_executions(execution_id, page=None, records_per_page=10, save_tes
         if "result" in suite_execution["fields"]:
             if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
                 suite_result = RESULTS["KILLED"]
+
+        if save_suite_info:  #TODO: Perf too many saves
+            se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
+            se.result = suite_result
+            se.save()
+            suite_result = suite_execution["fields"]["result"]
+
         suite_execution["suite_result"] = suite_result
         suite_execution["num_passed"] = num_passed
         suite_execution["num_failed"] = num_failed
         suite_execution["num_skipped"] = num_skipped
         suite_execution["num_not_run"] = num_not_run
         suite_execution["num_in_progress"] = num_in_progress
+
+
+
 
         suite_execution["fields"]["scheduled_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["scheduled_time"])))
         suite_execution["fields"]["submitted_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["submitted_time"])))

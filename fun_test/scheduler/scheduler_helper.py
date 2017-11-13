@@ -71,8 +71,8 @@ def queue_job(suite_path="unknown",
         if job_spec:
             suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                      scheduled_time=get_current_time(),
-                                      completed_time=get_current_time(),
+                                                        scheduled_time=get_current_time(),
+                                                        completed_time=get_current_time(),
                                                         suite_path=suite_path)
     if not job_spec:
         job_spec = {}

@@ -69,6 +69,7 @@ class SuiteWorker(Thread):
 
     def run(self):
         scheduler_logger.debug("Running Job: {}".format(self.job_id))
+        models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["IN_PROGRESS"])
         suite_execution_id = self.job_id
         self.prepare_job_directory()
         build_url = self.job_build_url
@@ -164,7 +165,9 @@ class SuiteWorker(Thread):
                 queue_job(job_spec=new_job_spec)
 
             del job_id_threads[self.job_id]
+            models_helper.finalize_suite_execution(suite_execution_id=self.job_id)
             send_summary_mail(job_id=self.job_id)
+
         else:
             pass #TODO: Send error report
 
