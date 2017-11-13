@@ -655,7 +655,9 @@ class FunTestScript(object):
 
                     if test_result == FunTest.FAILED:
                         self.at_least_one_failed = True
-                super(self.__class__, self).cleanup()
+
+            super(self.__class__, self).cleanup()
+
         except Exception as ex:
             fun_test.critical(str(ex))
             try:
