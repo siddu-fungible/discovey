@@ -7,7 +7,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     ctrl.$onInit = function () {
         console.log(ctrl);
-        $scope.recordsPerPage = 10;
+        $scope.recordsPerPage = 20;
         $scope.logDir = null;
         $scope.suiteExecutionsCount = 0;
         $http.get("/regression/suite_executions_count/"  + ctrl.filterString).then(function(result) {
