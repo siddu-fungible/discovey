@@ -10,6 +10,7 @@ from models_helper import _get_suite_executions, _get_suite_execution_attributes
 from web.fun_test.models import SuiteExecution, TestCaseExecution
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -88,11 +89,15 @@ def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
+
     return render(request, 'qa_dashboard/suite_detail.html', locals())
 
 def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj = TestCaseExecution.objects.get(suite_execution_id=suite_execution_id,
                                                         execution_id=test_case_execution_id)
+    test_case_execution_obj.started_time = timezone.localtime(test_case_execution_obj.started_time)
+    test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
+
     data = serializers.serialize('json', [test_case_execution_obj])
     return HttpResponse(data)
 

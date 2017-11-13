@@ -1,6 +1,8 @@
 import os, django, json, datetime
 from django.core import serializers, paginator
-from fun_global import RESULTS
+from fun_global import RESULTS, get_current_time
+from django.utils import timezone
+import dateutil.parser
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
@@ -65,7 +67,7 @@ def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESUL
     te = TestCaseExecution(execution_id=get_next_test_case_execution_id(), test_case_id=test_case_id,
                            suite_execution_id=suite_execution_id,
                            result=result,
-                           started_time=datetime.datetime.now(),
+                           started_time=get_current_time(), #timezone.now(), #get_current_time(),
                            script_path=path)
     te.save()
     add_test_case_execution_id(suite_execution_id=suite_execution_id,
@@ -83,7 +85,7 @@ def report_test_case_execution_result(execution_id, result):
     test_execution = get_test_case_execution(execution_id=execution_id)
     # fun_test.simple_assert(test_execution, "Test-execution") # TODO
     test_execution.result = result
-    test_execution.end_time = datetime.datetime.now()
+    test_execution.end_time = get_current_time()#timezone.now()
     test_execution.save()
 
 def get_test_case_executions_by_suite_execution(suite_execution_id):
@@ -150,6 +152,11 @@ def _get_suite_executions(execution_id, page=None, records_per_page=10, save_tes
         suite_execution["num_skipped"] = num_skipped
         suite_execution["num_not_run"] = num_not_run
         suite_execution["num_in_progress"] = num_in_progress
+
+        suite_execution["fields"]["scheduled_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["scheduled_time"])))
+        suite_execution["fields"]["submitted_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["submitted_time"])))
+        suite_execution["fields"]["completed_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["completed_time"])))
+
     return all_objects_dict
 
 def _get_suite_execution_attributes(suite_execution):

@@ -96,7 +96,7 @@ class SuiteWorker(Thread):
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         if not suite_execution:
             raise SchedulerException("Unable to retrieve suite execution id: {}".format(suite_execution_id))
-        suite_execution.scheduled_time = datetime.datetime.now()
+        suite_execution.scheduled_time = get_current_time()
         suite_execution.suite_path = self.job_spec["suite_name"]
         suite_execution.save()
 
@@ -144,7 +144,7 @@ class SuiteWorker(Thread):
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
         scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
-        suite_execution.completed_time = datetime.datetime.now()
+        suite_execution.completed_time = get_current_time()
         suite_execution.save()
 
         # print job summary
@@ -198,7 +198,7 @@ def process_killed_jobs():
                 finally:
                     del job_id_timers[job_id]
                 suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
-                suite_execution.completed_time = datetime.datetime.now()
+                suite_execution.completed_time = get_current_time()
                 suite_execution.result = RESULTS["KILLED"]
                 suite_execution.save()
         os.remove(job_file)

@@ -3,8 +3,13 @@ import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR
-from fun_global import RESULTS, is_regression_server
+from fun_global import RESULTS, is_regression_server, get_current_time
 from lib.utilities.send_mail import send_mail
+from django.utils.timezone import activate
+from django.utils import timezone
+from fun_settings import TIME_ZONE
+
+activate(TIME_ZONE)
 
 CONSOLE_LOG_EXTENSION = ".logs.txt"
 HTML_LOG_EXTENSION = ".html"
@@ -65,9 +70,9 @@ def queue_job(suite_path="unknown",
     if suite_path == "unknown":
         if job_spec:
             suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
-    suite_execution = models_helper.add_suite_execution(submitted_time=datetime.datetime.now(),
-                                      scheduled_time=datetime.datetime.max,
-                                      completed_time=datetime.datetime.max,
+    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
+                                      scheduled_time=get_current_time(),
+                                      completed_time=get_current_time(),
                                                         suite_path=suite_path)
     if not job_spec:
         job_spec = {}
