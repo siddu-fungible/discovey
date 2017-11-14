@@ -562,6 +562,10 @@ class Topology(object):
             if not isinstance(dsts, list):
                 self.logger.warning('For flat_topo, destinations must be list of nodes')
                 return
+            if oper == 'shut' or oper == 'no_shut':
+                self.logger.warning('shut/no_shut not valid for flat_topo')
+                return
+
             dst_nodes = []
             node_vm = self.get_node_vm(src)
             for dst in dsts:
@@ -597,6 +601,10 @@ class Topology(object):
             if not isinstance(dsts, list):
                 self.logger.warning('For flat_topo, destinations must be list of nodes')
                 return
+            if oper == 'shut' or oper == 'no_shut':
+                self.logger.warning('shut/no_shut not valid for flat_topo')
+                return
+
             dst_nodes = []
             node_vm = self.get_node_vm(src)
             for dst in dsts:
@@ -1086,6 +1094,8 @@ class VM(object):
 
     def linkRepair(self, src_node, dst, oper):
 
+        netem_repair_cmd_1 = ''
+
         if dst not in src_node.interfaces:
             self.logger.warning('Invalid destination %s for linkRepair from %s. Skipping over' % (dst, src_node.name))
             return
@@ -1093,11 +1103,22 @@ class VM(object):
         my_intf_name = src_node.interfaces[dst]['my_intf_name']
         peer_intf_name = src_node.interfaces[dst]['peer_intf_name']
         peer_type = src_node.interfaces[dst]['peer_type']
-        netem_repair_cmd = 'ip netns exec %s tc qdisc del dev %s root \n' % (src_node.name, my_intf_name) 
-        if peer_type == 'leaf':
-            netem_repair_cmd += 'ip netns exec %s tc qdisc del dev %s root \n' % (dst, peer_intf_name)
+        dst_vm_ip = src_node.interfaces[dst]['dst_vm_ip']
+        
+        if oper == 'no_shut':
+            netem_repair_cmd = 'ip netns exec %s ip link set dev %s up \n' % (src_node.name, my_intf_name) 
+            if peer_type == 'spine': 
+                if self.ip != dst_vm_ip: 
+                    netem_repair_cmd_1 = 'ip netns exec %s ip link set dev %s up \n' % (dst, peer_intf_name)
+        else:
+            netem_repair_cmd = 'ip netns exec %s tc qdisc del dev %s root \n' % (src_node.name, my_intf_name) 
+            if peer_type == 'leaf':
+                netem_repair_cmd += 'ip netns exec %s tc qdisc del dev %s root \n' % (dst, peer_intf_name)
 
         out = exec_remote_commands([(self.ip, [netem_repair_cmd])], [], logger=self.logger)
+        if netem_repair_cmd_1:
+            out = exec_remote_commands([(dst_vm_ip, [netem_repair_cmd_1])], [], logger=self.logger)
+
         src_node.interfaces[dst]['state'] = 'up'
 
       
@@ -1111,6 +1132,8 @@ class VM(object):
 
     def linkImpair(self, src_node, dst, oper, param1, param2, param3):
 
+        netem_impair_cmd_1 = ''
+
         if dst not in src_node.interfaces:
             self.logger.warning('Invalid destination %s for linkImpair from %s. Skipping over' % (dst, src_node.name))
             return
@@ -1118,6 +1141,8 @@ class VM(object):
         my_intf_name = src_node.interfaces[dst]['my_intf_name']
         peer_intf_name = src_node.interfaces[dst]['peer_intf_name']
         peer_type = src_node.interfaces[dst]['peer_type']
+        dst_vm_ip = src_node.interfaces[dst]['dst_vm_ip']
+
         if oper == 'rate':
             netem_impair_cmd = 'ip netns exec %s tc qdisc add dev %s root tbf %s %s ' % \
                                (src_node.name, my_intf_name, oper, param1)
@@ -1126,6 +1151,13 @@ class VM(object):
                                (src_node.name, my_intf_name, oper, param1)
             netem_impair_cmd += '\nip netns exec %s tc qdisc add dev %s root netem %s %s \n' % \
                                (dst, peer_intf_name, oper, param1)
+        elif oper == 'shut':
+            netem_impair_cmd = 'ip netns exec %s ip link set dev %s down \n' % \
+                               (src_node.name, my_intf_name)
+            if peer_type == 'spine':
+                if self.ip != dst_vm_ip:
+                    netem_impair_cmd_1 = 'ip netns exec %s ip link set dev %s down \n' % \
+                                         (dst, peer_intf_name)
         else:
             netem_impair_cmd = 'ip netns exec %s tc qdisc add dev %s root netem %s %s ' % \
                                (src_node.name, my_intf_name, oper, param1)
@@ -1151,7 +1183,10 @@ class VM(object):
                 src_node.interfaces[dst]['state'] += 'delay %s ' % param3
             else:
                 pass
+
         out = exec_remote_commands([(self.ip, [netem_impair_cmd])], [], logger=self.logger)
+        if netem_impair_cmd_1:
+            out = exec_remote_commands([(dst_vm_ip, [netem_impair_cmd_1])], [], logger=self.logger)
 
     def flatLinkImpair(self, src, dsts):
         src_node = self.get_node(src) 
@@ -1489,7 +1524,8 @@ class Node(object):
                                      'peer_ip': peer_ip,
                                      'peer_asn': dst.asn,
                                      'peer_type': dst.type,
-                                     'state': 'up'
+                                     'state': 'up',
+                                     'dst_vm_ip': dst.vm_obj.ip
                                      }
 
         #Links to TG are made from the TG node
