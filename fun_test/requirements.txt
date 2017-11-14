@@ -1,0 +1,13 @@
+cffi==1.10.0
+Django==1.11.3
+jira==1.0.10
+pexpect==4.2.1
+paramiko==2.2.1
+paramiko-expect==0.2.8
+docker==2.5.0
+netaddr==0.7.19
+psutil==5.3.1
+rq==0.8.2
+zmq==0.0.0
+pathos==0.2.1
+python-dateutil==2.6.1

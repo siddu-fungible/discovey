@@ -5,23 +5,12 @@ Installation:
 # git clone git@github.com:fungible-inc/Integration.git
 # cd Integration/fun_test
 # export PYTHONPATH=`pwd`
-# pip install django
-# pip install jira
-# pip install pexpect
-# pip install paramiko
-# pip install paramiko_expect
-# pip install docker
-# pip install netaddr
-# pip install psutil
-# pip install rq
-# pip install zmq
-# pip install pathos
-# export PYTHONPATH=`pwd`
-# cd web/fun_test
+# pip install -r requirements.txt  (sudo may be required)
 
-# python ./start_server.py [OPTIONAL]
-# cd ../../scripts
 
+# python web/start_server.py [OPTIONAL]
+
+# cd scripts
 # python examples/sanity.py 
 ```
 

@@ -142,6 +142,10 @@ class TopologyHelper:
                     fun_test.counter += 1
 
 
+    @fun_test.safe
+    def cleanup(self):
+        asset_manager.cleanup()
+
 if __name__ == "__main__":
     topology_dict = {
         "name": "Basic Storage",

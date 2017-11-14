@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from fun_settings import *
 from django.core.management import execute_from_command_line
 import os, sys, psutil, subprocess

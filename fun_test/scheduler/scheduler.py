@@ -1,17 +1,22 @@
 from fun_settings import *
-import json, os, sys
-import glob, re
-import time, subprocess, datetime
+from fun_global import get_current_time, RESULTS
+import os
+import re
+import subprocess
 from threading import Thread
-import web.fun_test.models_helper as models_helper
+import threading
 from scheduler_helper import *
-import urllib, tarfile, requests
+import dateutil.parser, signal, psutil
 
-threads = []
+job_id_threads = {}
+job_id_timers = {}
 
+def timed_dispatcher(suite_worker_obj):
+    job_id_threads[suite_worker_obj.job_id] = (suite_worker_obj)
+    suite_worker_obj.start()
+    if suite_worker_obj.job_id in job_id_timers:
+        del job_id_timers[suite_worker_obj.job_id]
 
-
-FUNOS_POSIX_PATH_IN_TGZ = 'build/funos-f1'
 
 def get_scripts_in_suite(suite_name):
     suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
@@ -34,6 +39,25 @@ class SuiteWorker(Thread):
             self.job_test_case_ids = job_spec["test_case_ids"]
         if "build_url" in job_spec:
             self.job_build_url = job_spec["build_url"]
+        self.current_script_process = None
+
+        self.suite_shutdown = False
+
+    def shutdown_suite(self):
+        scheduler_logger.info("Shutdown_suite")
+        if self.current_script_process:
+            try:
+                os.kill(self.current_script_process.pid, signal.SIGINT)
+                time.sleep(5)
+            except Exception as ex:
+                scheduler_logger.error(str(ex))
+            if psutil.pid_exists(self.current_script_process.pid):
+                try:
+                    os.kill(self.current_script_process.pid, signal.SIGKILL)
+                except Exception as ex:
+                    scheduler_logger.error(str(ex))
+
+
 
     def prepare_job_directory(self):
         self.job_dir = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(self.job_id)
@@ -43,105 +67,48 @@ class SuiteWorker(Thread):
         except Exception as ex:
             raise SchedulerException(str(ex))
 
-    def get_test_artifacts_directory(self, relative=False):
-        if not relative:
-            directory = TEST_ARTIFACTS_DIR + "/s_" + str(self.job_id)
-        else:
-            directory = TEST_ARTIFACTS_RELATIVE_DIR + "/s_" + str(self.job_id)
-        return directory
-
-    def get_test_artifacts_url(self):
-        relative_dir = self.get_test_artifacts_directory(relative=True)
-        url = "http://0.0.0.0:%d" % WEB_SERVER_PORT + STATIC_RELATIVE_DIR + relative_dir
-        return url
-
-    def get_funos_posix_url(self):
-        url = self.get_test_artifacts_url()
-        url += "/" + FUNOS_POSIX_PATH_IN_TGZ
-        return url
-
-    def remove_test_artifacts_directory(self):
-        directory = self.get_test_artifacts_directory()
-        if os.path.exists(directory):
-            os.removedirs(path=directory)
-
-    def prepare_test_artifacts_directory(self):
-        result = None
-        directory = self.get_test_artifacts_directory()
-        try:
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-            result = directory
-        except Exception as ex:
-            raise SchedulerException(str(ex))
-        return result
-
-    def extract_funos_posix(self, tar_url):
-        tmp_directory = self.prepare_test_artifacts_directory()
-        file_tmp, http_message = urllib.urlretrieve(tar_url, tmp_directory + "/funos.tgz")
-        tgz_file = tarfile.open(name=file_tmp, mode="r:gz")
-        members = tgz_file.getmembers()
-        f = filter(lambda x: x.path == FUNOS_POSIX_PATH_IN_TGZ, members)
-        if not f:
-            SchedulerException("Unable to find {} in tgz".format(FUNOS_POSIX_PATH_IN_TGZ))
-        extraction_path = tmp_directory
-        tgz_file.extract(member=f[0], path=extraction_path)
-        if not os.path.exists(extraction_path):
-            raise SchedulerException("Extraction to {} failed".format(extraction_path))
-        try:
-            os.remove(file_tmp)
-        except:
-            pass
-        return extraction_path
-
     def run(self):
-        scheduler_logger.info("Running Job: {}".format(self.job_id))
+        scheduler_logger.debug("Running Job: {}".format(self.job_id))
+        models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["IN_PROGRESS"])
         suite_execution_id = self.job_id
         self.prepare_job_directory()
         build_url = self.job_build_url
-        '''
-        r = requests.post(MICROSERVICE_TGZ_EXTRACTION_URL,
-                          data=json.dumps({'suite_execution_id': str(self.job_id),
-                                           'tgz_url': self.job_build_tgz_url}))
-        if r.status_code == 200:
-            scheduler_logger.debug("Extract funos-posix-url successful")
-            funos_posix_url = r.text
-        else:
-            raise Exception("Unable to retrieve funos-posix-url")
-        scheduler_logger.debug("FunOs Url:" + funos_posix_url)
-        '''
-
 
         # Setup the suites own logger
-        local_scheduler_logger = logging.getLogger("scheduler_log")
+        local_scheduler_logger = logging.getLogger("scheduler_log.txt")
         local_scheduler_logger.setLevel(logging.INFO)
-        handler = logging.handlers.RotatingFileHandler(self.job_dir + "/scheduler.log", maxBytes=TEN_MB, backupCount=5)
+        handler = logging.handlers.RotatingFileHandler(self.job_dir + "/scheduler.log.txt", maxBytes=TEN_MB, backupCount=5)
         handler.setFormatter(
             logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         local_scheduler_logger.addHandler(hdlr=handler)
         self.local_scheduler_logger = local_scheduler_logger
-
 
         suite_summary = {}
 
         suite_spec = get_scripts_in_suite(suite_name=self.job_spec["suite_name"])
         script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], suite_spec)
 
-        self.local_scheduler_logger.info("Scripts to be executed:")
-        map(lambda f: self.local_scheduler_logger.info("{}: {}".format(f[0], f[1])), enumerate(script_paths))
+        self.local_scheduler_logger.debug("Scripts to be executed:")
+        map(lambda f: self.local_scheduler_logger.debug("{}: {}".format(f[0], f[1])), enumerate(script_paths))
 
 
         self.local_scheduler_logger.info("Starting Job-id: {}".format(self.job_id))
 
-
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         if not suite_execution:
             raise SchedulerException("Unable to retrieve suite execution id: {}".format(suite_execution_id))
-        suite_execution.scheduled_time = datetime.datetime.now()
+        suite_execution.scheduled_time = get_current_time()
         suite_execution.suite_path = self.job_spec["suite_name"]
         suite_execution.save()
 
         for script_path in script_paths:
+
+            if self.suite_shutdown:
+                scheduler_logger.critical("{}: SUITE shutdown requested".format(self.job_id))
+                local_scheduler_logger.critical("SUITE shutdown requested")
+                suite_summary[os.path.basename(script_path)] = {"crashed": True, "result": False}
+                continue
+
             relative_path = script_path.replace(SCRIPTS_DIR, "")
             if self.job_test_case_ids:
                 if not self.job_script_path in relative_path:
@@ -160,33 +127,86 @@ class SuiteWorker(Thread):
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
-                script_process = subprocess.Popen(popens,
+                self.current_script_process = subprocess.Popen(popens,
                                                   close_fds=True,
                                                   stdout=console_log,
                                                   stderr=console_log)
             poll_status = None
             while poll_status is None:
                 # print("Still working...")
-                poll_status = script_process.poll()
+                poll_status = self.current_script_process.poll()
             if poll_status:  #
                 scheduler_logger.critical("CRASH: Script {}".format(os.path.basename(script_path)))
+                local_scheduler_logger.critical("CRASH")
                 crashed = True  #TODO: Need to re-check this based on exit code
             script_result = False
-            if script_process.returncode == 0:
+            if self.current_script_process.returncode == 0:
                 script_result = True
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
         scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
-        suite_execution.completed_time = datetime.datetime.now()
+        suite_execution.completed_time = get_current_time()
         suite_execution.save()
 
         # print job summary
-        self.local_scheduler_logger.info("Suite Summary:")
-        scheduler_logger.info("{:50} {} {}".format("Script", "Result", "Crashed"))
+        self.local_scheduler_logger.debug("Suite Summary:")
+        scheduler_logger.debug("{:50} {} {}".format("Script", "Result", "Crashed"))
         for script_path, script_metrics in suite_summary.items():
-            scheduler_logger.info("{:50} {} {}".format(script_path,
+            scheduler_logger.debug("{:50} {} {}".format(script_path,
                                                        str(script_metrics["result"]),
                                                        str(script_metrics["crashed"])))
+        if not self.suite_shutdown:
+            if "repeat" in self.job_spec and self.job_spec["repeat"]:
+                queue_job(job_spec=self.job_spec)
+            elif "repeat_in_minutes" in self.job_spec and self.job_spec["repeat_in_minutes"]:
+                repeat_in_minutes_value = self.job_spec["repeat_in_minutes"]
+                new_job_spec = self.job_spec
+                new_job_spec["schedule_in_minutes"] = repeat_in_minutes_value
+                queue_job(job_spec=new_job_spec)
+
+            del job_id_threads[self.job_id]
+            models_helper.finalize_suite_execution(suite_execution_id=self.job_id)
+            send_summary_mail(job_id=self.job_id)
+
+        else:
+            pass #TODO: Send error report
+
+
+
+def process_killed_jobs():
+    job_files = glob.glob("{}/*{}".format(KILLED_JOBS_DIR, KILLED_JOB_EXTENSION))
+    job_files.sort(key=os.path.getmtime)
+
+    for job_file in job_files:
+        with open(job_file, "r") as f:
+            contents = f.read()
+            job_id = int(contents)
+            if job_id in job_id_threads:
+                t = job_id_threads[job_id]
+                scheduler_logger.info("Killing Job: {}".format(job_id))
+                try:
+                    t.shutdown_suite()
+                except Exception as ex:
+                    scheduler_logger.error(str(ex))
+                finally:
+                    del job_id_threads[job_id]
+
+            if job_id in job_id_timers:
+                try:
+                    if job_id in job_id_timers:
+                        t = job_id_timers[job_id]
+                        t.cancel()
+                except Exception as ex:
+                    scheduler_logger.error(str(ex))
+                finally:
+                    del job_id_timers[job_id]
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+                suite_execution.completed_time = get_current_time()
+                suite_execution.result = RESULTS["KILLED"]
+                suite_execution.save()
+        os.remove(job_file)
+
+
 
 def process_queue():
     time.sleep(1)
@@ -195,12 +215,32 @@ def process_queue():
     job_files.sort(key=os.path.getmtime)
 
     for job_file in job_files:
+
         # Execute
         job_spec = parse_file_to_json(file_name=job_file)
-        if job_spec:
-            t = SuiteWorker(job_spec=job_spec)
-            threads.append(t)
+        current_time = get_current_time()
+
+        schedule_it = True
+        scheduling_time = 1
+        if "schedule_in_minutes" in job_spec and job_spec["schedule_in_minutes"]:
+            scheduling_time = 60 * job_spec["schedule_in_minutes"]
+        elif "schedule_at" in job_spec and job_spec["schedule_at"]:
+            schedule_at_time_offset = dateutil.parser.parse(job_spec["schedule_at"]).replace(year=1, month=1, day=1)
+            current_time_offset = current_time.replace(year=1, month=1, day=1)
+
+            total_seconds = (schedule_at_time_offset - current_time_offset).total_seconds()
+            if total_seconds < 0:
+                scheduling_time = (24 * 60 * 3600) + total_seconds
+            elif total_seconds >= 0:
+                scheduling_time = total_seconds
+            else:
+                schedule_it = False #TODO: Email, report a scheduling failure
+        if job_spec and schedule_it:
+            suite_worker_obj = SuiteWorker(job_spec=job_spec)
+            t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
+            job_id_timers[suite_worker_obj.job_id] = t
             t.start()
+
         else:
             raise SchedulerException("Unable to parse {}".format(job_file))
         de_queue_job(job_file)
@@ -217,6 +257,10 @@ def de_queue_job(job_file):
         scheduler_logger.critical(str(ex))
         #TODO: Ensure job_file is removed
 
+def ensure_singleton():
+    if len(process_list(process_name=os.path.basename(__file__))) > 1:
+        raise SchedulerException("Only one instance of scheduler.py is permitted")
+
 if __name__ == "__main1__":
     queue_job(suite_name="storage_basic")
     #queue_job(job_id=2, suite="suite2")
@@ -230,14 +274,9 @@ if __name__ == "__main1__":
     pass
 
 if __name__ == "__main__":
+    ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
-    #queue_job(job_id=2, suite="suite2")
-    #queue_job(job_id=4, suite="suite3")
-    #queue_job(job_id=3, suite="suite4")
-    #queue_job(job_id=5, suite="suite5")
     while True:
+        process_killed_jobs()
         process_queue()
-    # process killed jobs
-    # wait
-    pass
-# if __name__ == "__main1__":
+        # wait

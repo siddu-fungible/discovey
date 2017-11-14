@@ -165,7 +165,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug("Expect Buffer After:%s" % self.handle.after)
         fun_test.debug("Expect Buffer:%s" % self.handle.buffer)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def _paramiko_connect(self):
         client = paramiko.SSHClient()
 
@@ -178,7 +178,7 @@ class Linux(object, ToDictMixin):
 
         self.paramiko_handle = SSHClientInteraction(client, timeout=10, display=True)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def _connect(self):
 
         if self.use_paramiko:
@@ -326,7 +326,7 @@ class Linux(object, ToDictMixin):
         self.logger.write_now(message=self.paramiko_handle.current_output_clean, stdout=False)
         return clean_output
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def command(self, command, sync=False, timeout=60, sync_timeout=0.3, custom_prompts=None, wait_until=None,
                 wait_until_timeout=60, include_last_line=False, include_first_line=False):
         if self.use_paramiko:
@@ -415,7 +415,7 @@ class Linux(object, ToDictMixin):
             raise ex
         return buf
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def interactive_command(self, command, timeout=0.5, expected_prompt=None):
         if expected_prompt and (timeout == 0.5):
             timeout = 5
@@ -436,7 +436,7 @@ class Linux(object, ToDictMixin):
         buf = '\n'.join(buf_lines[1:-1])  # Ignore the command itself start from 1
         return buf
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def ping(self,
              dst,
              count=5,
@@ -458,7 +458,7 @@ class Linux(object, ToDictMixin):
             result = True
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def check_disk(self, threshold=75):
         result = False
         try:
@@ -477,7 +477,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug("Disk utilization below %d limit: " % threshold + str(result) + "\n")
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def check_ssh(self):
         result = False
         try:
@@ -490,7 +490,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug("ssh status: " + str(result) + "\n")
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def service(self,
                 service_name,
                 action="restart"):
@@ -516,7 +516,7 @@ class Linux(object, ToDictMixin):
             self.logger.critical(critical_str)
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def get_process_id(self, process_name):
         pid = None
         command = "pidof -x " + process_name
@@ -532,7 +532,7 @@ class Linux(object, ToDictMixin):
 
         return pid
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def create_file(self, file_name, contents):
         self.command("touch %s" % file_name)
         lines = contents.split('\n')
@@ -546,7 +546,7 @@ class Linux(object, ToDictMixin):
                 self.command("echo \"%s\" >> %s" % (processed_line, file_name))
         return file_name
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def create_temp_file(self, file_name, contents):
         return self.create_file(file_name=self.get_temp_file_path(file_name=file_name),
                                 contents=contents)
@@ -573,7 +573,7 @@ class Linux(object, ToDictMixin):
             user_name = result.group(0).strip()
         return user_name
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def list_files(self, path):
         o = self.command("ls -ltr " + path)
         lines = o.split('\n')
@@ -591,7 +591,7 @@ class Linux(object, ToDictMixin):
                     files.append((m.group(1), m.group(2)))
         return files
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def start_bg_process(self,
                          command,
                          get_job_id=False,
@@ -624,7 +624,7 @@ class Linux(object, ToDictMixin):
             fun_test.sleep("Waiting for bg process to start", seconds=1)
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def fg_process(self,
                    job_id=None,
                    process_id=None):
@@ -641,7 +641,7 @@ class Linux(object, ToDictMixin):
         except pexpect.ExceptionPexpect:
             pass
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def kill_process(self,
                      process_id=None,
                      job_id=None,
@@ -681,7 +681,7 @@ class Linux(object, ToDictMixin):
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def enter_sudo(self):
         result = False
         if not self.handle:
@@ -694,17 +694,17 @@ class Linux(object, ToDictMixin):
             result = False
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def set_prompt_terminator(self, prompt_terminator):
         self.prompt_terminator = prompt_terminator
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def exit_sudo(self):
         if hasattr(self, 'saved_prompt_terminator'):
             self.set_prompt_terminator(prompt_terminator=self.saved_prompt_terminator)
         self.command("exit")
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def netstat(self, grep_filters=None):
         result = []
         command = "netstat -anpt"
@@ -743,7 +743,7 @@ class Linux(object, ToDictMixin):
         self.exit_sudo()
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def disconnect(self):
         if self.handle:
             self.handle.close()
@@ -764,7 +764,7 @@ class Linux(object, ToDictMixin):
         except pexpect.ExceptionPexpect:
             pass
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def clean(self):
         self.send_control_c()
         try:
@@ -776,11 +776,11 @@ class Linux(object, ToDictMixin):
         except pexpect.ExceptionPexpect:
             pass
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def sendline(self, c):
         self.handle.sendline(c)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def iptables(self,
                  flush=None,
                  append_chain_rule="INPUT",
@@ -858,7 +858,7 @@ class Linux(object, ToDictMixin):
             self.logger.critical(critical_str)
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def sudo_command(self, command, timeout=60):
         sudoed = self.enter_sudo()
         output = self.command(command, timeout=timeout)
@@ -866,12 +866,12 @@ class Linux(object, ToDictMixin):
             self.exit_sudo()
         return output
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def copy(self, source_file_name, destination_file_name):
         command = "yes | cp %s %s" % (source_file_name, destination_file_name)
         return self.command(command)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def backup_file(self, source_file_name):
         destination_file_name = self.tmp_dir + "/" + os.path.basename(source_file_name) + ".backup"
         self.copy(source_file_name=source_file_name, destination_file_name=destination_file_name)
@@ -880,7 +880,7 @@ class Linux(object, ToDictMixin):
                                  backedup_file_name=destination_file_name)
         return backup_obj
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def read_file(self, file_name, include_last_line=False):
         output = self.command("cat %s" % file_name, include_last_line=include_last_line)
         lines = output.split('\n')
@@ -889,7 +889,7 @@ class Linux(object, ToDictMixin):
             processed_output = '\n'.join(lines[1:])
         return processed_output
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def tail(self, file_name, line_count=5):
         output = self.command("tail -%d %s" % (line_count, file_name))
         lines = output.split('\n')
@@ -900,7 +900,7 @@ class Linux(object, ToDictMixin):
         '''
         return lines
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def replace_line(self, file_name, search_line_regex, desired_line):
         file_contents = self.read_file(file_name=file_name)
         processed_lines = []
@@ -913,7 +913,7 @@ class Linux(object, ToDictMixin):
         processed_output = '\n'.join(processed_lines)
         return self.create_file(file_name=file_name, contents=processed_output)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def check_file_directory_exists(self,
                                     path):
         result = False
@@ -932,7 +932,7 @@ class Linux(object, ToDictMixin):
 
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def exit_status(self):
         output = self.command("echo $?")
         output = output.rstrip()
@@ -943,7 +943,7 @@ class Linux(object, ToDictMixin):
             pass
         return exit_code
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def tc(self, target_ip=None, delay_in_ms=None, interface=None, remove=None):
         result = False
         entered_sudo = False
@@ -989,7 +989,7 @@ class Linux(object, ToDictMixin):
                 self.exit_sudo()
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, timeout=60):
         transfer_complete = False
         scp_command = "scp %s %s@%s:%s" % (source_file_path, target_username, target_ip, target_file_path)
@@ -1034,7 +1034,7 @@ class Linux(object, ToDictMixin):
 
         return transfer_complete
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def md5sum(self, file_name):
         result = None
         command = "md5sum " + file_name + " | cut -d ' ' -f 1"
@@ -1048,24 +1048,24 @@ class Linux(object, ToDictMixin):
             self.logger.critical(critical_str)
         return result
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def command_exists(self, command):
         self.command("which " + command)
         exit_status = self.get_exit_status()  #TODO
         return exit_status == 0
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def initialize(self, reset=False):
         if reset:
             self.reset()
         self.iptables(flush=True)
         return True
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def reset(self):
         self.sudo_command("rm -rf /tmp/*")
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def nslookup(self, dns_name):
         result = {}
         try:
@@ -1084,11 +1084,11 @@ class Linux(object, ToDictMixin):
     def __repr__(self):
         return "{}: {}".format(self.__class__.__name__, self.host_ip)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def insmod(self, module):
         self.sudo_command("insmod {}".format(module))
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def nvme_setup(self):
         self.command("cd .") #TODO
         modules = ["nvme-core.ko", "nvme.ko"]
@@ -1097,12 +1097,12 @@ class Linux(object, ToDictMixin):
             fun_test.sleep("Insmod wait", seconds=2)
         return True
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def nvme_create_namespace(self, size, capacity, device):
         command = "{} create-ns --nsze={} --ncap={} {}".format(self.NVME_PATH, size, capacity, device)
         return self.sudo_command(command)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def nvme_attach_namespace(self, namespace_id, controllers, device):
         command = "{} attach-ns --namespace-id={} --controllers={} {}".format(self.NVME_PATH,
                                                                              namespace_id,
@@ -1110,14 +1110,14 @@ class Linux(object, ToDictMixin):
                                                                              device)
         return self.sudo_command(command)
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def nvme_restart(self):
         command = "rmmod nvme"
         self.sudo_command(command)
         self.insmod(module="nvme.ko")
         return True
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def lsblk(self):
         result = collections.OrderedDict()
         output = self.command("lsblk")
@@ -1149,6 +1149,46 @@ class Linux(object, ToDictMixin):
                 result_d["type"] = type
                 result_d["mount_point"] = mount_point
                 result[name_alpha] = result_d
+        return result
+
+    @fun_test.safe
+    def get_ip_route(self, netns=None):
+        """Do 'ip -n <netns> route' to get kernel FIB info
+
+        root@ubuntu:~# ip -n 1-1 route show
+        default via 172.17.0.1 dev eth0
+        ..
+        10.0.0.48/28 via 192.168.0.10 dev p-69  proto 186  metric 20
+        10.0.1.0/28  proto 186  metric 20
+        	nexthop via 192.96.0.2  dev p-1 weight 1
+        	nexthop via 192.96.0.6  dev p-3 weight 1
+        192.96.0.0/30 dev p-1  proto kernel  scope link  src 192.96.0.1
+        ..
+
+        :return: dict {'0.0.0.0/0': {'172.17.0.1': 'eth0'},
+                       '10.0.0.48/28': {'192.168.0.10': 'p-69'},
+                       '10.0.1.0/28': {'192.96.0.2': 'p-1', '192.96.0.6': 'p-3'},
+                       '192.96.0.0/30': {'directly connected': 'p-1'},
+                        ..}
+        """
+        result = {}
+        command = "ip -n %s route show" % netns if netns else 'ip route show'
+        output = self.command(command)
+
+        pat_ip_addr = r'(?:\d{1,3}\.){3}\d{1,3}'
+        m = re.findall(r'^(%s/\d{1,2}|default|).*?(?:via )?(%s|)\s+dev\s+(\S+)' % (pat_ip_addr, pat_ip_addr), output,
+                       re.S | re.M)
+        if m:
+            for prefix, nhp, interface in m:
+                if prefix == 'default':  # format it to match FRR's FIB
+                    prefix = '0.0.0.0/0'
+                if nhp == '':
+                    nhp = 'directly connected'  # format it to match FRR's FIB
+                if prefix:
+                    prefix_cache = prefix
+                else:
+                    prefix = prefix_cache
+                result.setdefault(prefix, {}).update({nhp: interface})
         return result
 
 

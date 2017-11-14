@@ -6,10 +6,11 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
     };
 
     ctrl.$onInit = function () {
-        $scope.recordsPerPage = 10;
+        console.log(ctrl);
+        $scope.recordsPerPage = 20;
         $scope.logDir = null;
         $scope.suiteExecutionsCount = 0;
-        $http.get("/regression/suite_executions_count").then(function(result) {
+        $http.get("/regression/suite_executions_count/"  + ctrl.filterString).then(function(result) {
             $scope.suiteExecutionsCount = (parseInt(result.data));
             $scope.setPage(1);
 
@@ -28,10 +29,10 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     $scope.setPage = function(page) {
         $scope.pager = PagerService.GetPager($scope.suiteExecutionsCount, page, $scope.recordsPerPage);
-        if (page === 0 || (page > $scope.pager.pages.length)) {
+        if (page === 0 || (page > $scope.pager.endPage)) {
             return;
         }
-        $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page).then(function (result) {
+        $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page + "/" + ctrl.filterString).then(function (result) {
             $scope.items = result.data;
         });
     };
@@ -51,7 +52,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     $scope.getSchedulerLog = function (suiteId) {
         if($scope.logDir) {
-            return $scope.logDir + suiteId + "/scheduler.log"; // TODO
+            return $scope.logDir + suiteId + "/scheduler.log.txt"; // TODO
         }
     };
 
@@ -65,6 +66,13 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         $http.get("/regression/suite_re_run/" + suiteId).then(function (result) {
             let jobId = parseInt(result.data);
             $window.location.href = "/regression/suite_detail/" + jobId;
+        });
+    }
+
+    $scope.killClick = function(suiteId) {
+        $http.get("/regression/kill_job/" + suiteId).then(function (result) {
+            let jobId = parseInt(result.data);
+            $window.location.href = "/regression/";
         });
     }
 
@@ -132,6 +140,8 @@ angular.module('qa-dashboard')
     .component('suitesTable', {
         templateUrl: '/static/qa_dashboard/suites_table.html',
         controller: SuitesTableController,
-        bindings: {}
+        bindings: {
+            filterString: '@'
+        }
     })
     .factory('PagerService', PagerService);

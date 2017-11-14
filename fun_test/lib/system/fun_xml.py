@@ -959,16 +959,6 @@ class FunXml:
         if self.ts is not None:
             self.ts.add_checkpoint(checkpoint=checkpoint, result=result, expected=str(expected), actual=str(actual))
 
-    def __del__(self):
-        # print("FunXml DEL")
-        global replacement_logs
-        if replacement_logs:
-            for replacement_log in replacement_logs:
-                if os.path.exists(replacement_log):
-                    # print("Removing " + replacement_log)
-                    os.remove(replacement_log)
-        replacement_logs = []
-
     def add_collapsible_tab_panel(self, header, panel_items):
         self.ts.add_collapsible_tab_panel(header=header, panel_items=panel_items)
 

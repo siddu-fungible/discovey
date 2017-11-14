@@ -1,33 +1,75 @@
-<div class="panel panel-primary">
-    <div class="panel-heading">Submit Job</div>
-    <div class="panel-body">
-        <form name="submissionForm">
-            <div class="form-group">
-                <label for="build-url">Build URL</label>
-                <input id="build-url" ng-model="buildUrl" type="text" required/>
-            </div>
-            <div class="form-group">
-                <label for="suite-select">Select a suite</label>
-                <select id="suite-select" ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteName" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
-            </div>
+<div class="row">
+    <div class="col-sm-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">Submit Job</div>
+            <div class="panel-body">
+                <form name="submissionForm">
+                    <div class="form-group">
+                        <label for="build-url">Build URL</label>
+                        <input id="build-url" name="build-url" ng-model="buildUrl" type="text" required/>
+                    </div>
+                    <div class="form-group">
+                        <label for="suite-select">Select a suite</label>
+                        <select id="suite-select" ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteName" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
+                    </div>
 
-            <div class="form-group">
-                <h2>{{ selectedSuite }}</h2>
-                <button ng-if="selectedInfo" ng-click="submitClick(submissionForm.$valid)" class="btn btn-primary">Submit</button>
-            </div>
-            <div class="form-group">
-                <table ng-if="selectedInfo" class="table table-nonfluid">
-                    <tr>
-                        <th style="background-color: #E4EFF2">
-                            Scripts
-                        </th>
-                    </tr>
-                    <tr ng-repeat="scriptInfo in selectedInfo">
-                        <td>{{ scriptInfo.path }}</td>
+                    <div class="form-group">
+                        <h3>{{ selectedSuite }}</h3>
+                        <label class="form-check-label">
+                        <input class="form-check-input" type="checkbox" value="" ng-model="schedulingOptions">
+                            Show Scheduling Options
+                        </label>
+                        <button ng-click="testClick()" class="btn btn-primary">Submit</button>
+                        <button ng-if="selectedInfo" ng-click="submitClick(submissionForm.$valid)" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="form-group">
+                        <table ng-if="selectedInfo" class="table table-nonfluid">
+                            <tr>
+                                <th style="background-color: #E4EFF2">
+                                    Scripts
+                                </th>
+                            </tr>
+                            <tr ng-repeat="scriptInfo in selectedInfo">
+                                <td>{{ scriptInfo.path }}</td>
 
-                    </tr>
-                </table>
+                            </tr>
+                        </table>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
+    </div>
+    <div class="col-sm-6" ng-show="schedulingOptions">
+        <div class="panel panel-primary">
+            <div class="panel-heading">Scheduling options</div>
+                <div class="panel-body">
+
+                    <div class="radio">
+                        <label for="schedule-in-minutes">
+                            <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="true" checked="true">Schedule in minutes:
+                        </label>
+
+                        <form ng-show="scheduleInMinutesRadio">
+                            <input type="number" class="form-control" id="schedule-in-minutes" min="5" max="1439" ng-model="scheduleInMinutes">
+                                <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" value="" ng-model="scheduleInRepeat">
+                                    Repeat
+                                </label>
+                        </form>
+                        <br>
+                        <br>
+                        <label for="schedule-at">
+                            <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="false">Schedule At:
+                        </label>
+                        <form ng-hide="scheduleInMinutesRadio">
+                            <input type="time" class="form-control" id="schedule-at" ng-model="scheduleAt">
+                                <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" value="" ng-model="scheduleAtRepeat">
+                                    Repeat
+                                </label>
+                        </form>
+                    </div>
+                </div>
+        </div>
     </div>
 </div>

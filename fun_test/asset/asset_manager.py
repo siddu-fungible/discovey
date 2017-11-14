@@ -1,4 +1,5 @@
 from fun_settings import *
+from lib.system.utils import parse_file_to_json
 from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1
 from lib.orchestration.simulation_orchestrator import SimulationOrchestrator, DockerContainerOrchestrator
@@ -15,17 +16,24 @@ class AssetManager:
         self.docker_host = None  #TODO
         self.orchestrators = []
 
+    @fun_test.safe
+    def cleanup(self):
+        for orchestrator in self.orchestrators:
+            self.docker_host.stop_container(orchestrator.container_name)
+            fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
+            self.docker_host.remove_container(orchestrator.container_name)
+
     def describe(self):
         fun_test.log_section("Printing assets")
         # for orchestrator in self.orchestrators:
         #    orchestrator.describe()
         self.docker_host.describe()
 
-    @fun_test.log_parameters
+    @fun_test.safe
     def get_any_simple_host(self, name):
         asset = None
         try:
-            all_assets = fun_test.parse_file_to_json(file_name=self.SIMPLE_HOSTS_ASSET_SPEC)
+            all_assets = parse_file_to_json(file_name=self.SIMPLE_HOSTS_ASSET_SPEC)
             fun_test.test_assert(all_assets, "Retrieve at least one asset")
             if name in all_assets:
                 asset = all_assets[name]
@@ -37,7 +45,7 @@ class AssetManager:
 
     @fun_test.safe
     def get_any_docker_host(self):
-        docker_hosts = fun_test.parse_file_to_json(self.DOCKER_HOSTS_ASSET_SPEC)
+        docker_hosts = parse_file_to_json(self.DOCKER_HOSTS_ASSET_SPEC)
         fun_test.simple_assert(docker_hosts, "At least one docker host")
         asset = DockerHost.get(docker_hosts[0])
         return asset

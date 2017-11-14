@@ -4,6 +4,9 @@ from lib.host.linux import Linux
 import re, json
 
 class F1(Linux, ToDictMixin):
+    '''
+    F1 class encapsulating ways to start the funos-posix simulator
+    '''
     SIMULATION_FUNOS_BUILD_PATH = "/home/jabraham/FunOS/build"
     DPCSH_PATH = "/home/jabraham/FunTools/dpcsh/dpcsh"
     FUN_OS_SIMULATION_PROCESS = "funos-posix"
@@ -23,7 +26,7 @@ class F1(Linux, ToDictMixin):
     def post_init(self):
         self.fun_os_process_id = None
         self.external_dpcsh_port = None
-        self.TO_DICT_VARS.append("fun_os_process_id")
+        self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
     def start(self, dpcsh=False, dpcsh_only=False, external_dpcsh_port=None):
         if external_dpcsh_port:

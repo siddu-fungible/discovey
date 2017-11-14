@@ -4,10 +4,11 @@ import socket, fcntl, errno
 import os, sys
 
 class StorageController():
-    def __init__(self, target_ip=None, target_port=None):
+    def __init__(self, mode="storage", target_ip=None, target_port=None):
         self.target_ip = target_ip
         self.target_port = target_port
         self.sock = None
+        self.mode = mode
 
     def sendall(self, data, expected_command_duration=1):
         start = time.time()
@@ -85,8 +86,9 @@ class StorageController():
         print "Status: {}".format(result["status"])
         print json.dumps(result["data"], indent=4)
 
-    def json_command(self, d):
-        return self.command('storage {}'.format(json.dumps(d)))
+    def json_command(self, data, action="", additional_info=""):
+        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info))
+
 
     def ip_cfg(self, ip):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip":ip}}

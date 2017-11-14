@@ -17,9 +17,9 @@ WEB_SERVER_PORT = 5000
 ASSET_DIR = FUN_TEST_DIR + "/asset"
 JOBS_DIR = WEB_STATIC_DIR + "/jobs"
 ARCHIVED_JOBS_DIR = JOBS_DIR + "/archived"
+KILLED_JOBS_DIR = JOBS_DIR + "/killed"
 SCRIPTS_DIR = FUN_TEST_DIR + "/scripts"
 
-DOCKER_REMOTE_API_PORT = 4243
 TEST_CASE_SPEC_DIR = SCRIPTS_DIR + "/test_case_spec"
 SUITES_DIR = TEST_CASE_SPEC_DIR + "/suites"
 
@@ -31,4 +31,8 @@ SYSTEM_TMP_DIR = "/tmp"
 sys.path.append(WEB_DIR)
 
 DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funos/940/"
+TIME_ZONE = "America/Los_Angeles"
 
+
+MAIL_SERVER = "localhost"
+AUTOMATION_EMAIL = "automation@fungible.com"
