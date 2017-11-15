@@ -18,17 +18,30 @@
 
         $scope.changedValue = function(selectedSuite) {
             $scope.selectedInfo = $scope.suitesInfo[selectedSuite];
+
         };
 
 
         $scope.testClick = function() {
-            /*console.log($scope.scheduleAt);
-            console.log($scope.scheduleInMinutes);
-            console.log($scope.scheduleInRepeat);
-            console.log($scope.scheduleAtRepeat);*/
-            console.log($scope.scheduleInMinutesRadio);
-            console.log($scope.scheduleAtRadio);
-            console.log($scope.scheduleRadio);
+            console.log($scope.selectedSuite);
+
+
+            if ($scope.schedulingOptions) {
+
+                if($scope.scheduleInMinutesRadio) {
+                    if(!$scope.scheduleInMinutes) {
+                        commonAlert.showError("Please enter the schedule in minutes value");
+                    }
+                    console.log($scope.scheduleInMinutes);
+                    console.log($scope.scheduleInRepeat);
+
+                } else {
+                    if(!$scope.scheduleAt) {
+                        commonAlert.showError("Please enter the schedule at value");
+                    }
+
+                }
+            }
 
         };
 

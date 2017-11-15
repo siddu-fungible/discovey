@@ -1,0 +1,25 @@
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+<script>
+    angular.module("myApp", [])
+  .component("helloWorld",{
+      template: "<span>Hello {{$ctrl.name}}, I'm {{$ctrl.myName}}!</span>",
+      bindings: { name: '@' },
+      controller: function(){
+        this.myName = 'Alain';
+
+
+      }
+  });
+
+</script>
+
+<div ng-app="myApp">
+
+  <form name="myForm">
+    <input type="number" name="simpleText" ng-min="5"/>
+  </form>
+  <hello-world name="John" f="myForm"> </hello-world>
+</div>
+</html>
