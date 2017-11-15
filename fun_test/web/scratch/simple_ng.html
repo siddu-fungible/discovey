@@ -2,24 +2,42 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 
 <script>
-    angular.module("myApp", [])
-  .component("helloWorld",{
-      template: "<span>Hello {{$ctrl.name}}, I'm {{$ctrl.myName}}!</span>",
-      bindings: { name: '@' },
-      controller: function(){
-        this.myName = 'Alain';
 
+function myController($scope) {
+    let ctrl = this;
+    this.myName = 'Alain';
 
-      }
+    this.$onInit = function () {
+        console.log("init");
+        console.log(this.name);
+    }
+
+    $scope.testClick = function () {
+        console.log("testClick");
+        console.log(ctrl.f);
+    }
+
+}
+
+angular.module("myApp", [])
+    .component("helloWorld",{
+        template: "<span>Hello {{$ctrl.name}}, I'm {{$ctrl.myName}}!</span>" +
+                  "<button ng-click='testClick()'>Submit</button>",
+        bindings: { name: '@' ,
+                    f: '<'
+                    },
+        controller: myController
   });
+
 
 </script>
 
 <div ng-app="myApp">
 
-  <form name="myForm">
-    <input type="number" name="simpleText" ng-min="5"/>
-  </form>
-  <hello-world name="John" f="myForm"> </hello-world>
+    <form name="myForm">
+        <input type="number" name="simpleText" ng-min="5"/>
+    </form>
+    <hello-world name="John" f="myForm"></hello-world>
+
 </div>
 </html>
