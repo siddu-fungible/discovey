@@ -206,6 +206,24 @@ class Frr(Linux):
         """
         return self.get_ip_route(fib=True)
 
+    def get_bgp_timers(self):
+        """ Do 'show run bgpd' | grep 'timers bgp' to get BGP keepalive/hold time.
+
+        root@node-1-1:~# vtysh -c 'show run bgpd' | grep 'timers bgp'
+         timers bgp 5 15
+        root@node-1-1:~#
+
+        :return: tuple, (5, 15)
+        """
+        output = self.command("vtysh -c 'show run bgpd' | grep 'timers bgp'")
+        result = ()
+
+        m = re.search(r'timers bgp (\d+) (\d+)', output)
+        if m:
+            result = (int(m.group(1)), int(m.group(2)))
+        return result
+
+
 
 if __name__ == "__main__":
     node = '1-1'
