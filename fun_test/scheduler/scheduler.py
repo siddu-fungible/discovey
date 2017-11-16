@@ -239,6 +239,9 @@ def process_queue():
             suite_worker_obj = SuiteWorker(job_spec=job_spec)
             t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
             job_id_timers[suite_worker_obj.job_id] = t
+            models_helper.update_suite_execution(suite_execution_id=suite_worker_obj.job_id,
+                                                 scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time),
+                                                 result=RESULTS["SCHEDULED"])
             t.start()
 
         else:

@@ -10,7 +10,9 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SKIPPED": "SKIPPED",
            "IN_PROGRESS": "IN_PROGRESS",
            "UNKNOWN": "UNKNOWN",
-           "KILLED": "KILLED"}
+           "KILLED": "KILLED",
+           "QUEUED": "QUEUED",
+           "SCHEDULED": "SCHEDULED"}
 
 
 def get_current_time():
