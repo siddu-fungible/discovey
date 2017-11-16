@@ -23,26 +23,33 @@
         };
 
 
-        $scope.testClick = function() {
-            console.log($scope.selectedSuite);
-
-
+        $scope.getSchedulingOptions = function(payload) {
+            //console.log($scope.selectedSuite);
             if ($scope.schedulingOptions) {
 
                 if($scope.scheduleInMinutesRadio) {
                     if(!$scope.scheduleInMinutes) {
                         commonAlert.showError("Please enter the schedule in minutes value");
+                    } else {
+                        payload["schedule_in_minutes"] = $scope.scheduleInMinutes;
+                        payload["schedule_in_minutes_repeat"] = $scope.scheduleInMinutesRepeat;
                     }
-                    console.log("Schedule in minutes:" + $scope.scheduleInMinutes);
-                    console.log("Schedule in repeat:" + $scope.scheduleInRepeat);
+
 
                 } else {
                     if(!$scope.scheduleAt) {
                         commonAlert.showError("Please enter the schedule at value");
+                        return;
+                    } else {
+                        payload["schedule_at"] = $scope.scheduleAt;
+                        payload["schedule_at_repeat"] = $scope.scheduleAtRepeat;
                     }
 
                 }
             }
+
+            console.log(payload);
+            return payload;
 
         };
 
@@ -56,6 +63,10 @@
             let payload = {};
             payload["suite_path"] = $scope.selectedSuite;
             payload["build_url"] = $scope.buildUrl;
+
+            if($scope.schedulingOptions) {
+                payload = $scope.getSchedulingOptions(payload);
+            }
             $http.post('/regression/submit_job', payload).then(function(result){
                 $scope.jobId = parseInt(result.data);
                 $window.location.href = "/regression/suite_detail/" + $scope.jobId;

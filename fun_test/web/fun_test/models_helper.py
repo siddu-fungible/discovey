@@ -133,7 +133,7 @@ def _get_suite_executions(execution_id=None,
         else:
             all_objects = SuiteExecution.objects.all().order_by('-id')
     else:
-        all_objects = SuiteExecution.objects.filter(q)
+        all_objects = SuiteExecution.objects.filter(q).order_by('-id')
 
 
     if get_count:
