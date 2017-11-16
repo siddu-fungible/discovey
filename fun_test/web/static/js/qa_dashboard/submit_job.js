@@ -5,6 +5,7 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
+            $scope.scheduleInMinutes = 1;
             $scope.scheduleInMinutesRadio = true;
             $scope.buildUrl = "http://dochub.fungible.local/doc/jenkins/funos/latest/";
             console.log(ctrl);
@@ -32,8 +33,8 @@
                     if(!$scope.scheduleInMinutes) {
                         commonAlert.showError("Please enter the schedule in minutes value");
                     }
-                    console.log($scope.scheduleInMinutes);
-                    console.log($scope.scheduleInRepeat);
+                    console.log("Schedule in minutes:" + $scope.scheduleInMinutes);
+                    console.log("Schedule in repeat:" + $scope.scheduleInRepeat);
 
                 } else {
                     if(!$scope.scheduleAt) {

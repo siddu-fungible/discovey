@@ -48,12 +48,9 @@
                         <label for="schedule-in-minutes">
                             <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="true" checked="true">Schedule in minutes:
                         </label>
-
-                        <div ng-if="!scheduleInForm.$valid">
-                            {{ scheduleInForm.$error.messages }} Hi
-                        </div>
                         <form name="scheduleInForm" ng-show="scheduleInMinutesRadio" novalidate>
-                            <input type="number" class="form-control" id="schedule-in-minutes" ng-min="5" max="1439" ng-model="scheduleInMinutes">
+                            <fun-field id="schedule-in-minutes" klass="form-control" type="number" min="5" max="1439" bind-value="scheduleInMinutes"></fun-field>
+                            <!-- input type="number" class="form-control" id="schedule-in-minutes" ng-min="5" max="1439" ng-model="scheduleInMinutes" -->
                                 <label class="form-check-label">
                                 <input class="form-check-input" type="checkbox" value="" ng-model="scheduleInRepeat">
                                     Repeat
@@ -65,7 +62,7 @@
                             <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="false">Schedule At:
                         </label>
                         <form ng-hide="scheduleInMinutesRadio">
-                            <input type="time" class="form-control" id="schedule-at" ng-model="scheduleAt">
+                            <fun-field id="schedule-at" klass="form-control" type="time" min="5" bind-value="scheduleAt"></fun-field>
                                 <label class="form-check-label">
                                 <input class="form-check-input" type="checkbox" value="" ng-model="scheduleAtRepeat">
                                     Repeat
