@@ -12,7 +12,7 @@ if enable_rq_worker:
     rq_found = False
     for proc in psutil.process_iter():
         try:
-            s = [s for s in proc.cmdline() if "rq" in s]
+            s = [s for s in proc.cmdline() if "rq worker" in s]
             if s:
                 rq_found = True
         except:

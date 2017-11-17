@@ -34,7 +34,7 @@ arp_ignore_default_cmd = 'echo 0 > /proc/sys/net/ipv4/conf/default/arp_ignore'
 vxlan_del_cmd = "ip link del vxlan_sys_4789"
 
 frr_password = 'zebra'
-base_port = 10000
+base_port = 20000
 ssh_retries = 10
 
 #docker_run_sh = os.path.expanduser('~')+'/docker.sh'

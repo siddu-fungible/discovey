@@ -6,12 +6,12 @@ from django.views.decorators.csrf import csrf_exempt
 from web.tools.models import Session, F1, Tg, TopologyTask, TrafficTask, IkvVideoTask
 from rq import Queue
 from redis import Redis
-from topology_tasks import deploy_topology
-from traffic_tasks import start_fio
+from web.tools.topology_tasks import deploy_topology
+from web.tools.traffic_tasks import start_fio
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 from fun_global import RESULTS
 from fun_settings import *
-import ikv_tasks
+import web.tools.ikv_tasks
 from lib.topology.topology_manager.topo_manager import topo
 from collections import OrderedDict
 
@@ -240,9 +240,12 @@ def attach_tg(request, topology_session_id, f1_id):
 
     tg = None
     tg_found = False
-    if topology_obj.tgs:
-        print("Searching for {}".format(f1_id))
-        for tg in topology_obj.tgs:
+    print("F1 Name:" + f1_record.name)
+    f1_node = topology_obj.get_node(f1_record.name)
+    #print f1_node.__dict__
+    if f1_node.tgs:
+        print("Searching for {} Found".format(f1_id))
+        for tg in f1_node.tgs:
             if tg.node.name == f1_id:
                 print("Found {} in tg list".format(f1_id))
                 tg_found = True
@@ -271,6 +274,9 @@ def attach_tg(request, topology_session_id, f1_id):
 
     if result["status"]:
         data = result["data"]
+    
+    if (not result["status"]) and (not result["data"]):
+            result["status"] = True
     print("create command result: " + str(result))
     logs.append("create command result: " + json.dumps(result, indent=4))
     result["logs"] = logs

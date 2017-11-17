@@ -1,5 +1,5 @@
 import os, django, json, time
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "web.fun_test.settings")
 django.setup()
 from fun_global import RESULTS
 from fun_settings import *
@@ -25,11 +25,13 @@ def start_fio(session_id, f1_record, fio_info):
     print "Info:" + json.dumps(info, indent=4) + ":EINFO"
     tg = None
     tg_found = False
-    if topology_obj.tgs:
-        for tg in topology_obj.tgs:
-            if tg.node.name == f1_record["name"]:
-                tg_found = True
-                break
+    f1_node = topology_obj.get_node(f1_record["name"])
+
+    if f1_node.tgs:
+        for tg in f1_node.tgs:
+        #    if tg.node.name == f1_record["name"]:
+            tg_found = True
+            break
     if not tg_found:
         print("ERROR no TG attached")
         return #tg = topology_obj.attachTG(f1_record["name"])

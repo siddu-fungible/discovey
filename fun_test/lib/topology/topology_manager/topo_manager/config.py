@@ -6,7 +6,7 @@ offSpines = 0
 flat_topo = False 
 
 #If network_only, use FRR container. Else use PSIM container.
-network_only = True 
+network_only = False
 
 if network_only:
     leaf_container = 'frr:v4'
@@ -21,5 +21,5 @@ spine_container = 'frr:v4'
 vm_ips = ['10.1.20.67']
 
 #Uname/passwd of compute engines
-vm_user = 'asurana'
+vm_user = 'jabraham'
 vm_passwd = 'fun123'
