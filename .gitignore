@@ -1,4 +1,5 @@
 *.pyc
+*.pkl
 *.log
 fun_test/web/static/logs/*.html
 .DS_Store
