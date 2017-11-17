@@ -214,7 +214,7 @@ def _get_suite_executions(execution_id=None,
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
-    suite_execution_attributes.append({"name": "Result", "value": suite_execution["suite_result"]})
+    suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
     suite_execution_attributes.append({"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
     suite_execution_attributes.append({"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})
