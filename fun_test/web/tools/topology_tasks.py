@@ -1,4 +1,5 @@
-import os, django, topo, json
+import os, django, json
+from lib.topology.topology_manager.topo_manager import topo
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 from fun_global import RESULTS
