@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from fun_settings import *
 from fun_global import get_current_time, RESULTS
 import os
@@ -279,6 +280,8 @@ if __name__ == "__main1__":
 if __name__ == "__main__":
     ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
+    with open("/tmp/john-{}".format(datetime.datetime.now()), "w") as f:
+        f.write("hi")
     while True:
         process_killed_jobs()
         process_queue()
