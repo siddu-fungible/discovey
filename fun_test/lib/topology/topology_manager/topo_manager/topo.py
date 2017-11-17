@@ -2026,6 +2026,7 @@ class TrafficGenerator(object):
         self.id = str(tg_id)
         self.name = 'TG%s-%s' % (self.id, node.name)
         self.node = node
+        self.vm_obj = node.vm_obj
         self.asn = node.asn
         self.type = 'traffic_gen'
         self.vm_ip = node.vm_ip

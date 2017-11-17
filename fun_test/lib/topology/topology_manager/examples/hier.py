@@ -3,7 +3,7 @@ from ..topo_manager import *
 def main():
             
     topo = Topology()
-    topo.create(5,4,8)
+    topo.create(4,4,8)
     import pdb; pdb.set_trace()
     topo.save()
     topo.printRacks([1])
