@@ -19,10 +19,14 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
                            "COMPLETED": "COMPLETED",
                            "ALL": "ALL"}
 
+pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
-def update_suite_execution(suite_execution_id, result):
+def update_suite_execution(suite_execution_id, result=None, scheduled_time=None):
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
-    te.result = result
+    if result:
+        te.result = result
+    if scheduled_time:
+        te.scheduled_time = scheduled_time
     te.save()
     return te
 
@@ -41,7 +45,8 @@ def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_pa
     s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
                    submitted_time=submitted_time,
                    scheduled_time=scheduled_time,
-                   completed_time=completed_time)
+                   completed_time=completed_time,
+                      result="QUEUED")
     s.save()
     return s
 
@@ -121,7 +126,7 @@ def _get_suite_executions(execution_id=None,
     q = Q(result=RESULTS["UNKNOWN"])
 
     if filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
-        q = Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"])
+        q = Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"]) | Q(result=RESULTS["QUEUED"]) | Q(result=RESULTS["SCHEDULED"])
     elif filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
         q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"])
     if execution_id:
@@ -133,7 +138,7 @@ def _get_suite_executions(execution_id=None,
         else:
             all_objects = SuiteExecution.objects.all().order_by('-id')
     else:
-        all_objects = SuiteExecution.objects.filter(q)
+        all_objects = SuiteExecution.objects.filter(q).order_by('-id')
 
 
     if get_count:
@@ -186,9 +191,10 @@ def _get_suite_executions(execution_id=None,
 
         if save_suite_info:  #TODO: Perf too many saves
             se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
-            se.result = suite_result
+            if suite_result not in pending_states:
+                se.result = suite_result
             se.save()
-            suite_result = suite_execution["fields"]["result"]
+            suite_result = se.result
 
         suite_execution["suite_result"] = suite_result
         suite_execution["num_passed"] = num_passed
@@ -208,7 +214,7 @@ def _get_suite_executions(execution_id=None,
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
-    suite_execution_attributes.append({"name": "Result", "value": suite_execution["suite_result"]})
+    suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
     suite_execution_attributes.append({"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
     suite_execution_attributes.append({"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})

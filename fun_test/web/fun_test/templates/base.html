@@ -17,6 +17,7 @@
     <!-- js -->
     <script src="{% static "js/common/bootstrap.min.js" %}"></script>
     <script src="{% static "js/common/angular.min.js" %}"></script>
+    <script src="{% static "js/qa_dashboard/fun_field_component.js" %}"></script>
     <script src="{% static "js/qa_dashboard/qa_dashboard.js" %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
 
@@ -97,7 +98,7 @@
     {% verbatim %}
     <div class="content" ng-controller="QaDashBoardController" ng-if="showCommonError">
         <div class="alert alert-danger alert-dismissible show" role="alert">
-          <strong>{{ commonErrorMessage }}</strong> Check here for details
+          <strong>{{ commonErrorMessage }}</strong> {{ detailError }}
           <button type="button" class="close" aria-label="Close">
             <span aria-hidden="true" ng-click="closeCommonError()">&times;</span>
           </button>

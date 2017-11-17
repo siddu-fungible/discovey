@@ -12,7 +12,7 @@ from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 from fun_global import RESULTS
 from fun_settings import *
 import ikv_tasks
-import topo
+from lib.topology.topology_manager.topo_manager import topo
 from collections import OrderedDict
 
 tgs = [

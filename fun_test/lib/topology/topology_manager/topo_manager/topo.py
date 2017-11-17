@@ -21,8 +21,8 @@ class Topology(object):
         self.leaf_vm_objs = []
         self.spine_vm_objs = []
 
-        self.nRacks = 0
-        self.nLeafs = 0
+        self.nRacks = 1
+        self.nLeafs = 4
         self.nSpines = 0
 
         self.offRacks = 0

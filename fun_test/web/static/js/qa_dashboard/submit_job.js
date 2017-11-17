@@ -5,8 +5,9 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
+            $scope.scheduleInMinutes = 1;
             $scope.scheduleInMinutesRadio = true;
-            $scope.buildUrl = "http://dochub.fungible.local/doc/jenkins/funos/latest/";
+            $scope.buildUrl = "http://dochub.fungible.local/doc/jenkins/funos/1129/";
             console.log(ctrl);
             $scope.selectedSuite = null;
             $scope.selectedInfo = null;
@@ -18,17 +19,37 @@
 
         $scope.changedValue = function(selectedSuite) {
             $scope.selectedInfo = $scope.suitesInfo[selectedSuite];
+
         };
 
 
-        $scope.testClick = function() {
-            /*console.log($scope.scheduleAt);
-            console.log($scope.scheduleInMinutes);
-            console.log($scope.scheduleInRepeat);
-            console.log($scope.scheduleAtRepeat);*/
-            console.log($scope.scheduleInMinutesRadio);
-            console.log($scope.scheduleAtRadio);
-            console.log($scope.scheduleRadio);
+        $scope.getSchedulingOptions = function(payload) {
+            //console.log($scope.selectedSuite);
+            if ($scope.schedulingOptions) {
+
+                if($scope.scheduleInMinutesRadio) {
+                    if(!$scope.scheduleInMinutes) {
+                        commonAlert.showError("Please enter the schedule in minutes value");
+                    } else {
+                        payload["schedule_in_minutes"] = $scope.scheduleInMinutes;
+                        payload["schedule_in_minutes_repeat"] = $scope.scheduleInMinutesRepeat;
+                    }
+
+
+                } else {
+                    if(!$scope.scheduleAt) {
+                        commonAlert.showError("Please enter the schedule at value");
+                        return;
+                    } else {
+                        payload["schedule_at"] = $scope.scheduleAt;
+                        payload["schedule_at_repeat"] = $scope.scheduleAtRepeat;
+                    }
+
+                }
+            }
+
+            console.log(payload);
+            return payload;
 
         };
 
@@ -42,6 +63,10 @@
             let payload = {};
             payload["suite_path"] = $scope.selectedSuite;
             payload["build_url"] = $scope.buildUrl;
+
+            if($scope.schedulingOptions) {
+                payload = $scope.getSchedulingOptions(payload);
+            }
             $http.post('/regression/submit_job', payload).then(function(result){
                 $scope.jobId = parseInt(result.data);
                 $window.location.href = "/regression/suite_detail/" + $scope.jobId;

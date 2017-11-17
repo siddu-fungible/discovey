@@ -12,6 +12,7 @@ import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import logging
+import dateutil.parser
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,23 @@ def submit_job(request):
         request_json = json.loads(request.body)
         suite_path = request_json["suite_path"]
         build_url = request_json["build_url"]
-        job_id = queue_job(suite_path=suite_path, build_url=build_url)
+        if "schedule_at" in request_json and request_json["schedule_at"]:
+            schedule_at_value = request_json["schedule_at"]
+            schedule_at_value = str(timezone.localtime(dateutil.parser.parse(schedule_at_value)))
+            schedule_at_repeat = False
+            if "schedule_at_repeat" in request_json:
+                schedule_at_repeat = request_json["schedule_at_repeat"]
+            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_at=schedule_at_value, repeat=schedule_at_repeat)
+
+        elif "schedule_in_minutes" in request_json and request_json["schedule_in_minutes"]:
+            schedule_in_minutes_value = request_json["schedule_in_minutes"]
+            schedule_in_minutes_repeat = False
+            if "schedule_in_minutes_repeat" in request_json:
+                schedule_in_minutes_repeat = request_json["schedule_in_minutes_repeat"]
+            repeat_in_minutes = None if not schedule_in_minutes_repeat else schedule_in_minutes_value
+            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes_value, repeat_in_minutes=repeat_in_minutes)
+        else:
+            job_id = queue_job(suite_path=suite_path, build_url=build_url)
     return HttpResponse(job_id)
 
 def static_serve_log_directory(request, suite_execution_id):

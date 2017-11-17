@@ -1,0 +1,28 @@
+<html>
+<script
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="fun_field_component.js"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet"/>
+<script>
+
+
+
+angular.module("myApp", [])
+    .component(funFieldComponent["name"], funFieldComponent["info"]);
+
+
+
+
+</script>
+
+<div ng-app="myApp">
+    <form>
+        <fun-field type="number" min="5" max="10" required="true"></fun-field>
+        <fun-field type="text" min-length="5" max-length="7"></fun-field>
+    </form>
+</div>
+</html>

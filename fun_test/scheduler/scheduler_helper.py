@@ -132,6 +132,7 @@ def process_list(process_name):
     for proc in psutil.process_iter():
         try:
             proc_name = proc.name()
+            pid = proc.pid()
             result = process_name in proc_name
             proc_cmd_line = proc.cmdline()
 
@@ -146,6 +147,7 @@ def process_list(process_name):
                         break
         except:
             pass
+    # print processes
     return processes
 
 def _get_table(header_list, list_of_rows):

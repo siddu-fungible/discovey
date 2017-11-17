@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from fun_settings import *
 from fun_global import get_current_time, RESULTS
 import os
@@ -239,6 +240,9 @@ def process_queue():
             suite_worker_obj = SuiteWorker(job_spec=job_spec)
             t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
             job_id_timers[suite_worker_obj.job_id] = t
+            models_helper.update_suite_execution(suite_execution_id=suite_worker_obj.job_id,
+                                                 scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time),
+                                                 result=RESULTS["SCHEDULED"])
             t.start()
 
         else:
@@ -276,6 +280,8 @@ if __name__ == "__main1__":
 if __name__ == "__main__":
     ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
+    with open("/tmp/john-{}".format(datetime.datetime.now()), "w") as f:
+        f.write("hi")
     while True:
         process_killed_jobs()
         process_queue()

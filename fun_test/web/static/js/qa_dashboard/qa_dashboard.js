@@ -53,6 +53,8 @@
             closeAllAlerts: closeAllAlerts
         };
     }]);
+    app.component(funFieldComponent["name"], funFieldComponent["info"]);
+
 }).call();
 
 
