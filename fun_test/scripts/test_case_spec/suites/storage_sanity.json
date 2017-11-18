@@ -1,3 +1,4 @@
 [
-  {"path": "storage/ikv_test.py"}
+  {"path": "storage/ikv_test.py"},
+  {"path": "storage/setup_replica.py"}
 ]
