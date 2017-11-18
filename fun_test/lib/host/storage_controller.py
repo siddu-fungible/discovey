@@ -110,6 +110,46 @@ class StorageController():
         create_dict["params"]["name"] = name
         return self.json_command(create_dict)
 
+    def attach_volume(self, ns_id, uuid, remote_ip):
+        attach_dict = {"class": "controller",
+                       "opcode": "ATTACH",
+                       "params": {"huid": 0,
+                                  "ctlid": 0,
+                                  "fnid": 5,
+                                  "nsid": ns_id,
+                                  "uuid": uuid,
+                                  "remote_ip": remote_ip}}
+        return self.json_command(attach_dict)
+
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid):
+        create_dict = {"class": "volume",
+                       "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                       "params": {"type": "VOL_TYPE_BLK_RDS",
+                                  "capacity": capacity,
+                                  "block_size": block_size,
+                                  "uuid": uuid,
+                                  "name": name,
+                                  "remote_ip": remote_ip,
+                                  "remote_nsid": remote_nsid}}
+        return self.json_command(create_dict)
+
+
+    def create_replica_volume(self, capacity,
+                              block_size,
+                              uuid,
+                              name,
+                              pvol_id):
+        create_dict = {"class": "volume",
+                       "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                       "params": {"type": "VOL_TYPE_BLK_REPLICA",
+                                  "capacity": capacity,
+                                  "block_size": block_size,
+                                  "uuid": uuid,
+                                  "name": name,
+                                  "min_replicas_insync": 1,
+                                  "pvol_type": "VOL_TYPE_BLK_RDS",
+                                  "pvol_id": pvol_id}}
+        return self.json_command(create_dict)
 
 
 if __name__ == "__main__":

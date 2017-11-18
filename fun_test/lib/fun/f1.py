@@ -49,7 +49,7 @@ class F1(Linux, ToDictMixin):
                     self.interactive_command("./funos-posix app=prem_test sim_id=nvme_test nvfile=nvfile",
                                              expected_prompt="Remote PCIe EP NVME Test")
                 except:
-                    pass
+                    pass  #TODO
             else:
                 try:
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS)
@@ -60,7 +60,7 @@ class F1(Linux, ToDictMixin):
                     self.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
                     self.command("ulimit -Sc unlimited")
                     self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
-                    self.command("./funos-posix app=mdt_test nvfile=nvfile")
+                    # self.command("./funos-posix app=mdt_test nvfile=nvfile &> /tmp/funos.log")
                     if not dpcsh_only:
                         #new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
                         #                                                                           self.FUN_OS_SIMULATION_PROCESS))
@@ -73,10 +73,10 @@ class F1(Linux, ToDictMixin):
 
                     else:
 
-                        self.command("{}/{} app=mdt_test nvfile=nvfile".format(self.SIMULATION_FUNOS_BUILD_PATH,
+                        self.command("{}/{} app=mdt_test nvfile=nvfile &> /tmp/funos.log".format(self.SIMULATION_FUNOS_BUILD_PATH,
                                                                                self.FUN_OS_SIMULATION_PROCESS))
                         new_process_id = self.start_bg_process(
-                            command="{}/{} --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
+                            command="{}/{} --dpc-server app=load_mods".format(self.SIMULATION_FUNOS_BUILD_PATH,
                                                                 self.FUN_OS_SIMULATION_PROCESS),
                         output_file="/tmp/f1_dpc_server.log")
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
@@ -89,7 +89,7 @@ class F1(Linux, ToDictMixin):
                     fun_test.test_assert(new_process_id, "Started FunOs")
                     self.fun_os_process_id = new_process_id
                 except:
-                    pass
+                    pass  #TODO
 
             started = True
         return started
