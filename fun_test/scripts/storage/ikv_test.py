@@ -39,7 +39,7 @@ class MyScript(FunTestScript):
         fun_test.test_assert(self.topology, "Ensure deploy is successful")
 
     def cleanup(self):
-        pass
+        TopologyHelper(spec=self.topology).cleanup()
 
 
 class FunTestCase1(FunTestCase):
@@ -79,7 +79,6 @@ class FunTestCase1(FunTestCase):
 
 
         result = storage_controller.command("peek storage/volumes")
-        TopologyHelper(spec=self.script_obj.topology).cleanup()
 
 if __name__ == "__main__":
 

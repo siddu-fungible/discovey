@@ -11,7 +11,7 @@ from web.tools.traffic_tasks import start_fio
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 from fun_global import RESULTS
 from fun_settings import *
-import web.tools.ikv_tasks
+import web.tools.ikv_tasks as ikv_tasks
 from lib.topology.topology_manager.topo_manager import topo
 from collections import OrderedDict
 

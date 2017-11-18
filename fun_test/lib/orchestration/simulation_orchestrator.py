@@ -108,7 +108,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                  ssh_port,
                  dpcsh_port,
                  qemu_ssh_ports,
-                 container_name):
+                 container_name,
+                 internal_ip):
         super(SimulationOrchestrator, self).__init__(host_ip=host_ip,
                                                      ssh_username=ssh_username,
                                                      ssh_password=ssh_password,
@@ -116,6 +117,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         self.dpcsh_port = dpcsh_port
         self.qemu_ssh_ports = qemu_ssh_ports
         self.container_name = container_name
+        self.internal_ip = internal_ip
 
     def describe(self):
         self.docker_host.describe()
@@ -126,6 +128,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                           ssh_username=self.ssh_username,
                           ssh_password=self.ssh_password,
                           ssh_port=self.ssh_port)
+        f1_obj.set_data_plane_ip(data_plane_ip=self.internal_ip)
 
         # Start FunOS
         fun_test.test_assert(f1_obj.start(dpcsh=True,
@@ -142,7 +145,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                                           ssh_port=asset_properties["mgmt_ssh_port"],
                                           dpcsh_port=asset_properties["pool2_ports"][0]["external"],
                                           qemu_ssh_ports=asset_properties["pool1_ports"],
-                                          container_name=asset_properties["name"])
+                                          container_name=asset_properties["name"],
+                                          internal_ip=asset_properties["internal_ip"])
         return obj
 
     def post_init(self):

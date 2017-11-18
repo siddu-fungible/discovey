@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper, Dut
 from lib.host.storage_controller import StorageController
 import uuid
 # fun_test.enable_debug()
-
+# fun_test.enable_pause_on_failure()
 
 
 topology_dict = {
@@ -64,7 +64,7 @@ class MyScript(FunTestScript):
         fun_test.test_assert(self.topology, "Ensure deploy is successful")
 
     def cleanup(self):
-        pass
+        TopologyHelper(spec=self.topology).cleanup()
 
 
 class FunTestCase1(FunTestCase):
@@ -91,7 +91,7 @@ class FunTestCase1(FunTestCase):
                                                target_port=dut_instance.external_dpcsh_port)
 
         result = storage_controller.ip_cfg(ip=dut_instance.host_ip)
-        fun_test.test_assert(result["status"], "ip_cfg {}".format(dut_instance.host_ip))
+        fun_test.test_assert(result["status"], "ip_cfg {}".format(dut_instance.data_plane_ip))
 
         this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
         result = storage_controller.create_blt_volume(capacity=1073741824,

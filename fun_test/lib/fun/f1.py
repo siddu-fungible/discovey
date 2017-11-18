@@ -120,3 +120,8 @@ class F1(Linux, ToDictMixin):
 class DockerF1(F1, ToDictMixin):
     SIMULATION_FUNOS_BUILD_PATH = "/"
     DPCSH_PATH = "/"
+    data_plane_ip = None
+
+    def set_data_plane_ip(self, data_plane_ip):
+        self.data_plane_ip = data_plane_ip
+        self.TO_DICT_VARS.append("data_plane_ip")
