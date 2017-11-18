@@ -25,7 +25,7 @@ class Command(BaseCommand):
                     print("Killed old scheduler")
             except Exception as ex:
                 print("Run_scheduler:" + str(ex))
-        p = subprocess.Popen(["./scheduler.py"], cwd=SCHEDULER_DIR)  # TODO Validate this
+        p = subprocess.Popen(["./scheduler.py"], cwd=SCHEDULER_DIR, env=os.environ.copy())  # TODO Validate this
         time.sleep(5)
 
 
