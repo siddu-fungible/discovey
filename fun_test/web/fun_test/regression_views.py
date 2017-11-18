@@ -62,11 +62,10 @@ def submit_job(request):
 
         elif "schedule_in_minutes" in request_json and request_json["schedule_in_minutes"]:
             schedule_in_minutes_value = request_json["schedule_in_minutes"]
-            schedule_in_minutes_repeat = False
+            schedule_in_minutes_repeat = None
             if "schedule_in_minutes_repeat" in request_json:
                 schedule_in_minutes_repeat = request_json["schedule_in_minutes_repeat"]
-            repeat_in_minutes = None if not schedule_in_minutes_repeat else schedule_in_minutes_value
-            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes_value, repeat_in_minutes=repeat_in_minutes)
+            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes_value, repeat_in_minutes=schedule_in_minutes_repeat)
         else:
             job_id = queue_job(suite_path=suite_path, build_url=build_url)
     return HttpResponse(job_id)

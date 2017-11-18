@@ -63,7 +63,7 @@
                         <button data-placement="top" data-toggle="tooltip" title="Re-run" ng-click="rerunClick(suiteExecution.fields.execution_id)" class="btn
                                 btn-warning"><i class="glyphicon glyphicon-refresh"></i></button>
 
-                        <button ng-show="(suiteExecution.fields.result != 'KILLED') && ((suiteExecution.suite_result == 'IN_PROGRESS') || (suiteExecution.suite_result == 'UNKNOWN'))" data-placement="top" data-toggle="tooltip" title="Stop/Kill" ng-click="killClick(suiteExecution.fields.execution_id)" class="btn
+                        <button ng-show="(suiteExecution.fields.result != 'KILLED') && ((suiteExecution.suite_result != 'PASSED') && (suiteExecution.suite_result != 'FAILED'))" data-placement="top" data-toggle="tooltip" title="Stop/Kill" ng-click="killClick(suiteExecution.fields.execution_id)" class="btn
                                 btn-danger"><i class="glyphicon glyphicon-ban-circle"></i></button>
                     </td>
                 </tr>

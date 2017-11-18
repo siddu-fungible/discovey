@@ -54,12 +54,16 @@
                             <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="true" checked="true">Schedule in minutes:
                         </label>
                         <form name="scheduleInForm" ng-show="scheduleInMinutesRadio" novalidate>
-                            <fun-field id="schedule-in-minutes" klass="form-control" type="number" min="5" max="1439" bind-value="scheduleInMinutes"></fun-field>
-                            <!-- input type="number" class="form-control" id="schedule-in-minutes" ng-min="5" max="1439" ng-model="scheduleInMinutes" -->
+                            <fun-field id="schedule-in-minutes" klass="form-control" type="number" min="1" max="1439" bind-value="scheduleInMinutes"></fun-field>
+                            <label for="repeat-in-minutes"> Repeat in minutes
+                            </label>
+                            <fun-field id="repeat-in-minutes" klass="form-control" type="number" min="1" max="1439" bind-value="scheduleInMinutesRepeat"></fun-field>
+
+                            <!-- input type="number" class="form-control" id="schedule-in-minutes" ng-min="5" max="1439" ng-model="scheduleInMinutes">
                                 <label class="form-check-label">
                                 <input class="form-check-input" type="checkbox" value="" ng-model="scheduleInMinutesRepeat">
                                     Repeat
-                                </label>
+                                </label -->
                         </form>
                         <br>
                         <br>
