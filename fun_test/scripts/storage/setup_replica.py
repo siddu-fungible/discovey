@@ -86,7 +86,7 @@ class MyScript(FunTestScript):
         fun_test.test_assert(self.topology, "Ensure deploy is successful")
 
     def cleanup(self):
-        # TopologyHelper(spec=self.topology).cleanup()
+        TopologyHelper(spec=self.topology).cleanup()
         pass
 
 
@@ -147,8 +147,10 @@ class FunTestCase1(FunTestCase):
         result = storage_controller.ip_cfg(ip=dut_instance2.data_plane_ip)
         fun_test.test_assert(result["status"], "ip_cfg {} on Dut Instance {}".format(dut_instance2.data_plane_ip, 2))
 
+        rds_uuids = []
         for index, dut_instance in enumerate([dut_instance0, dut_instance1]):
             this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+            rds_uuids.append(this_uuid)
             result = storage_controller.create_rds_volume(capacity=capacity,
                                                           block_size=block_size,
                                                           name=volume_name,
@@ -162,12 +164,17 @@ class FunTestCase1(FunTestCase):
                                                           uuid=this_uuid,
                                                           block_size=block_size,
                                                           name=volume_name,
-                                                          pvol_id=created_uuids)
+                                                          pvol_id=rds_uuids)
         fun_test.test_assert(result["status"], "Create Replica volume on index: {}".format(2))
 
 
         result = storage_controller.command("peek storage/volumes")
-        i = 0
+        fun_test.simple_assert(result["status"], "Peeking storage volume stats")
+        fun_test.test_assert_expected(actual=len(result["data"]["VOL_TYPE_BLK_RDS"].keys()),
+                                      expected=len(rds_uuids), message="Ensure RDS volumes are found ")
+        fun_test.test_assert_expected(actual=len(result["data"]["VOL_TYPE_BLK_REPLICA"].keys()),
+                                      expected=1, message="Ensure Replica volumes are found ")
+        # i = 0
         # result = storage_controller.command("peek stats")
         # storage_controller.print_result(result)
 

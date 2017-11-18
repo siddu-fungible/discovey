@@ -4,11 +4,12 @@ import socket, fcntl, errno
 import os, sys
 
 class StorageController():
-    def __init__(self, mode="storage", target_ip=None, target_port=None):
+    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
         self.target_ip = target_ip
         self.target_port = target_port
         self.sock = None
         self.mode = mode
+        self.verbose = verbose
 
     def sendall(self, data, expected_command_duration=1):
         start = time.time()
@@ -53,7 +54,7 @@ class StorageController():
     def _connect(self):
         if not self.sock:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print("Connecting to {} {}".format(self.target_ip, self.target_port))
+            fun_test.log("Connecting to {} {}".format(self.target_ip, self.target_port))
             self.sock.connect((self.target_ip, self.target_port))
             fcntl.fcntl(self.sock, fcntl.F_SETFL, os.O_NONBLOCK)
 
@@ -62,13 +63,17 @@ class StorageController():
         output = ""
         try:
             self._connect()
-            # print ("Sending:" + command + "\n")
+            if self.verbose:
+                fun_test.log("DPCSH Send:" + command + "\n")
             self.sendall("{}\n".format(command))
             output = self._read(expected_command_duration)
             json_output = json.loads(output)
             result["status"] = True
             result["data"] = json_output
+            result["raw_output"] = output
             result["error_message"] = None
+            if int(result["data"]):
+                result["status"] = False
 
         except socket.error, msg:
             print msg
@@ -82,12 +87,17 @@ class StorageController():
         return result
 
     def print_result(self, result):
-        print "Command: {}".format(result["command"])
-        print "Status: {}".format(result["status"])
-        print json.dumps(result["data"], indent=4)
+        fun_test.log("DPCSH Result")
+        fun_test.log("Command: {}".format(result["command"]))
+        fun_test.log("Status: {}".format(result["status"]))
+        fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
+        fun_test.log("Raw output: {}".format(result["raw_output"]))
 
     def json_command(self, data, action="", additional_info=""):
-        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info))
+        o = self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info))
+        if self.verbose:
+            self.print_result(result=o)
+        return o
 
 
     def ip_cfg(self, ip):
