@@ -262,8 +262,16 @@ def de_queue_job(job_file):
         #TODO: Ensure job_file is removed
 
 def ensure_singleton():
+    if os.path.exists(SCHEDULER_PID):
+        raise SchedulerException("Only one instance of scheduler.py is permitted")
+    else:
+        with open(SCHEDULER_PID, "w") as f:
+            pid = os.getpid()
+            f.write(str(pid))
+    '''
     if len(process_list(process_name=os.path.basename(__file__))) > 1:
         raise SchedulerException("Only one instance of scheduler.py is permitted")
+    '''
 
 if __name__ == "__main1__":
     queue_job(suite_name="storage_basic")
@@ -280,8 +288,6 @@ if __name__ == "__main1__":
 if __name__ == "__main__":
     ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
-    with open("/tmp/john-{}".format(datetime.datetime.now()), "w") as f:
-        f.write("hi")
     while True:
         process_killed_jobs()
         process_queue()
