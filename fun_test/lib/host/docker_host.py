@@ -179,6 +179,22 @@ class DockerHost(Linux, ToDictMixin):
             container = self.get_container_by_name(name=container_name)
         container.remove()
 
+    @fun_test.safe
+    def destroy_container(self, container_name):
+        container = self.get_container_by_name(name=container_name)
+        if container:
+
+            try:
+                container.stop()
+                fun_test.debug("Stopped Container: {}".format(container.name))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
+            try:
+                container.remove()
+                fun_test.debug("Removed Container: {}".format(container.name))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
     @fun_test.safe
     def setup_container(self,
@@ -261,22 +277,7 @@ class DockerHost(Linux, ToDictMixin):
             except APIError as ex:
                 message = str(ex)
                 fun_test.critical("Container creation error: {}". format(message))
-
-                container = self.get_container_by_name(name=container_name)
-                if container:
-
-                    try:
-                        container.stop()
-                        fun_test.debug("Stopped Container: {}".format(container.name))
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-
-                    try:
-                        container.remove()
-                        fun_test.debug("Removed Container: {}".format(container.name))
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-
+                self.destroy_container(container_name=container_name)
                 port0_allocator.de_allocate_ports([x["external"] for x in pool0_allocation])
                 port1_allocator.de_allocate_ports([x["external"] for x in pool1_allocation])
                 port2_allocator.de_allocate_ports([x["external"] for x in pool2_allocation])
@@ -295,6 +296,7 @@ class DockerHost(Linux, ToDictMixin):
                     raise FunTestLibException("Unable to bind to any port, max_retries: {} reached".format(max_port_retries))
             except Exception as ex:
                 fun_test.critical(ex)
+                self.destroy_container(container_name=container_name)
                 if allocated_container:
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
