@@ -644,6 +644,7 @@ class FunTestScript(object):
                             fun_test.critical(str(ex))
                     except Exception as ex:
                         fun_test.critical(str(ex))
+                        fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
                         try:
                             test_case.cleanup()
                         except Exception as ex:
