@@ -67,14 +67,16 @@ class StorageController():
                 fun_test.log("DPCSH Send:" + command + "\n")
             self.sendall("{}\n".format(command))
             output = self._read(expected_command_duration)
+            result["raw_output"] = output
             json_output = json.loads(output)
             result["status"] = True
             result["data"] = json_output
-            result["raw_output"] = output
             result["error_message"] = None
-            if int(result["data"]):
-                result["status"] = False
-
+            try:
+                if int(result["data"]):
+                    result["status"] = False
+            except:
+                pass
         except socket.error, msg:
             print msg
             result["error_message"] = msg
@@ -84,6 +86,8 @@ class StorageController():
             result["error_message"] = str(ex)
         if not result["status"]:
             fun_test.log("Command failed: " + fun_test.dict_to_json_string(result))
+        if self.verbose:
+            self.print_result(result=result)
         return result
 
     def print_result(self, result):
@@ -94,11 +98,7 @@ class StorageController():
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
     def json_command(self, data, action="", additional_info=""):
-        o = self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info))
-        if self.verbose:
-            self.print_result(result=o)
-        return o
-
+        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info))
 
     def ip_cfg(self, ip):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip":ip}}

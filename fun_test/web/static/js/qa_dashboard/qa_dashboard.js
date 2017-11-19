@@ -33,16 +33,17 @@
         }
     }]);
     app.factory('commonAlert', ["$rootScope", function ($rootScope) {
-        function showError (message) {
+        function showError(message) {
             $rootScope.showCommonError = true;
             $rootScope.commonErrorMessage = message;
         }
-        function showSuccess (message) {
+
+        function showSuccess(message) {
             $rootScope.showCommonSuccess = true;
             $rootScope.commonSuccessMessage = message;
         }
 
-        function closeAllAlerts () {
+        function closeAllAlerts() {
             $rootScope.showCommonError = false;
             $rootScope.showCommonSuccess = false;
         }

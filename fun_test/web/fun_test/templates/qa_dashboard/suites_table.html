@@ -2,37 +2,42 @@
     <!-- button ng-click="test()">Test</button -->
     <div class="panel panel-primary">
         <div class="panel-heading">Suite Executions</div>
-            <div class="panel-body">
-                <div class="text-center">
-                    <!-- pager -->
-                    <ul ng-if="pager.pages.length" class="pagination">
-                        <li ng-class="{disabled:pager.currentPage === 1}">
-                            <a ng-click="setPage(1)">First</a>
-                        </li>
-                        <li ng-class="{disabled:pager.currentPage === 1}">
-                            <a ng-click="setPage(pager.currentPage - 1)">Previous</a>
-                        </li>
-                        <li ng-repeat="page in pager.pages" ng-class="{active:pager.currentPage === page}">
-                            <a ng-click="setPage(page)">{{page}}</a>
-                        </li>
-                        <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
-                            <a ng-click="setPage(pager.currentPage + 1)">Next</a>
-                        </li>
-                        <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
-                            <a ng-click="setPage(pager.totalPages)">Last</a>
-                        </li>
-                    </ul>
-                </div>
+        <div class="panel-body">
+            <div class="text-center">
+                <!-- pager -->
+                <ul ng-if="pager.pages.length" class="pagination">
+                    <li ng-class="{disabled:pager.currentPage === 1}">
+                        <a ng-click="setPage(1)">First</a>
+                    </li>
+                    <li ng-class="{disabled:pager.currentPage === 1}">
+                        <a ng-click="setPage(pager.currentPage - 1)">Previous</a>
+                    </li>
+                    <li ng-repeat="page in pager.pages" ng-class="{active:pager.currentPage === page}">
+                        <a ng-click="setPage(page)">{{page}}</a>
+                    </li>
+                    <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                        <a ng-click="setPage(pager.currentPage + 1)">Next</a>
+                    </li>
+                    <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                        <a ng-click="setPage(pager.totalPages)">Last</a>
+                    </li>
+                </ul>
+            </div>
             <table ng-if="items" class="table table-nonfluid">
                 <thead>
                 <tr>
                     <th>Id</th>
                     <th>Result</th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Passed" class="label label-success">P</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Failed" class="label label-danger">F</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Not Run" class="label label-default">N</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="In Progress" class="label label-info">I</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Skipped" class="label label-warning">S</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Passed"
+                               class="label label-success">P</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Failed"
+                               class="label label-danger">F</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Not Run"
+                               class="label label-default">N</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="In Progress"
+                               class="label label-info">I</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Skipped"
+                               class="label label-warning">S</label></th>
                     <th># TC</th>
                     <th>Scheduled At</th>
                     <th>Path</th>
@@ -47,7 +52,8 @@
 
                     <td>
                         <button ng-click="getSuiteDetail(suiteExecution.fields.execution_id)" class="btn
-                                btn-{{ resultToClass(suiteExecution.suite_result)}}">{{ suiteExecution.suite_result }}</button>
+                                btn-{{ resultToClass(suiteExecution.suite_result)}}">{{ suiteExecution.suite_result }}
+                        </button>
                     </td>
                     <td>{{ suiteExecution.num_passed }}</td>
                     <td>{{ suiteExecution.num_failed }}</td>
@@ -58,12 +64,16 @@
                     <td>{{ suiteExecution.fields.scheduled_time }}</td>
                     <td>{{ suiteExecution.fields.suite_path }}</td>
                     <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) }}">Log</a></td>
-                    <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) }}">s_{{suiteExecution.fields.execution_id}}</a></td>
+                    <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) }}">s_{{suiteExecution.fields.execution_id}}</a>
+                    </td>
                     <td>
-                        <button data-placement="top" data-toggle="tooltip" title="Re-run" ng-click="rerunClick(suiteExecution.fields.execution_id)" class="btn
+                        <button data-placement="top" data-toggle="tooltip" title="Re-run"
+                                ng-click="rerunClick(suiteExecution.fields.execution_id)" class="btn
                                 btn-warning"><i class="glyphicon glyphicon-refresh"></i></button>
 
-                        <button ng-show="(suiteExecution.fields.result != 'KILLED') && ((suiteExecution.suite_result != 'PASSED') && (suiteExecution.suite_result != 'FAILED'))" data-placement="top" data-toggle="tooltip" title="Stop/Kill" ng-click="killClick(suiteExecution.fields.execution_id)" class="btn
+                        <button ng-show="(suiteExecution.fields.result != 'KILLED') && ((suiteExecution.suite_result != 'PASSED') && (suiteExecution.suite_result != 'FAILED'))"
+                                data-placement="top" data-toggle="tooltip" title="Stop/Kill"
+                                ng-click="killClick(suiteExecution.fields.execution_id)" class="btn
                                 btn-danger"><i class="glyphicon glyphicon-ban-circle"></i></button>
                     </td>
                 </tr>

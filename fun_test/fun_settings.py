@@ -31,7 +31,7 @@ TCMS_PROJECT = "TCM"
 SYSTEM_TMP_DIR = "/tmp"
 sys.path.append(WEB_DIR)
 
-DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funos/940/"
+DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funos/1129/"
 TIME_ZONE = "America/Los_Angeles"
 
 
