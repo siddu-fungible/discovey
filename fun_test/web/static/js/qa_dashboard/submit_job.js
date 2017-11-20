@@ -7,7 +7,7 @@
         ctrl.$onInit = function () {
             $scope.scheduleInMinutes = 1;
             $scope.scheduleInMinutesRadio = true;
-            $scope.buildUrl = "http://dochub.fungible.local/doc/jenkins/funos/1129/";
+            $scope.buildUrl = "http://dochub.fungible.local/doc/jenkins/funos/latest/";
             console.log(ctrl);
             $scope.selectedSuite = null;
             $scope.selectedInfo = null;
