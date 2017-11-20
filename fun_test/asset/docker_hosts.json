@@ -9,7 +9,7 @@
     "images": [
       {
         "category":  "storage_basic",
-        "name": "integration_jenkins_fetch"
+        "name": "storage_basic"
       }
     ]
   }
