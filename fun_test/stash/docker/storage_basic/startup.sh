@@ -52,13 +52,10 @@ echo "---------------------"
 echo "Setting up qemu files"
 echo "---------------------"
 qemu_directory=qemu/x86_64-softmmu
-tar -xvzf $qemu.tgz
-#mkdir $qemu_directory
+tar -xvzf $qemu_tgz_name -C qemu 
 tar -xvzf $pcbios_tgz_name -C $qemu_directory
-chmod 777 $qemu_name
-mv $qemu_name $qemu_directory
-export PATH=$PATH:./qemu
-
+chmod 777 $qemu_directory/$qemu_name
+export PATH=$PATH:$qemu_directory
 
 
 echo "----------------------"
