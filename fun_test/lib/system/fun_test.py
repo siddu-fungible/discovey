@@ -519,11 +519,46 @@ class FunTest:
                                                      suite_execution_id=fun_test.suite_execution_id,
                                                      result=fun_test.FAILED)
 
+    def _get_flat_file_name(self, path):
+        parts = path.split("/")
+        flat = path
+        if len(parts) > 2:
+            flat = "_".join(parts[-2:])
+        return flat.lstrip("/")
 
     def test(self, module_name):
+
+        test_cases = []
+        test_script = None
+
         import imp, inspect
-        module_obj = imp.load_source('module.name', module_name)
-        members = [o for o in inspect.getmembers(module_obj)]
+
+        temp_module_name = self._get_flat_file_name(path=module_name)
+
+        imp.load_source(temp_module_name, module_name)
+        members = inspect.getmembers(sys.modules[temp_module_name], inspect.isclass)
+        for m in members:
+            if len(m) > 1:
+                klass = m[1]
+                mros = inspect.getmro(klass)
+                if issubclass(klass, FunTestCase):
+                    if len(mros) > 1 and "lib.system.fun_test.FunTestCase" in str(mros[1]):
+                        print klass
+                        o = klass(None)
+                        o.describe()
+                        print o.id
+                        print o.summary
+                        print o.steps
+                        test_cases.append(klass)
+
+                if issubclass(klass, FunTestScript):
+                    if len(mros) > 1 and "lib.system.fun_test.FunTestScript" in str(mros[1]):
+                        test_script = klass
+
+
+
+
+
         i = 0
 
 fun_test = FunTest()
