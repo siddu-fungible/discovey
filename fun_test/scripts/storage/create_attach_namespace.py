@@ -38,7 +38,8 @@ class MyScript(FunTestScript):
         fun_test.test_assert(self.topology, "Ensure deploy is successful")
 
     def cleanup(self):
-        TopologyHelper(spec=self.topology).cleanup()
+        #TopologyHelper(spec=self.topology).cleanup()
+        pass
 
 
 class FunTestCase1(FunTestCase):

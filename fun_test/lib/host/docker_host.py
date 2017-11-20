@@ -160,7 +160,9 @@ class DockerHost(Linux, ToDictMixin):
                                ssh_internal_ports,
                                qemu_internal_ports,
                                dpcsh_internal_ports):
-        return self.setup_container(image_name=self.STORAGE_IMAGE_NAME,
+        images = self.spec["images"]
+        storage_image_names = [x["name"] for x in images if x["category"] == "storage_basic"]  #TODO
+        return self.setup_container(image_name=storage_image_names[0],
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,
                                     pool1_internal_ports=qemu_internal_ports,
