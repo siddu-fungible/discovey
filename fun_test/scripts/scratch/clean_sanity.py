@@ -27,7 +27,7 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
-        fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
+        fun_test.test_assert_expected(expected=2, actual=2, message="Some bvjgfgjhjghfghfghfghjfgjhfghfjghfgjhfgjhfgjhfghjfgjhfghjfgjhfghjfjghfghjfhgjfghjfgjfgjhfmessage2")
 
 
 class FunTestCase2(FunTestCase):
@@ -48,7 +48,9 @@ class FunTestCase2(FunTestCase):
 
 
 if __name__ == "__main__":
+
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1(myscript))
     myscript.add_test_case(FunTestCase2(myscript))
-    myscript.run()
+    # myscript.run()
+    fun_test.test(__file__)

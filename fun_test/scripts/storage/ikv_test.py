@@ -51,11 +51,12 @@ def get_sha256_hex(value):
 class FunTestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Create and attach namespace",
+                              summary="Create, open IKV store, puts and gets of kv",
                               steps="""
         1. Create and open ikv
         2. likv put the contents and retrieve a key hex
         3. likv get using the key hex from the put
+        4. Compare the put value and get value
                               """)
 
     def setup(self):
@@ -160,8 +161,6 @@ class FunTestCase1(FunTestCase):
                                       expected=1, message="LIKV puts")
 
 if __name__ == "__main__":
-
-
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1(myscript))
     myscript.run()

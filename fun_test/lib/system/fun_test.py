@@ -519,6 +519,13 @@ class FunTest:
                                                      suite_execution_id=fun_test.suite_execution_id,
                                                      result=fun_test.FAILED)
 
+
+    def test(self, module_name):
+        import imp, inspect
+        module_obj = imp.load_source('module.name', module_name)
+        members = [o for o in inspect.getmembers(module_obj)]
+        i = 0
+
 fun_test = FunTest()
 
 class FunTestScript(object):
