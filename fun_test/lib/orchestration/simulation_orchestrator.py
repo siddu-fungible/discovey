@@ -95,7 +95,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
 class DockerContainerOrchestrator(SimulationOrchestrator):
     # Container that is capable of spinning an F1 and multiple Qemu instances, all within one container
-    QEMU_PATH = "/qemu"
+    QEMU_PATH = "/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     docker_host = None
 
