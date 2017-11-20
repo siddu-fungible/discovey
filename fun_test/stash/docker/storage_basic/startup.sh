@@ -29,18 +29,18 @@ funos_tgz_name=funos.tgz
 funos_tgz_url=$base_url/$funos_tgz_name
 qemu_name=qemu-system-x86_64
 qemu_tgz_name=qemu.tgz
-qemu_url=$base_url/$qemu_tgz_name
+qemu_tgz_url=$base_url/$qemu_tgz_name
 pcbios_tgz_name=pc-bios.tgz
 pcbios_tgz_url=$base_url/$pcbios_tgz_name
 
 echo "Base URL: $base_url"
 echo "Dpsch URL: $dpcsh_url"
 echo "FunOS Tgz URL: $funos_tgz_url"
-echo "Qemu Tgz URL: $qemu_url"
+echo "Qemu Tgz URL: $qemu_tgz_url"
 echo "PC Bios URL: $pcbios_tgz_url"
 
 
-arr=($dpcsh_url $funos_tgz_url $qemu_url $pcbios_tgz_url)
+arr=($dpcsh_url $funos_tgz_url $qemu_tgz_url $pcbios_tgz_url)
 for url in "${arr[@]}"
     do
         curl_fetch $url
