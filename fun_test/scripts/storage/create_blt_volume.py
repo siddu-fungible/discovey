@@ -60,11 +60,12 @@ class MyScript(FunTestScript):
 
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
-        self.topology = topology_obj_helper.deploy()
-        fun_test.test_assert(self.topology, "Ensure deploy is successful")
+        topology = topology_obj_helper.deploy()
+        fun_test.test_assert(topology, "Ensure deploy is successful")
+        fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        TopologyHelper(spec=self.topology).cleanup()
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
 
 
 class FunTestCase1(FunTestCase):
@@ -85,7 +86,7 @@ class FunTestCase1(FunTestCase):
         pass
 
     def run(self):
-        dut_instance = self.script_obj.topology.get_dut_instance(index=0)
+        dut_instance = fun_test.shared_variables["topology"].get_dut_instance(index=0)
         fun_test.test_assert(dut_instance, "Retrieved dut instance")
         storage_controller = StorageController(target_ip=dut_instance.host_ip,
                                                target_port=dut_instance.external_dpcsh_port)
@@ -109,5 +110,5 @@ if __name__ == "__main__":
 
 
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1(myscript))
+    myscript.add_test_case(FunTestCase1())
     myscript.run()

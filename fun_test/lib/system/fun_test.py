@@ -141,6 +141,7 @@ class FunTest:
 
         self.log_timestamps = True
         self.pause_on_failure = False
+        self.shared_variables = {}
 
     def create_test_case_artifact_file(self, post_fix_name, contents):
         artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
@@ -756,12 +757,10 @@ class FunTestScript(object):
 
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
-    def __init__(self,
-                 script_obj):
+    def __init__(self):
         self.id = None
         self.summary = None
         self.steps = None
-        self.script_obj = script_obj
         self._added_to_script = None
 
     def __str__(self):

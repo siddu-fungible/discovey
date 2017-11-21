@@ -82,11 +82,12 @@ class MyScript(FunTestScript):
 
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
-        self.topology = topology_obj_helper.deploy()
-        fun_test.test_assert(self.topology, "Ensure deploy is successful")
+        topology = topology_obj_helper.deploy()
+        fun_test.test_assert(topology, "Ensure deploy is successful")
+        fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        TopologyHelper(spec=self.topology).cleanup()
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         pass
 
 
@@ -109,13 +110,13 @@ class FunTestCase1(FunTestCase):
         pass
 
     def run(self):
-        dut_instance0 = self.script_obj.topology.get_dut_instance(index=0)
+        dut_instance0 = fun_test.shared_variables["topology"].get_dut_instance(index=0)
         fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
 
-        dut_instance1 = self.script_obj.topology.get_dut_instance(index=1)
+        dut_instance1 = fun_test.shared_variables["topology"].get_dut_instance(index=1)
         fun_test.test_assert(dut_instance1, "Retrieved dut instance 1")
 
-        dut_instance2 = self.script_obj.topology.get_dut_instance(index=2)
+        dut_instance2 = fun_test.shared_variables["topology"].get_dut_instance(index=2)
         fun_test.test_assert(dut_instance2, "Retrieved dut instance 2")
 
         created_uuids = []
@@ -182,5 +183,5 @@ if __name__ == "__main__":
 
 
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1(myscript))
+    myscript.add_test_case(FunTestCase1())
     myscript.run()

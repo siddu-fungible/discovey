@@ -60,7 +60,9 @@ class F1(Linux, ToDictMixin):
                     self.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
                     self.command("ulimit -Sc unlimited")
                     self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
-                    self.command("./funos-posix app=mdt_test nvfile=nvfile &> /tmp/funos.log")
+                    # self.command("./funos-posix app=mdt_test nvfile=nvfile &> /tmp/funos.log")
+                    self.command("{}/{} app=mdt_test nvfile=nvfile &> /tmp/funos.log".format(self.SIMULATION_FUNOS_BUILD_PATH,
+                                                                                    self.FUN_OS_SIMULATION_PROCESS))
                     if not dpcsh_only:
                         #new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
                         #                                                                           self.FUN_OS_SIMULATION_PROCESS))
@@ -73,9 +75,6 @@ class F1(Linux, ToDictMixin):
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
 
                     else:
-
-                        self.command("{}/{} app=mdt_test nvfile=nvfile &> /tmp/funos.log".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                                                                               self.FUN_OS_SIMULATION_PROCESS))
                         new_process_id = self.start_bg_process(
                             command="{}/{} --dpc-server app=load_mods".format(self.SIMULATION_FUNOS_BUILD_PATH,
                                                                 self.FUN_OS_SIMULATION_PROCESS),
