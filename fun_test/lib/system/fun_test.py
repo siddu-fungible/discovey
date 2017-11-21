@@ -89,7 +89,12 @@ class FunTest:
                             dest="build_url",
                             default=None,
                             help="To be used only by the scheduler")
+        parser.add_argument('--disable_fun_test',
+                            dest="disable_fun_test",
+                            default=None)
         args = parser.parse_args()
+        if args.disable_fun_test:
+            return
         self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
@@ -528,6 +533,7 @@ class FunTest:
 
     def test(self, module_name):
 
+        sys.argv.append("--disable_fun_test")
         test_cases = []
         test_script = None
 
@@ -554,8 +560,12 @@ class FunTest:
                 if issubclass(klass, FunTestScript):
                     if len(mros) > 1 and "lib.system.fun_test.FunTestScript" in str(mros[1]):
                         test_script = klass
-
-
+        #test_script_obj = test_script()
+        #test_case_order = test_script().test_case_order
+        '''
+        for entry in test_script().test_case_order:
+            print entry["tc"]
+        '''
 
 
 
@@ -565,6 +575,7 @@ fun_test = FunTest()
 
 class FunTestScript(object):
     __metaclass__ = abc.ABCMeta
+    test_case_order = None
     def __init__(self):
         fun_test._initialize()
         self.test_cases = []
@@ -586,6 +597,14 @@ class FunTestScript(object):
     def describe(self):
         pass
 
+    def _get_test_case_by_name(self, tc_name):
+        result = None
+        for test_case in self.test_cases:
+            s = test_case.__class__.__name__
+            if s == tc_name:
+                result = test_case
+        return result
+
     @abc.abstractmethod
     def setup(self):
         fun_test._start_test(id=self.id,
@@ -595,12 +614,34 @@ class FunTestScript(object):
 
         setup_te = None
         try:
+            if self.test_case_order:
+                new_order = []
+                for entry in self.test_case_order:
+                    tc_name = entry["tc"]
+                    main_test_case = self._get_test_case_by_name(tc_name=tc_name)
+                    if not main_test_case:
+                        raise Exception("Unable to find test-case {} in list. Did you forget to append to the script?".format(tc_name))
 
+                    if "dependencies" in entry:
+                        dependencies = entry["dependencies"]
+                        for dependency in dependencies:
+                            t = self._get_test_case_by_name(tc_name=dependency)
+                            if not t:
+                                raise Exception("Unable to find test-case {} in list. Did you forget to append to the script?".format(dependency))
+                            else:
+                                new_order.append(t)
+                                t._added_to_script = True
+
+                    new_order.append(main_test_case)
+                    main_test_case._added_to_script = True
+
+                self.test_cases  = new_order
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
                 setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
                                                            suite_execution_id=fun_test.suite_execution_id,
                                                            result=fun_test.IN_PROGRESS,
                                                            path=fun_test.relative_path)
+
                 for test_case in self.test_cases:
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
@@ -721,6 +762,7 @@ class FunTestCase:
         self.summary = None
         self.steps = None
         self.script_obj = script_obj
+        self._added_to_script = None
 
     def __str__(self):
         s = "{}: {}".format(self.id, self.summary)

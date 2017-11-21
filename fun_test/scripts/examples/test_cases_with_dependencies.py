@@ -94,7 +94,6 @@ class FunTestCase4(FunTestCase):
 
 
 if __name__ == "__main__":
-    fun_test.test(__file__)
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1(myscript))
     myscript.add_test_case(FunTestCase2(myscript))
