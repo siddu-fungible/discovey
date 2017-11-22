@@ -1,5 +1,4 @@
 from lib.system.fun_test import *
-from lib.templates.storage.storage_template import StorageTemplate
 from lib.topology.topology_helper import TopologyHelper, Dut
 from lib.host.storage_controller import StorageController
 import uuid
@@ -43,35 +42,9 @@ topology_dict = {
             },
             "simulation_start_mode": Dut.SIMULATION_START_MODE_DPCSH_ONLY
         }
-
     }
-}
 
-""",
-1: {
-    "mode": Dut.MODE_SIMULATION,
-    "type": Dut.DUT_TYPE_FSU,
-    "interface_info": {
-        0: {
-            "vms": 1,
-            "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
-        }
-    },
-    "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
-},
-2: {
-    "mode": Dut.MODE_SIMULATION,
-    "type": Dut.DUT_TYPE_FSU,
-    "interface_info": {
-        0: {
-            "vms": 1,
-            "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
-        }
-    },
-    "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
 }
-}
-"""
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -175,9 +148,7 @@ class FunTestCase1(FunTestCase):
                                       expected=len(rds_uuids), message="Ensure RDS volumes are found ")
         fun_test.test_assert_expected(actual=len(result["data"]["VOL_TYPE_BLK_REPLICA"].keys()),
                                       expected=1, message="Ensure Replica volumes are found ")
-        # i = 0
-        # result = storage_controller.command("peek stats")
-        # storage_controller.print_result(result)
+
 
 if __name__ == "__main__":
 

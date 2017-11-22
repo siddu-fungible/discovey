@@ -10,6 +10,10 @@
       {
         "category":  "storage_basic",
         "name": "storage_basic"
+      },
+      {
+        "category": "fio_traffic_generator",
+        "name": "tgen"
       }
     ]
   }

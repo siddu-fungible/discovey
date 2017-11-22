@@ -1,0 +1,8 @@
+class TrafficGenerator:
+    TRAFFIC_GENERATOR_TYPE_FIO = "TRAFFIC_GENERATOR_TYPE_FIO"
+    TRAFFIC_GENERATOR_TYPE = TRAFFIC_GENERATOR_TYPE_FIO
+    def __init__(self):
+        self.type = self.TRAFFIC_GENERATOR_TYPE
+
+class Fio(TrafficGenerator):
+    TRAFFIC_GENERATOR_TYPE = TrafficGenerator.TRAFFIC_GENERATOR_TYPE_FIO

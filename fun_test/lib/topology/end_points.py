@@ -5,6 +5,7 @@ class EndPoint(object, ToDictMixin):
     END_POINT_TYPE_BARE_METAL = "END_POINT_TYPE_BARE_METAL"
     END_POINT_TYPE_VM = "END_POINT_TYPE_VM"
     END_POINT_TYPE_SSD = "END_POINT_TYPE_SSD"
+    END_POINT_TYPE_FIO = "END_POINT_TYPE_FIO"
 
     # Hypervisor Endpoint types indicate Containers capable of carrying multiple hosts
     END_POINT_TYPE_HYPERVISOR = "END_POINT_TYPE_HYPERVISOR"
@@ -69,3 +70,9 @@ class QemuColocatedHypervisorEndPoint(HypervisorEndPoint, ToDictMixin):
 
 class SsdEndPoint(EndPoint):
     end_point_type = EndPoint.END_POINT_TYPE_SSD
+
+class FioEndPoint(EndPoint):
+    end_point_type = EndPoint.END_POINT_TYPE_FIO
+
+    def __str__(self):
+        return "Fio Endpoint"

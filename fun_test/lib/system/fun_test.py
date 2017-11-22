@@ -551,7 +551,7 @@ class FunTest:
                 if issubclass(klass, FunTestCase):
                     if len(mros) > 1 and "lib.system.fun_test.FunTestCase" in str(mros[1]):
                         print klass
-                        o = klass(None)
+                        o = klass()
                         o.describe()
                         print o.id
                         print o.summary

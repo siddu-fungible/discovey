@@ -3,6 +3,7 @@ from lib.system.utils import parse_file_to_json
 from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1
 from lib.orchestration.simulation_orchestrator import SimulationOrchestrator, DockerContainerOrchestrator
+from lib.orchestration.simulation_orchestrator import DockerHostOrchestrator
 from lib.system.fun_test import fun_test
 from lib.orchestration.orchestrator import OrchestratorType
 
@@ -19,15 +20,17 @@ class AssetManager:
     @fun_test.safe
     def cleanup(self):
         for orchestrator in self.orchestrators:
-            self.docker_host.stop_container(orchestrator.container_name)
-            fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
-            self.docker_host.remove_container(orchestrator.container_name)
+            if orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
+                self.docker_host.stop_container(orchestrator.container_name)
+                fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
+                self.docker_host.remove_container(orchestrator.container_name)
 
     def describe(self):
         fun_test.log_section("Printing assets")
         # for orchestrator in self.orchestrators:
         #    orchestrator.describe()
-        self.docker_host.describe()
+        if self.docker_host:
+            self.docker_host.describe()
 
     @fun_test.safe
     def get_any_simple_host(self, name):
@@ -67,8 +70,8 @@ class AssetManager:
                     build_url = fun_test.build_url
                 if not self.docker_host:
                     self.docker_host = self.get_any_docker_host()
-                fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                 fun_test.simple_assert(self.docker_host, "Docker host available")
+                fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                 fun_test.log("Setting up the integration container for index: {} url: {}".format(index, build_url))
                 id = index + fun_test.get_suite_execution_id()
                 container_name = "{}_{}".format("integration_basic", id)
@@ -83,6 +86,15 @@ class AssetManager:
 
                 fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(id))
                 orchestrator = DockerContainerOrchestrator.get(container_asset)
+            elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST:
+                if not self.docker_host:
+                    self.docker_host = self.get_any_docker_host()
+                    fun_test.simple_assert(self.docker_host, "Docker host available")
+                    fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
+                orchestrator = self.docker_host
+                orchestrator.__class__ = DockerHostOrchestrator
+                orchestrator.launch_host_instance()
+
         except Exception as ex:
             fun_test.critical(str(ex))
         self.orchestrators.append(orchestrator)

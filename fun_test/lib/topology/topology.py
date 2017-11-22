@@ -4,6 +4,7 @@ class ExpandedTopology(ToDictMixin):
     TO_DICT_VARS = ["duts"]
     def __init__(self):
         self.duts = {}
+        self.tgs = {}
 
     def get_dut(self, index):
         result = None

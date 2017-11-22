@@ -2,11 +2,11 @@ from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
 from lib.host.host import Qemu
+from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1, DockerF1
-from orchestrator import OrchestratorType
+from orchestrator import OrchestratorType, Orchestrator
 
-
-class SimulationOrchestrator(Linux, ToDictMixin):
+class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     QEMU_PATH = "/home/jabraham/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     QEMU_INSTANCE_PORT = 2220
@@ -94,7 +94,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
 
 class DockerContainerOrchestrator(SimulationOrchestrator):
-    # Container that is capable of spinning an F1 and multiple Qemu instances, all within one container
+    # An orchestrator (which happens to be a container) that is capable of spinning an F1 and multiple Qemu instances, all within one container
     QEMU_PATH = "/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     docker_host = None
@@ -157,6 +157,9 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         self.TO_DICT_VARS.extend(["port_redirections", "ORCHESTRATOR_TYPE", "docker_host"])
 
 
-class DockerHostOrchestrator(SimulationOrchestrator):
+class DockerHostOrchestrator(Orchestrator, DockerHost):
     # A Docker Linux Host capable of launching docker container instances
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST
+
+    def launch_host_instance(self):
+        pass
