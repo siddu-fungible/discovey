@@ -26,13 +26,39 @@ class DpcshClient:
                     time.sleep(0.1)
                     continue
 
-
+    '''
     def _read(self, expected_command_duration=1):
         start = time.time()
         chunk = 1024
 
         output = ""
         while True:
+            elapsed_time = time.time() - start
+            if elapsed_time > expected_command_duration:
+                break
+            try:
+                buffer = self.sock.recv(chunk)
+            except socket.error, e:
+                err = e.args[0]
+                if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
+                    time.sleep(0.1)
+                    continue
+                else:
+                    # a "real" error occurred
+                    print e
+                    sys.exit(1)
+            else:
+                output += buffer
+        return output
+
+    '''
+
+    def _read(self, expected_command_duration=1):
+        start = time.time()
+        chunk = 1024
+
+        output = ""
+        while not output.endswith("\n"):
             elapsed_time = time.time() - start
             if elapsed_time > expected_command_duration:
                 break
