@@ -111,7 +111,7 @@ class TopologyHelper:
             for tg_index, tg in tgs.items():
                 fun_test.debug("Setting up Tg {}".format(str(tg)))
                 if tg.type == EndPoint.END_POINT_TYPE_FIO:
-                    self.allocate_traffic_generator(fio_end_point=tg)
+                    self.allocate_traffic_generator(index=tg_index, end_point=tg)
         else:
             pass  # Networking style,
 
@@ -162,8 +162,13 @@ class TopologyHelper:
                     fun_test.counter += 1
 
     @fun_test.safe
-    def allocate_traffic_generator(self, fio_end_point):
+    def allocate_traffic_generator(self, index, end_point):
         orchestrator_obj = asset_manager.get_orchestrator(OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST)
+        if end_point.end_point_type == EndPoint.END_POINT_TYPE_FIO:
+            instance = orchestrator_obj.launch_fio_instance(index)
+            fun_test.test_assert(instance, "allocate_traffic_generator: Launched fio instance")
+            end_point.set_instance(instance=instance)
+
 
 
     @fun_test.safe

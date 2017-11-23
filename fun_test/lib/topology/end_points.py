@@ -74,5 +74,15 @@ class SsdEndPoint(EndPoint):
 class FioEndPoint(EndPoint):
     end_point_type = EndPoint.END_POINT_TYPE_FIO
 
+    def __init__(self):
+        super(FioEndPoint, self).__init__()
+        self.instance = None
+
     def __str__(self):
         return "Fio Endpoint"
+
+    def set_instance(self, instance):
+        self.instance = instance
+
+    def get_instance(self):
+        return self.instance

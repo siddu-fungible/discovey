@@ -9,11 +9,11 @@
     "images": [
       {
         "category":  "storage_basic",
-        "name": "storage_basic"
+        "name": "storage_basic:latest"
       },
       {
         "category": "fio_traffic_generator",
-        "name": "tgen"
+        "name": "tgen:v3"
       }
     ]
   }

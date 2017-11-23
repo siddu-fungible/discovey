@@ -93,7 +93,6 @@ class AssetManager:
                     fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                 orchestrator = self.docker_host
                 orchestrator.__class__ = DockerHostOrchestrator
-                orchestrator.launch_host_instance()
 
         except Exception as ex:
             fun_test.critical(str(ex))

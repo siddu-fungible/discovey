@@ -1,6 +1,7 @@
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
+from lib.host.fio import Fio
 from lib.host.host import Qemu
 from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1, DockerF1
@@ -161,5 +162,8 @@ class DockerHostOrchestrator(Orchestrator, DockerHost):
     # A Docker Linux Host capable of launching docker container instances
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST
 
-    def launch_host_instance(self):
-        pass
+    def launch_fio_instance(self, index):
+        id = index + fun_test.get_suite_execution_id()
+        container_name = "{}_{}".format("integration_fio", id)
+        container_asset = self.setup_fio_container(container_name=container_name, ssh_internal_ports=[22])
+        return Fio.get(asset_properties=container_asset)

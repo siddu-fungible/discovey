@@ -10,7 +10,7 @@ import re, collections
 
 class PortAllocator:
     def __init__(self, base_port, internal_ports):
-        self.internal_ports = internal_ports
+        self.internal_ports = internal_ports if internal_ports else []
         self.allocated_ports = [base_port]
 
     def prepare_ports_dict(self, ports_dict):
@@ -100,7 +100,9 @@ class DockerHost(Linux, ToDictMixin):
         images = []
         try:
             self.connect()
-            images = [y[0].split(":")[0] for y in [x.tags for x in self.client.images.list(all=True)] if y]
+            # images = [y[0].split(":")[0] for y in [x.tags for x in self.client.images.list(all=True)] if y]
+            images = [x.tags[0] for x in self.client.images.list(all=True) if x.tags]
+
         except Exception as ex:
             print ("get_images:" + str(ex))  #TODO: we use print as non fun-test code can access this
         return images
@@ -153,6 +155,11 @@ class DockerHost(Linux, ToDictMixin):
             pass
         return container
 
+    def _get_image_name_by_category(self, category_name):
+        images = self.spec["images"]
+        images = [x["name"] for x in images if str(x["category"]) == category_name]
+        return images[0]
+
     @fun_test.safe
     def setup_storage_container(self,
                                container_name,
@@ -160,14 +167,23 @@ class DockerHost(Linux, ToDictMixin):
                                ssh_internal_ports,
                                qemu_internal_ports,
                                dpcsh_internal_ports):
-        images = self.spec["images"]
-        storage_image_names = [x["name"] for x in images if x["category"] == "storage_basic"]  #TODO
-        return self.setup_container(image_name=storage_image_names[0],
+        storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  #TODO
+        return self.setup_container(image_name=storage_image_name,
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,
                                     pool1_internal_ports=qemu_internal_ports,
                                     pool2_internal_ports=dpcsh_internal_ports,
                                     command=build_url)
+
+    @fun_test.safe
+    def setup_fio_container(self,
+                            container_name,
+                            ssh_internal_ports):
+        fio_image_name = self._get_image_name_by_category(category_name="fio_traffic_generator")
+        return self.setup_container(image_name=fio_image_name,
+                                    container_name=container_name,
+                                    pool0_internal_ports=ssh_internal_ports)
+
 
     @fun_test.safe
     def stop_container(self, container_name, container=None):
@@ -202,10 +218,10 @@ class DockerHost(Linux, ToDictMixin):
     def setup_container(self,
                         image_name,
                         container_name,
-                        command,
-                        pool0_internal_ports,
-                        pool1_internal_ports,
-                        pool2_internal_ports):
+                        command=None,
+                        pool0_internal_ports=None,
+                        pool1_internal_ports=None,
+                        pool2_internal_ports=None):
         container_asset = {}
         allocated_container = None
 
@@ -244,12 +260,19 @@ class DockerHost(Linux, ToDictMixin):
                 pool1_allocation = port1_allocator.prepare_ports_dict(ports_dict=ports_dict)
                 pool2_allocation = port2_allocator.prepare_ports_dict(ports_dict=ports_dict)
 
-                allocated_container = self.client.containers.run(image_name,
-                                           command=command,
-                                           detach=True,
-                                           privileged=True,
-                                           ports=ports_dict,
-                                           name=container_name)
+                if command:
+                    allocated_container = self.client.containers.run(image_name,
+                                               command=command,
+                                               detach=True,
+                                               privileged=True,
+                                               ports=ports_dict,
+                                               name=container_name)
+                else:
+                    allocated_container = self.client.containers.run(image_name,
+                                               detach=True,
+                                               privileged=True,
+                                               ports=ports_dict,
+                                               name=container_name)
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
