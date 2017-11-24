@@ -221,6 +221,43 @@ def attach_tg(request, topology_session_id, f1_id):
     logs = []
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
+
+
+    topology_obj = topo.Topology()
+    pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
+    topology_obj.load(filename=pickle_file)
+
+    info = json.loads(topology_obj.getAccessInfo())
+    topology_obj.save(filename=pickle_file)
+
+
+    tg = None
+    tg_found = False
+    print("F1 Name:" + f1_record.name)
+    f1_node = topology_obj.get_node(f1_record.name)
+    if f1_node.tgs:
+        print("Searching for {} Found".format(f1_id))
+        for tg in f1_node.tgs:
+            if tg.node.name == f1_id:
+                print("Found {} in tg list".format(f1_id))
+                tg_found = True
+                break
+    if not tg_found:
+        print("No TG found, attaching a new one")
+        tg = topology_obj.attachTG(f1_id)
+    print("**** tg.ip: " + tg.ip)
+    topology_obj.save(filename=pickle_file)
+
+
+    # result["logs"] = ["Attached TG: {}".format(tg.ip)]
+    return HttpResponse(tg.ip)
+
+'''
+@csrf_exempt
+def attach_tg(request, topology_session_id, f1_id):
+    logs = []
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
 
@@ -281,6 +318,7 @@ def attach_tg(request, topology_session_id, f1_id):
     logs.append("create command result: " + json.dumps(result, indent=4))
     result["logs"] = logs
     return HttpResponse(json.dumps(result))
+'''
 
 
 @csrf_exempt
@@ -501,6 +539,8 @@ def attach_volume(request, topology_session_id, f1_id):
     print("attach command result: " + str(result))
     if result["status"]:
         i = result["data"]
+    if (not result["status"]) and (not result["data"]):
+            result["status"] = True
     result["logs"] = logs
     return HttpResponse(json.dumps(result))
 

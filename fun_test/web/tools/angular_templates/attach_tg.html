@@ -11,10 +11,9 @@
         {{ errorMessage }}
     </div>
     <br>
-    <br>
 
 
-    <label class="form-inline">Replica Volume UUID</label>
+    <!-- label class="form-inline">Replica Volume UUID</label>
     <select class="form-control" ng-model="selectedUuid"
 	    ng-options="volumeUuid for volumeUuid in $ctrl.f1.replicaVolumeUuids track by volumeUuid"
 	    ng-change="tgUuidSelection(selectedUuid)">
@@ -25,7 +24,7 @@
     <select class="form-control" ng-model="selectedUuid"
 	    ng-options="volumeUuid for volumeUuid in $ctrl.f1.volumeUuids track by volumeUuid"
 	    ng-change="tgUuidSelection(selectedUuid)">
-    </select>
+    </select -->
     <br>
 
     <button ng-hide="playing" type="button" class="btn btn-success btn-sm" ng-click="attach()">
