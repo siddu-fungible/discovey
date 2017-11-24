@@ -6,9 +6,6 @@
 
         ctrl.$onInit = function () {
             $scope.charting = false;
-            //$scope.series = ['2-1', '2-2', '2-3', '2-4'];
-            //$scope.series = ['2-2', '2-3'];
-            //$scope.series = ['2-2', '2-3', '2-1'];
             $scope.series = ['1-1', '1-2', '1-3', '1-4'];
             //$scope.buttonText = "Start";
             $scope.buttonText = "Fetch stats";
@@ -56,14 +53,14 @@
             //console.log(ctrl);
             $scope.charting = !$scope.charting;
             $scope.pullStats();
-            /*if($scope.charting) {
+            if($scope.charting) {
                 $scope.buttonText = "Stop";
                 $scope.playIcon = "glyphicon-pause";
                 $scope.pullStats();
             } else {
                 $scope.buttonText = "Start";
                 $scope.playIcon = "glyphicon-play";
-            }*/
+            }
         };
 
         $scope.startIkvChart = function () {
@@ -95,7 +92,7 @@
             });
           
             if($scope.charting) {
-                $timeout($scope.pullStats, 5000);
+                $timeout($scope.pullStats, 4000);
             }
 
         };
@@ -158,7 +155,7 @@
             });
           
             if($scope.charting) {
-                $timeout($scope.pullStats, 5000);
+                $timeout($scope.pullStats, 4000);
             }
 
         };
