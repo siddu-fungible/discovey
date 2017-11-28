@@ -35,6 +35,7 @@ class StorageController():
         while not output.endswith("\n"):
             elapsed_time = time.time() - start
             if elapsed_time > expected_command_duration:
+                fun_test.critical("Command timeout")
                 break
             try:
                 buffer = self.sock.recv(chunk)
@@ -97,8 +98,8 @@ class StorageController():
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_command(self, data, action="", additional_info=""):
-        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info))
+    def json_command(self, data, action="", additional_info="", expected_command_duration=1):
+        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info), expected_command_duration=expected_command_duration)
 
     def ip_cfg(self, ip):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip":ip}}
@@ -129,7 +130,7 @@ class StorageController():
                                   "nsid": ns_id,
                                   "uuid": uuid,
                                   "remote_ip": remote_ip}}
-        return self.json_command(attach_dict)
+        return self.json_command(attach_dict, expected_command_duration=3)
 
     def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid):
         create_dict = {"class": "volume",

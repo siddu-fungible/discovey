@@ -169,6 +169,7 @@ class FunTestCase1(FunTestCase):
                                       expected=1, message="Ensure Replica volumes are found ")
         replica_uuid = result["data"]["VOL_TYPE_BLK_REPLICA"].keys()[0]
 
+        fun_test.sleep("Waiting after creating replica", seconds=10)
         fio = topology.get_tg_instance(tg_index=0)
         destination_ip = dut_instance2.data_plane_ip
         dut_instance = topology.get_dut_instance(index=2)
@@ -176,8 +177,10 @@ class FunTestCase1(FunTestCase):
                                                target_port=dut_instance.external_dpcsh_port)
         # result = storage_controller.ip_cfg(ip=fio.internal_ip)
         storage_controller.attach_volume(ns_id=ns_id, uuid=replica_uuid, remote_ip=fio.internal_ip)
-        fun_test.test_assert(result["status"], "ip_cfg {} on Dut Instance {}".format(dut_instance2.data_plane_ip, 2))
-        fio.send_traffic(destination_ip=destination_ip)
+        # result = storage_controller.ip_cfg(ip=fio.internal_ip)
+        # fun_test.test_assert(result["status"], "ip_cfg {} on Dut Instance {}".format(fio.internal_ip, 2))
+        # fun_test.sleep("Waiting for controller attach", seconds=10)
+        # fio.send_traffic(destination_ip=destination_ip)
 
 
 

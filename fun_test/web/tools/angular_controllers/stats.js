@@ -12,6 +12,12 @@
             $scope.playIcon = "glyphicon-play";
             $scope.currentReadValues = {};
             $scope.currentWriteValues = {};
+
+            for(let i = 0; i < $scope.series.length; i++) {
+                $scope.currentReadValues[$scope.series[i]] = 0;
+                $scope.currentWriteValues[$scope.series[i]] = 0;
+            }
+
             $scope.readsTitle = "Reads";
             $scope.writesTitle = "Writes";
             $scope.width = "100px";
