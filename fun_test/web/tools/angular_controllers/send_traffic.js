@@ -45,7 +45,23 @@
                     let s = regex.exec($scope.logs);
                     if(s.length) {
                         $scope.logs = s[0].replace(/\\n/g, "\n");
-                    } 
+                    }
+
+                    let cleanLogs = [];
+                    const read_regex = /READ.*io=(.*B) /;
+                    let r_s = regex.exec($scope.logs);
+                    if(r_s.length) {
+                        cleanLogs.push(s[1]);
+                    }
+                    const write_regex = /WRITE.*io=(.*B) /;
+                    let w_s = regex.exec($scope.logs);
+                    if(w_s.length) {
+                        cleanLogs.push(s[1]);
+                    }
+                    $scope.logs = cleanLogs;
+
+
+
                 }
             }).catch(function (result) {
                 // task error TODO
