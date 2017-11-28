@@ -47,22 +47,23 @@ def start_fio(session_id, f1_record, fio_info):
 
     #fio_command = "fio --name=fun_nvmeof --ioengine=fun --rw=readwrite --bs={} --size={} --numjobs=1  --iodepth=8 --do_verify=0 --verify=md5 --verify_fatal=1 --source_ip={} --dest_ip={} --io_queues=1 --nrfiles={} --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY".format(block_size, size, tg.ip, f1_record["dataplane_ip"], nr_files)
 
-    fio_command = "fio --name=fun_nvmeof --ioengine=fun --rw=read --bs={} --size={} --numjobs=1  --iodepth=1 --source_ip={} --dest_ip={} --io_queues=1 --nrfiles={} --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY".format(block_size, size, tg.ip, f1_record["dataplane_ip"], nr_files)
+    fio_command = "fio --name=fun_nvmeof --ioengine=fun --rw=write --bs={} --size={} --numjobs=1  --iodepth=1 --do_verify=1 --verify=md5 --verify_fatal=1 --source_ip={} --dest_ip={} --io_queues=1 --nrfiles={} --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY".format(block_size, size, tg.ip, f1_record["dataplane_ip"], nr_files)
     print("FIO command: {} {} {}".format(fio_command, tg.ip, tg.host_ssh_port))
     # pdb.set_trace()
     #out = tg.exec_command(fio_command, False)
     linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123", ssh_port=tg.host_ssh_port)
+    # linux_obj.command("ping -c 3 {}".format(f1_record["dataplane_ip"]))
     try:
         out = linux_obj.command(fio_command, timeout=5)
     except:
         linux_obj.disconnect()
+        linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123", ssh_port=tg.host_ssh_port)
+        try:
+            out = linux_obj.command(fio_command)
+        except:
+            pass
         pass
     '''
-    linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123", ssh_port=tg.host_ssh_port)
-    try:
-        out = linux_obj.command(fio_command)
-    except:
-        pass
     '''
     topology_obj.save(filename=pickle_file)
     print("Output:" + str(json.dumps(out, indent=4)))

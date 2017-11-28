@@ -534,7 +534,7 @@ def attach_volume(request, topology_session_id, f1_id):
                               "remote_ip": remote_ip}}
     command = "storage {}".format(json.dumps(create_dict))
     logs.append("Sending: " + command)
-    result = dpcsh_client.command(command=command)
+    result = dpcsh_client.command(command=command, expected_command_duration=4)
     logs.append("command result: " + json.dumps(result, indent=4))
     print("attach command result: " + str(result))
     if result["status"]:

@@ -71,7 +71,7 @@ class DpcshClient:
                     continue
                 else:
                     # a "real" error occurred
-                    print e
+                    print("Some Error:" + str(e))
                     sys.exit(1)
             else:
                 output += buffer
