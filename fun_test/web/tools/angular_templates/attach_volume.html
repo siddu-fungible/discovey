@@ -37,6 +37,7 @@
                 <select
                         ng-options="f1.dataplane_ip as [f1.name, f1.dataplane_ip].join(' -- ') for f1 in $ctrl.f1s"
                         ng-model="selectedRemoteIp" required></select>
+                <br>
                 <label>Remote Traffic generator</label>
                 <select
                         ng-options="tg.ip as tg.ip for tg in $ctrl.f1.tgs"
