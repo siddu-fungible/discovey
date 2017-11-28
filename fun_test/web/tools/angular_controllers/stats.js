@@ -163,7 +163,7 @@
             });
           
             if($scope.charting) {
-                $timeout($scope.pullStats, 4000);
+                $timeout($scope.pullStats, 2000);
             }
 
         };

@@ -53,13 +53,16 @@ def start_fio(session_id, f1_record, fio_info):
     #out = tg.exec_command(fio_command, False)
     linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123", ssh_port=tg.host_ssh_port)
     # linux_obj.command("ping -c 3 {}".format(f1_record["dataplane_ip"]))
+    t = 5
+    if ("1m" in fio_command) or ("4m" in fio_command):
+        t = 180
     try:
-        out = linux_obj.command(fio_command, timeout=5)
+        out = linux_obj.command(fio_command, timeout=t)
     except:
         linux_obj.disconnect()
         linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123", ssh_port=tg.host_ssh_port)
         try:
-            out = linux_obj.command(fio_command)
+            out = linux_obj.command(fio_command, timeout=t)
         except:
             pass
         pass
