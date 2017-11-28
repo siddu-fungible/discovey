@@ -8,7 +8,7 @@
             $scope.charting = false;
             $scope.series = ['1-1', '1-2', '1-3', '1-4'];
             //$scope.buttonText = "Start";
-            $scope.buttonText = "Fetch stats";
+            //$scope.buttonText = "Toggle stats";
             $scope.playIcon = "glyphicon-play";
             $scope.currentReadValues = {};
             $scope.currentWriteValues = {};
@@ -24,6 +24,7 @@
             $scope.height = "100px";
             $scope.ikvInfo = null;
 
+            //$scope.startChart();
 
 
   $scope.options = {
@@ -59,14 +60,15 @@
             //console.log(ctrl);
             $scope.charting = !$scope.charting;
             $scope.pullStats();
+            /*
             if($scope.charting) {
                 $scope.buttonText = "Stop";
                 $scope.playIcon = "glyphicon-pause";
                 $scope.pullStats();
             } else {
                 $scope.buttonText = "Start";
-                $scope.playIcon = "glyphicon-play";
-            }
+                $scope.playIcon = "glyphicon-play";
+            }*/
         };
 
         $scope.startIkvChart = function () {

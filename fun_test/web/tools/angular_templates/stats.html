@@ -2,8 +2,8 @@
 
     <div ng-switch="$ctrl.commonTrafficWorkFlow.id">
         <div ng-switch-when="send_traffic">
-            <button type="button" class="btn btn-success" ng-click="startChart()">
-                {{ buttonText }}
+            <button type="button" class="btn btn-success" ng-click="startChart()" ng-hide="charting">
+               Fetch Stats 
             </button>
             <table class="table table-bordered">
                 <tr>

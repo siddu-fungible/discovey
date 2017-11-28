@@ -43,20 +43,20 @@
                     $scope.logs = result.data.logs.toString();
                     const regex = /Run status group.*',/g;
                     let s = regex.exec($scope.logs);
-                    if(s.length) {
+                    if(s && s.length) {
                         $scope.logs = s[0].replace(/\\n/g, "\n");
                     }
 
                     let cleanLogs = [];
-                    const read_regex = /READ.*io=(.*B) /;
-                    let r_s = regex.exec($scope.logs);
-                    if(r_s.length) {
-                        cleanLogs.push(s[1]);
+                    const read_regex = /READ.*io=(.*B) /g;
+                    let r_s = read_regex.exec($scope.logs);
+                    if(r_s && r_s.length) {
+                        cleanLogs.push("Read IO:" + r_s[1] + "\n");
                     }
-                    const write_regex = /WRITE.*io=(.*B) /;
-                    let w_s = regex.exec($scope.logs);
-                    if(w_s.length) {
-                        cleanLogs.push(s[1]);
+                    const write_regex = /WRITE.*io=(.*B) /g;
+                    let w_s = write_regex.exec($scope.logs);
+                    if(w_s && w_s.length) {
+                        cleanLogs.push("Write IO:" + w_s[1] + "\n");
                     }
                     $scope.logs = cleanLogs;
 
