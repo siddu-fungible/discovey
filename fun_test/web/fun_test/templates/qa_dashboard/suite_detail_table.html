@@ -23,7 +23,7 @@
                     <td>
                         <button class="btn btn-{{ resultToClass(testCaseExecution.fields.result)}}">{{ testCaseExecution.fields.result }}</button>
                     </td>
-                    <td>{{ testCaseExecution.fields.started_time }}</td>
+                    <td>{{ trimTime(testCaseExecution.fields.started_time) }}</td>
                     <td>{{ testCaseExecution.fields.script_path }}</td>
                     <td><a target="_blank" href="{{ getHtmlLogPath(testCaseExecution.fields.script_path) }}">html</a></td>
                     <td><a target="_blank" href="{{ getConsoleLogPath(testCaseExecution.fields.script_path) }}">flat</a></td>

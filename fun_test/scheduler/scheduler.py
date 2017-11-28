@@ -75,6 +75,7 @@ class SuiteWorker(Thread):
         self.prepare_job_directory()
         build_url = self.job_build_url
 
+
         # Setup the suites own logger
         local_scheduler_logger = logging.getLogger("scheduler_log.txt")
         local_scheduler_logger.setLevel(logging.INFO)
@@ -83,6 +84,18 @@ class SuiteWorker(Thread):
             logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         local_scheduler_logger.addHandler(hdlr=handler)
         self.local_scheduler_logger = local_scheduler_logger
+
+        if build_url:
+            version = determine_version(build_url=build_url)
+            if not version:
+                models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
+                error_message = "Unable to determine version from build url: {}".format(build_url)
+                scheduler_logger.critical(error_message)
+                local_scheduler_logger.critical(error_message)
+                self.suite_shutdown = True
+            else:
+                models_helper.update_suite_execution(suite_execution_id=self.job_id, version=version)
+
 
         suite_summary = {}
 

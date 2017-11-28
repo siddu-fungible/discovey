@@ -32,6 +32,13 @@
             return klass;
         }
     }]);
+
+    app.factory('trimTime', [function (t) {
+        return function (t) {
+            return t.replace(/\..*$/, "").replace(/T/, " ");
+        }
+    }]);
+
     app.factory('commonAlert', ["$rootScope", function ($rootScope) {
         function showError(message) {
             $rootScope.showCommonError = true;

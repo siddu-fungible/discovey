@@ -21,12 +21,14 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
-def update_suite_execution(suite_execution_id, result=None, scheduled_time=None):
+def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None):
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result
     if scheduled_time:
         te.scheduled_time = scheduled_time
+    if version:
+        te.version = version
     te.save()
     return te
 
@@ -215,6 +217,7 @@ def _get_suite_executions(execution_id=None,
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
     suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
+    suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
     suite_execution_attributes.append({"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
     suite_execution_attributes.append({"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})

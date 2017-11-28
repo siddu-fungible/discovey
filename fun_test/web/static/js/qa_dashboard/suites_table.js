@@ -1,4 +1,4 @@
-function SuitesTableController($scope, $http, resultToClass, $window, PagerService, commonAlert) {
+function SuitesTableController($scope, $http, resultToClass, $window, PagerService, commonAlert, trimTime) {
     let ctrl = this;
 
     $scope.resultToClass = function (result) {
@@ -43,8 +43,12 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
 
     $scope.test = function() {
         commonAlert.showSuccess("john");
-
     };
+
+    $scope.trimTime = function (t) {
+        return trimTime(t);
+    };
+
     $scope.getSuiteDetail = function (suiteId) {
         console.log(suiteId);
         $window.location.href = "/regression/suite_detail/" + suiteId;
@@ -60,14 +64,14 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         if($scope.logDir) {
             return "/regression/static_serve_log_directory/" + suiteId;
         }
-    }
+    };
 
     $scope.rerunClick = function(suiteId) {
         $http.get("/regression/suite_re_run/" + suiteId).then(function (result) {
             let jobId = parseInt(result.data);
             $window.location.href = "/regression/suite_detail/" + jobId;
         });
-    }
+    };
 
     $scope.killClick = function(suiteId) {
         $http.get("/regression/kill_job/" + suiteId).then(function (result) {

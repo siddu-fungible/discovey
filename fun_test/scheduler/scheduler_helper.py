@@ -8,6 +8,7 @@ from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from django.utils import timezone
 from fun_settings import TIME_ZONE
+from lib.utilities.http import fetch_text_file
 
 activate(TIME_ZONE)
 
@@ -19,6 +20,7 @@ ARCHIVED_JOB_EXTENSION = "archived.json"
 KILLED_JOB_EXTENSION = "killed_job"
 JSON_EXTENSION = ".json"
 LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
+BUILD_INFO_FILENAME = "build_info.txt"
 
 scheduler_logger = logging.getLogger("main_scheduler_log")
 scheduler_logger.setLevel(logging.DEBUG)
@@ -223,6 +225,14 @@ def send_summary_mail(job_id):
             scheduler_logger.info("Sent mail")
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))
+
+def determine_version(build_url):
+    content = fetch_text_file(url=build_url + "/" + BUILD_INFO_FILENAME)
+    version = None
+    if content:
+        content = content.strip()
+        version = int(content)
+    return version
 
 if __name__ == "__main__":
     print get_flat_console_log_file_name(path="/clean_sanity.py")

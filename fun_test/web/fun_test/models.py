@@ -18,6 +18,7 @@ class SuiteExecution(models.Model):
     completed_time = models.DateTimeField()
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
     result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")  # Currently used to track KILLED entries could be used to cache overall suite result
+    version = models.CharField(max_length=50, default="UNKNOWN")
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
