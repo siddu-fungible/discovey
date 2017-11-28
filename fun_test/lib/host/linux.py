@@ -682,14 +682,18 @@ class Linux(object, ToDictMixin):
         pass
 
     @fun_test.safe
-    def enter_sudo(self):
+    def enter_sudo(self, preserve_environment=None):
         result = False
         if not self.handle:
             self._connect()
         self.saved_prompt_terminator = self.prompt_terminator
         self.set_prompt_terminator(prompt_terminator=r'# ')
         prompt = r'assword\s+for\s+%s: ' % self.ssh_username
-        output = self.command("sudo bash", custom_prompts={prompt: self.ssh_password})
+        options_str = ""
+        if preserve_environment:
+            options_str += "-E "
+        cmd = 'sudo {}bash'.format(options_str)
+        output = self.command(cmd, custom_prompts={prompt: self.ssh_password})
         if "command not found" in output:
             result = False
         return result
@@ -768,11 +772,11 @@ class Linux(object, ToDictMixin):
     def clean(self):
         self.send_control_c()
         try:
-            self.handle.expect(self.UNEXPECTED_EXPECT, timeout="0.1")
+            self.handle.expect(self.UNEXPECTED_EXPECT, timeout=0.1)
         except pexpect.ExceptionPexpect:
             pass
         try:
-            self.handle.expect(self.prompt_terminator, timeout="0.1")
+            self.handle.expect(self.prompt_terminator, timeout=0.1)
         except pexpect.ExceptionPexpect:
             pass
 
@@ -859,8 +863,8 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def sudo_command(self, command, timeout=60):
-        sudoed = self.enter_sudo()
+    def sudo_command(self, command, timeout=60, preserve_environment=None):
+        sudoed = self.enter_sudo(preserve_environment=preserve_environment)
         output = self.command(command, timeout=timeout)
         if sudoed:
             self.exit_sudo()
