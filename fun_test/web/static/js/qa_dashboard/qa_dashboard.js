@@ -1,6 +1,6 @@
 (function () {
     let app;
-    app = angular.module('qa-dashboard', []);
+    app = angular.module('qa-dashboard', ['ngSanitize', 'ui.select']);
     app.controller('QaDashBoardController', ['$rootScope', '$scope', '$http', '$window', '$timeout', function ($rootScope, $scope, $http, $window, $timeout) {
 
         $scope.closeCommonError = function () {

@@ -10,75 +10,97 @@
                     </div>
                     <div class="form-group">
                         <label for="suite-select">Select a suite</label>
-                        <select id="suite-select" ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteName" ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
+                        <select id="suite-select"
+                                ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteName"
+                                ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
                     </div>
 
 
+                    <div class="form-group">
+                        <p class="">
+                            <input class="form-check-input" type="checkbox" value="" ng-model="schedulingOptions">
+                            Show Scheduling Options
+                        </p>
+                        <button ng-click="testClick()" class="btn btn-primary">Test</button>
+                        <button ng-if="selectedInfo" ng-click="submitClick(submissionForm.$valid)"
+                                class="btn btn-primary">Submit
+                        </button>
+
+                        <label for="tag-select">Select a tag</label>
+                        <ui-select id="tag-select" multiple ng-model="$ctrl.selectedTags" theme="bootstrap" sortable="true">
+                            <ui-select-match placeholder="Select tag...">{{$item.name}}</ui-select-match>
+                            <ui-select-choices repeat="tag in tags | propsFilter: {name: $select.search}">
+                                <div ng-bind-html="tag.name | highlight: $select.search"></div>
+                                <small>
+                                    name: <span ng-bind-html="''+tag.name | highlight: $select.search"></span>
+                                </small>
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <fieldset ng-if="selectedInfo" class="title">
+                        <legend>{{ selectedSuite }}</legend>
 
                         <div class="form-group">
-                            <p class="">
-                            <input class="form-check-input" type="checkbox" value="" ng-model="schedulingOptions">
-                                Show Scheduling Options
-                            </p>
-                            <!-- button ng-click="testClick()" class="btn btn-primary">Test</button -->
-                            <button ng-if="selectedInfo" ng-click="submitClick(submissionForm.$valid)" class="btn btn-primary">Submit</button>
+                            <table class="table table-nonfluid">
+                                <tr>
+                                    <th style="background-color: #E4EFF2">
+                                        Scripts
+                                    </th>
+                                </tr>
+                                <tr ng-repeat="scriptInfo in selectedInfo">
+                                    <td>{{ scriptInfo.path }}</td>
+
+                                </tr>
+                            </table>
                         </div>
-                            <fieldset ng-if="selectedInfo" class="title">
-                                <legend>{{ selectedSuite }}</legend>
+                    </fieldset>
 
-                                <div class="form-group">
-                                    <table  class="table table-nonfluid">
-                                        <tr>
-                                            <th style="background-color: #E4EFF2">
-                                                Scripts
-                                            </th>
-                                        </tr>
-                                        <tr ng-repeat="scriptInfo in selectedInfo">
-                                            <td>{{ scriptInfo.path }}</td>
-
-                                        </tr>
-                                    </table>
-                                </div>
-                            </fieldset>
                 </form>
             </div>
+
+
         </div>
     </div>
     <div class="col-sm-6" ng-show="schedulingOptions">
         <div class="panel panel-primary">
             <div class="panel-heading">Scheduling options</div>
-                <div class="panel-body">
+            <div class="panel-body">
 
-                    <div class="radio">
-                        <label for="schedule-in-minutes">
-                            <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="true" checked="true">Schedule in minutes:
+                <div class="radio">
+                    <label for="schedule-in-minutes">
+                        <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="true"
+                               checked="true">Schedule in minutes:
+                    </label>
+                    <form name="scheduleInForm" ng-show="scheduleInMinutesRadio" novalidate>
+                        <fun-field id="schedule-in-minutes" klass="form-control" type="number" min="1" max="1439"
+                                   bind-value="scheduleInMinutes"></fun-field>
+                        <label for="repeat-in-minutes"> Repeat in minutes
                         </label>
-                        <form name="scheduleInForm" ng-show="scheduleInMinutesRadio" novalidate>
-                            <fun-field id="schedule-in-minutes" klass="form-control" type="number" min="1" max="1439" bind-value="scheduleInMinutes"></fun-field>
-                            <label for="repeat-in-minutes"> Repeat in minutes
-                            </label>
-                            <fun-field id="repeat-in-minutes" klass="form-control" type="number" min="1" max="1439" bind-value="scheduleInMinutesRepeat"></fun-field>
+                        <fun-field id="repeat-in-minutes" klass="form-control" type="number" min="1" max="1439"
+                                   bind-value="scheduleInMinutesRepeat"></fun-field>
 
-                            <!-- input type="number" class="form-control" id="schedule-in-minutes" ng-min="5" max="1439" ng-model="scheduleInMinutes">
-                                <label class="form-check-label">
-                                <input class="form-check-input" type="checkbox" value="" ng-model="scheduleInMinutesRepeat">
-                                    Repeat
-                                </label -->
-                        </form>
-                        <br>
-                        <br>
-                        <label for="schedule-at">
-                            <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="false">Schedule At:
+                        <!-- input type="number" class="form-control" id="schedule-in-minutes" ng-min="5" max="1439" ng-model="scheduleInMinutes">
+														<label class="form-check-label">
+														<input class="form-check-input" type="checkbox" value="" ng-model="scheduleInMinutesRepeat">
+																Repeat
+														</label -->
+                    </form>
+                    <br>
+                    <br>
+                    <label for="schedule-at">
+                        <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="false">Schedule
+                        At:
+                    </label>
+                    <form ng-hide="scheduleInMinutesRadio">
+                        <fun-field id="schedule-at" klass="form-control" type="time" min="5"
+                                   bind-value="scheduleAt"></fun-field>
+                        <label class="form-check-label">
+                            <input class="form-check-input" type="checkbox" value="" ng-model="scheduleAtRepeat">
+                            Repeat
                         </label>
-                        <form ng-hide="scheduleInMinutesRadio">
-                            <fun-field id="schedule-at" klass="form-control" type="time" min="5" bind-value="scheduleAt"></fun-field>
-                                <label class="form-check-label">
-                                <input class="form-check-input" type="checkbox" value="" ng-model="scheduleAtRepeat">
-                                    Repeat
-                                </label>
-                        </form>
-                    </div>
+                    </form>
                 </div>
+            </div>
         </div>
     </div>
 </div>

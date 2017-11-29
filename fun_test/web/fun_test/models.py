@@ -51,6 +51,13 @@ class TestCaseExecution(models.Model):
         return s
 
 
+class Tag(models.Model):
+    tag = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.tag
+
+
 if __name__ == "__main__":
     #import django
     #import os

@@ -15,6 +15,22 @@
             $http.get("/regression/suites").then(function(result) {
                 $scope.suitesInfo = result.data;
             });
+            ctrl.selectedTags = [];
+            $scope.tags = [];
+            $scope.fetchTags();
+        };
+
+        $scope.fetchTags = function() {
+            $http.get('/regression/tags').then(function(result){
+                let data = result.data;
+                data.forEach(function(item){
+                    $scope.tags.push({name: item.fields.tag});
+                });
+
+            }).catch(function(result) {
+                commonAlert.showError("Unable to fetch tags");
+            });
+
         };
 
         $scope.changedValue = function(selectedSuite) {
@@ -53,6 +69,22 @@
 
         };
 
+        $scope._getSelectedtags = function () {
+            let tags = [];
+            ctrl.selectedTags.forEach(function(item) {
+                tags.push(item.name);
+            });
+            return tags;
+        };
+
+        $scope.testClick = function () {
+            //console.log(ctrl.selectedTag);
+            $scope._getSelectedtags().forEach(function(item) {
+               console.log(item);
+            });
+
+        };
+
         $scope.submitClick = function (formIsValid) {
             if(!formIsValid) {
                commonAlert.showError("Form is invalid");
@@ -83,6 +115,35 @@
         controller: SubmitJob,
         bindings: {
         }
-    })
+    }).filter('propsFilter', function () {
+    return function (items, props) {
+        let out = [];
+
+        if (angular.isArray(items)) {
+            let keys = Object.keys(props);
+
+            items.forEach(function (item) {
+                let itemMatches = false;
+
+                for (let i = 0; i < keys.length; i++) {
+                    let prop = keys[i];
+                    let text = props[prop].toLowerCase();
+                    if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                        itemMatches = true;
+                        break;
+                    }
+                }
+                if (itemMatches) {
+                    out.push(item);
+                }
+            });
+        } else {
+            // Let the output be the input untouched
+            out = items;
+        }
+
+        return out;
+    };
+});
 
 })(window.angular);
