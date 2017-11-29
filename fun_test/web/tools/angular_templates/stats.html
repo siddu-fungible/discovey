@@ -17,6 +17,7 @@
                         <span ng-if="f1.attached_ns_id" class="label label-info">EXPORTED</span>
                         <span ng-if="f1.rdsVolumeUuids.length" class="label label-warning">REMOTE</span>
                         <span ng-if="f1.replicaVolumeUuids.length" class="label label-danger">REPLICA</span>
+                        <span ng-if="f1.faultInjection" class="label label-danger fa fa-exclamation-triangle"> </span>
                     </td>
                     <td>{{ currentReadValues[f1.name] }}</td>
                     <td>{{ currentWriteValues[f1.name] }}</td>

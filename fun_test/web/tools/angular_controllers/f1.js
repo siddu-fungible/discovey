@@ -18,6 +18,7 @@
             ctrl.f1.rdsVolumeUuids = [];
             ctrl.f1.replicaVolumeUuids = [];
             ctrl.f1.attached_ns_id = false;
+            ctrl.f1.faultInjection = 0;
             $scope.checkVolumes();  //TODO
 
 
@@ -43,6 +44,11 @@
                             if("attach_nsid" in value) {
                                 if(value.attach_nsid === 1) {
                                     ctrl.f1.attached_ns_id = true;
+                                }
+                            }
+                            if("fault_injection" in value) {
+                                if(value.fault_injection === 1) {
+                                    ctrl.f1.faultInjection = 1;
                                 }
                             }
                         });
