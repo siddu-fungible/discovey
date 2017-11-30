@@ -92,8 +92,8 @@ def queue_job(suite_path="unknown",
                                                         completed_time=get_current_time(),
                                                         suite_path=suite_path,
                                                         tags=tags)
-    if tags and "jenkins-hourly" in tags:
-        set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
+    # if tags and "jenkins-hourly" in tags:
+    #    set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
     if not job_spec:
         job_spec = {}
         suite_path = suite_path.replace(JSON_EXTENSION, "")
