@@ -29,7 +29,7 @@ def pending_jobs(request):
     return render(request, 'qa_dashboard/regression.html', locals())
 
 def jenkins_jobs(request):
-    filter_string = SUITE_EXECUTION_FILTERS["COMPLETED"]
+    filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     tags = json.dumps(["jenkins-hourly", "jenkins-nightly"])
     # tags = json.dumps(["none"])
     return render(request, 'qa_dashboard/regression.html', locals())

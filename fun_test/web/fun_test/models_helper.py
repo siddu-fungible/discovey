@@ -141,6 +141,12 @@ def _get_suite_executions(execution_id=None,
     if execution_id:
         q = Q(execution_id=execution_id) & q
 
+    if filter_string == "ALL":
+        if execution_id:
+            q = Q(execution_id=execution_id)
+        else:
+            q = Q()
+
     if tags:
         tag_q = None
         for tag in tags:
@@ -152,13 +158,8 @@ def _get_suite_executions(execution_id=None,
             # print("Found tags:" + str(tags))
         if tags:
             q = q & tag_q
-    if filter_string == "ALL":
-        if execution_id:
-            all_objects = SuiteExecution.objects.filter(execution_id=execution_id).order_by('-id')
-        else:
-            all_objects = SuiteExecution.objects.all().order_by('-id')
-    else:
-        all_objects = SuiteExecution.objects.filter(q).order_by('-id')
+
+    all_objects = SuiteExecution.objects.filter(q).order_by('-id')
 
 
     if get_count:
