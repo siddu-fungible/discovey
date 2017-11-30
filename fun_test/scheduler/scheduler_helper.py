@@ -37,6 +37,13 @@ else:
     scheduler_logger.addHandler(hdlr=handler)
     scheduler_logger.setLevel(logging.DEBUG)
 
+
+def set_jenkins_hourly_execution_status(status):
+    status_file = LOGS_DIR + "/jenkins_hourly_execution_status"
+    with open(status_file, "w") as f:
+        f.write(status)
+
+
 class SchedulerException(Exception):
     def __init__(self, *args):
         super(SchedulerException, self).__init__(*args)
@@ -79,6 +86,8 @@ def queue_job(suite_path="unknown",
                                                         completed_time=get_current_time(),
                                                         suite_path=suite_path,
                                                         tags=tags)
+    if tags and "jenkins-hourly" in tags:
+        set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
     if not job_spec:
         job_spec = {}
         suite_path = suite_path.replace(JSON_EXTENSION, "")
@@ -187,6 +196,8 @@ def _get_table(header_list, list_of_rows):
 def send_summary_mail(job_id):
     suite_executions = models_helper._get_suite_executions(execution_id=job_id, save_test_case_info=True)
     suite_execution = suite_executions[0]
+    if "jenkins-hourly" in suite_execution["tags"]:
+        set_jenkins_hourly_execution_status(status=suite_execution["suite_result"])
     suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)

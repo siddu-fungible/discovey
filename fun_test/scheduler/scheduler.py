@@ -256,6 +256,10 @@ def process_queue():
             models_helper.update_suite_execution(suite_execution_id=suite_worker_obj.job_id,
                                                  scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time),
                                                  result=RESULTS["SCHEDULED"])
+            if "tags" in job_spec:
+                tags = job_spec["tags"]
+                if "jenkins-hourly" in tags:
+                    set_jenkins_hourly_execution_status(status=RESULTS["SCHEDULED"])
             t.start()
 
         else:
