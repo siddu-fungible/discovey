@@ -196,7 +196,8 @@ def _get_table(header_list, list_of_rows):
 def send_summary_mail(job_id):
     suite_executions = models_helper._get_suite_executions(execution_id=job_id, save_test_case_info=True)
     suite_execution = suite_executions[0]
-    if "jenkins-hourly" in suite_execution["tags"]:
+    scheduler_logger.info("Suite Execution: {}".format(str(suite_execution)))
+    if "jenkins-hourly" in suite_execution["fields"]["tags"]:
         set_jenkins_hourly_execution_status(status=suite_execution["suite_result"])
     suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
     header_list = ["Metric", "Value"]
