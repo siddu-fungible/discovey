@@ -10,7 +10,11 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         $scope.recordsPerPage = 20;
         $scope.logDir = null;
         $scope.suiteExecutionsCount = 0;
-        $http.get("/regression/suite_executions_count/"  + ctrl.filterString).then(function(result) {
+        let payload = {};
+        if(ctrl.tags) {
+            payload["tags"] = ctrl.tags;
+        }
+        $http.post("/regression/suite_executions_count/"  + ctrl.filterString, payload).then(function(result) {
             $scope.suiteExecutionsCount = (parseInt(result.data));
             $scope.setPage(1);
 

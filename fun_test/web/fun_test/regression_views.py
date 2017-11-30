@@ -108,9 +108,16 @@ def suites(request):
     return HttpResponse(json.dumps(suites_info))
 
 
-
+@csrf_exempt
 def suite_executions_count(request, filter_string):
-    count = _get_suite_executions(get_count=True, filter_string=filter_string)
+    tags = None
+    if request.method == 'POST':
+        if request.body:
+            request_json = json.loads(request.body)
+            if "tags" in request_json:
+                tags = request_json["tags"]
+                tags = json.loads(tags)
+    count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
     return HttpResponse(count)
 
 @csrf_exempt
