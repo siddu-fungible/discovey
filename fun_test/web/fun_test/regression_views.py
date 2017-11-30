@@ -140,6 +140,14 @@ def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
     return HttpResponse(json.dumps(all_objects_dict[0])) #TODO: Validate
 
+def last_jenkins_hourly_execution_status(request):
+    result = RESULTS["UNKNOWN"]
+    suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
+                                             filter_string=SUITE_EXECUTION_FILTERS["COMPLETED"])
+    if suite_executions:
+        result = suite_executions[0]["suite_result"]
+    return result
+
 def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
