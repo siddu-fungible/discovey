@@ -21,11 +21,11 @@
                             <input class="form-check-input" type="checkbox" value="" ng-model="schedulingOptions">
                             Show Scheduling Options
                         </p>
-                        <button ng-click="testClick()" class="btn btn-primary">Test</button>
+                        <!--button ng-click="testClick()" class="btn btn-primary">Test</button -->
                         <button ng-if="selectedInfo" ng-click="submitClick(submissionForm.$valid)"
                                 class="btn btn-primary">Submit
                         </button>
-
+                        <br>
                         <label for="tag-select">Select a tag</label>
                         <ui-select id="tag-select" multiple ng-model="$ctrl.selectedTags" theme="bootstrap" sortable="true">
                             <ui-select-match placeholder="Select tag...">{{$item.name}}</ui-select-match>
