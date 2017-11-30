@@ -128,17 +128,22 @@ def _get_suite_executions(execution_id=None,
                           save_test_case_info=False,
                           save_suite_info=True,
                           filter_string="ALL",
-                          get_count=False):
+                          get_count=False,
+                          tags=None):
     all_objects = None
     q = Q(result=RESULTS["UNKNOWN"])
 
     if filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
         q = Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"]) | Q(result=RESULTS["QUEUED"]) | Q(result=RESULTS["SCHEDULED"])
     elif filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
-        q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"])
+        q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"]) | Q(result=RESULTS["ABORTED"])
     if execution_id:
         q = Q(execution_id=execution_id) & q
 
+    if tags:
+        for tag in tags:
+            tag_str = '"{}"'.format(tag)
+            q = Q(tags__contains=tag_str) & q
     if filter_string == "ALL":
         if execution_id:
             all_objects = SuiteExecution.objects.filter(execution_id=execution_id).order_by('-id')

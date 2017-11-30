@@ -32,7 +32,11 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         if (page === 0 || (page > $scope.pager.endPage)) {
             return;
         }
-        $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page + "/" + ctrl.filterString).then(function (result) {
+        let payload = {};
+        if(ctrl.tags) {
+            payload["tags"] = ctrl.tags;
+        }
+        $http.post("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page + "/" + ctrl.filterString, payload).then(function (result) {
             $scope.items = result.data;
         });
     };
@@ -149,7 +153,8 @@ angular.module('qa-dashboard')
         templateUrl: '/static/qa_dashboard/suites_table.html',
         controller: SuitesTableController,
         bindings: {
-            filterString: '@'
+            filterString: '@',
+            tags: '@'
         }
     })
     .factory('PagerService', PagerService);

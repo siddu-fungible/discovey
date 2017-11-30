@@ -3,7 +3,7 @@
 {% block content %}
 <div class="content">
     <script src="{% static "js/qa_dashboard/suites_table.js" %}"></script>
-    <suites-table filter-string="{{ filter_string }}">
+    <suites-table filter-string="{{ filter_string }}" tags="{{ tags }}">
 
     </suites-table>
 </div>

@@ -28,6 +28,12 @@ def pending_jobs(request):
     filter_string = SUITE_EXECUTION_FILTERS["PENDING"]
     return render(request, 'qa_dashboard/regression.html', locals())
 
+def jenkins_jobs(request):
+    filter_string = SUITE_EXECUTION_FILTERS["COMPLETED"]
+    tags = json.dumps(["jenkins-hourly", "jenkins-nightly"])
+    # tags = json.dumps(["none"])
+    return render(request, 'qa_dashboard/regression.html', locals())
+
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
 
@@ -107,11 +113,20 @@ def suite_executions_count(request, filter_string):
     count = _get_suite_executions(get_count=True, filter_string=filter_string)
     return HttpResponse(count)
 
+@csrf_exempt
 def suite_executions(request, records_per_page=10, page=None, filter_string="ALL"):
+    tags = None
+    if request.method == 'POST':
+        if request.body:
+            request_json = json.loads(request.body)
+            if "tags" in request_json:
+                tags = request_json["tags"]
+                tags = json.loads(tags)
     all_objects_dict = _get_suite_executions(execution_id=None,
                                              page=page,
                                              records_per_page=records_per_page,
-                                             filter_string=filter_string)
+                                             filter_string=filter_string,
+                                             tags=tags)
     return HttpResponse(json.dumps(all_objects_dict))
 
 def suite_execution(request, execution_id):
