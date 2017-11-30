@@ -66,7 +66,8 @@ def queue_job(suite_path="unknown",
               schedule_at=None,
               repeat=False,
               schedule_in_minutes=None,
-              repeat_in_minutes=None):
+              repeat_in_minutes=None,
+              tags=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
     if suite_path == "unknown":
@@ -75,7 +76,8 @@ def queue_job(suite_path="unknown",
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                         scheduled_time=get_current_time(),
                                                         completed_time=get_current_time(),
-                                                        suite_path=suite_path)
+                                                        suite_path=suite_path,
+                                                        tags=tags)
     if not job_spec:
         job_spec = {}
         suite_path = suite_path.replace(JSON_EXTENSION, "")

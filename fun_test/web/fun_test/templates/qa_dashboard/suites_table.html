@@ -45,6 +45,7 @@
                     <th>Log</th>
                     <th>Log Dir</th>
                     <th>Action</th>
+                    <th>Tags</th>
 
                 </tr>
                 </thead>
@@ -77,6 +78,9 @@
                                 data-placement="top" data-toggle="tooltip" title="Stop/Kill"
                                 ng-click="killClick(suiteExecution.fields.execution_id)" class="btn
                                 btn-danger"><i class="glyphicon glyphicon-ban-circle"></i></button>
+                    </td>
+                    <td>
+                        <label ng-repeat="tag in getTagList(suiteExecution.fields.tags)" class="label label-primary">{{ tag }}</label>
                     </td>
                 </tr>
             </table>

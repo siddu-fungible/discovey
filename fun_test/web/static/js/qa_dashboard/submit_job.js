@@ -95,6 +95,7 @@
             let payload = {};
             payload["suite_path"] = $scope.selectedSuite;
             payload["build_url"] = $scope.buildUrl;
+            payload["tags"] = $scope._getSelectedtags();
 
             if($scope.schedulingOptions) {
                 payload = $scope.getSchedulingOptions(payload);

@@ -35,8 +35,12 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
 def finalize_suite_execution(suite_execution_id):
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True)
 
-def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_path="unknown"):
+def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_path="unknown", tags=None):
 
+    if tags:
+        tags = json.dumps(tags)
+    else:
+        tags = "[]"
     last_suite_execution_id = LastSuiteExecution.objects.all()
     if not last_suite_execution_id:
         LastSuiteExecution().save()
@@ -45,10 +49,11 @@ def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_pa
     last_suite_execution_id.save()
 
     s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
-                   submitted_time=submitted_time,
-                   scheduled_time=scheduled_time,
-                   completed_time=completed_time,
-                      result="QUEUED")
+                       submitted_time=submitted_time,
+                       scheduled_time=scheduled_time,
+                       completed_time=completed_time,
+                       result="QUEUED",
+                       tags=tags)
     s.save()
     return s
 

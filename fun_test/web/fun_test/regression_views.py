@@ -52,6 +52,7 @@ def submit_job(request):
         request_json = json.loads(request.body)
         suite_path = request_json["suite_path"]
         build_url = request_json["build_url"]
+        tags = request_json["tags"]
         if "schedule_at" in request_json and request_json["schedule_at"]:
             schedule_at_value = request_json["schedule_at"]
             schedule_at_value = str(timezone.localtime(dateutil.parser.parse(schedule_at_value)))
@@ -65,9 +66,9 @@ def submit_job(request):
             schedule_in_minutes_repeat = None
             if "schedule_in_minutes_repeat" in request_json:
                 schedule_in_minutes_repeat = request_json["schedule_in_minutes_repeat"]
-            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes_value, repeat_in_minutes=schedule_in_minutes_repeat)
+            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes_value, repeat_in_minutes=schedule_in_minutes_repeat, tags=tags)
         else:
-            job_id = queue_job(suite_path=suite_path, build_url=build_url)
+            job_id = queue_job(suite_path=suite_path, build_url=build_url, tags=tags)
     return HttpResponse(job_id)
 
 def static_serve_log_directory(request, suite_execution_id):

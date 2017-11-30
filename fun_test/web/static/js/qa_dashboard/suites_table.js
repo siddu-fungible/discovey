@@ -78,6 +78,10 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
             let jobId = parseInt(result.data);
             $window.location.href = "/regression/";
         });
+    };
+
+    $scope.getTagList = function (tagsString) {
+        return angular.fromJson(tagsString);
     }
 
 }
