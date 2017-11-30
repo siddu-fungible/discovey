@@ -71,6 +71,9 @@ class SuiteWorker(Thread):
     def run(self):
         scheduler_logger.debug("Running Job: {}".format(self.job_id))
         models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["IN_PROGRESS"])
+        if "tags" in self.job_spec and "jenkins-hourly" in self.job_spec["tags"]:
+            set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
+
         suite_execution_id = self.job_id
         self.prepare_job_directory()
         build_url = self.job_build_url
