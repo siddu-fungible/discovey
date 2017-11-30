@@ -87,6 +87,7 @@ def queue_job(suite_path="unknown",
         job_spec["repeat"] = repeat
         job_spec["schedule_in_minutes"] = schedule_in_minutes
         job_spec["repeat_in_minutes"] = repeat_in_minutes
+        job_spec["tags"] = tags
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
 
