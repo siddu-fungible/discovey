@@ -33,7 +33,7 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
     return te
 
 def finalize_suite_execution(suite_execution_id):
-    _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True)
+    _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
 
 def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_path="unknown", tags=None):
 
@@ -129,7 +129,8 @@ def _get_suite_executions(execution_id=None,
                           save_suite_info=True,
                           filter_string="ALL",
                           get_count=False,
-                          tags=None):
+                          tags=None,
+                          finalize=None):
     all_objects = None
     q = Q(result=RESULTS["UNKNOWN"])
 
@@ -198,12 +199,12 @@ def _get_suite_executions(execution_id=None,
                                                           "test_case_id": test_case_execution.test_case_id,
                                                           "result": test_case_execution.result})
 
-        if (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
+        if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
             suite_result = RESULTS["PASSED"]
-        if num_failed:
+        if finalize and num_failed:
             suite_result = RESULTS["FAILED"]
-        if num_in_progress:
-            suite_result = RESULTS["IN_PROGRESS"]
+        # if num_in_progress:
+        #    suite_result = RESULTS["IN_PROGRESS"]
         if "result" in suite_execution["fields"]:
             if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
                 suite_result = RESULTS["KILLED"]
