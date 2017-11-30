@@ -1,8 +1,8 @@
-import time, datetime, json, glob
+import time, datetime, json, glob, shutil
 import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR
 from fun_global import RESULTS, is_regression_server, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
@@ -39,9 +39,15 @@ else:
 
 
 def set_jenkins_hourly_execution_status(status):
-    status_file = LOGS_DIR + "/jenkins_hourly_execution_status"
-    with open(status_file, "w") as f:
-        f.write(status)
+    source_file = MEDIA_DIR + "/regression_unknown.png"
+    if status == RESULTS["PASSED"]:
+        source_file = MEDIA_DIR + "/regression_passed.png"
+    if status == RESULTS["FAILED"]:
+        source_file = MEDIA_DIR + "/regression_failed.png"
+    if status == RESULTS["IN_PROGRESS"]:
+        source_file = MEDIA_DIR + "/regression_in_progress.png"
+    status_file = LOGS_DIR + "/jenkins_hourly_execution_status.png"
+    shutil.copy(src=source_file, dst=status_file)
 
 
 class SchedulerException(Exception):
