@@ -45,7 +45,8 @@ class SuiteWorker(Thread):
         self.suite_shutdown = False
 
     def shutdown_suite(self):
-        scheduler_logger.info("Shutdown_suite")
+        job_id = self.job_spec["job_id"]
+        scheduler_logger.info("Job Id: {} Shutdown_suite".format(job_id))
         if self.current_script_process:
             try:
                 os.kill(self.current_script_process.pid, signal.SIGINT)
@@ -235,6 +236,8 @@ def process_queue():
 
         # Execute
         job_spec = parse_file_to_json(file_name=job_file)
+        job_id = job_spec["job_id"]
+        scheduler_logger.info("Process queue: {}".format(job_id))
         current_time = get_current_time()
 
         schedule_it = True
@@ -252,6 +255,8 @@ def process_queue():
                 scheduling_time = total_seconds
             else:
                 schedule_it = False #TODO: Email, report a scheduling failure
+
+        scheduler_logger.info("Job Id: {} Schedule it: {} Time: {}".format(job_id, schedule_it, scheduling_time))
         if job_spec and schedule_it:
             suite_worker_obj = SuiteWorker(job_spec=job_spec)
             t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))

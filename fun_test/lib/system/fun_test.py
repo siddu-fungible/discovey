@@ -140,8 +140,15 @@ class FunTest:
         self.counter = 0  # Mostly used for testing
 
         self.log_timestamps = True
+        self.log_function_name = False
         self.pause_on_failure = False
         self.shared_variables = {}
+
+    def set_log_format(self, timestamp="UNCHANGED", function_name="UNCHANGED"):
+        if timestamp != "UNCHANGED":
+            self.log_timestamps = timestamp
+        if function_name != "UNCHANGED":
+            self.log_function_name = function_name
 
     def create_test_case_artifact_file(self, post_fix_name, contents):
         artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
@@ -185,13 +192,13 @@ class FunTest:
     def log_disable_timestamps(self):
         self.log_timestamps = False
 
-    def log_selected_module(self, module_name):
+    def log_module_filter(self, module_name):
         self.logging_selected_modules.append(module_name.strip("*.py"))
 
-    def log_disable_selective(self):
+    def log_module_filter_disable(self):
         self.logging_selected_modules = []
 
-    def log_selected_modules(self, module_names):
+    def log_module_filters(self, module_names):
         self.logging_selected_modules.extend(module_names)
 
     def enable_debug(self):
@@ -262,7 +269,8 @@ class FunTest:
         module_info = None
         for f in outer_frames:
             if not f[1].endswith("fun_test.py"):
-                module_info = (os.path.basename(f[1]).strip(".py"), f[2])
+                function_name = f[0].f_code.co_name
+                module_info = (os.path.basename(f[1]).strip(".py"), f[2], function_name)
                 break
         return module_info
 
@@ -281,23 +289,30 @@ class FunTest:
             calling_module=None,
             no_timestamp=False):
         current_time = get_current_time()
+        if calling_module:
+            module_name = calling_module[0]
+            line_number = calling_module[1]
+            function_name = calling_module[2]
+        else:
+            outer_frames = inspect.getouterframes(inspect.currentframe())
+            module_info = self._get_calling_module(outer_frames=outer_frames)
+            module_name = module_info[0]
+            line_number = module_info[1]
+            function_name = module_info[2]
+
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
-        module_line_info = ""
-        if level in [self.LOG_LEVEL_DEBUG, self.LOG_LEVEL_CRITICAL]:
-            if calling_module:
-                module_line_info = "{}.py:{} ".format(calling_module[0], calling_module[1])
+
         if self.logging_selected_modules:
-            outer_frames = inspect.getouterframes(inspect.currentframe())
-            if not calling_module:
-                module_name = self._get_calling_module(outer_frames=outer_frames)
-            else:
-                module_name = calling_module[0]
             if (not module_name == "fun_test") and not self._is_selected_module(module_name=module_name):
                 return
-            else:
-                message = "{}: {}".format(module_name, message)
+
+        module_line_info = ""
+        if level in [self.LOG_LEVEL_DEBUG, self.LOG_LEVEL_CRITICAL]:
+            module_line_info = "{}.py:{}".format(module_name, line_number)
+        if self.log_function_name:
+            module_line_info += ":{}".format(function_name)
 
         self.fun_xml_obj.log(log=message, newline=newline)
 
