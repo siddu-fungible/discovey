@@ -13,10 +13,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import logging
 import dateutil.parser
+from lib.utilities.jira_manager import JiraManager
 
 logger = logging.getLogger(__name__)
 
 def index(request):
+    JiraManager()
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     return render(request, 'qa_dashboard/regression.html', locals())
 

@@ -6,7 +6,7 @@ import time, json, pdb
 import inspect
 from fun_settings import *
 import fun_xml
-import argparse
+import argparse, threading
 from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 import signal
@@ -109,8 +109,11 @@ class FunTest:
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
+        (frame, file_name, line_number, function_name, lines, index) = \
+            inspect.getouterframes(inspect.currentframe())[2]
 
-        signal.signal(signal.SIGINT, self.exit_gracefully)
+        if threading.current_thread().__class__.__name__ == '_MainThread':
+            signal.signal(signal.SIGINT, self.exit_gracefully)
         # signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.initialized = False
@@ -119,8 +122,7 @@ class FunTest:
         self.buf = None
         self.current_test_case_id = None
         self.traces = {}
-        (frame, file_name, line_number, function_name, lines, index) = \
-            inspect.getouterframes(inspect.currentframe())[2]
+
         absolute_script_file_name = file_name
         self.script_file_name = os.path.basename(absolute_script_file_name)
         script_file_name_without_extension = self.script_file_name.replace(".py", "")
@@ -547,7 +549,7 @@ class FunTest:
             flat = "_".join(parts[-2:])
         return flat.lstrip("/")
 
-    def test(self, module_name):
+    def inspect(self, module_name):
 
         sys.argv.append("--disable_fun_test")
         test_cases = []
