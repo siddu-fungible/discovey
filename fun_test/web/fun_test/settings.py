@@ -26,6 +26,7 @@ SECRET_KEY = 'y9@*b%24y_iv_0wmr8l%&_3@@4hpfp2@_#n$q-qu$549f_r0ww'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
 ALLOWED_HOSTS = ['*']
 
 
@@ -154,7 +155,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'fun_test.regression_views': {
+        'web': {
             'handlers': ['console'],
             'level': 'INFO',
         },

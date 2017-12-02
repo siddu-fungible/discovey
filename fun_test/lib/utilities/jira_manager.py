@@ -1,10 +1,12 @@
-from lib.system.fun_test import fun_test
 from fun_settings import *
-
+import logging
 from fun_global import *
 from jira import JIRA
 import jira
 import os, traceback
+
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+
 
 class JiraManager:
     def __init__(self, project_name=TCMS_PROJECT):
@@ -12,7 +14,7 @@ class JiraManager:
         if "JIRA_PASS" in os.environ:
             password = os.environ["JIRA_PASS"]
         self.jira = JIRA(JIRA_URL, basic_auth=("automation", "Precious1*"))
-        fun_test.debug("JIRA Manager initialization complete")
+        logger.debug("JIRA Manager initialization complete")
 
     def get_issue_id(self, id):
         return '{}-{}'.format(self.project_name, id)
@@ -47,7 +49,7 @@ class JiraManager:
             if not 'does not exist' in ex.text:
                 raise ex
         except Exception as ex:
-            fun_test.critical("Exception: {}".format(str(ex)))
+            logger.exception("Exception: {}".format(str(ex)))
         return result
 
     def get_issues(self, component=None):
@@ -61,7 +63,7 @@ class JiraManager:
         try:
             project = self.jira.project(self.project_name)
         except Exception as ex:
-            fun_test.critical(str(ex))
+            logger.exception(str(ex))
         return project
 
     def get_project_components(self):

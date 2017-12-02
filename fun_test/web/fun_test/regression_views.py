@@ -1,4 +1,5 @@
 import json, os
+from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
@@ -13,12 +14,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import logging
 import dateutil.parser
-from lib.utilities.jira_manager import JiraManager
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 def index(request):
-    JiraManager()
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     return render(request, 'qa_dashboard/regression.html', locals())
 
