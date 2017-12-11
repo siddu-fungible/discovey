@@ -17,14 +17,37 @@
                 <div class="panel-body">
                     <p>Category: {{ currentCatalog.category }}</p>
                     <p>JQLs</p>
+
+                    <div class="row form-group">
+                        <div class="col-sm-1">
+                            <button ng-click="addJqlClick()" class="button btn-sm btn-info">Add</button>
+                        </div>
+                        <div class="col-sm-3">
+                            <label>Operator</label>
+                            <select ng-options="operator for operator in operators" ng-model="selectedOperator"></select>
+                        </div>
+                        <div>
+                            <fun-field type="text" min-length="2" max-length="100" bind-value="addJql"></fun-field>
+                        </div>
+                    </div>
+                    <div ng-if="showPreview" class="row col-sm-1 form-group">
+                        <button ng-click="previewClick()" class="button btn-sm btn-success">Preview</button>
+                    </div>
+                    <br>
+                    <br>
+                    <br>
                     <table class="table">
                         <tr>
                             <th>Action</th>
+                            <th>Status</th>
+                            <th>Operator</th>
                             <th>Query</th>
                         </tr>
-                        <tr ng-repeat="jql in toList(jqls)">
-                            <td><button class="btn btn-danger btn-xs" ng-click="removeClick($index)"><span class="fa fa-remove"></span></button></td>
-                            <td>{{ jql }}</td>
+                        <tr ng-repeat="jql in jqls">
+                            <td><button class="btn btn-danger btn-xs" ng-click="removeClick($index)"><span class="glyphicon glyphicon-remove"></span></button></td>
+                            <td>{{ jql.status }}</td>
+                            <td>{{ jql.operator }}</td>
+                            <td>{{ jql.value }}</td>
                         </tr>
 
                     </table>

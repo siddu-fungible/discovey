@@ -39,15 +39,24 @@
         }
     }]);
 
-    app.factory('commonAlert', ["$rootScope", function ($rootScope) {
-        function showError(message) {
+    app.factory('commonAlert', ["$rootScope", "$timeout", function ($rootScope, $timeout) {
+        function showError(message, timeout) {
             $rootScope.showCommonError = true;
             $rootScope.commonErrorMessage = message;
+            if (timeout) {
+                $timeout(function() {
+                    $rootScope.showCommonError = false;
+                }, timeout);
+            }
         }
 
         function showSuccess(message) {
             $rootScope.showCommonSuccess = true;
             $rootScope.commonSuccessMessage = message;
+            $timeout(function() {
+                $rootScope.showCommonSuccess = false;
+            }, 10000);
+
         }
 
         function closeAllAlerts() {
