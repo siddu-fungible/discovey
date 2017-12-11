@@ -46,7 +46,8 @@ tcm_urls = [
     url(r'^create_catalog_page', tcm_views.create_catalog_page),
     url(r'^create_catalog', tcm_views.create_catalog),
     url(r'^view_catalog_page', tcm_views.view_catalog_page),
-    url(r'^catalog', tcm_views.catalog)
+    url(r'^catalog', tcm_views.catalog),
+    url(r'^update_catalog', tcm_views.update_catalog)
 ]
 
 urlpatterns = [

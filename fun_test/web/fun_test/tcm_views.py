@@ -41,6 +41,18 @@ def _create_catalog_test_case(issues):
 def view_catalog_page(request):
     return render(request, 'qa_dashboard/catalog.html', locals())
 
+
+def update_catalog(request):
+    result = initialize_result(failed=True)
+    request_json = json.loads(request.body)
+    logger.info("Updating catalog: " + str(request_json))
+    name = request_json["name"]
+    jqls = request_json["jqls"]
+
+    return HttpResponse(json.dumps(result))
+
+
+
 def catalog(request):
     result = initialize_result(failed=True)
     suite = CatalogSuite.objects.get(name="catalog-1")
@@ -60,7 +72,7 @@ def catalog(request):
         result["error_message"] = str(ex)
     result["status"] = True
     result["data"] = payload
-    return HttpResponse(json.dumps(payload))
+    return HttpResponse(json.dumps(result))
 
 @csrf_exempt
 def create_catalog(request):

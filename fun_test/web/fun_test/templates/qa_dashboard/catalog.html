@@ -16,7 +16,18 @@
 
                 <div class="panel-body">
                     <p>Category: {{ currentCatalog.category }}</p>
-                    <p>JQL: {{ currentCatalog.jqls }}</p>
+                    <p>JQLs</p>
+                    <table class="table">
+                        <tr>
+                            <th>Action</th>
+                            <th>Query</th>
+                        </tr>
+                        <tr ng-repeat="jql in toList(jqls)">
+                            <td><button class="btn btn-danger btn-xs" ng-click="removeClick($index)"><span class="fa fa-remove"></span></button></td>
+                            <td>{{ jql }}</td>
+                        </tr>
+
+                    </table>
                 </div>
                 <table class="table">
                     <tr>
