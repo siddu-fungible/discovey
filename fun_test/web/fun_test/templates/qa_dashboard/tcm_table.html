@@ -1,0 +1,58 @@
+<div class="panel-with-table">
+    <!-- button ng-click="test()">Test</button -->
+    <div class="panel panel-primary">
+        <div class="panel-heading">Test-case catalog</div>
+        <div class="panel-body">
+            <table ng-if="items" class="table table-nonfluid">
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Result</th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Passed"
+                               class="label label-success">P</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Failed"
+                               class="label label-danger">F</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Not Run"
+                               class="label label-default">N</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="In Progress"
+                               class="label label-info">I</label></th>
+                    <th><label data-placement="top" data-toggle="tooltip" title="Skipped"
+                               class="label label-warning">S</label></th>
+                    <th># TC</th>
+                    <th>Version</th>
+                    <th>Scheduled At</th>
+                    <th>Path</th>
+                    <th>Log</th>
+                    <th>Log Dir</th>
+                    <th>Action</th>
+                    <th>Tags</th>
+
+                </tr>
+                </thead>
+                <tr ng-repeat="suiteExecution in items">
+                    <td>{{ suiteExecution.fields.execution_id }}</td>
+
+                    <td>
+
+                    </td>
+
+                    </td>
+                    <td>
+                        <button data-placement="top" data-toggle="tooltip" title="Re-run"
+                                ng-click="rerunClick(suiteExecution.fields.execution_id)" class="btn btn-xs
+                                btn-warning"><i class="glyphicon glyphicon-refresh"></i></button>
+                          &nbsp;
+                        <button ng-show="(suiteExecution.fields.result != 'KILLED') && ((suiteExecution.suite_result != 'PASSED') && (suiteExecution.suite_result != 'FAILED'))"
+                                data-placement="top" data-toggle="tooltip" title="Stop/Kill"
+                                ng-click="killClick(suiteExecution.fields.execution_id)" class="btn btn-xs
+                                btn-danger"><i class="glyphicon glyphicon-ban-circle"></i></button>
+                    </td>
+                    <td>
+                        <label ng-repeat="tag in getTagList(suiteExecution.fields.tags)" class="label label-primary">{{ tag }}</label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</div>

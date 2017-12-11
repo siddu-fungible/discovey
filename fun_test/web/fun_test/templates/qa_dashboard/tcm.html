@@ -2,11 +2,13 @@
 {% load staticfiles %}
 {% block javascript %}
     {{ block.super }}
-    <script src="{% static "js/qa_dashboard/submit_job.js" %}"></script>
+    <script src="{% static "js/qa_dashboard/tcm_table.js" %}"></script>
 {% endblock %}
-
 {% block content %}
 <div class="content">
-    <submit-job class="col-sm-8"></submit-job>
- </div>
+    TCM
+    <tcm-table>
+
+    </tcm-table>
+</div>
 {% endblock %}

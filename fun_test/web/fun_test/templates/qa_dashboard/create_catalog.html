@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/create_catalog.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="content" ng-controller="createCatalogController">
+        <form>
+            <div class="form-group">
+                <label for="category-select">Select a category</label>
+                <select id="category-select"
+                        ng-options="category as category for category in {{ categories }} track by category"
+                        ng-model="selectedCategory"
+                        ng-change="changed()"></select>
+
+            </div>
+            <div class="form-group">
+                <label for="catalog-name">Name</label>
+                <fun-field id="catalog-name" klass="form-control" type="text" min-length="2" max-length="20"
+                                   bind-value="catalogName"></fun-field>
+            </div>
+
+            <div class="form-group">
+                <label for="jql">JQL</label>
+                <fun-field id="jql" klass="form-control" type="text" min-length="2" max-length="200"
+                                   bind-value="jql"></fun-field>
+            </div>
+
+            <button type="submit" ng-click="submitClick()" class="btn btn-default">Submit</button>
+        </form>
+    </div>
+{% endblock %}

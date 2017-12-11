@@ -7,6 +7,7 @@ import os
 
 from django.db import models
 from fun_global import RESULTS
+from web.fun_test.jira_models import *
 
 RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 

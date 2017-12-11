@@ -15,19 +15,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
 
+
+    {% block javascript %}
+
     <script src="{% static "js/common/jquery-3.2.1.min.js" %}"></script>
-    <!-- js -->
     <script src="{% static "js/common/bootstrap.min.js" %}"></script>
     <!-- script src="{% static "js/common/angular.min.js" %}"></script -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular-sanitize.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.js" type="application/javascript"></script>
-
-
     <script src="{% static "js/qa_dashboard/fun_field_component.js" %}"></script>
     <script src="{% static "js/qa_dashboard/qa_dashboard.js" %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
 
+    {% endblock %}
 
 
 </head>
@@ -69,13 +70,12 @@
                 </ul>
 
 
-                <li data-toggle="collapse" data-target="#service" class="collapsed">
+                <li data-toggle="collapse" data-target="#test-case" class="collapsed">
                   <a href="#"><i class="fa fa-globe fa-lg"></i> Test-cases <span class="arrow"></span></a>
                 </li>
-                <ul class="sub-menu collapse" id="service">
-                  <li>New Service 1</li>
-                  <li>New Service 2</li>
-                  <li>New Service 3</li>
+                <ul class="sub-menu collapse" id="test-case">
+                    <li><a href="/tcm/view_catalog_page">View Catalog</a></li>
+                    <li><a href="/tcm/create_catalog_page">Create Catalog</a></li>
                 </ul>
 
 

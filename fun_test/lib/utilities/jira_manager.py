@@ -13,7 +13,7 @@ class JiraManager:
         self.project_name = project_name
         if "JIRA_PASS" in os.environ:
             password = os.environ["JIRA_PASS"]
-        self.jira = JIRA(JIRA_URL, basic_auth=("automation", "Precious1*"))
+        self.jira = JIRA(JIRA_URL, basic_auth=("automation", "Precious1*"), timeout=20)
         logger.debug("JIRA Manager initialization complete")
 
     def get_issue_id(self, id):
@@ -52,10 +52,34 @@ class JiraManager:
             logger.exception("Exception: {}".format(str(ex)))
         return result
 
-    def get_issues(self, component=None):
+    def get_issue_by_id(self, id):
         result = None
-        if component:
-            result = self.jira.search_issues(jql_str="component={}".format(component))
+        issue_id = self.get_issue_id(id=id)
+        jql = "project={} and id={}".format(self.project_name, issue_id)
+        try:
+            issues_list = self.jira.search_issues(jql_str=jql)
+            if issues_list:
+                result = issues_list[0]
+        except jira.exceptions.JIRAError as ex:
+            if not 'does not exist' in ex.text:
+                raise ex
+        except Exception as ex:
+            logger.exception("Exception: {}".format(str(ex)))
+        return result
+
+    def get_issue_attributes(self, id):
+        issue = self.get_issue_by_id(id=id)
+        attributes = {}
+        if issue:
+            attributes["summary"] = issue.fields.summary
+            attributes["components"] = [str(x) for x in issue.fields.components]
+        return attributes
+
+    def get_issues(self, component=None):
+        return self.get_issues_by_jql("component={}".format(component))
+
+    def get_issues_by_jql(self, jql):
+        result = self.jira.search_issues(jql_str=jql)
         return result
 
     def get_project(self):

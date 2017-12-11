@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/catalog.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="content">
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="panel panel-primary" ng-controller="catalogController">
+                {% verbatim %}
+                <div class="panel-heading">{{ currentCatalog.name }}</div>
+
+                <div class="panel-body">
+                    <p>Category: {{ currentCatalog.category }}</p>
+                    <p>JQL: {{ currentCatalog.jqls }}</p>
+                </div>
+                <table class="table">
+                    <tr>
+                        <th>Id</th>
+                        <th>Summary</th>
+                        <th>Components</th>
+                    </tr>
+                    <tr ng-repeat="testCase in currentCatalog.test_cases">
+                        <td>
+                            {{ testCase.jira_id }}
+                        </td>
+                        <td>
+                            {{ testCase.summary }}
+                        </td>
+                        <td>
+                            <label class="label label-primary" ng-repeat="component in testCase.components"> {{ component }}</label>
+                        </td>
+                    </tr>
+                </table>
+                {% endverbatim %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
