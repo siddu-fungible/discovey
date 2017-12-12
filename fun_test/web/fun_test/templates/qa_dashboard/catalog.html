@@ -44,7 +44,7 @@
                             <th>Query</th>
                         </tr>
                         <tr ng-repeat="jql in jqls">
-                            <td><button class="btn btn-danger btn-xs" ng-click="removeClick($index)"><span class="glyphicon glyphicon-remove"></span></button></td>
+                            <td><button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:20px; color: red"></i></button></td>
                             <td>{{ jql.status }}</td>
                             <td>{{ jql.operator }}</td>
                             <td>{{ jql.value }}</td>

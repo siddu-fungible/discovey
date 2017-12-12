@@ -52,6 +52,30 @@ def update_catalog(request):
     return HttpResponse(json.dumps(result))
 
 
+@csrf_exempt
+def preview_catalog(request):
+    result = initialize_result(failed=True)
+    request_json = json.loads(request.body)
+    jqls = request_json["jqls"]
+    flat_jql = ""
+    try:
+        jira_manager = JiraManager()
+        flat_jql = " ".join(jqls)
+        issues = jira_manager.get_issues_by_jql(jql=flat_jql)
+        logger.info("Issues: " + str(issues))
+        payload = {}
+        payload["test_cases"] = []
+        for issue in issues:
+            issue_attributes = jira_manager.get_issue_attributes_by_issue(issue=issue)
+            payload["test_cases"].append({"jira_id": issue_attributes["id"],
+                                          "summary": issue_attributes["summary"],
+                                          "components": issue_attributes["components"]})
+
+        result["data"] = payload
+        result["status"] = True
+    except Exception as ex:
+        result["error_message"] = "JQL:" + flat_jql + "\n" + str(ex)
+    return HttpResponse(json.dumps(result))
 
 def catalog(request):
     result = initialize_result(failed=True)
@@ -64,7 +88,7 @@ def catalog(request):
     try:
         for test_case in suite.test_cases.all():
             jira_manager = JiraManager()
-            issue_attributes = jira_manager.get_issue_attributes(id=test_case.jira_id)
+            issue_attributes = jira_manager.get_issue_attributes_by_id(id=test_case.jira_id)
             payload["test_cases"].append({"jira_id": test_case.jira_id,
                                           "summary": issue_attributes["summary"],
                                           "components": issue_attributes["components"]})

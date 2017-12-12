@@ -43,10 +43,10 @@
         function showError(message, timeout) {
             $rootScope.showCommonError = true;
             $rootScope.commonErrorMessage = message;
-            if (timeout) {
+            if (timeout !== -1) {
                 $timeout(function() {
                     $rootScope.showCommonError = false;
-                }, timeout);
+                }, 10000);
             }
         }
 

@@ -61,15 +61,27 @@
             let jqlsWithOperator = [];
             $scope.jqls.forEach(function(element) {
                 if (element.operator) {
-                    jqlsWithOperator.push(element.operator + " " + element.value);
+                    jqlsWithOperator.push(element.operator + " (" + element.value + ")");
                 } else {
                     jqlsWithOperator.push(element.value);
                 }
             });
-            $http.post("/regression/tcm/preview_catalog", payload).then(function (result) {
+            payload["jqls"] = jqlsWithOperator;
 
-                payload["jqls"] = $scope.jqls;
+            $http.post("/tcm/preview_catalog", payload).then(function (result) {
+                let data = result.data;
+                if (!data["status"]) {
+                    commonAlert.showError("Catalog preview failed: " + data["error_message"]);
+                    return;
+                }
+                $scope.currentCatalog = result.data.data;
+                let jqlList = $scope.toList($scope.currentCatalog["jqls"]);
+                jqlList.forEach(function (element) {
+                    $scope.jqls.push({"value": element,
+                    "status": "Preview"});
+                });
             }).catch(function (result) {
+                commonAlert.showError("Unable to preview catalog." + result.data.toString());
 
             });
 

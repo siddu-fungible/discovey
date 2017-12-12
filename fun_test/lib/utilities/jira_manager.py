@@ -67,12 +67,18 @@ class JiraManager:
             logger.exception("Exception: {}".format(str(ex)))
         return result
 
-    def get_issue_attributes(self, id):
+    def get_issue_attributes_by_id(self, id):
         issue = self.get_issue_by_id(id=id)
         attributes = {}
         if issue:
-            attributes["summary"] = issue.fields.summary
-            attributes["components"] = [str(x) for x in issue.fields.components]
+            attributes = self.get_issue_attributes_by_issue(issue=issue)
+        return attributes
+
+    def get_issue_attributes_by_issue(self, issue):
+        attributes = {}
+        attributes["summary"] = issue.fields.summary
+        attributes["components"] = [str(x) for x in issue.fields.components]
+        attributes["id"] = int(issue.key.replace(self.project_name + "-", ""))
         return attributes
 
     def get_issues(self, component=None):
