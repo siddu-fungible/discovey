@@ -9,7 +9,7 @@
 
 <div class="content">
     <div class="row">
-        <div class="col-sm-6">
+        <div class="col-md-10">
             <div class="panel panel-primary" ng-controller="catalogController">
                 {% verbatim %}
                 <div class="panel-heading">{{ currentCatalog.name }}</div>
@@ -18,18 +18,21 @@
                     <p>Category: {{ currentCatalog.category }}</p>
                     <p>JQLs</p>
 
-                    <div class="row form-group">
-                        <div class="col-sm-1">
-                            <button ng-click="addJqlClick()" class="button btn-sm btn-info">Add</button>
-                        </div>
-                        <div class="col-sm-3">
-                            <label>Operator</label>
-                            <select ng-options="operator for operator in operators" ng-model="selectedOperator"></select>
-                        </div>
-                        <div>
-                            <fun-field type="text" min-length="2" max-length="100" bind-value="addJql"></fun-field>
-                        </div>
-                    </div>
+                    <table class="table table-nonfluid table-bordered">
+                        <tr>
+                            <td class="col-md-1">
+                                <button ng-click="addJqlClick()" class="button btn-sm btn-info">Add</button>
+                            </td>
+                            <td class="col-md-2" style="vertical-align:middle;">
+                                <label  class="" for="select-operator">Operator</label>
+                                <select id="select-operator" ng-options="operator for operator in operators" ng-model="selectedOperator"></select>
+                            </td>
+                            <td class="col-md-10" style="vertical-align:middle;">
+                                <label class="col-md-1" for="add-jql">JQL</label>
+                                <fun-field klass="col-md-11" id="add-jql" type="text" min-length="2" max-length="100" bind-value="addJql"></fun-field>
+                            </td>
+                        </tr>
+                    </table>
                     <div ng-if="showPreview" class="row col-sm-1 form-group">
                         <button ng-click="previewClick()" class="button btn-sm btn-success">Preview</button>
                     </div>

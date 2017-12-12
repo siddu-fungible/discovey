@@ -1,7 +1,7 @@
 let funFieldComponentInfo = {
 
-        template: "<div>" +
-                  "<input class='{{ $ctrl.klass }}' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
+        template: "<div class='{{ $ctrl.klass }}'>" +
+                  "<input style='width: 100%' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
                   "<p ng-if='!value && $ctrl.required' style='{{ errorStyle }}'>{{ $ctrl.type }} * Required</p>" +
                   "<p ng-show='minRequirementError' style='{{ errorStyle }}'>{{ minRequirementError }}</p>" +
                   "<p ng-show='maxRequirementError' style='{{ errorStyle }}'>{{ maxRequirementError }}</p>" +
