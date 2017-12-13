@@ -168,10 +168,17 @@ body {
 }
 
 .content {
-    margin-left: 20%;
-    margin-right: 10%
+    margin-left: 20px;
+    margin-right: 10%;
+    margin-top: 5%;
 }
 
 .panel-with-table {
     width: 1250px;
 }
+
+.fun-center {
+    vertical-align:middle;
+}
+
+
