@@ -230,7 +230,7 @@ class Linux(object, ToDictMixin):
                                                 env={"TERM": "dumb"},
                                                 maxread=4096)
 
-                self.handle.logfile_read = sys.stdout
+                # self.handle.logfile_read = sys.stdout
                 self.handle.logfile_read = self.logger
 
                 current_loop_count = 0
