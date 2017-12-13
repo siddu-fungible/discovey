@@ -33,8 +33,21 @@
                             </td>
                         </tr>
                     </table>
-                    <div ng-if="showPreview" class="row col-sm-1 form-group">
-                        <button ng-click="previewClick()" class="button btn-sm btn-success">Preview</button>
+                    <div ng-if="showValidate" class="row col-sm-1 form-group">
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <button ng-click="validateClick()" class="button btn-sm btn-success">Validate</button>
+                                </td>
+                                <td>
+                                    <span ng-if="validated" class="glyphicon glyphicon-ok" style="color:green"></span>
+                                </td>
+                                <td>
+                                    <button ng-if="validated" ng-click="commitClick()" class="button btn-sm btn-default">Commit</button>
+                                </td>
+                            </tr>
+                        </table>
+
                     </div>
                     <br>
                     <br>

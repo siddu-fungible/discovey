@@ -41,7 +41,7 @@ def _create_catalog_test_case(issues):
 def view_catalog_page(request):
     return render(request, 'qa_dashboard/catalog.html', locals())
 
-
+@csrf_exempt
 def update_catalog(request):
     result = initialize_result(failed=True)
     request_json = json.loads(request.body)
@@ -49,6 +49,23 @@ def update_catalog(request):
     name = request_json["name"]
     jqls = request_json["jqls"]
 
+    flat_jql = " ".join(jqls)
+
+    try:
+        jira_manager = JiraManager()
+        issues = jira_manager.get_issues_by_jql(jql=flat_jql)
+        logger.info("Issues: " + str(issues))
+        if issues:
+            pks = _create_catalog_test_case(issues)
+            test_cases = CatalogTestCase.objects.filter(pk__in=pks)
+            suite = CatalogSuite.objects.get(name=name)
+            suite.jqls = json.dumps(jqls)
+            suite.save()
+            for test_case in test_cases:
+                suite.test_cases.add(test_case.pk)
+            suite.save()
+    except Exception as ex:
+        result["error_message"] = "JQL:" + flat_jql + "\n" + str(ex)
     return HttpResponse(json.dumps(result))
 
 
@@ -115,7 +132,6 @@ def create_catalog(request):
                                  category=request_json["category"],
                                  jqls=json.dumps([jql]))
             suite.save()
-            # test_cases=test_cases)
             for test_case in test_cases:
                 suite.test_cases.add(test_case.pk)
             suite.save()

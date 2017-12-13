@@ -8,9 +8,10 @@
             $scope.getCatalog();
             $scope.currentCatalog = null;
             $scope.jqls = [];
-            $scope.showPreview = false;
+            $scope.showValidate = false;
             $scope.operators = ["or", "and"];
             $scope.selectedOperator = $scope.operators[0];
+            $scope.validated = false;
         };
 
         $scope.getCatalog = function () {
@@ -56,17 +57,22 @@
 
         };
 
-        $scope.previewClick = function () {
-            let payload = {};
+        $scope.getJqlsWithOperator = function (jqls) {
             let jqlsWithOperator = [];
-            $scope.jqls.forEach(function(element) {
+            jqls.forEach(function (element) {
                 if (element.operator) {
                     jqlsWithOperator.push(element.operator + " (" + element.value + ")");
                 } else {
                     jqlsWithOperator.push(element.value);
                 }
             });
-            payload["jqls"] = jqlsWithOperator;
+
+            return jqlsWithOperator;
+        };
+
+        $scope.validateClick = function () {
+            let payload = {};
+            payload["jqls"] = $scope.getJqlsWithOperator($scope.jqls);
 
             $http.post("/tcm/preview_catalog", payload).then(function (result) {
                 let data = result.data;
@@ -75,13 +81,9 @@
                     return;
                 }
                 $scope.currentCatalog = result.data.data;
-                let jqlList = $scope.toList($scope.currentCatalog["jqls"]);
-                jqlList.forEach(function (element) {
-                    $scope.jqls.push({"value": element,
-                    "status": "Preview"});
-                });
+                $scope.validated = true;
             }).catch(function (result) {
-                commonAlert.showError("Unable to preview catalog." + result.data.toString());
+                commonAlert.showError("Unable to preview catalog. " + result.data.toString());
 
             });
 
@@ -91,10 +93,24 @@
             if (!$scope.addJql) {
                 return;
             }
+            $scope.validated = false;
             $scope.jqls.push({"value": $scope.addJql,
             "status": "Uncommitted",
             "operator": $scope.selectedOperator});
-            $scope.showPreview = true;
+            $scope.showValidate = true;
+        };
+
+        $scope.commitClick = function () {
+            let payload = {};
+            payload["name"] = "catalog-1";
+            let jqlsWithOperator = $scope.getJqlsWithOperator($scope.jqls);
+            payload["jqls"] = jqlsWithOperator;
+            $http.post("/tcm/update_catalog", payload).then(function (result) {
+                commonAlert.showSuccess("Committed catalog");
+            }).catch(function (result) {
+                commonAlert.showError("Unable to commit catalog. " + result.data.toString());
+            });
+
         }
     }
 
