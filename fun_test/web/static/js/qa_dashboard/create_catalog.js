@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function CreateCatalogController($scope, $http, $window, commonAlert) {
+    function CreateCatalogController($scope, $http, commonAlert) {
         let ctrl = this;
 
         ctrl.$onInit = function () {

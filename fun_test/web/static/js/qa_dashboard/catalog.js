@@ -5,17 +5,24 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
-            $scope.getCatalog();
             $scope.currentCatalog = null;
             $scope.jqls = [];
             $scope.showValidate = false;
             $scope.operators = ["or", "and"];
             $scope.selectedOperator = $scope.operators[0];
             $scope.validated = false;
+            let catalogElement = angular.element(document.querySelector('#catalog-div'));
+            $scope.catalogName = catalogElement.data("catalog-name");
+            $scope.getCatalog();
+
+        };
+
+        $scope.setCatalogName = function (name) {
+            $scope.catalogName = name;
         };
 
         $scope.getCatalog = function () {
-            $http.get('/tcm/catalog').then(function (result){
+            $http.get('/tcm/catalog/' + $scope.catalogName).then(function (result){
 
                 let data = result.data;
                 if(!data["status"]) {
@@ -102,9 +109,8 @@
 
         $scope.commitClick = function () {
             let payload = {};
-            payload["name"] = "catalog-1";
-            let jqlsWithOperator = $scope.getJqlsWithOperator($scope.jqls);
-            payload["jqls"] = jqlsWithOperator;
+            payload["name"] = $scope.catalogName;
+            payload["jqls"] = $scope.getJqlsWithOperator($scope.jqls);
             $http.post("/tcm/update_catalog", payload).then(function (result) {
                 commonAlert.showSuccess("Committed catalog");
             }).catch(function (result) {

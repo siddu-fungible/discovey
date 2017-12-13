@@ -3,15 +3,16 @@
 {% block javascript %}
     {{ block.super }}
     <script src="{% static "js/qa_dashboard/catalog.js" %}"></script>
+
 {% endblock %}
 
 {% block content %}
-
 <div class="content">
+    <catalog-div id="catalog-div" data-catalog-name="{{ catalog_name }}"></catalog-div>
     <div class="row">
         <div class="col-md-10">
+            {% verbatim %}
             <div class="panel panel-primary" ng-controller="catalogController">
-                {% verbatim %}
                 <div class="panel-heading">{{ currentCatalog.name }}</div>
 
                 <div class="panel-body">
@@ -86,8 +87,8 @@
                         </td>
                     </tr>
                 </table>
-                {% endverbatim %}
             </div>
+            {% endverbatim %}
         </div>
     </div>
 </div>

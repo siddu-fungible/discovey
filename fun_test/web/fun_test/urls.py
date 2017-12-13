@@ -45,10 +45,14 @@ tcm_urls = [
     url(r'^$', tcm_views.index),
     url(r'^create_catalog_page', tcm_views.create_catalog_page),
     url(r'^create_catalog', tcm_views.create_catalog),
-    url(r'^view_catalog_page', tcm_views.view_catalog_page),
-    url(r'^catalog', tcm_views.catalog),
+    url(r'^view_catalog_page/(.*)$', tcm_views.view_catalog_page),
+    url(r'^catalog/(.*)$', tcm_views.catalog),
     url(r'^update_catalog', tcm_views.update_catalog),
-    url(r'^preview_catalog', tcm_views.preview_catalog)
+    url(r'^preview_catalog', tcm_views.preview_catalog),
+    url(r'^view_catalogs', tcm_views.view_catalogs),
+    url(r'^catalog_categories$', tcm_views.catalog_categories),
+    url(r'^catalogs_summary$', tcm_views.catalogs_summary),
+    url(r'^remove_catalog/(.*)$', tcm_views.remove_catalog)
 ]
 
 urlpatterns = [

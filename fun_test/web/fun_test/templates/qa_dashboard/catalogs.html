@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/catalogs.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+
+{% verbatim %}
+<div class="content" ng-controller="catalogsController">
+    <fieldset ng-repeat="(category, summary) in summaries">
+        <legend class="legend">{{ category }}</legend>
+        <table class="table table-nonfluid table-bordered">
+            <tr>
+                <th>
+                    Action
+                </th>
+                <th>
+                    Name
+                </th>
+                <th>
+                    TC Count
+                </th>
+            </tr>
+            <tr ng-repeat="catalog in summary.catalogs">
+                <td><button class="btn btn-sm" ng-click="removeClick(catalog.name)"><i class="fa fa-trash-o fa-1x" style="font-size:20px; color: red"></i></button></td>
+                <td>
+                    <a href="/tcm/view_catalog_page/{{ catalog.name }}">{{ catalog.name }}</a>
+                </td>
+                <td>
+                    {{ catalog.tc_count }}
+                </td>
+            </tr>
+        </table>
+    </fieldset>
+</div>
+{% endverbatim %}
+
+{% endblock %}

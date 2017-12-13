@@ -38,8 +38,41 @@ def _create_catalog_test_case(issues):
     pks = [x.pk for x in tcs]
     return pks
 
-def view_catalog_page(request):
+def view_catalog_page(request, catalog_name):
     return render(request, 'qa_dashboard/catalog.html', locals())
+
+def view_catalogs(request):
+    return render(request, 'qa_dashboard/catalogs.html', locals())
+
+def catalog_categories(request):
+    return HttpResponse(json.dumps([k for k in CATALOG_CATEGORIES]))
+
+def remove_catalog(request, catalog_name):
+    result = initialize_result(failed=True)
+    try:
+        CatalogSuite.objects.get(name=catalog_name).delete()
+        result["status"] = True
+    except Exception as ex:
+        result["error_message"] = str(ex)
+    return HttpResponse(json.dumps(result))
+
+def catalogs_summary(request):
+    result = initialize_result(failed=True)
+    result["data"] = None
+    result["status"] = True
+    catalog_summary = {}
+    categories = [k for k in CATALOG_CATEGORIES]
+    for category in categories:
+        catalog_summary[category] = {}
+        catalog_summary[category]["catalogs"] = []
+        matching_suites = CatalogSuite.objects.filter(category=str(category))
+        for matching_suite in matching_suites:
+            test_cases = matching_suite.test_cases
+            test_case_count = test_cases.count()
+            catalog_info = {"name": matching_suite.name, "tc_count": test_case_count}
+            catalog_summary[category]["catalogs"].append(catalog_info)
+    result["data"] = catalog_summary
+    return HttpResponse(json.dumps(result))
 
 @csrf_exempt
 def update_catalog(request):
@@ -94,9 +127,9 @@ def preview_catalog(request):
         result["error_message"] = "JQL:" + flat_jql + "\n" + str(ex)
     return HttpResponse(json.dumps(result))
 
-def catalog(request):
+def catalog(request, catalog_name):
     result = initialize_result(failed=True)
-    suite = CatalogSuite.objects.get(name="catalog-1")
+    suite = CatalogSuite.objects.get(name=catalog_name)
     payload = {}
     payload["name"] = suite.name
     payload["category"] = suite.category
@@ -135,7 +168,7 @@ def create_catalog(request):
             for test_case in test_cases:
                 suite.test_cases.add(test_case.pk)
             suite.save()
-
+        result["status"] = True
     except Exception as ex:
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))

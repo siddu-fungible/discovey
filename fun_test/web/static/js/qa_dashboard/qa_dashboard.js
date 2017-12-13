@@ -40,22 +40,41 @@
     }]);
 
     app.factory('commonAlert', ["$rootScope", "$timeout", function ($rootScope, $timeout) {
+
         function showError(message, timeout) {
             $rootScope.showCommonError = true;
             $rootScope.commonErrorMessage = message;
-            if (timeout !== -1) {
-                $timeout(function() {
-                    $rootScope.showCommonError = false;
-                }, 10000);
+            let t = 10000;
+            if (timeout) {
+                t = timeout;
+                if (timeout === -1) {
+                    t = 1000000;
+                }
             }
+            $timeout(function() {
+                $rootScope.showCommonError = false;
+            }, t);
         }
 
-        function showSuccess(message) {
+        function showHttpError(message, result, timeout) {
+            let errorMessage = message + " :" + result.toString();
+            showError(errorMessage, timeout);
+        }
+
+        function showSuccess(message, timeout) {
             $rootScope.showCommonSuccess = true;
             $rootScope.commonSuccessMessage = message;
+            let t = 10000;
+            if (timeout) {
+                t = timeout;
+                if (timeout === -1) {
+                    t = 1000000;
+                }
+            }
+            console.log(t);
             $timeout(function() {
                 $rootScope.showCommonSuccess = false;
-            }, 10000);
+            }, t)
 
         }
 
@@ -67,7 +86,8 @@
         return {
             showError: showError,
             showSuccess: showSuccess,
-            closeAllAlerts: closeAllAlerts
+            closeAllAlerts: closeAllAlerts,
+            showHttpError: showHttpError,
         };
     }]);
     app.component(funFieldComponent["name"], funFieldComponent["info"]);
