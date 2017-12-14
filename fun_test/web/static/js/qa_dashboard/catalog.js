@@ -46,6 +46,7 @@
         };
 
         $scope.removeClick = function (jqlIndex) {
+
             commonAlert.closeAllAlerts();
             console.log(jqlIndex);
             if (jqlIndex === 0) {
@@ -58,9 +59,10 @@
                     commonAlert.showError("At least one JQL is required", 5000);
                     return;
                 }
-
                 $scope.jqls.splice(jqlIndex, 1)
             }
+            $scope.validated = false;
+            $scope.showValidate = true;
 
         };
 

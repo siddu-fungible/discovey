@@ -35,7 +35,12 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
 def finalize_suite_execution(suite_execution_id):
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
 
-def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_path="unknown", tags=None):
+def add_suite_execution(submitted_time,
+                        scheduled_time,
+                        completed_time,
+                        suite_path="unknown",
+                        tags=None,
+                        catalog_reference=""):
 
     if tags:
         tags = json.dumps(tags)
@@ -53,7 +58,8 @@ def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_pa
                        scheduled_time=scheduled_time,
                        completed_time=completed_time,
                        result="QUEUED",
-                       tags=tags)
+                       tags=tags,
+                       catalog_reference=catalog_reference)
     s.save()
     return s
 

@@ -1,6 +1,6 @@
 from django.contrib import admin
-from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag
-from web.fun_test.jira_models import CatalogTestCase, CatalogSuite
+from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer
+from web.fun_test.models import CatalogTestCase, CatalogSuite
 
 @admin.register(SuiteExecution)
 class SuiteExecutionAdmin(admin.ModelAdmin):
@@ -23,10 +23,6 @@ class CatalogTestCaseAdmin(admin.ModelAdmin):
 class CatalogSuiteAdmin(admin.ModelAdmin):
     pass
 
-
-'''
-
-admin.site.register(SuiteExecution, SuiteExecutionAdmin)
-admin.site.register(TestCaseExecution, TestCaseExecutionAdmin)
-admin.site.register(Tag, TagAdmin)
-'''
+@admin.register(Engineer)
+class EngineerAdmin(admin.ModelAdmin):
+    pass

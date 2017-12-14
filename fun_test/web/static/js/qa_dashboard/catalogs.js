@@ -8,6 +8,8 @@
             $scope.categories = [];
             $scope.fetchSummaries();
             $scope.summaries = null;
+            $scope.selectedCatalog = null;
+            $scope.showExecuteOptions = false;
         };
         
         $scope.fetchCategories = function () {
@@ -49,6 +51,10 @@
                     commonAlert.showHttpError("Unable to remove catalog: ", result);
                 })
             }
+        };
+
+        $scope.executeClick = function () {
+            $scope.showExecuteOptions = !$scope.showExecuteOptions;
         };
 
     }

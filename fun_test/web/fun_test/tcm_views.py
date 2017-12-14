@@ -7,10 +7,12 @@ from web_global import initialize_result
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager
-from web.fun_test.jira_models import CatalogSuite, CatalogTestCase
+from web.fun_test.models import CatalogSuite, CatalogTestCase
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
+from web.fun_test.models_helper import add_suite_execution
 from django.core import serializers
+from fun_global import get_current_time
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -56,6 +58,15 @@ def remove_catalog(request, catalog_name):
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
 
+def execute_catalog(request, catalog_name):
+    result = initialize_result(failed=True)
+    suite_execution = add_suite_execution(submitted_time=get_current_time(),
+                                          scheduled_time=get_current_time(),
+                                          completed_time=get_current_time(),
+                                          catalog_reference=catalog_name)
+
+    return HttpResponse(json.dumps(result))
+
 def catalogs_summary(request):
     result = initialize_result(failed=True)
     result["data"] = None
@@ -93,6 +104,8 @@ def update_catalog(request):
             test_cases = CatalogTestCase.objects.filter(pk__in=pks)
             suite = CatalogSuite.objects.get(name=name)
             suite.jqls = json.dumps(jqls)
+            suite.save()
+            suite.test_cases.clear()
             suite.save()
             for test_case in test_cases:
                 suite.test_cases.add(test_case.pk)

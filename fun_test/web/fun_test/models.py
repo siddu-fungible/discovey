@@ -13,6 +13,25 @@ RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 
 TAG_LENGTH = 50
 
+class CatalogTestCase(models.Model):
+    jira_id = models.IntegerField()
+
+    def __str__(self):
+        return str(self.jira_id)
+
+
+class CatalogSuite(models.Model):
+    category = models.CharField(max_length=20,
+                                choices=[(k, v) for k, v in CATALOG_CATEGORIES.items()],
+                                default=CATALOG_CATEGORIES["ON_DEMAND"])
+    jqls = models.TextField(default="[]")
+    name = models.TextField(default="UNKNOWN", unique=True)
+    test_cases = models.ManyToManyField(CatalogTestCase, blank=True)
+
+    def __str__(self):
+        s = "{} {}".format(self.category, self.name)
+        return s
+
 class SuiteExecution(models.Model):
     execution_id = models.IntegerField(unique=True)
     suite_path = models.CharField(max_length=100)
@@ -20,9 +39,9 @@ class SuiteExecution(models.Model):
     scheduled_time = models.DateTimeField()
     completed_time = models.DateTimeField()
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")  # Currently used to track KILLED entries could be used to cache overall suite result
-    version = models.CharField(max_length=50, default="UNKNOWN")
+    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
     tags = models.TextField(default="[]")
+    catalog_reference = models.TextField(null=True, blank=True)
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
@@ -60,6 +79,25 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.tag
+
+class Engineer(models.Model):
+    email = models.CharField(max_length=100)
+    short_name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return "{} {}".format(self.short_name, self.email)
+
+
+
+
+
+class CatalogTestCaseExecution(models.Model):
+    execution_id = models.IntegerField(unique=True)
+    jira_id = models.IntegerField()
+    engineer = models.ForeignKey(Engineer)
+
+    def __str__(self):
+        return "{} {} {}".format(self.execution_id, self.jira_id, self.engineer)
 
 
 if __name__ == "__main__":
