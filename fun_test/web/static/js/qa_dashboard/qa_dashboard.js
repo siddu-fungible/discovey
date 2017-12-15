@@ -1,6 +1,40 @@
 (function () {
     let app;
-    app = angular.module('qa-dashboard', ['ngSanitize', 'ui.select']);
+
+    angular
+        .module("commonModule", [])
+        .filter('propsFilter', function () {
+            return function (items, props) {
+                let out = [];
+
+                if (angular.isArray(items)) {
+                    let keys = Object.keys(props);
+
+                    items.forEach(function (item) {
+                        let itemMatches = false;
+
+                        for (let i = 0; i < keys.length; i++) {
+                            let prop = keys[i];
+                            let text = props[prop].toLowerCase();
+                            if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                                itemMatches = true;
+                                break;
+                            }
+                        }
+                        if (itemMatches) {
+                            out.push(item);
+                        }
+                    });
+                } else {
+                    // Let the output be the input untouched
+                    out = items;
+                }
+                return out;
+            };
+        });
+
+
+    app = angular.module('qa-dashboard', ['ngSanitize', 'ui.select', 'commonModule']);
     app.controller('QaDashBoardController', ['$rootScope', '$scope', '$http', '$window', '$timeout', function ($rootScope, $scope, $http, $window, $timeout) {
 
         $scope.closeCommonError = function () {
@@ -51,13 +85,19 @@
                     t = 1000000;
                 }
             }
-            $timeout(function() {
+            $timeout(function () {
                 $rootScope.showCommonError = false;
             }, t);
         }
 
         function showHttpError(message, result, timeout) {
-            let errorMessage = message + " :" + result.toString();
+            let errorMessage = message + " " + result;
+            if (result.data) {
+                errorMessage = message + " :" + result.data;
+            }
+            if (result.stack) {
+                errorMessage = message + "\n" + result.stack;
+            }
             showError(errorMessage, timeout);
         }
 
@@ -72,7 +112,7 @@
                 }
             }
             console.log(t);
-            $timeout(function() {
+            $timeout(function () {
                 $rootScope.showCommonSuccess = false;
             }, t)
 
@@ -90,7 +130,28 @@
             showHttpError: showHttpError,
         };
     }]);
+
+    app.factory('commonService', ["$rootScope", function ($rootScope) {
+        function validateApiResult(apiResult, message) {
+            let result = false;
+            let data = apiResult["data"];
+            if (!data["status"]) {
+                $rootScope.commonAlert("Error: " + message + " " + data["error_message"]);
+            } else {
+                result = true;
+            }
+            return result;
+        }
+
+
+        return {
+            validateApiResult: validateApiResult
+        };
+
+    }]);
+
     app.component(funFieldComponent["name"], funFieldComponent["info"]);
+
 
 }).call();
 

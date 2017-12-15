@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function CatalogsController($scope, $http, $window, $timeout, commonAlert) {
+    function CatalogsController($scope, $http, $window, $timeout, commonService, commonAlert) {
         let ctrl = this;
 
         ctrl.$onInit = function () {
@@ -10,8 +10,25 @@
             $scope.summaries = null;
             $scope.selectedCatalog = null;
             $scope.showExecuteOptions = false;
+            $scope.owners = [];
+            $scope.fetchOwners();
         };
-        
+
+        $scope.fetchOwners = function () {
+            $http.get("/regression/engineers").then(function (result) {
+                if(!commonService.validateApiResult(result, "Fetch Engineers")) {
+                    return;
+                }
+                let data = result.data.data;
+                data.forEach(function (element) {
+                    $scope.owners.push({"name": element.fields.short_name, "email": element.fields.email});
+                });
+
+            }).catch(function (result) {
+                commonAlert.showHttpError("Unable to fetch owners", result)
+            });
+        };
+
         $scope.fetchCategories = function () {
             $http.get("/tcm/catalog_categories").then(function (result) {
                 $scope.categories = angular.fromJson(result.data);
@@ -59,7 +76,6 @@
 
     }
 
-    angular.module('qa-dashboard').controller("catalogsController", CatalogsController)
-
+    angular.module('qa-dashboard').controller("catalogsController", CatalogsController);
 
 })(window.angular);

@@ -11,7 +11,6 @@ from web.fun_test.models import CatalogSuite, CatalogTestCase
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 from web.fun_test.models_helper import add_suite_execution
-from django.core import serializers
 from fun_global import get_current_time
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)

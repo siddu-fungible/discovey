@@ -63,6 +63,20 @@
                 <fun-field type="text" id="owner" min-length="2" max-length="30" bind-value="owner">
 
             </div>
+            <div>
+                <label for="owner-select">Owner</label>
+                <ui-select id="owner-select" ng-model="selectedOwner" theme="bootstrap">
+                    <ui-select-match placeholder="Select owner...">{{$select.selected.name}}</ui-select-match>
+                    <ui-select-choices repeat="owner in owners | propsFilter: {name: $select.search}">
+                        <div ng-bind-html="owner.name | highlight: $select.search"></div>
+                        <small>
+                            name: <span ng-bind-html="''+owner.name | highlight: $select.search"></span>
+                            email: <span ng-bind-html="''+owner.email | highlight: $select.search"></span>
+                        </small>
+                    </ui-select-choices>
+                </ui-select>
+
+            </div>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>

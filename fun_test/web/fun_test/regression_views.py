@@ -8,7 +8,8 @@ from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
-from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag
+from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer
+from web_global import initialize_result
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
@@ -93,6 +94,14 @@ def kill_job(request, suite_execution_id):
 
 def tags(request):
     return HttpResponse(serializers.serialize('json', Tag.objects.all()))
+
+def engineers(request):
+    result = initialize_result(failed=True)
+    s = serializers.serialize('json', Engineer.objects.all())
+    s = json.loads(s)  #TODO
+    result["data"] = s
+    result["status"] = True
+    return HttpResponse(json.dumps(result))
 
 def suites(request):
     suites_info = collections.OrderedDict()

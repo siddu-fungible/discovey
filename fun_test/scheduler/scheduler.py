@@ -188,6 +188,7 @@ class SuiteWorker(Thread):
 
         else:
             pass #TODO: Send error report
+            send_summary_mail(job_id=self.job_id)
 
 
 
