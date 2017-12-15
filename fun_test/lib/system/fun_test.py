@@ -11,6 +11,7 @@ from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 import signal
 from web.fun_test.web_interface import get_homepage_url
+import pexpect
 
 class TestException(Exception):
     def __str__(self):
@@ -585,9 +586,76 @@ class FunTest:
             print entry["tc"]
         '''
 
+    def scp(self,
+            source_file_path,
+            target_file_path,
+            source_ip=None,
+            source_username=None,
+            source_password=None,
+            source_port=None,
+            target_ip=None,
+            target_username=None,
+            target_password=None,
+            target_port=22,
+            timeout=60):
+        transfer_complete = False
+        scp_command = ""
 
+        #scp_command = "scp -P %d %s %s@%s:%s" % (
+        #target_port, source_file_path, target_username, target_ip, target_file_path)
+        the_password = source_password
+        if target_ip:
+            scp_command = "scp -P {} {} {}@{}:{}".format(target_port,
+                                                         source_file_path,
+                                                         target_username,
+                                                         target_ip,
+                                                         target_file_path)
+            target_password = the_password
+        elif source_ip:
+            scp_command = "scp -P {} {}@{}:{} {}".format(source_port,
+                                                         source_username,
+                                                         source_ip,
+                                                         source_file_path,
+                                                         target_file_path)
 
-        i = 0
+        handle = pexpect.spawn(scp_command, env={"TERM": "dumb"}, maxread=4096)
+        handle.logfile_read = fun_test
+        handle.sendline(scp_command)
+
+        expects = collections.OrderedDict()
+        expects[0] = '[pP]assword:'
+        expects[1] = r'\$ ' + r'$'
+        expects[2] = '\(yes/no\)?'
+
+        max_retry_count = 10
+        max_loop_count = 10
+
+        attempt = 0
+        try:
+            while attempt < max_retry_count and not transfer_complete:
+                current_loop_count = 0
+                while current_loop_count < max_loop_count:
+                    try:
+                        i = handle.expect(expects.values(), timeout=timeout)
+                        if i == 0:
+                            fun_test.debug("Sending: %s" % target_password)
+                            handle.sendline(the_password)
+                            current_loop_count += 1
+                        if i == 2:
+                            fun_test.debug("Sending: %s" % "yes")
+                            handle.sendline("yes")
+                            current_loop_count += 1
+                        if i == 1:
+                            transfer_complete = True
+                            break
+                    except pexpect.exceptions.EOF:
+                        transfer_complete = True
+                        break
+        except Exception as ex:
+            critical_str = str(ex)
+            self.critical(critical_str)
+
+        return transfer_complete
 
 fun_test = FunTest()
 

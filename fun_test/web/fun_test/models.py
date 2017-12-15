@@ -41,6 +41,7 @@ class SuiteExecution(models.Model):
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
     result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
     tags = models.TextField(default="[]")
+    version = models.CharField(max_length=50, default="UNKNOWN")
     catalog_reference = models.TextField(null=True, blank=True)
 
     def __str__(self):
@@ -63,7 +64,6 @@ class TestCaseExecution(models.Model):
     result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="NOTRUN")
     started_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True)
-
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
@@ -89,7 +89,14 @@ class Engineer(models.Model):
 
 
 
+class CatalogSuiteExecution(models.Model):
+    suite_execution_id = models.IntegerField(unique=True)
+    owner_email = models.EmailField()
+    instance_name = models.CharField(max_length=50)
+    catalog_name = models.TextField(default="UNKNOWN", unique=True)
 
+    def __str__(self):
+        return "{} {} {}".format(self.suite_execution_id, self.owner_email, self.instance_name)
 
 class CatalogTestCaseExecution(models.Model):
     execution_id = models.IntegerField(unique=True)

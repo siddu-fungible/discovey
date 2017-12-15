@@ -12,6 +12,7 @@
             $scope.showExecuteOptions = false;
             $scope.owners = [];
             $scope.fetchOwners();
+            $scope.instanceName = null;
         };
 
         $scope.fetchOwners = function () {
@@ -72,6 +73,29 @@
 
         $scope.executeClick = function () {
             $scope.showExecuteOptions = !$scope.showExecuteOptions;
+        };
+
+        $scope.executeSubmitClick = function () {
+            console.log($scope.selectedOwner);
+            if (!$scope.selectedOwner) {
+                return commonAlert.showError("Please choose an owner");
+            }
+            if (!$scope.instanceName) {
+                return commonAlert.showError("Please enter an instance name");
+            }
+            let payload = {};
+            payload["name"] = $scope.selectedCatalog;
+            payload["owner_email"] = $scope.selectedOwner.email;
+            payload["instance_name"] = $scope.instanceName;
+            $http.post("/tcm/execute_catalog", payload).then(function (result) {
+                if (!commonService.validateApiResult(result, "Execute catalog")) {
+                    return;
+                }
+                commonAlert.showSuccess("Catalog execution instance created");
+
+            }).catch(function (result) {
+                return commonAlert.showHttpError("Execute catalog", result);
+            });
         };
 
     }

@@ -7,7 +7,7 @@ from web_global import initialize_result
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager
-from web.fun_test.models import CatalogSuite, CatalogTestCase
+from web.fun_test.models import CatalogSuite, CatalogTestCase, CatalogSuiteExecution
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 from web.fun_test.models_helper import add_suite_execution
@@ -57,13 +57,25 @@ def remove_catalog(request, catalog_name):
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
 
-def execute_catalog(request, catalog_name):
+@csrf_exempt
+def execute_catalog(request):
     result = initialize_result(failed=True)
+    request_json = json.loads(request.body)
+    catalog_name = request_json["name"]
+    owner_email = request_json["owner_email"]
+    instance_name = request_json["instance_name"]
+
     suite_execution = add_suite_execution(submitted_time=get_current_time(),
                                           scheduled_time=get_current_time(),
                                           completed_time=get_current_time(),
                                           catalog_reference=catalog_name)
 
+    cse = CatalogSuiteExecution(owner_email=owner_email,
+                                catalog_name=catalog_name,
+                                instance_name=instance_name,
+                                suite_execution_id=suite_execution.execution_id)
+    cse.save()
+    result["status"] = True
     return HttpResponse(json.dumps(result))
 
 def catalogs_summary(request):

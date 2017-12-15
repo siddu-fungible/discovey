@@ -1,1 +1,2 @@
-print reduce(lambda x, y: x * y, range(1, 6))
+import os
+print os.system("cat ~/.bash_rc")

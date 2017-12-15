@@ -1,6 +1,6 @@
 from django.contrib import admin
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer
-from web.fun_test.models import CatalogTestCase, CatalogSuite
+from web.fun_test.models import CatalogTestCase, CatalogSuite, CatalogSuiteExecution
 
 @admin.register(SuiteExecution)
 class SuiteExecutionAdmin(admin.ModelAdmin):
@@ -25,4 +25,8 @@ class CatalogSuiteAdmin(admin.ModelAdmin):
 
 @admin.register(Engineer)
 class EngineerAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(CatalogSuiteExecution)
+class CatalogSuiteExecutionAdmin(admin.ModelAdmin):
     pass

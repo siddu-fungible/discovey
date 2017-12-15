@@ -64,7 +64,9 @@ class FunTestCase1(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        dut_instance = fun_test.shared_variables["topology"].get_dut_instance(index=0)
+        fun_test.scp(source_ip=dut_instance.host_ip, source_file_path=dut_instance.F1_LOG, source_username=dut_instance.ssh_username, source_password=dut_instance.ssh_password, source_port=dut_instance.ssh_port, target_file_path="/tmp/john.log.txt")
+
 
     def run(self):
         dut_instance = fun_test.shared_variables["topology"].get_dut_instance(index=0)
