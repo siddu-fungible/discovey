@@ -153,11 +153,16 @@ class FunTest:
         if function_name != "UNCHANGED":
             self.log_function_name = function_name
 
-    def create_test_case_artifact_file(self, post_fix_name, contents):
-        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+    def create_test_case_artifact_file(self, contents, post_fix_name=None, artifact_file=None):
+        if not artifact_file:
+            artifact_file = self.get_test_case_artifact_file_name(post_fix_name=post_fix_name)
         with open(artifact_file, "w") as f:
             f.write(contents)
         return os.path.basename(artifact_file)
+
+    def get_test_case_artifact_file_name(self, post_fix_name):
+        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        return artifact_file
 
     def enable_pause_on_failure(self):
         if not is_regression_server():
@@ -585,6 +590,10 @@ class FunTest:
         for entry in test_script().test_case_order:
             print entry["tc"]
         '''
+
+    def add_auxillary_file(self, description, filename):
+        base_name = os.path.basename(filename)
+        self.fun_xml_obj.add_auxillary_file(description=description, auxillary_file=base_name)
 
     def scp(self,
             source_file_path,

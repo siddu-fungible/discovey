@@ -148,7 +148,28 @@ class TopologyPageContent:
     def set_topology_json_filename(self, filename):
         json_editor = GenericElement("div", id="topology-json")
         json_editor.set_attribute(attribute="data-path", attribute_value=filename)
+        json_editor.text = " "
         self.tree.append(json_editor)
+
+class AuxPageContent:
+    def __init__(self):
+        self.tree = GenericElement("div", id="aux", class_name="tab-pane")
+        self.ul = GenericElement("ul")
+        self.ul.text = " "
+        self.tree.text = ""
+        self.tree.append(self.ul)
+
+    def get(self):
+        return self.tree
+
+    def add_file(self, description, filename):
+        li = GenericElement("li")
+        a = GenericElement("a")
+        a.set_attribute("href", filename)
+        a.set_attribute("target", "_blank")
+        a.text = description
+        li.append(a)
+        self.ul.append(li)
 
 class ScriptContent:
     def __init__(self):
@@ -819,11 +840,14 @@ class FunXml:
         page_tab2 = self.get_page_tab(name="Documentation", index=2, href_id="#documentation")
         page_tab3 = self.get_page_tab(name="Script", index=3, href_id="#script")
         page_tab4 = self.get_page_tab(name="Topology", index=4, href_id="#topology")
+        page_tab5 = self.get_page_tab(name="Aux", index=5, href_id="#aux")
+
 
         self.nav_tab.append(page_tab1)
         self.nav_tab.append(page_tab2)
         self.nav_tab.append(page_tab3)
         self.nav_tab.append(page_tab4)
+        self.nav_tab.append(page_tab5)
         tabs_wrapper.append(self.nav_tab)
 
         self.tab_content = GenericElement("div", class_name="tab-content card")
@@ -833,13 +857,14 @@ class FunXml:
                                                variants=self.variants)
 
         self.script_page_content = ScriptContent()
-
         self.topology_page_content = TopologyPageContent()
+        self.aux_page_content = AuxPageContent()
 
         self.tab_content.append(self.result_page_content.get())
         self.tab_content.append(self.documentation_page_content.get())
         self.tab_content.append(self.script_page_content.get())
         self.tab_content.append(self.topology_page_content.get())
+        self.tab_content.append(self.aux_page_content.get())
 
         self.body = GenericElement('body')
         # self.body.set("ng-app", NG_APP_NAME)
@@ -861,6 +886,9 @@ class FunXml:
 
         self.summary_chart = summary_chart
         self.ts = None
+
+    def add_auxillary_file(self, description, auxillary_file):
+        self.aux_page_content.add_file(description=description, filename=auxillary_file)
 
     def get_page_tab(self, name, index, href_id):
         if index == 1:

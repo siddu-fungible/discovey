@@ -3,6 +3,7 @@
 *.log
 fun_test/web/static/logs/*.html
 fun_test/web/static/logs/*json
+fun_test/scripts/scratch/*.py
 .DS_Store
 fun_test/web/static/logs/scheduler.*
 fun_test/web/static/logs/s_*
