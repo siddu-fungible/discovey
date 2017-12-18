@@ -118,6 +118,7 @@ def catalog_suite_execution_details(request, instance_name):
             info = {}
             info["execution_id"] = te.execution_id
             info["test_bed"] = te.test_bed
+            info["execution_id"] = te.execution_id
             info["suite_execution_id"] = te.catalog_suite_execution_id
             info["owner"] = te.engineer.short_name
             info["result"] = TestCaseExecution.objects.get(execution_id=te.execution_id).result

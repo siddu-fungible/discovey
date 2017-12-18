@@ -12,7 +12,7 @@
                 <tr ng-repeat="(jiraId, info) in executionDetails">
                     <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
                     <td>{{ info.summary }}</td>
-                    <td>PASSED</td>
+                    <td>UNKNOWN</td>
                     <td>
                         <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable" href="#">Details</a>
                         <table class="table collapse" id="info-table-{{ $index }}">
@@ -20,12 +20,19 @@
                                 <th >Owner</th>
                                 <th>TestBed</th>
                                 <th>Result</th>
+                                <th>Result Override</th>
                             </tr>
                             <tbody>
                                 <tr ng-repeat="instance in info.instances">
                                     <td>{{ instance.owner }}</td>
                                     <td>{{ instance.test_bed }}</td>
                                     <td>{{ instance.result }}</td>
+                                    <td>
+                                        <select ng-options="option for option in overrideOptions" ng-model="selectedOverride">
+                                        </select>
+                                        <button ng-click="overrideSubmitClick(jiraId, $index, instance.execution_id, selectedOverride)">Submit
+                                        </button>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

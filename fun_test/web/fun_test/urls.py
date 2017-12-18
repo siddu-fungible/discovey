@@ -39,7 +39,8 @@ regression_urls = [
     url(r'^static_serve_log_directory/(\d+)$', regression_views.static_serve_log_directory),
     url(r'^kill_job/(\d+)$', regression_views.kill_job),
     url(r'^tags', regression_views.tags),
-    url(r'^engineers', regression_views.engineers)
+    url(r'^engineers', regression_views.engineers),
+    url(r'^update_test_case_execution$', regression_views.update_test_case_execution)
 ]
 
 tcm_urls = [

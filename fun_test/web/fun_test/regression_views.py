@@ -176,3 +176,15 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
 
 def log_path(request):
     return HttpResponse(LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX)
+
+@csrf_exempt
+def update_test_case_execution(request):
+    result = initialize_result(failed=True)
+    request_json = json.loads(request.body)
+    override_result = request_json["override_result"]
+    execution_id = int(request_json["execution_id"])
+    te = TestCaseExecution.objects.get(execution_id=execution_id)
+    te.result = override_result
+    te.save()
+    result["status"] = True
+    return HttpResponse(json.dumps(result))

@@ -133,7 +133,6 @@
         }
 
         function apiGet (url, message) {
-            let data = null;
             return $http.get(url).then(function (result) {
                 let data = null;
                 if (validateApiResult(result, message)) {
@@ -143,7 +142,7 @@
             });
 
         }
-        
+
         function apiPost (url, payload, message) {
             return $http.post(url, payload).then(function (result) {
                 let data = null;

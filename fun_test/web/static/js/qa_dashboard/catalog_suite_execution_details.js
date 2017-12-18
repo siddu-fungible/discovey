@@ -7,6 +7,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, commonSe
 
     ctrl.$onInit = function () {
         $scope.fetchCatalogSuiteExecutionDetails();
+        $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
     };
 
     $scope.fetchBasicIssueAttributes = function () {
@@ -39,7 +40,18 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, commonSe
         });
     };
 
+    $scope.overrideSubmitClick = function (testCaseId, instanceIndex, executionId, overrideOption) {
+        if(!overrideOption) {
+            return commonService.showError("Please select an override option");
+        }
+        let payload = {};
+        payload["execution_id"] = executionId;
+        payload["override_result"] = overrideOption;
+        commonService.apiPost("/regression/update_test_case_execution", payload).then(function (data) {
+            $scope.executionDetails[parseInt(testCaseId)].instances[instanceIndex].result = overrideOption;
+        })
 
+    }
 
 }
 
