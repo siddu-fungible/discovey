@@ -113,7 +113,7 @@ def catalog_suite_execution_details(request, instance_name):
             if te.jira_id not in payload:
                 payload[te.jira_id] = {}
                 payload[te.jira_id]["instances"] = []
-                payload[te.jira_id]["summary"] = JiraManager().get_issue_attributes_by_id(id=te.jira_id)["summary"]
+                # payload[te.jira_id]["summary"] = JiraManager().get_issue_attributes_by_id(id=te.jira_id)["summary"]
             instances = payload[te.jira_id]["instances"]
             info = {}
             info["execution_id"] = te.execution_id
@@ -135,6 +135,20 @@ def catalog_suite_execution_details(request, instance_name):
 
 def catalog_suite_execution_details_page(request, instance_name):
     return render(request, 'qa_dashboard/catalog_execution_details_page.html', locals())
+
+@csrf_exempt
+def basic_issue_attributes(request):
+    result = initialize_result(failed=True)
+    request_json = json.loads(request.body)
+    logger.info("basic_issue_attributes: " + str(request_json))
+    jira_ids = request_json
+    try:
+        issue_attributes = JiraManager().get_basic_issue_attributes_by_ids(ids=jira_ids)
+        result["data"] = issue_attributes
+        result["status"] = True
+    except Exception as ex:
+        result["error_message"] = str(ex)
+    return HttpResponse(json.dumps(result))
 
 def catalogs_summary(request):
     result = initialize_result(failed=True)

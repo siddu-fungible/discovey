@@ -9,6 +9,21 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, commonSe
         $scope.fetchCatalogSuiteExecutionDetails();
     };
 
+    $scope.fetchBasicIssueAttributes = function () {
+        let message = "fetchBasicIssueAttributes";
+        let jira_ids = [];
+        angular.forEach($scope.executionDetails, function (value, key) {
+            jira_ids.push(key);
+        });
+        commonService.apiPost("/tcm/basic_issue_attributes", jira_ids, message).then(function (issuesAttributes) {
+            if(issuesAttributes) {
+                angular.forEach($scope.executionDetails, function (value, key) {
+                    value.summary = issuesAttributes[parseInt(key)].summary;
+                });
+            }
+        });
+    };
+
     $scope.fetchCatalogSuiteExecutionDetails = function () {
         let message = "fetchCatalogSuiteExecutionDetails";
         $http.get('/tcm/catalog_suite_execution_details/' + ctrl.instanceName).then(function (result) {
@@ -16,11 +31,15 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, commonSe
                 return;
             }
             $scope.executionDetails = result["data"]["data"];
-            let i = 0;
+
+            // Fetch basic issue attributes
+            return $scope.fetchBasicIssueAttributes();
         }).catch(function (result) {
             return commonService.showHttpError(message, result);
         });
-    }
+    };
+
+
 
 }
 

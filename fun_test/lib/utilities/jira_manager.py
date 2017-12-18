@@ -85,6 +85,7 @@ class JiraManager:
         return self.get_issues_by_jql("component={}".format(component))
 
     def get_issues_by_jql(self, jql):
+        logger.info("JQL: {}".format(jql))
         result = self.jira.search_issues(jql_str=jql)
         return result
 
@@ -102,6 +103,23 @@ class JiraManager:
         if project:
             components = self.jira.project_components(project=self.project_name)
         return components
+
+    def _get_jql_for_ids(self, ids):
+        s = ""
+        if len(ids):
+            s = "id={}-{}".format(self.project_name, ids[0])
+            for id in ids[1:]:
+                s += " or id={}-{}".format(self.project_name, id)
+        return s
+
+    def get_basic_issue_attributes_by_ids(self, ids):
+        jql = self._get_jql_for_ids(ids=ids)
+        issues = self.get_issues_by_jql(jql)
+        issue_attributes = {}
+        for issue in issues:
+            attributes = self.get_issue_attributes_by_issue(issue)
+            issue_attributes[attributes["id"]] = attributes
+        return issue_attributes
 
 if __name__ == "__main__":
     from lib.system.fun_test import FunTimer

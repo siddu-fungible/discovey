@@ -73,8 +73,8 @@
         }
     }]);
 
-    app.factory('commonService', ["$rootScope", "$timeout", function ($rootScope, $timeout) {
-        function validateApiResult(apiResult, message) {
+    app.factory('commonService', ["$rootScope", "$timeout", "$http", function ($rootScope, $timeout, $http) {
+        function validateApiResult (apiResult, message) {
             let result = false;
             let data = apiResult["data"];
             if (!data["status"]) {
@@ -84,7 +84,7 @@
             }
             return result;
         }
-        function showError(message, timeout) {
+        function showError (message, timeout) {
             $rootScope.showCommonError = true;
             $rootScope.commonErrorMessage = message;
             let t = 10000;
@@ -99,7 +99,7 @@
             }, t);
         }
 
-        function showHttpError(message, result, timeout) {
+        function showHttpError (message, result, timeout) {
             let errorMessage = message + " " + result;
             if (result.data) {
                 errorMessage = message + " :" + result.data;
@@ -110,7 +110,7 @@
             showError(errorMessage, timeout);
         }
 
-        function showSuccess(message, timeout) {
+        function showSuccess (message, timeout) {
             $rootScope.showCommonSuccess = true;
             $rootScope.commonSuccessMessage = message;
             let t = 10000;
@@ -127,18 +127,41 @@
 
         }
 
-        function closeAllAlerts() {
+        function closeAllAlerts () {
             $rootScope.showCommonError = false;
             $rootScope.showCommonSuccess = false;
         }
 
+        function apiGet (url, message) {
+            let data = null;
+            return $http.get(url).then(function (result) {
+                let data = null;
+                if (validateApiResult(result, message)) {
+                    data = result.data.data;
+                }
+                return data;
+            });
+
+        }
+        
+        function apiPost (url, payload, message) {
+            return $http.post(url, payload).then(function (result) {
+                let data = null;
+                if (validateApiResult(result, message)) {
+                    data = result.data.data;
+                }
+                return data;
+            });
+        }
 
         return {
             showError: showError,
             showSuccess: showSuccess,
             closeAllAlerts: closeAllAlerts,
             showHttpError: showHttpError,
-            validateApiResult: validateApiResult
+            validateApiResult: validateApiResult,
+            apiGet: apiGet,
+            apiPost: apiPost
         };
 
     }]);

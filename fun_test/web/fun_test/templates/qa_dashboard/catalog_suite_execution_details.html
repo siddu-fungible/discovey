@@ -8,38 +8,30 @@
                 <th>Result</th>
                 <th>Info</th>
             </tr>
-            <tr ng-repeat="(jiraId, info) in executionDetails">
-                <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
-                <td>{{ info.summary }}</td>
-                <td>PASSED</td>
-                <td>
-                    <div class="panel panel-default">
-                        <div class="panel-heading active" role="tab">
-                            <h4 class="panel-title">
-                                <a role="button" data-toggle="collapse" href="#index-table-{{ $index }}">
-                                    Details
-                                </a>
-                            </h4>
-                        </div>
-                        <div id="index-table-{{ $index }}" class="panel-collapse collapse" role="tabpanel">
-                            <table class="table">
-                                <tr>
-                                    <th>Owner</th>
-                                    <th>TestBed</th>
-                                    <th>Result</th>
-                                </tr>
-                                <tbody>
+            <tbody id="suite-execution-details-table">
+                <tr ng-repeat="(jiraId, info) in executionDetails">
+                    <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
+                    <td>{{ info.summary }}</td>
+                    <td>PASSED</td>
+                    <td>
+                        <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable" href="#">Details</a>
+                        <table class="table collapse" id="info-table-{{ $index }}">
+                            <tr>
+                                <th >Owner</th>
+                                <th>TestBed</th>
+                                <th>Result</th>
+                            </tr>
+                            <tbody>
                                 <tr ng-repeat="instance in info.instances">
                                     <td>{{ instance.owner }}</td>
                                     <td>{{ instance.test_bed }}</td>
                                     <td>{{ instance.result }}</td>
                                 </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </td>
-            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
         </table>
     </div>
 </div>
