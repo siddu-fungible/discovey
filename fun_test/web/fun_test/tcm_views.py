@@ -7,11 +7,13 @@ from web_global import initialize_result
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager
-from web.fun_test.models import CatalogSuite, CatalogTestCase, CatalogSuiteExecution
+from web.fun_test.models import CatalogSuite, CatalogTestCase, CatalogSuiteExecution, CatalogTestCaseExecution
+from web.fun_test.models import TestBed, Engineer, TestCaseExecution
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
-from web.fun_test.models_helper import add_suite_execution
+from web.fun_test.models_helper import add_suite_execution, add_test_case_execution
 from fun_global import get_current_time
+from django.core import serializers
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -75,8 +77,64 @@ def execute_catalog(request):
                                 instance_name=instance_name,
                                 suite_execution_id=suite_execution.execution_id)
     cse.save()
+
+    test_cases = CatalogSuite.objects.get(name=catalog_name).test_cases.all()
+    for test_case in test_cases:
+        test_case_execution = add_test_case_execution(test_case_id=test_case.jira_id,
+                                                      suite_execution_id=suite_execution.execution_id,
+                                                      path="")
+        cte = CatalogTestCaseExecution(jira_id=test_case.jira_id,
+                                       execution_id=test_case_execution.execution_id,
+                                       catalog_suite_execution_id=cse.suite_execution_id,
+                                       engineer=Engineer.objects.get(email=owner_email),
+                                       test_bed=TestBed.objects.get(name="simulation"))
+        cte.save()
     result["status"] = True
     return HttpResponse(json.dumps(result))
+
+def catalog_executions(request, catalog_name):
+    return render(request, 'qa_dashboard/catalog_execution_page.html', locals())
+
+@csrf_exempt
+def catalog_suite_execution_summary(request, catalog_name):
+    result = initialize_result(failed=True)
+    result["status"] = True
+    result["data"] = json.loads(serializers.serialize('json', CatalogSuiteExecution.objects.filter(catalog_name=catalog_name))) #TODO: Really stupid
+    return HttpResponse(json.dumps(result))
+
+def catalog_suite_execution_details(request, instance_name):
+    result = initialize_result(failed=True)
+    try:
+        suite_execution = CatalogSuiteExecution.objects.get(instance_name=instance_name)
+        logger.info("Retrieved suite execution id: {}".format(suite_execution.suite_execution_id))
+        tex = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution.suite_execution_id)
+        payload = {}
+        for te in tex:
+            if te.jira_id not in payload:
+                payload[te.jira_id] = {}
+                payload[te.jira_id]["instances"] = []
+                payload[te.jira_id]["summary"] = JiraManager().get_issue_attributes_by_id(id=te.jira_id)["summary"]
+            instances = payload[te.jira_id]["instances"]
+            info = {}
+            info["execution_id"] = te.execution_id
+            info["test_bed"] = te.test_bed
+            info["suite_execution_id"] = te.catalog_suite_execution_id
+            info["owner"] = te.engineer.short_name
+            info["result"] = TestCaseExecution.objects.get(execution_id=te.execution_id).result
+            instances.append(info)
+
+        result["data"] = payload
+        result["status"] = True
+    except ObjectDoesNotExist as ex:
+        result["error_message"] = "Unable to retrieve CatalogSuiteExecution for instance {} : {}".format(instance_name,
+                                                                                                         str(ex))
+    except Exception as ex:
+        result["error_message"] = "Unable to retrieve CatalogSuiteExecution for instance {} : {}".format(instance_name,
+                                                                                                         str(ex))
+    return HttpResponse(json.dumps(result))
+
+def catalog_suite_execution_details_page(request, instance_name):
+    return render(request, 'qa_dashboard/catalog_execution_details_page.html', locals())
 
 def catalogs_summary(request):
     result = initialize_result(failed=True)
@@ -91,7 +149,9 @@ def catalogs_summary(request):
         for matching_suite in matching_suites:
             test_cases = matching_suite.test_cases
             test_case_count = test_cases.count()
-            catalog_info = {"name": matching_suite.name, "tc_count": test_case_count}
+            catalog_info = {"name": matching_suite.name,
+                            "tc_count": test_case_count,
+                            "execution_count": CatalogSuiteExecution.objects.filter(catalog_name=matching_suite.name).count()}
             catalog_summary[category]["catalogs"].append(catalog_info)
     result["data"] = catalog_summary
     return HttpResponse(json.dumps(result))

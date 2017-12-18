@@ -28,7 +28,7 @@ let funFieldComponent = {"name": "funField", "info": funFieldComponentInfo};
 
 
 
-function FunFieldController($scope, commonAlert) {
+function FunFieldController($scope, commonService) {
     let ctrl = this;
 
     this.$onInit = function () {
@@ -55,7 +55,7 @@ function FunFieldController($scope, commonAlert) {
         } else if(ctrl.type === "text") {
             let result = validateText();
         }
-        commonAlert.closeAllAlerts();
+        commonService.closeAllAlerts();
     };
 
     let validateNumber = function () {

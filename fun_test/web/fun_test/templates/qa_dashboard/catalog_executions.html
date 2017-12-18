@@ -1,0 +1,19 @@
+<div class="panel panel-primary">
+    <div class="panel-heading">{{ $ctrl.catalogName }}</div>
+    <div class="panel-body">
+        <table class="table table-nonfluid">
+            <tr>
+                <th>Instance Name</th>
+                <th>Owner</th>
+                <th>Id</th>
+                <th>Details</th>
+            </tr>
+            <tr ng-repeat="summaryEntry in catalogExecutionSummary">
+                <td>{{ summaryEntry.fields.instance_name }}</td>
+                <td>{{ summaryEntry.fields.owner_email }}</td>
+                <td>{{ summaryEntry.fields.suite_execution_id }}</td>
+                <td><a href="/tcm/catalog_suite_execution_details_page/{{ summaryEntry.fields.instance_name }}">Details</a></td>
+            </tr>
+        </table>
+    </div>
+</div>

@@ -35,11 +35,13 @@
                     <th>
                         TC Count
                     </th>
+                    <th>
+                        Executions
+                    </th>
                 </tr>
                 <tr ng-repeat="catalog in summary.catalogs">
                     <td>
                         <input type="radio" ng-model="$parent.$parent.$parent.selectedCatalog" value="{{ catalog.name }}"/>
-                        {{ selectedCatalog }}
                     </td>
                     <td><button class="btn btn-sm" ng-click="removeClick(catalog.name)"><i class="fa fa-trash-o fa-1x" style="font-size:20px; color: red"></i></button></td>
                     <td class="fun-center">
@@ -47,6 +49,9 @@
                     </td>
                     <td>
                         {{ catalog.tc_count }}
+                    </td>
+                    <td>
+                        <a href="/tcm/catalog_executions/{{ catalog.name }}">{{ catalog.execution_count }}</a>
                     </td>
                 </tr>
             </table>

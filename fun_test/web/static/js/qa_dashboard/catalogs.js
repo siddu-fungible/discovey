@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function CatalogsController($scope, $http, $window, $timeout, commonService, commonAlert) {
+    function CatalogsController($scope, $http, $window, $timeout, commonService) {
         let ctrl = this;
 
         ctrl.$onInit = function () {
@@ -26,7 +26,7 @@
                 });
 
             }).catch(function (result) {
-                commonAlert.showHttpError("Unable to fetch owners", result)
+                commonService.showHttpError("Unable to fetch owners", result)
             });
         };
 
@@ -35,7 +35,7 @@
                 $scope.categories = angular.fromJson(result.data);
 
             }).catch(function (result) {
-                commonAlert.showError("Unable to retrieve catalog categories: " + result.toString());
+                commonService.showError("Unable to retrieve catalog categories: " + result.toString());
             })
         };
 
@@ -43,13 +43,13 @@
             $http.get("/tcm/catalogs_summary").then(function (result) {
                 let data = result["data"];
                 if(!data["status"]) {
-                    commonAlert.showHttpError("Unable to get catalog summaries", result);
+                    commonService.showHttpError("Unable to get catalog summaries", result);
                     return;
                 }
                 $scope.summaries = data.data;
 
             }).catch(function (result) {
-                commonAlert.showHttpError("Unable to retrieve catalog summaries: ", result);
+                commonService.showHttpError("Unable to retrieve catalog summaries: ", result);
             })
         };
 
@@ -58,15 +58,15 @@
                 $http.get("/tcm/remove_catalog/" + catalogName).then(function (result) {
                     let data = result["data"];
                     if(!data["status"]) {
-                        commonAlert.showHttpError("Unable to remove", result);
+                        commonService.showHttpError("Unable to remove", result);
                         return;
                     }
-                    commonAlert.showSuccess("Removing catalog... Please wait", -1);
+                    commonService.showSuccess("Removing catalog... Please wait", -1);
                     $timeout(function () {
                         $window.location.reload();
                     }, 3000);
                 }).catch(function (result) {
-                    commonAlert.showHttpError("Unable to remove catalog: ", result);
+                    commonService.showHttpError("Unable to remove catalog: ", result);
                 })
             }
         };
@@ -78,10 +78,10 @@
         $scope.executeSubmitClick = function () {
             console.log($scope.selectedOwner);
             if (!$scope.selectedOwner) {
-                return commonAlert.showError("Please choose an owner");
+                return commonService.showError("Please choose an owner");
             }
             if (!$scope.instanceName) {
-                return commonAlert.showError("Please enter an instance name");
+                return commonService.showError("Please enter an instance name");
             }
             let payload = {};
             payload["name"] = $scope.selectedCatalog;
@@ -91,10 +91,10 @@
                 if (!commonService.validateApiResult(result, "Execute catalog")) {
                     return;
                 }
-                commonAlert.showSuccess("Catalog execution instance created");
+                commonService.showSuccess("Catalog execution instance created");
 
             }).catch(function (result) {
-                return commonAlert.showHttpError("Execute catalog", result);
+                return commonService.showHttpError("Execute catalog", result);
             });
         };
 

@@ -73,8 +73,17 @@
         }
     }]);
 
-    app.factory('commonAlert', ["$rootScope", "$timeout", function ($rootScope, $timeout) {
-
+    app.factory('commonService', ["$rootScope", "$timeout", function ($rootScope, $timeout) {
+        function validateApiResult(apiResult, message) {
+            let result = false;
+            let data = apiResult["data"];
+            if (!data["status"]) {
+                showError("Error: " + message + " " + data["error_message"]);
+            } else {
+                result = true;
+            }
+            return result;
+        }
         function showError(message, timeout) {
             $rootScope.showCommonError = true;
             $rootScope.commonErrorMessage = message;
@@ -123,28 +132,12 @@
             $rootScope.showCommonSuccess = false;
         }
 
+
         return {
             showError: showError,
             showSuccess: showSuccess,
             closeAllAlerts: closeAllAlerts,
             showHttpError: showHttpError,
-        };
-    }]);
-
-    app.factory('commonService', ["$rootScope", function ($rootScope) {
-        function validateApiResult(apiResult, message) {
-            let result = false;
-            let data = apiResult["data"];
-            if (!data["status"]) {
-                $rootScope.commonAlert("Error: " + message + " " + data["error_message"]);
-            } else {
-                result = true;
-            }
-            return result;
-        }
-
-
-        return {
             validateApiResult: validateApiResult
         };
 

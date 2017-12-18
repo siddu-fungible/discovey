@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/catalog_suite_execution_details.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+    <catalog-suite-execution-details instance-name="{{ instance_name }}"></catalog-suite-execution-details>
+ </div>
+{% endblock %}

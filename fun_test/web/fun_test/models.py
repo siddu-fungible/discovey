@@ -19,6 +19,13 @@ class CatalogTestCase(models.Model):
     def __str__(self):
         return str(self.jira_id)
 
+class TestBed(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return "{} {}".format(self.name, self.description)
+
 
 class CatalogSuite(models.Model):
     category = models.CharField(max_length=20,
@@ -92,19 +99,22 @@ class Engineer(models.Model):
 class CatalogSuiteExecution(models.Model):
     suite_execution_id = models.IntegerField(unique=True)
     owner_email = models.EmailField()
-    instance_name = models.CharField(max_length=50)
-    catalog_name = models.TextField(default="UNKNOWN", unique=True)
+    instance_name = models.CharField(max_length=50, unique=True)
+    catalog_name = models.TextField(default="UNKNOWN")
 
     def __str__(self):
         return "{} {} {}".format(self.suite_execution_id, self.owner_email, self.instance_name)
 
 class CatalogTestCaseExecution(models.Model):
     execution_id = models.IntegerField(unique=True)
+    catalog_suite_execution_id = models.IntegerField(default=0)
     jira_id = models.IntegerField()
     engineer = models.ForeignKey(Engineer)
+    test_bed = models.CharField(max_length=100, default="simulation")
+    # result
 
     def __str__(self):
-        return "{} {} {}".format(self.execution_id, self.jira_id, self.engineer)
+        return "{} {} {} {}".format(self.execution_id, self.jira_id, self.engineer, self.test_bed)
 
 
 if __name__ == "__main__":

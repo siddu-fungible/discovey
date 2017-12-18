@@ -1,0 +1,45 @@
+<div class="panel panel-primary">
+    <div class="panel-heading">{{ $ctrl.instanceName }}</div>
+    <div class="panel-body">
+        <table class="table table-nonfluid">
+            <tr>
+                <th>Jira Id</th>
+                <th>Summary</th>
+                <th>Result</th>
+                <th>Info</th>
+            </tr>
+            <tr ng-repeat="(jiraId, info) in executionDetails">
+                <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
+                <td>{{ info.summary }}</td>
+                <td>PASSED</td>
+                <td>
+                    <div class="panel panel-default">
+                        <div class="panel-heading active" role="tab">
+                            <h4 class="panel-title">
+                                <a role="button" data-toggle="collapse" href="#index-table-{{ $index }}">
+                                    Details
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="index-table-{{ $index }}" class="panel-collapse collapse" role="tabpanel">
+                            <table class="table">
+                                <tr>
+                                    <th>Owner</th>
+                                    <th>TestBed</th>
+                                    <th>Result</th>
+                                </tr>
+                                <tbody>
+                                <tr ng-repeat="instance in info.instances">
+                                    <td>{{ instance.owner }}</td>
+                                    <td>{{ instance.test_bed }}</td>
+                                    <td>{{ instance.result }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

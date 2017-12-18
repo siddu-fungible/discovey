@@ -1,4 +1,4 @@
-function SuitesTableController($scope, $http, resultToClass, $window, PagerService, commonAlert, trimTime) {
+function SuitesTableController($scope, $http, resultToClass, $window, PagerService, commonService, trimTime) {
     let ctrl = this;
 
     $scope.resultToClass = function (result) {
@@ -50,7 +50,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
     };
 
     $scope.test = function() {
-        commonAlert.showSuccess("john");
+        commonService.showSuccess("john");
     };
 
     $scope.trimTime = function (t) {

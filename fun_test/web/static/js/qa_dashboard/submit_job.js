@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function SubmitJob($scope, $http, $window, commonAlert) {
+    function SubmitJob($scope, $http, $window, commonService) {
         let ctrl = this;
 
         ctrl.$onInit = function () {
@@ -28,7 +28,7 @@
                 });
 
             }).catch(function(result) {
-                commonAlert.showError("Unable to fetch tags");
+                commonService.showError("Unable to fetch tags");
             });
 
         };
@@ -45,7 +45,7 @@
 
                 if($scope.scheduleInMinutesRadio) {
                     if(!$scope.scheduleInMinutes) {
-                        commonAlert.showError("Please enter the schedule in minutes value");
+                        commonService.showError("Please enter the schedule in minutes value");
                     } else {
                         payload["schedule_in_minutes"] = $scope.scheduleInMinutes;
                         payload["schedule_in_minutes_repeat"] = $scope.scheduleInMinutesRepeat;
@@ -54,7 +54,7 @@
 
                 } else {
                     if(!$scope.scheduleAt) {
-                        commonAlert.showError("Please enter the schedule at value");
+                        commonService.showError("Please enter the schedule at value");
                         return;
                     } else {
                         payload["schedule_at"] = $scope.scheduleAt;
@@ -87,7 +87,7 @@
 
         $scope.submitClick = function (formIsValid) {
             if(!formIsValid) {
-               commonAlert.showError("Form is invalid");
+               commonService.showError("Form is invalid");
                return;
             }
             console.log($scope.selectedSuite);
@@ -103,9 +103,9 @@
             $http.post('/regression/submit_job', payload).then(function(result){
                 $scope.jobId = parseInt(result.data);
                 $window.location.href = "/regression/suite_detail/" + $scope.jobId;
-                commonAlert.showSuccess("Job " + $scope.jobId + " Submitted");
+                commonService.showSuccess("Job " + $scope.jobId + " Submitted");
             }).catch(function(result) {
-                commonAlert.showError("Unable to submit job");
+                commonService.showError("Unable to submit job");
             });
         }
 

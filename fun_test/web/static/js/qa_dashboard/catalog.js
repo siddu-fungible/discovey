@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function CatalogController($scope, $http, commonAlert) {
+    function CatalogController($scope, $http, commonService) {
         let ctrl = this;
 
         ctrl.$onInit = function () {
@@ -26,7 +26,7 @@
 
                 let data = result.data;
                 if(!data["status"]) {
-                    commonAlert.showError("Catalog fetch failed: " + data["error_message"]);
+                    commonService.showError("Catalog fetch failed: " + data["error_message"]);
                     return;
                 }
                 $scope.currentCatalog = result.data.data;
@@ -37,7 +37,7 @@
                 });
 
             }).catch(function(result) {
-                commonAlert.showError("Unable to fetch catalog." + result.data.toString());
+                commonService.showError("Unable to fetch catalog." + result.data.toString());
             });
         };
 
@@ -47,16 +47,16 @@
 
         $scope.removeClick = function (jqlIndex) {
 
-            commonAlert.closeAllAlerts();
+            commonService.closeAllAlerts();
             console.log(jqlIndex);
             if (jqlIndex === 0) {
-                commonAlert.showError("Cannot remove index 0", 5000);
+                commonService.showError("Cannot remove index 0", 5000);
                 return;
             }
             let thisJql = $scope.jqls[jqlIndex];
             if (confirm("Are you sure you want to remove " + thisJql.value + " ?")) {
                 if ($scope.jqls.length < 2) {
-                    commonAlert.showError("At least one JQL is required", 5000);
+                    commonService.showError("At least one JQL is required", 5000);
                     return;
                 }
                 $scope.jqls.splice(jqlIndex, 1)
@@ -86,13 +86,13 @@
             $http.post("/tcm/preview_catalog", payload).then(function (result) {
                 let data = result.data;
                 if (!data["status"]) {
-                    commonAlert.showError("Catalog preview failed: " + data["error_message"]);
+                    commonService.showError("Catalog preview failed: " + data["error_message"]);
                     return;
                 }
                 $scope.currentCatalog = result.data.data;
                 $scope.validated = true;
             }).catch(function (result) {
-                commonAlert.showError("Unable to preview catalog. " + result.data.toString());
+                commonService.showError("Unable to preview catalog. " + result.data.toString());
 
             });
 
@@ -114,9 +114,9 @@
             payload["name"] = $scope.catalogName;
             payload["jqls"] = $scope.getJqlsWithOperator($scope.jqls);
             $http.post("/tcm/update_catalog", payload).then(function (result) {
-                commonAlert.showSuccess("Committed catalog");
+                commonService.showSuccess("Committed catalog");
             }).catch(function (result) {
-                commonAlert.showError("Unable to commit catalog. " + result.data.toString());
+                commonService.showError("Unable to commit catalog. " + result.data.toString());
             });
 
         }
