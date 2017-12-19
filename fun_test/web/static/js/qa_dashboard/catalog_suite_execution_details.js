@@ -2,7 +2,7 @@
 
 'use strict';
 
-function CatalogSuiteExecutionDetailsController($scope, $http, $window, commonService) {
+function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultToClass, commonService) {
     let ctrl = this;
 
     ctrl.$onInit = function () {
@@ -10,16 +10,32 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, commonSe
         $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
     };
 
+    $scope.resultToClass = function (result) {
+        return resultToClass(result);
+    };
+
     $scope.fetchBasicIssueAttributes = function () {
         let message = "fetchBasicIssueAttributes";
-        let jira_ids = [];
+        let jiraIds = [];
         angular.forEach($scope.executionDetails, function (value, key) {
-            jira_ids.push(key);
+            jiraIds.push(key);
         });
-        commonService.apiPost("/tcm/basic_issue_attributes", jira_ids, message).then(function (issuesAttributes) {
+        commonService.apiPost("/tcm/basic_issue_attributes", jiraIds, message).then(function (issuesAttributes) {
             if(issuesAttributes) {
                 angular.forEach($scope.executionDetails, function (value, key) {
                     value.summary = issuesAttributes[parseInt(key)].summary;
+                    value.components = issuesAttributes[parseInt(key)].components;
+                    let jiraId = null;
+                    if(Object.keys($scope.executionDetails)) {
+
+                    }
+                    jiraIds.forEach(function (jiraId) {
+                        let suiteExecutionId = $scope.executionDetails[jiraId].instances[0].suite_execution_id;
+                        commonService.apiGet("/regression/catalog_test_case_execution_summary_result/" + suiteExecutionId + "/" + jiraId).then(function (data) {
+                            $scope.executionDetails[jiraId].summaryResult = data;
+                        });
+                    });
+
                 });
             }
         });
@@ -47,8 +63,11 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, commonSe
         let payload = {};
         payload["execution_id"] = executionId;
         payload["override_result"] = overrideOption;
+        let thisTestCaseId = parseInt(testCaseId);
         commonService.apiPost("/regression/update_test_case_execution", payload).then(function (data) {
-            $scope.executionDetails[parseInt(testCaseId)].instances[instanceIndex].result = overrideOption;
+
+            $scope.executionDetails[thisTestCaseId].instances[instanceIndex].result = overrideOption;
+            $scope.executionDetails[thisTestCaseId].summaryResult = data;
         })
 
     }

@@ -5,6 +5,7 @@
             <tr>
                 <th>Jira Id</th>
                 <th>Summary</th>
+                <th>Components</th>
                 <th>Result</th>
                 <th>Info</th>
             </tr>
@@ -12,12 +13,15 @@
                 <tr ng-repeat="(jiraId, info) in executionDetails">
                     <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
                     <td>{{ info.summary }}</td>
-                    <td>UNKNOWN</td>
+                    <td>
+                        <label class="label label-primary" ng-repeat="component in info.components"> {{ component }}</label>
+                    </td>
+                    <td><label ng-if="info.summaryResult" class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
                     <td>
                         <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable" href="#">Details</a>
                         <table class="table collapse" id="info-table-{{ $index }}">
                             <tr>
-                                <th >Owner</th>
+                                <th>Owner</th>
                                 <th>TestBed</th>
                                 <th>Result</th>
                                 <th>Result Override</th>
@@ -30,7 +34,7 @@
                                     <td>
                                         <select ng-options="option for option in overrideOptions" ng-model="selectedOverride">
                                         </select>
-                                        <button ng-click="overrideSubmitClick(jiraId, $index, instance.execution_id, selectedOverride)">Submit
+                                        <button class="btn btn-primary btn-sm" ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">Submit
                                         </button>
                                     </td>
                                 </tr>

@@ -35,6 +35,7 @@ class CatalogSuite(models.Model):
     name = models.TextField(default="UNKNOWN", unique=True)
     test_cases = models.ManyToManyField(CatalogTestCase, blank=True)
 
+
     def __str__(self):
         s = "{} {}".format(self.category, self.name)
         return s
@@ -71,6 +72,7 @@ class TestCaseExecution(models.Model):
     result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="NOTRUN")
     started_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True)
+    overridden_result = models.BooleanField(default=False)
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
@@ -101,9 +103,10 @@ class CatalogSuiteExecution(models.Model):
     owner_email = models.EmailField()
     instance_name = models.CharField(max_length=50, unique=True)
     catalog_name = models.TextField(default="UNKNOWN")
+    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
 
     def __str__(self):
-        return "{} {} {}".format(self.suite_execution_id, self.owner_email, self.instance_name)
+        return "{} {} {} {}".format(self.suite_execution_id, self.owner_email, self.instance_name, self.result)
 
 class CatalogTestCaseExecution(models.Model):
     execution_id = models.IntegerField(unique=True)

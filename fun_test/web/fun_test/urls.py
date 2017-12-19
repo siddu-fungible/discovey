@@ -40,7 +40,9 @@ regression_urls = [
     url(r'^kill_job/(\d+)$', regression_views.kill_job),
     url(r'^tags', regression_views.tags),
     url(r'^engineers', regression_views.engineers),
-    url(r'^update_test_case_execution$', regression_views.update_test_case_execution)
+    url(r'^update_test_case_execution$', regression_views.update_test_case_execution),
+    url(r'^catalog_test_case_execution_summary_result/(.*)/(.*)$',
+        regression_views.catalog_test_case_execution_summary_result)
 ]
 
 tcm_urls = [

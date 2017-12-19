@@ -8,7 +8,8 @@ from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
-from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer
+from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
+from web.fun_test.models import CatalogSuiteExecution
 from web_global import initialize_result
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
@@ -162,7 +163,6 @@ def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-
     return render(request, 'qa_dashboard/suite_detail.html', locals())
 
 def test_case_execution(request, suite_execution_id, test_case_execution_id):
@@ -177,14 +177,54 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
 def log_path(request):
     return HttpResponse(LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX)
 
+def get_catalog_test_case_execution_summary_result(suite_execution_id, jira_id):
+    ctes = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution_id, jira_id=jira_id)
+    summary_result = RESULTS["UNKNOWN"]
+    te_count = ctes.count()
+    num_passed = 0
+    num_failed = 0
+    for cte in ctes:
+        te = TestCaseExecution.objects.get(execution_id=cte.execution_id)
+        if te.result == RESULTS["PASSED"]:
+            num_passed += 1
+        if te.result == RESULTS["FAILED"]:
+            num_failed += 1
+
+    if num_failed:
+        summary_result = RESULTS["FAILED"]
+    if num_passed == te_count:
+        summary_result = RESULTS["PASSED"]
+    if num_passed == 0:
+        summary_result = RESULTS["FAILED"]
+    return summary_result
+
+@csrf_exempt
+def catalog_test_case_execution_summary_result(request, suite_execution_id, jira_id):
+    result = initialize_result(failed=True)
+    try:
+        result["status"] = True
+        result["data"] = get_catalog_test_case_execution_summary_result(suite_execution_id=suite_execution_id,
+                                                                        jira_id=jira_id)
+    except Exception as ex:
+        result["error_message"] = str(ex)
+    return HttpResponse(json.dumps(result))
+
 @csrf_exempt
 def update_test_case_execution(request):
     result = initialize_result(failed=True)
     request_json = json.loads(request.body)
     override_result = request_json["override_result"]
     execution_id = int(request_json["execution_id"])
-    te = TestCaseExecution.objects.get(execution_id=execution_id)
-    te.result = override_result
-    te.save()
-    result["status"] = True
+    try:
+        te = TestCaseExecution.objects.get(execution_id=execution_id)
+        te.result = override_result
+        te.overridden_result = True
+        te.save()
+        suite_execution_id = te.suite_execution_id
+        summary_result = get_catalog_test_case_execution_summary_result(suite_execution_id=suite_execution_id, jira_id=te.test_case_id)
+        result["status"] = True
+        result["data"] = summary_result
+    except Exception as ex:
+        logger.critical(str(ex))
+
     return HttpResponse(json.dumps(result))
