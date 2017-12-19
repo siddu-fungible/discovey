@@ -8,10 +8,17 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
     ctrl.$onInit = function () {
         $scope.fetchCatalogSuiteExecutionDetails();
         $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
+        $scope.currentView = "all";
+        $scope.componentViewDetails = {};
     };
 
     $scope.resultToClass = function (result) {
         return resultToClass(result);
+    };
+
+    $scope.test = function () {
+        //console.log($scope.currentView);
+        console.log($scope.componentViewDetails);
     };
 
     $scope.fetchBasicIssueAttributes = function () {
@@ -38,6 +45,15 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
 
                 });
             }
+            angular.forEach(issuesAttributes, function (info, jiraId) {
+                let components = info.components;
+                let thisJiraId = jiraId;
+                components.forEach(function (component) {
+                    $scope._updateComponentViewDetails(component, thisJiraId);
+
+                });
+            });
+
         });
     };
 
@@ -56,6 +72,46 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         });
     };
 
+    $scope._resetComponentViewDetails = function (component) {
+        $scope.componentViewDetails[component]["numPassed"] = 0;
+        $scope.componentViewDetails[component]["numFailed"] = 0;
+        $scope.componentViewDetails[component]["numUnknown"] = 0;
+        $scope.componentViewDetails[component]["numTotal"] = 0;
+    };
+
+    $scope._updateComponentViewDetails = function (component, jiraId) {
+        if(!$scope.componentViewDetails.hasOwnProperty(component)) {
+            $scope.componentViewDetails[component] = {};
+            $scope._resetComponentViewDetails(component);
+            $scope.componentViewDetails[component]["jiraIds"] = {};
+
+        }
+
+        let instances = $scope.executionDetails[jiraId].instances;
+        let numPassed = 0;
+        let numFailed = 0;
+        let numUnknown = 0;
+        let numTotal = 0;
+        instances.forEach(function (instance) {
+            numTotal += 1;
+            if(instance.result === "PASSED") {
+                numPassed += 1;
+            }
+            if(instance.result === "FAILED") {
+                numFailed += 1;
+            }
+            if(instance.result === "UNKNOWN") {
+                numUnknown += 1;
+            }
+        });
+        $scope.componentViewDetails[component]["jiraIds"][jiraId] = $scope.executionDetails[jiraId].instances;
+        $scope.componentViewDetails[component]["numPassed"] += numPassed;
+        $scope.componentViewDetails[component]["numFailed"] += numFailed;
+        $scope.componentViewDetails[component]["numUnknown"] += numUnknown;
+        $scope.componentViewDetails[component]["numTotal"] += numTotal;
+
+    };
+
     $scope.overrideSubmitClick = function (testCaseId, instanceIndex, executionId, overrideOption) {
         if(!overrideOption) {
             return commonService.showError("Please select an override option");
@@ -68,6 +124,13 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
 
             $scope.executionDetails[thisTestCaseId].instances[instanceIndex].result = overrideOption;
             $scope.executionDetails[thisTestCaseId].summaryResult = data;
+            let components = $scope.executionDetails[thisTestCaseId].components;
+            components.forEach(function(component) {
+                $scope._resetComponentViewDetails(component);
+                angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, thisJiraId) {
+                    $scope._updateComponentViewDetails(component, thisJiraId);
+                });
+            });
         })
 
     }

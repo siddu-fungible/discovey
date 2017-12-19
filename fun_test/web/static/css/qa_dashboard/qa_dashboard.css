@@ -192,3 +192,25 @@ body {
 	-moz-transform: rotate(180deg);
 	transform: rotate(180deg);
 }
+
+.line-header {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    text-align: center;
+}
+
+.line-header:after {
+    position: absolute;
+    top: 51%;
+    overflow: hidden;
+    width: 50%;
+    height: 1px;
+    content: '\a0';
+    background-color: red;
+}
+/*
+h1:before {
+    margin-left: -50%;
+    text-align: right;
+}*/

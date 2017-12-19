@@ -1,7 +1,11 @@
+<input type="radio" name="view-radio" ng-model="currentView" value="all" >Show All
+<input type="radio" name="view-radio" ng-model="currentView" value="components">Components View
+
+<button ng-click="test()">Test</button>
 <div class="panel panel-primary">
     <div class="panel-heading">{{ $ctrl.instanceName }}</div>
-    <div class="panel-body">
-        <table class="table table-nonfluid">
+    <div class="panel-body" ng-switch="currentView">
+        <table ng-switch-when="all" class="table table-nonfluid">
             <tr>
                 <th>Jira Id</th>
                 <th>Summary</th>
@@ -44,5 +48,44 @@
                 </tr>
             </tbody>
         </table>
+        <div ng-switch-when="components">
+            <!--label class="label label-primary line-header" ng-repeat="(component, info) in componentViewDetails">{{ component }}</label -->
+            <table class="table">
+                <tr>
+                    <th>Component</th>
+                    <th>Total</th>
+                    <th>Passed</th>
+                    <th>Failed</th>
+                    <th>Unknown</th>
+                    <th>Progress</th>
+                    <th>Passed %</th>
+                    <th>Failed %</th>
+                    <th>Pending %</th>
+                </tr>
+                <tr ng-repeat="(component, info) in componentViewDetails">
+                    <td>
+                        {{ component }}
+                    </td>
+                    <td>
+                        {{ info.numTotal }}
+                    </td>
+                    <td>
+                        {{ info.numPassed }}
+                    </td>
+                    <td>
+                        {{ info.numFailed }}
+                    </td>
+                    <td>
+                        {{ info.numUnknown }}
+                    </td>
+                    <td>
+
+                    </td>
+                    <td>{{ info.numPassed * 100/info.numTotal }}</td>
+                    <td>{{ info.numFailed * 100/info.numTotal }}</td>
+                    <td>{{ (info.numTotal - (info.numPassed + info.numFailed + info.numUnknown))  * 100/info.numTotal }}</td>
+                </tr>
+            </table>
+        </div>
     </div>
 </div>
