@@ -269,7 +269,7 @@ class FunTest:
 
 
     def _get_module_name(self, outer_frames):
-        module_name = os.path.basename(outer_frames[0][1]).strip(".py")
+        module_name = os.path.basename(outer_frames[0][1]).replace(".py", "")
         line_number = outer_frames[0][2]
         return (module_name, line_number)
 
@@ -278,7 +278,7 @@ class FunTest:
         for f in outer_frames:
             if not f[1].endswith("fun_test.py"):
                 function_name = f[0].f_code.co_name
-                module_info = (os.path.basename(f[1]).strip(".py"), f[2], function_name)
+                module_info = (os.path.basename(f[1]).replace(".py", ""), f[2], function_name)
                 break
         return module_info
 
