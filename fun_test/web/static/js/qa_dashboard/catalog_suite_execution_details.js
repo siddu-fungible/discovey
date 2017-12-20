@@ -8,8 +8,10 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
     ctrl.$onInit = function () {
         $scope.fetchCatalogSuiteExecutionDetails();
         $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
-        $scope.currentView = "all";
+        $scope.currentView = "components";
         $scope.componentViewDetails = {};
+        $scope.testCaseViewInstances = null;
+        $scope.currentTestCaseViewComponent = null;
     };
 
     $scope.resultToClass = function (result) {
@@ -28,6 +30,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
             jiraIds.push(key);
         });
         commonService.apiPost("/tcm/basic_issue_attributes", jiraIds, message).then(function (issuesAttributes) {
+            let summaryResults = 0;
             if(issuesAttributes) {
                 angular.forEach($scope.executionDetails, function (value, key) {
                     value.summary = issuesAttributes[parseInt(key)].summary;
@@ -36,23 +39,29 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                     if(Object.keys($scope.executionDetails)) {
 
                     }
+                    let numJiraIds = jiraIds.length;
                     jiraIds.forEach(function (jiraId) {
                         let suiteExecutionId = $scope.executionDetails[jiraId].instances[0].suite_execution_id;
                         commonService.apiGet("/regression/catalog_test_case_execution_summary_result/" + suiteExecutionId + "/" + jiraId).then(function (data) {
                             $scope.executionDetails[jiraId].summaryResult = data;
+                            summaryResults += 1;
+
+                            if(summaryResults === numJiraIds) {
+                                angular.forEach(issuesAttributes, function (info, jiraId) {
+                                    let components = info.components;
+                                    let thisJiraId = jiraId;
+                                    components.forEach(function (component) {
+                                        $scope._updateComponentViewDetails(component, thisJiraId);
+
+                                    });
+                                });
+                            }
                         });
                     });
 
                 });
             }
-            angular.forEach(issuesAttributes, function (info, jiraId) {
-                let components = info.components;
-                let thisJiraId = jiraId;
-                components.forEach(function (component) {
-                    $scope._updateComponentViewDetails(component, thisJiraId);
 
-                });
-            });
 
         });
     };
@@ -104,7 +113,9 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                 numUnknown += 1;
             }
         });
-        $scope.componentViewDetails[component]["jiraIds"][jiraId] = $scope.executionDetails[jiraId].instances;
+        $scope.componentViewDetails[component]["jiraIds"][jiraId] = {"instances": $scope.executionDetails[jiraId].instances,
+            summary: $scope.executionDetails[jiraId].summary,
+        summaryResult: $scope.executionDetails[jiraId].summaryResult};
         $scope.componentViewDetails[component]["numPassed"] += numPassed;
         $scope.componentViewDetails[component]["numFailed"] += numFailed;
         $scope.componentViewDetails[component]["numUnknown"] += numUnknown;
@@ -133,6 +144,12 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
             });
         })
 
+    };
+
+    $scope.totalClick = function (component) {
+        console.log(component);
+        $scope.testCaseViewInstances = $scope.componentViewDetails[component].jiraIds;
+        $scope.currentTestCaseViewComponent = component;
     }
 
 }

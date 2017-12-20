@@ -2,90 +2,150 @@
 <input type="radio" name="view-radio" ng-model="currentView" value="components">Components View
 
 <button ng-click="test()">Test</button>
-<div class="panel panel-primary">
-    <div class="panel-heading">{{ $ctrl.instanceName }}</div>
-    <div class="panel-body" ng-switch="currentView">
-        <table ng-switch-when="all" class="table table-nonfluid">
-            <tr>
-                <th>Jira Id</th>
-                <th>Summary</th>
-                <th>Components</th>
-                <th>Result</th>
-                <th>Info</th>
-            </tr>
-            <tbody id="suite-execution-details-table">
-                <tr ng-repeat="(jiraId, info) in executionDetails">
-                    <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
-                    <td>{{ info.summary }}</td>
-                    <td>
-                        <label class="label label-primary" ng-repeat="component in info.components"> {{ component }}</label>
-                    </td>
-                    <td><label ng-if="info.summaryResult" class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
-                    <td>
-                        <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable" href="#">Details</a>
-                        <table class="table collapse" id="info-table-{{ $index }}">
-                            <tr>
-                                <th>Owner</th>
-                                <th>TestBed</th>
-                                <th>Result</th>
-                                <th>Result Override</th>
-                            </tr>
-                            <tbody>
-                                <tr ng-repeat="instance in info.instances">
-                                    <td>{{ instance.owner }}</td>
-                                    <td>{{ instance.test_bed }}</td>
-                                    <td>{{ instance.result }}</td>
-                                    <td>
-                                        <select ng-options="option for option in overrideOptions" ng-model="selectedOverride">
-                                        </select>
-                                        <button class="btn btn-primary btn-sm" ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">Submit
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <div ng-switch-when="components">
-            <!--label class="label label-primary line-header" ng-repeat="(component, info) in componentViewDetails">{{ component }}</label -->
-            <table class="table">
-                <tr>
-                    <th>Component</th>
-                    <th>Total</th>
-                    <th>Passed</th>
-                    <th>Failed</th>
-                    <th>Unknown</th>
-                    <th>Progress</th>
-                    <th>Passed %</th>
-                    <th>Failed %</th>
-                    <th>Pending %</th>
-                </tr>
-                <tr ng-repeat="(component, info) in componentViewDetails">
-                    <td>
-                        {{ component }}
-                    </td>
-                    <td>
-                        {{ info.numTotal }}
-                    </td>
-                    <td>
-                        {{ info.numPassed }}
-                    </td>
-                    <td>
-                        {{ info.numFailed }}
-                    </td>
-                    <td>
-                        {{ info.numUnknown }}
-                    </td>
-                    <td>
 
-                    </td>
-                    <td>{{ info.numPassed * 100/info.numTotal }}</td>
-                    <td>{{ info.numFailed * 100/info.numTotal }}</td>
-                    <td>{{ (info.numTotal - (info.numPassed + info.numFailed + info.numUnknown))  * 100/info.numTotal }}</td>
+<br>
+<br>
+
+<div class="col-md-4">
+    <div class="panel panel-primary">
+        <div class="panel-heading">{{ $ctrl.instanceName }}</div>
+        <div class="panel-body" ng-switch="currentView">
+            <table ng-switch-when="all" class="table table-nonfluid">
+                <tr>
+                    <th>Jira Id</th>
+                    <th>Summary</th>
+                    <th>Components</th>
+                    <th>Result</th>
+                    <th>Info</th>
                 </tr>
+                <tbody id="suite-execution-details-table">
+                    <tr ng-repeat="(jiraId, info) in executionDetails">
+                        <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
+                        <td>{{ info.summary }}</td>
+                        <td>
+                            <label class="label label-primary" ng-repeat="component in info.components"> {{ component }}</label>
+                        </td>
+                        <td><label ng-if="info.summaryResult" class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
+                        <td>
+                            <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable" href="#">Details</a>
+                            <table class="table collapse" id="info-table-{{ $index }}">
+                                <tr>
+                                    <th>Owner</th>
+                                    <th>TestBed</th>
+                                    <th>Result</th>
+                                    <th>Result Override</th>
+                                </tr>
+                                <tbody>
+                                    <tr ng-repeat="instance in info.instances">
+                                        <td>{{ instance.owner }}</td>
+                                        <td>{{ instance.test_bed }}</td>
+                                        <td>{{ instance.result }}</td>
+                                        <td>
+                                            <select ng-options="option for option in overrideOptions" ng-model="selectedOverride">
+                                            </select>
+                                            <button class="btn btn-primary btn-sm" ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">Submit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
+            <div ng-switch-when="components">
+                <!--label class="label label-primary line-header" ng-repeat="(component, info) in componentViewDetails">{{ component }}</label -->
+                <table class="table table-nonfluid">
+                    <tr>
+                        <th>Component</th>
+                        <th>Total</th>
+                        <th>Passed</th>
+                        <th>Failed</th>
+                        <th>Unknown</th>
+                        <th>Progress</th>
+                        <th>Passed %</th>
+                        <th>Failed %</th>
+                        <th>Pending %</th>
+                    </tr>
+                    <tr ng-repeat="(component, info) in componentViewDetails">
+                        <td>
+                            <a href="#" ng-click="totalClick(component)">{{ component }}</a>
+                        </td>
+                        <td>
+                            {{ info.numTotal }}
+                        </td>
+                        <td>
+                            {{ info.numPassed }}
+                        </td>
+                        <td>
+                            {{ info.numFailed }}
+                        </td>
+                        <td>
+                            {{ info.numUnknown }}
+                        </td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-success" role="progressbar" style="width:{{ info.numPassed * 100/info.numTotal }}%">P
+                                </div>
+                                <div class="progress-bar progress-bar-danger" role="progressbar" style="width:{{ info.numFailed * 100/info.numTotal }}%">F
+                                </div>
+                                <div class="progress-bar progress-bar-info" role="progressbar" style="width:0%">U
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ info.numPassed * 100/info.numTotal }}</td>
+                        <td>{{ info.numFailed * 100/info.numTotal }}</td>
+                        <td>{{ (info.numTotal - (info.numPassed + info.numFailed + info.numUnknown))  * 100/info.numTotal }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-8" ng-if="testCaseViewInstances">
+    <div class="panel panel-primary">
+    <div class="panel-heading">Test-cases for {{ currentTestCaseViewComponent }}</div>
+        <div class="panel-body">
+            <table class="table table-nonfluid">
+                <tr>
+                    <th>Jira Id</th>
+                    <th>Summary</th>
+                    <th>Result</th>
+                    <th>Info</th>
+                </tr>
+                <tbody>
+                    <tr ng-repeat="(jiraId, info) in testCaseViewInstances">
+                        <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
+                        <td>{{ info.summary }}</td>
+                        <td><label ng-if="info.summaryResult" class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
+                        <td>
+                            <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable" href="#">Details</a>
+                            <table class="table collapse" id="info-table-{{ $index }}">
+                                <tr>
+                                    <th>Owner</th>
+                                    <th>TestBed</th>
+                                    <th>Result</th>
+                                    <th>Result Override</th>
+                                </tr>
+                                <tbody>
+                                    <tr ng-repeat="instance in info.instances">
+                                        <td>{{ instance.owner }}</td>
+                                        <td>{{ instance.test_bed }}</td>
+                                        <td>{{ instance.result }}</td>
+                                        <td>
+                                            <select ng-options="option for option in overrideOptions" ng-model="selectedOverride">
+                                            </select>
+                                            <button class="btn btn-primary btn-sm" ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">Submit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
         </div>
     </div>
 </div>
