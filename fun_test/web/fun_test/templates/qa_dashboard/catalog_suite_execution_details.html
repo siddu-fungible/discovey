@@ -1,16 +1,31 @@
-<input type="radio" name="view-radio" ng-model="currentView" value="all" >Show All
-<input type="radio" name="view-radio" ng-model="currentView" value="components">Components View
+<table class="table table-nonfluid table-borderless">
+    <tr>
+        <td>
+            <input type="radio" name="view-radio" ng-model="currentView" value="all" >Show All
+        </td>
+        <td>
+            <input type="radio" name="view-radio" ng-model="currentView" value="components">Components View
+        </td>
+    </tr>
+    <tr>
+        <div ng-if="status" ng-switch="status">
+            Status:
+            <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw" style="color: green"></i>Fetching JIRA issues..</span>
+            <!--span ng-switch-when="idle" class="label label-info">IDLE</span -->
+            <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
+            <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
+        </div>
+    </tr>
+</table>
 
-<button ng-click="test()">Test</button>
+<!-- button ng-click="test()">Test</button -->
 
-<br>
-<br>
 
-<div class="col-md-4">
+<div class="col-md-pull-4">
     <div class="panel panel-primary">
         <div class="panel-heading">{{ $ctrl.instanceName }}</div>
         <div class="panel-body" ng-switch="currentView">
-            <table ng-switch-when="all" class="table table-nonfluid">
+            <table ng-switch-when="all" class="table">
                 <tr>
                     <th>Jira Id</th>
                     <th>Summary</th>
@@ -84,7 +99,7 @@
                             {{ info.numUnknown }}
                         </td>
                         <td>
-                            <div class="progress">
+                            <div class="progress" style="width: 200px; height: 20px;">
                                 <div class="progress-bar progress-bar-success" role="progressbar" style="width:{{ info.numPassed * 100/info.numTotal }}%">P
                                 </div>
                                 <div class="progress-bar progress-bar-danger" role="progressbar" style="width:{{ info.numFailed * 100/info.numTotal }}%">F

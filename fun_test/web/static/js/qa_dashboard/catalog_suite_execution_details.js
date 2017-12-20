@@ -12,6 +12,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         $scope.componentViewDetails = {};
         $scope.testCaseViewInstances = null;
         $scope.currentTestCaseViewComponent = null;
+        $scope.status = "idle";
     };
 
     $scope.resultToClass = function (result) {
@@ -29,7 +30,10 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         angular.forEach($scope.executionDetails, function (value, key) {
             jiraIds.push(key);
         });
+
+        $scope.status = "fetchingJira";
         commonService.apiPost("/tcm/basic_issue_attributes", jiraIds, message).then(function (issuesAttributes) {
+            $scope.status = null;
             let summaryResults = 0;
             if(issuesAttributes) {
                 angular.forEach($scope.executionDetails, function (value, key) {
