@@ -13,6 +13,8 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         $scope.testCaseViewInstances = null;
         $scope.currentTestCaseViewComponent = null;
         $scope.status = "idle";
+        $scope.resetInstanceMetrics();
+        //$scope.fetchInstanceMetrics();
     };
 
     $scope.resultToClass = function (result) {
@@ -24,10 +26,20 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         console.log($scope.componentViewDetails);
     };
 
+    $scope.resetInstanceMetrics = function () {
+        $scope.instanceMetrics = {};
+    };
+
+    $scope.fetchInstanceMetrics = function () {
+        commonService.apiGet('/tcm/instance_metrics/' + ctrl.instanceName).then(function (data) {
+
+        });
+    };
+
     $scope.fetchBasicIssueAttributes = function () {
         let message = "fetchBasicIssueAttributes";
         let jiraIds = [];
-        angular.forEach($scope.executionDetails, function (value, key) {
+        angular.forEach($scope.executionDetails.jira_ids, function (value, key) {
             jiraIds.push(key);
         });
 
@@ -36,7 +48,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
             $scope.status = null;
             let summaryResults = 0;
             if(issuesAttributes) {
-                angular.forEach($scope.executionDetails, function (value, key) {
+                angular.forEach($scope.executionDetails.jira_ids, function (value, key) {
                     value.summary = issuesAttributes[parseInt(key)].summary;
                     value.components = issuesAttributes[parseInt(key)].components;
                     let jiraId = null;
@@ -45,9 +57,9 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                     }
                     let numJiraIds = jiraIds.length;
                     jiraIds.forEach(function (jiraId) {
-                        let suiteExecutionId = $scope.executionDetails[jiraId].instances[0].suite_execution_id;
+                        let suiteExecutionId = $scope.executionDetails.jira_ids[jiraId].instances[0].suite_execution_id;
                         commonService.apiGet("/regression/catalog_test_case_execution_summary_result/" + suiteExecutionId + "/" + jiraId).then(function (data) {
-                            $scope.executionDetails[jiraId].summaryResult = data;
+                            $scope.executionDetails.jira_ids[jiraId].summaryResult = data;
                             summaryResults += 1;
 
                             if(summaryResults === numJiraIds) {
@@ -100,7 +112,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
 
         }
 
-        let instances = $scope.executionDetails[jiraId].instances;
+        let instances = $scope.executionDetails.jira_ids[jiraId].instances;
         let numPassed = 0;
         let numFailed = 0;
         let numUnknown = 0;
@@ -117,13 +129,14 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                 numUnknown += 1;
             }
         });
-        $scope.componentViewDetails[component]["jiraIds"][jiraId] = {"instances": $scope.executionDetails[jiraId].instances,
-            summary: $scope.executionDetails[jiraId].summary,
-        summaryResult: $scope.executionDetails[jiraId].summaryResult};
+        $scope.componentViewDetails[component]["jiraIds"][jiraId] = {"instances": $scope.executionDetails.jira_ids[jiraId].instances,
+            summary: $scope.executionDetails.jira_ids[jiraId].summary,
+        summaryResult: $scope.executionDetails.jira_ids[jiraId].summaryResult};
         $scope.componentViewDetails[component]["numPassed"] += numPassed;
         $scope.componentViewDetails[component]["numFailed"] += numFailed;
         $scope.componentViewDetails[component]["numUnknown"] += numUnknown;
         $scope.componentViewDetails[component]["numTotal"] += numTotal;
+
 
     };
 
@@ -137,15 +150,16 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         let thisTestCaseId = parseInt(testCaseId);
         commonService.apiPost("/regression/update_test_case_execution", payload).then(function (data) {
 
-            $scope.executionDetails[thisTestCaseId].instances[instanceIndex].result = overrideOption;
-            $scope.executionDetails[thisTestCaseId].summaryResult = data;
-            let components = $scope.executionDetails[thisTestCaseId].components;
+            $scope.executionDetails.jira_ids[thisTestCaseId].instances[instanceIndex].result = overrideOption;
+            $scope.executionDetails.jira_ids[thisTestCaseId].summaryResult = data;
+            let components = $scope.executionDetails.jira_ids[thisTestCaseId].components;
             components.forEach(function(component) {
                 $scope._resetComponentViewDetails(component);
                 angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, thisJiraId) {
                     $scope._updateComponentViewDetails(component, thisJiraId);
                 });
             });
+            $scope.fetchCatalogSuiteExecutionDetails();
         })
 
     };

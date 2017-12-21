@@ -12,7 +12,7 @@ from web.fun_test.models import TestBed, Engineer, TestCaseExecution
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 from web.fun_test.models_helper import add_suite_execution, add_test_case_execution
-from fun_global import get_current_time
+from fun_global import get_current_time, RESULTS
 from django.core import serializers
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -104,26 +104,38 @@ def catalog_suite_execution_summary(request, catalog_name):
 
 def catalog_suite_execution_details(request, instance_name):
     result = initialize_result(failed=True)
+    num_passed = 0
+    num_failed = 0
+    num_total = 0
     try:
         suite_execution = CatalogSuiteExecution.objects.get(instance_name=instance_name)
         logger.info("Retrieved suite execution id: {}".format(suite_execution.suite_execution_id))
         tex = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution.suite_execution_id)
         payload = {}
+        payload["jira_ids"] = {}
+
+        num_total = tex.count()
+
         for te in tex:
-            if te.jira_id not in payload:
-                payload[te.jira_id] = {}
-                payload[te.jira_id]["instances"] = []
+            if te.jira_id not in payload["jira_ids"]:
+                payload["jira_ids"][te.jira_id] = {}
+                payload["jira_ids"][te.jira_id]["instances"] = []
                 # payload[te.jira_id]["summary"] = JiraManager().get_issue_attributes_by_id(id=te.jira_id)["summary"]
-            instances = payload[te.jira_id]["instances"]
+            instances = payload["jira_ids"][te.jira_id]["instances"]
             info = {}
-            info["execution_id"] = te.execution_id
             info["test_bed"] = te.test_bed
             info["execution_id"] = te.execution_id
             info["suite_execution_id"] = te.catalog_suite_execution_id
             info["owner"] = te.engineer.short_name
             info["result"] = TestCaseExecution.objects.get(execution_id=te.execution_id).result
+            if info["result"] == RESULTS["PASSED"]:
+                num_passed += 1
+            if info["result"] == RESULTS["FAILED"]:
+                num_failed += 1
             instances.append(info)
-
+        payload["num_total"] = num_total
+        payload["num_passed"] = num_passed
+        payload["num_failed"] = num_failed
         result["data"] = payload
         result["status"] = True
     except ObjectDoesNotExist as ex:
@@ -136,6 +148,14 @@ def catalog_suite_execution_details(request, instance_name):
 
 def catalog_suite_execution_details_page(request, instance_name):
     return render(request, 'qa_dashboard/catalog_execution_details_page.html', locals())
+
+def instance_metrics(request, instance_name):
+    result = initialize_result(failed=True)
+    try:
+        result["status"] = True
+    except Exception as ex:
+        result["error_message"] = str(ex)
+    return HttpResponse(json.dumps(result))
 
 @csrf_exempt
 def basic_issue_attributes(request):

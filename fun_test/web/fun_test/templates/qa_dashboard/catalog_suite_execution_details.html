@@ -32,6 +32,8 @@
                     <th class="absorbing-column">Components</th>
                     <th>Result</th>
                     <th>Info</th>
+                    <th>Bugs</th>
+                    <th>Comments</th>
                 </tr>
                 <tbody id="suite-execution-details-table">
                     <tr ng-repeat="(jiraId, info) in executionDetails">
@@ -69,7 +71,50 @@
                 </tbody>
             </table>
             <div ng-switch-when="components">
+                <label class="label label-primary">Gross</label>
+                <table class="table table-nonfluid table-responsive">
+                    <tr>
+                        <th>Total</th>
+                        <th>Passed</th>
+                        <th>Failed</th>
+                        <th>Unknown</th>
+                        <th>Progress</th>
+                        <th>Passed %</th>
+                        <th>Failed %</th>
+                        <th>Pending %</th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ executionDetails.num_total }}
+                        </td>
+                        <td>
+                            {{ executionDetails.num_passed }}
+                        </td>
+                        <td>
+                            {{ executionDetails.num_failed }}
+                        </td>
+                        <td>
+                            {{ executionDetails.num_unknown }}
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar progress-bar-success" role="progressbar" style="width:{{ executionDetails.num_passed * 100/executionDetails.num_total }}%">P
+                                </div>
+                                <div class="progress-bar progress-bar-danger" role="progressbar" style="width:{{ executionDetails.num_failed * 100/executionDetails.num_total }}%">F
+                                </div>
+                                <div class="progress-bar progress-bar-info" role="progressbar" style="width:0%">U
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ executionDetails.num_passed * 100/executionDetails.num_total }}</td>
+                        <td>{{ executionDetails.num_failed * 100/executionDetails.num_total }}</td>
+                        <td>{{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_unknown))  * 100/executionDetails.num_total }}</td>
+                    </tr>
+                </table>
+
                 <!--label class="label label-primary line-header" ng-repeat="(component, info) in componentViewDetails">{{ component }}</label -->
+                <label class="label label-primary">Component-wise</label>
                 <table class="table table-nonfluid table-responsive">
                     <tr>
                         <th>Component</th>
@@ -81,10 +126,12 @@
                         <th>Passed %</th>
                         <th>Failed %</th>
                         <th>Pending %</th>
+                        <th>Blockers</th>
+                        <th></th>
                     </tr>
                     <tr ng-repeat="(component, info) in componentViewDetails">
                         <td>
-                            <a href="#" ng-click="totalClick(component)">{{ component }}</a>
+                            {{ component }}
                         </td>
                         <td>
                             {{ info.numTotal }}
@@ -111,6 +158,8 @@
                         <td>{{ info.numPassed * 100/info.numTotal }}</td>
                         <td>{{ info.numFailed * 100/info.numTotal }}</td>
                         <td>{{ (info.numTotal - (info.numPassed + info.numFailed + info.numUnknown))  * 100/info.numTotal }}</td>
+                        <td>0</td>
+                        <td> <a href="#" ng-click="totalClick(component)"> Details</a></td>
                     </tr>
                 </table>
             </div>
@@ -125,6 +174,8 @@
             <th>Summary</th>
             <th>Result</th>
             <th>Info</th>
+            <th>Bugs</th>
+            <th>Comments</th>
         </tr>
         <tbody>
             <tr ng-repeat="(jiraId, info) in testCaseViewInstances">
