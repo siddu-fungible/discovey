@@ -1,27 +1,32 @@
-<table class="table table-nonfluid table-borderless">
-    <tr>
-        <td>
-            <input type="radio" name="view-radio" ng-model="currentView" value="all" >Show All
-        </td>
-        <td>
-            <input type="radio" name="view-radio" ng-model="currentView" value="components">Components View
-        </td>
-    </tr>
-    <tr>
-        <div ng-switch="status">
-            Status:
-            <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw" style="color: green"></i>Fetching JIRA issues..</span>
-            <span ng-switch-when="idle" class="label label-info">IDLE</span>
-            <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
-            <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
-        </div>
-    </tr>
-</table>
-
+<div class="row">
+    <div class="" >
+        <fun-chart values="progressValues" series="series" show-legend="true"
+               title="Progress" charting="charting" auto-update="autoUpdate" chart-type="pie" colors="colors" width="450" height="350"></fun-chart>
+    </div>
+</div>
 <!-- button ng-click="test()">Test</button -->
 
-
 <div class="col-md-12 col-lg-6">
+    <table class="table table-nonfluid table-borderless">
+        <tr>
+            <td>
+                <input type="radio" name="view-radio" ng-model="currentView" value="all" >Show All
+            </td>
+            <td>
+                <input type="radio" name="view-radio" ng-model="currentView" value="components">Components View
+            </td>
+        </tr>
+        <tr>
+            <div ng-switch="status">
+                Status:
+                <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw" style="color: green"></i>Fetching JIRA issues..</span>
+                <span ng-switch-when="idle" class="label label-info">IDLE</span>
+                <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
+                <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
+            </div>
+        </tr>
+    </table>
+
     <div class="panel panel-primary">
         <div class="panel-heading">{{ $ctrl.instanceName }}</div>
         <div class="panel-body" ng-switch="currentView">
@@ -36,7 +41,7 @@
                     <th>Comments</th>
                 </tr>
                 <tbody id="suite-execution-details-table">
-                    <tr ng-repeat="(jiraId, info) in executionDetails">
+                    <tr ng-repeat="(jiraId, info) in executionDetails.jira_ids">
                         <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
                         <td class="absorbing-column">{{ info.summary }}</td>
                         <td>
@@ -166,6 +171,8 @@
     </div>
 </div>
 <div class="col-md-8 col-lg-6" ng-if="testCaseViewInstances && currentView === 'components'">
+
+
     <legend>{{ currentTestCaseViewComponent }}</legend>
     <table class="table table-nonfluid">
         <tr>

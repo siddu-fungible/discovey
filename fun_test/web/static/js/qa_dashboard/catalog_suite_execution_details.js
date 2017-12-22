@@ -14,7 +14,12 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         $scope.currentTestCaseViewComponent = null;
         $scope.status = "idle";
         $scope.resetInstanceMetrics();
-        //$scope.fetchInstanceMetrics();
+        $scope.series = ['Passed', 'Failed', 'Pending'];
+        $scope.charting = true;
+        $scope.autoUpdate = true;
+        $scope.progressValues = {};
+        $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
+
     };
 
     $scope.resultToClass = function (result) {
@@ -86,6 +91,12 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                 return;
             }
             $scope.executionDetails = result["data"]["data"];
+            $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100/$scope.executionDetails.num_total;
+            $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100/$scope.executionDetails.num_total;
+            $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed)) * 100/$scope.executionDetails.num_passed * 100/$scope.executionDetails.num_total;
+            $scope.progressValues["Passed"] = $scope.executionDetails.passedPercentage;
+            $scope.progressValues["Failed"] = $scope.executionDetails.failedPercentage;
+            $scope.progressValues["Pending"] = $scope.executionDetails.pendingPercentage;
 
             // Fetch basic issue attributes
             return $scope.fetchBasicIssueAttributes(checkComponents);
