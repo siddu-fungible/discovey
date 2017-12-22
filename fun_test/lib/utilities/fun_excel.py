@@ -12,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 
 FIELDS = OrderedDict()
 FIELDS["Jira-Id"] = {}
-FIELDS["Id"] = {}
+FIELDS["Test-plan-Id"] = {}
 FIELDS["Module"] = {}
 FIELDS["Components"] = {}
 FIELDS["Test-type"] = {}

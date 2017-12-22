@@ -6,7 +6,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
     let ctrl = this;
 
     ctrl.$onInit = function () {
-        $scope.fetchCatalogSuiteExecutionDetails();
+        $scope.fetchCatalogSuiteExecutionDetails(true);
         $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
         $scope.currentView = "components";
         $scope.componentViewDetails = {};
@@ -36,7 +36,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         });
     };
 
-    $scope.fetchBasicIssueAttributes = function () {
+    $scope.fetchBasicIssueAttributes = function (checkComponents) {
         let message = "fetchBasicIssueAttributes";
         let jiraIds = [];
         angular.forEach($scope.executionDetails.jira_ids, function (value, key) {
@@ -45,16 +45,13 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
 
         $scope.status = "fetchingJira";
         commonService.apiPost("/tcm/basic_issue_attributes", jiraIds, message).then(function (issuesAttributes) {
-            $scope.status = null;
+            $scope.status = "idle";
             let summaryResults = 0;
             if(issuesAttributes) {
                 angular.forEach($scope.executionDetails.jira_ids, function (value, key) {
                     value.summary = issuesAttributes[parseInt(key)].summary;
                     value.components = issuesAttributes[parseInt(key)].components;
                     let jiraId = null;
-                    if(Object.keys($scope.executionDetails)) {
-
-                    }
                     let numJiraIds = jiraIds.length;
                     jiraIds.forEach(function (jiraId) {
                         let suiteExecutionId = $scope.executionDetails.jira_ids[jiraId].instances[0].suite_execution_id;
@@ -62,7 +59,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                             $scope.executionDetails.jira_ids[jiraId].summaryResult = data;
                             summaryResults += 1;
 
-                            if(summaryResults === numJiraIds) {
+                            if(summaryResults === numJiraIds && checkComponents) {
                                 angular.forEach(issuesAttributes, function (info, jiraId) {
                                     let components = info.components;
                                     let thisJiraId = jiraId;
@@ -82,7 +79,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
         });
     };
 
-    $scope.fetchCatalogSuiteExecutionDetails = function () {
+    $scope.fetchCatalogSuiteExecutionDetails = function (checkComponents) {
         let message = "fetchCatalogSuiteExecutionDetails";
         $http.get('/tcm/catalog_suite_execution_details/' + ctrl.instanceName).then(function (result) {
             if (!commonService.validateApiResult(result, message)) {
@@ -91,7 +88,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
             $scope.executionDetails = result["data"]["data"];
 
             // Fetch basic issue attributes
-            return $scope.fetchBasicIssueAttributes();
+            return $scope.fetchBasicIssueAttributes(checkComponents);
         }).catch(function (result) {
             return commonService.showHttpError(message, result);
         });
@@ -159,7 +156,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                     $scope._updateComponentViewDetails(component, thisJiraId);
                 });
             });
-            $scope.fetchCatalogSuiteExecutionDetails();
+            $scope.fetchCatalogSuiteExecutionDetails(false);
         })
 
     };

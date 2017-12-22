@@ -8,10 +8,10 @@
         </td>
     </tr>
     <tr>
-        <div ng-if="status" ng-switch="status">
+        <div ng-switch="status">
             Status:
             <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw" style="color: green"></i>Fetching JIRA issues..</span>
-            <!--span ng-switch-when="idle" class="label label-info">IDLE</span -->
+            <span ng-switch-when="idle" class="label label-info">IDLE</span>
             <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
             <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
         </div>
@@ -82,7 +82,6 @@
                         <th>Passed %</th>
                         <th>Failed %</th>
                         <th>Pending %</th>
-                        <th></th>
                     </tr>
                     <tr>
                         <td>

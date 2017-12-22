@@ -18,10 +18,18 @@ function CatalogExecutionsController($scope, $http, $window, commonService) {
             }
             let data = result.data.data;
             $scope.catalogExecutionSummary = data;
+            $scope.catalogExecutionSummary.forEach(function (instance) {
+                let instanceName = instance.fields.instance_name;
+                let i = 0;
+            });
 
         }).catch(function (result) {
             return commonService.showHttpError(message, result);
         });
+    };
+
+    $scope.fetchCatalogSuiteExecutionDetails = function (instanceName) {
+
     };
 }
 
