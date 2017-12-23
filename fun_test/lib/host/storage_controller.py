@@ -124,7 +124,7 @@ class StorageController():
     def attach_volume(self, ns_id, uuid, remote_ip):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
-                       "params": {"huid": 0,
+                       "params": {"huid": 7,
                                   "ctlid": 0,
                                   "fnid": 5,
                                   "nsid": ns_id,

@@ -526,7 +526,7 @@ def attach_volume(request, topology_session_id, f1_id):
 
     create_dict = {"class": "controller",
                    "opcode": "ATTACH",
-                   "params": {"huid": 0,
+                   "params": {"huid": 7,
                               "ctlid": 0,
                               "fnid": 5,
                               "nsid": nsid,
