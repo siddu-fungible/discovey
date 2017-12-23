@@ -91,12 +91,14 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                 return;
             }
             $scope.executionDetails = result["data"]["data"];
-            $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100/$scope.executionDetails.num_total;
-            $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100/$scope.executionDetails.num_total;
-            $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed)) * 100/$scope.executionDetails.num_passed * 100/$scope.executionDetails.num_total;
-            $scope.progressValues["Passed"] = $scope.executionDetails.passedPercentage;
-            $scope.progressValues["Failed"] = $scope.executionDetails.failedPercentage;
-            $scope.progressValues["Pending"] = $scope.executionDetails.pendingPercentage;
+            if($scope.executionDetails.num_total > 0) {
+                $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100 / $scope.executionDetails.num_total;
+                $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100 / $scope.executionDetails.num_total;
+                $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed)) * 100 / $scope.executionDetails.num_total;
+                $scope.progressValues["Passed"] = $scope.executionDetails.passedPercentage;
+                $scope.progressValues["Failed"] = $scope.executionDetails.failedPercentage;
+                $scope.progressValues["Pending"] = $scope.executionDetails.pendingPercentage;
+            }
 
             // Fetch basic issue attributes
             return $scope.fetchBasicIssueAttributes(checkComponents);
