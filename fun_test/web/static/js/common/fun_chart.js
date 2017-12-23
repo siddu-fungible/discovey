@@ -130,7 +130,7 @@
             }
 
             if(ctrl.autoUpdate) {
-                $timeout($scope.updatePlot, 5000);
+                $timeout($scope.updatePlot, 3000);
             }
 
         };
