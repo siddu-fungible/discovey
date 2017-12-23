@@ -26,7 +26,7 @@ scheduler_logger = logging.getLogger("main_scheduler_log")
 scheduler_logger.setLevel(logging.DEBUG)
 
 TEN_MB = 1e7
-DEBUG = True
+DEBUG = False
 
 
 if not DEBUG:
