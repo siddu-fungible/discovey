@@ -194,8 +194,8 @@ def get_catalog_test_case_execution_summary_result(suite_execution_id, jira_id):
         summary_result = RESULTS["FAILED"]
     if num_passed == te_count:
         summary_result = RESULTS["PASSED"]
-    if num_passed == 0:
-        summary_result = RESULTS["FAILED"]
+    # if num_passed == 0:
+    #    summary_result = RESULTS["FAILED"]
     return summary_result
 
 @csrf_exempt
