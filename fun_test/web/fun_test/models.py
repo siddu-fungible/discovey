@@ -50,7 +50,7 @@ class SuiteExecution(models.Model):
     result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
     tags = models.TextField(default="[]")
     version = models.CharField(max_length=50, default="UNKNOWN")
-    catalog_reference = models.TextField(null=True, blank=True)
+    catalog_reference = models.TextField(null=True, blank=True, default=None)
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
