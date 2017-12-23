@@ -31,11 +31,11 @@ DEBUG = False
 
 if not DEBUG:
     handler = logging.handlers.RotatingFileHandler(LOG_FILE_NAME, maxBytes=TEN_MB, backupCount=5)
-    handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 else:
     handler = logging.StreamHandler(sys.stdout)
-    scheduler_logger.addHandler(hdlr=handler)
-    scheduler_logger.setLevel(logging.DEBUG)
+handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+scheduler_logger.addHandler(hdlr=handler)
+scheduler_logger.setLevel(logging.DEBUG)
 
 
 def set_jenkins_hourly_execution_status(status):
