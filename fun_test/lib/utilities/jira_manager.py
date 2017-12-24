@@ -121,12 +121,75 @@ class JiraManager:
             issue_attributes[attributes["id"]] = attributes
         return issue_attributes
 
+    def create_test_case(self,
+                         summary,
+                         description,
+                         module,
+                         setup,
+                         variations,
+                         components,
+                         test_type,
+                         priority,
+                         expected_result,
+                         automatable=None,
+                         test_bed=None):
+        issue_id = None
+        components = [{"name": x} for x in components]
+        try:
+            project = self.get_project()
+            issue_dict = {
+                "project": project.id,
+                "summary": summary,
+                "description": description,
+                "issuetype": "Test-case",
+                "components": components,
+                "priority": {"name": priority},
+                self._get_custom_field_string("module"): {"value": module},
+                self._get_custom_field_string("setup"): setup,
+                self._get_custom_field_string("variations"): variations,
+                self._get_custom_field_string("expected_result"): expected_result,
+                self._get_custom_field_string("test_type"): {"value": test_type},
+                self._get_custom_field_string("test_bed"): [{"value": test_bed}],
+                self._get_custom_field_string("automatable"): {"value": automatable}
+            }
+            issue = self.jira.create_issue(fields=issue_dict)
+            issue_id = issue.key.replace(TCMS_PROJECT + "-", "")
+            logger.debug("Issue: {} created".format(issue_id))
+        except Exception as ex:
+            logger.critical(str(ex))
+        return issue_id
+
+    def _get_custom_field_string(self, field_name):
+        custom_field_mapping = {
+            "setup": "customfield_10305",
+            "module": "customfield_10301",
+            "variations": "customfield_10307",
+            "test_type": "customfield_10304",
+            "test_bed": "customfield_10302",
+            "expected_result": "customfield_10306",
+            "automatable": "customfield_10308"
+
+        }
+        return custom_field_mapping[field_name]
+
 if __name__ == "__main__":
     from lib.system.fun_test import FunTimer
     m = JiraManager()
+    print m.create_test_case(summary="Summary 1",
+                             description="Description 1",
+                             module="networking",
+                             setup="Setup 1",
+                             variations="Variations1",
+                             components=["nw-bgp", "nw-isis"],
+                             test_type="functional",
+                             priority="High",
+                             expected_result="Expected Result1",
+                             automatable="yes",
+                             test_bed="Simulation")
 
-    print m.get_issues(component="nw-bgp")
-    print m.get_project_components()
+
+    # print m.get_issues(component="nw-bgp")
+    # print m.get_project_components()
     # ft = FunTimer(max_time=1)
     # m.update_test_case(id=27, summary="Some summary", description="Some description")
     #print m.is_issue_present(id=2)

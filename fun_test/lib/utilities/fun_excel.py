@@ -20,7 +20,7 @@ FIELDS["Priority"] = {}
 FIELDS["Test-bed"] = {}
 FIELDS["Summary"] = {}
 FIELDS["Setup"] = {}
-FIELDS["Steps"] = {}
+FIELDS["Description"] = {}
 FIELDS["Expected-result"] = {}
 FIELDS["Variations"] = {}
 FIELDS["Automatable"] = {}
@@ -39,12 +39,15 @@ class TcmsExcel:
 
     def _open(self):
         try:
-            self.book =  xlrd.open_workbook(self.workbook_filename)
+            self.book = xlrd.open_workbook(self.workbook_filename)
             self.test_cases_sheet = self.book.sheet_by_name(TEST_CASES_SHEET_NAME)
             if not self.test_cases_sheet:
                 raise Exception("Could not find Sheet {} in workbook".format(TEST_CASES_SHEET_NAME))
         except Exception as ex:
             raise Exception(str(ex))
+
+    def get_num_rows(self):
+        return self.test_cases_sheet.nrows
 
     def validate(self):
         if not self.test_cases_sheet:
@@ -58,7 +61,7 @@ class TcmsExcel:
 
 
         # Validate each column:
-        num_rows = self.test_cases_sheet.nrows
+        num_rows = self.get_num_rows()
         for row_index in range(1, num_rows):
             columns = self.get_columns_by_row(row_index=row_index)
 
@@ -81,6 +84,17 @@ class TcmsExcel:
         for i in range(len(headers)):
             print "{}:\n{}\n\n".format(headers[i], columns[i])
 
+    def get_value_from_row_by_key(self, row, key):
+        result = None
+        FIELDS_keys = FIELDS.keys()
+        if not key in FIELDS_keys:
+            raise Exception("Key: {} not found in FIELDS".format(key))
+        index_of_key = FIELDS_keys.index(key)
+        if index_of_key < len(row):
+            result = row[index_of_key]
+        else:
+            raise Exception("Index of key exceeds columns on row")
+        return result
 
 if __name__ == "__main__":
     tcms_excel = TcmsExcel(workbook_filename='/Users/johnabraham/Desktop/tcms_format.xlsx')
