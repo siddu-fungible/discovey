@@ -6,7 +6,12 @@ import jira
 import os, traceback
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
-
+if not logger.handlers:
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(sys.stdout)
+    logger.addHandler(hdlr=handler)
+    logger.setLevel(logging.DEBUG)
 
 class JiraManager:
     def __init__(self, project_name=TCMS_PROJECT):
@@ -149,7 +154,7 @@ class JiraManager:
                 self._get_custom_field_string("variations"): variations,
                 self._get_custom_field_string("expected_result"): expected_result,
                 self._get_custom_field_string("test_type"): {"value": test_type},
-                self._get_custom_field_string("test_bed"): [{"value": test_bed}],
+                # self._get_custom_field_string("test_bed"): [{"value": test_bed}],  #TODO
                 self._get_custom_field_string("automatable"): {"value": automatable}
             }
             issue = self.jira.create_issue(fields=issue_dict)
@@ -172,9 +177,22 @@ class JiraManager:
         }
         return custom_field_mapping[field_name]
 
+    def summary_exists(self, summary):
+        result = False
+        jql = "summary ~ \"{}\"".format(summary)
+        try:
+            issues = self.get_issues_by_jql(jql=jql)
+            result = len(issues)
+        except jira.exceptions.JIRAError as ex:
+            logger.debug("JIRA summary {} does not exist".format(summary))
+        except Exception as ex:
+            logger.critical("Fix this: {}".format(str(ex)))
+        return result
+
 if __name__ == "__main__":
     from lib.system.fun_test import FunTimer
     m = JiraManager()
+    '''
     print m.create_test_case(summary="Summary 1",
                              description="Description 1",
                              module="networking",
@@ -186,8 +204,8 @@ if __name__ == "__main__":
                              expected_result="Expected Result1",
                              automatable="yes",
                              test_bed="Simulation")
-
-
+    '''
+    print m.summary_exists(summary="Summary John")
     # print m.get_issues(component="nw-bgp")
     # print m.get_project_components()
     # ft = FunTimer(max_time=1)

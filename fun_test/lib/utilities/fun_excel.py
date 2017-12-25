@@ -4,8 +4,6 @@ import sys
 from collections import OrderedDict
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(hdlr=handler)
 logger.setLevel(logging.DEBUG)
@@ -27,7 +25,7 @@ FIELDS["Automatable"] = {}
 
 TEST_CASES_SHEET_NAME = "Test-cases"
 
-ALLOWED_COMPONENTS = ["bgp", "ikv", "crypto", "erasure-coding"]
+ALLOWED_COMPONENTS = ["nw-bgp", "nw-isis", "ikv", "crypto", "erasure-coding"]
 
 
 class TcmsExcel:
