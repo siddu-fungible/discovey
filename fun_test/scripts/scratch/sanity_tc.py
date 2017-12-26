@@ -9,14 +9,15 @@ class MyScript(FunTestScript):
         3. Step 3""")
 
     def setup(self):
-        pass
+        fun_test.log("Script-level setup")
+        fun_test.shared_variables["some_variable"] = 123
 
     def cleanup(self):
-        pass
+        fun_test.log("Script-level cleanup")
 
 class FunTestCase1(FunTestCase):
     def describe(self):
-        self.set_test_details(id="122",
+        self.set_test_details(id=1,
                               summary="Sanity Test 1",
                               steps="""
         1. Steps 1
@@ -26,36 +27,37 @@ class FunTestCase1(FunTestCase):
 
     def setup(self):
         fun_test.log("Testcase setup")
+        fun_test.sleep("demo", seconds=1)
 
     def cleanup(self):
-        print("Testcase cleanup")
+        fun_test.log("Testcase cleanup")
 
     def run(self):
-        import time
-        time.sleep(200)
+
         fun_test.add_checkpoint("Some checkpoint")
         for i in range(0, 50):
             fun_test.log("Some log")
+
+        fun_test.log("Variable shared across test-cases and the script level: {}".format(fun_test.shared_variables["some_variable"]))
+
 
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
 
 
 class FunTestCase2(FunTestCase):
     def describe(self):
-        self.set_test_details(id="$tc",
+        self.set_test_details(id=2,
                               summary="Sanity Test 2",
                               steps="Steps 1")
 
     def setup(self):
-        print("Testcase setup")
+        fun_test.log("Testcase setup")
 
     def cleanup(self):
-        print("Testcase cleanup")
+        fun_test.log("Testcase cleanup")
 
     def run(self):
-        print("The Testcase")
-
-
+        fun_test.log("The Testcase")
 
         fun_test.test_assert(expression=1 > 2, message="1 > 2")
         fun_test.test_assert(expression=2 > 1, message="2 > 1")
@@ -63,6 +65,6 @@ class FunTestCase2(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1(myscript))
-    myscript.add_test_case(FunTestCase2(myscript))
+    myscript.add_test_case(FunTestCase1())
+    myscript.add_test_case(FunTestCase2())
     myscript.run()

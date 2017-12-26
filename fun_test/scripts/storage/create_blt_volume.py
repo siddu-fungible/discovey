@@ -95,11 +95,11 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(result["status"], "ip_cfg {}".format(dut_instance.data_plane_ip))
 
         this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
-        result = storage_controller.create_blt_volume(capacity=1073741824,
+        result = storage_controller.create_thin_block_volume(capacity=1073741824,
                                                       block_size=4096,
                                                       name="volume1",
                                                       uuid=this_uuid)
-        fun_test.test_assert(result["status"], "create_blt_volume")
+        fun_test.test_assert(result["status"], "create_thin_block_volume")
 
         result = storage_controller.command("peek storage/volumes")
         i = 0

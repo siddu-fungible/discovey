@@ -1,11 +1,13 @@
 from lib.system.utils import ToDictMixin
 
+
 class EndPoint(object, ToDictMixin):
     end_point_type = "Unknown end-point type"
     END_POINT_TYPE_BARE_METAL = "END_POINT_TYPE_BARE_METAL"
     END_POINT_TYPE_VM = "END_POINT_TYPE_VM"
     END_POINT_TYPE_SSD = "END_POINT_TYPE_SSD"
     END_POINT_TYPE_FIO = "END_POINT_TYPE_FIO"
+    END_POINT_TYPE_LINUX_HOST = "END_POINT_TYPE_LINUX_HOST"
 
     # Hypervisor Endpoint types indicate Containers capable of carrying multiple hosts
     END_POINT_TYPE_HYPERVISOR = "END_POINT_TYPE_HYPERVISOR"
@@ -13,6 +15,7 @@ class EndPoint(object, ToDictMixin):
     MODE_SIMULATION = "MODE_SIMULATION"
 
     TO_DICT_VARS = ["mode", "type", "instance"]
+
     def __init__(self):
         self.type = self.end_point_type
         self.instance = None
@@ -23,6 +26,7 @@ class EndPoint(object, ToDictMixin):
 
     def get_instance(self):
         return self.instance
+
 
 class VmEndPoint(EndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_VM
@@ -53,6 +57,7 @@ class HypervisorEndPoint(EndPoint, ToDictMixin):
         self.mode = self.MODE_SIMULATION
         self.instances = []
 
+
 class QemuColocatedHypervisorEndPoint(HypervisorEndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED
 
@@ -68,8 +73,10 @@ class QemuColocatedHypervisorEndPoint(HypervisorEndPoint, ToDictMixin):
     def get_host_instance(self, host_index):
         return self.instances[host_index]
 
+
 class SsdEndPoint(EndPoint):
     end_point_type = EndPoint.END_POINT_TYPE_SSD
+
 
 class FioEndPoint(EndPoint):
     end_point_type = EndPoint.END_POINT_TYPE_FIO
@@ -80,6 +87,23 @@ class FioEndPoint(EndPoint):
 
     def __str__(self):
         return "Fio Endpoint"
+
+    def set_instance(self, instance):
+        self.instance = instance
+
+    def get_instance(self):
+        return self.instance
+
+
+class LinuxHostEndPoint(EndPoint):
+    end_point_type = EndPoint.END_POINT_TYPE_LINUX_HOST
+
+    def __init__(self):
+        super(LinuxHostEndPoint, self).__init__()
+        self.instance = None
+
+    def __str__(self):
+        return "Linux Server Endpoint"
 
     def set_instance(self, instance):
         self.instance = instance

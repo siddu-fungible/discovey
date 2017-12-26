@@ -2,10 +2,10 @@ import json
 
 from asset.asset_manager import *
 from dut import Dut
-from lib.host.traffic_generator import Fio
+from lib.host.traffic_generator import Fio, LinuxHost
 from lib.system.fun_test import FunTestLibException
 from topology import ExpandedTopology
-from end_points import EndPoint, FioEndPoint
+from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
 
 
 class TopologyHelper:
@@ -55,6 +55,8 @@ class TopologyHelper:
                 tg_type = tg_info["type"]
                 if tg_type == Fio.TRAFFIC_GENERATOR_TYPE_FIO:
                     expanded_topology.tgs[tg_index] = FioEndPoint()
+                if tg_type == LinuxHost.TRAFFIC_GENERATOR_TYPE_LINUX_HOST:
+                    expanded_topology.tgs[tg_index] = LinuxHostEndPoint()
 
         fun_test.debug("got expanded topology")
         return expanded_topology
@@ -110,7 +112,7 @@ class TopologyHelper:
 
             for tg_index, tg in tgs.items():
                 fun_test.debug("Setting up Tg {}".format(str(tg)))
-                if tg.type == EndPoint.END_POINT_TYPE_FIO:
+                if (tg.type == EndPoint.END_POINT_TYPE_FIO or tg.type == EndPoint.END_POINT_TYPE_LINUX_HOST):
                     self.allocate_traffic_generator(index=tg_index, end_point=tg)
         else:
             pass  # Networking style,
@@ -168,8 +170,10 @@ class TopologyHelper:
             instance = orchestrator_obj.launch_fio_instance(index)
             fun_test.test_assert(instance, "allocate_traffic_generator: Launched fio instance")
             end_point.set_instance(instance=instance)
-
-
+        if end_point.end_point_type == EndPoint.END_POINT_TYPE_LINUX_HOST:
+            instance = orchestrator_obj.launch_linux_instance(index)
+            fun_test.test_assert(instance, "allocate_traffic_generator: Launched Linux instance")
+            end_point.set_instance(instance=instance)
 
     @fun_test.safe
     def cleanup(self):

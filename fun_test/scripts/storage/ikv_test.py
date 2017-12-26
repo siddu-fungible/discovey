@@ -98,21 +98,21 @@ class FunTestCase1(FunTestCase):
         storage_controller = StorageController(mode="storage",
                                                target_ip=dut_instance.host_ip,
                                                target_port=dut_instance.external_dpcsh_port)
-        result = storage_controller.create_blt_volume(capacity=4198400,
+        result = storage_controller.create_thin_block_volume(capacity=4198400,
                                                       uuid=dir_vol_uuid,
                                                       name="vol-likv-dir-1",
                                                       block_size=4096)
         fun_test.test_assert(result["status"], "Create dir volume")
 
 
-        result = storage_controller.create_blt_volume(capacity=1073741824,
+        result = storage_controller.create_thin_block_volume(capacity=1073741824,
                                                       block_size=4096,
                                                       name="vol-likv-lvs-1",
                                                       uuid=lvs_vol_uuid)
 
         fun_test.test_assert(result["status"], "Create lvs volume")
 
-        result = storage_controller.create_blt_volume(capacity=5623808,
+        result = storage_controller.create_thin_block_volume(capacity=5623808,
                                                       block_size=4096,
                                                       name="vol-lvs-allocator-1",
                                                       uuid=lvs_allocator_uuid)
