@@ -5,6 +5,8 @@ import collections
 import os
 import sys
 import re
+import urllib
+import time
 
 RESULT_COLORS = {"passed": "resultpass",
                  "failed": "resultfail",
@@ -51,7 +53,7 @@ class GenericTable:
         one_row = GenericElement("tr")
         for data in row:
             td = GenericElement("td")
-            td.text = data
+            td.text = str(data)
             one_row.append(td)
         self.table.append(one_row)
 
@@ -468,7 +470,7 @@ class TestSection(GenericElement):
 
     def add_addendum(self, header, text=None):
         if not header in self.addendums:
-            addendum_heading = GenericElement("span", class_name="panel-heading")
+            addendum_heading = GenericElement("div", class_name="panel-heading")
 
             # anchor
             addendum_heading_anchor = GenericElement("a", class_name="accordion-toggle collapsed")
@@ -500,6 +502,7 @@ class TestSection(GenericElement):
     def _add_panel_items(self, tab_panel, panel_items):
         ul = GenericElement("ul", class_name="nav nav-tabs")
         ul.set("role", "tab_list")
+        time.sleep(0.001)
         ts = get_timestamp_string()
         href_dict = {}
         index = 0
@@ -512,7 +515,8 @@ class TestSection(GenericElement):
             if index == 0:
                 li.set_attribute(attribute="class", attribute_value="active")
 
-            href = ts + k.replace(" ", "_")
+            href = ts # + k.replace(" ", "_")
+            href = urllib.quote(href)
             href_dict[k] = href
             anchor.set("href", "#" + href)
             anchor.set("aria-controls", str(index))
@@ -561,13 +565,14 @@ class TestSection(GenericElement):
         ts = get_timestamp_string()
         href_dict = {}
         for k in panel_items:
+            time.sleep(0.001)
             li = GenericElement("li")
             li.set("role", "presentation")
             anchor = GenericElement("a")
             anchor.set("role", "tab")
             if not addendum["li_count"]:
                 li.set_attribute(attribute="class", attribute_value="active")
-            href = ts + k.replace(" ", "_")
+            href = ts # + k.replace(" ", "_")
             href_dict[k] = href
             anchor.set("href", "#" + href)
             anchor.set("aria-controls", "profile")
