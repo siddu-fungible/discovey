@@ -107,11 +107,11 @@ class FunTestCase1(FunTestCase):
 
             this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
             created_uuids.append(this_uuid)
-            result = storage_controller.create_blt_volume(capacity=capacity,
+            result = storage_controller.create_thin_block_volume(capacity=capacity,
                                                           block_size=block_size,
                                                           name=volume_name,
                                                           uuid=this_uuid)
-            fun_test.test_assert(result["status"], "create_blt_volume on Dut Instance {}".format(index))
+            fun_test.test_assert(result["status"], "create_thin_block_volume on Dut Instance {}".format(index))
             result = storage_controller.attach_volume(ns_id=ns_id, uuid=this_uuid, remote_ip=dut_instance2.data_plane_ip)
             fun_test.test_assert(result["status"], "attach volume on Dut Instance {}".format(index))
 

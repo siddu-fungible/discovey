@@ -3,6 +3,7 @@ import json, time
 import socket, fcntl, errno
 import os, sys
 
+
 class StorageController():
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
         self.target_ip = target_ip
@@ -25,7 +26,6 @@ class StorageController():
                 if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
                     time.sleep(0.1)
                     continue
-
 
     def _read(self, expected_command_duration=1):
         start = time.time()
@@ -66,18 +66,17 @@ class StorageController():
             self._connect()
             if self.verbose:
                 fun_test.log("DPCSH Send:" + command + "\n")
-            self.sendall("{}\n".format(command))
+            self.sendall("{}\n".format(command), expected_command_duration)
             output = self._read(expected_command_duration)
-            result["raw_output"] = output
-            json_output = json.loads(output)
-            result["status"] = True
-            result["data"] = json_output
-            result["error_message"] = None
-            try:
-                if int(result["data"]):
-                    result["status"] = False
-            except:
-                pass
+            if output:
+                result["raw_output"] = output
+                json_output = json.loads(output)
+                result["status"] = True
+                result["data"] = json_output
+                result["error_message"] = None
+            if (type(result["data"]) is bool and result["data"] is False) or (type(result["data"]) is int and
+                                                                              result["data"] != 0):
+                result["status"] = False
         except socket.error, msg:
             print msg
             result["error_message"] = msg
@@ -99,17 +98,14 @@ class StorageController():
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
     def json_command(self, data, action="", additional_info="", expected_command_duration=1):
-        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info), expected_command_duration=expected_command_duration)
+        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),
+                            expected_command_duration=expected_command_duration)
 
     def ip_cfg(self, ip):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip":ip}}
         return self.json_command(cfg_dict)
 
-    def create_blt_volume(self,
-                          capacity,
-                          uuid,
-                          block_size,
-                          name):
+    def create_thin_block_volume(self, capacity, uuid, block_size, name):
         create_dict = {}
         create_dict["class"] = "volume"
         create_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
@@ -121,14 +117,10 @@ class StorageController():
         create_dict["params"]["name"] = name
         return self.json_command(create_dict)
 
-    def attach_volume(self, ns_id, uuid, remote_ip):
+    def attach_volume(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
-                       "params": {"huid": 7,
-                                  "ctlid": 0,
-                                  "fnid": 5,
-                                  "nsid": ns_id,
-                                  "uuid": uuid,
+                       "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
                                   "remote_ip": remote_ip}}
         return self.json_command(attach_dict, expected_command_duration=3)
 
@@ -143,7 +135,6 @@ class StorageController():
                                   "remote_ip": remote_ip,
                                   "remote_nsid": remote_nsid}}
         return self.json_command(create_dict)
-
 
     def create_replica_volume(self, capacity,
                               block_size,
@@ -161,6 +152,10 @@ class StorageController():
                                   "pvol_type": "VOL_TYPE_BLK_RDS",
                                   "pvol_id": pvol_id}}
         return self.json_command(create_dict)
+
+    def peek(self, props_tree):
+        props_tree = "peek " + props_tree
+        return self.command(props_tree)
 
 
 if __name__ == "__main__":

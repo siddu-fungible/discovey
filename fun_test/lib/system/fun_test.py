@@ -505,6 +505,7 @@ class FunTest:
                                   actual=actual,
                                   message=message,
                                   ignore_on_success=ignore_on_success)
+
     def simple_assert(self, expression, message):
         self.test_assert(expression=expression, message=message, ignore_on_success=True)
 

@@ -184,6 +184,14 @@ class DockerHost(Linux, ToDictMixin):
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports)
 
+    @fun_test.safe
+    def setup_linux_container(self,
+                            container_name,
+                            ssh_internal_ports):
+        linux_image_name = self._get_image_name_by_category(category_name="fio_traffic_generator")
+        return self.setup_container(image_name=linux_image_name,
+                                    container_name=container_name,
+                                    pool0_internal_ports=ssh_internal_ports)
 
     @fun_test.safe
     def stop_container(self, container_name, container=None):
