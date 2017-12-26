@@ -124,8 +124,8 @@ class FunTest:
         self.current_test_case_id = None
         self.traces = {}
 
-        absolute_script_file_name = file_name
-        self.script_file_name = os.path.basename(absolute_script_file_name)
+        self.absolute_script_file_name = file_name
+        self.script_file_name = os.path.basename(self.absolute_script_file_name)
         script_file_name_without_extension = self.script_file_name.replace(".py", "")
 
         self.test_metrics = collections.OrderedDict()
@@ -137,7 +137,7 @@ class FunTest:
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
                                           log_directory=self.logs_dir,
                                           log_file=html_log_file,
-                                          full_script_path=absolute_script_file_name)
+                                          full_script_path=self.absolute_script_file_name)
         reload(sys)
         sys.setdefaultencoding('UTF8') #Needed for xml
         self.counter = 0  # Mostly used for testing
@@ -146,6 +146,14 @@ class FunTest:
         self.log_function_name = False
         self.pause_on_failure = False
         self.shared_variables = {}
+
+
+    def get_absolute_script_path(self):
+        return self.absolute_script_file_name
+
+    def get_script_parent_directory(self):
+        current_directory = os.path.abspath(os.path.join(self.get_absolute_script_path(), os.pardir))
+        return current_directory
 
     def set_log_format(self, timestamp="UNCHANGED", function_name="UNCHANGED"):
         if timestamp != "UNCHANGED":
