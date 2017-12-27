@@ -124,6 +124,7 @@ def _get_catalog_suite_execution_details(request, instance_name, with_jira_attri
         tex = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution.suite_execution_id)
         payload = {}
         payload["jira_ids"] = {}
+        payload["suite_execution_id"] = suite_execution.suite_execution_id
         num_total = tex.count()
 
         for te in tex:

@@ -16,7 +16,7 @@
             </tr>
             <tbody>
                 <tr ng-repeat="(jiraId, info) in testCaseViewInstances">
-                    <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
+                    <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
                     <td>{{ info.summary }}</td>
                     <td><label ng-if="info.summaryResult" class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
                     <td>
@@ -76,6 +76,7 @@
         <div class="panel-body" ng-switch="currentView">
             <table ng-switch-when="all" class="table table-nonfluid">
                 <tr>
+                    <th></th>
                     <th>Jira Id</th>
                     <th>Summary</th>
                     <th class="absorbing-column">Components</th>
@@ -86,7 +87,8 @@
                 </tr>
                 <tbody id="suite-execution-details-table">
                     <tr ng-repeat="(jiraId, info) in executionDetails.jira_ids">
-                        <td><a href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
+                        <td>{{ $index + 1 }}</td>
+                        <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a></td>
                         <td class="absorbing-column">{{ info.summary }}</td>
                         <td>
                             <label class="label label-primary" ng-repeat="component in info.components"> {{ component }}</label>

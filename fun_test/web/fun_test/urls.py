@@ -42,7 +42,9 @@ regression_urls = [
     url(r'^engineers', regression_views.engineers),
     url(r'^update_test_case_execution$', regression_views.update_test_case_execution),
     url(r'^catalog_test_case_execution_summary_result/(.*)/(.*)$',
-        regression_views.catalog_test_case_execution_summary_result)
+        regression_views.catalog_test_case_execution_summary_result),
+    url(r'^catalog_test_case_execution_summary_result_multiple_jiras$',
+        regression_views.catalog_test_case_execution_summary_result_multiple_jiras)
 ]
 
 tcm_urls = [

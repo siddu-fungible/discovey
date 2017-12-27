@@ -177,6 +177,13 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
 def log_path(request):
     return HttpResponse(LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX)
 
+def get_catalog_test_case_execution_summary_result_multiple_jiras(suite_execution_id, jira_ids):
+    summary_result = {}
+    for jira_id in jira_ids:
+        summary_result[jira_id] = get_catalog_test_case_execution_summary_result(suite_execution_id=suite_execution_id,
+                                                                                 jira_id=jira_id)
+    return summary_result
+
 def get_catalog_test_case_execution_summary_result(suite_execution_id, jira_id):
     ctes = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution_id, jira_id=jira_id)
     summary_result = RESULTS["UNKNOWN"]
@@ -205,6 +212,20 @@ def catalog_test_case_execution_summary_result(request, suite_execution_id, jira
         result["status"] = True
         result["data"] = get_catalog_test_case_execution_summary_result(suite_execution_id=suite_execution_id,
                                                                         jira_id=jira_id)
+    except Exception as ex:
+        result["error_message"] = str(ex)
+    return HttpResponse(json.dumps(result))
+
+@csrf_exempt
+def catalog_test_case_execution_summary_result_multiple_jiras(request):
+    result = initialize_result(failed=True)
+    try:
+        request_json = json.loads(request.body)
+        suite_execution_id = request_json["suite_execution_id"]
+        jira_ids = request_json["jira_ids"]
+        result["status"] = True
+        result["data"] = get_catalog_test_case_execution_summary_result_multiple_jiras(suite_execution_id=suite_execution_id,
+                                                                        jira_ids=jira_ids)
     except Exception as ex:
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
