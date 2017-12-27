@@ -61,8 +61,10 @@ tcm_urls = [
     url(r'^catalog_executions/(.*)$', tcm_views.catalog_executions),
     url(r'^catalog_suite_execution_summary/(.*)$', tcm_views.catalog_suite_execution_summary),
     url(r'^catalog_suite_execution_details/(.*)$', tcm_views.catalog_suite_execution_details),
+    url(r'^catalog_suite_execution_details_with_jira/(.*)$', tcm_views.catalog_suite_execution_details_with_jira),
     url(r'^catalog_suite_execution_details_page/(.*)$', tcm_views.catalog_suite_execution_details_page),
-    url(r'^basic_issue_attributes$', tcm_views.basic_issue_attributes)
+    url(r'^basic_issue_attributes$', tcm_views.basic_issue_attributes),
+    url(r'^module_component_mapping$', tcm_views.module_component_mapping)
 ]
 
 urlpatterns = [

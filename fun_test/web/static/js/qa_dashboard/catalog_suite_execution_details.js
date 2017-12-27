@@ -6,24 +6,42 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
     let ctrl = this;
 
     ctrl.$onInit = function () {
-        $scope.fetchCatalogSuiteExecutionDetails(true);
-        $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
-        $scope.currentView = "components";
-        $scope.componentViewDetails = {};
-        $scope.testCaseViewInstances = null;
-        $scope.currentTestCaseViewComponent = null;
-        $scope.status = "idle";
-        $scope.resetInstanceMetrics();
-        $scope.series = ['Passed', 'Failed', 'Pending'];
-        $scope.charting = true;
-        $scope.autoUpdate = true;
-        $scope.progressValues = {};
-        $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
+        $scope.fetchModuleComponentMapping().then(function (result) {
+            if(result) {
+                $scope.moduleComponentMapping = result;
+                $scope.moduleInfo = {};
+                angular.forEach($scope.moduleComponentMapping, function (info, module) {
+                    $scope.moduleInfo[module] = {showingDetails: false};
+                });
+                $scope.fetchCatalogSuiteExecutionDetails(true);
+                $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
+                $scope.currentView = "components";
+                $scope.componentViewDetails = {};
+                $scope.testCaseViewInstances = null;
+                $scope.currentTestCaseViewComponent = null;
+                $scope.status = "idle";
+                $scope.resetInstanceMetrics();
+                $scope.series = ['Passed', 'Failed', 'Pending'];
+                $scope.charting = true;
+                $scope.autoUpdate = true;
+                $scope.progressValues = {};
+                $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
 
+            }
+        });
+
+    };
+
+    $scope.moduleShowDetailsClick = function (module) {
+        $scope.moduleInfo[module].showingDetails = !$scope.moduleInfo[module].showingDetails;
     };
 
     $scope.resultToClass = function (result) {
         return resultToClass(result);
+    };
+
+    $scope.getComponentInfo = function (component) {
+        return $scope.componentViewDetails[component];
     };
 
     $scope.test = function () {
@@ -73,12 +91,56 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
 
                                     });
                                 });
+                                $scope.recalculateModuleInfo();
                             }
                         });
                     });
                 });
             }
         });
+    };
+
+    $scope.fetchModuleComponentMapping = function () {
+        let message = "fetchModuleComponentMapping";
+        return commonService.apiGet('/tcm/module_component_mapping', message).then(function (data) {
+            return data;
+        }).catch(function (result) {
+            return null;
+        });
+    };
+
+    $scope.recalculateModuleInfo = function () {
+        angular.forEach($scope.moduleComponentMapping, function (info, module) {
+            $scope.moduleInfo[module]['numTotal'] = 0;
+            $scope.moduleInfo[module]['numPassed'] = 0;
+            $scope.moduleInfo[module]['numFailed'] = 0;
+            $scope.moduleInfo[module]['numUnknown'] = 0;
+
+        });
+
+        commonService.apiGet('/tcm/catalog_suite_execution_details_with_jira/' + ctrl.instanceName).then(function (data) {
+            $scope.moduleInfo = data.module_info;
+        });
+
+        /*
+        angular.forEach($scope.componentViewDetails, function(info, component) {
+            let moduleBucket = null;
+            angular.forEach($scope.moduleComponentMapping, function(componentList, module) {
+                if(!moduleBucket) {
+                    if(componentList.indexOf(component) > -1) {
+                        moduleBucket = module;
+                    }
+                }
+            });
+            if(moduleBucket) {
+                $scope.moduleInfo[moduleBucket]['numTotal'] += info.numTotal;
+                $scope.moduleInfo[moduleBucket]['numPassed'] += info.numPassed;
+                $scope.moduleInfo[moduleBucket]['numFailed'] += info.numFailed;
+                $scope.moduleInfo[moduleBucket]['numUnknown'] += info.numUnknown;
+
+            }
+        });*/
+
     };
 
     $scope.fetchCatalogSuiteExecutionDetails = function (checkComponents) {
@@ -166,6 +228,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                     $scope._updateComponentViewDetails(component, thisJiraId);
                 });
             });
+            $scope.recalculateModuleInfo();
             $scope.fetchCatalogSuiteExecutionDetails(false);
         })
 
