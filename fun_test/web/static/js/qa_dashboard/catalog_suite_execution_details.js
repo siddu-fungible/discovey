@@ -76,11 +76,8 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                             }
                         });
                     });
-
                 });
             }
-
-
         });
     };
 

@@ -5,6 +5,7 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
+            $scope.status = "idle";
             $scope.currentCatalog = null;
             $scope.jqls = [];
             $scope.showValidate = false;
@@ -22,7 +23,9 @@
         };
 
         $scope.getCatalog = function () {
+            $scope.status = "fetchingJira";
             $http.get('/tcm/catalog/' + $scope.catalogName).then(function (result){
+                $scope.status = "idle";
 
                 let data = result.data;
                 if(!data["status"]) {

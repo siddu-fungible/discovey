@@ -254,9 +254,10 @@ def catalog(request, catalog_name):
     payload["category"] = suite.category
     payload["test_cases"] = []
     payload["jqls"] = json.loads(suite.jqls)
+    jira_manager = JiraManager()
+
     try:
         for test_case in suite.test_cases.all():
-            jira_manager = JiraManager()
             issue_attributes = jira_manager.get_issue_attributes_by_id(id=test_case.jira_id)
             payload["test_cases"].append({"jira_id": test_case.jira_id,
                                           "summary": issue_attributes["summary"],
