@@ -84,6 +84,7 @@ class JiraManager:
         attributes["summary"] = issue.fields.summary
         attributes["components"] = [str(x) for x in issue.fields.components]
         attributes["id"] = int(issue.key.replace(self.project_name + "-", ""))
+        attributes["module"] = getattr(issue.fields, self._get_custom_field_string("module")).value
         return attributes
 
     def get_issues(self, component=None):

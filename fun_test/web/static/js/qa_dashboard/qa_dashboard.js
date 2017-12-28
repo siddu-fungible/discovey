@@ -84,8 +84,13 @@
             }
             return result;
         }
-        function showError (message, timeout) {
+        function showError (message, timeout, result) {
             $rootScope.showCommonError = true;
+            if(result) {
+                if(result.stack) {
+                    message = message + "\n" + result.stack;
+                }
+            }
             $rootScope.commonErrorMessage = message;
             let t = 10000;
             if (timeout) {
@@ -104,10 +109,7 @@
             if (result.data) {
                 errorMessage = message + " :" + result.data;
             }
-            if (result.stack) {
-                errorMessage = message + "\n" + result.stack;
-            }
-            showError(errorMessage, timeout);
+            showError(errorMessage, timeout, result);
         }
 
         function showSuccess (message, timeout) {
@@ -139,6 +141,8 @@
                     data = result.data.data;
                 }
                 return data;
+            }).catch(function (result) {
+                showHttpError(message, result);
             });
 
         }
@@ -150,6 +154,8 @@
                     data = result.data.data;
                 }
                 return data;
+            }).catch(function(result){
+                showHttpError(message, result);
             });
         }
 

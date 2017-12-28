@@ -6,24 +6,41 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
     let ctrl = this;
 
     ctrl.$onInit = function () {
-        $scope.fetchCatalogSuiteExecutionDetails(true);
-        $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
-        $scope.currentView = "components";
-        $scope.componentViewDetails = {};
-        $scope.testCaseViewInstances = null;
-        $scope.currentTestCaseViewComponent = null;
-        $scope.status = "idle";
-        $scope.resetInstanceMetrics();
-        $scope.series = ['Passed', 'Failed', 'Pending'];
-        $scope.charting = true;
-        $scope.autoUpdate = true;
-        $scope.progressValues = {};
-        $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
+        $scope.fetchModuleComponentMapping().then(function (result) {
+            if(result) {
+                $scope.moduleComponentMapping = result;
+                $scope.moduleInfo = {};
+                angular.forEach($scope.moduleComponentMapping, function (info, module) {
+                    $scope.moduleInfo[module] = {showingDetails: false};
+                });
+                $scope.fetchCatalogSuiteExecutionDetails(true);
+                $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
+                $scope.currentView = "components";
+                $scope.componentViewDetails = {};
+                $scope.testCaseViewInstances = null;
+                $scope.currentTestCaseViewComponent = null;
+                $scope.resetInstanceMetrics();
+                $scope.series = ['Passed', 'Failed', 'Pending'];
+                $scope.charting = true;
+                $scope.autoUpdate = true;
+                $scope.progressValues = {};
+                $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
 
+            }
+        });
+
+    };
+
+    $scope.moduleShowDetailsClick = function (module) {
+        $scope.moduleInfo[module].showingDetails = !$scope.moduleInfo[module].showingDetails;
     };
 
     $scope.resultToClass = function (result) {
         return resultToClass(result);
+    };
+
+    $scope.getComponentInfo = function (component) {
+        return $scope.componentViewDetails[component];
     };
 
     $scope.test = function () {
@@ -48,37 +65,71 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
             jiraIds.push(key);
         });
 
+        let suiteExecutionId = $scope.executionDetails.suite_execution_id;
+        let payload = {};
+        payload["suite_execution_id"] = suiteExecutionId;
+        payload["jira_ids"] = jiraIds;
         $scope.status = "fetchingJira";
+        commonService.apiPost('/regression/catalog_test_case_execution_summary_result_multiple_jiras', payload).then(function (summary) {
+            angular.forEach(summary, function (value, key) {
+                $scope.executionDetails.jira_ids[key].summaryResult = value;
+            });
+        });
+
+        let numJiraIds = jiraIds.length;
+        let attributesFetched = 0;
         commonService.apiPost("/tcm/basic_issue_attributes", jiraIds, message).then(function (issuesAttributes) {
-            $scope.status = "idle";
-            let summaryResults = 0;
             if(issuesAttributes) {
-                angular.forEach($scope.executionDetails.jira_ids, function (value, key) {
-                    value.summary = issuesAttributes[parseInt(key)].summary;
-                    value.components = issuesAttributes[parseInt(key)].components;
-                    let jiraId = null;
-                    let numJiraIds = jiraIds.length;
-                    jiraIds.forEach(function (jiraId) {
-                        let suiteExecutionId = $scope.executionDetails.jira_ids[jiraId].instances[0].suite_execution_id;
-                        commonService.apiGet("/regression/catalog_test_case_execution_summary_result/" + suiteExecutionId + "/" + jiraId).then(function (data) {
-                            $scope.executionDetails.jira_ids[jiraId].summaryResult = data;
-                            summaryResults += 1;
+                $scope.recalculateModuleInfo();
 
-                            if(summaryResults === numJiraIds && checkComponents) {
-                                angular.forEach(issuesAttributes, function (info, jiraId) {
-                                    let components = info.components;
-                                    let thisJiraId = jiraId;
-                                    components.forEach(function (component) {
-                                        $scope._updateComponentViewDetails(component, thisJiraId);
 
-                                    });
-                                });
-                            }
+                angular.forEach($scope.executionDetails.jira_ids, function (value, jiraId) {
+                    value.summary = issuesAttributes[parseInt(jiraId)].summary;
+                    value.components = issuesAttributes[parseInt(jiraId)].components;
+
+                    if(checkComponents) {
+                        $scope._resetComponentViewDetails();
+                        let components = value.components;
+                        let thisJiraId = jiraId;
+
+                        components.forEach(function (component) {
+                            $scope._updateComponentViewDetails(component, thisJiraId);
+
                         });
-                    });
+                    }
+                    attributesFetched += 1;
+                    if(attributesFetched === numJiraIds) {
+                        /*$scope.status = "idle";*/
+                    }
                 });
+
             }
         });
+    };
+
+    $scope.fetchModuleComponentMapping = function () {
+        let message = "fetchModuleComponentMapping";
+        return commonService.apiGet('/tcm/module_component_mapping', message).then(function (data) {
+            return data;
+        }).catch(function (result) {
+            return null;
+        });
+    };
+
+    $scope.recalculateModuleInfo = function () {
+        $scope.status = "fetchingJira";
+        angular.forEach($scope.moduleComponentMapping, function (info, module) {
+            $scope.moduleInfo[module]['numTotal'] = 0;
+            $scope.moduleInfo[module]['numPassed'] = 0;
+            $scope.moduleInfo[module]['numFailed'] = 0;
+            $scope.moduleInfo[module]['numUnknown'] = 0;
+
+        });
+        commonService.apiGet('/tcm/catalog_suite_execution_details_with_jira/' + ctrl.instanceName).then(function (data) {
+            $scope.status = "idle";
+            $scope.moduleInfo = data.module_info;
+        });
+
     };
 
     $scope.fetchCatalogSuiteExecutionDetails = function (checkComponents) {
@@ -105,6 +156,12 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
     };
 
     $scope._resetComponentViewDetails = function (component) {
+        if(!$scope.componentViewDetails.hasOwnProperty(component)) {
+            $scope.componentViewDetails[component] = {};
+            $scope._resetComponentViewDetails(component);
+            $scope.componentViewDetails[component]["jiraIds"] = {};
+
+        }
         $scope.componentViewDetails[component]["numPassed"] = 0;
         $scope.componentViewDetails[component]["numFailed"] = 0;
         $scope.componentViewDetails[component]["numUnknown"] = 0;
@@ -166,6 +223,7 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                     $scope._updateComponentViewDetails(component, thisJiraId);
                 });
             });
+            $scope.recalculateModuleInfo();
             $scope.fetchCatalogSuiteExecutionDetails(false);
         })
 

@@ -126,6 +126,8 @@
                     layout["title"] = ctrl.title;
                     layout["titleside"] = "bottom";
                 }
+                /*Plotly.purge("c-" + $scope.genId);*/
+                layout['hovermode'] = !1;
                 Plotly.plot("c-" + $scope.genId, data, layout);
             }
 

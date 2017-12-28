@@ -42,7 +42,9 @@ regression_urls = [
     url(r'^engineers', regression_views.engineers),
     url(r'^update_test_case_execution$', regression_views.update_test_case_execution),
     url(r'^catalog_test_case_execution_summary_result/(.*)/(.*)$',
-        regression_views.catalog_test_case_execution_summary_result)
+        regression_views.catalog_test_case_execution_summary_result),
+    url(r'^catalog_test_case_execution_summary_result_multiple_jiras$',
+        regression_views.catalog_test_case_execution_summary_result_multiple_jiras)
 ]
 
 tcm_urls = [
@@ -61,8 +63,10 @@ tcm_urls = [
     url(r'^catalog_executions/(.*)$', tcm_views.catalog_executions),
     url(r'^catalog_suite_execution_summary/(.*)$', tcm_views.catalog_suite_execution_summary),
     url(r'^catalog_suite_execution_details/(.*)$', tcm_views.catalog_suite_execution_details),
+    url(r'^catalog_suite_execution_details_with_jira/(.*)$', tcm_views.catalog_suite_execution_details_with_jira),
     url(r'^catalog_suite_execution_details_page/(.*)$', tcm_views.catalog_suite_execution_details_page),
-    url(r'^basic_issue_attributes$', tcm_views.basic_issue_attributes)
+    url(r'^basic_issue_attributes$', tcm_views.basic_issue_attributes),
+    url(r'^module_component_mapping$', tcm_views.module_component_mapping)
 ]
 
 urlpatterns = [

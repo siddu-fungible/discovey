@@ -17,6 +17,11 @@ from django.core import serializers
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
+MODULE_COMPONENT_MAP = {
+    "networking": ["nw-dma", "nw-le", "nw-cfg", "nw-nu-transit", "nw-bgp", "nw-isis"],
+    "storage": ["st-nvmeof", "st-durable-volume", "st-likv"]
+}
+
 def index(request):
     return render(request, 'qa_dashboard/tcm.html', locals())
 
@@ -102,26 +107,39 @@ def catalog_suite_execution_summary(request, catalog_name):
     result["data"] = json.loads(serializers.serialize('json', CatalogSuiteExecution.objects.filter(catalog_name=catalog_name))) #TODO: Really stupid
     return HttpResponse(json.dumps(result))
 
-def catalog_suite_execution_details(request, instance_name):
+def catalog_suite_execution_details_with_jira(request, instance_name):
+    return HttpResponse(json.dumps(_get_catalog_suite_execution_details(request=request,
+                                                                        instance_name=instance_name,
+                                                                        with_jira_attributes=True)))
+
+def _get_catalog_suite_execution_details(request, instance_name, with_jira_attributes=False):
     result = initialize_result(failed=True)
     num_passed = 0
     num_failed = 0
     num_total = 0
+    jira_manager = JiraManager()
     try:
         suite_execution = CatalogSuiteExecution.objects.get(instance_name=instance_name)
         logger.info("Retrieved suite execution id: {}".format(suite_execution.suite_execution_id))
         tex = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution.suite_execution_id)
         payload = {}
         payload["jira_ids"] = {}
-
+        payload["suite_execution_id"] = suite_execution.suite_execution_id
         num_total = tex.count()
 
         for te in tex:
             if te.jira_id not in payload["jira_ids"]:
                 payload["jira_ids"][te.jira_id] = {}
                 payload["jira_ids"][te.jira_id]["instances"] = []
-                # payload[te.jira_id]["summary"] = JiraManager().get_issue_attributes_by_id(id=te.jira_id)["summary"]
+            if not "module_info" in payload:
+                payload["module_info"] = {}
+                for key in MODULE_COMPONENT_MAP:
+                    payload["module_info"][key] = {"numTotal": 0, "numPassed": 0, "numFailed": 0}
             instances = payload["jira_ids"][te.jira_id]["instances"]
+            this_module = None
+            if with_jira_attributes:
+                this_module = jira_manager.get_issue_attributes_by_id(id=te.jira_id)["module"]
+
             info = {}
             info["test_bed"] = te.test_bed
             info["execution_id"] = te.execution_id
@@ -132,10 +150,19 @@ def catalog_suite_execution_details(request, instance_name):
                 num_passed += 1
             if info["result"] == RESULTS["FAILED"]:
                 num_failed += 1
+
+            if with_jira_attributes:
+                payload["module_info"][this_module]["numTotal"] += 1
+                if info["result"] == RESULTS["PASSED"]:
+                    payload["module_info"][this_module]["numPassed"] += 1
+                if info["result"] == RESULTS["FAILED"]:
+                    payload["module_info"][this_module]["numFailed"] += 1
             instances.append(info)
         payload["num_total"] = num_total
         payload["num_passed"] = num_passed
         payload["num_failed"] = num_failed
+        payload["owner_email"] = suite_execution.owner_email
+
         result["data"] = payload
         result["status"] = True
     except ObjectDoesNotExist as ex:
@@ -144,7 +171,10 @@ def catalog_suite_execution_details(request, instance_name):
     except Exception as ex:
         result["error_message"] = "Unable to retrieve CatalogSuiteExecution for instance {} : {}".format(instance_name,
                                                                                                          str(ex))
-    return HttpResponse(json.dumps(result))
+    return result
+
+def catalog_suite_execution_details(request, instance_name):
+    return HttpResponse(json.dumps(_get_catalog_suite_execution_details(request=request, instance_name=instance_name)))
 
 def catalog_suite_execution_details_page(request, instance_name):
     return render(request, 'qa_dashboard/catalog_execution_details_page.html', locals())
@@ -166,6 +196,15 @@ def basic_issue_attributes(request):
     try:
         issue_attributes = JiraManager().get_basic_issue_attributes_by_ids(ids=jira_ids)
         result["data"] = issue_attributes
+        result["status"] = True
+    except Exception as ex:
+        result["error_message"] = str(ex)
+    return HttpResponse(json.dumps(result))
+
+def module_component_mapping(request):
+    result = initialize_result(failed=True)
+    try:
+        result["data"] = MODULE_COMPONENT_MAP
         result["status"] = True
     except Exception as ex:
         result["error_message"] = str(ex)
