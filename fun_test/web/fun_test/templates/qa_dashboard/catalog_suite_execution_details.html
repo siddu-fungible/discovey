@@ -190,10 +190,10 @@
                                         </div>
 
                                     </td>
-                                    <td>{{ (moduleInfo[module].numPassed * 100)/moduleInfo[module].numTotal }}</td>
-                                    <td>{{ (moduleInfo[module].numFailed * 100)/moduleInfo[module].numTotal }}</td>
+                                    <td>{{ (moduleInfo[module].numPassed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
+                                    <td>{{ (moduleInfo[module].numFailed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
                                     <td>
-                                        {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal }}</td>
+                                        {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}</td>
                                     <td></td>
                                     <td><a ng-click="moduleShowDetailsClick(module)"> Details</a>
                                     </td>
