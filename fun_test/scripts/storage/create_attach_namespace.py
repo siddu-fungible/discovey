@@ -36,6 +36,7 @@ class MyScript(FunTestScript):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
         self.topology = topology_obj_helper.deploy()
         fun_test.test_assert(self.topology, "Ensure deploy is successful")
+        fun_test.shared_variables["topology"] = self.topology
 
     def cleanup(self):
         TopologyHelper(spec=self.topology).cleanup()
@@ -62,8 +63,9 @@ class FunTestCase1(FunTestCase):
     def run(self):
         # fun_test.test_assert(StorageTemplate(topology=self.script_obj.topology).deploy(),
         #                      "Deploying a storage template")
-        storage_template = StorageTemplate(topology=self.script_obj.topology)
-        host = self.script_obj.topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
+        topology = fun_test.shared_variables["topology"]
+        storage_template = StorageTemplate(topology=topology)
+        host = topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
         storage_template.create_volume(host_obj=host)
         storage_template.attach_volume(host_obj=host)
 
@@ -84,5 +86,5 @@ if __name__ == "__main__":
 
 
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1(myscript))
+    myscript.add_test_case(FunTestCase1())
     myscript.run()
