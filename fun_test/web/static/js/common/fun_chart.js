@@ -126,6 +126,7 @@
                     layout["title"] = ctrl.title;
                     layout["titleside"] = "bottom";
                 }
+                Plotly.purge("c-" + $scope.genId);
                 Plotly.plot("c-" + $scope.genId, data, layout);
             }
 
