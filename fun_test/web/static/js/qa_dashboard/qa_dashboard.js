@@ -106,11 +106,14 @@
 
         function showError (message, timeout, result) {
             $rootScope.showCommonError = true;
+            let stack = null;
             if(result) {
                 if(result.stack) {
-                    message = message + "\n" + result.stack;
+                    stack = result.stack;
                 }
             }
+            addLogEntry(message, stack);
+
             $rootScope.commonErrorMessage = message;
             let t = 10000;
             if (timeout) {
@@ -125,11 +128,12 @@
         }
 
         function showHttpError (message, result, timeout) {
-            let errorMessage = message + " " + result;
+            let errorMessage = result;
             if (result.data) {
-                errorMessage = message + " :" + result.data;
+                errorMessage = result.data;
             }
-            showError(errorMessage, timeout, result);
+            addLogEntry(message, errorMessage);
+            showError(message, timeout, result);
         }
 
         function showSuccess (message, timeout) {
