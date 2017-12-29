@@ -195,7 +195,9 @@
                                     <td>
                                         {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}</td>
                                     <td></td>
-                                    <td><a ng-click="moduleShowDetailsClick(module)"> Details</a>
+                                    <td>
+                                        <a ng-show="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Hide Details</a>
+                                        <a ng-hide="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Details</a>
                                     </td>
                                 </tr>
                                 <tr ng-repeat-end ng-if="moduleInfo[module].showingDetails">
@@ -282,7 +284,7 @@
                 <th>Comments</th>
             </tr>
             <tbody>
-            <tr ng-repeat="(jiraId, info) in testCaseViewInstances">
+            <tr ng-repeat-start="(jiraId, info) in testCaseViewInstances">
                 <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
                 </td>
                 <td>{{ info.summary }}</td>
@@ -290,9 +292,13 @@
                            class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label>
                 </td>
                 <td>
-                    <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable"
-                       href="#">Details</a>
-                    <table class="table collapse" id="info-table-{{ $index }}">
+                    <a ng-show="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Hide Details</a>
+                    <a ng-hide="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Details</a>
+                </td>
+            </tr>
+            <tr ng-repeat-end>
+                <td colspan="5">
+                    <table ng-if="testCaseViewInstances[jiraId].showingDetails" class="table">
                         <tr>
                             <th>Owner</th>
                             <th>TestBed</th>

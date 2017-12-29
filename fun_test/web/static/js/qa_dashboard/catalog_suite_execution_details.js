@@ -234,7 +234,14 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
         console.log(component);
         $scope.testCaseViewInstances = $scope.componentViewDetails[component].jiraIds;
         $scope.currentTestCaseViewComponent = component;
-    }
+    };
+
+    $scope.testCaseViewInstancesDetailsClick = function (jiraId) {
+        if(!$scope.testCaseViewInstances[jiraId].hasOwnProperty("showingDetails")) {
+            $scope.testCaseViewInstances[jiraId].showingDetails = false;
+        }
+        $scope.testCaseViewInstances[jiraId].showingDetails = !$scope.testCaseViewInstances[jiraId].showingDetails;
+    };
 
 }
 
