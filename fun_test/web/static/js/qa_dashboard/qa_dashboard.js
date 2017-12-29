@@ -36,6 +36,11 @@
 
     app = angular.module('qa-dashboard', ['ngSanitize', 'ui.select', 'commonModule']);
     app.controller('QaDashBoardController', ['$rootScope', '$scope', '$http', '$window', '$timeout', function ($rootScope, $scope, $http, $window, $timeout) {
+        let ctrl = this;
+
+        ctrl.$onInit = function () {
+
+        };
 
         $scope.closeCommonError = function () {
             $rootScope.showCommonError = false;
@@ -84,6 +89,21 @@
             }
             return result;
         }
+
+        function addLogEntry (log, details) {
+            let payload = {};
+            payload["log"] = log;
+            payload["time"] = new Date();
+            if(details) {
+                payload["details"] = details;
+            } else {
+                payload["details"] = "";
+            }
+            $http.post("/common/add_session_log", payload).then(function () {
+
+            });
+        }
+
         function showError (message, timeout, result) {
             $rootScope.showCommonError = true;
             if(result) {
@@ -166,7 +186,8 @@
             showHttpError: showHttpError,
             validateApiResult: validateApiResult,
             apiGet: apiGet,
-            apiPost: apiPost
+            apiPost: apiPost,
+            addLogEntry: addLogEntry
         };
 
     }]);

@@ -63,4 +63,5 @@ def get_script_content(request):
 
 
 def index(request):
+    request.session.clear()
     return render(request, 'base.html', locals())

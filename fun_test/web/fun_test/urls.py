@@ -17,6 +17,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from . import views, regression_views
 from . import tcm_views
+from . import common_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 regression_urls = [
@@ -69,6 +70,12 @@ tcm_urls = [
     url(r'^module_component_mapping$', tcm_views.module_component_mapping)
 ]
 
+common_urls = [
+    url(r'^alerts_page$', common_views.alerts_page),
+    url(r'^add_session_log$', common_views.add_session_log),
+    url(r'^get_session_logs$', common_views.get_session_logs)
+]
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^publish', views.publish, name='publish'),
@@ -76,6 +83,7 @@ urlpatterns = [
     url(r'^tools/', include('tools.urls')),
     url(r'^regression/', include(regression_urls)),
     url(r'^tcm/', include(tcm_urls)), # urls related to test-case manangement
+    url(r'^common/', include(common_urls)),
     url(r'^$', views.index)
 
 ]

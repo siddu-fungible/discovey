@@ -2,10 +2,15 @@
 
 'use strict';
 
-function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultToClass, commonService) {
+function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $window, resultToClass, commonService) {
     let ctrl = this;
+    console.log($rootScope.logEntries);
 
     ctrl.$onInit = function () {
+        $scope.series = ['Passed', 'Failed', 'Pending'];
+        $scope.charting = true;
+        $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
+
         $scope.fetchModuleComponentMapping().then(function (result) {
             if(result) {
                 $scope.moduleComponentMapping = result;
@@ -20,15 +25,16 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
                 $scope.testCaseViewInstances = null;
                 $scope.currentTestCaseViewComponent = null;
                 $scope.resetInstanceMetrics();
-                $scope.series = ['Passed', 'Failed', 'Pending'];
-                $scope.charting = true;
                 $scope.autoUpdate = true;
                 $scope.progressValues = {};
-                $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
 
             }
         });
 
+    };
+
+    $scope.testClick = function () {
+        commonService.addLogEntry("CatalogSuiteExecutionDetailsController", "Some details");
     };
 
     $scope.moduleShowDetailsClick = function (module) {
@@ -41,11 +47,6 @@ function CatalogSuiteExecutionDetailsController($scope, $http, $window, resultTo
 
     $scope.getComponentInfo = function (component) {
         return $scope.componentViewDetails[component];
-    };
-
-    $scope.test = function () {
-        //console.log($scope.currentView);
-        console.log($scope.componentViewDetails);
     };
 
     $scope.resetInstanceMetrics = function () {
