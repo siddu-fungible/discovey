@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/dashboard_alerts.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+{% verbatim %}
+<div class="content" ng-controller="dashboardAlertsController">
+    <table class="table">
+        <tr>
+            <th></th>
+            <th>Time</th>
+            <th>Log</th>
+            <th></th>
+        </tr>
+        <tr ng-repeat-start="logEntry in logEntries">
+            <td>
+                {{ $index + 1 }}
+            </td>
+            <td>
+                {{ logEntry.time }}
+            </td>
+            <td>
+                {{ logEntry.log }}
+            </td>
+            <td>
+                <a ng-click="showLogToggleClick($index)">Details</a>
+            </td>
+        </tr>
+        <tr ng-repeat-end ng-if="logEntry.show">
+            <td colspan="4"> {{ logEntry.details }}</td>
+        </tr>
+
+    </table>
+</div>
+{% endverbatim %}
+
+{% endblock %}
