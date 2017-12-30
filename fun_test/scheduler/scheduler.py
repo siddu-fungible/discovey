@@ -155,12 +155,15 @@ class SuiteWorker(Thread):
                 poll_status = self.current_script_process.poll()
             if poll_status:  #
                 scheduler_logger.critical("CRASH: Script {}".format(os.path.basename(script_path)))
+                self.local_scheduler_logger.info("CRASH: {}".format(script_path))
                 local_scheduler_logger.critical("CRASH")
                 crashed = True  #TODO: Need to re-check this based on exit code
             script_result = False
             if self.current_script_process.returncode == 0:
                 script_result = True
+            self.local_scheduler_logger.info("Executed: {}".format(script_path))
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
+        self.local_scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         suite_execution.completed_time = get_current_time()

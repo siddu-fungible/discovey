@@ -87,14 +87,13 @@ class FunTestCase4(FunTestCase):
 
     def run(self):
         print("The Testcase")
-        fun_test.test_assert(expression=2 > 1, message="2 > 1")
+        fun_test.test_assert(expression=1 > 1, message="2 > 1")
 
 
 
 
 
 if __name__ == "__main__":
-    fun_test.test(__file__)
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())
     myscript.add_test_case(FunTestCase2())
