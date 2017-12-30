@@ -12,6 +12,7 @@ from scheduler.scheduler_helper import *
 import signal
 from web.fun_test.web_interface import get_homepage_url
 import pexpect
+from uuid import getnode as get_mac
 
 class TestException(Exception):
     def __str__(self):
@@ -195,7 +196,7 @@ class FunTest:
         if env_sid:
             env_sid = int(env_sid)
         if not env_sid:
-            env_sid = 100
+            env_sid = int(str(get_mac())[:4])
         sid = self.suite_execution_id if self.suite_execution_id else env_sid
         return sid
 
