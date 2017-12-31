@@ -3,11 +3,16 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="row">
-            <div class="">
-                <fun-chart values="progressValues" series="series" show-legend="true"
-                           title="Progress" charting="charting" auto-update="autoUpdate" chart-type="pie"
+            <div class="col-lg-4">
+                <fun-chart values="overallProgressValues" series="series" show-legend="true"
+                           title="Overall progress" charting="charting" auto-update="autoUpdate" chart-type="pie"
                            colors="colors"
-                           width="450" height="350"></fun-chart>
+                           width="250" height="250" update-charts-now="updateOverallProgressChartsNow"></fun-chart>
+            </div>
+            <div class="col-lg-4">
+                <fun-chart values="moduleProgressValues" colors="colors" title="Module progress"
+                           width="250" height="250" chart-type="horizontal_colored_bar_chart"
+                           series="series" charting="charting" update-charts-now="updateModuleProgressChartsNow"></fun-chart>
             </div>
         </div>
         <div class="row">
@@ -93,7 +98,7 @@
                             </tbody>
                         </table>
                         <div ng-switch-when="components">
-                            <label class="label label-primary">Gross</label>
+                            <label class="label label-primary">Overall</label>
                             <table class="table table-nonfluid table-responsive">
                                 <tr>
                                     <th>Total</th>

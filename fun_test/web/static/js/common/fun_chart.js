@@ -18,9 +18,13 @@
         $scope.getRandomId();
 
         $scope.$watch(function () {
-            return ctrl.charting === true;
-        }, function (newvalue, oldvalue) {
-
+                return ctrl.updateChartsNow === true;
+            }
+            , function (newvalue, oldvalue) {
+            if(newvalue === oldvalue) {
+                return;
+            }
+            ctrl.updateChartsNow = false;
             let layout = {
                 showlegend: ctrl.showLegend,
                 autosize: true
@@ -51,29 +55,103 @@
             }
 
             let data = [];
-            if(ctrl.chartType === "scatter") {
-                for (let i = 0; i < $scope.traceCount; i++) {
-                    data.push({
-                        x: [],
-                        y: [],
-                        type: ctrl.chartType,
-                        name: ctrl.series[i]
 
-                    });
-                }
-            } else if(ctrl.chartType === "pie") {
-                let values = [];
-                let marker = {};
-                marker["colors"] = ctrl.colors;
-                data.push({values: values,
-                    type: ctrl.chartType,
-                    labels: ctrl.series,
-                    marker: marker});
-            }
             if (ctrl.charting) {
                 $timeout(function () {
-                    Plotly.newPlot("c-" + $scope.genId, data, layout, {displayModeBar: false});
-                    $timeout($scope.updatePlot, 10);
+                    if(ctrl.chartType === "horizontal_colored_bar_chart") {
+
+                        let seriesData = [];
+                        let series = ctrl.series.reverse();
+                        series.forEach(function(seriesName, index){
+                            let oneSeriesDataEntry = {name: seriesName, data: [], colors: ctrl.colors.reverse()};
+                            angular.forEach(ctrl.values, function (categoryInfo, categoryName) {
+                                oneSeriesDataEntry.data.push(categoryInfo[seriesName]);
+                                oneSeriesDataEntry.color = ctrl.colors[index];
+                            });
+                            seriesData.push(oneSeriesDataEntry);
+                        });
+
+                        let categories = Object.keys(ctrl.values);
+
+                        Highcharts.chart("c-" + $scope.genId, {
+                            chart: {
+                                type: 'bar',
+                                height: ctrl.height,
+                                width: ctrl.width
+                            },
+                            title: {
+                                text: ctrl.title
+                            },
+                            xAxis: {
+                                categories: categories,
+                                labels: {
+                                    style: {
+                                        fontSize: '14px'
+                                    }
+                                }
+                            },
+                            yAxis: {
+                                min: 0,
+                                max: 100,
+                                title: {
+                                    text: 'Percentage'
+                                },
+                            },
+                            legend: {
+                                reversed: true
+                            },
+                            plotOptions: {
+                                series: {
+                                    stacking: 'normal',
+                                    pointWidth: 20,
+                                    pointPadding: 0,
+                                    borderWidth: 0,
+                                    groupPadding: 0,
+
+                                }
+                            },
+                            series: seriesData
+                        });
+                    } else if(ctrl.chartType === "pie") {
+
+                        let plotData = [];
+                        ctrl.series.forEach(function(seriesName){
+                            let oneEntry = {};
+                            oneEntry.name = seriesName;
+                            oneEntry.y = ctrl.values[seriesName];
+                            plotData.push(oneEntry);
+                        });
+
+                        Highcharts.chart("c-" + $scope.genId, {
+                        chart: {
+                            plotBackgroundColor: null,
+                            plotBorderWidth: null,
+                            plotShadow: false,
+                            type: 'pie',
+                            height: ctrl.height,
+                            width: ctrl.width
+                        },
+                        title: {
+                            text: ctrl.title
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer'
+                            }
+                        },
+                        series: [{
+                            name: ctrl.title,
+                            colorByPoint: true,
+                            data: plotData,
+                            colors: ctrl.colors
+                        }]
+                    });
+                    }
+                    /*$timeout($scope.updatePlot, 10);*/
                 }, 1000);
 
             }
@@ -88,56 +166,20 @@
             angular.forEach(ctrl.series, function (input) {
                 $scope.values[input] = [];
             });
-        };
 
-        $scope.updatePlot = function () {
-            //console.log(ctrl.values);
-            if(ctrl.chartType === "scatter") {
-                let traceList = [];
-                for (let i = 0; i < $scope.traceCount; i++) {
-                    traceList.push(i);
-                }
-                let xValueList = [];
-                let yValueList = [];
+            /*$timeout($scope.repeat, 1000);*/
 
-                angular.forEach(ctrl.values, function (value, key) {
-                    yValueList.push([parseInt(value)]);
-                    xValueList.push([$scope.xValue]);
-                });
-
-                let data = {x: xValueList, y: yValueList};
-                Plotly.extendTraces("c-" + $scope.genId, data, traceList);
-
-                $scope.xValue += 1;
-            } else if(ctrl.chartType === "pie") {
-                let traceList = [];
-                for (let i = 0; i < $scope.traceCount; i++) {
-                    traceList.push(i);
-                }
-                let values = [];
-                angular.forEach(ctrl.values, function (value, key) {
-                    values.push(value);
-                });
-                let marker = {};
-                marker["colors"] = ctrl.colors;
-                let data = [{values: values, type: ctrl.chartType, labels: ctrl.series, marker: marker}];
-                let layout = {};
-                if(ctrl.title) {
-                    layout["title"] = ctrl.title;
-                    layout["titleside"] = "bottom";
-                }
-                /*Plotly.purge("c-" + $scope.genId);*/
-                layout['hovermode'] = !1;
-                Plotly.plot("c-" + $scope.genId, data, layout);
-            }
-
-            if(ctrl.autoUpdate) {
-                $timeout($scope.updatePlot, 3000);
-            }
 
         };
+
+        $scope.repeat = function() {
+            console.log(ctrl);
+            $timeout($scope.repeat, 1000);
+        }
 
     }
+
+
 
     angular.module('qa-dashboard').component('funChart', {
         template: '<div class="fun-chart" id="c-{{ genId }}">\n' +
@@ -148,6 +190,7 @@
             autoUpdate: '<',
             charting: '<',
             values: '<',
+            updateChartsNow: '=',
             showLegend: '<',
             series: '<',
             title: '@',

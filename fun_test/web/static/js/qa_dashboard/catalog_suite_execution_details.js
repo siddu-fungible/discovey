@@ -8,9 +8,12 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
 
     ctrl.$onInit = function () {
         $scope.series = ['Passed', 'Failed', 'Pending'];
+
+        /* module chart */
         $scope.charting = true;
         $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
-
+        $scope.updateOverallProgressChartsNow = false;
+        $scope.updateModuleProgressChartsNow = false;
         $scope.fetchModuleComponentMapping().then(function (result) {
             if(result) {
                 $scope.moduleComponentMapping = result;
@@ -26,7 +29,10 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
                 $scope.currentTestCaseViewComponent = null;
                 $scope.resetInstanceMetrics();
                 $scope.autoUpdate = true;
-                $scope.progressValues = {};
+                $scope.overallProgressValues = {};
+                $scope.moduleProgressValues = {};
+                $scope.updateOverallProgressChartsNow = false;
+                $scope.updateModuleProgressChartsNow = false;
 
             }
         });
@@ -83,7 +89,6 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
             if(issuesAttributes) {
                 $scope.recalculateModuleInfo();
 
-
                 angular.forEach($scope.executionDetails.jira_ids, function (value, jiraId) {
                     value.summary = issuesAttributes[parseInt(jiraId)].summary;
                     value.components = issuesAttributes[parseInt(jiraId)].components;
@@ -119,16 +124,17 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
 
     $scope.recalculateModuleInfo = function () {
         $scope.status = "fetchingJira";
-        angular.forEach($scope.moduleComponentMapping, function (info, module) {
-            $scope.moduleInfo[module]['numTotal'] = 0;
-            $scope.moduleInfo[module]['numPassed'] = 0;
-            $scope.moduleInfo[module]['numFailed'] = 0;
-            $scope.moduleInfo[module]['numUnknown'] = 0;
-
-        });
         commonService.apiGet('/tcm/catalog_suite_execution_details_with_jira/' + ctrl.instanceName).then(function (data) {
             $scope.status = "idle";
             $scope.moduleInfo = data.module_info;
+            angular.forEach($scope.moduleInfo, function(info, moduleName) {
+                let passedPercentage = (info.numPassed * 100)/(info.numTotal);
+                let failedPercentage = (info.numFailed * 100)/(info.numTotal);
+                let pendingPercentage = ((info.numTotal - info.numPassed - info.numFailed) * 100)/(info.numTotal);
+                $scope.moduleProgressValues[moduleName] = {"Passed": passedPercentage, "Failed": failedPercentage, "Pending": pendingPercentage};
+
+            });
+            $scope.updateModuleProgressChartsNow = true;
         });
 
     };
@@ -144,9 +150,10 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
                 $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100 / $scope.executionDetails.num_total;
                 $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100 / $scope.executionDetails.num_total;
                 $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed)) * 100 / $scope.executionDetails.num_total;
-                $scope.progressValues["Passed"] = $scope.executionDetails.passedPercentage;
-                $scope.progressValues["Failed"] = $scope.executionDetails.failedPercentage;
-                $scope.progressValues["Pending"] = $scope.executionDetails.pendingPercentage;
+                $scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
+                $scope.overallProgressValues["Failed"] = $scope.executionDetails.failedPercentage;
+                $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;
+                $scope.updateOverallProgressChartsNow = true;
             }
 
             // Fetch basic issue attributes
@@ -224,7 +231,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
                     $scope._updateComponentViewDetails(component, thisJiraId);
                 });
             });
-            $scope.recalculateModuleInfo();
+            /*$scope.recalculateModuleInfo();*/
             $scope.fetchCatalogSuiteExecutionDetails(false);
         })
 
