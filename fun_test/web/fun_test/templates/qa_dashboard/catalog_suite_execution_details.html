@@ -2,20 +2,36 @@
 <h5>Owner: {{ executionDetails.owner_email }}</h5>
 <div class="row">
     <div class="col-lg-8">
-        <div class="row">
-            <div class="col-lg-4">
+        <div ng-if="overallProgressValues" class="row">
+            <div ng-if="overallProgressValues" class="col-lg-4">
                 <fun-chart values="overallProgressValues" series="series" show-legend="true"
                            title="Overall progress" charting="charting" auto-update="autoUpdate" chart-type="pie"
                            colors="colors"
                            width="250" height="250" update-charts-now="updateOverallProgressChartsNow"></fun-chart>
             </div>
-            <div class="col-lg-4">
+            <div ng-if="moduleProgressValues" class="col-lg-4">
                 <fun-chart values="moduleProgressValues" colors="colors" title="Module progress"
                            width="250" height="250" chart-type="horizontal_colored_bar_chart"
                            series="series" charting="charting" update-charts-now="updateModuleProgressChartsNow"></fun-chart>
             </div>
         </div>
-        <div class="row">
+
+        <table class="table table-nonfluid table-borderless">
+            <tr>
+                <div ng-switch="status">
+                    Status:
+                    <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw"
+                                                           style="color: green"></i>Fetching JIRA issues..</span>
+                    <span ng-switch-when="fetchingCatalogExecution"><i class="fa fa-refresh fa-spin fa-2x fa-fw"
+                                                           style="color: green"></i>Fetching Catalog execution..</span>
+                    <span ng-switch-when="idle" class="label label-info">IDLE</span>
+                    <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
+                    <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
+                </div>
+            </tr>
+
+        </table>
+        <div ng-if="executionDetails" class="row">
             <div class="">
                 <table class="table table-nonfluid table-borderless">
                     <tr>
@@ -26,16 +42,6 @@
                             <input type="radio" name="view-radio" ng-model="currentView" value="components">Module-Components
                             View
                         </td>
-                    </tr>
-                    <tr>
-                        <div ng-switch="status">
-                            Status:
-                            <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw"
-                                                                   style="color: green"></i>Fetching JIRA issues..</span>
-                            <span ng-switch-when="idle" class="label label-info">IDLE</span>
-                            <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
-                            <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
-                        </div>
                     </tr>
                 </table>
 

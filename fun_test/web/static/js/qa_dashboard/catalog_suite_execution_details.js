@@ -141,7 +141,9 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
 
     $scope.fetchCatalogSuiteExecutionDetails = function (checkComponents) {
         let message = "fetchCatalogSuiteExecutionDetails";
+        $scope.status = "fetchingCatalogExecution";
         $http.get('/tcm/catalog_suite_execution_details/' + ctrl.instanceName).then(function (result) {
+            $scope.status = "idle";
             if (!commonService.validateApiResult(result, message)) {
                 return;
             }
