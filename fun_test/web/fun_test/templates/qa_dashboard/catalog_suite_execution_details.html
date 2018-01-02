@@ -53,6 +53,7 @@
                                 <th></th>
                                 <th>Jira Id</th>
                                 <th>Summary</th>
+                                <th>Module</th>
                                 <th class="absorbing-column">Components</th>
                                 <th>Result</th>
                                 <th>Info</th>
@@ -66,6 +67,7 @@
                                        href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
                                 </td>
                                 <td class="absorbing-column">{{ info.summary }}</td>
+                                <td>{{ info.module }}</td>
                                 <td>
                                     <label class="label label-primary"
                                            ng-repeat="component in info.components"> {{ component }}</label>
@@ -115,6 +117,7 @@
                                     <th>Passed %</th>
                                     <th>Failed %</th>
                                     <th>Pending %</th>
+                                    <th>Blockers</th>
                                 </tr>
                                 <tr>
                                     <td>

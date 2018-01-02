@@ -39,7 +39,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
 
     };
 
-    $scope.moduleDetailsClick = function () {
+    $scope.testClick = function () {
         /*commonService.addLogEntry("CatalogSuiteExecutionDetailsController", "Some details");*/
         console.log($scope.updateOverallProgressChartsNow);
                 console.log($scope.updateModuleProgressChartsNow);
@@ -93,8 +93,10 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
                 $scope.recalculateModuleInfo();
 
                 angular.forEach($scope.executionDetails.jira_ids, function (value, jiraId) {
-                    value.summary = issuesAttributes[parseInt(jiraId)].summary;
-                    value.components = issuesAttributes[parseInt(jiraId)].components;
+                    jiraId = parseInt(jiraId);
+                    value.summary = issuesAttributes[jiraId].summary;
+                    value.components = issuesAttributes[jiraId].components;
+                    value.module = issuesAttributes[jiraId].module;
 
                     if(checkComponents) {
                         $scope._resetComponentViewDetails();
@@ -243,7 +245,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
 
     };
 
-    $scope.totalClick = function (component) {
+    $scope.moduleDetailsClick = function (component) {
         console.log(component);
         $scope.testCaseViewInstances = $scope.componentViewDetails[component].jiraIds;
         $scope.currentTestCaseViewComponent = component;
