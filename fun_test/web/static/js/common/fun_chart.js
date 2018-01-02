@@ -18,13 +18,14 @@
         $scope.getRandomId();
 
         $scope.$watch(function () {
-                return ctrl.updateChartsNow === true;
+                /*console.log(ctrl.values);*/
+                return ctrl.values;
             }
             , function (newvalue, oldvalue) {
                 if (newvalue === oldvalue) {
                     return;
                 }
-                ctrl.updateChartsNow = false;
+                /*ctrl.updateChartsNow = false;*/
                 let layout = {
                     showlegend: ctrl.showLegend,
                     autosize: true

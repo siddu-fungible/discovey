@@ -40,7 +40,10 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
     };
 
     $scope.testClick = function () {
-        commonService.addLogEntry("CatalogSuiteExecutionDetailsController", "Some details");
+        /*commonService.addLogEntry("CatalogSuiteExecutionDetailsController", "Some details");*/
+        console.log($scope.updateOverallProgressChartsNow);
+                console.log($scope.updateModuleProgressChartsNow);
+
     };
 
     $scope.moduleShowDetailsClick = function (module) {
@@ -156,6 +159,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
                 $scope.overallProgressValues["Failed"] = $scope.executionDetails.failedPercentage;
                 $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;
                 $scope.updateOverallProgressChartsNow = true;
+                /*$scope.$digest();*/
             }
 
             // Fetch basic issue attributes
