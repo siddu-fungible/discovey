@@ -270,7 +270,7 @@
                                                 <td>
                                                     {{ (getComponentInfo(component).numTotal - (getComponentInfo(component).numPassed + getComponentInfo(component).numFailed + getComponentInfo(component).numUnknown))  * 100/getComponentInfo(component).numTotal | number: 2}}</td>
                                                 <td>0</td>
-                                                <td><a href="#" ng-click="totalClick(component)"> Details</a></td>
+                                                <td><a href="#" ng-click="moduleDetailsClick(component)"> Details</a></td>
                                             </tr>
                                         </table>
                                     </td>

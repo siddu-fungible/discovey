@@ -39,7 +39,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
 
     };
 
-    $scope.testClick = function () {
+    $scope.moduleDetailsClick = function () {
         /*commonService.addLogEntry("CatalogSuiteExecutionDetailsController", "Some details");*/
         console.log($scope.updateOverallProgressChartsNow);
                 console.log($scope.updateModuleProgressChartsNow);
