@@ -83,7 +83,7 @@
             let result = false;
             let data = apiResult["data"];
             if (!data["status"]) {
-                showError("Error: " + message + " " + data["error_message"]);
+                showError("Error: " + message + " " + data["error_message"] + " Status: " + data["status"]);
             } else {
                 result = true;
             }
