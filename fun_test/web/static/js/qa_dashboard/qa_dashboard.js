@@ -197,7 +197,7 @@
     }]);
 
     app.component(funFieldComponent["name"], funFieldComponent["info"]);
-
+    app.component(funSpinnerStatusComponent["name"], funSpinnerStatusComponent["info"]);
 
 }).call();
 

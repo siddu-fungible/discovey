@@ -1,25 +1,25 @@
 let funFieldComponentInfo = {
 
-        template: "<div class='{{ $ctrl.klass }}'>" +
-                  "<input style='width: 100%' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
-                  "<p ng-if='!value && $ctrl.required' style='{{ errorStyle }}'>{{ $ctrl.type }} * Required</p>" +
-                  "<p ng-show='minRequirementError' style='{{ errorStyle }}'>{{ minRequirementError }}</p>" +
-                  "<p ng-show='maxRequirementError' style='{{ errorStyle }}'>{{ maxRequirementError }}</p>" +
-                  "<p ng-show='minLengthRequirementError' style='{{ errorStyle }}'>{{ minLengthRequirementError }}</p>" +
-                  "<p ng-show='maxLengthRequirementError' style='{{ errorStyle }}'>{{ maxLengthRequirementError }}</p>" +
-                  "</div>",
+    template: "<div class='{{ $ctrl.klass }}'>" +
+              "<input style='width: 100%' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
+              "<p ng-if='!value && $ctrl.required' style='{{ errorStyle }}'>{{ $ctrl.type }} * Required</p>" +
+              "<p ng-show='minRequirementError' style='{{ errorStyle }}'>{{ minRequirementError }}</p>" +
+              "<p ng-show='maxRequirementError' style='{{ errorStyle }}'>{{ maxRequirementError }}</p>" +
+              "<p ng-show='minLengthRequirementError' style='{{ errorStyle }}'>{{ minLengthRequirementError }}</p>" +
+              "<p ng-show='maxLengthRequirementError' style='{{ errorStyle }}'>{{ maxLengthRequirementError }}</p>" +
+              "</div>",
 
-        bindings: {
-                    type: '@',
-                    min: '<',
-                    max: '<',
-                    minLength: '<',
-                    maxLength: '<',
-                    required: '@',
-                    klass: '@',
-                    bindValue: '='
-                  },
-        controller: FunFieldController
+    bindings: {
+                type: '@',
+                min: '<',
+                max: '<',
+                minLength: '<',
+                maxLength: '<',
+                required: '@',
+                klass: '@',
+                bindValue: '='
+              },
+    controller: FunFieldController
  };
 
 
