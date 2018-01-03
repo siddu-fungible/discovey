@@ -10,7 +10,7 @@
                 <th>Total</th>
                 <th>Passed</th>
                 <th>Failed</th>
-                <th>Unknown</th>
+                <th>Pending</th>
                 <th>Progress</th>
                 <th>Passed %</th>
                 <th>Failed %</th>
@@ -21,6 +21,32 @@
                 <td>{{ summaryEntry.fields.owner_email }}</td>
                 <td>{{ summaryEntry.fields.suite_execution_id }}</td>
                 <td><a href="/tcm/catalog_suite_execution_details_page/{{ summaryEntry.fields.instance_name }}">Details</a></td>
+                <td>{{ summaryEntry.fields.numTotal }}</td>
+                <td>{{ summaryEntry.fields.numPassed }}</td>
+                <td>{{ summaryEntry.fields.numFailed }}</td>
+                <td>{{ (summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) }}</td>
+                <td>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar progress-bar-success" role="progressbar"
+                             style="width:
+                                     {{ (summaryEntry.fields.numPassed * 100)/summaryEntry.fields.numTotal }}%">
+                            P
+                        </div>
+                        <div class="progress-bar progress-bar-danger" role="progressbar"
+                             style="width:
+                                     {{ (summaryEntry.fields.numFailed * 100)/summaryEntry.fields.numTotal }}%">
+                            F
+                        </div>
+                        <div class="progress-bar progress-bar-info" role="progressbar"
+                             style="width:0%">U
+                        </div>
+                    </div>
+
+                </td>
+                <td>{{ (summaryEntry.fields.numPassed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+                <td>{{ (summaryEntry.fields.numFailed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+                <td>{{ ((summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+
             </tr>
         </table>
     </div>
