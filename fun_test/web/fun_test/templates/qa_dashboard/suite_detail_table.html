@@ -21,13 +21,13 @@
                     <td>{{ testCaseExecution.fields.test_case_id }}</td>
                     <td>Test-case summary</td>
                     <td>
-                        <button class="btn btn-{{ resultToClass(testCaseExecution.fields.result)}}">{{ testCaseExecution.fields.result }}</button>
+                        <button class="btn btn-xs btn-{{ resultToClass(testCaseExecution.fields.result)}}">{{ testCaseExecution.fields.result }}</button>
                     </td>
-                    <td>{{ testCaseExecution.fields.started_time }}</td>
+                    <td>{{ trimTime(testCaseExecution.fields.started_time) }}</td>
                     <td>{{ testCaseExecution.fields.script_path }}</td>
                     <td><a target="_blank" href="{{ getHtmlLogPath(testCaseExecution.fields.script_path) }}">html</a></td>
                     <td><a target="_blank" href="{{ getConsoleLogPath(testCaseExecution.fields.script_path) }}">flat</a></td>
-                    <td><button ng-click="rerunClick($ctrl.executionId, testCaseExecution.fields.test_case_id, testCaseExecution.fields.script_path)" class="btn
+                    <td><button ng-click="rerunClick($ctrl.executionId, testCaseExecution.fields.test_case_id, testCaseExecution.fields.script_path)" class="btn btn-xs
                                 btn-warning"><i class="glyphicon glyphicon-refresh"></i></button></td>
                 </tr>
             </table>

@@ -1,9 +1,8 @@
 (function (angular) {
     'use strict';
 
-    function SuiteDetailTableController($scope, $http, $timeout, resultToClass, $window) {
+    function SuiteDetailTableController($scope, $http, $timeout, resultToClass, $window, trimTime) {
         let ctrl = this;
-
 
         $scope.resultToClass = function (result) {
             return resultToClass(result);
@@ -36,7 +35,6 @@
 
                     })
                 });
-
             });
         };
 
@@ -58,6 +56,10 @@
 
         $scope.getConsoleLogPath = function (path) {
             return _getFlatPath(path) + $scope.CONSOLE_LOG_EXTENSION;
+        };
+
+        $scope.trimTime = function (t) {
+            return trimTime(t);
         };
 
         $scope.rerunClick = function(suiteExecutionId, testCaseExecutionId, scriptPath) {

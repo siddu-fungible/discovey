@@ -6,12 +6,12 @@ from django.views.decorators.csrf import csrf_exempt
 from web.tools.models import Session, F1, Tg, TopologyTask, TrafficTask, IkvVideoTask
 from rq import Queue
 from redis import Redis
-from topology_tasks import deploy_topology
-from traffic_tasks import start_fio
+from web.tools.topology_tasks import deploy_topology
+from web.tools.traffic_tasks import start_fio
 from lib.utilities.test_dpcsh_tcp_proxy import DpcshClient
 from fun_global import RESULTS
 from fun_settings import *
-import ikv_tasks
+import web.tools.ikv_tasks as ikv_tasks
 from lib.topology.topology_manager.topo_manager import topo
 from collections import OrderedDict
 
@@ -221,6 +221,43 @@ def attach_tg(request, topology_session_id, f1_id):
     logs = []
     f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
     server_ip = f1_record.ip
+
+
+    topology_obj = topo.Topology()
+    pickle_file = WEB_UPLOADS_DIR + "/topology.pkl"
+    topology_obj.load(filename=pickle_file)
+
+    info = json.loads(topology_obj.getAccessInfo())
+    topology_obj.save(filename=pickle_file)
+
+
+    tg = None
+    tg_found = False
+    print("F1 Name:" + f1_record.name)
+    f1_node = topology_obj.get_node(f1_record.name)
+    if f1_node.tgs:
+        print("Searching for {} Found".format(f1_id))
+        for tg in f1_node.tgs:
+            if tg.node.name == f1_id:
+                print("Found {} in tg list".format(f1_id))
+                tg_found = True
+                break
+    if not tg_found:
+        print("No TG found, attaching a new one")
+        tg = topology_obj.attachTG(f1_id)
+    print("**** tg.ip: " + tg.ip)
+    topology_obj.save(filename=pickle_file)
+
+
+    # result["logs"] = ["Attached TG: {}".format(tg.ip)]
+    return HttpResponse(tg.ip)
+
+'''
+@csrf_exempt
+def attach_tg(request, topology_session_id, f1_id):
+    logs = []
+    f1_record = _get_f1_record(topology_session_id=topology_session_id, f1_id=f1_id)
+    server_ip = f1_record.ip
     server_port = f1_record.dpcsh_port
     dpcsh_client = DpcshClient(server_address=server_ip, server_port=server_port)
 
@@ -240,9 +277,12 @@ def attach_tg(request, topology_session_id, f1_id):
 
     tg = None
     tg_found = False
-    if topology_obj.tgs:
-        print("Searching for {}".format(f1_id))
-        for tg in topology_obj.tgs:
+    print("F1 Name:" + f1_record.name)
+    f1_node = topology_obj.get_node(f1_record.name)
+    #print f1_node.__dict__
+    if f1_node.tgs:
+        print("Searching for {} Found".format(f1_id))
+        for tg in f1_node.tgs:
             if tg.node.name == f1_id:
                 print("Found {} in tg list".format(f1_id))
                 tg_found = True
@@ -271,10 +311,14 @@ def attach_tg(request, topology_session_id, f1_id):
 
     if result["status"]:
         data = result["data"]
+    
+    if (not result["status"]) and (not result["data"]):
+            result["status"] = True
     print("create command result: " + str(result))
     logs.append("create command result: " + json.dumps(result, indent=4))
     result["logs"] = logs
     return HttpResponse(json.dumps(result))
+'''
 
 
 @csrf_exempt
@@ -482,7 +526,7 @@ def attach_volume(request, topology_session_id, f1_id):
 
     create_dict = {"class": "controller",
                    "opcode": "ATTACH",
-                   "params": {"huid": 0,
+                   "params": {"huid": 7,
                               "ctlid": 0,
                               "fnid": 5,
                               "nsid": nsid,
@@ -490,11 +534,13 @@ def attach_volume(request, topology_session_id, f1_id):
                               "remote_ip": remote_ip}}
     command = "storage {}".format(json.dumps(create_dict))
     logs.append("Sending: " + command)
-    result = dpcsh_client.command(command=command)
+    result = dpcsh_client.command(command=command, expected_command_duration=4)
     logs.append("command result: " + json.dumps(result, indent=4))
     print("attach command result: " + str(result))
     if result["status"]:
         i = result["data"]
+    if (not result["status"]) and (not result["data"]):
+            result["status"] = True
     result["logs"] = logs
     return HttpResponse(json.dumps(result))
 

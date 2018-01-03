@@ -6,11 +6,13 @@ import time, json, pdb
 import inspect
 from fun_settings import *
 import fun_xml
-import argparse
+import argparse, threading
 from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 import signal
 from web.fun_test.web_interface import get_homepage_url
+import pexpect
+from uuid import getnode as get_mac
 
 class TestException(Exception):
     def __str__(self):
@@ -89,7 +91,12 @@ class FunTest:
                             dest="build_url",
                             default=None,
                             help="To be used only by the scheduler")
+        parser.add_argument('--disable_fun_test',
+                            dest="disable_fun_test",
+                            default=None)
         args = parser.parse_args()
+        if args.disable_fun_test:
+            return
         self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
@@ -104,8 +111,11 @@ class FunTest:
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
+        (frame, file_name, line_number, function_name, lines, index) = \
+            inspect.getouterframes(inspect.currentframe())[2]
 
-        signal.signal(signal.SIGINT, self.exit_gracefully)
+        if threading.current_thread().__class__.__name__ == '_MainThread':
+            signal.signal(signal.SIGINT, self.exit_gracefully)
         # signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.initialized = False
@@ -114,10 +124,9 @@ class FunTest:
         self.buf = None
         self.current_test_case_id = None
         self.traces = {}
-        (frame, file_name, line_number, function_name, lines, index) = \
-            inspect.getouterframes(inspect.currentframe())[2]
-        absolute_script_file_name = file_name
-        self.script_file_name = os.path.basename(absolute_script_file_name)
+
+        self.absolute_script_file_name = file_name
+        self.script_file_name = os.path.basename(self.absolute_script_file_name)
         script_file_name_without_extension = self.script_file_name.replace(".py", "")
 
         self.test_metrics = collections.OrderedDict()
@@ -129,19 +138,40 @@ class FunTest:
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
                                           log_directory=self.logs_dir,
                                           log_file=html_log_file,
-                                          full_script_path=absolute_script_file_name)
+                                          full_script_path=self.absolute_script_file_name)
         reload(sys)
         sys.setdefaultencoding('UTF8') #Needed for xml
         self.counter = 0  # Mostly used for testing
 
         self.log_timestamps = True
+        self.log_function_name = False
         self.pause_on_failure = False
+        self.shared_variables = {}
 
-    def create_test_case_artifact_file(self, post_fix_name, contents):
-        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+
+    def get_absolute_script_path(self):
+        return self.absolute_script_file_name
+
+    def get_script_parent_directory(self):
+        current_directory = os.path.abspath(os.path.join(self.get_absolute_script_path(), os.pardir))
+        return current_directory
+
+    def set_log_format(self, timestamp="UNCHANGED", function_name="UNCHANGED"):
+        if timestamp != "UNCHANGED":
+            self.log_timestamps = timestamp
+        if function_name != "UNCHANGED":
+            self.log_function_name = function_name
+
+    def create_test_case_artifact_file(self, contents, post_fix_name=None, artifact_file=None):
+        if not artifact_file:
+            artifact_file = self.get_test_case_artifact_file_name(post_fix_name=post_fix_name)
         with open(artifact_file, "w") as f:
             f.write(contents)
         return os.path.basename(artifact_file)
+
+    def get_test_case_artifact_file_name(self, post_fix_name):
+        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        return artifact_file
 
     def enable_pause_on_failure(self):
         if not is_regression_server():
@@ -166,7 +196,7 @@ class FunTest:
         if env_sid:
             env_sid = int(env_sid)
         if not env_sid:
-            env_sid = 100
+            env_sid = int(str(get_mac())[:4])
         sid = self.suite_execution_id if self.suite_execution_id else env_sid
         return sid
 
@@ -179,13 +209,13 @@ class FunTest:
     def log_disable_timestamps(self):
         self.log_timestamps = False
 
-    def log_selected_module(self, module_name):
+    def log_module_filter(self, module_name):
         self.logging_selected_modules.append(module_name.strip("*.py"))
 
-    def log_disable_selective(self):
+    def log_module_filter_disable(self):
         self.logging_selected_modules = []
 
-    def log_selected_modules(self, module_names):
+    def log_module_filters(self, module_names):
         self.logging_selected_modules.extend(module_names)
 
     def enable_debug(self):
@@ -248,7 +278,7 @@ class FunTest:
 
 
     def _get_module_name(self, outer_frames):
-        module_name = os.path.basename(outer_frames[0][1]).strip(".py")
+        module_name = os.path.basename(outer_frames[0][1]).replace(".py", "")
         line_number = outer_frames[0][2]
         return (module_name, line_number)
 
@@ -256,7 +286,8 @@ class FunTest:
         module_info = None
         for f in outer_frames:
             if not f[1].endswith("fun_test.py"):
-                module_info = (os.path.basename(f[1]).strip(".py"), f[2])
+                function_name = f[0].f_code.co_name
+                module_info = (os.path.basename(f[1]).replace(".py", ""), f[2], function_name)
                 break
         return module_info
 
@@ -275,23 +306,30 @@ class FunTest:
             calling_module=None,
             no_timestamp=False):
         current_time = get_current_time()
+        if calling_module:
+            module_name = calling_module[0]
+            line_number = calling_module[1]
+            function_name = calling_module[2]
+        else:
+            outer_frames = inspect.getouterframes(inspect.currentframe())
+            module_info = self._get_calling_module(outer_frames=outer_frames)
+            module_name = module_info[0]
+            line_number = module_info[1]
+            function_name = module_info[2]
+
         message = str(message)
         if trace_id:
             self.trace(id=trace_id, log=message)
-        module_line_info = ""
-        if level in [self.LOG_LEVEL_DEBUG, self.LOG_LEVEL_CRITICAL]:
-            if calling_module:
-                module_line_info = "{}.py:{} ".format(calling_module[0], calling_module[1])
+
         if self.logging_selected_modules:
-            outer_frames = inspect.getouterframes(inspect.currentframe())
-            if not calling_module:
-                module_name = self._get_calling_module(outer_frames=outer_frames)
-            else:
-                module_name = calling_module[0]
             if (not module_name == "fun_test") and not self._is_selected_module(module_name=module_name):
                 return
-            else:
-                message = "{}: {}".format(module_name, message)
+
+        module_line_info = ""
+        if level in [self.LOG_LEVEL_DEBUG, self.LOG_LEVEL_CRITICAL]:
+            module_line_info = "{}.py:{}".format(module_name, line_number)
+        if self.log_function_name:
+            module_line_info += ":{}".format(function_name)
 
         self.fun_xml_obj.log(log=message, newline=newline)
 
@@ -476,6 +514,7 @@ class FunTest:
                                   actual=actual,
                                   message=message,
                                   ignore_on_success=ignore_on_success)
+
     def simple_assert(self, expression, message):
         self.test_assert(expression=expression, message=message, ignore_on_success=True)
 
@@ -519,10 +558,129 @@ class FunTest:
                                                      suite_execution_id=fun_test.suite_execution_id,
                                                      result=fun_test.FAILED)
 
+    def _get_flat_file_name(self, path):
+        parts = path.split("/")
+        flat = path
+        if len(parts) > 2:
+            flat = "_".join(parts[-2:])
+        return flat.lstrip("/")
+
+    def inspect(self, module_name):
+
+        sys.argv.append("--disable_fun_test")
+        test_cases = []
+        test_script = None
+
+        import imp, inspect
+
+        temp_module_name = self._get_flat_file_name(path=module_name)
+
+        imp.load_source(temp_module_name, module_name)
+        members = inspect.getmembers(sys.modules[temp_module_name], inspect.isclass)
+        for m in members:
+            if len(m) > 1:
+                klass = m[1]
+                mros = inspect.getmro(klass)
+                if issubclass(klass, FunTestCase):
+                    if len(mros) > 1 and "lib.system.fun_test.FunTestCase" in str(mros[1]):
+                        print klass
+                        o = klass()
+                        o.describe()
+                        print o.id
+                        print o.summary
+                        print o.steps
+                        test_cases.append(klass)
+
+                if issubclass(klass, FunTestScript):
+                    if len(mros) > 1 and "lib.system.fun_test.FunTestScript" in str(mros[1]):
+                        test_script = klass
+        #test_script_obj = test_script()
+        #test_case_order = test_script().test_case_order
+        '''
+        for entry in test_script().test_case_order:
+            print entry["tc"]
+        '''
+
+    def add_auxillary_file(self, description, filename):
+        base_name = os.path.basename(filename)
+        self.fun_xml_obj.add_auxillary_file(description=description, auxillary_file=base_name)
+
+    def scp(self,
+            source_file_path,
+            target_file_path,
+            source_ip=None,
+            source_username=None,
+            source_password=None,
+            source_port=None,
+            target_ip=None,
+            target_username=None,
+            target_password=None,
+            target_port=22,
+            timeout=60):
+        transfer_complete = False
+        scp_command = ""
+
+        #scp_command = "scp -P %d %s %s@%s:%s" % (
+        #target_port, source_file_path, target_username, target_ip, target_file_path)
+        the_password = source_password
+        if target_ip:
+            scp_command = "scp -P {} {} {}@{}:{}".format(target_port,
+                                                         source_file_path,
+                                                         target_username,
+                                                         target_ip,
+                                                         target_file_path)
+            target_password = the_password
+        elif source_ip:
+            scp_command = "scp -P {} {}@{}:{} {}".format(source_port,
+                                                         source_username,
+                                                         source_ip,
+                                                         source_file_path,
+                                                         target_file_path)
+
+        handle = pexpect.spawn(scp_command, env={"TERM": "dumb"}, maxread=4096)
+        handle.logfile_read = fun_test
+        handle.sendline(scp_command)
+
+        expects = collections.OrderedDict()
+        expects[0] = '[pP]assword:'
+        expects[1] = r'\$ ' + r'$'
+        expects[2] = '\(yes/no\)?'
+
+        max_retry_count = 10
+        max_loop_count = 10
+
+        attempt = 0
+        try:
+            while attempt < max_retry_count and not transfer_complete:
+                current_loop_count = 0
+                while current_loop_count < max_loop_count:
+                    try:
+                        i = handle.expect(expects.values(), timeout=timeout)
+                        if i == 0:
+                            fun_test.debug("Sending: %s" % target_password)
+                            handle.sendline(the_password)
+                            current_loop_count += 1
+                        if i == 2:
+                            fun_test.debug("Sending: %s" % "yes")
+                            handle.sendline("yes")
+                            current_loop_count += 1
+                        if i == 1:
+                            transfer_complete = True
+                            break
+                    except pexpect.exceptions.EOF:
+                        transfer_complete = True
+                        break
+        except Exception as ex:
+            critical_str = str(ex)
+            self.critical(critical_str)
+
+        return transfer_complete
+
 fun_test = FunTest()
 
 class FunTestScript(object):
     __metaclass__ = abc.ABCMeta
+    test_case_order = None
     def __init__(self):
         fun_test._initialize()
         self.test_cases = []
@@ -544,6 +702,14 @@ class FunTestScript(object):
     def describe(self):
         pass
 
+    def _get_test_case_by_name(self, tc_name):
+        result = None
+        for test_case in self.test_cases:
+            s = test_case.__class__.__name__
+            if s == tc_name:
+                result = test_case
+        return result
+
     @abc.abstractmethod
     def setup(self):
         fun_test._start_test(id=self.id,
@@ -553,12 +719,34 @@ class FunTestScript(object):
 
         setup_te = None
         try:
+            if self.test_case_order:
+                new_order = []
+                for entry in self.test_case_order:
+                    tc_name = entry["tc"]
+                    main_test_case = self._get_test_case_by_name(tc_name=tc_name)
+                    if not main_test_case:
+                        raise Exception("Unable to find test-case {} in list. Did you forget to append to the script?".format(tc_name))
 
+                    if "dependencies" in entry:
+                        dependencies = entry["dependencies"]
+                        for dependency in dependencies:
+                            t = self._get_test_case_by_name(tc_name=dependency)
+                            if not t:
+                                raise Exception("Unable to find test-case {} in list. Did you forget to append to the script?".format(dependency))
+                            else:
+                                new_order.append(t)
+                                t._added_to_script = True
+
+                    new_order.append(main_test_case)
+                    main_test_case._added_to_script = True
+
+                self.test_cases  = new_order
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
                 setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
                                                            suite_execution_id=fun_test.suite_execution_id,
                                                            result=fun_test.IN_PROGRESS,
                                                            path=fun_test.relative_path)
+
                 for test_case in self.test_cases:
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
@@ -644,6 +832,7 @@ class FunTestScript(object):
                             fun_test.critical(str(ex))
                     except Exception as ex:
                         fun_test.critical(str(ex))
+                        fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
                         try:
                             test_case.cleanup()
                         except Exception as ex:
@@ -672,12 +861,11 @@ class FunTestScript(object):
 
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
-    def __init__(self,
-                 script_obj):
+    def __init__(self):
         self.id = None
         self.summary = None
         self.steps = None
-        self.script_obj = script_obj
+        self._added_to_script = None
 
     def __str__(self):
         s = "{}: {}".format(self.id, self.summary)

@@ -1,8 +1,12 @@
-from lib.system.fun_test import fun_test, FunTestLibException
-from asset.asset_manager import *
 import json
-from topology import ExpandedTopology
+
+from asset.asset_manager import *
 from dut import Dut
+from lib.host.traffic_generator import Fio, LinuxHost
+from lib.system.fun_test import FunTestLibException
+from topology import ExpandedTopology
+from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
+
 
 class TopologyHelper:
     def __init__(self, spec):
@@ -16,34 +20,45 @@ class TopologyHelper:
         spec = self.spec
 
         expanded_topology = ExpandedTopology()
-        fun_test.simple_assert("dut_info" in spec, "dut_info in spec")
-        duts = spec["dut_info"]
-        for dut_index, dut_info in duts.items():
-            dut_type = dut_info["type"]
-            simulation_start_mode = Dut.SIMULATION_START_MODE_NORMAL
-            if "simulation_start_mode" in dut_info:
-                simulation_start_mode = dut_info["simulation_start_mode"]
+        # fun_test.simple_assert("dut_info" in spec, "dut_info in spec")  #TODO
+        if "dut_info" in spec:
+            duts = spec["dut_info"]
+            for dut_index, dut_info in duts.items():
+                dut_type = dut_info["type"]
+                simulation_start_mode = Dut.SIMULATION_START_MODE_NORMAL
+                if "simulation_start_mode" in dut_info:
+                    simulation_start_mode = dut_info["simulation_start_mode"]
 
-            # Create DUT object
-            dut_obj = Dut(type=dut_type, index=dut_index, simulation_start_mode=simulation_start_mode)
-            interfaces = dut_info["interface_info"]
+                # Create DUT object
+                dut_obj = Dut(type=dut_type, index=dut_index, simulation_start_mode=simulation_start_mode)
+                interfaces = dut_info["interface_info"]
 
-            # Assign endpoints on interfaces
-            for interface_index, interface_info in interfaces.items():
-                dut_interface_obj = dut_obj.add_interface(index=interface_index, type=interface_info['type'])
-                if "hosts" in interface_info:
-                    dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"])
-                elif 'vms' in interface_info:
-                    if not 'type' in interface_info:
-                        raise FunTestLibException("We must define an interface type")
-                    if dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_PCIE:
-                        dut_interface_obj.add_qemu_colocated_hypervisor(num_vms=interface_info["vms"])
-                    elif dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
-                        dut_interface_obj.add_hypervisor(num_vms=interface_info["vms"])
-                elif 'ssds' in interface_info:
-                    dut_interface_obj.add_drives_to_interface(num_ssds=interface_info["ssds"])
-            expanded_topology.duts[dut_index] = dut_obj
+                # Assign endpoints on interfaces
+                for interface_index, interface_info in interfaces.items():
+                    dut_interface_obj = dut_obj.add_interface(index=interface_index, type=interface_info['type'])
+                    if "hosts" in interface_info:
+                        dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"])
+                    elif 'vms' in interface_info:
+                        if not 'type' in interface_info:
+                            raise FunTestLibException("We must define an interface type")
+                        if dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_PCIE:
+                            dut_interface_obj.add_qemu_colocated_hypervisor(num_vms=interface_info["vms"])
+                        elif dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
+                            dut_interface_obj.add_hypervisor(num_vms=interface_info["vms"])
+                    elif 'ssds' in interface_info:
+                        dut_interface_obj.add_drives_to_interface(num_ssds=interface_info["ssds"])
+                expanded_topology.duts[dut_index] = dut_obj
 
+        if "tg_info" in spec:
+            tgs = spec["tg_info"]
+            for tg_index, tg_info in tgs.items():
+                tg_type = tg_info["type"]
+                if tg_type == Fio.TRAFFIC_GENERATOR_TYPE_FIO:
+                    expanded_topology.tgs[tg_index] = FioEndPoint()
+                if tg_type == LinuxHost.TRAFFIC_GENERATOR_TYPE_LINUX_HOST:
+                    expanded_topology.tgs[tg_index] = LinuxHostEndPoint()
+
+        fun_test.debug("got expanded topology")
         return expanded_topology
 
 
@@ -75,7 +90,7 @@ class TopologyHelper:
                 fun_test.debug("Allocating the DUT")
                 self.allocate_dut(dut_obj=dut_obj, orchestrator_obj=storage_container_orchestrator)
 
-                fun_test.debug("Setup peers on the interfaces")
+                fun_test.debug("Setting up peers on the interfaces")
 
                 for interface_index, interface_info in dut_obj.interfaces.items():
                     fun_test.debug("Setting up DUT interface {}".format(interface_index))
@@ -92,6 +107,13 @@ class TopologyHelper:
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                      orchestrator_obj=storage_container_orchestrator)
+
+            tgs = topology.tgs
+
+            for tg_index, tg in tgs.items():
+                fun_test.debug("Setting up Tg {}".format(str(tg)))
+                if (tg.type == EndPoint.END_POINT_TYPE_FIO or tg.type == EndPoint.END_POINT_TYPE_LINUX_HOST):
+                    self.allocate_traffic_generator(index=tg_index, end_point=tg)
         else:
             pass  # Networking style,
 
@@ -125,8 +147,8 @@ class TopologyHelper:
     @fun_test.safe
     def allocate_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO
         if hypervisor_end_point.mode == hypervisor_end_point.MODE_SIMULATION:
-            if not orchestrator_obj:
-                orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
+            # if not orchestrator_obj:
+            #    orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
 
             if hypervisor_end_point.num_vms:
@@ -141,6 +163,17 @@ class TopologyHelper:
                     hypervisor_end_point.add_instance(instance=instance)
                     fun_test.counter += 1
 
+    @fun_test.safe
+    def allocate_traffic_generator(self, index, end_point):
+        orchestrator_obj = asset_manager.get_orchestrator(OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST)
+        if end_point.end_point_type == EndPoint.END_POINT_TYPE_FIO:
+            instance = orchestrator_obj.launch_fio_instance(index)
+            fun_test.test_assert(instance, "allocate_traffic_generator: Launched fio instance")
+            end_point.set_instance(instance=instance)
+        if end_point.end_point_type == EndPoint.END_POINT_TYPE_LINUX_HOST:
+            instance = orchestrator_obj.launch_linux_instance(index)
+            fun_test.test_assert(instance, "allocate_traffic_generator: Launched Linux instance")
+            end_point.set_instance(instance=instance)
 
     @fun_test.safe
     def cleanup(self):

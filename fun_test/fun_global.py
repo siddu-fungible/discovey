@@ -12,7 +12,8 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "UNKNOWN": "UNKNOWN",
            "KILLED": "KILLED",
            "QUEUED": "QUEUED",
-           "SCHEDULED": "SCHEDULED"}
+           "SCHEDULED": "SCHEDULED",
+           "ABORTED": "ABORTED"}
 
 
 def get_current_time():

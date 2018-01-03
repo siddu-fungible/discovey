@@ -12,7 +12,10 @@ TEST_ARTIFACTS_RELATIVE_DIR = "/test_artifacts"
 TEST_ARTIFACTS_DIR = WEB_STATIC_DIR + TEST_ARTIFACTS_RELATIVE_DIR
 LOGS_DIR = WEB_STATIC_DIR + "/logs"
 LOGS_RELATIVE_DIR = STATIC_RELATIVE_DIR + "/logs"
+MEDIA_DIR = WEB_STATIC_DIR + "/media"
+
 WEB_SERVER_PORT = 5000
+COMMON_WEB_LOGGER_NAME = "web"
 
 
 ASSET_DIR = FUN_TEST_DIR + "/asset"
@@ -31,9 +34,11 @@ TCMS_PROJECT = "TCM"
 SYSTEM_TMP_DIR = "/tmp"
 sys.path.append(WEB_DIR)
 
-DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funos/940/"
+DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funos/latest/"
 TIME_ZONE = "America/Los_Angeles"
 
 
 MAIL_SERVER = "localhost"
 AUTOMATION_EMAIL = "automation@fungible.com"
+
+SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"

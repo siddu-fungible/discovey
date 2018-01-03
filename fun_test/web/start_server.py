@@ -12,7 +12,7 @@ if enable_rq_worker:
     rq_found = False
     for proc in psutil.process_iter():
         try:
-            s = [s for s in proc.cmdline() if "rq" in s]
+            s = [s for s in proc.cmdline() if "rq worker" in s]
             if s:
                 rq_found = True
         except:
@@ -24,5 +24,6 @@ if enable_rq_worker:
 
 
 if __name__ == "__main__":
-    execute_from_command_line(["", "run_scheduler"])
-    execute_from_command_line(["", "runserver", "0.0.0.0:%d" % WEB_SERVER_PORT, "--noreload"])
+    # execute_from_command_line(["", "run_scheduler"])
+    # execute_from_command_line(["", "runserver", "0.0.0.0:%d" % WEB_SERVER_PORT, "--noreload"])
+    execute_from_command_line(["", "runserver", "0.0.0.0:%d" % WEB_SERVER_PORT])

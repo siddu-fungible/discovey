@@ -13,7 +13,7 @@ Topology manager can be run on standalone (single) physical server/VM or on a cl
 
 ```
 1. Clone Integration repo. 
-2. Make changes to config.py to suit your environment.
+2. Make changes to topo_manager/config.py to suit your environment. Defaults should usually work; the only needed change would    be the IP(s) of the compute VMs and their access credentials.
 3. On all the compute engines, do the following:
    (a) Install Docker:
          (i) curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -

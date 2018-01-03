@@ -8,6 +8,7 @@ import time
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 
+
 class NoLogger:
     def __init__(self):
         self.trace_enabled = None
@@ -28,7 +29,6 @@ class NoLogger:
 
     def log(self, message):
         fun_test.log(message=message, trace_id=self.trace_id)
-
 
     def critical(self, message):
         message = "\nCRITICAL: {}".format(message)
@@ -125,10 +125,8 @@ class Linux(object, ToDictMixin):
         :rtype: object
         """
         prop = asset_properties
-        return Linux(host_ip=prop["host_ip"],
-                     ssh_username=prop["mgmt_ssh_username"],
-                     ssh_password=prop["mgmt_ssh_password"],
-                     ssh_port=prop["mgmt_ssh_port"])
+        return Linux(host_ip=prop["host_ip"], ssh_username=prop["mgmt_ssh_username"],
+                     ssh_password=prop["mgmt_ssh_password"], ssh_port=prop["mgmt_ssh_port"])
 
     def enable_logs(self, enable=True):
         if enable:
@@ -187,8 +185,6 @@ class Linux(object, ToDictMixin):
         connected = False
 
         try:
-
-
             expects = collections.OrderedDict()
             expects[0] = '[pP]assword'
             expects[1] = '\(yes/no\)?'
@@ -230,7 +226,7 @@ class Linux(object, ToDictMixin):
                                                 env={"TERM": "dumb"},
                                                 maxread=4096)
 
-                self.handle.logfile_read = sys.stdout
+                # self.handle.logfile_read = sys.stdout
                 self.handle.logfile_read = self.logger
 
                 current_loop_count = 0
@@ -682,14 +678,18 @@ class Linux(object, ToDictMixin):
         pass
 
     @fun_test.safe
-    def enter_sudo(self):
+    def enter_sudo(self, preserve_environment=None):
         result = False
         if not self.handle:
             self._connect()
         self.saved_prompt_terminator = self.prompt_terminator
         self.set_prompt_terminator(prompt_terminator=r'# ')
         prompt = r'assword\s+for\s+%s: ' % self.ssh_username
-        output = self.command("sudo bash", custom_prompts={prompt: self.ssh_password})
+        options_str = ""
+        if preserve_environment:
+            options_str += "-E "
+        cmd = 'sudo {}bash'.format(options_str)
+        output = self.command(cmd, custom_prompts={prompt: self.ssh_password})
         if "command not found" in output:
             result = False
         return result
@@ -768,11 +768,11 @@ class Linux(object, ToDictMixin):
     def clean(self):
         self.send_control_c()
         try:
-            self.handle.expect(self.UNEXPECTED_EXPECT, timeout="0.1")
+            self.handle.expect(self.UNEXPECTED_EXPECT, timeout=0.1)
         except pexpect.ExceptionPexpect:
             pass
         try:
-            self.handle.expect(self.prompt_terminator, timeout="0.1")
+            self.handle.expect(self.prompt_terminator, timeout=0.1)
         except pexpect.ExceptionPexpect:
             pass
 
@@ -859,8 +859,8 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def sudo_command(self, command, timeout=60):
-        sudoed = self.enter_sudo()
+    def sudo_command(self, command, timeout=60, preserve_environment=None):
+        sudoed = self.enter_sudo(preserve_environment=preserve_environment)
         output = self.command(command, timeout=timeout)
         if sudoed:
             self.exit_sudo()
@@ -1190,6 +1190,80 @@ class Linux(object, ToDictMixin):
                     prefix = prefix_cache
                 result.setdefault(prefix, {}).update({nhp: interface})
         return result
+
+    @fun_test.safe
+    def fio(self, destination_ip, source_ip="", name="fun_nvmeof", ioengine="fun", rw="write",
+            block_size="4k", size="128k", numjobs=1, iodepth=8, do_verify=1, verify="md5", verify_fatal=1,
+            io_queues=2, nrfiles=1, nqn="nqn.2017-05.com.fungible:nss-uuid1", nvme_mode="IO_ONLY", timeout=60):
+        if not source_ip:
+            source_ip = self.internal_ip
+        fio_result = ""
+        fio_dict = {}
+
+        # Building the command and executing it
+        if do_verify:
+            fio_command = "fio --name={} --ioengine={} --rw={} --bs={} --size={} --numjobs={} --iodepth={} " \
+                      "--do_verify={} --verify={} --verify_fatal={} --source_ip={} --dest_ip={} --io_queues={} " \
+                      "--nrfiles={} --nqn={} --nvme_mode={}".format(name, ioengine, rw, block_size, size, numjobs,
+                                                                    iodepth, do_verify, verify, verify_fatal, source_ip,
+                                                                    destination_ip, io_queues, nrfiles, nqn, nvme_mode)
+        else:
+            fio_command = "fio --name={} --ioengine={} --rw={} --bs={} --size={} --numjobs={} --iodepth={} " \
+                          "--source_ip={} --dest_ip={} --io_queues={} --nrfiles={} --nqn={} --nvme_mode={}"\
+                            .format(name, ioengine, rw, block_size, size, numjobs, iodepth, source_ip, destination_ip,
+                                    io_queues, nrfiles, nqn, nvme_mode)
+
+        fun_test.debug(fio_command)
+        fio_result = self.command(command=fio_command, timeout=timeout)
+        # fio_result += '\n'
+        fun_test.debug(fio_result)
+
+        # Checking there is no error occured during the FIO test
+        match = ""
+        match = re.search(r'Assertion .* failed', fio_result, re.I)
+        if match:
+            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+            return fio_dict
+        # Extracting the Run status portion of the output and converting it into a dictionary
+        match_obj = ""
+        match_str = ""
+        match_obj = re.compile(r'Run status group *\d+ *\(all jobs\):((?:(?!Disk stats).)*)', re.S)
+        match_str = match_obj.search(fio_result)
+        fun_test.simple_assert(match_str, "Found FIO Run status output")
+
+        # Splitting the extracted portion into lines and stripping the whitespaces and newline characters from it
+        match_list = ""
+        match_str = match_str.group(1).strip()
+        match_list = match_str.split('\n')
+        fun_test.debug(match_list)
+
+        # Extracting the bw, io and run time status for both read & write operation and populating it as dictionary
+        # attributes
+        for line in match_list:
+            mode, stats = line.split(':')
+            mode = mode.strip().lower()
+            stats = stats.strip()
+            fun_test.debug(mode)
+            fun_test.debug(stats)
+            fio_dict[mode] = {}
+
+            for field, value in dict(x.split('=') for x in stats.split(',') if '=' in x).items():
+                field = field.strip()
+                value = int(re.sub(r'(\d+)(.*)', r'\1', value))
+                fio_dict[mode][field] = value
+
+        match = ""
+        match = re.search(r'read: IOPS=(\d+)', fio_result)
+        if match:
+            fio_dict["read"]["iops"] = int(match.group(1))
+
+        match = ""
+        match = re.search(r'write: IOPS=(\d+)', fio_result)
+        if match:
+            fio_dict["write"]["iops"] = int(match.group(1))
+
+        fun_test.debug(fio_dict)
+        return fio_dict
 
 
 class LinuxBackup:

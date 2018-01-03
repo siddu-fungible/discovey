@@ -1,7 +1,46 @@
 (function () {
     let app;
-    app = angular.module('qa-dashboard', []);
+
+    angular
+        .module("commonModule", [])
+        .filter('propsFilter', function () {
+            return function (items, props) {
+                let out = [];
+
+                if (angular.isArray(items)) {
+                    let keys = Object.keys(props);
+
+                    items.forEach(function (item) {
+                        let itemMatches = false;
+
+                        for (let i = 0; i < keys.length; i++) {
+                            let prop = keys[i];
+                            let text = props[prop].toLowerCase();
+                            if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                                itemMatches = true;
+                                break;
+                            }
+                        }
+                        if (itemMatches) {
+                            out.push(item);
+                        }
+                    });
+                } else {
+                    // Let the output be the input untouched
+                    out = items;
+                }
+                return out;
+            };
+        });
+
+
+    app = angular.module('qa-dashboard', ['ngSanitize', 'ui.select', 'commonModule']);
     app.controller('QaDashBoardController', ['$rootScope', '$scope', '$http', '$window', '$timeout', function ($rootScope, $scope, $http, $window, $timeout) {
+        let ctrl = this;
+
+        ctrl.$onInit = function () {
+
+        };
 
         $scope.closeCommonError = function () {
             $rootScope.showCommonError = false;
@@ -32,14 +71,86 @@
             return klass;
         }
     }]);
-    app.factory('commonAlert', ["$rootScope", function ($rootScope) {
-        function showError (message) {
-            $rootScope.showCommonError = true;
-            $rootScope.commonErrorMessage = message;
+
+    app.factory('trimTime', [function (t) {
+        return function (t) {
+            return t.replace(/\..*$/, "").replace(/T/, " ");
         }
-        function showSuccess (message) {
+    }]);
+
+    app.factory('commonService', ["$rootScope", "$timeout", "$http", function ($rootScope, $timeout, $http) {
+        function validateApiResult (apiResult, message) {
+            let result = false;
+            let data = apiResult["data"];
+            if (!data["status"]) {
+                showError("Error: " + message + " " + data["error_message"]);
+            } else {
+                result = true;
+            }
+            return result;
+        }
+
+        function addLogEntry (log, details) {
+            let payload = {};
+            payload["log"] = log;
+            payload["time"] = new Date();
+            if(details) {
+                payload["details"] = details;
+            } else {
+                payload["details"] = "";
+            }
+            $http.post("/common/add_session_log", payload).then(function () {
+
+            });
+        }
+
+        function showError (message, timeout, result) {
+            $rootScope.showCommonError = true;
+            let stack = null;
+            if(result) {
+                if(result.stack) {
+                    stack = result.stack;
+                }
+            }
+            addLogEntry(message, stack);
+
+            $rootScope.commonErrorMessage = message;
+            let t = 10000;
+            if (timeout) {
+                t = timeout;
+                if (timeout === -1) {
+                    t = 1000000;
+                }
+            }
+            $timeout(function () {
+                $rootScope.showCommonError = false;
+            }, t);
+        }
+
+        function showHttpError (message, result, timeout) {
+            let errorMessage = result;
+            if (result.data) {
+                errorMessage = result.data;
+            }
+            addLogEntry(message, errorMessage);
+            showError(message, timeout, result);
+        }
+
+        function showSuccess (message, timeout) {
             $rootScope.showCommonSuccess = true;
             $rootScope.commonSuccessMessage = message;
+            let t = 10000;
+            if (timeout) {
+                t = timeout;
+                if (timeout === -1) {
+                    t = 1000000;
+                }
+            }
+            console.log(t);
+            $timeout(function () {
+                $rootScope.showCommonSuccess = false;
+            }, t)
+
         }
 
         function closeAllAlerts () {
@@ -47,13 +158,46 @@
             $rootScope.showCommonSuccess = false;
         }
 
+        function apiGet (url, message) {
+            return $http.get(url).then(function (result) {
+                let data = null;
+                if (validateApiResult(result, message)) {
+                    data = result.data.data;
+                }
+                return data;
+            }).catch(function (result) {
+                showHttpError(message, result);
+            });
+
+        }
+
+        function apiPost (url, payload, message) {
+            return $http.post(url, payload).then(function (result) {
+                let data = null;
+                if (validateApiResult(result, message)) {
+                    data = result.data.data;
+                }
+                return data;
+            }).catch(function(result){
+                showHttpError(message, result);
+            });
+        }
+
         return {
             showError: showError,
             showSuccess: showSuccess,
-            closeAllAlerts: closeAllAlerts
+            closeAllAlerts: closeAllAlerts,
+            showHttpError: showHttpError,
+            validateApiResult: validateApiResult,
+            apiGet: apiGet,
+            apiPost: apiPost,
+            addLogEntry: addLogEntry
         };
+
     }]);
+
     app.component(funFieldComponent["name"], funFieldComponent["info"]);
+
 
 }).call();
 

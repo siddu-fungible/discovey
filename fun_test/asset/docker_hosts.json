@@ -9,7 +9,11 @@
     "images": [
       {
         "category":  "storage_basic",
-        "name": "integration_jenkins_fetch"
+        "name": "storage_basic:latest"
+      },
+      {
+        "category": "fio_traffic_generator",
+        "name": "tgen:v3"
       }
     ]
   }

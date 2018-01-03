@@ -35,9 +35,7 @@ class FunTestCase1(FunTestCase):
         fun_test.add_checkpoint("Some checkpoint")
 
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
-        d = {
-
-        }
+        d = {}
         d[1] = "john"
         artifact_file_name = fun_test.create_test_case_artifact_file(post_fix_name="abc.json", contents=json.dumps(d))
         fun_test.set_topology_json_filename(artifact_file_name)

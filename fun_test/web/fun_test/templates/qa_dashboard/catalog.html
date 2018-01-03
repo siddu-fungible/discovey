@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/catalog.js" %}"></script>
+
+{% endblock %}
+
+{% block content %}
+<div class="content">
+    <catalog-div id="catalog-div" data-catalog-name="{{ catalog_name }}"></catalog-div>
+    <div class="row">
+        <div class="col-md-6">
+            {% verbatim %}
+            <div class="panel panel-primary" ng-controller="catalogController">
+                <div class="panel-heading">{{ currentCatalog.name }}</div>
+
+                <div class="panel-body">
+                    <p>Category: {{ currentCatalog.category }}</p>
+                    <p>JQLs</p>
+
+                    <table class="table table-nonfluid table-bordered">
+                        <tr>
+                            <td class="col-md-1">
+                                <button ng-click="addJqlClick()" class="button btn-sm btn-info">Add</button>
+                            </td>
+                            <td class="col-md-2" style="vertical-align:middle;">
+                                <label  class="" for="select-operator">Operator</label>
+                                <select id="select-operator" ng-options="operator for operator in operators" ng-model="selectedOperator"></select>
+                            </td>
+                            <td class="col-md-10" style="vertical-align:middle;">
+                                <label class="col-md-1" for="add-jql">JQL</label>
+                                <fun-field klass="col-md-11" id="add-jql" type="text" min-length="2" max-length="100" bind-value="addJql"></fun-field>
+                            </td>
+                        </tr>
+                    </table>
+                    <div ng-if="showValidate" class="row col-sm-1 form-group">
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <button ng-click="validateClick()" class="button btn-sm btn-success">Validate</button>
+                                </td>
+                                <td>
+                                    <span ng-if="validated" class="glyphicon glyphicon-ok" style="color:green"></span>
+                                </td>
+                                <td>
+                                    <button ng-if="validated" ng-click="commitClick()" class="button btn-sm btn-default">Commit</button>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                    <br>
+                    <br>
+                    <br>
+                    <table class="table table-nonfluid">
+                        <tr>
+                            <th>Action</th>
+                            <th>Status</th>
+                            <th>Operator</th>
+                            <th>Query</th>
+                        </tr>
+                        <tr ng-repeat="jql in jqls">
+                            <td><button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:20px; color: red"></i></button></td>
+                            <td>{{ jql.status }}</td>
+                            <td>{{ jql.operator }}</td>
+                            <td>{{ jql.value }}</td>
+                        </tr>
+
+                    </table>
+                </div>
+                <div ng-switch="status">
+                    Status:
+                    <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw" style="color: green"></i>Fetching JIRA issues..</span>
+                    <span ng-switch-when="idle" class="label label-info">IDLE</span>
+                    <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
+                    <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
+                </div>
+
+                <table class="table table-nonfluid">
+                    <tr>
+                        <th>Id</th>
+                        <th>Summary</th>
+                        <th>Components</th>
+                    </tr>
+                    <tr ng-repeat="testCase in currentCatalog.test_cases">
+                        <td>
+                            {{ testCase.jira_id }}
+                        </td>
+                        <td>
+                            {{ testCase.summary }}
+                        </td>
+                        <td>
+                            <label class="label label-primary" ng-repeat="component in testCase.components"> {{ component }}</label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            {% endverbatim %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

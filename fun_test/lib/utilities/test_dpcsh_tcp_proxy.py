@@ -26,7 +26,7 @@ class DpcshClient:
                     time.sleep(0.1)
                     continue
 
-
+    '''
     def _read(self, expected_command_duration=1):
         start = time.time()
         chunk = 1024
@@ -46,6 +46,32 @@ class DpcshClient:
                 else:
                     # a "real" error occurred
                     print e
+                    sys.exit(1)
+            else:
+                output += buffer
+        return output
+
+    '''
+
+    def _read(self, expected_command_duration=1):
+        start = time.time()
+        chunk = 1024
+
+        output = ""
+        while not output.endswith("\n"):
+            elapsed_time = time.time() - start
+            if elapsed_time > expected_command_duration:
+                break
+            try:
+                buffer = self.sock.recv(chunk)
+            except socket.error, e:
+                err = e.args[0]
+                if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
+                    time.sleep(0.1)
+                    continue
+                else:
+                    # a "real" error occurred
+                    print("Some Error:" + str(e))
                     sys.exit(1)
             else:
                 output += buffer
@@ -85,7 +111,7 @@ class DpcshClient:
         print json.dumps(result["data"], indent=4)
 
 if __name__ == "__main__":
-    dpcsh_client_obj = DpcshClient(server_address="10.138.0.3", server_port=10005)
+    dpcsh_client_obj = DpcshClient(server_address="10.1.20.67", server_port=20020)
     result = dpcsh_client_obj.command(command="peek stats")
     if result["status"]:
         dpcsh_client_obj.print_result(result=result)
@@ -96,5 +122,7 @@ if __name__ == "__main__":
 
     #result = dpcsh_client_obj.command(command="peek stats", expected_command_duration=3)
     #i = 0
+    '''
     result = dpcsh_client_obj.command(command="peek stats/likv", expected_command_duration=3)
     dpcsh_client_obj.print_result(result)
+    '''

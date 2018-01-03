@@ -1,0 +1,345 @@
+<h4>{{ $ctrl.instanceName }}</h4>
+<h5>Owner: {{ executionDetails.owner_email }}</h5>
+<div class="row">
+    <div class="col-lg-8">
+        <div ng-if="overallProgressValues" class="row">
+            <div ng-if="overallProgressValues" class="col-lg-4">
+                <fun-chart values="overallProgressValues" series="series" show-legend="true"
+                           title="Overall progress" charting="charting" auto-update="autoUpdate" chart-type="pie"
+                           colors="colors"
+                           width="250" height="250" update-charts-now="updateOverallProgressChartsNow"></fun-chart>
+            </div>
+            <div ng-if="moduleProgressValues" class="col-lg-4">
+                <fun-chart values="moduleProgressValues" colors="colors" title="Module progress"
+                           width="250" height="250" chart-type="horizontal_colored_bar_chart"
+                           series="series" charting="charting" update-charts-now="updateModuleProgressChartsNow"></fun-chart>
+            </div>
+        </div>
+
+        <table class="table table-nonfluid table-borderless">
+            <tr>
+                <div ng-switch="status">
+                    Status:
+                    <span ng-switch-when="fetchingJira"><i class="fa fa-refresh fa-spin fa-2x fa-fw"
+                                                           style="color: green"></i>Fetching JIRA issues..</span>
+                    <span ng-switch-when="fetchingCatalogExecution"><i class="fa fa-refresh fa-spin fa-2x fa-fw"
+                                                           style="color: green"></i>Fetching Catalog execution..</span>
+                    <span ng-switch-when="idle" class="label label-info">IDLE</span>
+                    <span ng-switch-when="pass" class="glyphicon glyphicon-ok" style="color:green"></span>
+                    <span ng-switch-when="fail" class="glyphicon glyphicon-remove" style="color:red"></span>
+                </div>
+            </tr>
+
+        </table>
+        <div ng-if="executionDetails" class="row">
+            <div class="">
+                <table class="table table-nonfluid table-borderless">
+                    <tr>
+                        <td>
+                            <input type="radio" name="view-radio" ng-model="currentView" value="all">Show All
+                        </td>
+                        <td>
+                            <input type="radio" name="view-radio" ng-model="currentView" value="components">Module-Components
+                            View
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="panel panel-primary">
+                    <div class="panel-heading">{{ $ctrl.instanceName }}</div>
+                    <div class="panel-body" ng-switch="currentView">
+                        <table ng-switch-when="all" class="table table-nonfluid">
+                            <tr>
+                                <th></th>
+                                <th>Jira Id</th>
+                                <th>Summary</th>
+                                <th>Module</th>
+                                <th class="absorbing-column">Components</th>
+                                <th>Result</th>
+                                <th>Info</th>
+                                <th>Bugs</th>
+                                <th>Comments</th>
+                            </tr>
+                            <tbody id="suite-execution-details-table">
+                            <tr ng-repeat="(jiraId, info) in executionDetails.jira_ids">
+                                <td>{{ $index + 1 }}</td>
+                                <td><a target="_blank"
+                                       href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
+                                </td>
+                                <td class="absorbing-column">{{ info.summary }}</td>
+                                <td>{{ info.module }}</td>
+                                <td>
+                                    <label class="label label-primary"
+                                           ng-repeat="component in info.components"> {{ component }}</label>
+                                </td>
+                                <td><label ng-if="info.summaryResult" class="label label-
+                                    {{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
+                                <td>
+                                    <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable"
+                                       >Details</a>
+                                    <table class="table collapse" id="info-table-{{ $index }}">
+                                        <tr>
+                                            <th>Owner</th>
+                                            <th>TestBed</th>
+                                            <th>Result</th>
+                                            <th>Result Override</th>
+                                        </tr>
+                                        <tbody>
+                                        <tr ng-repeat="instance in info.instances">
+                                            <td>{{ instance.owner }}</td>
+                                            <td>{{ instance.test_bed }}</td>
+                                            <td>{{ instance.result }}</td>
+                                            <td>
+                                                <select ng-options="option for option in overrideOptions"
+                                                        ng-model="selectedOverride">
+                                                </select>
+                                                <button class="btn btn-primary btn-sm"
+                                                        ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">
+                                                    Submit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div ng-switch-when="components">
+                            <label class="label label-primary">Overall</label>
+                            <table class="table table-nonfluid table-responsive">
+                                <tr>
+                                    <th>Total</th>
+                                    <th>Passed</th>
+                                    <th>Failed</th>
+                                    <th>Unknown</th>
+                                    <th>Progress</th>
+                                    <th>Passed %</th>
+                                    <th>Failed %</th>
+                                    <th>Pending %</th>
+                                    <th>Blockers</th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {{ executionDetails.num_total }}
+                                    </td>
+                                    <td>
+                                        {{ executionDetails.num_passed }}
+                                    </td>
+                                    <td>
+                                        {{ executionDetails.num_failed }}
+                                    </td>
+                                    <td>
+                                        {{ executionDetails.num_unknown }}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                                 style="width:
+                                                         {{ executionDetails.num_passed * 100/executionDetails.num_total }}%">
+                                                P
+                                            </div>
+                                            <div class="progress-bar progress-bar-danger" role="progressbar"
+                                                 style="width:
+                                                         {{ executionDetails.num_failed * 100/executionDetails.num_total }}%">
+                                                F
+                                            </div>
+                                            <div class="progress-bar progress-bar-info" role="progressbar"
+                                                 style="width:0%">U
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ executionDetails.num_passed * 100/executionDetails.num_total | number: 2 }}</td>
+                                    <td>
+                                        {{ executionDetails.num_failed * 100/executionDetails.num_total | number: 2 }}</td>
+                                    <td>
+                                        {{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_unknown))  * 100/executionDetails.num_total | number: 2 }}</td>
+                                </tr>
+                            </table>
+
+
+                            <label class="label label-primary">Module-wise</label>
+                            <table class="table table-nonfluid">
+                                <tr>
+                                    <th>
+
+                                    </th>
+                                    <th>Total</th>
+                                    <th>Passed</th>
+                                    <th>Failed</th>
+                                    <th>Unknown</th>
+                                    <th>Progress</th>
+                                    <th>Passed %</th>
+                                    <th>Failed %</th>
+                                    <th>Pending %</th>
+                                    <th>Blockers</th>
+                                    <th>
+
+                                    </th>
+                                </tr>
+                                <tr ng-repeat-start="(module, componentList) in moduleComponentMapping">
+                                    <td>
+                                        {{ module }}
+                                    </td>
+                                    <td>{{ moduleInfo[module].numTotal }}</td>
+                                    <td>{{ moduleInfo[module].numPassed }}</td>
+                                    <td>{{ moduleInfo[module].numFailed }}</td>
+                                    <td>{{ moduleInfo[module].numUnknown }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                                 style="width:
+                                                         {{ moduleInfo[module].numPassed * 100/moduleInfo[module].numTotal }}%">
+                                                P
+                                            </div>
+                                            <div class="progress-bar progress-bar-danger" role="progressbar"
+                                                 style="width:
+                                                         {{ moduleInfo[module].numFailed * 100/moduleInfo[module].numTotal }}%">
+                                                F
+                                            </div>
+                                            <div class="progress-bar progress-bar-info" role="progressbar"
+                                                 style="width:0%">U
+                                            </div>
+                                        </div>
+
+                                    </td>
+                                    <td>{{ (moduleInfo[module].numPassed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
+                                    <td>{{ (moduleInfo[module].numFailed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
+                                    <td>
+                                        {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}</td>
+                                    <td></td>
+                                    <td>
+                                        <a ng-show="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Hide Details</a>
+                                        <a ng-hide="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Details</a>
+                                    </td>
+                                </tr>
+                                <tr ng-repeat-end ng-if="moduleInfo[module].showingDetails">
+                                    <td></td>
+                                    <td colspan="9">
+                                        <label class="label label-primary">Component-wise</label>
+                                        <table class="table table-nonfluid table-responsive">
+                                            <tr>
+                                                <th>Component</th>
+                                                <th>Total</th>
+                                                <th>Passed</th>
+                                                <th>Failed</th>
+                                                <th>Unknown</th>
+                                                <th>Progress</th>
+                                                <th>Passed %</th>
+                                                <th>Failed %</th>
+                                                <th>Pending %</th>
+                                                <th>Blockers</th>
+                                                <th></th>
+                                            </tr>
+                                            <tr ng-repeat="component in componentList">
+                                                <td>
+                                                    {{ component }}
+                                                </td>
+                                                <td>
+                                                    {{ getComponentInfo(component).numTotal }}
+                                                </td>
+                                                <td>
+                                                    {{ getComponentInfo(component).numPassed }}
+                                                </td>
+                                                <td>
+                                                    {{ getComponentInfo(component).numFailed }}
+                                                </td>
+                                                <td>
+                                                    {{ getComponentInfo(component).numUnknown }}
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar progress-bar-success"
+                                                             role="progressbar"
+                                                             style="width:
+                                                                     {{ getComponentInfo(component).numPassed * 100/getComponentInfo(component).numTotal }}%">
+                                                            P
+                                                        </div>
+                                                        <div class="progress-bar progress-bar-danger" role="progressbar"
+                                                             style="width:
+                                                                     {{ getComponentInfo(component).numFailed * 100/getComponentInfo(component).numTotal }}%">
+                                                            F
+                                                        </div>
+                                                        <div class="progress-bar progress-bar-info" role="progressbar"
+                                                             style="width:0%">U
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {{ getComponentInfo(component).numPassed * 100/getComponentInfo(component).numTotal | number: 2 }}</td>
+                                                <td>
+                                                    {{ getComponentInfo(component).numFailed * 100/getComponentInfo(component).numTotal | number: 2}}</td>
+                                                <td>
+                                                    {{ (getComponentInfo(component).numTotal - (getComponentInfo(component).numPassed + getComponentInfo(component).numFailed + getComponentInfo(component).numUnknown))  * 100/getComponentInfo(component).numTotal | number: 2}}</td>
+                                                <td>0</td>
+                                                <td><a href="#" ng-click="moduleDetailsClick(component)"> Details</a></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8 col-lg-4" ng-if="testCaseViewInstances && currentView === 'components'">
+        <legend>{{ currentTestCaseViewComponent }}</legend>
+        <table class="table table-nonfluid">
+            <tr>
+                <th>Jira Id</th>
+                <th>Summary</th>
+                <th>Result</th>
+                <th>Info</th>
+                <th>Bugs</th>
+                <th>Comments</th>
+            </tr>
+            <tbody>
+            <tr ng-repeat-start="(jiraId, info) in testCaseViewInstances">
+                <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
+                </td>
+                <td>{{ info.summary }}</td>
+                <td><label ng-if="info.summaryResult"
+                           class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label>
+                </td>
+                <td>
+                    <a ng-show="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Hide Details</a>
+                    <a ng-hide="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Details</a>
+                </td>
+            </tr>
+            <tr ng-repeat-end>
+                <td colspan="5">
+                    <table ng-if="testCaseViewInstances[jiraId].showingDetails" class="table">
+                        <tr>
+                            <th>Owner</th>
+                            <th>TestBed</th>
+                            <th>Result</th>
+                            <th>Result Override</th>
+                        </tr>
+                        <tbody>
+                        <tr ng-repeat="instance in info.instances">
+                            <td>{{ instance.owner }}</td>
+                            <td>{{ instance.test_bed }}</td>
+                            <td>{{ instance.result }}</td>
+                            <td>
+                                <select ng-options="option for option in overrideOptions" ng-model="selectedOverride">
+                                </select>
+                                <button class="btn btn-primary btn-sm"
+                                        ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">
+                                    Submit
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<button ng-click="testClick()">Test</button>
+

@@ -14,13 +14,16 @@ class F1(Linux, ToDictMixin):
 
     INTERNAL_DPCSH_PORT = 5000
 
+    F1_LOG = "/tmp/f1.log.txt"
+    DPCSH_PROXY_LOG = "/tmp/dpcsh_proxy.log.txt"
+
     @staticmethod
     def get(asset_properties):
         prop = asset_properties
         f1 = F1(host_ip=prop["host_ip"],
-                     ssh_username=prop["mgmt_ssh_username"],
-                     ssh_password=prop["mgmt_ssh_password"],
-                     ssh_port=prop["mgmt_ssh_port"])
+                ssh_username=prop["mgmt_ssh_username"],
+                ssh_password=prop["mgmt_ssh_password"],
+                ssh_port=prop["mgmt_ssh_port"])
         return f1
 
     def post_init(self):
@@ -49,7 +52,7 @@ class F1(Linux, ToDictMixin):
                     self.interactive_command("./funos-posix app=prem_test sim_id=nvme_test nvfile=nvfile",
                                              expected_prompt="Remote PCIe EP NVME Test")
                 except:
-                    pass
+                    pass  #TODO
             else:
                 try:
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS)
@@ -60,7 +63,10 @@ class F1(Linux, ToDictMixin):
                     self.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
                     self.command("ulimit -Sc unlimited")
                     self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
-                    self.command("./funos-posix app=mdt_test nvfile=nvfile")
+                    # self.command("./funos-posix app=mdt_test nvfile=nvfile &> /tmp/funos.log")
+                    self.command("{}/{} app=mdt_test nvfile=nvfile &> {}".format(self.SIMULATION_FUNOS_BUILD_PATH,
+                                                                                 self.FUN_OS_SIMULATION_PROCESS,
+                                                                                 self.F1_LOG))
                     if not dpcsh_only:
                         #new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
                         #                                                                           self.FUN_OS_SIMULATION_PROCESS))
@@ -68,28 +74,26 @@ class F1(Linux, ToDictMixin):
                         new_process_id = self.start_bg_process(
                             command="{}/{} app=prem_test nvfile=nvfile".format(
                                 self.SIMULATION_FUNOS_BUILD_PATH,
-                                self.FUN_OS_SIMULATION_PROCESS))
+                                self.FUN_OS_SIMULATION_PROCESS),
+                            output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
 
                     else:
-
-                        self.command("{}/{} app=mdt_test nvfile=nvfile".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                                                                               self.FUN_OS_SIMULATION_PROCESS))
                         new_process_id = self.start_bg_process(
-                            command="{}/{} --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
+                            command="{}/{} --dpc-server app=load_mods".format(self.SIMULATION_FUNOS_BUILD_PATH,
                                                                 self.FUN_OS_SIMULATION_PROCESS),
-                        output_file="/tmp/f1_dpc_server.log")
+                            output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
                         dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
                                                                             self.DPCSH_PROCESS,
                                                                             self.INTERNAL_DPCSH_PORT),
-                                                                           output_file="/tmp/dpcsh.bg.log")
+                                                                            output_file=self.DPCSH_PROXY_LOG)
                         fun_test.test_assert(dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
 
                     fun_test.test_assert(new_process_id, "Started FunOs")
                     self.fun_os_process_id = new_process_id
                 except:
-                    pass
+                    pass  #TODO
 
             started = True
         return started
@@ -120,3 +124,8 @@ class F1(Linux, ToDictMixin):
 class DockerF1(F1, ToDictMixin):
     SIMULATION_FUNOS_BUILD_PATH = "/"
     DPCSH_PATH = "/"
+    data_plane_ip = None
+
+    def set_data_plane_ip(self, data_plane_ip):
+        self.data_plane_ip = data_plane_ip
+        self.TO_DICT_VARS.append("data_plane_ip")

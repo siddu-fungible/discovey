@@ -29,7 +29,7 @@
 
         $scope.getIkvVideoStatus = function (sessionId) {
                 $http.get("/tools/tg/ikv_video_task_status/" + sessionId.toString()).then(function (result) {
-                    status = result.data["status"];
+                    let status = result.data["status"];
                     if ((status === "NOT_RUN") || (status === "IN_PROGRESS")) {
                         $timeout(function () {
                             $scope.getIkvVideoStatus(sessionId)

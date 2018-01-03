@@ -1,13 +1,14 @@
-import time, datetime, json, glob
+import time, datetime, json, glob, shutil
 import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR
 from fun_global import RESULTS, is_regression_server, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from django.utils import timezone
 from fun_settings import TIME_ZONE
+from lib.utilities.http import fetch_text_file
 
 activate(TIME_ZONE)
 
@@ -19,21 +20,35 @@ ARCHIVED_JOB_EXTENSION = "archived.json"
 KILLED_JOB_EXTENSION = "killed_job"
 JSON_EXTENSION = ".json"
 LOG_FILE_NAME = LOGS_DIR + "/scheduler.log"
+BUILD_INFO_FILENAME = "build_info.txt"
 
 scheduler_logger = logging.getLogger("main_scheduler_log")
 scheduler_logger.setLevel(logging.DEBUG)
 
 TEN_MB = 1e7
-DEBUG = True
+DEBUG = False
 
 
 if not DEBUG:
     handler = logging.handlers.RotatingFileHandler(LOG_FILE_NAME, maxBytes=TEN_MB, backupCount=5)
-    handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 else:
     handler = logging.StreamHandler(sys.stdout)
-    scheduler_logger.addHandler(hdlr=handler)
-    scheduler_logger.setLevel(logging.DEBUG)
+handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+scheduler_logger.addHandler(hdlr=handler)
+scheduler_logger.setLevel(logging.DEBUG)
+
+
+def set_jenkins_hourly_execution_status(status):
+    source_file = MEDIA_DIR + "/regression_unknown.png"
+    if status == RESULTS["PASSED"]:
+        source_file = MEDIA_DIR + "/regression_passed.png"
+    if status == RESULTS["FAILED"]:
+        source_file = MEDIA_DIR + "/regression_failed.png"
+    if status == RESULTS["IN_PROGRESS"]:
+        source_file = MEDIA_DIR + "/regression_in_progress.png"
+    status_file = LOGS_DIR + "/jenkins_hourly_execution_status.png"
+    shutil.copy(src=source_file, dst=status_file)
+
 
 class SchedulerException(Exception):
     def __init__(self, *args):
@@ -64,16 +79,21 @@ def queue_job(suite_path="unknown",
               schedule_at=None,
               repeat=False,
               schedule_in_minutes=None,
-              repeat_in_minutes=None):
+              repeat_in_minutes=None,
+              tags=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
     if suite_path == "unknown":
         if job_spec:
             suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
+            tags = job_spec["tags"]
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                         scheduled_time=get_current_time(),
                                                         completed_time=get_current_time(),
-                                                        suite_path=suite_path)
+                                                        suite_path=suite_path,
+                                                        tags=tags)
+    # if tags and "jenkins-hourly" in tags:
+    #    set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
     if not job_spec:
         job_spec = {}
         suite_path = suite_path.replace(JSON_EXTENSION, "")
@@ -83,6 +103,7 @@ def queue_job(suite_path="unknown",
         job_spec["repeat"] = repeat
         job_spec["schedule_in_minutes"] = schedule_in_minutes
         job_spec["repeat_in_minutes"] = repeat_in_minutes
+        job_spec["tags"] = tags
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
 
@@ -181,6 +202,9 @@ def _get_table(header_list, list_of_rows):
 def send_summary_mail(job_id):
     suite_executions = models_helper._get_suite_executions(execution_id=job_id, save_test_case_info=True)
     suite_execution = suite_executions[0]
+    scheduler_logger.info("Suite Execution: {}".format(str(suite_execution)))
+    if "jenkins-hourly" in suite_execution["fields"]["tags"]:
+        set_jenkins_hourly_execution_status(status=suite_execution["suite_result"])
     suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
@@ -223,6 +247,14 @@ def send_summary_mail(job_id):
             scheduler_logger.info("Sent mail")
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))
+
+def determine_version(build_url):
+    content = fetch_text_file(url=build_url + "/" + BUILD_INFO_FILENAME)
+    version = None
+    if content:
+        content = content.strip()
+        version = int(content)
+    return version
 
 if __name__ == "__main__":
     print get_flat_console_log_file_name(path="/clean_sanity.py")

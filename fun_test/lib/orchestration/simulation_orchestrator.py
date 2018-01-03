@@ -1,12 +1,13 @@
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
+from lib.host.fio import Fio
 from lib.host.host import Qemu
+from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1, DockerF1
-from orchestrator import OrchestratorType
+from orchestrator import OrchestratorType, Orchestrator
 
-
-class SimulationOrchestrator(Linux, ToDictMixin):
+class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     QEMU_PATH = "/home/jabraham/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     QEMU_INSTANCE_PORT = 2220
@@ -48,7 +49,7 @@ class SimulationOrchestrator(Linux, ToDictMixin):
                 function = 4
 
             # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
-            command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(
+            command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=../core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel ../bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(
                 self.QEMU_PROCESS, internal_ssh_port)
 
             self.start_bg_process(command=command, output_file="/tmp/qemu.log")
@@ -94,8 +95,8 @@ class SimulationOrchestrator(Linux, ToDictMixin):
 
 
 class DockerContainerOrchestrator(SimulationOrchestrator):
-    # Container that is capable of spinning an F1 and multiple Qemu instances, all within one container
-    QEMU_PATH = "/qemu"
+    # An orchestrator (which happens to be a container) that is capable of spinning an F1 and multiple Qemu instances, all within one container
+    QEMU_PATH = "/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     docker_host = None
 
@@ -108,7 +109,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                  ssh_port,
                  dpcsh_port,
                  qemu_ssh_ports,
-                 container_name):
+                 container_name,
+                 internal_ip):
         super(SimulationOrchestrator, self).__init__(host_ip=host_ip,
                                                      ssh_username=ssh_username,
                                                      ssh_password=ssh_password,
@@ -116,6 +118,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         self.dpcsh_port = dpcsh_port
         self.qemu_ssh_ports = qemu_ssh_ports
         self.container_name = container_name
+        self.internal_ip = internal_ip
 
     def describe(self):
         self.docker_host.describe()
@@ -126,6 +129,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                           ssh_username=self.ssh_username,
                           ssh_password=self.ssh_password,
                           ssh_port=self.ssh_port)
+        f1_obj.set_data_plane_ip(data_plane_ip=self.internal_ip)
 
         # Start FunOS
         fun_test.test_assert(f1_obj.start(dpcsh=True,
@@ -142,7 +146,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                                           ssh_port=asset_properties["mgmt_ssh_port"],
                                           dpcsh_port=asset_properties["pool2_ports"][0]["external"],
                                           qemu_ssh_ports=asset_properties["pool1_ports"],
-                                          container_name=asset_properties["name"])
+                                          container_name=asset_properties["name"],
+                                          internal_ip=asset_properties["internal_ip"])
         return obj
 
     def post_init(self):
@@ -153,6 +158,20 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         self.TO_DICT_VARS.extend(["port_redirections", "ORCHESTRATOR_TYPE", "docker_host"])
 
 
-class DockerHostOrchestrator(SimulationOrchestrator):
+class DockerHostOrchestrator(Orchestrator, DockerHost):
     # A Docker Linux Host capable of launching docker container instances
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST
+
+    def launch_fio_instance(self, index):
+        id = index + fun_test.get_suite_execution_id()
+        container_name = "{}_{}".format("integration_fio", id)
+        container_asset = self.setup_fio_container(container_name=container_name, ssh_internal_ports=[22])
+        return Fio.get(asset_properties=container_asset)
+
+    def launch_linux_instance(self, index):
+        id = index + fun_test.get_suite_execution_id()
+        container_name = "{}_{}".format("integration_fio", id)
+        container_asset = self.setup_linux_container(container_name=container_name, ssh_internal_ports=[22])
+        linux = Linux.get(asset_properties=container_asset)
+        linux.internal_ip = container_asset["internal_ip"]
+        return linux

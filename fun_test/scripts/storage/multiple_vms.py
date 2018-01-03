@@ -34,11 +34,12 @@ class MyScript(FunTestScript):
 
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
-        self.topology = topology_obj_helper.deploy()
-        fun_test.test_assert(self.topology, "Ensure deploy is successful")
+        topology = topology_obj_helper.deploy()
+        fun_test.test_assert(topology, "Ensure deploy is successful")
+        fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        pass
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
 
 
 class FunTestCase1(FunTestCase):
@@ -67,5 +68,5 @@ if __name__ == "__main__":
 
 
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1(myscript))
+    myscript.add_test_case(FunTestCase1())
     myscript.run()

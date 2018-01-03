@@ -37,14 +37,17 @@
             payload["uuid"] = $scope.selectedUuid;
             $scope.status = "processing";
 
+
             $http.post('/tools/f1/attach_tg/' + ctrl.topologySessionId + "/" + ctrl.f1.name, payload).then(function(response){
+                ctrl.f1.tgs.push({"ip": response.data});
                 $scope.status = "pass";
                 $scope.logs = [];
-                let responseLogs = response.data.logs;
+                let responseLogs = ["Attached Tg:" + response.data];
                 for (let i = 0; i < responseLogs.length; i++) {
                     $scope.logs.push(responseLogs[i] + "\n");
                     $scope.logs.push("-----------------------------------\n");
                 }
+                /*
                 if (!response.data["status"]) {
                     $scope.errorMessage = response.data["error_message"];
                     $scope.status = "fail";
@@ -56,7 +59,7 @@
                             ctrl.f1.volumeUuids.push(key);
                         });
                     });
-                }
+                }*/
             })
             .catch(function(data) {
                 $scope.status = "fail";

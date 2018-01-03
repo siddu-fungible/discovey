@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/catalogs.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+
+{% verbatim %}
+<div ng-controller="catalogsController">
+    <div class="col-md-6">
+        <table class="table">
+            <tr>
+                <td>
+                    <button ng-if="selectedCatalog" class="button btn-success" ng-click="executeClick()">Execute</button>
+                </td>
+            </tr>
+        </table>
+
+
+        <fieldset ng-repeat="(category, summary) in summaries" ng-if="summaries[category].catalogs.length > 0">
+            <legend class="legend">{{ category }}</legend>
+            <table class="table table-nonfluid table-bordered">
+                <tr>
+                    <th>
+
+                    </th>
+                    <th>
+                        Action
+                    </th>
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        TC Count
+                    </th>
+                    <th>
+                        Executions
+                    </th>
+                </tr>
+                <tr ng-repeat="catalog in summary.catalogs">
+                    <td>
+                        <input type="radio" ng-model="$parent.$parent.$parent.selectedCatalog" value="{{ catalog.name }}"/>
+                    </td>
+                    <td><button class="btn btn-sm" ng-click="removeClick(catalog.name)"><i class="fa fa-trash-o fa-1x" style="font-size:20px; color: red"></i></button></td>
+                    <td class="fun-center">
+                        <a href="/tcm/view_catalog_page/{{ catalog.name }}">{{ catalog.name }}</a>
+                    </td>
+                    <td>
+                        {{ catalog.tc_count }}
+                    </td>
+                    <td>
+                        <a href="/tcm/catalog_executions/{{ catalog.name }}">Runs ({{ catalog.execution_count }})</a>
+                    </td>
+                </tr>
+            </table>
+        </fieldset>
+    </div>
+    <div class="col-md-6" ng-show="showExecuteOptions">
+        <form>
+            <div class="form-group">
+                <label for="instance-name">Instance Name</label>
+                <fun-field type="text" id="instance-name" min-length="2" max-length="30" bind-value="instanceName">
+            </div>
+            <div class="form-group">
+                <label for="owner-select">Owner</label>
+                <ui-select id="owner-select" ng-model="$parent.selectedOwner" theme="bootstrap">
+                    <ui-select-match placeholder="Select owner...">{{$select.selected.name}}</ui-select-match>
+                    <ui-select-choices repeat="owner in owners | propsFilter: {name: $select.search}">
+                        <div ng-bind-html="owner.name | highlight: $select.search"></div>
+                        <small>
+                            name: <span ng-bind-html="''+owner.name | highlight: $select.search"></span>
+                            email: <span ng-bind-html="''+owner.email | highlight: $select.search"></span>
+                        </small>
+                    </ui-select-choices>
+                </ui-select>
+
+            </div>
+            <button type="submit" class="btn btn-primary" ng-click="executeSubmitClick()">Submit</button>
+        </form>
+    </div>
+</div>
+{% endverbatim %}
+
+{% endblock %}

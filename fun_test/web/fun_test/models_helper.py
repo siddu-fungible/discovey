@@ -21,20 +21,31 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
-def update_suite_execution(suite_execution_id, result=None, scheduled_time=None):
+def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None):
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result
     if scheduled_time:
         te.scheduled_time = scheduled_time
+    if version:
+        te.version = version
     te.save()
     return te
 
 def finalize_suite_execution(suite_execution_id):
-    _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True)
+    _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
 
-def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_path="unknown"):
+def add_suite_execution(submitted_time,
+                        scheduled_time,
+                        completed_time,
+                        suite_path="unknown",
+                        tags=None,
+                        catalog_reference=""):
 
+    if tags:
+        tags = json.dumps(tags)
+    else:
+        tags = "[]"
     last_suite_execution_id = LastSuiteExecution.objects.all()
     if not last_suite_execution_id:
         LastSuiteExecution().save()
@@ -43,10 +54,12 @@ def add_suite_execution(submitted_time, scheduled_time, completed_time, suite_pa
     last_suite_execution_id.save()
 
     s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
-                   submitted_time=submitted_time,
-                   scheduled_time=scheduled_time,
-                   completed_time=completed_time,
-                      result="QUEUED")
+                       submitted_time=submitted_time,
+                       scheduled_time=scheduled_time,
+                       completed_time=completed_time,
+                       result="QUEUED",
+                       tags=tags,
+                       catalog_reference=catalog_reference)
     s.save()
     return s
 
@@ -83,7 +96,8 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
     return result
 
 def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULT_CHOICES[0][0]):
-    te = TestCaseExecution(execution_id=get_next_test_case_execution_id(), test_case_id=test_case_id,
+    te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
+                           test_case_id=test_case_id,
                            suite_execution_id=suite_execution_id,
                            result=result,
                            started_time=get_current_time(), #timezone.now(), #get_current_time(),
@@ -121,24 +135,38 @@ def _get_suite_executions(execution_id=None,
                           save_test_case_info=False,
                           save_suite_info=True,
                           filter_string="ALL",
-                          get_count=False):
+                          get_count=False,
+                          tags=None,
+                          finalize=None):
     all_objects = None
     q = Q(result=RESULTS["UNKNOWN"])
 
     if filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
         q = Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"]) | Q(result=RESULTS["QUEUED"]) | Q(result=RESULTS["SCHEDULED"])
     elif filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
-        q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"])
+        q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"]) | Q(result=RESULTS["ABORTED"])
     if execution_id:
         q = Q(execution_id=execution_id) & q
 
     if filter_string == "ALL":
         if execution_id:
-            all_objects = SuiteExecution.objects.filter(execution_id=execution_id).order_by('-id')
+            q = Q(execution_id=execution_id)
         else:
-            all_objects = SuiteExecution.objects.all().order_by('-id')
-    else:
-        all_objects = SuiteExecution.objects.filter(q).order_by('-id')
+            q = Q()
+
+    if tags:
+        tag_q = None
+        for tag in tags:
+            tag_str = '"{}"'.format(tag)
+            if not tag_q:
+                tag_q = Q(tags__contains=tag_str)
+            else:
+                tag_q = Q(tags__contains=tag_str) | tag_q
+            # print("Found tags:" + str(tags))
+        if tags:
+            q = q & tag_q
+
+    all_objects = SuiteExecution.objects.filter(q).order_by('-id')
 
 
     if get_count:
@@ -179,12 +207,12 @@ def _get_suite_executions(execution_id=None,
                                                           "test_case_id": test_case_execution.test_case_id,
                                                           "result": test_case_execution.result})
 
-        if (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
+        if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
             suite_result = RESULTS["PASSED"]
-        if num_failed:
+        if finalize and num_failed:
             suite_result = RESULTS["FAILED"]
-        if num_in_progress:
-            suite_result = RESULTS["IN_PROGRESS"]
+        # if num_in_progress:
+        #    suite_result = RESULTS["IN_PROGRESS"]
         if "result" in suite_execution["fields"]:
             if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
                 suite_result = RESULTS["KILLED"]
@@ -215,6 +243,7 @@ def _get_suite_executions(execution_id=None,
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
     suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
+    suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
     suite_execution_attributes.append({"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
     suite_execution_attributes.append({"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})

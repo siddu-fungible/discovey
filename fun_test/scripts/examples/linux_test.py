@@ -1,4 +1,4 @@
-from lib.host.linux import Linux
+from lib.host.linux import Linux, NoLogger
 
 '''
 linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123")
@@ -18,6 +18,7 @@ i = 0
 '''
 
 
-linux_obj = Linux(host_ip="10.1.20.67", ssh_username="jabraham", ssh_password="Fun!@#", use_paramiko=False)
+linux_obj = Linux(host_ip="10.1.20.67", ssh_username="jabraham", ssh_password="fun123", use_paramiko=False)
+linux_obj.logger = NoLogger()
 o = linux_obj.command("ls -l")
 o = linux_obj.command("date")

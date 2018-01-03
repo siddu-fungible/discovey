@@ -10,6 +10,7 @@ class MyScript(FunTestScript):
 
     def setup(self):
         fun_test.log("Script-level setup")
+        fun_test.shared_variables["some_variable"] = 123
 
     def cleanup(self):
         fun_test.log("Script-level cleanup")
@@ -32,10 +33,12 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
+
         fun_test.add_checkpoint("Some checkpoint")
         for i in range(0, 50):
             fun_test.log("Some log")
 
+        fun_test.log("Variable shared across test-cases and the script level: {}".format(fun_test.shared_variables["some_variable"]))
 
 
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
@@ -62,6 +65,6 @@ class FunTestCase2(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1(myscript))
-    myscript.add_test_case(FunTestCase2(myscript))
+    myscript.add_test_case(FunTestCase1())
+    myscript.add_test_case(FunTestCase2())
     myscript.run()

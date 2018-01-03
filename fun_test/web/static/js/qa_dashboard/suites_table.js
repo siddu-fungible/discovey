@@ -1,4 +1,4 @@
-function SuitesTableController($scope, $http, resultToClass, $window, PagerService, commonAlert) {
+function SuitesTableController($scope, $http, resultToClass, $window, PagerService, commonService, trimTime) {
     let ctrl = this;
 
     $scope.resultToClass = function (result) {
@@ -10,7 +10,11 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         $scope.recordsPerPage = 20;
         $scope.logDir = null;
         $scope.suiteExecutionsCount = 0;
-        $http.get("/regression/suite_executions_count/"  + ctrl.filterString).then(function(result) {
+        let payload = {};
+        if(ctrl.tags) {
+            payload["tags"] = ctrl.tags;
+        }
+        $http.post("/regression/suite_executions_count/"  + ctrl.filterString, payload).then(function(result) {
             $scope.suiteExecutionsCount = (parseInt(result.data));
             $scope.setPage(1);
 
@@ -32,7 +36,11 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         if (page === 0 || (page > $scope.pager.endPage)) {
             return;
         }
-        $http.get("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page + "/" + ctrl.filterString).then(function (result) {
+        let payload = {};
+        if(ctrl.tags) {
+            payload["tags"] = ctrl.tags;
+        }
+        $http.post("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page + "/" + ctrl.filterString, payload).then(function (result) {
             $scope.items = result.data;
         });
     };
@@ -42,9 +50,13 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
     };
 
     $scope.test = function() {
-        commonAlert.showSuccess("john");
-
+        commonService.showSuccess("john");
     };
+
+    $scope.trimTime = function (t) {
+        return trimTime(t);
+    };
+
     $scope.getSuiteDetail = function (suiteId) {
         console.log(suiteId);
         $window.location.href = "/regression/suite_detail/" + suiteId;
@@ -60,20 +72,24 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
         if($scope.logDir) {
             return "/regression/static_serve_log_directory/" + suiteId;
         }
-    }
+    };
 
     $scope.rerunClick = function(suiteId) {
         $http.get("/regression/suite_re_run/" + suiteId).then(function (result) {
             let jobId = parseInt(result.data);
             $window.location.href = "/regression/suite_detail/" + jobId;
         });
-    }
+    };
 
     $scope.killClick = function(suiteId) {
         $http.get("/regression/kill_job/" + suiteId).then(function (result) {
             let jobId = parseInt(result.data);
             $window.location.href = "/regression/";
         });
+    };
+
+    $scope.getTagList = function (tagsString) {
+        return angular.fromJson(tagsString);
     }
 
 }
@@ -141,7 +157,8 @@ angular.module('qa-dashboard')
         templateUrl: '/static/qa_dashboard/suites_table.html',
         controller: SuitesTableController,
         bindings: {
-            filterString: '@'
+            filterString: '@',
+            tags: '@'
         }
     })
     .factory('PagerService', PagerService);

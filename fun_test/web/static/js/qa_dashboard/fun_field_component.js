@@ -1,7 +1,7 @@
 let funFieldComponentInfo = {
 
-        template: "<div>" +
-                  "<input class='{{ $ctrl.klass }}' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
+        template: "<div class='{{ $ctrl.klass }}'>" +
+                  "<input style='width: 100%' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
                   "<p ng-if='!value && $ctrl.required' style='{{ errorStyle }}'>{{ $ctrl.type }} * Required</p>" +
                   "<p ng-show='minRequirementError' style='{{ errorStyle }}'>{{ minRequirementError }}</p>" +
                   "<p ng-show='maxRequirementError' style='{{ errorStyle }}'>{{ maxRequirementError }}</p>" +
@@ -28,7 +28,7 @@ let funFieldComponent = {"name": "funField", "info": funFieldComponentInfo};
 
 
 
-function FunFieldController($scope) {
+function FunFieldController($scope, commonService) {
     let ctrl = this;
 
     this.$onInit = function () {
@@ -40,13 +40,13 @@ function FunFieldController($scope) {
         $scope.maxLengthRequirementError = null;
         $scope.errorStyle = "color: #a94442";
 
-    }
+    };
 
     $scope.testClick = function () {
         console.log("testClick");
         console.log(ctrl.f);
 
-    }
+    };
 
     $scope.onChange = function () {
         ctrl.bindValue = $scope.value;
@@ -55,7 +55,8 @@ function FunFieldController($scope) {
         } else if(ctrl.type === "text") {
             let result = validateText();
         }
-    }
+        commonService.closeAllAlerts();
+    };
 
     let validateNumber = function () {
         $scope.minRequirementError = null;
@@ -76,12 +77,13 @@ function FunFieldController($scope) {
         }
         if (!result) {
             console.log($scope.value + " : is invalid");
+            $scope.value = null;
         }
         else {
             console.log($scope.value + " : is valid");
         }
         return result
-    }
+    };
 
     let validateText = function () {
         $scope.minLengthRequirementError = null;

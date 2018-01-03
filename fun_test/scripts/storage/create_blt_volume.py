@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper, Dut
 from lib.host.storage_controller import StorageController
 import uuid
 # fun_test.enable_debug()
-
+# fun_test.enable_pause_on_failure()
 
 
 topology_dict = {
@@ -60,11 +60,12 @@ class MyScript(FunTestScript):
 
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
-        self.topology = topology_obj_helper.deploy()
-        fun_test.test_assert(self.topology, "Ensure deploy is successful")
+        topology = topology_obj_helper.deploy()
+        fun_test.test_assert(topology, "Ensure deploy is successful")
+        fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        pass
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
 
 
 class FunTestCase1(FunTestCase):
@@ -85,20 +86,20 @@ class FunTestCase1(FunTestCase):
         pass
 
     def run(self):
-        dut_instance = self.script_obj.topology.get_dut_instance(index=0)
+        dut_instance = fun_test.shared_variables["topology"].get_dut_instance(index=0)
         fun_test.test_assert(dut_instance, "Retrieved dut instance")
         storage_controller = StorageController(target_ip=dut_instance.host_ip,
                                                target_port=dut_instance.external_dpcsh_port)
 
         result = storage_controller.ip_cfg(ip=dut_instance.host_ip)
-        fun_test.test_assert(result["status"], "ip_cfg {}".format(dut_instance.host_ip))
+        fun_test.test_assert(result["status"], "ip_cfg {}".format(dut_instance.data_plane_ip))
 
         this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
-        result = storage_controller.create_blt_volume(capacity=1073741824,
+        result = storage_controller.create_thin_block_volume(capacity=1073741824,
                                                       block_size=4096,
                                                       name="volume1",
                                                       uuid=this_uuid)
-        fun_test.test_assert(result["status"], "create_blt_volume")
+        fun_test.test_assert(result["status"], "create_thin_block_volume")
 
         result = storage_controller.command("peek storage/volumes")
         i = 0
@@ -109,5 +110,5 @@ if __name__ == "__main__":
 
 
     myscript = MyScript()
-    myscript.add_test_case(FunTestCase1(myscript))
+    myscript.add_test_case(FunTestCase1())
     myscript.run()

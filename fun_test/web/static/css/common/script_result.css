@@ -94,7 +94,7 @@ wrapper.toggled #page_content_wrapper {
     margin-right: -350px;
 }
 
-#documentation, #script, #topology{
+#documentation, #script, #topology, #aux{
     margin: 80px;
 }
 

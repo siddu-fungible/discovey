@@ -45,7 +45,8 @@ class SuiteWorker(Thread):
         self.suite_shutdown = False
 
     def shutdown_suite(self):
-        scheduler_logger.info("Shutdown_suite")
+        job_id = self.job_spec["job_id"]
+        scheduler_logger.info("Job Id: {} Shutdown_suite".format(job_id))
         if self.current_script_process:
             try:
                 os.kill(self.current_script_process.pid, signal.SIGINT)
@@ -71,9 +72,13 @@ class SuiteWorker(Thread):
     def run(self):
         scheduler_logger.debug("Running Job: {}".format(self.job_id))
         models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["IN_PROGRESS"])
+        if "tags" in self.job_spec and "jenkins-hourly" in self.job_spec["tags"]:
+            set_jenkins_hourly_execution_status(status=RESULTS["IN_PROGRESS"])
+
         suite_execution_id = self.job_id
         self.prepare_job_directory()
         build_url = self.job_build_url
+
 
         # Setup the suites own logger
         local_scheduler_logger = logging.getLogger("scheduler_log.txt")
@@ -83,6 +88,18 @@ class SuiteWorker(Thread):
             logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         local_scheduler_logger.addHandler(hdlr=handler)
         self.local_scheduler_logger = local_scheduler_logger
+
+        if build_url:
+            version = determine_version(build_url=build_url)
+            if not version:
+                models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
+                error_message = "Unable to determine version from build url: {}".format(build_url)
+                scheduler_logger.critical(error_message)
+                local_scheduler_logger.critical(error_message)
+                self.suite_shutdown = True
+            else:
+                models_helper.update_suite_execution(suite_execution_id=self.job_id, version=version)
+
 
         suite_summary = {}
 
@@ -138,12 +155,15 @@ class SuiteWorker(Thread):
                 poll_status = self.current_script_process.poll()
             if poll_status:  #
                 scheduler_logger.critical("CRASH: Script {}".format(os.path.basename(script_path)))
+                self.local_scheduler_logger.info("CRASH: {}".format(script_path))
                 local_scheduler_logger.critical("CRASH")
                 crashed = True  #TODO: Need to re-check this based on exit code
             script_result = False
             if self.current_script_process.returncode == 0:
                 script_result = True
+            self.local_scheduler_logger.info("Executed: {}".format(script_path))
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
+        self.local_scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         suite_execution.completed_time = get_current_time()
@@ -171,6 +191,7 @@ class SuiteWorker(Thread):
 
         else:
             pass #TODO: Send error report
+            send_summary_mail(job_id=self.job_id)
 
 
 
@@ -219,6 +240,8 @@ def process_queue():
 
         # Execute
         job_spec = parse_file_to_json(file_name=job_file)
+        job_id = job_spec["job_id"]
+        scheduler_logger.info("Process queue: {}".format(job_id))
         current_time = get_current_time()
 
         schedule_it = True
@@ -236,6 +259,8 @@ def process_queue():
                 scheduling_time = total_seconds
             else:
                 schedule_it = False #TODO: Email, report a scheduling failure
+
+        scheduler_logger.info("Job Id: {} Schedule it: {} Time: {}".format(job_id, schedule_it, scheduling_time))
         if job_spec and schedule_it:
             suite_worker_obj = SuiteWorker(job_spec=job_spec)
             t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj, ))
@@ -243,6 +268,10 @@ def process_queue():
             models_helper.update_suite_execution(suite_execution_id=suite_worker_obj.job_id,
                                                  scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time),
                                                  result=RESULTS["SCHEDULED"])
+            # if "tags" in job_spec:
+            #    tags = job_spec["tags"]
+            #    if "jenkins-hourly" in tags:
+            #        set_jenkins_hourly_execution_status(status=RESULTS["SCHEDULED"])
             t.start()
 
         else:
@@ -262,8 +291,16 @@ def de_queue_job(job_file):
         #TODO: Ensure job_file is removed
 
 def ensure_singleton():
+    if os.path.exists(SCHEDULER_PID):
+        raise SchedulerException("Only one instance of scheduler.py is permitted")
+    else:
+        with open(SCHEDULER_PID, "w") as f:
+            pid = os.getpid()
+            f.write(str(pid))
+    '''
     if len(process_list(process_name=os.path.basename(__file__))) > 1:
         raise SchedulerException("Only one instance of scheduler.py is permitted")
+    '''
 
 if __name__ == "__main1__":
     queue_job(suite_name="storage_basic")
@@ -280,8 +317,6 @@ if __name__ == "__main1__":
 if __name__ == "__main__":
     ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
-    with open("/tmp/john-{}".format(datetime.datetime.now()), "w") as f:
-        f.write("hi")
     while True:
         process_killed_jobs()
         process_queue()

@@ -3,12 +3,14 @@ import json, time
 import socket, fcntl, errno
 import os, sys
 
+
 class StorageController():
-    def __init__(self, mode="storage", target_ip=None, target_port=None):
+    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
         self.target_ip = target_ip
         self.target_port = target_port
         self.sock = None
         self.mode = mode
+        self.verbose = verbose
 
     def sendall(self, data, expected_command_duration=1):
         start = time.time()
@@ -25,7 +27,6 @@ class StorageController():
                     time.sleep(0.1)
                     continue
 
-
     def _read(self, expected_command_duration=1):
         start = time.time()
         chunk = 1024
@@ -34,6 +35,7 @@ class StorageController():
         while not output.endswith("\n"):
             elapsed_time = time.time() - start
             if elapsed_time > expected_command_duration:
+                fun_test.critical("Command timeout")
                 break
             try:
                 buffer = self.sock.recv(chunk)
@@ -53,7 +55,7 @@ class StorageController():
     def _connect(self):
         if not self.sock:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print("Connecting to {} {}".format(self.target_ip, self.target_port))
+            fun_test.log("Connecting to {} {}".format(self.target_ip, self.target_port))
             self.sock.connect((self.target_ip, self.target_port))
             fcntl.fcntl(self.sock, fcntl.F_SETFL, os.O_NONBLOCK)
 
@@ -62,14 +64,19 @@ class StorageController():
         output = ""
         try:
             self._connect()
-            # print ("Sending:" + command + "\n")
-            self.sendall("{}\n".format(command))
+            if self.verbose:
+                fun_test.log("DPCSH Send:" + command + "\n")
+            self.sendall("{}\n".format(command), expected_command_duration)
             output = self._read(expected_command_duration)
-            json_output = json.loads(output)
-            result["status"] = True
-            result["data"] = json_output
-            result["error_message"] = None
-
+            if output:
+                result["raw_output"] = output
+                json_output = json.loads(output)
+                result["status"] = True
+                result["data"] = json_output
+                result["error_message"] = None
+            if (type(result["data"]) is bool and result["data"] is False) or (type(result["data"]) is int and
+                                                                              result["data"] != 0):
+                result["status"] = False
         except socket.error, msg:
             print msg
             result["error_message"] = msg
@@ -79,26 +86,26 @@ class StorageController():
             result["error_message"] = str(ex)
         if not result["status"]:
             fun_test.log("Command failed: " + fun_test.dict_to_json_string(result))
+        if self.verbose:
+            self.print_result(result=result)
         return result
 
     def print_result(self, result):
-        print "Command: {}".format(result["command"])
-        print "Status: {}".format(result["status"])
-        print json.dumps(result["data"], indent=4)
+        fun_test.log("DPCSH Result")
+        fun_test.log("Command: {}".format(result["command"]))
+        fun_test.log("Status: {}".format(result["status"]))
+        fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
+        fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_command(self, data, action="", additional_info=""):
-        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info))
-
+    def json_command(self, data, action="", additional_info="", expected_command_duration=1):
+        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),
+                            expected_command_duration=expected_command_duration)
 
     def ip_cfg(self, ip):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip":ip}}
         return self.json_command(cfg_dict)
 
-    def create_blt_volume(self,
-                          capacity,
-                          uuid,
-                          block_size,
-                          name):
+    def create_thin_block_volume(self, capacity, uuid, block_size, name):
         create_dict = {}
         create_dict["class"] = "volume"
         create_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
@@ -110,6 +117,45 @@ class StorageController():
         create_dict["params"]["name"] = name
         return self.json_command(create_dict)
 
+    def attach_volume(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5):
+        attach_dict = {"class": "controller",
+                       "opcode": "ATTACH",
+                       "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
+                                  "remote_ip": remote_ip}}
+        return self.json_command(attach_dict, expected_command_duration=3)
+
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid):
+        create_dict = {"class": "volume",
+                       "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                       "params": {"type": "VOL_TYPE_BLK_RDS",
+                                  "capacity": capacity,
+                                  "block_size": block_size,
+                                  "uuid": uuid,
+                                  "name": name,
+                                  "remote_ip": remote_ip,
+                                  "remote_nsid": remote_nsid}}
+        return self.json_command(create_dict)
+
+    def create_replica_volume(self, capacity,
+                              block_size,
+                              uuid,
+                              name,
+                              pvol_id):
+        create_dict = {"class": "volume",
+                       "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                       "params": {"type": "VOL_TYPE_BLK_REPLICA",
+                                  "capacity": capacity,
+                                  "block_size": block_size,
+                                  "uuid": uuid,
+                                  "name": name,
+                                  "min_replicas_insync": 1,
+                                  "pvol_type": "VOL_TYPE_BLK_RDS",
+                                  "pvol_id": pvol_id}}
+        return self.json_command(create_dict)
+
+    def peek(self, props_tree):
+        props_tree = "peek " + props_tree
+        return self.command(props_tree)
 
 
 if __name__ == "__main__":
