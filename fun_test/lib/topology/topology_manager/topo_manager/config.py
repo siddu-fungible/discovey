@@ -21,9 +21,6 @@ spine_container = 'frr:v4'
 vm_ips = ['192.168.56.101']
 
 #Uname/passwd of compute engines
-<<<<<<< HEAD
 vm_user = 'ptf'
-=======
-vm_user = 'jabraham'
->>>>>>> 1a5e0d121eee2b79929ae3bbd90a64eff4f84442
+# vm_user = 'jabraham'
 vm_passwd = 'fun123'

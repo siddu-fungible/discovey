@@ -26,4 +26,5 @@ def get_session_logs(request):
     logs = []
     if "logs" in request.session:
         logs = request.session["logs"]
+    logs.reverse()
     return HttpResponse(json.dumps(logs))

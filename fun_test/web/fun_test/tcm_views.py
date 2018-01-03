@@ -107,19 +107,19 @@ def catalog_suite_execution_summary(request, catalog_name):
     result["data"] = json.loads(serializers.serialize('json', CatalogSuiteExecution.objects.filter(catalog_name=catalog_name))) #TODO: Really stupid
     return HttpResponse(json.dumps(result))
 
-def catalog_suite_execution_details_with_jira(request, instance_name):
+def catalog_suite_execution_details_with_jira(request, suite_execution_id):
     return HttpResponse(json.dumps(_get_catalog_suite_execution_details(request=request,
-                                                                        instance_name=instance_name,
+                                                                        suite_execution_id=suite_execution_id,
                                                                         with_jira_attributes=True)))
 
-def _get_catalog_suite_execution_details(request, instance_name, with_jira_attributes=False):
+def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_attributes=False):
     result = initialize_result(failed=True)
     num_passed = 0
     num_failed = 0
     num_total = 0
     jira_manager = JiraManager()
     try:
-        suite_execution = CatalogSuiteExecution.objects.get(instance_name=instance_name)
+        suite_execution = CatalogSuiteExecution.objects.get(suite_execution_id=suite_execution_id)
         logger.info("Retrieved suite execution id: {}".format(suite_execution.suite_execution_id))
         tex = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution.suite_execution_id)
         payload = {}
@@ -166,17 +166,17 @@ def _get_catalog_suite_execution_details(request, instance_name, with_jira_attri
         result["data"] = payload
         result["status"] = True
     except ObjectDoesNotExist as ex:
-        result["error_message"] = "Unable to retrieve CatalogSuiteExecution for instance {} : {}".format(instance_name,
+        result["error_message"] = "Unable to retrieve CatalogSuiteExecution for instance {} : {}".format(suite_execution_id,
                                                                                                          str(ex))
     except Exception as ex:
-        result["error_message"] = "Unable to retrieve CatalogSuiteExecution for instance {} : {}".format(instance_name,
+        result["error_message"] = "Unable to retrieve CatalogSuiteExecution for instance {} : {}".format(suite_execution_id,
                                                                                                          str(ex))
     return result
 
-def catalog_suite_execution_details(request, instance_name):
-    return HttpResponse(json.dumps(_get_catalog_suite_execution_details(request=request, instance_name=instance_name)))
+def catalog_suite_execution_details(request, suite_execution_id):
+    return HttpResponse(json.dumps(_get_catalog_suite_execution_details(request=request, suite_execution_id=suite_execution_id)))
 
-def catalog_suite_execution_details_page(request, instance_name):
+def catalog_suite_execution_details_page(request, suite_execution_id):
     return render(request, 'qa_dashboard/catalog_execution_details_page.html', locals())
 
 def instance_metrics(request, instance_name):
@@ -209,6 +209,24 @@ def module_component_mapping(request):
     except Exception as ex:
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
+
+def releases(request):
+    result = initialize_result(failed=True)
+    try:
+        release_catalogs = CatalogSuite.objects.filter(category=CATALOG_CATEGORIES["RELEASE"])
+        executions = []
+        for release_catalog in release_catalogs:
+            suite_executions = CatalogSuiteExecution.objects.filter(catalog_name=release_catalog.name)
+            for suite_execution in suite_executions:
+                executions.append(json.loads(serializers.serialize('json', [suite_execution]))[0])
+        result["status"] = True
+        result["data"] = executions
+    except Exception as ex:
+        result["error_message"] = str(ex)
+    return HttpResponse(json.dumps(result))
+
+def releases_page(request):
+    return render(request, 'qa_dashboard/releases_page.html', locals())
 
 def catalogs_summary(request):
     result = initialize_result(failed=True)

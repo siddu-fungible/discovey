@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/releases.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="content" ng-controller="releasesController">
+Releases
+ </div>
+{% endblock %}
