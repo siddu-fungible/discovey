@@ -1652,11 +1652,8 @@ class Node(object):
                 neighbor = self.interfaces[intf]['peer_ip']
                 bgp_config += '  neighbor %s remote-as %s \n' % (neighbor, self.interfaces[intf]['peer_asn'])
                 if self.type == 'leaf':
-                    #if self.interfaces[intf]['peer_type'] == 'leaf':
-                    #    bgp_config += '  neighbor %s route-map REMOTE_RACK_RMAP_IBGP_OUT out \n' % neighbor
-                    #else:
-                    #    bgp_config += '  neighbor %s route-map REMOTE_RACK_RMAP_IN in \n' % neighbor
-                    #    bgp_config += '  neighbor %s route-map REMOTE_RACK_RMAP_OUT out \n' % neighbor
+                    if self.interfaces[intf]['peer_type'] == 'spine':
+                        bgp_config += '  neighbor %s route-map CX_EBGP_RMAP_IN in \n' % neighbor
                     bgp_config += '  address-family ipv4 unicast \n'
                     bgp_config += '    network %s \n' % str(self.public_network)
                     bgp_config += '    maximum-paths 8 \n'
@@ -1667,11 +1664,7 @@ class Node(object):
                         bgp_config += '    neighbor %s next-hop-self \n' % neighbor
         if self.type == 'leaf':
             bgp_config += create_ip_prefix_list('REMOTE_RACK_PREFIX_MATCH_ALL', 'permit', '0.0.0.0/0')
-            bgp_config += create_ip_community_list('FILTER_E_I', 'permit', self.asn + ':1')
-            bgp_config += create_ip_community_list('FILTER_E_I_E', 'permit', self.asn + ':2')
-            bgp_config += create_route_map('REMOTE_RACK_RMAP_IN', self.asn + ':1')
-            bgp_config += create_route_map('REMOTE_RACK_RMAP_IBGP_OUT', self.asn + ':2')
-            bgp_config += create_route_map('REMOTE_RACK_RMAP_OUT', 'None')
+            bgp_config += create_route_map('CX_EBGP_RMAP_IN', 'no-export')
         self.bgp_config = 'en\n conf t\n' + bgp_config + 'do wr mem\n'
 
         res = self.exec_command_telnet(self.bgp_port, self.bgp_config.split('\n'))

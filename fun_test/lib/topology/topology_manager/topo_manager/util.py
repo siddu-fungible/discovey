@@ -72,21 +72,10 @@ def create_ip_community_list(name, action, community):
     return ip_community_list
 
 def create_route_map(name, community):
-    if name == 'REMOTE_RACK_RMAP_IN':
+    if name == 'CX_EBGP_RMAP_IN':
         route_map = 'route-map ' + name + ' permit 10 \n'
         route_map += '   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n'
         route_map += '      set community ' + community + '\n'
-    elif name == 'REMOTE_RACK_RMAP_IBGP_OUT':
-        route_map = 'route-map ' + name + ' permit 10 \n'
-        route_map += '   match community FILTER_E_I \n'
-        route_map += '      set community ' + community + '\n'
-        route_map += 'route-map ' + name + ' permit 20 \n'
-        route_map += ' match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n'
-    elif name == 'REMOTE_RACK_RMAP_OUT':
-        route_map = 'route-map ' + name + ' deny 10 \n'
-        route_map += '   match community FILTER_E_I_E \n'
-        route_map += ' route-map REMOTE_RACK_RMAP_OUT permit 20 \n'
-        route_map += '   match ip address prefix-list REMOTE_RACK_PREFIX_MATCH_ALL \n'
     else:
         return ''
 
