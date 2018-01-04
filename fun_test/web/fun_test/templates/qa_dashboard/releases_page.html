@@ -60,7 +60,7 @@
                     <td>{{ ((summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
                     <td>
                         <label class="switch">
-                            <input type="checkbox" ng-click="activeReleaseClick(summaryEntry.fields.suite_execution_id, $event)">
+                            <input type="checkbox" ng-checked="summaryEntry.fields.active" ng-click="activeReleaseClick(summaryEntry.fields.suite_execution_id, $event)">
                             <span class="slider round"></span>
                         </label>
                     </td>
