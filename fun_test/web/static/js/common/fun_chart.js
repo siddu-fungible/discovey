@@ -72,8 +72,18 @@
                             series.forEach(function (seriesName, index) {
                                 let oneSeriesDataEntry = {name: seriesName, data: [], colors: colors.reverse()};
                                 angular.forEach(ctrl.values, function (categoryInfo, categoryName) {
+                                    if(categoryInfo.hasOwnProperty("Link")) {
+                                        oneSeriesDataEntry.point = {
+                                            events: {
+                                                click: function () {
+                                                    location.href = categoryInfo["Link"];
+                                                }
+                                            }
+                                        }
+
+                                    }
                                     oneSeriesDataEntry.data.push(categoryInfo[seriesName]);
-                                    if(ctrl.colors) {
+                                    if (ctrl.colors) {
                                         oneSeriesDataEntry.color = colors[index];
                                     }
                                 });

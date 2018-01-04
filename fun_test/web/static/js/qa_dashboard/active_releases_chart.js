@@ -3,11 +3,11 @@
 
 let activeReleasesInfo = {
     template: ' <div class="panel panel-primary" style="max-height: 500px; min-height: 500px">\n' +
-    '               <div class="panel-heading">Release summary</div>\n' +
+    '               <div class="panel-heading">Active releases</div>\n' +
     '                   <div class="panel-body"> '+
     '                       <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
     '                       <div ng-if="releaseProgressValues" >\n' +
-    '                           <fun-chart values="releaseProgressValues" colors="colors" title="Active Releases"\n' +
+    '                           <fun-chart values="releaseProgressValues" colors="colors" title="Release progress"\n' +
     '                                chart-type="vertical_colored_bar_chart" yaxis-title="Percentage"\n' +
     '                               series="series" charting="charting"></fun-chart>\n' +
     '                       </div>\n' +
@@ -67,7 +67,8 @@ function ActiveReleasesController($scope, $timeout, commonService) {
                     $scope.releaseProgressValues[thisInstance.fields.instance_name] = {
                         "Passed": (thisInstance.fields.numPassed * 100)/thisInstance.fields.numTotal,
                         "Failed": (thisInstance.fields.numFailed * 100)/thisInstance.fields.numTotal,
-                        "Pending": ((thisInstance.fields.numTotal - thisInstance.fields.numFailed - thisInstance.fields.numPassed)  * 100)/thisInstance.fields.numTotal
+                        "Pending": ((thisInstance.fields.numTotal - thisInstance.fields.numFailed - thisInstance.fields.numPassed)  * 100)/thisInstance.fields.numTotal,
+                        "Link": "/tcm/catalog_suite_execution_details_page/" + suiteExecutionId
                     };
                     let i = 0;
 

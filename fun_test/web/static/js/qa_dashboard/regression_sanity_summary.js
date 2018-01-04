@@ -7,6 +7,7 @@ let regressionSanitySummaryInfo = {
     '                   <div class="panel-body"> '+
     '                       <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
     '                       <table class="table table-nonfluid table-borderless">\n' +
+    '                             <tr><th></th><th>Status</th></tr>\n' +
     '                            <tr>\n' +
     '                                <td>Hourly Sanity</td>\n' +
     '                                <td><label class="label label-{{ getColorForResult(hourlySanity) }}">{{hourlySanity}}</label></td>\n' +
