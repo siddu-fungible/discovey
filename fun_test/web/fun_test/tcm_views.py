@@ -221,20 +221,34 @@ def module_component_mapping(request):
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
 
+def active_releases(request):
+    pass
+
+def _get_releases(active=None):
+    release_catalogs = CatalogSuite.objects.filter(category=CATALOG_CATEGORIES["RELEASE"])
+    executions = []
+    for release_catalog in release_catalogs:
+        suite_executions = []
+        if not active:
+            suite_executions = CatalogSuiteExecution.objects.filter(catalog_name=release_catalog.name)
+        else:
+            suite_executions = CatalogSuiteExecution.objects.filter(catalog_name=release_catalog.name, active=True)
+        for suite_execution in suite_executions:
+            executions.append(json.loads(serializers.serialize('json', [suite_execution]))[0])
+    return executions
+
 def releases(request):
     result = initialize_result(failed=True)
     try:
-        release_catalogs = CatalogSuite.objects.filter(category=CATALOG_CATEGORIES["RELEASE"])
-        executions = []
-        for release_catalog in release_catalogs:
-            suite_executions = CatalogSuiteExecution.objects.filter(catalog_name=release_catalog.name)
-            for suite_execution in suite_executions:
-                executions.append(json.loads(serializers.serialize('json', [suite_execution]))[0])
         result["status"] = True
-        result["data"] = executions
+        result["data"] = _get_releases()
     except Exception as ex:
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
+
+@api_safe_json_response
+def active_releases(request):
+    return _get_releases(active=True)
 
 def releases_page(request):
     return render(request, 'qa_dashboard/releases_page.html', locals())

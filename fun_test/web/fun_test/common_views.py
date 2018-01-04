@@ -12,6 +12,9 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 def alerts_page(request):
     return render(request, 'qa_dashboard/alerts_page.html', locals())
 
+def home(request):
+    return render(request, 'qa_dashboard/home.html', locals())
+
 @csrf_exempt
 def add_session_log(request):
     if not "logs" in request.session:

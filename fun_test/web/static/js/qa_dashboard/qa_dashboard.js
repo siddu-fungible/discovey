@@ -217,6 +217,7 @@
 
     app.component(funFieldComponent["name"], funFieldComponent["info"]);
     app.component(funSpinnerStatusComponent["name"], funSpinnerStatusComponent["info"]);
+    app.component(activeReleasesComponent["name"], activeReleasesComponent["info"])
 
 }).call();
 
