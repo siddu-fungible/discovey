@@ -2,7 +2,8 @@
 
 
 let activeReleasesInfo = {
-    template: ' <div ng-if="releaseProgressValues" class="col-lg-4">\n' +
+    template: ' <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
+    '<div ng-if="releaseProgressValues" class="col-lg-4">\n' +
     '                <fun-chart values="releaseProgressValues" colors="colors" title="Active Releases"\n' +
     '                           width="250" height="250" chart-type="vertical_colored_bar_chart" yaxis-title="Percentage"\n' +
     '                           series="series" charting="charting"></fun-chart>\n' +
@@ -21,34 +22,15 @@ function ActiveReleasesController($scope, $timeout, commonService) {
 
     ctrl.$onInit = function () {
         $scope.status = "idle";
-        $scope.idle = "idle";
         $scope.charting = true;
         $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
 
         $scope.releaseProgressValues = {};
 
+        /*
         $timeout(function () {
-            /*
-            $scope.releaseProgressValues = {
-                "networking": {
-                    "Passed": 10,
-                    "Failed": 15
-                },
-                "storage": {
-                    "Passed": 30,
-                    "Failed": 40
-                },
-                "s1": {
-                    "Passed": 30,
-                    "Failed": 40
-                },
-                "s2": {
-                    "Passed": 30,
-                    "Failed": 40
-                }
-            };*/
             $scope.releaseProgressValues = {};
-        }, 1000);
+        }, 1000);*/
         $scope.series = ["Passed", "Failed", "Pending"];
 
         $scope.fetchActiveReleases();
