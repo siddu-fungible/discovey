@@ -13,6 +13,7 @@ def alerts_page(request):
     return render(request, 'qa_dashboard/alerts_page.html', locals())
 
 def home(request):
+    request.session.clear()
     return render(request, 'qa_dashboard/home.html', locals())
 
 @csrf_exempt

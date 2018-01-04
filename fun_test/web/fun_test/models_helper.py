@@ -4,6 +4,7 @@ from fun_global import RESULTS, get_current_time
 from django.utils import timezone
 import dateutil.parser
 from django.db.models import Q
+from django.db import transaction
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
@@ -179,6 +180,7 @@ def _get_suite_executions(execution_id=None,
     data = serializers.serialize("json", all_objects)
     all_objects_dict = json.loads(data)
 
+    ses = []
     for suite_execution in all_objects_dict:
         test_case_execution_ids = json.loads(suite_execution["fields"]["test_case_execution_ids"])
         suite_result = RESULTS["UNKNOWN"]
@@ -189,6 +191,8 @@ def _get_suite_executions(execution_id=None,
         num_in_progress = 0
 
         suite_execution["test_case_info"] = []
+
+
         for test_case_execution_id in test_case_execution_ids:
             test_case_execution = TestCaseExecution.objects.get(execution_id=test_case_execution_id)
             te_result = test_case_execution.result.upper()  #TODO: Upper?
@@ -207,6 +211,7 @@ def _get_suite_executions(execution_id=None,
                                                           "test_case_id": test_case_execution.test_case_id,
                                                           "result": test_case_execution.result})
 
+
         if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
             suite_result = RESULTS["PASSED"]
         if finalize and num_failed:
@@ -217,12 +222,15 @@ def _get_suite_executions(execution_id=None,
             if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
                 suite_result = RESULTS["KILLED"]
 
+
         if save_suite_info:  #TODO: Perf too many saves
             se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
             if suite_result not in pending_states:
                 se.result = suite_result
-            se.save()
+            # se.save()
+            ses.append(se)
             suite_result = se.result
+
 
         suite_execution["suite_result"] = suite_result
         suite_execution["num_passed"] = num_passed
@@ -237,6 +245,11 @@ def _get_suite_executions(execution_id=None,
         suite_execution["fields"]["scheduled_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["scheduled_time"])))
         suite_execution["fields"]["submitted_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["submitted_time"])))
         suite_execution["fields"]["completed_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["completed_time"])))
+
+    with transaction.atomic():
+        if save_suite_info:
+            for se in ses:
+                se.save()
 
     return all_objects_dict
 

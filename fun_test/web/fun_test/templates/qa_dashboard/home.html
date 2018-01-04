@@ -7,7 +7,14 @@
 {% block content %}
  {% verbatim %}
  <div ng-controller="homeController">
-    <active-releases></active-releases>
+    <div class="content">
+        <div class="col-lg-6">
+            <active-releases></active-releases>
+        </div>
+                <div class="col-lg-6">
+            <regression-sanity-summary></regression-sanity-summary>
+        </div>
+    </div>
 </div>
 {% endverbatim %}
 

@@ -2,17 +2,19 @@
 
 
 let activeReleasesInfo = {
-    template: ' <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
-    '<div ng-if="releaseProgressValues" class="col-lg-4">\n' +
-    '                <fun-chart values="releaseProgressValues" colors="colors" title="Active Releases"\n' +
-    '                           width="250" height="250" chart-type="vertical_colored_bar_chart" yaxis-title="Percentage"\n' +
-    '                           series="series" charting="charting"></fun-chart>\n' +
+    template: ' <div class="panel panel-primary">\n' +
+    '               <div class="panel-heading">Release summary</div>\n' +
+    '                   <div class="panel-body"> '+
+    '                       <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
+    '                       <div ng-if="releaseProgressValues" >\n' +
+    '                           <fun-chart values="releaseProgressValues" colors="colors" title="Active Releases"\n' +
+    '                               width="250" height="250" chart-type="vertical_colored_bar_chart" yaxis-title="Percentage"\n' +
+    '                               series="series" charting="charting"></fun-chart>\n' +
+    '                       </div>\n' +
+    '                   </div>\n' +
+    '               </div>\n' +
     '            </div>',
 
-    bindings: {
-        status: '<',
-        hideOnIdle: '<'
-    },
     controller: ActiveReleasesController
 };
 

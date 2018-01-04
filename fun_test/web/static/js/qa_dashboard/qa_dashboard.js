@@ -202,6 +202,23 @@
             });
         }
 
+        function getColorForResult (result) {
+            result = result.toUpperCase();
+            let klass = "default";
+            if (result === "FAILED") {
+                klass = "danger";
+            } else if (result === "PASSED") {
+                klass = "success";
+            } else if (result === "SKIPPED") {
+                klass = "warning";
+            } else if (result === "NOT_RUN") {
+                klass = "default";
+            } else if (result === "IN_PROGRESS") {
+                klass = "info";
+            }
+            return klass;
+        }
+
         return {
             showError: showError,
             showSuccess: showSuccess,
@@ -210,14 +227,16 @@
             validateApiResult: validateApiResult,
             apiGet: apiGet,
             apiPost: apiPost,
-            addLogEntry: addLogEntry
+            addLogEntry: addLogEntry,
+            getColorForResult: getColorForResult
         };
 
     }]);
 
     app.component(funFieldComponent["name"], funFieldComponent["info"]);
     app.component(funSpinnerStatusComponent["name"], funSpinnerStatusComponent["info"]);
-    app.component(activeReleasesComponent["name"], activeReleasesComponent["info"])
+    app.component(activeReleasesComponent["name"], activeReleasesComponent["info"]);
+    app.component(regressionSanitySummaryComponent["name"], regressionSanitySummaryComponent["info"])
 
 }).call();
 

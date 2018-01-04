@@ -154,10 +154,11 @@ def suite_execution(request, execution_id):
 def last_jenkins_hourly_execution_status(request):
     result = RESULTS["UNKNOWN"]
     suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
-                                             filter_string=SUITE_EXECUTION_FILTERS["COMPLETED"])
+                                             filter_string=SUITE_EXECUTION_FILTERS["COMPLETED"],
+                                             page=1, records_per_page=10)
     if suite_executions:
         result = suite_executions[0]["suite_result"]
-    return result
+    return HttpResponse(result)
 
 def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
