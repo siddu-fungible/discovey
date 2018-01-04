@@ -2,7 +2,7 @@
 
 
 let regressionSanitySummaryInfo = {
-    template: ' <div class="panel panel-primary">\n' +
+    template: ' <div class="panel panel-primary" style="max-height: 500px; min-height: 500px">\n' +
     '               <div class="panel-heading">Regression Sanity</div>\n' +
     '                   <div class="panel-body"> '+
     '                       <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +

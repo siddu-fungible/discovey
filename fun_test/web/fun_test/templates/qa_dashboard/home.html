@@ -8,11 +8,13 @@
  {% verbatim %}
  <div ng-controller="homeController">
     <div class="content">
-        <div class="col-lg-6">
-            <active-releases></active-releases>
-        </div>
-                <div class="col-lg-6">
-            <regression-sanity-summary></regression-sanity-summary>
+        <div class="row">
+            <div class="col-lg-3">
+                <active-releases></active-releases>
+            </div>
+            <div class="col-lg-3" >
+                <regression-sanity-summary ></regression-sanity-summary>
+            </div>
         </div>
     </div>
 </div>
