@@ -3,7 +3,7 @@ from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
 import logging, json
 from web.fun_test.tcm_common import CATALOG_CATEGORIES
-from web_global import initialize_result
+from web_global import initialize_result, api_safe_json_response
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager
@@ -200,6 +200,17 @@ def basic_issue_attributes(request):
     except Exception as ex:
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
+
+@api_safe_json_response
+def set_active_release(request, suite_execution_id, active):
+    if int(active):
+        active = True
+    else:
+        active = False
+    suite_execution = CatalogSuiteExecution.objects.get(suite_execution_id=suite_execution_id)
+    suite_execution.active = active
+    suite_execution.save()
+    return True
 
 def module_component_mapping(request):
     result = initialize_result(failed=True)

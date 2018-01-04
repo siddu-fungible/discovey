@@ -26,6 +26,7 @@
                     <th>Passed %</th>
                     <th>Failed %</th>
                     <th>Pending %</th>
+                    <th>Active Release</th>
                 </tr>
                 <tr ng-repeat="summaryEntry in catalogExecutionSummary">
                     <td>{{ summaryEntry.fields.instance_name }}</td>
@@ -57,7 +58,12 @@
                     <td>{{ (summaryEntry.fields.numPassed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
                     <td>{{ (summaryEntry.fields.numFailed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
                     <td>{{ ((summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
-
+                    <td>
+                        <label class="switch">
+                            <input type="checkbox" ng-click="activeReleaseClick(summaryEntry.fields.suite_execution_id, $event)">
+                            <span class="slider round"></span>
+                        </label>
+                    </td>
                 </tr>
             </table>
         </div>

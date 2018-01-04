@@ -24,6 +24,12 @@ function DashboardAlertsController($scope, $http, $window, commonService) {
         $scope.logEntries[index].show = !$scope.logEntries[index].show;
     };
 
+    $scope.prettyLogs = function (logs) {
+        /*return logs.replace("\n", "&#10");*/
+        return logs.replace(logs, "<pre>" + logs + "</pre>");
+
+    };
+
 
 }
 

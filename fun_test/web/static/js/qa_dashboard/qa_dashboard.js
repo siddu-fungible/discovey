@@ -83,7 +83,7 @@
             let result = false;
             let data = apiResult["data"];
             if (!data["status"]) {
-                showError("Error: " + message + " " + data["error_message"] + " Status: " + data["status"]);
+                showError(message, 10 * 1000, data);
             } else {
                 result = true;
             }
@@ -111,8 +111,27 @@
                 if(result.stack) {
                     stack = result.stack;
                 }
+                else {
+                    try {
+                        throw new Error();
+                    } catch(e) {
+                        stack = e.stack;
+                    }
+                }
+            } else {
+                try {
+                    throw new Error();
+                } catch(e) {
+                    stack = e.stack.replace(/\n/, '<br>').replace("&#10", "<br>");
+                }
             }
-            addLogEntry(message, stack);
+
+            let detailedMessage = "";
+            if(result.error_message) {
+                detailedMessage = "Error Message: " + result.error_message;
+            }
+            detailedMessage += "\n" + stack;
+            addLogEntry(message, detailedMessage);
 
             $rootScope.commonErrorMessage = message;
             let t = 10000;

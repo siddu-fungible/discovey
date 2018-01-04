@@ -68,6 +68,7 @@ tcm_urls = [
     url(r'^catalog_suite_execution_details_page/(.*)$', tcm_views.catalog_suite_execution_details_page),
     url(r'^basic_issue_attributes$', tcm_views.basic_issue_attributes),
     url(r'^module_component_mapping$', tcm_views.module_component_mapping),
+    url(r'^set_active_release/(.*)/(.*)$', tcm_views.set_active_release),
     url(r'^releases_page$', tcm_views.releases_page),
     url(r'^releases', tcm_views.releases)
 ]

@@ -9,6 +9,17 @@
             $scope.fetchReleases();
         };
 
+        $scope.activeReleaseClick = function (suiteExecutionId, event) {
+            let active = 0;
+            if (event.target.checked) {
+                active = 1;
+            }
+
+            commonService.apiGet('/tcm/set_active_release/' + suiteExecutionId + "/" + active, "activeReleaseClick").then(function (data) {
+
+            });
+        };
+
         $scope.fetchReleases = function () {
             $scope.status = "Fetching Releases...";
 
