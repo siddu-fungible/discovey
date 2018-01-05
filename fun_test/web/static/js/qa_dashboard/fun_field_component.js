@@ -1,33 +1,3 @@
-let funFieldComponentInfo = {
-
-    template: "<div class='{{ $ctrl.klass }}'>" +
-              "<input style='width: 100%' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
-              "<p ng-if='!value && $ctrl.required' style='{{ errorStyle }}'>{{ $ctrl.type }} * Required</p>" +
-              "<p ng-show='minRequirementError' style='{{ errorStyle }}'>{{ minRequirementError }}</p>" +
-              "<p ng-show='maxRequirementError' style='{{ errorStyle }}'>{{ maxRequirementError }}</p>" +
-              "<p ng-show='minLengthRequirementError' style='{{ errorStyle }}'>{{ minLengthRequirementError }}</p>" +
-              "<p ng-show='maxLengthRequirementError' style='{{ errorStyle }}'>{{ maxLengthRequirementError }}</p>" +
-              "</div>",
-
-    bindings: {
-                type: '@',
-                min: '<',
-                max: '<',
-                minLength: '<',
-                maxLength: '<',
-                required: '@',
-                klass: '@',
-                bindValue: '='
-              },
-    controller: FunFieldController
- };
-
-
-
-let funFieldComponent = {"name": "funField", "info": funFieldComponentInfo};
-
-
-
 function FunFieldController($scope, commonService) {
     let ctrl = this;
 
@@ -49,11 +19,16 @@ function FunFieldController($scope, commonService) {
     };
 
     $scope.onChange = function () {
-        ctrl.bindValue = $scope.value;
-        if(ctrl.type === "number") {
+        if (ctrl.type === "number") {
             let result = validateNumber();
-        } else if(ctrl.type === "text") {
+            if(result) {
+                ctrl.bindValue = $scope.value;
+            }
+        } else if (ctrl.type === "text") {
             let result = validateText();
+            if(result) {
+                ctrl.bindValue = $scope.value;
+            }
         }
         commonService.closeAllAlerts();
     };
@@ -63,14 +38,14 @@ function FunFieldController($scope, commonService) {
         $scope.maxRequirementError = null;
 
         let result = true;
-        if(ctrl.min) {
-            if($scope.value < ctrl.min) {
+        if (ctrl.min) {
+            if ($scope.value < ctrl.min) {
                 $scope.minRequirementError = "Value is less than: " + ctrl.min;
                 result = false;
             }
         }
-        if(ctrl.max) {
-            if($scope.value > ctrl.max) {
+        if (ctrl.max) {
+            if ($scope.value > ctrl.max) {
                 $scope.minRequirementError = "Value is greater than: " + ctrl.max;
                 result = false;
             }
@@ -90,14 +65,14 @@ function FunFieldController($scope, commonService) {
         $scope.maxLengthRequirementError = null;
 
         let result = true;
-        if(ctrl.minLength) {
-            if($scope.value.length < ctrl.minLength) {
+        if (ctrl.minLength) {
+            if ($scope.value.length < ctrl.minLength) {
                 $scope.minLengthRequirementError = "Length of value is less than: " + ctrl.minLength;
                 result = false;
             }
         }
-        if(ctrl.maxLength) {
-            if($scope.value.length > ctrl.maxLength) {
+        if (ctrl.maxLength) {
+            if ($scope.value.length > ctrl.maxLength) {
                 $scope.maxLengthRequirementError = "Length of value is greater than: " + ctrl.maxLength;
                 result = false;
             }
@@ -110,8 +85,29 @@ function FunFieldController($scope, commonService) {
         }
         return result
     }
-
-
-
-
 }
+
+angular.module('qa-dashboard').component("funField", {
+
+        template: "<div class='{{ $ctrl.klass }}'>" +
+        "<input style='width: 100%' type='{{ $ctrl.type }}' ng-model='value' ng-change='onChange()'/>" +
+        "<p ng-if='!value && $ctrl.required' style='{{ errorStyle }}'>{{ $ctrl.type }} * Required</p>" +
+        "<p ng-show='minRequirementError' style='{{ errorStyle }}'>{{ minRequirementError }}</p>" +
+        "<p ng-show='maxRequirementError' style='{{ errorStyle }}'>{{ maxRequirementError }}</p>" +
+        "<p ng-show='minLengthRequirementError' style='{{ errorStyle }}'>{{ minLengthRequirementError }}</p>" +
+        "<p ng-show='maxLengthRequirementError' style='{{ errorStyle }}'>{{ maxLengthRequirementError }}</p>" +
+        "</div>",
+
+        bindings: {
+            type: '@',
+            min: '<',
+            max: '<',
+            minLength: '<',
+            maxLength: '<',
+            required: '@',
+            klass: '@',
+            bindValue: '='
+        },
+        controller: FunFieldController
+    }
+);

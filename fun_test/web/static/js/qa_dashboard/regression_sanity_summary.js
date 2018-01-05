@@ -1,5 +1,6 @@
 'use strict';
 
+/*
 
 let regressionSanitySummaryInfo = {
     template: ' <div class="panel panel-primary" style="max-height: 500px; min-height: 500px">\n' +
@@ -24,6 +25,7 @@ let regressionSanitySummaryInfo = {
     controller: RegressionSanitySummaryController
 };
 
+*/
 
 function RegressionSanitySummaryController($scope, $http, commonService) {
     let ctrl = this;
@@ -49,5 +51,27 @@ function RegressionSanitySummaryController($scope, $http, commonService) {
     };
 }
 
-let regressionSanitySummaryComponent = {"name": "regressionSanitySummary", "info": regressionSanitySummaryInfo};
+/*let regressionSanitySummaryComponent = {"name": "regressionSanitySummary", "info": regressionSanitySummaryInfo};*/
 
+angular.module('qa-dashboard').component("regressionSanitySummary", {
+    template: ' <div class="panel panel-primary" style="max-height: 500px; min-height: 500px">\n' +
+    '               <div class="panel-heading">Regression Sanity</div>\n' +
+    '                   <div class="panel-body"> '+
+    '                       <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
+    '                       <table class="table table-nonfluid table-borderless">\n' +
+    '                             <tr><th></th><th>Status</th></tr>\n' +
+    '                            <tr>\n' +
+    '                                <td>Hourly Sanity</td>\n' +
+    '                                <td><label class="label label-{{ getColorForResult(hourlySanity) }}">{{hourlySanity}}</label></td>\n' +
+    '                            </tr>\n' +
+    '                            <tr>\n' +
+    '                                <td>Nightly Sanity</td>\n' +
+    '                                <td><label class="label label-{{ getColorForResult(nightlySanity) }}">{{nightlySanity}}</label></td>\n' +
+    '                            </tr>\n' +
+    '                       </table>\n' +
+    '                   </div>\n' +
+    '               </div>\n' +
+    '            </div>',
+
+    controller: RegressionSanitySummaryController
+});

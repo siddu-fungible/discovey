@@ -34,7 +34,7 @@
         });
 
 
-    app = angular.module('qa-dashboard', ['ngSanitize', 'ui.select', 'commonModule']);
+    app = angular.module('qa-dashboard', ['ngSanitize', 'ui.select', 'commonModule', 'ui.bootstrap']);
     app.controller('QaDashBoardController', ['$rootScope', '$scope', '$http', '$window', '$timeout', function ($rootScope, $scope, $http, $window, $timeout) {
         let ctrl = this;
 
@@ -233,10 +233,8 @@
 
     }]);
 
-    app.component(funFieldComponent["name"], funFieldComponent["info"]);
-    app.component(funSpinnerStatusComponent["name"], funSpinnerStatusComponent["info"]);
-    app.component(activeReleasesComponent["name"], activeReleasesComponent["info"]);
-    app.component(regressionSanitySummaryComponent["name"], regressionSanitySummaryComponent["info"])
+    /*app.component(activeReleasesComponent["name"], activeReleasesComponent["info"]);*/
+    /*app.component(regressionSanitySummaryComponent["name"], regressionSanitySummaryComponent["info"])*/
 
 }).call();
 
