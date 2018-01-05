@@ -1,0 +1,39 @@
+<div class="modal-header">
+    <h3 class="modal-title">Edit TCM-{{ jiraId }}</h3>
+</div>
+<div class="modal-body">
+    <table class="table table-nonfluid table-bordered">
+        <tr>
+            <td class="col-md-1">
+                <button ng-click="addBugClick()" class="button btn-sm btn-info">Add</button>
+            </td>
+            <td class="col-md-10" style="vertical-align:middle;">
+                <label class="col-md-1" for="add-jql">Bug Id</label>
+                <fun-field klass="col-md-11" id="add-bug" type="text" min-length="2" max-length="100" bind-value="addBug"></fun-field>
+            </td>
+        </tr>
+    </table>
+
+
+    <table class="table">
+        <tr>
+            <th>Bugs</th>
+            <th>Summary</th>
+            <th>Blocker</th>
+        </tr>
+        <tr ng-repeat="bug in bugs">
+            <td>{{ bug.id }}</td>
+            <td>{{ bug.summary }}</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" ng-checked="bug.blocker" ng-model="bug.blocker">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-success" ng-click="submit()">Submit</button>
+    <button class="btn" ng-click="$close()">Cancel</button>
+</div>

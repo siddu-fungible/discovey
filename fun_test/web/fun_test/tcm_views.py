@@ -146,6 +146,8 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
             info["suite_execution_id"] = te.catalog_suite_execution_id
             info["owner"] = te.engineer.short_name
             info["result"] = TestCaseExecution.objects.get(execution_id=te.execution_id).result
+            info["bugs"] = te.bugs
+            info["comments"] = te.comments
             if info["result"] == RESULTS["PASSED"]:
                 num_passed += 1
             if info["result"] == RESULTS["FAILED"]:

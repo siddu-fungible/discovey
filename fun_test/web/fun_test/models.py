@@ -115,6 +115,8 @@ class CatalogTestCaseExecution(models.Model):
     jira_id = models.IntegerField()
     engineer = models.ForeignKey(Engineer)
     test_bed = models.CharField(max_length=100, default="simulation")
+    bugs = models.TextField(default="[]")
+    comments = models.TextField(default="")
     # result
 
     def __str__(self):

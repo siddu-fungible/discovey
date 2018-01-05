@@ -1,6 +1,6 @@
 'use strict';
 
-
+/*
 let activeReleasesInfo = {
     template: ' <div class="panel panel-primary" style="max-height: 500px; min-height: 500px">\n' +
     '               <div class="panel-heading">Active releases</div>\n' +
@@ -17,7 +17,7 @@ let activeReleasesInfo = {
 
     controller: ActiveReleasesController
 };
-
+*/
 
 function ActiveReleasesController($scope, $timeout, commonService) {
     let ctrl = this;
@@ -82,5 +82,21 @@ function ActiveReleasesController($scope, $timeout, commonService) {
     }
 }
 
-let activeReleasesComponent = {"name": "activeReleases", "info": activeReleasesInfo};
+/*let activeReleasesComponent = {"name": "activeReleases", "info": activeReleasesInfo};*/
 
+angular.module('qa-dashboard').component("activeReleases", {
+    template: ' <div class="panel panel-primary" style="max-height: 500px; min-height: 500px">\n' +
+    '               <div class="panel-heading">Active releases</div>\n' +
+    '                   <div class="panel-body"> '+
+    '                       <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
+    '                       <div ng-if="releaseProgressValues" >\n' +
+    '                           <fun-chart values="releaseProgressValues" colors="colors" title="Release progress"\n' +
+    '                                chart-type="vertical_colored_bar_chart" yaxis-title="Percentage"\n' +
+    '                               series="series" charting="charting"></fun-chart>\n' +
+    '                       </div>\n' +
+    '                   </div>\n' +
+    '               </div>\n' +
+    '            </div>',
+
+    controller: ActiveReleasesController
+});
