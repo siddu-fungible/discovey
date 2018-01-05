@@ -63,7 +63,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
     };
 
     $scope.fetchInstanceMetrics = function () {
-        commonService.apiGet('/tcm/instance_metrics/' + ctrl.instanceName).then(function (data) {
+        commonService.apiGet('/tcm/instance_metrics/' + ctrl.suiteExecutionId).then(function (data) {
 
         });
     };
@@ -129,7 +129,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
 
     $scope.recalculateModuleInfo = function () {
         $scope.status = "fetchingJira";
-        commonService.apiGet('/tcm/catalog_suite_execution_details_with_jira/' + ctrl.instanceName).then(function (data) {
+        commonService.apiGet('/tcm/catalog_suite_execution_details_with_jira/' + ctrl.suiteExecutionId).then(function (data) {
             $scope.status = "idle";
             $scope.moduleInfo = data.module_info;
             angular.forEach($scope.moduleInfo, function(info, moduleName) {
@@ -147,7 +147,7 @@ function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $wind
     $scope.fetchCatalogSuiteExecutionDetails = function (checkComponents) {
         let message = "fetchCatalogSuiteExecutionDetails";
         $scope.status = "fetchingCatalogExecution";
-        $http.get('/tcm/catalog_suite_execution_details/' + ctrl.instanceName).then(function (result) {
+        $http.get('/tcm/catalog_suite_execution_details/' + ctrl.suiteExecutionId).then(function (result) {
             $scope.status = "idle";
             if (!commonService.validateApiResult(result, message)) {
                 return;
@@ -264,7 +264,7 @@ angular.module('qa-dashboard').component('catalogSuiteExecutionDetails', {
     templateUrl: '/static/qa_dashboard/catalog_suite_execution_details.html',
     controller: CatalogSuiteExecutionDetailsController,
     bindings: {
-        instanceName: '@'
+        suiteExecutionId: '@'
     },
 });
 })(window.angular);

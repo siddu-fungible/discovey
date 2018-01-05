@@ -18,13 +18,13 @@ function CatalogExecutionsController($scope, $http, $window, commonService) {
             }
             $scope.catalogExecutionSummary = result.data.data;
             $scope.catalogExecutionSummary.forEach(function (instance) {
-                let instanceName = instance.fields.instance_name;
+                let suiteExecutionId = instance.fields.suite_execution_id;
                 let thisInstance = instance;
                 thisInstance.fields.numPassed = 0;
                 thisInstance.fields.numFailed = 0;
                 thisInstance.fields.numTotal = 0;
 
-                commonService.apiGet("/tcm/catalog_suite_execution_details_with_jira/" + instanceName).then(function (data) {
+                commonService.apiGet("/tcm/catalog_suite_execution_details_with_jira/" + suiteExecutionId).then(function (data) {
 
                     angular.forEach(data.jira_ids, function (info, jiraId) {
                         info.instances.forEach(function (instance) {

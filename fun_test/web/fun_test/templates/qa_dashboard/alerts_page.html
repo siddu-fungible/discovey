@@ -30,7 +30,7 @@
             </td>
         </tr>
         <tr ng-repeat-end ng-if="logEntry.show">
-            <td colspan="4"> <iframe width="100%" height="1000px" srcdoc="{{ logEntry.details }}"></iframe></td>
+            <td colspan="4"> <iframe width="100%" height="1000px" srcdoc="{{ prettyLogs(logEntry.details) }}"></iframe></td>
         </tr>
 
     </table>

@@ -12,6 +12,10 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 def alerts_page(request):
     return render(request, 'qa_dashboard/alerts_page.html', locals())
 
+def home(request):
+    request.session.clear()
+    return render(request, 'qa_dashboard/home.html', locals())
+
 @csrf_exempt
 def add_session_log(request):
     if not "logs" in request.session:
@@ -26,4 +30,5 @@ def get_session_logs(request):
     logs = []
     if "logs" in request.session:
         logs = request.session["logs"]
+    logs.reverse()
     return HttpResponse(json.dumps(logs))

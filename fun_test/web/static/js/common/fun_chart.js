@@ -59,24 +59,47 @@
 
                 if (ctrl.charting) {
                     $timeout(function () {
-                        if (ctrl.chartType === "horizontal_colored_bar_chart") {
+                        if ((ctrl.chartType === "horizontal_colored_bar_chart") || (ctrl.chartType === "vertical_colored_bar_chart")) {
 
                             let seriesData = [];
                             let series = ctrl.series.reverse();
+                            let colors = [];
+                            if(ctrl.colors) {
+                                colors = ctrl.colors;
+                            } else {
+
+                            }
                             series.forEach(function (seriesName, index) {
-                                let oneSeriesDataEntry = {name: seriesName, data: [], colors: ctrl.colors.reverse()};
+                                let oneSeriesDataEntry = {name: seriesName, data: [], colors: colors.reverse()};
                                 angular.forEach(ctrl.values, function (categoryInfo, categoryName) {
+                                    if(categoryInfo.hasOwnProperty("Link")) {
+                                        oneSeriesDataEntry.point = {
+                                            events: {
+                                                click: function () {
+                                                    location.href = categoryInfo["Link"];
+                                                }
+                                            }
+                                        }
+
+                                    }
                                     oneSeriesDataEntry.data.push(categoryInfo[seriesName]);
-                                    oneSeriesDataEntry.color = ctrl.colors[index];
+                                    if (ctrl.colors) {
+                                        oneSeriesDataEntry.color = colors[index];
+                                    }
                                 });
                                 seriesData.push(oneSeriesDataEntry);
                             });
 
                             let categories = Object.keys(ctrl.values);
 
+                            let thisChartType = 'bar';
+                            if(ctrl.chartType === "vertical_colored_bar_chart") {
+                                thisChartType = "column";
+                            }
+
                             Highcharts.chart("c-" + $scope.genId, {
                                 chart: {
-                                    type: 'bar',
+                                    type: thisChartType,
                                     height: ctrl.height,
                                     width: ctrl.width
                                 },
@@ -95,7 +118,7 @@
                                     min: 0,
                                     max: 100,
                                     title: {
-                                        text: 'Percentage'
+                                        text: ctrl.yaxisTitle
                                     },
                                 },
                                 legend: {
@@ -205,7 +228,8 @@
             chartType: '@',
             colors: '<',
             width: '@',
-            height: '@'
+            height: '@',
+            yaxisTitle: '@'
         }
     });
 

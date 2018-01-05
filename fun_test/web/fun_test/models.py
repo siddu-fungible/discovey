@@ -104,6 +104,7 @@ class CatalogSuiteExecution(models.Model):
     instance_name = models.CharField(max_length=50, unique=True)
     catalog_name = models.TextField(default="UNKNOWN")
     result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
+    active = models.BooleanField(default=False)
 
     def __str__(self):
         return "{} {} {} {}".format(self.suite_execution_id, self.owner_email, self.instance_name, self.result)

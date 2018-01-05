@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
+    <link href="{% static "css/common/bootstrap-xlgrid.css" %}" rel="stylesheet">
     <link href="{% static "css/qa_dashboard/qa_dashboard.css" %}" rel="stylesheet">
 
 
@@ -26,6 +27,9 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.js"
                 type="application/javascript"></script>
         <script src="{% static "js/qa_dashboard/fun_field_component.js" %}"></script>
+        <script src="{% static "js/qa_dashboard/fun_spinner_status.js" %}"></script>
+        <script src="{% static "js/qa_dashboard/active_releases_chart.js" %}"></script>
+        <script src="{% static "js/qa_dashboard/regression_sanity_summary.js" %}"></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
         <script src="https://code.highcharts.com/highcharts.js"></script>
         <script src="{% static "js/qa_dashboard/qa_dashboard.js" %}"></script>
@@ -76,14 +80,14 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#" style="color: white">Fungible QA</a>
+            <a class="navbar-brand" href="/" style="color: white">Fungible QA</a>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="qa-dashboard-navbar">
             <ul class="nav navbar-nav">
                 <li class="dropdown">
-                    <a href="#" style="color: white;background-color: #337ab7" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                    <a href="/common/home" style="color: white;background-color: #337ab7" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                        aria-expanded="false">Regression<span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="/regression">All Jobs</a></li>
@@ -98,6 +102,7 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                        aria-expanded="false" style="color: white;background-color: #337ab7">Test-cases<span class="caret"></span></a>
                     <ul class="dropdown-menu">
+                        <li><a href="/tcm/releases_page">Releases</a> </li>
                         <li><a href="/tcm/view_catalogs">View Catalogs</a></li>
                         <li><a href="/tcm/create_catalog_page">Create Catalog</a></li>
                     </ul>

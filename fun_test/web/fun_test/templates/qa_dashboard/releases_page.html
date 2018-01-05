@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/releases.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+{% verbatim %}
+<div class="content" ng-controller="releasesController">
+    <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
+    <div class="panel panel-primary" ng-if="catalogExecutionSummary">
+        <div class="panel-heading">Releases</div>
+        <div class="panel-body">
+            <table class="table table-nonfluid">
+                <tr>
+                    <th>Instance Name</th>
+                    <th>Owner</th>
+                    <th>Id</th>
+                    <th>Details</th>
+                    <th>Total</th>
+                    <th>Passed</th>
+                    <th>Failed</th>
+                    <th>Pending</th>
+                    <th>Progress</th>
+                    <th>Passed %</th>
+                    <th>Failed %</th>
+                    <th>Pending %</th>
+                    <th>Active Release</th>
+                </tr>
+                <tr ng-repeat="summaryEntry in catalogExecutionSummary">
+                    <td>{{ summaryEntry.fields.instance_name }}</td>
+                    <td>{{ summaryEntry.fields.owner_email }}</td>
+                    <td>{{ summaryEntry.fields.suite_execution_id }}</td>
+                    <td><a href="/tcm/catalog_suite_execution_details_page/{{ summaryEntry.fields.suite_execution_id }}">Details</a></td>
+                    <td>{{ summaryEntry.fields.numTotal }}</td>
+                    <td>{{ summaryEntry.fields.numPassed }}</td>
+                    <td>{{ summaryEntry.fields.numFailed }}</td>
+                    <td>{{ (summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) }}</td>
+                    <td>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                 style="width:
+                                         {{ (summaryEntry.fields.numPassed * 100)/summaryEntry.fields.numTotal }}%">
+                                P
+                            </div>
+                            <div class="progress-bar progress-bar-danger" role="progressbar"
+                                 style="width:
+                                         {{ (summaryEntry.fields.numFailed * 100)/summaryEntry.fields.numTotal }}%">
+                                F
+                            </div>
+                            <div class="progress-bar progress-bar-info" role="progressbar"
+                                 style="width:0%">U
+                            </div>
+                        </div>
+
+                    </td>
+                    <td>{{ (summaryEntry.fields.numPassed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+                    <td>{{ (summaryEntry.fields.numFailed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+                    <td>{{ ((summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+                    <td>
+                        <label class="switch">
+                            <input type="checkbox" ng-checked="summaryEntry.fields.active" ng-click="activeReleaseClick(summaryEntry.fields.suite_execution_id, $event)">
+                            <span class="slider round"></span>
+                        </label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+
+ </div>
+{% endverbatim %}
+
+{% endblock %}

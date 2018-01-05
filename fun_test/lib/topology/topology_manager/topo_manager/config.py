@@ -21,6 +21,5 @@ vm_ips = ['192.168.56.101']
 
 #Uname/passwd of compute engines
 vm_user = 'ptf'
-vm_user = 'jabraham'
 vm_passwd = 'fun123'
 container_passwd = 'fun123'

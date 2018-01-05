@@ -67,13 +67,18 @@ tcm_urls = [
     url(r'^catalog_suite_execution_details_with_jira/(.*)$', tcm_views.catalog_suite_execution_details_with_jira),
     url(r'^catalog_suite_execution_details_page/(.*)$', tcm_views.catalog_suite_execution_details_page),
     url(r'^basic_issue_attributes$', tcm_views.basic_issue_attributes),
-    url(r'^module_component_mapping$', tcm_views.module_component_mapping)
+    url(r'^module_component_mapping$', tcm_views.module_component_mapping),
+    url(r'^set_active_release/(.*)/(.*)$', tcm_views.set_active_release),
+    url(r'^releases_page$', tcm_views.releases_page),
+    url(r'^releases$', tcm_views.releases),
+    url(r'^active_releases$', tcm_views.active_releases)
 ]
 
 common_urls = [
     url(r'^alerts_page$', common_views.alerts_page),
     url(r'^add_session_log$', common_views.add_session_log),
-    url(r'^get_session_logs$', common_views.get_session_logs)
+    url(r'^get_session_logs$', common_views.get_session_logs),
+    url(r'^home$', common_views.home)
 ]
 
 urlpatterns = [
@@ -84,7 +89,7 @@ urlpatterns = [
     url(r'^regression/', include(regression_urls)),
     url(r'^tcm/', include(tcm_urls)), # urls related to test-case manangement
     url(r'^common/', include(common_urls)),
-    url(r'^$', views.index)
+    url(r'^$', common_views.home)
 
 ]
 
