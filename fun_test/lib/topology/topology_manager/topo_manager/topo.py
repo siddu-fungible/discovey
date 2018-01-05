@@ -1660,10 +1660,9 @@ class Node(object):
                     bgp_config += '    maximum-paths ibgp 16 \n'
                     if self.interfaces[intf]['peer_type'] == 'leaf':
                         bgp_config += '    neighbor %s addpath-tx-all-paths \n' % neighbor
-                    else:
                         bgp_config += '    neighbor %s next-hop-self \n' % neighbor
         if self.type == 'leaf':
-            bgp_config += create_ip_prefix_list('REMOTE_RACK_PREFIX_MATCH_ALL', 'permit', '0.0.0.0/0')
+            bgp_config += create_ip_prefix_list('REMOTE_RACK_PREFIX_MATCH_ALL', 'permit', 'any')
             bgp_config += create_route_map('CX_EBGP_RMAP_IN', 'no-export')
         self.bgp_config = 'en\n conf t\n' + bgp_config + 'do wr mem\n'
 
@@ -1765,15 +1764,15 @@ class Node(object):
         self.container_conn = self.set_container_conn()
         if background:
             cmd = 'nohup ' + cmd + ' > /var/tmp/output 2>&1 &'
-            out = run_commands(self.container_conn, [cmd])
-            del self.container_conn
-            return out
+        out = run_commands(self.container_conn, [cmd])
+        del self.container_conn
+        return out
 
     def set_container_conn(self):
         client = paramiko.SSHClient()
         client.host_ip = self.vm_ip
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(self.vm_ip, self.host_ssh_port, username='root', password=vm_passwd)
+        client.connect(self.vm_ip, self.host_ssh_port, username='root', password=container_passwd)
         return client
 
     def exec_command_telnet(self, port, commandlist):
