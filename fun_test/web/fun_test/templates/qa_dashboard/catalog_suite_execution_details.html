@@ -340,7 +340,7 @@
                                     </button>
                                 </td>
                                 <td>
-                                    <a target="_blank" ng-repeat="bug in instance.bugs">SW-{{ bug.id }},&nbsp</a>
+                                    <a target="_blank" ng-repeat="bug in instance.bugs track by $index">SW-{{ bug.id }},&nbsp</a>
                                     <button class="btn btn-small btn-info" ng-click="editTestCaseClick(jiraId, instance)">Edit</button>
                                 </td>
                             </tr>

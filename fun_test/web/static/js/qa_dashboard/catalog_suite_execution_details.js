@@ -20,8 +20,12 @@
             /* module chart */
             $scope.charting = true;
             $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
+            $scope.overallProgressValues = {};
+            $scope.moduleProgressValues = {};
             $scope.updateOverallProgressChartsNow = false;
             $scope.updateModuleProgressChartsNow = false;
+            $scope.componentViewDetails = {};
+
             $scope.fetchModuleComponentMapping().then(function (result) {
                 if (result) {
                     $scope.moduleComponentMapping = result;
@@ -29,18 +33,21 @@
                     angular.forEach($scope.moduleComponentMapping, function (info, module) {
                         $scope.moduleInfo[module] = {showingDetails: false};
                     });
-                    $scope.fetchCatalogSuiteExecutionDetails(true);
-                    $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
-                    $scope.currentView = "components";
-                    $scope.componentViewDetails = {};
-                    $scope.testCaseViewInstances = null;
-                    $scope.currentTestCaseViewComponent = null;
-                    $scope.resetInstanceMetrics();
-                    $scope.autoUpdate = true;
-                    $scope.overallProgressValues = {};
-                    $scope.moduleProgressValues = {};
-                    $scope.updateOverallProgressChartsNow = false;
-                    $scope.updateModuleProgressChartsNow = false;
+                    $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
+                        $scope.fetchBasicIssueAttributes(true).then(function () {
+                            $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
+                            $scope.currentView = "components";
+                            $scope.testCaseViewInstances = null;
+                            $scope.currentTestCaseViewComponent = null;
+                            $scope.resetInstanceMetrics();
+                            $scope.autoUpdate = true;
+
+                            $scope.updateOverallProgressChartsNow = false;
+                            $scope.updateModuleProgressChartsNow = false;
+                        });
+
+                    });
+
 
                 }
             });
@@ -77,29 +84,36 @@
             });
         };
 
+
         $scope.fetchBasicIssueAttributes = function (checkComponents) {
             let message = "fetchBasicIssueAttributes";
-            let jiraIds = [];
+            let jiraIds = Object.keys($scope.executionDetails.jira_ids);
+            /*
             angular.forEach($scope.executionDetails.jira_ids, function (value, key) {
                 jiraIds.push(key);
-            });
+            });*/
 
             let suiteExecutionId = $scope.executionDetails.suite_execution_id;
             let payload = {};
             payload["suite_execution_id"] = suiteExecutionId;
             payload["jira_ids"] = jiraIds;
             $scope.status = "fetchingJira";
+
+
             commonService.apiPost('/regression/catalog_test_case_execution_summary_result_multiple_jiras', payload).then(function (summary) {
                 angular.forEach(summary, function (value, key) {
                     $scope.executionDetails.jira_ids[key].summaryResult = value;
                 });
             });
 
+
             let numJiraIds = jiraIds.length;
             let attributesFetched = 0;
-            commonService.apiPost("/tcm/basic_issue_attributes", jiraIds, message).then(function (issuesAttributes) {
+
+            return commonService.apiPost("/tcm/basic_issue_attributes", jiraIds, message).then(function (issuesAttributes) {
                 if (issuesAttributes) {
                     $scope.recalculateModuleInfo();
+
 
                     angular.forEach($scope.executionDetails.jira_ids, function (value, jiraId) {
                         jiraId = parseInt(jiraId);
@@ -119,13 +133,13 @@
                         }
                         attributesFetched += 1;
                         if (attributesFetched === numJiraIds) {
-                            /*$scope.status = "idle";*/
                         }
                     });
 
                 }
             });
         };
+
 
         $scope.fetchModuleComponentMapping = function () {
             let message = "fetchModuleComponentMapping";
@@ -160,12 +174,9 @@
         $scope.fetchCatalogSuiteExecutionDetails = function (checkComponents) {
             let message = "fetchCatalogSuiteExecutionDetails";
             $scope.status = "fetchingCatalogExecution";
-            $http.get('/tcm/catalog_suite_execution_details/' + ctrl.suiteExecutionId).then(function (result) {
+            return commonService.apiGet('/tcm/catalog_suite_execution_details/' + ctrl.suiteExecutionId, message).then(function (data) {
                 $scope.status = "idle";
-                if (!commonService.validateApiResult(result, message)) {
-                    return;
-                }
-                $scope.executionDetails = result["data"]["data"];
+                $scope.executionDetails = data;
                 if ($scope.executionDetails.num_total > 0) {
                     $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100 / $scope.executionDetails.num_total;
                     $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100 / $scope.executionDetails.num_total;
@@ -176,11 +187,8 @@
                     $scope.updateOverallProgressChartsNow = true;
                     /*$scope.$digest();*/
                 }
-
                 // Fetch basic issue attributes
-                return $scope.fetchBasicIssueAttributes(checkComponents);
-            }).catch(function (result) {
-                return commonService.showHttpError(message, result);
+                /*return $scope.fetchBasicIssueAttributes(checkComponents);*/
             });
         };
 
@@ -217,9 +225,9 @@
                 instance.bugs = angular.fromJson(instance.bugs);
                 allBugs += instance.bugs.length;
                 instance.bugs.forEach(function (bug) {
-                   if(bug.blocker) {
-                       blockerCount += 1;
-                   }
+                    if (bug.blocker) {
+                        blockerCount += 1;
+                    }
                 });
 
                 numTotal += 1;
@@ -257,18 +265,23 @@
             payload["override_result"] = overrideOption;
             let thisTestCaseId = parseInt(testCaseId);
             commonService.apiPost("/regression/update_test_case_execution", payload).then(function (data) {
-
-                $scope.executionDetails.jira_ids[thisTestCaseId].instances[instanceIndex].result = overrideOption;
-                $scope.executionDetails.jira_ids[thisTestCaseId].summaryResult = data;
-                let components = $scope.executionDetails.jira_ids[thisTestCaseId].components;
-                components.forEach(function (component) {
-                    $scope._resetComponentViewDetails(component);
-                    angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, thisJiraId) {
-                        $scope._updateComponentViewDetails(component, thisJiraId);
+                $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
+                    $scope.fetchBasicIssueAttributes(false).then(function () {
+                        $scope.executionDetails.jira_ids[thisTestCaseId].instances[instanceIndex].result = overrideOption;
+                        $scope.executionDetails.jira_ids[thisTestCaseId].summaryResult = data;
+                        let components = $scope.executionDetails.jira_ids[thisTestCaseId].components;
+                        components.forEach(function (component) {
+                            $scope._resetComponentViewDetails(component);
+                            angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, thisJiraId) {
+                                $scope._updateComponentViewDetails(component, thisJiraId);
+                            });
+                        });
                     });
+
                 });
+
                 /*$scope.recalculateModuleInfo();*/
-                $scope.fetchCatalogSuiteExecutionDetails(false);
+                /*$scope.fetchCatalogSuiteExecutionDetails(false);*/
             })
 
         };
@@ -312,13 +325,27 @@
                     }
 
                 }
+            }).result.then(function () {
+                $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
+                    $scope.fetchBasicIssueAttributes(true).then(function () {
+                        let components = $scope.executionDetails.jira_ids[jiraId].components;
+                        components.forEach(function (component) {
+                            $scope._resetComponentViewDetails(component);
+                            angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, thisJiraId) {
+                                $scope._updateComponentViewDetails(component, thisJiraId);
+                            });
+                        });
+                    });
+                });
+
+                /*$scope.recalculateModuleInfo();*/
             });
-        };
 
-        $scope.toJson = function (bugsString) {
-            return angular.fromJson(bugsString);
-        };
 
+            $scope.toJson = function (bugsString) {
+                return angular.fromJson(bugsString);
+            };
+        }
     }
 
     function EditTestCasesController($modalInstance, $scope, commonService, jiraId, instance) {
@@ -348,14 +375,14 @@
             let payload = {};
             payload["execution_id"] = $scope.executionId;
             payload["bugs"] = JSON.stringify($scope.bugs);
-            commonService.apiPost('/regression/update_test_case_execution', payload).then(function(data) {
+            commonService.apiPost('/regression/update_test_case_execution', payload).then(function (data) {
                 $modalInstance.close();
             });
 
         };
 
         $scope.addBugClick = function () {
-            if($scope.addBug) {
+            if ($scope.addBug) {
                 $scope.bugs.push({"id": $scope.addBug, "summary": "TBD", "blocker": false});
             }
         };
