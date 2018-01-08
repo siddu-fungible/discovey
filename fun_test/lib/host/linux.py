@@ -1191,6 +1191,7 @@ class Linux(object, ToDictMixin):
                 result.setdefault(prefix, {}).update({nhp: interface})
         return result
 
+    '''
     @fun_test.safe
     def fio(self, destination_ip, source_ip="", name="fun_nvmeof", ioengine="fun", rw="write",
             block_size="4k", size="128k", numjobs=1, iodepth=8, do_verify=1, verify="md5", verify_fatal=1,
@@ -1214,6 +1215,101 @@ class Linux(object, ToDictMixin):
                                     io_queues, nrfiles, nqn, nvme_mode)
 
         fun_test.debug(fio_command)
+        fio_result = self.command(command=fio_command, timeout=timeout)
+        # fio_result += '\n'
+        fun_test.debug(fio_result)
+
+        # Checking there is no error occured during the FIO test
+        match = ""
+        match = re.search(r'Assertion .* failed', fio_result, re.I)
+        if match:
+            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+            return fio_dict
+        # Extracting the Run status portion of the output and converting it into a dictionary
+        match_obj = ""
+        match_str = ""
+        match_obj = re.compile(r'Run status group *\d+ *\(all jobs\):((?:(?!Disk stats).)*)', re.S)
+        match_str = match_obj.search(fio_result)
+        fun_test.simple_assert(match_str, "Found FIO Run status output")
+
+        # Splitting the extracted portion into lines and stripping the whitespaces and newline characters from it
+        match_list = ""
+        match_str = match_str.group(1).strip()
+        match_list = match_str.split('\n')
+        fun_test.debug(match_list)
+
+        # Extracting the bw, io and run time status for both read & write operation and populating it as dictionary
+        # attributes
+        for line in match_list:
+            mode, stats = line.split(':')
+            mode = mode.strip().lower()
+            stats = stats.strip()
+            fun_test.debug(mode)
+            fun_test.debug(stats)
+            fio_dict[mode] = {}
+
+            for field, value in dict(x.split('=') for x in stats.split(',') if '=' in x).items():
+                field = field.strip()
+                value = int(re.sub(r'(\d+)(.*)', r'\1', value))
+                fio_dict[mode][field] = value
+
+        match = ""
+        match = re.search(r'read: IOPS=(\d+)', fio_result)
+        if match:
+            fio_dict["read"]["iops"] = int(match.group(1))
+
+        match = ""
+        match = re.search(r'write: IOPS=(\d+)', fio_result)
+        if match:
+            fio_dict["write"]["iops"] = int(match.group(1))
+
+        fun_test.debug(fio_dict)
+        return fio_dict
+    '''
+
+    @fun_test.safe
+    def fio(self, dest_ip, timeout=60, **kargs):
+
+        fio_command = "fio"
+        fio_result = ""
+        fio_dict = {}
+
+        fun_test.debug(kargs)
+
+        # Building the fio command
+        if 'name' not in kargs:
+            fio_command += " --name=fun_nvmeof"
+
+        if 'ioengine' not in kargs:
+            fio_command += " --ioengine=fun"
+
+        fio_command += " --dest_ip={}".format(dest_ip)
+
+        if 'source_ip' not in kargs:
+            fio_command += " --source_ip={}".format(self.internal_ip)
+
+        if 'numjobs' not in kargs:
+            fio_command += " --numjobs=1"
+
+        if 'io_queues' not in kargs:
+            fio_command += " --io_queues=2"
+
+        if 'nrfiles' not in kargs:
+            fio_command += " --nrfiles=1"
+
+        if 'nqn' not in kargs:
+            fio_command += " --nqn=nqn.2017-05.com.fungible:nss-uuid1"
+
+        if 'nvme_mode' not in kargs:
+            fio_command += " --nvme_mode=IO_ONLY"
+
+        if kargs:
+            for key in kargs:
+                fio_command += " --" + key + "=" + str(kargs[key])
+
+        fun_test.debug(fio_command)
+
+        # Executing the fio command
         fio_result = self.command(command=fio_command, timeout=timeout)
         # fio_result += '\n'
         fun_test.debug(fio_result)
