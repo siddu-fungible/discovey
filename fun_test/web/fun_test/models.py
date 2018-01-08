@@ -73,6 +73,8 @@ class TestCaseExecution(models.Model):
     started_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True)
     overridden_result = models.BooleanField(default=False)
+    bugs = models.TextField(default="[]")
+    comments = models.TextField(default="")
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
@@ -115,8 +117,7 @@ class CatalogTestCaseExecution(models.Model):
     jira_id = models.IntegerField()
     engineer = models.ForeignKey(Engineer)
     test_bed = models.CharField(max_length=100, default="simulation")
-    bugs = models.TextField(default="[]")
-    comments = models.TextField(default="")
+
     # result
 
     def __str__(self):

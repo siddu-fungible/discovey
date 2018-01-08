@@ -287,9 +287,9 @@
             </div>
         </div>
 
-        <div class="col-md-8 col-lg-4" ng-if="testCaseViewInstances && currentView === 'components'">
+        <div class="col-lg-10" ng-if="testCaseViewInstances && currentView === 'components'">
             <legend>{{ currentTestCaseViewComponent }}</legend>
-            <table class="table table-nonfluid table-borderless">
+            <table class="table table-borderless">
                 <tr>
                     <th>Jira Id</th>
                     <th>Summary</th>
@@ -311,20 +311,23 @@
                         <a ng-hide="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Details</a>
                     </td>
                     <td>
-                        <button class="btn btn-small" ng-click="editTestCaseClick(jiraId)">Edit</button>
+                        Count: {{ info.allBugs }}&nbsp<span ng-if="info.blockerCount">Blockers: {{ info.blockerCount }}</span>
                     </td>
                 </tr>
                 <tr ng-repeat-end>
                     <td colspan="5">
                         <table ng-if="testCaseViewInstances[jiraId].showingDetails" class="table">
                             <tr>
+                                <th></th>
                                 <th>Owner</th>
                                 <th>TestBed</th>
                                 <th>Result</th>
                                 <th>Result Override</th>
+                                <th>Bugs</th>
                             </tr>
                             <tbody>
                             <tr ng-repeat="instance in info.instances">
+                                <td></td>
                                 <td>{{ instance.owner }}</td>
                                 <td>{{ instance.test_bed }}</td>
                                 <td>{{ instance.result }}</td>
@@ -335,6 +338,10 @@
                                             ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">
                                         Submit
                                     </button>
+                                </td>
+                                <td>
+                                    <a target="_blank" ng-repeat="bug in instance.bugs">SW-{{ bug.id }},&nbsp</a>
+                                    <button class="btn btn-small btn-info" ng-click="editTestCaseClick(jiraId, instance)">Edit</button>
                                 </td>
                             </tr>
                             </tbody>

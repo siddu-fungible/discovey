@@ -121,13 +121,13 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
     try:
         suite_execution = CatalogSuiteExecution.objects.get(suite_execution_id=suite_execution_id)
         logger.info("Retrieved suite execution id: {}".format(suite_execution.suite_execution_id))
-        tex = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution.suite_execution_id)
+        ctex = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution.suite_execution_id)
         payload = {}
         payload["jira_ids"] = {}
         payload["suite_execution_id"] = suite_execution.suite_execution_id
-        num_total = tex.count()
+        num_total = ctex.count()
 
-        for te in tex:
+        for te in ctex:
             if te.jira_id not in payload["jira_ids"]:
                 payload["jira_ids"][te.jira_id] = {}
                 payload["jira_ids"][te.jira_id]["instances"] = []
@@ -145,9 +145,10 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
             info["execution_id"] = te.execution_id
             info["suite_execution_id"] = te.catalog_suite_execution_id
             info["owner"] = te.engineer.short_name
-            info["result"] = TestCaseExecution.objects.get(execution_id=te.execution_id).result
-            info["bugs"] = te.bugs
-            info["comments"] = te.comments
+            tex = TestCaseExecution.objects.get(execution_id=te.execution_id)
+            info["result"] = tex.result
+            info["bugs"] = tex.bugs
+            info["comments"] = tex.comments
             if info["result"] == RESULTS["PASSED"]:
                 num_passed += 1
             if info["result"] == RESULTS["FAILED"]:

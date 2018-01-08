@@ -17,11 +17,13 @@
 
     <table class="table">
         <tr>
+            <th></th>
             <th>Bugs</th>
             <th>Summary</th>
             <th>Blocker</th>
         </tr>
-        <tr ng-repeat="bug in bugs">
+        <tr ng-repeat="bug in bugs track by $index"">
+            <td><button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:20px; color: red"></i></button></td>
             <td>{{ bug.id }}</td>
             <td>{{ bug.summary }}</td>
             <td>

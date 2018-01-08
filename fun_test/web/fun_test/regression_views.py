@@ -235,12 +235,20 @@ def catalog_test_case_execution_summary_result_multiple_jiras(request):
 def update_test_case_execution(request):
     result = initialize_result(failed=True)
     request_json = json.loads(request.body)
-    override_result = request_json["override_result"]
+    override_result = None
+    bugs = None
+    if "override_result" in request_json:
+        override_result = request_json["override_result"]
+    if "bugs" in request_json:
+        bugs = request_json["bugs"]
     execution_id = int(request_json["execution_id"])
     try:
         te = TestCaseExecution.objects.get(execution_id=execution_id)
-        te.result = override_result
-        te.overridden_result = True
+        if override_result:
+            te.result = override_result
+            te.overridden_result = True
+        if bugs:
+            te.bugs = bugs
         te.save()
         suite_execution_id = te.suite_execution_id
         summary_result = get_catalog_test_case_execution_summary_result(suite_execution_id=suite_execution_id, jira_id=te.test_case_id)

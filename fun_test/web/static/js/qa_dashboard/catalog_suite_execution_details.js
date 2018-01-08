@@ -210,7 +210,18 @@
             let numFailed = 0;
             let numUnknown = 0;
             let numTotal = 0;
+            let allBugs = 0;
+            let blockerCount = 0;
+
             instances.forEach(function (instance) {
+                instance.bugs = angular.fromJson(instance.bugs);
+                allBugs += instance.bugs.length;
+                instance.bugs.forEach(function (bug) {
+                   if(bug.blocker) {
+                       blockerCount += 1;
+                   }
+                });
+
                 numTotal += 1;
                 if (instance.result === "PASSED") {
                     numPassed += 1;
@@ -224,6 +235,8 @@
             });
             $scope.componentViewDetails[component]["jiraIds"][jiraId] = {
                 "instances": $scope.executionDetails.jira_ids[jiraId].instances,
+                allBugs: allBugs,
+                blockerCount: blockerCount,
                 summary: $scope.executionDetails.jira_ids[jiraId].summary,
                 summaryResult: $scope.executionDetails.jira_ids[jiraId].summaryResult
             };
@@ -286,30 +299,39 @@
             };
         }
 
-        $scope.editTestCaseClick = function (jiraId) {
+        $scope.editTestCaseClick = function (jiraId, instance) {
             $modal.open({
                 templateUrl: "/static/qa_dashboard/edit_test_case.html",
-                controller: ['$modalInstance', '$scope', 'jiraId', EditTestCasesController],
+                controller: ['$modalInstance', '$scope', 'commonService', 'jiraId', 'instance', EditTestCasesController],
                 resolve: {
                     jiraId: function () {
                         return jiraId;
+                    },
+                    instance: function () {
+                        return instance;
                     }
+
                 }
             });
         };
 
+        $scope.toJson = function (bugsString) {
+            return angular.fromJson(bugsString);
+        };
+
     }
 
-    function EditTestCasesController($modalInstance, $scope, jiraId) {
+    function EditTestCasesController($modalInstance, $scope, commonService, jiraId, instance) {
         let ctrl = this;
         $scope.jiraId = jiraId;
+        $scope.executionId = instance.execution_id;
         /*
         $scope.bugs = [
             {"id": 123, "summary": "Fetching from JIRA...", "blocker": false},
             {"id": 124, "summary": "Fetching from JIRA...", "blocker": true},
 
         ];*/
-        $scope.bugs = [];
+        $scope.bugs = instance.bugs;
 
         ctrl.$onInit = function () {
             console.log(jiraId);
@@ -321,13 +343,29 @@
 
         $scope.submit = function () {
             console.log($scope.bugs);
+            // Update test-case execution
+
+            let payload = {};
+            payload["execution_id"] = $scope.executionId;
+            payload["bugs"] = JSON.stringify($scope.bugs);
+            commonService.apiPost('/regression/update_test_case_execution', payload).then(function(data) {
+                $modalInstance.close();
+            });
+
         };
 
         $scope.addBugClick = function () {
             if($scope.addBug) {
                 $scope.bugs.push({"id": $scope.addBug, "summary": "TBD", "blocker": false});
             }
-        }
+        };
+
+        $scope.removeClick = function (index) {
+            if (confirm("Are you sure you want to remove " + $scope.bugs[index].id + " ?")) {
+                $scope.bugs.splice(index, 1)
+            }
+        };
+
 
         /*
         function deletePerson() {
