@@ -338,7 +338,8 @@
                     }
 
                 }
-            }).result.then(function () {
+            }).result.then(function (res) {
+
                 $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
                     $scope.fetchBasicIssueAttributes(true).then(function () {
                         let components = $scope.executionDetails.jira_ids[jiraId].components;
@@ -352,6 +353,8 @@
                 });
 
                 /*$scope.recalculateModuleInfo();*/
+            }, function () {
+                
             });
 
 
@@ -371,7 +374,7 @@
             {"id": 124, "summary": "Fetching from JIRA...", "blocker": true},
 
         ];*/
-        $scope.bugs = instance.bugs;
+        $scope.bugs = angular.copy(instance.bugs);
 
         ctrl.$onInit = function () {
             console.log(jiraId);
@@ -389,6 +392,7 @@
             payload["execution_id"] = $scope.executionId;
             payload["bugs"] = JSON.stringify($scope.bugs);
             commonService.apiPost('/regression/update_test_case_execution', payload).then(function (data) {
+                instance.bugs = $scope.bugs;
                 $modalInstance.close();
             });
 
