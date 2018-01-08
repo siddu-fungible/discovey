@@ -170,7 +170,7 @@ class DockerHostOrchestrator(Orchestrator, DockerHost):
 
     def launch_linux_instance(self, index):
         id = index + fun_test.get_suite_execution_id()
-        container_name = "{}_{}".format("integration_fio", id)
+        container_name = "{}_{}".format("integration_lnx", id)
         container_asset = self.setup_linux_container(container_name=container_name, ssh_internal_ports=[22])
         linux = Linux.get(asset_properties=container_asset)
         linux.internal_ip = container_asset["internal_ip"]
