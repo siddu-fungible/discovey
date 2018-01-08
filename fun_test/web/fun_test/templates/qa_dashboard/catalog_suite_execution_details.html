@@ -118,7 +118,7 @@
                                         <th>Passed %</th>
                                         <th>Failed %</th>
                                         <th>Pending %</th>
-                                        <th>Blockers</th>
+                                        <th>Blocked</th>
                                     </tr>
                                     <tr>
                                         <td>
@@ -131,7 +131,7 @@
                                             {{ executionDetails.num_failed }}
                                         </td>
                                         <td>
-                                            {{ executionDetails.num_unknown }}
+                                            {{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed }}
                                         </td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
@@ -174,7 +174,7 @@
                                         <th>Passed %</th>
                                         <th>Failed %</th>
                                         <th>Pending %</th>
-                                        <th>Blockers</th>
+                                        <th>Blocked</th>
                                         <th>
 
                                         </th>
@@ -186,7 +186,7 @@
                                         <td>{{ moduleInfo[module].numTotal }}</td>
                                         <td>{{ moduleInfo[module].numPassed }}</td>
                                         <td>{{ moduleInfo[module].numFailed }}</td>
-                                        <td>{{ moduleInfo[module].numUnknown }}</td>
+                                        <td>{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed }}</td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar progress-bar-success" role="progressbar"
@@ -209,7 +209,7 @@
                                         <td>{{ (moduleInfo[module].numFailed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
                                         <td>
                                             {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}</td>
-                                        <td></td>
+                                        <td>{{ moduleInfo[module].numBlocked }}</td>
                                         <td>
                                             <a ng-show="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Hide Details</a>
                                             <a ng-hide="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Details</a>
@@ -230,7 +230,7 @@
                                                     <th>Passed %</th>
                                                     <th>Failed %</th>
                                                     <th>Pending %</th>
-                                                    <th>Blockers</th>
+                                                    <th>Blocked</th>
                                                     <th></th>
                                                 </tr>
                                                 <tr ng-repeat="component in componentList">
@@ -273,7 +273,7 @@
                                                         {{ getComponentInfo(component).numFailed * 100/getComponentInfo(component).numTotal | number: 2}}</td>
                                                     <td>
                                                         {{ (getComponentInfo(component).numTotal - (getComponentInfo(component).numPassed + getComponentInfo(component).numFailed + getComponentInfo(component).numUnknown))  * 100/getComponentInfo(component).numTotal | number: 2}}</td>
-                                                    <td>0</td>
+                                                    <td>{{ getComponentInfo(component).numBlocked }}</td>
                                                     <td><a href="#" ng-click="moduleDetailsClick(component)"> Details</a></td>
                                                 </tr>
                                             </table>

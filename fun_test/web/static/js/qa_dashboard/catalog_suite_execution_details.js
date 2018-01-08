@@ -31,7 +31,7 @@
                     $scope.moduleComponentMapping = result;
                     $scope.moduleInfo = {};
                     angular.forEach($scope.moduleComponentMapping, function (info, module) {
-                        $scope.moduleInfo[module] = {showingDetails: false};
+                        $scope.moduleInfo[module] = {showingDetails: false, numBlocked: 0};
                     });
                     $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
                         $scope.fetchBasicIssueAttributes(true).then(function () {
@@ -165,6 +165,13 @@
                         "Pending": pendingPercentage
                     };
 
+                    $scope.moduleInfo[moduleName].numBlocked = 0;
+                    $scope.moduleComponentMapping[moduleName].forEach(function (component) {
+                        if($scope.componentViewDetails.hasOwnProperty(component)) {
+                            $scope.moduleInfo[moduleName].numBlocked += $scope.componentViewDetails[component].numBlocked;
+                        }
+                    });
+
                 });
                 $scope.updateModuleProgressChartsNow = true;
             });
@@ -203,6 +210,7 @@
             $scope.componentViewDetails[component]["numFailed"] = 0;
             $scope.componentViewDetails[component]["numUnknown"] = 0;
             $scope.componentViewDetails[component]["numTotal"] = 0;
+            $scope.componentViewDetails[component]["numBlocked"] = 0;
         };
 
         $scope._updateComponentViewDetails = function (component, jiraId) {
@@ -219,14 +227,15 @@
             let numUnknown = 0;
             let numTotal = 0;
             let allBugs = 0;
-            let blockerCount = 0;
-
+            let instanceBlockerCount = 0;
             instances.forEach(function (instance) {
+
+
                 instance.bugs = angular.fromJson(instance.bugs);
                 allBugs += instance.bugs.length;
                 instance.bugs.forEach(function (bug) {
                     if (bug.blocker) {
-                        blockerCount += 1;
+                        instanceBlockerCount += 1;
                     }
                 });
 
@@ -244,10 +253,14 @@
             $scope.componentViewDetails[component]["jiraIds"][jiraId] = {
                 "instances": $scope.executionDetails.jira_ids[jiraId].instances,
                 allBugs: allBugs,
-                blockerCount: blockerCount,
+                blockerCount: instanceBlockerCount,
                 summary: $scope.executionDetails.jira_ids[jiraId].summary,
                 summaryResult: $scope.executionDetails.jira_ids[jiraId].summaryResult
             };
+
+            if(instanceBlockerCount) {
+                $scope.componentViewDetails[component].numBlocked += 1;
+            }
             $scope.componentViewDetails[component]["numPassed"] += numPassed;
             $scope.componentViewDetails[component]["numFailed"] += numFailed;
             $scope.componentViewDetails[component]["numUnknown"] += numUnknown;
