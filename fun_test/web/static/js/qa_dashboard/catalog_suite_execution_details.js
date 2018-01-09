@@ -20,11 +20,11 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
-            $scope.series = ['Passed', 'Failed', 'Pending'];
+            $scope.series = ['Passed', 'Failed', 'Pending', 'Blocked'];
 
             /* module chart */
             $scope.charting = true;
-            $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
+            $scope.colors = ['#5cb85c', '#d9534f', 'Grey', 'Purple'];
             $scope.overallProgressValues = {};
             $scope.moduleProgressValues = {};
             $scope.updateOverallProgressChartsNow = false;
@@ -162,13 +162,8 @@
                 $scope.moduleInfo = data.module_info;
                 angular.forEach($scope.moduleInfo, function (info, moduleName) {
                     let passedPercentage = (info.numPassed * 100) / (info.numTotal);
-                    let failedPercentage = (info.numFailed * 100) / (info.numTotal);
                     let pendingPercentage = ((info.numTotal - info.numPassed - info.numFailed) * 100) / (info.numTotal);
-                    $scope.moduleProgressValues[moduleName] = {
-                        "Passed": passedPercentage,
-                        "Failed": failedPercentage,
-                        "Pending": pendingPercentage
-                    };
+
 
                     $scope.moduleInfo[moduleName].numBlocked = 0;
                     $scope.executionDetails.numBlocked = 0;
@@ -177,10 +172,23 @@
                             $scope.moduleInfo[moduleName].numBlocked += $scope.componentViewDetails[component].numBlocked;
                         }
                     });
+                    let moduleBlockedPercentage = $scope.moduleInfo[moduleName].numBlocked * 100/$scope.moduleInfo[moduleName].numTotal;
+                    let moduleFailedPercentage = $scope.moduleInfo[moduleName].numFailed * 100 / (info.numTotal);
+                    moduleFailedPercentage = Math.abs(moduleFailedPercentage - moduleBlockedPercentage);
+
+                    $scope.moduleProgressValues[moduleName] = {
+                        "Passed": passedPercentage,
+                        "Failed": moduleFailedPercentage,
+                        "Pending": pendingPercentage,
+                        "Blocked": moduleBlockedPercentage
+                    };
 
                     angular.forEach($scope.moduleInfo, function(info, moduleName) {
                         $scope.executionDetails.numBlocked += $scope.moduleInfo[moduleName].numBlocked;
                     });
+                    $scope.executionDetails.blockedPercentage = $scope.executionDetails.numBlocked * 100/$scope.executionDetails.num_total;
+                    $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
+                    $scope.overallProgressValues["Failed"] = Math.abs($scope.executionDetails.failedPercentage - $scope.executionDetails.blockedPercentage)
                 });
                 $scope.updateModuleProgressChartsNow = true;
             });
@@ -196,11 +204,13 @@
                 $scope.executionDetails.numBlocked = 0;
                 if ($scope.executionDetails.num_total > 0) {
                     $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100 / $scope.executionDetails.num_total;
-                    $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100 / $scope.executionDetails.num_total;
-                    $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed)) * 100 / $scope.executionDetails.num_total;
+                    $scope.executionDetails.failedPercentage = Math.abs($scope.executionDetails.num_failed - $scope.executionDetails.numBlocked) * 100/$scope.executionDetails.num_total;
+                    $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed - $scope.executionDetails.numBlocked)) * 100 / $scope.executionDetails.num_total;
+                    $scope.executionDetails.blockedPercentage = $scope.executionDetails.numBlocked * 100/$scope.executionDetails.num_total;
                     $scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
                     $scope.overallProgressValues["Failed"] = $scope.executionDetails.failedPercentage;
                     $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;
+                    $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
                     $scope.updateOverallProgressChartsNow = true;
                     /*$scope.$digest();*/
                 }

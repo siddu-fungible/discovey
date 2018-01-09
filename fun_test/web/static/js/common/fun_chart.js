@@ -69,8 +69,10 @@
                             } else {
 
                             }
+                            /*, colors: colors.reverse() */
+                            colors = colors.reverse();
                             series.forEach(function (seriesName, index) {
-                                let oneSeriesDataEntry = {name: seriesName, data: [], colors: colors.reverse()};
+                                let oneSeriesDataEntry = {name: seriesName, data: []};
                                 angular.forEach(ctrl.values, function (categoryInfo, categoryName) {
                                     if(categoryInfo.hasOwnProperty("Link")) {
                                         oneSeriesDataEntry.point = {
