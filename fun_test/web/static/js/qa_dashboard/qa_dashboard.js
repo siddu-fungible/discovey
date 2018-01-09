@@ -127,7 +127,7 @@
             }
 
             let detailedMessage = "";
-            if(result.error_message) {
+            if(result && result.hasOwnProperty("error_message")) {
                 detailedMessage = "Error Message: " + result.error_message;
             }
             detailedMessage += "\n" + stack;

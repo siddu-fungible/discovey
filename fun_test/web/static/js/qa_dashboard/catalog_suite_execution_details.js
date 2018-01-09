@@ -20,11 +20,11 @@
         let ctrl = this;
 
         ctrl.$onInit = function () {
-            $scope.series = ['Passed', 'Failed', 'Pending', 'Blocked'];
+            $scope.series = ['Passed', 'Failed', 'Blocked', 'Pending'];
 
             /* module chart */
             $scope.charting = true;
-            $scope.colors = ['#5cb85c', '#d9534f', 'Grey', 'Purple'];
+            $scope.colors = ['#5cb85c', '#d9534f', 'Purple', 'Grey'];
             $scope.overallProgressValues = {};
             $scope.moduleProgressValues = {};
             $scope.updateOverallProgressChartsNow = false;
@@ -52,8 +52,6 @@
                         });
 
                     });
-
-
                 }
             });
 
@@ -179,8 +177,8 @@
                     $scope.moduleProgressValues[moduleName] = {
                         "Passed": passedPercentage,
                         "Failed": moduleFailedPercentage,
+                        "Blocked": moduleBlockedPercentage,
                         "Pending": pendingPercentage,
-                        "Blocked": moduleBlockedPercentage
                     };
 
                     angular.forEach($scope.moduleInfo, function(info, moduleName) {
@@ -208,9 +206,9 @@
                     $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed - $scope.executionDetails.numBlocked)) * 100 / $scope.executionDetails.num_total;
                     $scope.executionDetails.blockedPercentage = $scope.executionDetails.numBlocked * 100/$scope.executionDetails.num_total;
                     $scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
+                    $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
                     $scope.overallProgressValues["Failed"] = $scope.executionDetails.failedPercentage;
                     $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;
-                    $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
                     $scope.updateOverallProgressChartsNow = true;
                     /*$scope.$digest();*/
                 }
@@ -346,6 +344,12 @@
         }
 
         $scope.editTestCaseClick = function (jiraId, instance) {
+            if(instance.result !== "FAILED") {
+                let message = "Unable to edit bugs unless the test-case execution is marked FAILED";
+                alert(message);
+                return commonService.showError(message);
+            }
+
             $modal.open({
                 templateUrl: "/static/qa_dashboard/edit_test_case.html",
                 controller: ['$modalInstance', '$scope', 'commonService', 'jiraId', 'instance', EditTestCasesController],
@@ -388,6 +392,7 @@
         let ctrl = this;
         $scope.jiraId = jiraId;
         $scope.executionId = instance.execution_id;
+
         /*
         $scope.bugs = [
             {"id": 123, "summary": "Fetching from JIRA...", "blocker": false},
