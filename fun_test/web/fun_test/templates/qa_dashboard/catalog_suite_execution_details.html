@@ -156,6 +156,7 @@
                                             {{ executionDetails.num_failed * 100/executionDetails.num_total | number: 2 }}</td>
                                         <td>
                                             {{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_unknown))  * 100/executionDetails.num_total | number: 2 }}</td>
+                                        <td>{{ executionDetails.numBlocked }}</td>
                                     </tr>
                                 </table>
 

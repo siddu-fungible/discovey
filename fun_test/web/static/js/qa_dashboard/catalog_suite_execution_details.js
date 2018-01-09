@@ -166,12 +166,16 @@
                     };
 
                     $scope.moduleInfo[moduleName].numBlocked = 0;
+                    $scope.executionDetails.numBlocked = 0;
                     $scope.moduleComponentMapping[moduleName].forEach(function (component) {
                         if($scope.componentViewDetails.hasOwnProperty(component)) {
                             $scope.moduleInfo[moduleName].numBlocked += $scope.componentViewDetails[component].numBlocked;
                         }
                     });
 
+                    angular.forEach($scope.moduleInfo, function(info, moduleName) {
+                        $scope.executionDetails.numBlocked += $scope.moduleInfo[moduleName].numBlocked;
+                    });
                 });
                 $scope.updateModuleProgressChartsNow = true;
             });
@@ -184,6 +188,7 @@
             return commonService.apiGet('/tcm/catalog_suite_execution_details/' + ctrl.suiteExecutionId, message).then(function (data) {
                 $scope.status = "idle";
                 $scope.executionDetails = data;
+                $scope.executionDetails.numBlocked = 0;
                 if ($scope.executionDetails.num_total > 0) {
                     $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100 / $scope.executionDetails.num_total;
                     $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100 / $scope.executionDetails.num_total;
@@ -354,7 +359,7 @@
 
                 /*$scope.recalculateModuleInfo();*/
             }, function () {
-                
+
             });
 
 
