@@ -185,8 +185,10 @@
                         $scope.executionDetails.numBlocked += $scope.moduleInfo[moduleName].numBlocked;
                     });
                     $scope.executionDetails.blockedPercentage = $scope.executionDetails.numBlocked * 100/$scope.executionDetails.num_total;
-                    $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
+                    $scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
                     $scope.overallProgressValues["Failed"] = Math.abs($scope.executionDetails.failedPercentage - $scope.executionDetails.blockedPercentage)
+                    $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;
+                    $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
                 });
                 $scope.updateModuleProgressChartsNow = true;
             });
@@ -205,10 +207,10 @@
                     $scope.executionDetails.failedPercentage = Math.abs($scope.executionDetails.num_failed - $scope.executionDetails.numBlocked) * 100/$scope.executionDetails.num_total;
                     $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed - $scope.executionDetails.numBlocked)) * 100 / $scope.executionDetails.num_total;
                     $scope.executionDetails.blockedPercentage = $scope.executionDetails.numBlocked * 100/$scope.executionDetails.num_total;
-                    $scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
+                    /*$scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
                     $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
                     $scope.overallProgressValues["Failed"] = $scope.executionDetails.failedPercentage;
-                    $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;
+                    $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;*/
                     $scope.updateOverallProgressChartsNow = true;
                     /*$scope.$digest();*/
                 }
