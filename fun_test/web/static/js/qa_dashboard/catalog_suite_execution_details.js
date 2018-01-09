@@ -11,6 +11,11 @@
     });
 
 
+    angular.module('qa-dashboard').filter('abs', function() {
+        return function(num) { return Math.abs(num); }
+    });
+
+
     function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $window, resultToClass, commonService, $modal) {
         let ctrl = this;
 

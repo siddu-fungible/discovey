@@ -114,11 +114,12 @@
                                         <th>Passed</th>
                                         <th>Failed</th>
                                         <th>Pending</th>
+                                        <th>Blocked</th>
                                         <th>Progress</th>
                                         <th>Passed %</th>
                                         <th>Failed %</th>
                                         <th>Pending %</th>
-                                        <th>Blocked</th>
+                                        <th>Blocked %</th>
                                     </tr>
                                     <tr>
                                         <td>
@@ -128,11 +129,13 @@
                                             {{ executionDetails.num_passed }}
                                         </td>
                                         <td>
-                                            {{ executionDetails.num_failed }}
+                                            {{ executionDetails.num_failed - executionDetails.numBlocked | abs }}
                                         </td>
                                         <td>
-                                            {{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed }}
+                                            {{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed - executionDetails.numBlocked | abs}}
                                         </td>
+                                        <td>{{ executionDetails.numBlocked }}</td>
+
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar progress-bar-success" role="progressbar"
@@ -153,10 +156,13 @@
                                         <td>
                                             {{ executionDetails.num_passed * 100/executionDetails.num_total | number: 2 }}</td>
                                         <td>
-                                            {{ executionDetails.num_failed * 100/executionDetails.num_total | number: 2 }}</td>
+                                            {{ (executionDetails.num_failed - executionDetails.numBlocked)* 100/executionDetails.num_total | number: 2 | abs }}</td>
                                         <td>
-                                            {{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_unknown))  * 100/executionDetails.num_total | number: 2 }}</td>
-                                        <td>{{ executionDetails.numBlocked }}</td>
+                                            {{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_unknown))  * 100/executionDetails.num_total | number: 2 }}
+                                        </td>
+                                        <td>
+                                            {{ executionDetails.numBlocked * 100/executionDetails.num_total | number: 2 }}</td>
+                                        <td>
                                     </tr>
                                 </table>
 
@@ -171,11 +177,11 @@
                                         <th>Passed</th>
                                         <th>Failed</th>
                                         <th>Pending</th>
+                                        <th>Blocked</th>
                                         <th>Progress</th>
                                         <th>Passed %</th>
                                         <th>Failed %</th>
                                         <th>Pending %</th>
-                                        <th>Blocked</th>
                                         <th>
 
                                         </th>
@@ -188,6 +194,7 @@
                                         <td>{{ moduleInfo[module].numPassed }}</td>
                                         <td>{{ moduleInfo[module].numFailed }}</td>
                                         <td>{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed }}</td>
+                                        <td>{{ moduleInfo[module].numBlocked }}</td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar progress-bar-success" role="progressbar"
@@ -210,7 +217,6 @@
                                         <td>{{ (moduleInfo[module].numFailed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
                                         <td>
                                             {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}</td>
-                                        <td>{{ moduleInfo[module].numBlocked }}</td>
                                         <td>
                                             <a ng-show="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Hide Details</a>
                                             <a ng-hide="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Details</a>
@@ -227,11 +233,11 @@
                                                     <th>Passed</th>
                                                     <th>Failed</th>
                                                     <th>Pending</th>
+                                                    <th>Blocked</th>
                                                     <th>Progress</th>
                                                     <th>Passed %</th>
                                                     <th>Failed %</th>
                                                     <th>Pending %</th>
-                                                    <th>Blocked</th>
                                                     <th></th>
                                                 </tr>
                                                 <tr ng-repeat="component in componentList">
@@ -250,6 +256,7 @@
                                                     <td>
                                                         {{ getComponentInfo(component).numUnknown }}
                                                     </td>
+                                                    <td>{{ getComponentInfo(component).numBlocked }}</td>
                                                     <td>
                                                         <div class="progress" style="height: 20px;">
                                                             <div class="progress-bar progress-bar-success"
@@ -274,7 +281,6 @@
                                                         {{ getComponentInfo(component).numFailed * 100/getComponentInfo(component).numTotal | number: 2}}</td>
                                                     <td>
                                                         {{ (getComponentInfo(component).numTotal - (getComponentInfo(component).numPassed + getComponentInfo(component).numFailed + getComponentInfo(component).numUnknown))  * 100/getComponentInfo(component).numTotal | number: 2}}</td>
-                                                    <td>{{ getComponentInfo(component).numBlocked }}</td>
                                                     <td><a href="#" ng-click="moduleDetailsClick(component)"> Details</a></td>
                                                 </tr>
                                             </table>
