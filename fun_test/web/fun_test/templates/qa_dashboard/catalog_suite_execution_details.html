@@ -249,18 +249,20 @@
                                                         {{ component }}
                                                     </td>
                                                     <td>
-                                                        {{ getComponentInfo(component).numTotal }}
+                                                        <a href="#" ng-click="componentFilterClick(component, 'TOTAL')">{{ getComponentInfo(component).numTotal }}</a>
                                                     </td>
                                                     <td>
-                                                        {{ getComponentInfo(component).numPassed }}
+                                                        <a href="#" ng-click="componentFilterClick(component, 'PASSED')">{{ getComponentInfo(component).numPassed }}</a>
                                                     </td>
                                                     <td>
-                                                        {{ getComponentInfo(component).numFailed }}
+                                                        <a href="#" ng-click="componentFilterClick(component, 'FAILED')">{{ getComponentInfo(component).numFailed }}</a>
                                                     </td>
                                                     <td>
-                                                        {{ getComponentInfo(component).numTotal - getComponentInfo(component).numPassed - getComponentInfo(component).numFailed }}
+                                                        <a href="#" ng-click="componentFilterClick(component, 'PENDING')">{{ getComponentInfo(component).numTotal - getComponentInfo(component).numPassed - getComponentInfo(component).numFailed }}</a>
                                                     </td>
-                                                    <td>{{ getComponentInfo(component).numBlocked }}</td>
+                                                    <td>
+                                                        <a href="#" ng-click="componentFilterClick(component, 'BLOCKED')">{{ getComponentInfo(component).numBlocked }}</a>
+                                                    </td>
                                                     <td>
                                                         <div class="progress" style="height: 20px;">
                                                             <div class="progress-bar progress-bar-success"
@@ -285,7 +287,7 @@
                                                         {{ getComponentInfo(component).numFailed * 100/getComponentInfo(component).numTotal | number: 2}}</td>
                                                     <td>
                                                         {{ (getComponentInfo(component).numTotal - (getComponentInfo(component).numPassed + getComponentInfo(component).numFailed))  * 100/getComponentInfo(component).numTotal | number: 2}}</td>
-                                                    <td><a href="#" ng-click="moduleDetailsClick(component)"> Details</a></td>
+                                                    <!--td><a href="#" ng-click="componentFilterClick(component, 'TOTAL')"> Details</a></td-->
                                                 </tr>
                                             </table>
                                         </td>
@@ -310,7 +312,7 @@
                     <th>Comments</th>
                 </tr>
                 <tbody>
-                <tr ng-repeat-start="(jiraId, info) in testCaseViewInstances">
+                <tr ng-repeat-start="(jiraId, info) in testCaseViewInstances" ng-if="info.show">
                     <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
                     </td>
                     <td>{{ info.summary }}</td>
@@ -326,8 +328,9 @@
                     </td>
                 </tr>
                 <tr ng-repeat-end>
-                    <td colspan="5">
-                        <table ng-if="testCaseViewInstances[jiraId].showingDetails" class="table">
+                    <td></td>
+                    <td colspan="6">
+                        <table ng-if="testCaseViewInstances[jiraId].showingDetails" class="table table-borderless table-nonfluid">
                             <tr>
                                 <th></th>
                                 <th>Owner</th>
@@ -338,7 +341,7 @@
                             </tr>
                             <tbody>
                             <tr ng-repeat="instance in info.instances">
-                                <td></td>
+                                <td>&#10070;</td>
                                 <td>{{ instance.owner }}</td>
                                 <td>{{ instance.test_bed }}</td>
                                 <td>{{ instance.result }}</td>
@@ -351,8 +354,12 @@
                                     </button>
                                 </td>
                                 <td>
-                                    <a target="_blank" ng-repeat="bug in instance.bugs track by $index">SW-{{ bug.id }}&nbsp</a>
-                                    <button class="btn btn-small btn-info" ng-click="editTestCaseClick(jiraId, instance)">Edit</button>
+                                    <div ng-repeat="bug in instance.bugs track by $index">
+                                        <a target="_blank" >SW-{{ bug.id }}</a>
+                                        <br>
+                                    </div>
+
+                                    <button class="btn btn-sm btn-info" ng-click="editTestCaseClick(jiraId, instance)">Edit</button>
                                 </td>
                             </tr>
                             </tbody>
