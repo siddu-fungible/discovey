@@ -20,6 +20,16 @@
     function CatalogSuiteExecutionDetailsController($rootScope, $scope, $http, $window, resultToClass, commonService, $modal) {
         let ctrl = this;
 
+        $scope.setComponentModuleMapping = function () {
+            $scope.componentModuleMapping = {};
+            angular.forEach($scope.moduleComponentMapping, function(components, module) {
+                components.forEach(function (component) {
+                    $scope.componentModuleMapping[component] = module;
+                });
+            });
+            let i = 0;
+        };
+
         ctrl.$onInit = function () {
             $scope.series = ['Passed', 'Failed', 'Blocked', 'Pending'];
 
@@ -36,6 +46,8 @@
             $scope.fetchModuleComponentMapping().then(function (result) {
                 if (result) {
                     $scope.moduleComponentMapping = result;
+                    $scope.setComponentModuleMapping();
+
                     $scope.moduleInfo = {};
                     angular.forEach($scope.moduleComponentMapping, function (info, module) {
                         $scope.moduleInfo[module] = {showingDetails: false, numBlocked: 0};
@@ -331,6 +343,69 @@
             $scope.currentTestCaseViewComponent = component;
         };
 
+        $scope.moduleFilterClick = function(module, filter) {
+            $scope.lastTestCaseViewList = [];
+            $scope.testCaseViewInstances = {};
+            if(filter === "TOTAL") {
+                angular.forEach($scope.componentViewDetails, function(info, component) {
+                    if(component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                        angular.forEach(info.jiraIds, function(innerInfo, jiraId) {
+                            innerInfo.show = true;
+                            $scope.lastTestCaseViewList.push(jiraId);
+                        });
+                        Object.assign($scope.testCaseViewInstances, info.jiraIds);
+                    }
+                });
+            } else if(filter === "BLOCKED") {
+                angular.forEach($scope.componentViewDetails, function(info, component) {
+
+                    if (component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                        angular.forEach(info.jiraIds, function (innerInfo, jiraId) {
+                            if (innerInfo.summaryResult === "FAILED" && innerInfo.blockerCount) {
+                                innerInfo.show = true;
+                                $scope.lastTestCaseViewList.push(jiraId);
+
+                            } else {
+                                innerInfo.show = false;
+                            }
+                        });
+                        Object.assign($scope.testCaseViewInstances, info.jiraIds);
+
+                    }
+                })
+            } else if(filter === "PENDING") {
+                angular.forEach($scope.componentViewDetails, function(info, component) {
+                    if(component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                        angular.forEach(info.jiraIds, function(innerInfo, jiraId) {
+                            if(innerInfo.summaryResult !== "PASSED" && innerInfo.summaryResult !== "FAILED") {
+                                innerInfo.show = true;
+                                $scope.lastTestCaseViewList.push(jiraId);
+
+                            } else {
+                                innerInfo.show = false;
+                            }
+                        });
+                        Object.assign($scope.testCaseViewInstances, info.jiraIds);
+                    }
+                });
+            } else {
+                angular.forEach($scope.componentViewDetails, function(info, component) {
+                    if(component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                        angular.forEach(info.jiraIds, function(innerInfo, jiraId) {
+                            if(innerInfo.summaryResult === filter) {
+                                innerInfo.show = true;
+                                $scope.lastTestCaseViewList.push(jiraId);
+
+                            } else {
+                                innerInfo.show = false;
+                            }
+                        });
+                        Object.assign($scope.testCaseViewInstances, info.jiraIds);
+                    }
+                });
+            }
+        };
+
         $scope.componentFilterClick = function (component, filter) {
             $scope.lastTestCaseViewList = [];
             $scope.testCaseViewInstances = $scope.componentViewDetails[component].jiraIds;
@@ -341,11 +416,13 @@
                     $scope.lastTestCaseViewList.push(jiraId);
                 });
                 $scope.currentTestCaseViewComponent = component;
-            } else if (filter === "BLOCKED") {
+            } else if(filter === "BLOCKED") {
                 angular.forEach($scope.componentViewDetails[component].jiraIds, function(info, jiraId) {
                     if(info.blockerCount) {
                         info.show = true;
                         $scope.lastTestCaseViewList.push(jiraId);
+                    } else {
+                        info.show = false;
                     }
                 });
 
