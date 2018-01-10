@@ -5,7 +5,7 @@ from scripts.networking.lib_nw import testbed, verifications
 # use 1 x 4 x 4 for storage demo
 NUM_OF_RACKS = 4
 NUM_OF_NODES_PER_RACK = 4
-NUM_OF_SPINES = 4
+NUM_OF_SPINES = 8
 
 CONVERGE_TIME = 30
 
