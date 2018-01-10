@@ -1155,9 +1155,9 @@ class VM(object):
             self.logger.warning('No containers to launch')
             return
 
-        #out = exec_send_file([(self.ip, vm_docker_run)], [], logger=self.logger)
-        #out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
-        #out = exec_send_file([(self.ip, params)], [], logger=self.logger)
+        out = exec_send_file([(self.ip, vm_docker_run)], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
+        out = exec_send_file([(self.ip, params)], [], logger=self.logger)
 
         if self.role == 'leaf' and not network_only:
             self.logger.info('Waiting for PSIMs to be ready')
@@ -2002,7 +2002,6 @@ class Node(object):
             :returns console output as a list of 1 new line
             separated string.
         """
-        return
         if self.tn is None:
             self.tn = telnetlib.Telnet()
         try:
