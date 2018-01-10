@@ -294,6 +294,7 @@
             };
             if($scope.lastTestCaseViewList.indexOf(jiraId) > -1) {
                 $scope.componentViewDetails[component]["jiraIds"][jiraId].show = true;
+                Object.assign($scope.testCaseViewInstances, $scope.componentViewDetails[component]["jiraIds"]);
             }
 
             if(instanceBlockerCount) {
@@ -353,7 +354,7 @@
                             innerInfo.show = true;
                             $scope.lastTestCaseViewList.push(jiraId);
                         });
-                        Object.assign($scope.testCaseViewInstances, info.jiraIds);
+                        Object.assign($scope.testCaseViewInstances, $scope.componentViewDetails[component].jiraIds);
                     }
                 });
             } else if(filter === "BLOCKED") {
