@@ -2,9 +2,10 @@ from lib.system.fun_test import *
 from scripts.networking.lib_nw import testbed, verifications
 
 
-NUM_OF_RACKS = 3
+# use 1 x 4 x 4 for storage demo
+NUM_OF_RACKS = 4
 NUM_OF_NODES_PER_RACK = 4
-NUM_OF_SPINES = 8
+NUM_OF_SPINES = 4
 
 CONVERGE_TIME = 30
 
@@ -26,13 +27,14 @@ class BringUpTestBed(FunTestScript):
         """)
 
     def setup(self):
-        self.tb = testbed.TestBed(NUM_OF_RACKS, NUM_OF_NODES_PER_RACK, NUM_OF_SPINES)
+        tb = testbed.TestBed(NUM_OF_RACKS, NUM_OF_NODES_PER_RACK, NUM_OF_SPINES)
         msg = 'Call topo_manager to create virtual test bed'
-        fun_test.test_assert(self.tb.create_topo(), msg)
+        fun_test.test_assert(tb.create_topo(), msg)
         fun_test.sleep("Wait for BGP/ISIS/RIB/FIB to converge", seconds=CONVERGE_TIME)
+        fun_test.shared_variables["tb"] = tb
 
     def cleanup(self):
-        self.tb.cleanup()
+        fun_test.shared_variables["tb"].cleanup()
 
 
 class VerifyBgpNeighborState(FunTestCase):
@@ -54,7 +56,7 @@ class VerifyBgpNeighborState(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        verifications.verify_bgp_state(self.script_obj.tb)
+        verifications.verify_bgp_state(fun_test.shared_variables["tb"])
 
 
 class VerifyBgpNeighborStateQuick(FunTestCase):
@@ -76,7 +78,7 @@ class VerifyBgpNeighborStateQuick(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        verifications.verify_bgp_state(self.script_obj.tb, check_all_node=False)
+        verifications.verify_bgp_state(fun_test.shared_variables["tb"], check_all_node=False)
 
 
 class VerifyIsisNeighborState(FunTestCase):
@@ -95,7 +97,7 @@ class VerifyIsisNeighborState(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        verifications.verify_isis_neigh_state(self.script_obj.tb)
+        verifications.verify_isis_neigh_state(fun_test.shared_variables["tb"])
 
 
 class VerifyIpRouteSum(FunTestCase):
@@ -114,7 +116,7 @@ class VerifyIpRouteSum(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        verifications.verify_ip_route_sum(self.script_obj.tb)
+        verifications.verify_ip_route_sum(fun_test.shared_variables["tb"])
 
 
 class VerifyIpRibAndFib(FunTestCase):
@@ -133,7 +135,7 @@ class VerifyIpRibAndFib(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        verifications.verify_frr_rib_vs_fib(self.script_obj.tb)
+        verifications.verify_frr_rib_vs_fib(fun_test.shared_variables["tb"])
 
 
 class VerifyIpFibAndLinuxFib(FunTestCase):
@@ -153,7 +155,7 @@ class VerifyIpFibAndLinuxFib(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        verifications.verify_frr_fib_vs_linux_fib(self.script_obj.tb)
+        verifications.verify_frr_fib_vs_linux_fib(fun_test.shared_variables["tb"])
 
 
 class VerifyTraffic(FunTestCase):
@@ -172,7 +174,7 @@ class VerifyTraffic(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        verifications.verify_traffic(self.script_obj.tb, dut_node='1-1')
+        verifications.verify_traffic(fun_test.shared_variables["tb"], dut_node='1-1')
 
 
 if __name__ == "__main__":
@@ -185,5 +187,5 @@ if __name__ == "__main__":
                VerifyIpFibAndLinuxFib,
                VerifyTraffic,
                ):
-        ts.add_test_case(tc(ts))
+        ts.add_test_case(tc())
     ts.run()
