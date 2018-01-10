@@ -176,13 +176,13 @@
                                         <th>Total</th>
                                         <th>Passed</th>
                                         <th>Failed</th>
-                                        <th>Pending</th>
                                         <th>Blocked</th>
+                                        <th>Pending</th>
                                         <th>Progress</th>
                                         <th>Passed %</th>
                                         <th>Failed %</th>
-                                        <th>Pending %</th>
                                         <th>Blocked %</th>
+                                        <th>Pending %</th>
                                         <th>
 
                                         </th>
@@ -191,11 +191,11 @@
                                         <td>
                                             {{ module }}
                                         </td>
-                                        <td>{{ moduleInfo[module].numTotal }}</td>
-                                        <td>{{ moduleInfo[module].numPassed }}</td>
-                                        <td>{{ moduleInfo[module].numFailed }}</td>
-                                        <td>{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed }}</td>
-                                        <td>{{ moduleInfo[module].numBlocked }}</td>
+                                        <td><a href="#" ng-click="moduleFilterClick(module, 'TOTAL')">{{ moduleInfo[module].numTotal }}</a></td>
+                                        <td><a href="#" ng-click="moduleFilterClick(module, 'PASSED')">{{ moduleInfo[module].numPassed }}</a></td>
+                                        <td><a href="#" ng-click="moduleFilterClick(module, 'FAILED')">{{ moduleInfo[module].numFailed }}</a></td>
+                                        <td><a href="#" ng-click="moduleFilterClick(module, 'BLOCKED')">{{ moduleInfo[module].numBlocked }}</a></td>
+                                        <td><a href="#" ng-click="moduleFilterClick(module, 'PENDING')">{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed }}</a></td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar progress-bar-success" role="progressbar"
@@ -216,10 +216,10 @@
                                         </td>
                                         <td>{{ (moduleInfo[module].numPassed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
                                         <td>{{ (moduleInfo[module].numFailed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
+                                        <td>{{ (moduleInfo[module].numBlocked * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
                                         <td>
                                             {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}
                                         </td>
-                                        <td>{{ (moduleInfo[module].numBlocked * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
 
                                         <td>
                                             <a ng-show="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Hide Details</a>
@@ -327,7 +327,7 @@
                         Count: {{ info.allBugs }}&nbsp<span ng-if="info.blockerCount">Blockers: {{ info.blockerCount }}</span>
                     </td>
                 </tr>
-                <tr ng-repeat-end>
+                <tr ng-repeat-end ng-if="info.show">
                     <td></td>
                     <td colspan="6">
                         <table ng-if="testCaseViewInstances[jiraId].showingDetails" class="table table-borderless table-nonfluid">
