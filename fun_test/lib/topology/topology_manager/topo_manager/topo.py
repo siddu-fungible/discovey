@@ -21,8 +21,8 @@ class Topology(object):
         self.leaf_vm_objs = []
         self.spine_vm_objs = []
 
-        self.nRacks = 1
-        self.nLeafs = 4
+        self.nRacks = 0
+        self.nLeafs = 0
         self.nSpines = 0
 
         self.offRacks = 0
@@ -47,6 +47,9 @@ class Topology(object):
         self.link_objs = []
         self.all_spines = []
 
+        self.neighbor_prefix_counts = {}
+        self.spine_prefix_counts = {}
+
         self.iid = 1
 
         self.logger = logging.getLogger(__name__)
@@ -54,6 +57,7 @@ class Topology(object):
         self.name = '%d_Racks__%d_Leafs/rack__%d_Spines' % \
                     (self.nRacks, self.nLeafs, self.nSpines)
         self.state = 'init'
+
 
     def __getstate__(self):
         d = dict(self.__dict__)
@@ -358,6 +362,7 @@ class Topology(object):
         
         self.populate_ssh_config()
         self.deactivate_partial_topo(offRacks, offLeafs, offSpines)
+        self.build_prefix_count()
         self.state = 'running'
 
     def deactivate_partial_topo(self, offRacks, offLeafs, offSpines):
@@ -477,6 +482,7 @@ class Topology(object):
             threads.append(t)
         for t in threads:
             t.join()
+
 
     def pauseNodes(self, node_names):
         vms = {}
@@ -695,6 +701,179 @@ class Topology(object):
 
     def convert_index_to_name(self, index):
         return '0-'+str(index)
+
+    def update_prefix_counts(self, src_node, dst_node, action='down'):
+
+        src_type = 'leaf' if src_node.split('-')[0] != '0' else 'spine'
+        dst_type = 'leaf' if dst_node.split('-')[0] != '0' else 'spine'
+
+        if src_type == 'spine':
+            src_node, dst_node = dst_node, src_node
+            src_type, dst_type = dst_type, src_type
+
+        src_rack_id, src_node_id = src_node.split('-')
+        dst_rack_id, dst_node_id = dst_node.split('-')
+        rack = src_rack_id
+
+        if self.neighbor_prefix_counts[rack][src_node][dst_type + 's'][dst_node]['state'] == action:
+            return
+
+        # Update Local Rack prefixes
+        if dst_type == 'spine':
+            self.neighbor_prefix_counts[rack][src_node]['spines'][dst_node]['state'] = action
+            self.spine_prefix_counts[dst_node][src_node]['state'] = action
+            if action == 'down':
+                # Reset F1-Spine interface counts to 0
+                self.neighbor_prefix_counts[rack][src_node]['spines'][dst_node]['in'] = 0
+                self.neighbor_prefix_counts[rack][src_node]['spines'][dst_node]['out'] = 0
+                saved_spine_in = self.spine_prefix_counts[dst_node][src_node]['in']
+                self.spine_prefix_counts[dst_node][src_node]['in'] = \
+                    self.spine_prefix_counts[dst_node][src_node]['out'] = 0
+
+                # Adjust Spine router's egress prefix count
+                for node, val in self.spine_prefix_counts[dst_node].items():
+                    if node != src_node and val['state'] == 'up':
+                        val['out'] = max(0, val['out'] - saved_spine_in)
+            else:
+                # Determine F1 to Spine prefix count (# of UP leafs in the rack)
+                leaf_in = 1
+                for node, val in self.neighbor_prefix_counts[rack][src_node]['leafs'].items():
+                    if val['state'] == 'up':
+                        leaf_in += 1
+                self.neighbor_prefix_counts[rack][src_node]['spines'][dst_node]['out'] = \
+                    self.spine_prefix_counts[dst_node][src_node]['in'] = leaf_in
+
+                # Adjust all egress counts of Spine's neighbors
+                spine_in = 0
+                for node, val in self.spine_prefix_counts[dst_node].items():
+                    if node != src_node and val['state'] == 'up':
+                        spine_in += val['in']
+                        val['out'] += self.neighbor_prefix_counts[rack][src_node]['spines'][dst_node]['out']
+                self.neighbor_prefix_counts[rack][src_node]['spines'][dst_node]['in'] = \
+                    self.spine_prefix_counts[dst_node][src_node]['out'] = spine_in
+
+            # Compute total incoming prefixes to F1 from Spine
+            spine_in = 0
+            for spine, val in self.neighbor_prefix_counts[rack][src_node]['spines'].items():
+                spine_in += val['in']
+
+            # Update F1s Leafs
+            for leaf, val in self.neighbor_prefix_counts[rack][src_node]['leafs'].items():
+                if val['state'] == 'up':
+                    val['out'] = spine_in + 1
+                    self.neighbor_prefix_counts[rack][leaf]['leafs'][src_node]['in'] = spine_in + 1
+        else:
+            self.neighbor_prefix_counts[rack][src_node]['leafs'][dst_node]['state'] = action
+            self.neighbor_prefix_counts[rack][dst_node]['leafs'][src_node]['state'] = action
+            if action == 'down':
+                self.neighbor_prefix_counts[rack][src_node]['leafs'][dst_node]['in'] = \
+                    self.neighbor_prefix_counts[rack][src_node]['leafs'][dst_node]['out'] = 0
+                self.neighbor_prefix_counts[rack][dst_node]['leafs'][src_node]['in'] = \
+                    self.neighbor_prefix_counts[rack][dst_node]['leafs'][src_node]['out'] = 0
+                update = -1
+            else:
+                # Update F1-F1 link based on incoming Spine total
+                spine_in = 1
+                for spine, val in self.neighbor_prefix_counts[rack][src_node]['spines'].items():
+                    spine_in += val['in']
+                self.neighbor_prefix_counts[rack][src_node]['leafs'][dst_node]['out'] = \
+                    self.neighbor_prefix_counts[rack][dst_node]['leafs'][src_node]['in'] = spine_in
+                spine_in = 1
+                for spine, val in self.neighbor_prefix_counts[rack][dst_node]['spines'].items():
+                    spine_in += val['in']
+                self.neighbor_prefix_counts[rack][dst_node]['leafs'][src_node]['out'] = \
+                    self.neighbor_prefix_counts[rack][src_node]['leafs'][dst_node]['in'] = spine_in
+                update = 1
+
+            # Update F1-Spine prefix count
+            for impaired_node in [src_node, dst_node]:
+                for spine, val1 in self.neighbor_prefix_counts[rack][impaired_node]['spines'].items():
+                    if val1['state'] == 'up':
+                        val1['out'] = max(0, val1['out'] + update)
+                        for node, val2 in self.spine_prefix_counts[spine].items():
+                            if node == impaired_node:
+                                val2['in'] = val1['out']
+                            else:
+                                if val2['state'] == 'up':
+                                    val2['out'] = max(0, val2['out'] + update)
+
+        # Update Remote Rack prefixes
+        for rack in self.neighbor_prefix_counts:
+            if rack != src_rack_id:
+                if dst_type == 'spine':
+                    rem_src_node = '-'.join([rack, src_node_id])
+                    self.neighbor_prefix_counts[rack][rem_src_node]['spines'][dst_node]['in'] = \
+                        self.spine_prefix_counts[dst_node][rem_src_node]['out']
+                    spine_in = 0
+                    for spine, val in self.neighbor_prefix_counts[rack][rem_src_node]['spines'].items():
+                        spine_in += val['in']
+                    for leaf, val in self.neighbor_prefix_counts[rack][rem_src_node]['leafs'].items():
+                        if val['state'] == 'up':
+                            val['out'] = spine_in + 1
+                            self.neighbor_prefix_counts[rack][leaf]['leafs'][rem_src_node]['in'] = spine_in + 1
+                else:
+                    rem_src_node = '-'.join([rack, src_node_id])
+                    rem_dst_node = '-'.join([rack, dst_node_id])
+
+                    spine_in_src = 0
+                    for spine, val in self.neighbor_prefix_counts[rack][rem_src_node]['spines'].items():
+                        if val['state'] == 'up':
+                            val['in'] = self.spine_prefix_counts[spine][rem_src_node]['out']
+                            spine_in_src += val['in']
+
+                    spine_in_dst = 0
+                    for spine, val in self.neighbor_prefix_counts[rack][rem_dst_node]['spines'].items():
+                        if val['state'] == 'up':
+                            val['in'] = self.spine_prefix_counts[spine][rem_dst_node]['out']
+                            spine_in_dst += val['in']
+
+                    for leaf, val in self.neighbor_prefix_counts[rack][rem_src_node]['leafs'].items():
+                        if val['state'] == 'up':
+                            val['out'] = spine_in_src + 1
+                            self.neighbor_prefix_counts[rack][leaf]['leafs'][rem_src_node]['in'] = spine_in_src + 1
+                    for leaf, val in self.neighbor_prefix_counts[rack][rem_dst_node]['leafs'].items():
+                        if val['state'] == 'up':
+                            val['out'] = spine_in_dst + 1
+                            self.neighbor_prefix_counts[rack][leaf]['leafs'][rem_dst_node]['in'] = spine_in_dst + 1
+
+                            # pretty(self.neighbor_prefix_counts)
+                            # pretty(self.spine_prefix_counts)
+
+    def build_prefix_count(self):
+        # Initialize neighbor_prefix_counts and spine_prefix_counts
+
+        for vm in self.leaf_vm_objs:
+            for rack in vm.racks:
+                node_dict = {}
+                for node in rack.nodes:
+                    intf_dict = {'spines': {},
+                                 'leafs': {}}
+                    for key, val in node.interfaces.items():
+                        if val['peer_type'] == 'spine':
+                            intf_dict['spines'][key] = {'in': self.nLeafs * (self.nRacks - 1),
+                                                        'out': self.nLeafs,
+                                                        'state': 'up',
+                                                        'nei_ip': val['peer_ip']}
+                        else:
+                            intf_dict['leafs'][key] = {'in': self.nSpines * (self.nRacks - 1) + 1,
+                                                       'out': self.nSpines * (self.nRacks - 1) + 1,
+                                                       'state': 'up',
+                                                       'nei_ip': val['peer_ip']}
+                    node_dict[node.name] = intf_dict
+                self.neighbor_prefix_counts[str(rack.rack_id)] = node_dict
+
+        for vm in self.spine_vm_objs:
+            for spine in vm.spines:
+                node_dict = {}
+                for key in spine.interfaces.keys():
+                    node_dict[key] = {'in': self.nLeafs,
+                                      'out': self.nLeafs * (self.nRacks - 1),
+                                      'state': 'up'}
+                self.spine_prefix_counts[spine.name] = node_dict
+
+                # pretty(self.spine_prefix_counts)
+                # pretty(self.neighbor_prefix_counts)
+
 
     def populate_ssh_config(self):
         ssh_config = ''
@@ -976,9 +1155,9 @@ class VM(object):
             self.logger.warning('No containers to launch')
             return
 
-        out = exec_send_file([(self.ip, vm_docker_run)], [], logger=self.logger)
-        out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
-        out = exec_send_file([(self.ip, params)], [], logger=self.logger)
+        #out = exec_send_file([(self.ip, vm_docker_run)], [], logger=self.logger)
+        #out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
+        #out = exec_send_file([(self.ip, params)], [], logger=self.logger)
 
         if self.role == 'leaf' and not network_only:
             self.logger.info('Waiting for PSIMs to be ready')
@@ -1013,53 +1192,79 @@ class VM(object):
 
     def pauseRacks(self, *racks):
         pause_list = ' '
+        prefix_update_nodes = []
+
         for rack_id in racks[0]:
             rack_obj = self.get_rack_from_id(rack_id)
             if rack_obj:
                 for node in rack_obj.nodes:
                     node.state = 'paused'
-                    pause_list += node.name
-                    pause_list += ' '
+                    pause_list += node.name + ' '
+                    prefix_update_nodes.append(node)
 
         docker_pause = docker_pause_cmd + pause_list
         out = exec_remote_commands([(self.ip, [docker_pause])], [], logger=self.logger)
 
+        if self.topo.state == 'running':
+            for node in prefix_update_nodes:
+                node.update_prefix_counts('down')
+
+
     def pauseNodes(self, *nodes):
         pause_list = ''
+        prefix_update_nodes = []
+
         for node in nodes[0]:
             node_obj = self.get_node(node)
             if node_obj:
                 node_obj.state = 'paused'
-                pause_list += node_obj.name
-                pause_list += ' '
+                pause_list += node_obj.name + ' '
+                prefix_update_nodes.append(node_obj)
 
         docker_pause = docker_pause_cmd + pause_list
         out = exec_remote_commands([(self.ip, [docker_pause])], [], logger=self.logger)
 
+        if self.topo.state == 'running':
+            for node in prefix_update_nodes:
+                node.update_prefix_counts('down')
+
+
     def unpauseRacks(self, *racks):
         unpause_list = ' '
+        prefix_update_nodes = []
+
         for rack_id in racks[0]:
             rack_obj = self.get_rack_from_id(rack_id)
             if rack_obj:
                 for node in rack_obj.nodes:
                     node.state = 'running'
-                    unpause_list += node.name
-                    unpause_list += ' '
+                    unpause_list += node.name + ' '
+                    prefix_update_nodes.append(node)
 
         docker_unpause = docker_unpause_cmd + unpause_list
         out = exec_remote_commands([(self.ip, [docker_unpause])], [], logger=self.logger)
 
+        if self.topo.state == 'running':
+            for node in prefix_update_nodes:
+                node.update_prefix_counts('up')
+
     def unpauseNodes(self, *nodes):
         unpause_list = ''
+        prefix_update_nodes = []
+
         for node in nodes[0]:
             node_obj = self.get_node(node)
             if node_obj:
                 node_obj.state = 'paused'
-                unpause_list += node_obj.name
-                unpause_list += ' '
+                unpause_list += node_obj.name + ' '
+                prefix_update_nodes.append(node_obj)
 
         docker_unpause = docker_unpause_cmd + unpause_list
         out = exec_remote_commands([(self.ip, [docker_unpause])], [], logger=self.logger)
+
+        if self.topo.state == 'running':
+            for node in prefix_update_nodes:
+                node.update_prefix_counts('up')
 
     def get_dst_list(self, src_node, dsts):
 
@@ -1091,6 +1296,9 @@ class VM(object):
             dst_list = self.get_dst_list(src_node, dsts)
             for dst in dst_list:
                 self.linkRepair(src_node, dst, oper)
+                if oper == 'loss':
+                    self.topo.update_prefix_counts(src, dst, 'up')
+
 
     def linkRepair(self, src_node, dst, oper):
 
@@ -1129,6 +1337,8 @@ class VM(object):
             dst_list = self.get_dst_list(src_node, dsts)
             for dst in dst_list:
                 self.linkImpair(src_node, dst, oper, param1, param2, param3)
+                if oper == 'loss' and param1 == '100%':
+                    self.topo.update_prefix_counts(src, dst)
 
     def linkImpair(self, src_node, dst, oper, param1, param2, param3):
 
@@ -1621,6 +1831,10 @@ class Node(object):
 
         self.logger.info('Docker command: %s' % self.docker_run)
 
+    def update_prefix_counts(self, action):
+        for intf in self.interfaces:
+            self.vm_obj.topo.update_prefix_counts(self.name, intf, action)
+
     def configure(self):
         "Generate routing configuration"
         self.do_zebra_config()
@@ -1660,6 +1874,7 @@ class Node(object):
                     bgp_config += '    maximum-paths ibgp 16 \n'
                     if self.interfaces[intf]['peer_type'] == 'leaf':
                         bgp_config += '    neighbor %s addpath-tx-all-paths \n' % neighbor
+                    else:
                         bgp_config += '    neighbor %s next-hop-self \n' % neighbor
         if self.type == 'leaf':
             bgp_config += create_ip_prefix_list('REMOTE_RACK_PREFIX_MATCH_ALL', 'permit', 'any')
@@ -1691,6 +1906,13 @@ class Node(object):
                 isis_config += 'isis hello-interval 5\n'
                 isis_config += 'isis hello-multiplier 2 level-1 \n'
                 isis_config += 'isis metric 1 level-1\n'
+            else:
+                isis_config += 'interface %s\n' % self.interfaces[intf]['my_intf_name']
+                isis_config += 'ip router isis rack%s\n' % self.rack_id
+                isis_config += 'isis circuit-type level-1 \n'
+                isis_config += 'isis network point-to-point\n'
+                isis_config += 'isis passive\n'
+
         self.isis_config = 'en\n conf t\n' + isis_config + 'do wr mem \n'
 
         if self.type == 'leaf':
@@ -1780,6 +2002,7 @@ class Node(object):
             :returns console output as a list of 1 new line
             separated string.
         """
+        return
         if self.tn is None:
             self.tn = telnetlib.Telnet()
         try:
