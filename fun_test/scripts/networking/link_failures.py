@@ -20,16 +20,17 @@ class LinkFailures(FunTestScript):
         """)
 
     def setup(self):
-        self.tb = testbed.TestBed(testbed_bringup.NUM_OF_RACKS,
-                                  testbed_bringup.NUM_OF_NODES_PER_RACK,
-                                  testbed_bringup.NUM_OF_SPINES)
+        tb = testbed.TestBed(testbed_bringup.NUM_OF_RACKS,
+                             testbed_bringup.NUM_OF_NODES_PER_RACK,
+                             testbed_bringup.NUM_OF_SPINES)
         msg = 'Call topo_manager to create virtual test bed'
-        fun_test.test_assert(self.tb.create_topo(), msg)
+        fun_test.test_assert(tb.create_topo(), msg)
         fun_test.sleep("Wait for BGP/ISIS/RIB/FIB to converge", seconds=testbed_bringup.CONVERGE_TIME)
-        verifications.baseline_verifications(self.tb)
+        verifications.baseline_verifications(tb)
+        fun_test.shared_variables["tb"] = tb
 
     def cleanup(self):
-        self.tb.cleanup()
+        fun_test.shared_variables["tb"].cleanup()
 
 
 class NodeSpineSingleLinkFailure(FunTestCase):
@@ -56,12 +57,12 @@ class NodeSpineSingleLinkFailure(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        failures.link_failures(self.script_obj.tb, src_node_name='1-1', dst_node_names='0-1')
+        failures.link_failures(fun_test.shared_variables["tb"], src_node_name='1-1', dst_node_names='0-1')
 
 
 class NodeAllSpineLinksFailure(FunTestCase):
     def describe(self):
-        self.set_test_details(id=2  ,
+        self.set_test_details(id=2,
                               summary="Shutdown all the spine links of a Node and verify BGP/ISIS/RIB/FIB/traffic",
                               steps="""
         1. Step 1: Shutdown all the spine links of of a Node
@@ -83,7 +84,7 @@ class NodeAllSpineLinksFailure(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        failures.link_failures(self.script_obj.tb, src_node_name='1-1', dst_node_names='all spine links')
+        failures.link_failures(fun_test.shared_variables["tb"], src_node_name='1-1', dst_node_names='all spine links')
 
 
 class NodeNodeSingleLinkFailure(FunTestCase):
@@ -110,7 +111,7 @@ class NodeNodeSingleLinkFailure(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        failures.link_failures(self.script_obj.tb, src_node_name='1-1', dst_node_names='1-2')
+        failures.link_failures(fun_test.shared_variables["tb"], src_node_name='1-1', dst_node_names='1-2')
 
 
 if __name__ == "__main__":
@@ -119,5 +120,5 @@ if __name__ == "__main__":
                NodeAllSpineLinksFailure,
                NodeNodeSingleLinkFailure,
                ):
-        ts.add_test_case(tc(ts))
+        ts.add_test_case(tc())
     ts.run()
