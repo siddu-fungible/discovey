@@ -312,6 +312,13 @@
             if (!overrideOption) {
                 return commonService.showError("Please select an override option");
             }
+            if($scope.executionDetails.jira_ids[testCaseId].instances[instanceIndex].bugs.length) {
+                if (overrideOption === "PASSED") {
+                    let message = "This instance has bugs on it. Please remove the bugs before setting the result to PASSED";
+                    alert(message);
+                    return commonService.showError(message);
+                }
+            }
             let payload = {};
             payload["execution_id"] = executionId;
             payload["override_result"] = overrideOption;
@@ -349,7 +356,7 @@
             $scope.testCaseViewInstances = {};
             if(filter === "TOTAL") {
                 angular.forEach($scope.componentViewDetails, function(info, component) {
-                    if(component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                    if(component !== "undefined" && ($scope.componentModuleMapping[component] === module || (module === "ALL"))) {
                         angular.forEach(info.jiraIds, function(innerInfo, jiraId) {
                             innerInfo.show = true;
                             $scope.lastTestCaseViewList.push(jiraId);
@@ -360,7 +367,7 @@
             } else if(filter === "BLOCKED") {
                 angular.forEach($scope.componentViewDetails, function(info, component) {
 
-                    if (component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                    if (component !== "undefined" && ($scope.componentModuleMapping[component] === module || (module === "ALL"))) {
                         angular.forEach(info.jiraIds, function (innerInfo, jiraId) {
                             if (innerInfo.summaryResult === "FAILED" && innerInfo.blockerCount) {
                                 innerInfo.show = true;
@@ -376,7 +383,7 @@
                 })
             } else if(filter === "PENDING") {
                 angular.forEach($scope.componentViewDetails, function(info, component) {
-                    if(component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                    if(component !== "undefined" && ($scope.componentModuleMapping[component] === module || (module === "ALL"))) {
                         angular.forEach(info.jiraIds, function(innerInfo, jiraId) {
                             if(innerInfo.summaryResult !== "PASSED" && innerInfo.summaryResult !== "FAILED") {
                                 innerInfo.show = true;
@@ -391,7 +398,7 @@
                 });
             } else {
                 angular.forEach($scope.componentViewDetails, function(info, component) {
-                    if(component !== "undefined" && $scope.componentModuleMapping[component] === module) {
+                    if(component !== "undefined" && ($scope.componentModuleMapping[component] === module || (module === "ALL"))) {
                         angular.forEach(info.jiraIds, function(innerInfo, jiraId) {
                             if(innerInfo.summaryResult === filter) {
                                 innerInfo.show = true;
@@ -473,7 +480,7 @@
 
         $scope.editTestCaseClick = function (jiraId, instance) {
             if(instance.result !== "FAILED") {
-                let message = "Unable to edit bugs unless the test-case execution is marked FAILED";
+                let message = "Unable to edit bugs unless the test-case execution result is marked FAILED";
                 alert(message);
                 return commonService.showError(message);
             }

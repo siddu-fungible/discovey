@@ -113,28 +113,28 @@
                                         <th>Total</th>
                                         <th>Passed</th>
                                         <th>Failed</th>
-                                        <th>Pending</th>
                                         <th>Blocked</th>
+                                        <th>Pending</th>
                                         <th>Progress</th>
                                         <th>Passed %</th>
                                         <th>Failed %</th>
-                                        <th>Pending %</th>
                                         <th>Blocked %</th>
+                                        <th>Pending %</th>
                                     </tr>
                                     <tr>
                                         <td>
-                                            {{ executionDetails.num_total }}
+                                            <a href="#" ng-click="moduleFilterClick('ALL', 'TOTAL')">{{ executionDetails.num_total }}</a>
                                         </td>
                                         <td>
-                                            {{ executionDetails.num_passed }}
+                                            <a href="#" ng-click="moduleFilterClick('ALL', 'PASSED')">{{ executionDetails.num_passed }}</a>
                                         </td>
                                         <td>
-                                            {{ executionDetails.num_failed }}
+                                            <a href="#" ng-click="moduleFilterClick('ALL', 'FAILED')">{{ executionDetails.num_failed }}</a>
                                         </td>
+                                        <td><a href="#" ng-click="moduleFilterClick('ALL', 'BLOCKED')">{{ executionDetails.numBlocked }}</a></td>
                                         <td>
-                                            {{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed }}
+                                            <a href="#" ng-click="moduleFilterClick('ALL', 'PENDING')">{{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed }}</a>
                                         </td>
-                                        <td>{{ executionDetails.numBlocked }}</td>
 
                                         <td>
                                             <div class="progress" style="height: 20px;">
@@ -154,15 +154,18 @@
                                             </div>
                                         </td>
                                         <td>
-                                            {{ executionDetails.num_passed * 100/executionDetails.num_total | number: 2 }}</td>
+                                            {{ executionDetails.num_passed * 100/executionDetails.num_total | number: 2 }}
+                                        </td>
                                         <td>
-                                            {{ (executionDetails.num_failed)* 100/executionDetails.num_total | number: 2 | abs }}</td>
+                                            {{ (executionDetails.num_failed)* 100/executionDetails.num_total | number: 2 | abs }}
+                                        </td>
+                                        <td>
+                                            {{ executionDetails.numBlocked * 100/executionDetails.num_total | number: 2 }}
+                                        </td>
                                         <td>
                                             {{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_unknown))  * 100/executionDetails.num_total | number: 2 }}
                                         </td>
-                                        <td>
-                                            {{ executionDetails.numBlocked * 100/executionDetails.num_total | number: 2 }}</td>
-                                        <td>
+
                                     </tr>
                                 </table>
 
