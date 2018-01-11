@@ -123,17 +123,17 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <a href="#" ng-click="moduleFilterClick('ALL', 'TOTAL')">{{ executionDetails.num_total }}</a>
+                                            <a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'TOTAL')">{{ executionDetails.num_total }}</a>
                                         </td>
                                         <td>
-                                            <a href="#" ng-click="moduleFilterClick('ALL', 'PASSED')">{{ executionDetails.num_passed }}</a>
+                                            <a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'PASSED')">{{ executionDetails.num_passed }}</a>
                                         </td>
                                         <td>
-                                            <a href="#" ng-click="moduleFilterClick('ALL', 'FAILED')">{{ executionDetails.num_failed }}</a>
+                                            <a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'FAILED')">{{ executionDetails.num_failed }}</a>
                                         </td>
-                                        <td><a href="#" ng-click="moduleFilterClick('ALL', 'BLOCKED')">{{ executionDetails.numBlocked }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'BLOCKED')">{{ executionDetails.numBlocked }}</a></td>
                                         <td>
-                                            <a href="#" ng-click="moduleFilterClick('ALL', 'PENDING')">{{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed }}</a>
+                                            <a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'PENDING')">{{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed }}</a>
                                         </td>
 
                                         <td>
@@ -194,11 +194,11 @@
                                         <td>
                                             {{ module }}
                                         </td>
-                                        <td><a href="#" ng-click="moduleFilterClick(module, 'TOTAL')">{{ moduleInfo[module].numTotal }}</a></td>
-                                        <td><a href="#" ng-click="moduleFilterClick(module, 'PASSED')">{{ moduleInfo[module].numPassed }}</a></td>
-                                        <td><a href="#" ng-click="moduleFilterClick(module, 'FAILED')">{{ moduleInfo[module].numFailed }}</a></td>
-                                        <td><a href="#" ng-click="moduleFilterClick(module, 'BLOCKED')">{{ moduleInfo[module].numBlocked }}</a></td>
-                                        <td><a href="#" ng-click="moduleFilterClick(module, 'PENDING')">{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'TOTAL')">{{ moduleInfo[module].numTotal }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'PASSED')">{{ moduleInfo[module].numPassed }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'FAILED')">{{ moduleInfo[module].numFailed }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'BLOCKED')">{{ moduleInfo[module].numBlocked }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'PENDING')">{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed }}</a></td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar progress-bar-success" role="progressbar"
@@ -252,19 +252,19 @@
                                                         {{ component }}
                                                     </td>
                                                     <td>
-                                                        <a href="#" ng-click="componentFilterClick(component, 'TOTAL')">{{ getComponentInfo(component).numTotal }}</a>
+                                                        <a href="#test-case-view" ng-click="componentFilterClick(component, 'TOTAL')">{{ getComponentInfo(component).numTotal }}</a>
                                                     </td>
                                                     <td>
-                                                        <a href="#" ng-click="componentFilterClick(component, 'PASSED')">{{ getComponentInfo(component).numPassed }}</a>
+                                                        <a href="#test-case-view" ng-click="componentFilterClick(component, 'PASSED')">{{ getComponentInfo(component).numPassed }}</a>
                                                     </td>
                                                     <td>
-                                                        <a href="#" ng-click="componentFilterClick(component, 'FAILED')">{{ getComponentInfo(component).numFailed }}</a>
+                                                        <a href="#test-case-view" ng-click="componentFilterClick(component, 'FAILED')">{{ getComponentInfo(component).numFailed }}</a>
                                                     </td>
                                                     <td>
-                                                        <a href="#" ng-click="componentFilterClick(component, 'PENDING')">{{ getComponentInfo(component).numTotal - getComponentInfo(component).numPassed - getComponentInfo(component).numFailed }}</a>
+                                                        <a href="#test-case-view" ng-click="componentFilterClick(component, 'PENDING')">{{ getComponentInfo(component).numTotal - getComponentInfo(component).numPassed - getComponentInfo(component).numFailed }}</a>
                                                     </td>
                                                     <td>
-                                                        <a href="#" ng-click="componentFilterClick(component, 'BLOCKED')">{{ getComponentInfo(component).numBlocked }}</a>
+                                                        <a href="#test-case-view" ng-click="componentFilterClick(component, 'BLOCKED')">{{ getComponentInfo(component).numBlocked }}</a>
                                                     </td>
                                                     <td>
                                                         <div class="progress" style="height: 20px;">
@@ -303,10 +303,11 @@
             </div>
         </div>
 
-        <div class="col-lg-6" ng-if="testCaseViewInstances && currentView === 'components'">
+        <div id="test-case-view" class="col-lg-6" ng-if="testCaseViewInstances && currentView === 'components'">
             <legend>{{ currentTestCaseViewComponent }}</legend>
             <table class="table table-borderless">
                 <tr>
+                    <th><input type="checkbox" ng-model="$parent.selectAllTestCases" ng-click="selectAllTestCasesClick()"></th>
                     <th>Jira Id</th>
                     <th>Summary</th>
                     <th>Result</th>
@@ -316,6 +317,7 @@
                 </tr>
                 <tbody>
                 <tr ng-repeat-start="(jiraId, info) in testCaseViewInstances" ng-if="info.show">
+                    <td><input type="checkbox" ng-model="info.selected" ng-click="selectTestCaseClick(jiraId)"/></td>
                     <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
                     </td>
                     <td>{{ info.summary }}</td>
@@ -357,12 +359,12 @@
                                     </button>
                                 </td>
                                 <td>
-                                    <div ng-repeat="bug in instance.bugs track by $index">
+                                    <button class="fa fa-pencil" ng-click="editTestCaseClick(jiraId, instance)"></button>
+                                    <div style="display: inline-block" ng-repeat="bug in instance.bugs track by $index">
                                         <a target="_blank" >SW-{{ bug.id }}</a>
                                         <br>
                                     </div>
 
-                                    <button class="btn btn-sm btn-info" ng-click="editTestCaseClick(jiraId, instance)">Edit</button>
                                 </td>
                             </tr>
                             </tbody>

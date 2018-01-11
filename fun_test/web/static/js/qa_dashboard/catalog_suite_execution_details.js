@@ -42,6 +42,7 @@
             $scope.updateModuleProgressChartsNow = false;
             $scope.componentViewDetails = {};
             $scope.lastTestCaseViewList = [];
+            $scope.selectAllTestCases = false;
 
             $scope.fetchModuleComponentMapping().then(function (result) {
                 if (result) {
@@ -75,7 +76,8 @@
             /*commonService.addLogEntry("CatalogSuiteExecutionDetailsController", "Some details");*/
             /*console.log($scope.updateOverallProgressChartsNow);
             console.log($scope.updateModuleProgressChartsNow);*/
-            $scope.editTestCaseClick(124);
+            /*$scope.editTestCaseClick(124);*/
+            console.log($scope.selectAllTestCases);
 
         };
 
@@ -349,6 +351,17 @@
             console.log(component);
             $scope.testCaseViewInstances = $scope.componentViewDetails[component].jiraIds;
             $scope.currentTestCaseViewComponent = component;
+        };
+
+        $scope.selectAllTestCasesClick = function () {
+            console.log($scope.selectAllTestCases);
+            angular.forEach($scope.testCaseViewInstances, function(info, jiraId) {
+                info.selected = $scope.selectAllTestCases;
+            });
+        };
+
+        $scope.selectTestCaseClick = function (jiraId) {
+            console.log($scope.testCaseViewInstances[jiraId].selected);
         };
 
         $scope.moduleFilterClick = function(module, filter) {
