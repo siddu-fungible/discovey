@@ -309,7 +309,7 @@ class DockerHost(Linux, ToDictMixin):
                 break
             except APIError as ex:
                 message = str(ex)
-                fun_test.critical("Container creation error: {}". format(message))
+                fun_test.log("Container creation error: {}". format(message))
                 self.destroy_container(container_name=container_name)
                 port0_allocator.de_allocate_ports([x["external"] for x in pool0_allocation])
                 port1_allocator.de_allocate_ports([x["external"] for x in pool1_allocation])
@@ -327,6 +327,8 @@ class DockerHost(Linux, ToDictMixin):
                 port_retries += 1
                 if port_retries >= max_port_retries:
                     raise FunTestLibException("Unable to bind to any port, max_retries: {} reached".format(max_port_retries))
+                else:
+                    fun_test.log("Retrying...")
             except Exception as ex:
                 fun_test.critical(ex)
                 self.destroy_container(container_name=container_name)
