@@ -148,9 +148,11 @@ class FunTest:
         self.pause_on_failure = False
         self.shared_variables = {}
 
-
     def get_absolute_script_path(self):
         return self.absolute_script_file_name
+
+    def get_script_name_without_ext(self):
+        return os.path.splitext(self.absolute_script_file_name)[0]
 
     def get_script_parent_directory(self):
         current_directory = os.path.abspath(os.path.join(self.get_absolute_script_path(), os.pardir))
