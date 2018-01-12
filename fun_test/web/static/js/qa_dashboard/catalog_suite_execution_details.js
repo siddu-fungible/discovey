@@ -181,11 +181,18 @@
 
                     $scope.moduleInfo[moduleName].numBlocked = 0;
                     $scope.executionDetails.numBlocked = 0;
+                    let blockedSetOfTcs = new Set();
                     $scope.moduleComponentMapping[moduleName].forEach(function (component) {
                         if($scope.componentViewDetails.hasOwnProperty(component)) {
-                            $scope.moduleInfo[moduleName].numBlocked += $scope.componentViewDetails[component].numBlocked;
+                            /*$scope.moduleInfo[moduleName].numBlocked += $scope.componentViewDetails[component].numBlocked;*/
+                            angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, jiraId) {
+                                if(info.blockerCount) {
+                                    blockedSetOfTcs.add(jiraId);
+                                }
+                            });
                         }
                     });
+                    $scope.moduleInfo[moduleName].numBlocked = blockedSetOfTcs.size;
                     let moduleBlockedPercentage = $scope.moduleInfo[moduleName].numBlocked * 100/$scope.moduleInfo[moduleName].numTotal;
                     let moduleFailedPercentage = $scope.moduleInfo[moduleName].numFailed * 100 / (info.numTotal);
                     moduleFailedPercentage = Math.abs(moduleFailedPercentage - moduleBlockedPercentage);

@@ -309,6 +309,7 @@
             <table class="table table-borderless table-nonfluid">
                 <tr>
                     <th><input type="checkbox" ng-model="$parent.selectAllTestCases" ng-click="selectAllTestCasesClick()"></th>
+                    <th></th>
                     <th>Jira Id</th>
                     <th>Summary</th>
                     <th>Result</th>
@@ -319,6 +320,7 @@
                 <tbody>
                 <tr ng-repeat-start="(jiraId, info) in testCaseViewInstances" ng-if="info.show">
                     <td><input type="checkbox" ng-model="info.selected" ng-click="selectTestCaseClick(jiraId)"/></td>
+                    <td>{{ $index }}</td>
                     <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
                     </td>
                     <td>{{ info.summary }}</td>
