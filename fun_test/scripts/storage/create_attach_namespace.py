@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from lib.templates.storage.storage_template import StorageTemplate
 from lib.topology.topology_helper import TopologyHelper, Dut
+from lib.fun.f1 import F1
 
 # fun_test.enable_debug()
 
@@ -18,7 +19,7 @@ topology_dict = {
                     "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
-            "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
+            "start_mode": F1.START_MODE_NORMAL
         }
 
     }

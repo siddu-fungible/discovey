@@ -25,12 +25,12 @@ class TopologyHelper:
             duts = spec["dut_info"]
             for dut_index, dut_info in duts.items():
                 dut_type = dut_info["type"]
-                simulation_start_mode = Dut.SIMULATION_START_MODE_NORMAL
-                if "simulation_start_mode" in dut_info:
-                    simulation_start_mode = dut_info["simulation_start_mode"]
+                start_mode = F1.START_MODE_NORMAL
+                if "start_mode" in dut_info:
+                    start_mode = dut_info["start_mode"]
 
                 # Create DUT object
-                dut_obj = Dut(type=dut_type, index=dut_index, simulation_start_mode=simulation_start_mode)
+                dut_obj = Dut(type=dut_type, index=dut_index, start_mode=start_mode)
                 interfaces = dut_info["interface_info"]
 
                 # Assign endpoints on interfaces
@@ -139,7 +139,7 @@ class TopologyHelper:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
             dut_instance = orchestrator_obj.launch_dut_instance(
-                dpcsh_only=(dut_obj.simulation_start_mode == dut_obj.SIMULATION_START_MODE_DPCSH_ONLY),
+                dpcsh_only=(dut_obj.start_mode == F1.START_MODE_DPCSH_ONLY),
                 external_dpcsh_port=orchestrator_obj.dpcsh_port)
             fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
             dut_obj.set_instance(dut_instance)
@@ -191,7 +191,7 @@ if __name__ == "__main__":
                         "hosts": 1
                     }
                 },
-                "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
+                "start_mode": F1.START_MODE_NORMAL
             }
 
         }
@@ -208,7 +208,7 @@ if __name__ == "__main__":
                         "hosts": 0
                     }
                 },
-                "simulation_start_mode": Dut.SIMULATION_START_MODE_DPCSH_ONLY
+                "start_mode": F1.START_MODE_DPCSH_ONLY
             }
 
         }
@@ -225,7 +225,7 @@ if __name__ == "__main__":
                         "vms": 1
                     }
                 },
-                "simulation_start_mode": Dut.SIMULATION_START_MODE_DPCSH_ONLY
+                "start_mode": F1.START_MODE_DPCSH_ONLY
             }
 
         }

@@ -1,18 +1,18 @@
 from lib.system.fun_test import fun_test
+from lib.fun.f1 import F1
 from lib.system.utils import ToDictMixin
 from lib.topology.end_points import BareMetalEndPoint, QemuColocatedHypervisorEndPoint, HypervisorEndPoint
 class Dut(ToDictMixin):
     DUT_TYPE_FSU = "DUT_TYPE_FSU"
     DUT_TYPE_FM8 = "DUT_TYPE_FM8"
 
-    SIMULATION_START_MODE_NORMAL = "SIMULATION_START_MODE_NORMAL"
-    SIMULATION_START_MODE_DPCSH_ONLY = "SIMULATION_START_MODE_DPCSH_ONLY"
+
 
     MODE_SIMULATION = "MODE_SIMULATION"
     MODE_EMULATION = "MODE_EMULATION"
     MODE_REAL = "MODE_REAL"
 
-    TO_DICT_VARS = ["type", "index", "interfaces", "simulation_start_mode", "instance"]
+    TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance"]
 
     class DutInterface(ToDictMixin):
         INTERFACE_TYPE_PCIE = "INTERFACE_TYPE_PCIE"
@@ -48,11 +48,11 @@ class Dut(ToDictMixin):
         def add_drives_to_interface(self, num_ssds=0):
             fun_test.simple_assert(num_ssds, "Num ssds")
 
-    def __init__(self, type, index, mode=MODE_SIMULATION, simulation_start_mode=SIMULATION_START_MODE_NORMAL):
+    def __init__(self, type, index, mode=MODE_SIMULATION, start_mode=F1.START_MODE_NORMAL):
         self.type = type
         self.index = index
         self.interfaces = {}
-        self.simulation_start_mode = simulation_start_mode
+        self.start_mode = start_mode
         self.mode = mode
         self.instance = None
 

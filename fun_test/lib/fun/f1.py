@@ -9,13 +9,18 @@ class F1(Linux, ToDictMixin):
     '''
     SIMULATION_FUNOS_BUILD_PATH = "/home/jabraham/FunOS/build"
     DPCSH_PATH = "/home/jabraham/FunTools/dpcsh/dpcsh"
-    FUN_OS_SIMULATION_PROCESS = "funos-posix"
-    DPCSH_PROCESS = "dpcsh"
+    FUN_OS_SIMULATION_PROCESS_NAME = "funos-posix"
+    DPCSH_PROCESS_NAME = "dpcsh"
 
     INTERNAL_DPCSH_PORT = 5000
 
+    # Default log path when run in the background
     F1_LOG = "/tmp/f1.log.txt"
     DPCSH_PROXY_LOG = "/tmp/dpcsh_proxy.log.txt"
+
+    START_MODE_NORMAL = "START_MODE_NORMAL"  # How do we define NORMAL #TODO
+    START_MODE_DPCSH_ONLY = "START_MODE_DPCSH_ONLY"   # Start with dpcsh only
+
 
     @staticmethod
     def get(asset_properties):
@@ -31,7 +36,11 @@ class F1(Linux, ToDictMixin):
         self.external_dpcsh_port = None
         self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
-    def start(self, dpcsh=False, dpcsh_only=False, external_dpcsh_port=None):
+    def start(self,
+              dpcsh=False,
+              dpcsh_only=False,
+              external_dpcsh_port=None,
+              app="prem_test"):
         if external_dpcsh_port:
             self.external_dpcsh_port = external_dpcsh_port
         started = False
@@ -41,7 +50,7 @@ class F1(Linux, ToDictMixin):
             if not dpcsh:
 
                 try:
-                    process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS)
+                    process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
                     if process_id:
                         self.kill_process(process_id=process_id[0], signal=9)
 
@@ -55,7 +64,7 @@ class F1(Linux, ToDictMixin):
                     pass  #TODO
             else:
                 try:
-                    process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS)
+                    process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
                     if process_id:
                         self.kill_process(process_id=process_id, signal=9)
 
@@ -63,29 +72,29 @@ class F1(Linux, ToDictMixin):
                     self.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
                     self.command("ulimit -Sc unlimited")
                     self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
-                    # self.command("./funos-posix app=mdt_test nvfile=nvfile &> /tmp/funos.log")
                     self.command("{}/{} app=mdt_test nvfile=nvfile &> {}".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                                                                                 self.FUN_OS_SIMULATION_PROCESS,
+                                                                                 self.FUN_OS_SIMULATION_PROCESS_NAME,
                                                                                  self.F1_LOG))
                     if not dpcsh_only:
                         #new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                        #                                                                           self.FUN_OS_SIMULATION_PROCESS))
+                        #                                                                           self.FUN_OS_SIMULATION_PROCESS_NAME))
 
                         new_process_id = self.start_bg_process(
-                            command="{}/{} app=prem_test nvfile=nvfile".format(
+                            command="{}/{} app={} nvfile=nvfile".format(
                                 self.SIMULATION_FUNOS_BUILD_PATH,
-                                self.FUN_OS_SIMULATION_PROCESS),
+                                self.FUN_OS_SIMULATION_PROCESS_NAME,
+                                app),
                             output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
 
                     else:
                         new_process_id = self.start_bg_process(
                             command="{}/{} --dpc-server app=load_mods".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                                                                self.FUN_OS_SIMULATION_PROCESS),
+                                                                self.FUN_OS_SIMULATION_PROCESS_NAME),
                             output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
                         dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
-                                                                            self.DPCSH_PROCESS,
+                                                                            self.DPCSH_PROCESS_NAME,
                                                                             self.INTERNAL_DPCSH_PORT),
                                                                             output_file=self.DPCSH_PROXY_LOG)
                         fun_test.test_assert(dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
@@ -100,7 +109,7 @@ class F1(Linux, ToDictMixin):
 
     def dpcsh_command(self, line):
         result = {}
-        output = self.command("{}/{} --nocli {}".format(self.DPCSH_PATH, self.DPCSH_PROCESS, line))
+        output = self.command("{}/{} --nocli {}".format(self.DPCSH_PATH, self.DPCSH_PROCESS_NAME, line))
         for line in output.splitlines():
             if "output =>" in line:
                 try:

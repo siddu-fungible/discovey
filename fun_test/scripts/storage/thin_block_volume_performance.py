@@ -4,6 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut
 from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
+from lib.fun.f1 import F1
 import uuid
 
 '''
@@ -22,7 +23,7 @@ topology_dict = {
                     "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
-            "simulation_start_mode": Dut.SIMULATION_START_MODE_DPCSH_ONLY
+            "start_mode": F1.START_MODE_DPCSH_ONLY
         }
     },
     "tg_info": {

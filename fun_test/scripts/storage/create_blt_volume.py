@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from lib.templates.storage.storage_template import StorageTemplate
 from lib.topology.topology_helper import TopologyHelper, Dut
 from lib.host.storage_controller import StorageController
+from lib.fun.f1 import F1
 import uuid
 # fun_test.enable_debug()
 # fun_test.enable_pause_on_failure()
@@ -19,37 +20,11 @@ topology_dict = {
                     "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
-            "simulation_start_mode": Dut.SIMULATION_START_MODE_DPCSH_ONLY
+            "start_mode": F1.START_MODE_DPCSH_ONLY
         }
 
     }
 }
-
-""",
-1: {
-    "mode": Dut.MODE_SIMULATION,
-    "type": Dut.DUT_TYPE_FSU,
-    "interface_info": {
-        0: {
-            "vms": 1,
-            "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
-        }
-    },
-    "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
-},
-2: {
-    "mode": Dut.MODE_SIMULATION,
-    "type": Dut.DUT_TYPE_FSU,
-    "interface_info": {
-        0: {
-            "vms": 1,
-            "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
-        }
-    },
-    "simulation_start_mode": Dut.SIMULATION_START_MODE_NORMAL
-}
-}
-"""
 
 class MyScript(FunTestScript):
     def describe(self):
