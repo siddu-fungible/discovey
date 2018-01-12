@@ -340,11 +340,9 @@
                     });
 
                 });
-
                 /*$scope.recalculateModuleInfo();*/
                 /*$scope.fetchCatalogSuiteExecutionDetails(false);*/
             })
-
         };
 
         $scope.componentDetailsClick = function (component) {
@@ -478,18 +476,47 @@
             $scope.testCaseViewInstances[jiraId].showingDetails = !$scope.testCaseViewInstances[jiraId].showingDetails;
         };
 
-        function EditTestCaseController($scope, item, dialog) {
 
-            $scope.item = item;
 
-            $scope.save = function () {
-                dialog.close($scope.item);
-            };
+        $scope.bulkEditTestCaseClick = function () {
+            /* Ensure at least one test-case is selected */
+            let oneTestCaseSelected = false;
+            angular.forEach($scope.testCaseViewInstances, function (info, jiraId) {
+                if(info.selected) {
+                    oneTestCaseSelected = true;
+                }
+            });
+            if(!oneTestCaseSelected) {
+                return commonService.showError("Please select at least one test-case");
+            }
 
-            $scope.close = function () {
-                dialog.close(undefined);
-            };
-        }
+            $modal.open({
+                templateUrl: "/static/qa_dashboard/bulk_edit_test_case.html",
+                controller: ['$modalInstance', '$scope', 'commonService', '$http', 'testCaseViewInstances', BulkEditTestCasesController],
+                resolve: {
+                    testCaseViewInstances: function () {
+                        return $scope.testCaseViewInstances;
+                    }
+                }
+            }).result.then(function () {
+                $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
+                    $scope.fetchBasicIssueAttributes(true).then(function () {
+
+                        angular.forEach($scope.testCaseViewInstances, function (info, jiraId) {
+                            let components = $scope.executionDetails.jira_ids[jiraId].components;
+                            components.forEach(function (component) {
+                                $scope._resetComponentViewDetails(component);
+                                angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, jiraId) {
+                                    $scope._updateComponentViewDetails(component, jiraId);
+                                });
+                            });
+                        })
+
+                    });
+                });
+            })
+        };
+
 
         $scope.editTestCaseClick = function (jiraId, instance) {
             if(instance.result !== "FAILED") {
@@ -508,9 +535,8 @@
                     instance: function () {
                         return instance;
                     }
-
                 }
-            }).result.then(function (res) {
+            }).result.then(function () {
 
                 $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
                     $scope.fetchBasicIssueAttributes(true).then(function () {
@@ -534,6 +560,88 @@
                 return angular.fromJson(bugsString);
             };
         }
+    }
+
+    function BulkEditTestCasesController($modalInstance, $scope, commonService, $http, testCaseViewInstances) {
+        let ctrl = this;
+        $scope.resultOptions = [null, "PASSED", "FAILED"];
+        $scope.owners = [{"name": "No change"}];
+        $scope.bugs = [];
+        $scope.testCaseViewInstances = testCaseViewInstances;
+
+        $scope.fetchOwners = function () {
+            $http.get("/regression/engineers").then(function (result) {
+                if(!commonService.validateApiResult(result, "Fetch Engineers")) {
+                    return;
+                }
+                let data = result.data.data;
+                data.forEach(function (element) {
+                    $scope.owners.push({"name": element.fields.short_name, "email": element.fields.email});
+                });
+
+            }).catch(function (result) {
+                commonService.showHttpError("Unable to fetch owners", result)
+            });
+        };
+        $scope.fetchOwners();
+
+        $scope.submit = function () {
+            console.log($scope.selectedResult);
+            if($scope.selectedResult) {
+                console.log("yes");
+            }
+            if($scope.bugs.length && ($scope.selectedResult !== "FAILED")) {
+                return commonService.showError("Please set the result to FAILED, if you need to add bugs");
+            }
+
+            console.log($scope.selectedOwner);
+            // Update test-case execution
+
+
+            $scope.numPostRequests = 0;
+            $scope.numPostResponses = 0;
+
+            angular.forEach($scope.testCaseViewInstances, function(info, jiraId) {
+                if(info.selected && info.show) {
+                    console.log(jiraId);
+                    info.instances.forEach(function (instance) {
+                        let payload = {};
+                        payload["execution_id"] = instance.execution_id;
+                        if($scope.bugs) {
+                            payload["bugs"] = JSON.stringify($scope.bugs);
+                        }
+                        if($scope.selectedResult) {
+                            payload["override_result"] = $scope.selectedResult;
+                        }
+                        if($scope.selectedOwner) {
+                            payload["owner_email"] = $scope.selectedOwner.email;
+                        }
+                        $scope.numPostRequests += 1;
+                        commonService.apiPost('/regression/update_test_case_execution', payload).then(function (data) {
+
+                            $scope.numPostResponses += 1;
+                            if($scope.numPostResponses === $scope.numPostRequests) {
+                                $modalInstance.close();
+                            }
+                        });
+                    });
+                }
+            });
+
+        };
+
+        $scope.addBugClick = function () {
+            if ($scope.addBug) {
+                $scope.bugs.push({"id": $scope.addBug, "summary": "TBD", "blocker": false});
+            }
+        };
+
+        $scope.removeClick = function (index) {
+            if (confirm("Are you sure you want to remove " + $scope.bugs[index].id + " ?")) {
+                $scope.bugs.splice(index, 1)
+            }
+        };
+
     }
 
     function EditTestCasesController($modalInstance, $scope, commonService, jiraId, instance) {

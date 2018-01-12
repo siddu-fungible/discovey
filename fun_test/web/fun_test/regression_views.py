@@ -237,10 +237,14 @@ def update_test_case_execution(request):
     request_json = json.loads(request.body)
     override_result = None
     bugs = None
+    owner_email = None
     if "override_result" in request_json:
         override_result = request_json["override_result"]
     if "bugs" in request_json:
         bugs = request_json["bugs"]
+
+    if "owner_email" in request_json:
+        owner_email = request_json["owner_email"]
     execution_id = int(request_json["execution_id"])
     try:
         te = TestCaseExecution.objects.get(execution_id=execution_id)
@@ -249,6 +253,10 @@ def update_test_case_execution(request):
             te.overridden_result = True
         if bugs:
             te.bugs = bugs
+        if owner_email:
+            cte = CatalogTestCaseExecution.objects.get(execution_id=execution_id)
+            cte.engineer = Engineer.objects.get(email=owner_email)
+            cte.save()
         te.save()
         suite_execution_id = te.suite_execution_id
         summary_result = get_catalog_test_case_execution_summary_result(suite_execution_id=suite_execution_id, jira_id=te.test_case_id)

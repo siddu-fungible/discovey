@@ -78,7 +78,7 @@
         }
     }]);
 
-    app.factory('commonService', ["$rootScope", "$timeout", "$http", function ($rootScope, $timeout, $http) {
+    app.factory('commonService', ["$rootScope", "$timeout", "$http", "$window", function ($rootScope, $timeout, $http, $window) {
         function validateApiResult (apiResult, message) {
             let result = false;
             let data = apiResult["data"];
@@ -144,6 +144,7 @@
             $timeout(function () {
                 $rootScope.showCommonError = false;
             }, t);
+            $window.scrollTo(0, 0);
         }
 
         function showHttpError (message, result, timeout) {
@@ -168,7 +169,8 @@
             console.log(t);
             $timeout(function () {
                 $rootScope.showCommonSuccess = false;
-            }, t)
+            }, t);
+            $window.scrollTo(0, 0);
 
         }
 

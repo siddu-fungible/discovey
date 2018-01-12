@@ -303,9 +303,10 @@
             </div>
         </div>
 
-        <div id="test-case-view" class="col-lg-6" ng-if="testCaseViewInstances && currentView === 'components'">
+        <div id="test-case-view" class="col-lg-12 col-xl-6" ng-if="testCaseViewInstances && currentView === 'components'">
+            <button class="btn btn-primary fa fa-pencil" ng-click="bulkEditTestCaseClick()">Bulk Edit</button>
             <legend>{{ currentTestCaseViewComponent }}</legend>
-            <table class="table table-borderless">
+            <table class="table table-borderless table-nonfluid">
                 <tr>
                     <th><input type="checkbox" ng-model="$parent.selectAllTestCases" ng-click="selectAllTestCasesClick()"></th>
                     <th>Jira Id</th>
@@ -321,8 +322,13 @@
                     <td><a target="_blank" href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
                     </td>
                     <td>{{ info.summary }}</td>
-                    <td><label ng-if="info.summaryResult"
-                               class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label>
+                    <td>
+                        <div class="row">
+                            <label ng-if="info.summaryResult" style="display: inline-flex"
+                                   class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label>
+                            <span style="display: inline-flex" ng-if="info.blockerCount"
+                                   class="fa fa-ban"></span>
+                        </div>
                     </td>
                     <td>
                         <a ng-show="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Hide Details</a>
