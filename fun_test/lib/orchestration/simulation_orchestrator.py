@@ -124,7 +124,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         self.docker_host.describe()
 
     @fun_test.safe
-    def launch_dut_instance(self, dpcsh_only, external_dpcsh_port):
+    def launch_dut_instance(self, start_mode, external_dpcsh_port):
         f1_obj = DockerF1(host_ip=self.host_ip,
                           ssh_username=self.ssh_username,
                           ssh_password=self.ssh_password,
@@ -132,8 +132,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
         f1_obj.set_data_plane_ip(data_plane_ip=self.internal_ip)
 
         # Start FunOS
-        fun_test.test_assert(f1_obj.start(dpcsh=True,
-                                          dpcsh_only=dpcsh_only,
+        fun_test.test_assert(f1_obj.start(start_mode=start_mode,
                                           external_dpcsh_port=external_dpcsh_port),
                              "DockerContainerOrchestrator: Start FunOS")
         return f1_obj

@@ -18,7 +18,7 @@ class F1(Linux, ToDictMixin):
     F1_LOG = "/tmp/f1.log.txt"
     DPCSH_PROXY_LOG = "/tmp/dpcsh_proxy.log.txt"
 
-    START_MODE_NORMAL = "START_MODE_NORMAL"  # How do we define NORMAL #TODO
+    START_MODE_NORMAL = "START_MODE_NORMAL"  # How do we define NORMAL ? #TODO
     START_MODE_DPCSH_ONLY = "START_MODE_DPCSH_ONLY"   # Start with dpcsh only
 
 
@@ -36,9 +36,7 @@ class F1(Linux, ToDictMixin):
         self.external_dpcsh_port = None
         self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
-    def start(self,
-              dpcsh=False,
-              dpcsh_only=False,
+    def start(self, start_mode,
               external_dpcsh_port=None,
               app="prem_test"):
         if external_dpcsh_port:
@@ -47,7 +45,7 @@ class F1(Linux, ToDictMixin):
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
         if simulation_mode:
-            if not dpcsh:
+            if start_mode == self.START_MODE_NORMAL:
 
                 try:
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
@@ -62,7 +60,7 @@ class F1(Linux, ToDictMixin):
                                              expected_prompt="Remote PCIe EP NVME Test")
                 except:
                     pass  #TODO
-            else:
+            elif start_mode == self.START_MODE_DPCSH_ONLY:
                 try:
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
                     if process_id:
@@ -75,6 +73,7 @@ class F1(Linux, ToDictMixin):
                     self.command("{}/{} app=mdt_test nvfile=nvfile &> {}".format(self.SIMULATION_FUNOS_BUILD_PATH,
                                                                                  self.FUN_OS_SIMULATION_PROCESS_NAME,
                                                                                  self.F1_LOG))
+                    '''
                     if not dpcsh_only:
                         #new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
                         #                                                                           self.FUN_OS_SIMULATION_PROCESS_NAME))
@@ -86,8 +85,9 @@ class F1(Linux, ToDictMixin):
                                 app),
                             output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
+                    '''
 
-                    else:
+                    if True:
                         new_process_id = self.start_bg_process(
                             command="{}/{} --dpc-server app=load_mods".format(self.SIMULATION_FUNOS_BUILD_PATH,
                                                                 self.FUN_OS_SIMULATION_PROCESS_NAME),
@@ -99,8 +99,8 @@ class F1(Linux, ToDictMixin):
                                                                             output_file=self.DPCSH_PROXY_LOG)
                         fun_test.test_assert(dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
 
-                    fun_test.test_assert(new_process_id, "Started FunOs")
-                    self.fun_os_process_id = new_process_id
+                        fun_test.test_assert(new_process_id, "Started FunOs")
+                        self.fun_os_process_id = new_process_id
                 except:
                     pass  #TODO
 
