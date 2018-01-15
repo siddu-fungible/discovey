@@ -1,7 +1,9 @@
 from lib.system.fun_test import *
-from lib.topology.topology_helper import TopologyHelper, Dut
+from lib.topology.topology_helper import TopologyHelper
+from lib.topology.dut import Dut, DutInterface
 from lib.host.storage_controller import StorageController
 from lib.fun.f1 import F1
+import dill
 import uuid
 # fun_test.enable_debug()
 # fun_test.enable_pause_on_failure()
@@ -16,7 +18,7 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 0,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "start_mode": F1.START_MODE_DPCSH_ONLY
@@ -27,7 +29,7 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 0,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "start_mode": F1.START_MODE_DPCSH_ONLY
@@ -38,7 +40,7 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 0,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "start_mode": F1.START_MODE_DPCSH_ONLY
@@ -58,7 +60,11 @@ class MyScript(FunTestScript):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
         topology = topology_obj_helper.deploy()
         fun_test.test_assert(topology, "Ensure deploy is successful")
+
         fun_test.shared_variables["topology"] = topology
+        # topology_obj_helper.save(file_name="mypickle.pkl") # Useful when you do not recreate topologies/containers during development
+        #                                                   # Use the complement function .load() to retrieve the topology
+        pass
 
     def cleanup(self):
         TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
@@ -84,13 +90,16 @@ class FunTestCase1(FunTestCase):
         pass
 
     def run(self):
-        dut_instance0 = fun_test.shared_variables["topology"].get_dut_instance(index=0)
+        # topology = TopologyHelper().load("mypickle.pkl") # To be used only in association with .load()
+
+        # topology = fun_test.shared_variables["topoligy"]
+        dut_instance0 = topology.get_dut_instance(index=0)
         fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
 
-        dut_instance1 = fun_test.shared_variables["topology"].get_dut_instance(index=1)
+        dut_instance1 = topology.get_dut_instance(index=1)
         fun_test.test_assert(dut_instance1, "Retrieved dut instance 1")
 
-        dut_instance2 = fun_test.shared_variables["topology"].get_dut_instance(index=2)
+        dut_instance2 = topology.get_dut_instance(index=2)
         fun_test.test_assert(dut_instance2, "Retrieved dut instance 2")
 
         created_uuids = []

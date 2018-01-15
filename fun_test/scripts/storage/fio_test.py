@@ -1,7 +1,7 @@
 from lib.host.traffic_generator import TrafficGenerator
 from lib.system.fun_test import *
 from lib.topology.topology_helper import TopologyHelper
-from lib.topology.dut import Dut
+from lib.topology.dut import Dut, DutInterface
 from lib.host.storage_controller import StorageController
 from lib.fun.f1 import F1
 import uuid
@@ -30,7 +30,7 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 0,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "start_mode": F1.START_MODE_DPCSH_ONLY
@@ -41,7 +41,7 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 0,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "start_mode": F1.START_MODE_DPCSH_ONLY
@@ -52,7 +52,7 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 0,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "start_mode": F1.START_MODE_DPCSH_ONLY

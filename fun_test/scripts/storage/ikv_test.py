@@ -1,8 +1,11 @@
 from lib.system.fun_test import *
-from lib.topology.topology_helper import TopologyHelper, Dut
+from lib.topology.topology_helper import TopologyHelper
+from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
 from lib.host.storage_controller import StorageController
 import hashlib
+import pickle
+import dill
 # fun_test.enable_debug()
 
 
@@ -16,7 +19,7 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 0,
-                    "type": Dut.DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
             "start_mode": F1.START_MODE_DPCSH_ONLY
@@ -36,6 +39,7 @@ class MyScript(FunTestScript):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
         topology = topology_obj_helper.deploy()
         fun_test.shared_variables["topology"] = topology
+        topology.pickle(file_name="mypickle.pkl")
         fun_test.test_assert(topology, "Ensure deploy is successful")
 
     def cleanup(self):
@@ -78,7 +82,11 @@ class FunTestCase1(FunTestCase):
 
 
     def run(self):
-        dut_instance = fun_test.shared_variables["topology"].get_dut_instance(index=0)
+        topology = dill.load( open("mypickle.pkl", "rb" ))
+
+        # dut_instance = fun_test.shared_variables["topology"].get_dut_instance(index=0)
+        dut_instance = topology.get_dut_instance(index=0)
+
         fun_test.test_assert(dut_instance, "Retrieved dut instance")
         storage_controller = StorageController(mode="likv",
                                                target_ip=dut_instance.host_ip,

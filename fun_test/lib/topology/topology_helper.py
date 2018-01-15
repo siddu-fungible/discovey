@@ -1,7 +1,8 @@
 import json
+import dill
 
 from asset.asset_manager import *
-from dut import Dut
+from dut import Dut, DutInterface
 from lib.host.traffic_generator import Fio, LinuxHost
 from lib.system.fun_test import FunTestLibException
 from topology import ExpandedTopology
@@ -9,17 +10,24 @@ from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
 
 
 class TopologyHelper:
-    def __init__(self, spec):
+    def __init__(self, spec=None):
         self.spec = spec
+        self.expanded_topology = None
 
     def get_resource_requirements(self):
         pass
+
+    def save(self, file_name):
+        dill.dump(self.expanded_topology, open(file_name, "wb"))
+
+    def load(self, file_name):
+        return dill.load(open(file_name, "rb"))
 
     @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
 
-        expanded_topology = ExpandedTopology()
+        self.expanded_topology = ExpandedTopology()
         # fun_test.simple_assert("dut_info" in spec, "dut_info in spec")  #TODO
         if "dut_info" in spec:
             duts = spec["dut_info"]
@@ -41,25 +49,25 @@ class TopologyHelper:
                     elif 'vms' in interface_info:
                         if not 'type' in interface_info:
                             raise FunTestLibException("We must define an interface type")
-                        if dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_PCIE:
+                        if dut_interface_obj.type == DutInterface.INTERFACE_TYPE_PCIE:
                             dut_interface_obj.add_qemu_colocated_hypervisor(num_vms=interface_info["vms"])
-                        elif dut_interface_obj.type == Dut.DutInterface.INTERFACE_TYPE_ETHERNET:
+                        elif dut_interface_obj.type == DutInterface.INTERFACE_TYPE_ETHERNET:
                             dut_interface_obj.add_hypervisor(num_vms=interface_info["vms"])
                     elif 'ssds' in interface_info:
                         dut_interface_obj.add_drives_to_interface(num_ssds=interface_info["ssds"])
-                expanded_topology.duts[dut_index] = dut_obj
+                self.expanded_topology.duts[dut_index] = dut_obj
 
         if "tg_info" in spec:
             tgs = spec["tg_info"]
             for tg_index, tg_info in tgs.items():
                 tg_type = tg_info["type"]
                 if tg_type == Fio.TRAFFIC_GENERATOR_TYPE_FIO:
-                    expanded_topology.tgs[tg_index] = FioEndPoint()
+                    self.expanded_topology.tgs[tg_index] = FioEndPoint()
                 if tg_type == LinuxHost.TRAFFIC_GENERATOR_TYPE_LINUX_HOST:
-                    expanded_topology.tgs[tg_index] = LinuxHostEndPoint()
+                    self.expanded_topology.tgs[tg_index] = LinuxHostEndPoint()
 
         fun_test.debug("got expanded topology")
-        return expanded_topology
+        return self.expanded_topology
 
 
     @fun_test.safe

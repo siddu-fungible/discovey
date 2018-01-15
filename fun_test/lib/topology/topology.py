@@ -1,3 +1,4 @@
+import dill
 from lib.system.utils import ToDictMixin
 
 class ExpandedTopology(ToDictMixin):
@@ -32,3 +33,4 @@ class ExpandedTopology(ToDictMixin):
     def get_tg_instance(self, tg_index):
         tg = self.get_tg(index=tg_index)
         return tg.get_instance()
+
