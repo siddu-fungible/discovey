@@ -20,7 +20,7 @@ class F1(Linux, ToDictMixin):
 
     START_MODE_NORMAL = "START_MODE_NORMAL"  # How do we define NORMAL ? #TODO
     START_MODE_DPCSH_ONLY = "START_MODE_DPCSH_ONLY"   # Start with dpcsh only
-
+    START_MODE_CUSTOM_APP = "START_MODE_CUSTOM_APP" # the user will start it from the script by specifying the app
 
     @staticmethod
     def get(asset_properties):
@@ -38,7 +38,8 @@ class F1(Linux, ToDictMixin):
 
     def start(self, start_mode,
               external_dpcsh_port=None,
-              app="prem_test"):
+              app="prem_test",
+              args=""):
         if external_dpcsh_port:
             self.external_dpcsh_port = external_dpcsh_port
         started = False
@@ -75,16 +76,7 @@ class F1(Linux, ToDictMixin):
                                                                                  self.F1_LOG))
                     '''
                     if not dpcsh_only:
-                        #new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                        #                                                                           self.FUN_OS_SIMULATION_PROCESS_NAME))
 
-                        new_process_id = self.start_bg_process(
-                            command="{}/{} app={} nvfile=nvfile".format(
-                                self.SIMULATION_FUNOS_BUILD_PATH,
-                                self.FUN_OS_SIMULATION_PROCESS_NAME,
-                                app),
-                            output_file=self.F1_LOG)
-                        fun_test.sleep("Ensure FunOS is started", seconds=10)
                     '''
 
                     if True:
@@ -103,6 +95,19 @@ class F1(Linux, ToDictMixin):
                         self.fun_os_process_id = new_process_id
                 except:
                     pass  #TODO
+            elif start_mode == self.START_MODE_CUSTOM_APP:
+                # new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
+                #                                                                           self.FUN_OS_SIMULATION_PROCESS_NAME))
+
+                new_process_id = self.start_bg_process(
+                    command="{}/{} app={} {} nvfile=nvfile".format(
+                        self.SIMULATION_FUNOS_BUILD_PATH,
+                        self.FUN_OS_SIMULATION_PROCESS_NAME,
+                        app, args),
+                    output_file=self.F1_LOG)
+                fun_test.sleep("Ensure FunOS is started", seconds=10)
+                fun_test.test_assert(new_process_id, "Started FunOs")
+                self.fun_os_process_id = new_process_id
 
             started = True
         return started
