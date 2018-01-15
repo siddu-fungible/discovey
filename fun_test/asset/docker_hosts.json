@@ -9,7 +9,7 @@
     "images": [
       {
         "category":  "storage_basic",
-        "name": "storage_basic:latest"
+        "name": "storage_basic_x86_64:latest"
       },
       {
         "category": "fio_traffic_generator",

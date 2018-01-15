@@ -7,15 +7,25 @@ from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1, DockerF1
 from orchestrator import OrchestratorType, Orchestrator
 
+
 class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     QEMU_PATH = "/home/jabraham/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     QEMU_INSTANCE_PORT = 2220
 
+    QEMU_FS = "fun-image-x86-64-qemux86-64.ext4"
+    QEMU_KERNEL = "bzImage"
+
+    QEMU_NCPUS = 2
+    QEMU_BIOS = "pc-bios"
+
+    QEMU_LOG = "/tmp/qemu.log"
+
     INSTANCE_TYPE_QEMU = "INSTANCE_TYPE_QEMU"
     INSTANCE_TYPE_FSU = "INSTANCE_TYPE_FSU"
 
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION
+
 
     @staticmethod
     def get(asset_properties):
@@ -30,7 +40,9 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     def launch_host_instance(self,
                              instance_type=INSTANCE_TYPE_QEMU,
                              internal_ssh_port=None,
-                             external_ssh_port=None):
+                             external_ssh_port=None,
+                             qemu_num_cpus=2,
+                             qemu_memory=256):
         instance = None
         if not internal_ssh_port:
             internal_ssh_port = self.QEMU_INSTANCE_PORT
@@ -48,11 +60,27 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
             if fun_test.counter:
                 function = 4
 
-            # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
-            command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=../core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel ../bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(
-                self.QEMU_PROCESS, internal_ssh_port)
+            command = './{}  -daemonize -vnc :1 -machine q35,iommu=on -smp {} -m {} ' \
+                      '-L {} ' \
+                      '-kernel ../{} ' \
+                      '-append "root=/dev/vda rw highres=off ip=:::255.255.255.0:qemu-yocto:eth0:on oprofile.timer=1 console=ttyS0 console=tty0 mem={}M" ' \
+                      '-drive file=../{},format=raw,if=none,id=rootfs ' \
+                      '-device ioh3420,id=root_port1,addr=1c.0,port=1,chassis=1 ' \
+                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=nvme_test,bus=root_port1 -redir tcp:{}::22 ' \
+                      '-device virtio-rng-pci ' \
+                      '-device virtio-blk-pci,drive=rootfs'.format(self.QEMU_PROCESS,
+                                qemu_num_cpus,
+                                qemu_memory,
+                                self.QEMU_BIOS,
+                                self.QEMU_KERNEL,
+                                qemu_memory,
+                       self.QEMU_FS, internal_ssh_port)
 
-            self.start_bg_process(command=command, output_file="/tmp/qemu.log")
+            # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
+            # command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=../{},if=virtio,format=raw -kernel ../{} -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(
+            #    self.QEMU_PROCESS, internal_ssh_port, self.QEMU_FS, self.QEMU_KERNEL)
+
+            self.start_bg_process(command=command, output_file=self.QEMU_LOG)
 
             fun_test.sleep("Qemu startup", seconds=65)
             i = Qemu(host_ip=self.host_ip,
@@ -60,11 +88,13 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                      ssh_password="stack",
                      ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
 
+            '''
             self.command("cd {}".format(self.QEMU_PATH))
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
                          custom_prompts={"(yes/no)\?*": "yes"})  # TODO: Why is this here?
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
                          custom_prompts={"(yes/no)\?*": "yes"})
+            '''
 
             instance = i
         except Exception as ex:
