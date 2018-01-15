@@ -1,11 +1,10 @@
-ARG OS=ubuntu:17.04
+FROM ubuntu:17.04
 ARG QEMU_DIR=qemu
 ARG X86_64_FS_URL=http://dochub.fungible.local/doc/jenkins/cc-linux-yocto/latest/x86_64/fun-image-x86-64-qemux86-64.ext4
-ARG X86_64_KERNEL=http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/x86_64/bzImage
+ARG X86_64_KERNEL_URL=http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/x86_64/bzImage
 
 # Begin
 
-FROM $OS
 
 # jabraham@server17:~/docker-fetch-build$ ls qemu/
 # bzImage  core-image-full-cmdline-qemux86-64.ext4  funeth.ko  nvme-core.ko  nvme.ko
@@ -27,9 +26,11 @@ EXPOSE 22
 # QEMU
 # Add FS and Kernel for Qemu
 
+
+RUN echo $QEMU_DIR
 RUN mkdir $QEMU_DIR
-ADD $X86_64_FS $QEMU_DIR
-ADD $X86_64_KERNEL $QEMU_DIR
+ADD $X86_64_FS_URL ${QEMU_DIR}/
+ADD $X86_64_KERNEL_URL ${QEMU_DIR}/
 
 # Add startup script
 COPY startup.sh startup.sh
