@@ -73,8 +73,7 @@ class AssetManager:
                 fun_test.simple_assert(self.docker_host, "Docker host available")
                 fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                 fun_test.log("Setting up the integration container for index: {} url: {}".format(index, build_url))
-                id = index + fun_test.get_suite_execution_id()
-                container_name = "{}_{}".format("integration_basic", id)
+                container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), index)
 
                 container_asset = self.docker_host.setup_storage_container(build_url=build_url,
                                                                            container_name=container_name,
@@ -84,7 +83,7 @@ class AssetManager:
                                                                            dpcsh_internal_ports=[
                                                                                F1.INTERNAL_DPCSH_PORT])
 
-                fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(id))
+                fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))
                 orchestrator = DockerContainerOrchestrator.get(container_asset)
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST:
                 if not self.docker_host:

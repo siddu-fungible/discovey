@@ -2,12 +2,12 @@
 
 Purpose:
 ```
-Container containing the following fetched from the latest jenkins build
+Base image to create a container with the following fetched from the latest jenkins build
 1. funos-posix
 2. dpcsh
 3. qemu image
 
-contaning the following fetched from other sources
+and the following fetched from other sources
 3. QEMU FS, Kernel
 4. Kernel modules
 ```
