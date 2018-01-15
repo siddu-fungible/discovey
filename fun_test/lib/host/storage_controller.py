@@ -103,7 +103,7 @@ class StorageController():
 
     def ip_cfg(self, ip, expected_command_duration=1):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip":ip}}
-        return self.json_command(cfg_dict, expected_command_duration)
+        return self.json_command(cfg_dict, expected_command_duration=expected_command_duration)
 
     def create_thin_block_volume(self, capacity, uuid, block_size, name, expected_command_duration=1):
         create_dict = {}
@@ -115,14 +115,14 @@ class StorageController():
         create_dict["params"]["block_size"] = block_size
         create_dict["params"]["uuid"] = uuid
         create_dict["params"]["name"] = name
-        return self.json_command(create_dict, expected_command_duration)
+        return self.json_command(create_dict, expected_command_duration=expected_command_duration)
 
     def attach_volume(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, expected_command_duration=3):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
                                   "remote_ip": remote_ip}}
-        return self.json_command(attach_dict, expected_command_duration)
+        return self.json_command(attach_dict, expected_command_duration=expected_command_duration)
 
     def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid, expected_command_duration=1):
         create_dict = {"class": "volume",
@@ -134,7 +134,7 @@ class StorageController():
                                   "name": name,
                                   "remote_ip": remote_ip,
                                   "remote_nsid": remote_nsid}}
-        return self.json_command(create_dict, expected_command_duration)
+        return self.json_command(create_dict, expected_command_duration=expected_command_duration)
 
     def create_replica_volume(self, capacity, block_size, uuid, name, pvol_id, expected_command_duration=1):
         create_dict = {"class": "volume",
@@ -147,7 +147,7 @@ class StorageController():
                                   "min_replicas_insync": 1,
                                   "pvol_type": "VOL_TYPE_BLK_RDS",
                                   "pvol_id": pvol_id}}
-        return self.json_command(create_dict, expected_command_duration)
+        return self.json_command(create_dict, expected_command_duration=expected_command_duration)
 
     def peek(self, props_tree):
         props_tree = "peek " + props_tree
