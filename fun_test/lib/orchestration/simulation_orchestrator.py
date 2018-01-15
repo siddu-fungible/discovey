@@ -21,6 +21,8 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
 
     QEMU_LOG = "/tmp/qemu.log"
 
+    QEMU_MODULES_TGZ = "modules.tgz"
+
     INSTANCE_TYPE_QEMU = "INSTANCE_TYPE_QEMU"
     INSTANCE_TYPE_FSU = "INSTANCE_TYPE_FSU"
 
@@ -88,14 +90,22 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                      ssh_password="stack",
                      ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
 
-            '''
+
             self.command("cd {}".format(self.QEMU_PATH))
+            self.command("scp -P {} /{} root@127.0.0.1:".format(internal_ssh_port, self.QEMU_MODULES_TGZ),
+                         custom_prompts={"(yes/no)\?*": "yes"})
+            '''
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
                          custom_prompts={"(yes/no)\?*": "yes"})  # TODO: Why is this here?
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
                          custom_prompts={"(yes/no)\?*": "yes"})
             '''
-
+            i.command("rm -rf /lib/modules")
+            i.command("tar -xf {} -C /".format(self.QEMU_MODULES_TGZ))
+            i.command("depmod -a")
+            i.command("modprobe -r nvme")
+            fun_test.sleep("modprobe -r nvme")
+            i.command("modprobe nvme")
             instance = i
         except Exception as ex:
             fun_test.critical(str(ex))

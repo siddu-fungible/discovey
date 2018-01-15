@@ -20,7 +20,7 @@ class StorageTemplate:
         if True: # TODO self.topology.mode == fun_test.MODE_SIMULATION:
 
 
-            host_obj.nvme_setup()
+            # host_obj.nvme_setup()
 
             fun_test.log("Output of lsblk prior to test")
             host_obj.command("lsblk")
