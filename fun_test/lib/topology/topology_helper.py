@@ -186,6 +186,40 @@ class TopologyHelper:
     def cleanup(self):
         asset_manager.cleanup()
 
+
+    def quick_docker_deploy(self,
+                            num_f1=0,
+                            build_url="http://dochub.fungible.local/doc/jenkins/funos/latest/",
+                            f1_base_name="quick_deploy_f1",
+                            num_tg=0,
+                            tg_base_name="quick_deploy_tg"):
+        f1_assets = []
+        tg_assets = []
+        docker_host = AssetManager().get_any_docker_host()
+
+        for index in range(num_f1):
+            container_name = "{}_{}".format(f1_base_name, index)
+            ssh_internal_ports = [22]
+            qemu_internal_ports = [50001, 50002, 50004]
+            dpcsh_internal_ports = [5000]
+
+            container_asset = docker_host.setup_storage_container(container_name,
+                                                                   build_url,
+                                                                   ssh_internal_ports,
+                                                                   qemu_internal_ports,
+                                                                   dpcsh_internal_ports)
+            docker_host.describe_storage_container(container_asset)
+            f1_assets.append(container_asset)
+
+        for index in range(num_tg):
+            container_name = "{}_{}".format(tg_base_name, index)
+            ssh_internal_ports = [22]
+            container_asset = docker_host.setup_fio_container(container_name,
+                                                                   ssh_internal_ports)
+            tg_assets.append(container_asset)
+        return {"f1_assets": f1_assets, "tg_assets": tg_assets}
+
+
 if __name__ == "__main__":
     topology_dict = {
         "name": "Basic Storage",

@@ -9,9 +9,11 @@ import re, collections
 
 
 class PortAllocator:
-    def __init__(self, base_port, internal_ports):
+    def __init__(self, base_port, internal_ports, allocated_ports):
         self.internal_ports = internal_ports if internal_ports else []
         self.allocated_ports = [base_port]
+        self.allocated_ports.extend(allocated_ports)
+        i = 0
 
     def prepare_ports_dict(self, ports_dict):
         allocation = []
@@ -76,6 +78,9 @@ class DockerHost(Linux, ToDictMixin):
         self.remote_api_port = properties["remote_api_port"]
         self.spec = properties
         self.TO_DICT_VARS.extend(["containers_assets"])
+        self.pool0_allocated_ports = []
+        self.pool1_allocated_ports = []
+        self.pool2_allocated_ports = []
 
     def health(self):
         fun_test.debug("Health of {}".format(self.name))
@@ -175,6 +180,22 @@ class DockerHost(Linux, ToDictMixin):
                                     pool2_internal_ports=dpcsh_internal_ports,
                                     command=build_url)
 
+    def describe_storage_container(self, container_asset):
+        fun_test.log_section("Container: {}".format(container_asset["name"]))
+        fun_test.log("External Ip: {}".format(container_asset["host_ip"]), no_timestamp=True)
+        fun_test.log("External Ssh Port: {}".format(container_asset["mgmt_ssh_port"]), no_timestamp=True)
+        fun_test.log("Ssh Username: {}".format(container_asset["mgmt_ssh_username"]), no_timestamp=True)
+        fun_test.log("Ssh Password: {}".format(container_asset["mgmt_ssh_password"]), no_timestamp=True)
+        fun_test.log("Internal Ip: {}".format(container_asset["internal_ip"]), no_timestamp=True)
+        fun_test.log("External Dpcsh port: {}".format(container_asset["pool2_ports"][0]["external"]), no_timestamp=True)
+        fun_test.log("Internal Dpcsh port: {}".format(container_asset["pool2_ports"][0]["internal"]), no_timestamp=True)
+
+        fun_test.log("Qemu Ports:", no_timestamp=True)
+        for port_info in container_asset["pool1_ports"]:
+            fun_test.log("External: {}, Internal: {}".format(port_info["external"], port_info["internal"]),
+                         no_timestamp=True)
+
+
     @fun_test.safe
     def setup_fio_container(self,
                             container_name,
@@ -240,14 +261,20 @@ class DockerHost(Linux, ToDictMixin):
         port_retries = 0
         max_port_retries = 100
 
-        port0_allocator = PortAllocator(base_port=self.BASE_CONTAINER_SSH_PORT,
-                                        internal_ports=pool0_internal_ports)
-        port1_allocator = PortAllocator(base_port=self.BASE_POOL1_PORT,
-                                        internal_ports=pool1_internal_ports)
-        port2_allocator = PortAllocator(base_port=self.BASE_POOL2_PORT,
-                                        internal_ports=pool2_internal_ports)
+        port_allocator0 = PortAllocator(base_port=self.BASE_CONTAINER_SSH_PORT,
+                                        internal_ports=pool0_internal_ports,
+                                        allocated_ports=self.pool0_allocated_ports)
+        port_allocator1 = PortAllocator(base_port=self.BASE_POOL1_PORT,
+                                        internal_ports=pool1_internal_ports,
+                                        allocated_ports=self.pool1_allocated_ports)
+        port_allocator2 = PortAllocator(base_port=self.BASE_POOL2_PORT,
+                                        internal_ports=pool2_internal_ports,
+                                        allocated_ports=self.pool2_allocated_ports)
 
         while port_retries < max_port_retries:
+            self.pool0_allocated_ports = port_allocator0.allocated_ports
+            self.pool1_allocated_ports = port_allocator1.allocated_ports
+            self.pool2_allocated_ports = port_allocator2.allocated_ports
             container = self.get_container_by_name(name=container_name)
             if container:
                 try:
@@ -264,9 +291,9 @@ class DockerHost(Linux, ToDictMixin):
             try:
 
 
-                pool0_allocation = port0_allocator.prepare_ports_dict(ports_dict=ports_dict)
-                pool1_allocation = port1_allocator.prepare_ports_dict(ports_dict=ports_dict)
-                pool2_allocation = port2_allocator.prepare_ports_dict(ports_dict=ports_dict)
+                pool0_allocation = port_allocator0.prepare_ports_dict(ports_dict=ports_dict)
+                pool1_allocation = port_allocator1.prepare_ports_dict(ports_dict=ports_dict)
+                pool2_allocation = port_allocator2.prepare_ports_dict(ports_dict=ports_dict)
 
                 if command:
                     allocated_container = self.client.containers.run(image_name,
@@ -311,18 +338,18 @@ class DockerHost(Linux, ToDictMixin):
                 message = str(ex)
                 fun_test.log("Container creation error: {}". format(message))
                 self.destroy_container(container_name=container_name)
-                port0_allocator.de_allocate_ports([x["external"] for x in pool0_allocation])
-                port1_allocator.de_allocate_ports([x["external"] for x in pool1_allocation])
-                port2_allocator.de_allocate_ports([x["external"] for x in pool2_allocation])
+                port_allocator0.de_allocate_ports([x["external"] for x in pool0_allocation])
+                port_allocator1.de_allocate_ports([x["external"] for x in pool1_allocation])
+                port_allocator2.de_allocate_ports([x["external"] for x in pool2_allocation])
                 m = re.search("(\d+)\s+failed:\s+port\s+is\s+already", message)
                 if m:
                     used_up_port = int(m.group(1))
                     if used_up_port in [x["external"] for x in pool0_allocation]:
-                        port0_allocator.allocate_port(used_up_port)
+                        port_allocator0.allocate_port(used_up_port)
                     if used_up_port in [x["external"] for x in pool1_allocation]:
-                        port1_allocator.allocate_port(used_up_port)
+                        port_allocator1.allocate_port(used_up_port)
                     if used_up_port in [x["external"] for x in pool2_allocation]:
-                        port2_allocator.allocate_port(used_up_port)
+                        port_allocator2.allocate_port(used_up_port)
 
                 port_retries += 1
                 if port_retries >= max_port_retries:
@@ -361,8 +388,9 @@ class DockerHost(Linux, ToDictMixin):
         """
         return DockerHost(properties=asset_properties)
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     funos_url = "http://172.17.0.1:8080/fs/funos-posix"
     import asset.asset_manager
     dm = asset.asset_manager.AssetManager().get_any_docker_host()
     print dm.health()
+

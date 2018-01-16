@@ -39,7 +39,7 @@ class MyScript(FunTestScript):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
         topology = topology_obj_helper.deploy()
         fun_test.shared_variables["topology"] = topology
-        topology.pickle(file_name="mypickle.pkl")
+        # topology.pickle(file_name="mypickle.pkl")
         fun_test.test_assert(topology, "Ensure deploy is successful")
 
     def cleanup(self):
@@ -82,9 +82,8 @@ class FunTestCase1(FunTestCase):
 
 
     def run(self):
-        topology = dill.load( open("mypickle.pkl", "rb" ))
 
-        # dut_instance = fun_test.shared_variables["topology"].get_dut_instance(index=0)
+        topology = fun_test.shared_variables["topology"]
         dut_instance = topology.get_dut_instance(index=0)
 
         fun_test.test_assert(dut_instance, "Retrieved dut instance")

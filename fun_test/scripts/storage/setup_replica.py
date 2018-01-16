@@ -3,7 +3,6 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.storage_controller import StorageController
 from lib.fun.f1 import F1
-import dill
 import uuid
 # fun_test.enable_debug()
 # fun_test.enable_pause_on_failure()
@@ -92,7 +91,7 @@ class FunTestCase1(FunTestCase):
     def run(self):
         # topology = TopologyHelper().load("mypickle.pkl") # To be used only in association with .load()
 
-        topology = fun_test.shared_variables["topoligy"]
+        topology = fun_test.shared_variables["topology"]
         dut_instance0 = topology.get_dut_instance(index=0)
         fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
 
