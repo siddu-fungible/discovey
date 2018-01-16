@@ -1268,44 +1268,44 @@ class Linux(object, ToDictMixin):
     '''
 
     @fun_test.safe
-    def fio(self, dest_ip, timeout=60, **kargs):
+    def fio(self, destination_ip, timeout=60, **kwargs):
 
         fio_command = "fio"
         fio_result = ""
         fio_dict = {}
 
-        fun_test.debug(kargs)
+        fun_test.debug(kwargs)
 
         # Building the fio command
-        if 'name' not in kargs:
+        if 'name' not in kwargs:
             fio_command += " --name=fun_nvmeof"
 
-        if 'ioengine' not in kargs:
+        if 'ioengine' not in kwargs:
             fio_command += " --ioengine=fun"
 
-        fio_command += " --dest_ip={}".format(dest_ip)
+        fio_command += " --dest_ip={}".format(destination_ip)
 
-        if 'source_ip' not in kargs:
+        if 'source_ip' not in kwargs:
             fio_command += " --source_ip={}".format(self.internal_ip)
 
-        if 'numjobs' not in kargs:
+        if 'numjobs' not in kwargs:
             fio_command += " --numjobs=1"
 
-        if 'io_queues' not in kargs:
+        if 'io_queues' not in kwargs:
             fio_command += " --io_queues=2"
 
-        if 'nrfiles' not in kargs:
+        if 'nrfiles' not in kwargs:
             fio_command += " --nrfiles=1"
 
-        if 'nqn' not in kargs:
+        if 'nqn' not in kwargs:
             fio_command += " --nqn=nqn.2017-05.com.fungible:nss-uuid1"
 
-        if 'nvme_mode' not in kargs:
+        if 'nvme_mode' not in kwargs:
             fio_command += " --nvme_mode=IO_ONLY"
 
-        if kargs:
-            for key in kargs:
-                fio_command += " --" + key + "=" + str(kargs[key])
+        if kwargs:
+            for key in kwargs:
+                fio_command += " --" + key + "=" + str(kwargs[key])
 
         fun_test.debug(fio_command)
 
@@ -1348,12 +1348,10 @@ class Linux(object, ToDictMixin):
                 value = int(re.sub(r'(\d+)(.*)', r'\1', value))
                 fio_dict[mode][field] = value
 
-        match = ""
         match = re.search(r'read: IOPS=(\d+)', fio_result)
         if match:
             fio_dict["read"]["iops"] = int(match.group(1))
 
-        match = ""
         match = re.search(r'write: IOPS=(\d+)', fio_result)
         if match:
             fio_dict["write"]["iops"] = int(match.group(1))

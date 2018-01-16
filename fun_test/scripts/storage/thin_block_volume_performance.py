@@ -248,7 +248,7 @@ class FioSeqWriteSeqReadOnly(FunTestCase):
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = linux_host.fio(dest_ip=destination_ip, rw=mode, bs=fio_block_size,
+                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
                                                          size=fio_size, iodepth=fio_iodepth, timeout=fio_timeout)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])

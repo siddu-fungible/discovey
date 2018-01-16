@@ -202,14 +202,12 @@ class DockerHostOrchestrator(Orchestrator, DockerHost):
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST
 
     def launch_fio_instance(self, index):
-        id = index + fun_test.get_suite_execution_id()
-        container_name = "{}_{}".format("integration_fio", id)
+        container_name = "{}_{}_{}".format("integration_fio", fun_test.get_suite_execution_id(), index)
         container_asset = self.setup_fio_container(container_name=container_name, ssh_internal_ports=[22])
         return Fio.get(asset_properties=container_asset)
 
     def launch_linux_instance(self, index):
-        id = index + fun_test.get_suite_execution_id()
-        container_name = "{}_{}".format("integration_lnx", id)
+        container_name = "{}_{}_{}".format("integration_linux", fun_test.get_suite_execution_id(), index)
         container_asset = self.setup_linux_container(container_name=container_name, ssh_internal_ports=[22])
         linux = Linux.get(asset_properties=container_asset)
         linux.internal_ip = container_asset["internal_ip"]

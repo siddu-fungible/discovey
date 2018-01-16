@@ -227,7 +227,7 @@ class DockerHost(Linux, ToDictMixin):
         container.remove()
 
     @fun_test.safe
-    def destroy_container(self, container_name):
+    def destroy_container(self, container_name, ignore_error=False):
         container = self.get_container_by_name(name=container_name)
         if container:
 
@@ -235,13 +235,15 @@ class DockerHost(Linux, ToDictMixin):
                 container.stop()
                 fun_test.debug("Stopped Container: {}".format(container.name))
             except Exception as ex:
-                fun_test.critical(str(ex))
+                if not ignore_error:
+                    fun_test.critical(str(ex))
 
             try:
                 container.remove()
                 fun_test.debug("Removed Container: {}".format(container.name))
             except Exception as ex:
-                fun_test.critical(str(ex))
+                if not ignore_error:
+                    fun_test.critical(str(ex))
 
     @fun_test.safe
     def setup_container(self,
