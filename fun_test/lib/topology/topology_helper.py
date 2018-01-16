@@ -31,6 +31,14 @@ class TopologyHelper:
 
         self.expanded_topology = ExpandedTopology()
         # fun_test.simple_assert("dut_info" in spec, "dut_info in spec")  #TODO
+        if "dut_repeat" in spec:
+            repeat_count = spec["dut_repeat"]["count"]
+            spec["dut_info"] = {}
+            spec_dut_info = spec["dut_info"]
+            repeat_dut_info = spec["dut_repeat"]["info"]
+            for index in range(repeat_count):
+                spec_dut_info[index] = repeat_dut_info
+
         if "dut_info" in spec:
             duts = spec["dut_info"]
             for dut_index, dut_info in duts.items():

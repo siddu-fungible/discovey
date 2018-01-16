@@ -106,6 +106,8 @@ class FunTest:
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
 
+        print("Suite Execution Id: {}".format(self.get_suite_execution_id()))
+
         if args.test_case_ids:
             self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
             # print("***" + str(self.selected_test_case_ids))

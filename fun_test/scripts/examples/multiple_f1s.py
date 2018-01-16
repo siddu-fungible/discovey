@@ -61,7 +61,7 @@ class MyScript(FunTestScript):
                               """)
 
     def setup(self):
-        topology_obj_helper = TopologyHelper(spec_file="./multiple_f1s.json")
+        topology_obj_helper = TopologyHelper(spec_file="./multiple_f1s_w_repeat.json")
         topology = topology_obj_helper.deploy()
         fun_test.test_assert(topology, "Ensure deploy is successful")
         fun_test.shared_variables["topology"] = topology
