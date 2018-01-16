@@ -1,17 +1,17 @@
-Containerized FRR
+Containerized FRR:
 
 In order to build a FRR container, follow these steps:
 
-1. Clone FRR repo (git@github.com:fungible-inc/frr.git)
-2. In build.sh set WORKDIR appropriately
-3. Execute build.sh script:
+	1. Clone FRR repo (git@github.com:fungible-inc/frr.git)
+	2. In build.sh set WORKDIR appropriately
+	3. Execute build.sh script:
 
-   If building FRR for the first time on this host, then:
+If building FRR for the first time on this host, then:
 	./build.sh init <frr-container-image-name>
-   else:
+else:
         ./build.sh <frr-container-image-name>
 
-Executing build.sh will build FRR and also build the FRR container with the necessary config files/binaries.
+Executing build.sh will build FRR and also build the FRR container with the necessary config/binaries.
 
 To run a single FRR container instance, do this:
 
