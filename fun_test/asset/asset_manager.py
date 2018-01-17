@@ -71,7 +71,8 @@ class AssetManager:
                 if not self.docker_host:
                     self.docker_host = self.get_any_docker_host()
                 fun_test.simple_assert(self.docker_host, "Docker host available")
-                fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
+                if not fun_test.get_environment_variable("DOCKER_URL"):
+                    fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                 fun_test.log("Setting up the integration container for index: {} url: {}".format(index, build_url))
                 container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), index)
 

@@ -124,7 +124,7 @@ class StorageController():
                                   "remote_ip": remote_ip}}
         return self.json_command(attach_dict, expected_command_duration=expected_command_duration)
 
-    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid, expected_command_duration=1):
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid, expected_command_duration=2):
         create_dict = {"class": "volume",
                        "opcode": "VOL_ADMIN_OPCODE_CREATE",
                        "params": {"type": "VOL_TYPE_BLK_RDS",

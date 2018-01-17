@@ -141,7 +141,11 @@ class DockerHost(Linux, ToDictMixin):
 
     def connect(self):
         if not self.client:
-            self.client = DockerClient(base_url='tcp://{}:{}'.format(self.host_ip, self.remote_api_port))
+            docker_url = fun_test.get_environment_variable("DOCKER_URL")
+            url = 'tcp://{}:{}'.format(self.host_ip, self.remote_api_port)
+            if docker_url:
+                url = docker_url
+            self.client = DockerClient(base_url=url)
         return None  #TODO: validate this
 
     @fun_test.safe
