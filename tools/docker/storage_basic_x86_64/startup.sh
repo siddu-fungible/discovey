@@ -33,15 +33,18 @@ qemu_tgz_name=qemu.tgz
 qemu_tgz_url=$base_url/$qemu_tgz_name
 pcbios_tgz_name=pc-bios.tgz
 pcbios_tgz_url=$base_url/$pcbios_tgz_name
+modules_tgz_name=modules.tgz
+modules_tgz_url=http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
 
 echo "Base URL: $base_url"
 echo "Dpsch URL: $dpcsh_url"
 echo "FunOS Tgz URL: $funos_tgz_url"
 echo "Qemu Tgz URL: $qemu_tgz_url"
 echo "PC Bios URL: $pcbios_tgz_url"
+echo "Modules URL: $modules_tgz_url"
 
 
-arr=($dpcsh_url $funos_tgz_url $qemu_tgz_url $pcbios_tgz_url)
+arr=($dpcsh_url $funos_tgz_url $qemu_tgz_url $pcbios_tgz_url $modules_tgz_url)
 for url in "${arr[@]}"
     do
         curl_fetch $url
