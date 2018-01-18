@@ -49,7 +49,7 @@ class TopologyHelper:
                     start_mode = dut_info["start_mode"]
 
                 # Create DUT object
-                dut_obj = Dut(type=dut_type, index=dut_index, start_mode=start_mode)
+                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info)
                 interfaces = dut_info["interface_info"]
 
                 # Assign endpoints on interfaces
@@ -159,7 +159,7 @@ class TopologyHelper:
             if not orchestrator_obj:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
-            dut_instance = orchestrator_obj.launch_dut_instance(start_mode=dut_obj.start_mode,
+            dut_instance = orchestrator_obj.launch_dut_instance(spec=dut_obj.spec,
                                                                 external_dpcsh_port=orchestrator_obj.dpcsh_port)
             fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
             dut_obj.set_instance(dut_instance)

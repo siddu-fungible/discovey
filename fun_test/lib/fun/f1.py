@@ -22,13 +22,27 @@ class F1(Linux, ToDictMixin):
     START_MODE_DPCSH_ONLY = "START_MODE_DPCSH_ONLY"   # Start with dpcsh only
     START_MODE_CUSTOM_APP = "START_MODE_CUSTOM_APP" # the user will start it from the script by specifying the app
 
+    def __init__(self, host_ip,
+                          ssh_username,
+                          ssh_password,
+                          ssh_port,
+                          external_dpcsh_port,
+                 spec=None):
+        super(F1, self).__init__(host_ip=host_ip,
+                                 ssh_username=ssh_username,
+                                 ssh_password=ssh_password,
+                                 ssh_port=ssh_port)
+        self.external_dpcsh_port =  external_dpcsh_port
+        self.spec = spec
+
     @staticmethod
     def get(asset_properties):
         prop = asset_properties
         f1 = F1(host_ip=prop["host_ip"],
                 ssh_username=prop["mgmt_ssh_username"],
                 ssh_password=prop["mgmt_ssh_password"],
-                ssh_port=prop["mgmt_ssh_port"])
+                ssh_port=prop["mgmt_ssh_port"],
+                external_dpcsh_port=prop["external_dpcsh_port"])
         return f1
 
     def post_init(self):
@@ -37,11 +51,8 @@ class F1(Linux, ToDictMixin):
         self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
     def start(self, start_mode,
-              external_dpcsh_port=None,
               app="prem_test",
               args=""):
-        if external_dpcsh_port:
-            self.external_dpcsh_port = external_dpcsh_port
         started = False
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
@@ -100,7 +111,7 @@ class F1(Linux, ToDictMixin):
                 #                                                                           self.FUN_OS_SIMULATION_PROCESS_NAME))
 
                 new_process_id = self.start_bg_process(
-                    command="{}/{} app={} {} nvfile=nvfile".format(
+                    command="{}/{} app={} {}".format(
                         self.SIMULATION_FUNOS_BUILD_PATH,
                         self.FUN_OS_SIMULATION_PROCESS_NAME,
                         app, args),
@@ -139,6 +150,19 @@ class DockerF1(F1, ToDictMixin):
     SIMULATION_FUNOS_BUILD_PATH = "/"
     DPCSH_PATH = "/"
     data_plane_ip = None
+
+    def __init__(self, host_ip,
+                          ssh_username,
+                          ssh_password,
+                          ssh_port,
+                          external_dpcsh_port,
+                    spec=None):
+        super(DockerF1, self).__init__(host_ip=host_ip,
+                                       ssh_username=ssh_username,
+                                       ssh_port=ssh_port,
+                                       ssh_password=ssh_password,
+                                       external_dpcsh_port=external_dpcsh_port,
+                                       spec=spec)
 
     def set_data_plane_ip(self, data_plane_ip):
         self.data_plane_ip = data_plane_ip

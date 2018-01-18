@@ -54,11 +54,11 @@ class Dut(ToDictMixin):
 
 
 
-    def __init__(self, type, index, mode=MODE_SIMULATION, start_mode=F1.START_MODE_NORMAL):
+    def __init__(self, type, index, mode=MODE_SIMULATION, spec=None):
         self.type = type
         self.index = index
         self.interfaces = {}
-        self.start_mode = start_mode
+        self.spec = spec
         self.mode = mode
         self.instance = None
 
