@@ -150,15 +150,21 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                  dpcsh_port,
                  qemu_ssh_ports,
                  container_name,
-                 internal_ip):
+                 internal_ip,
+                 host_type=DockerHost.TYPE_BARE_METAL):
+        connect_retry_timeout = 20
+        if host_type == DockerHost.TYPE_DESKTOP:
+            connect_retry_timeout = 60
         super(SimulationOrchestrator, self).__init__(host_ip=host_ip,
                                                      ssh_username=ssh_username,
                                                      ssh_password=ssh_password,
-                                                     ssh_port=ssh_port)
+                                                     ssh_port=ssh_port,
+                                                     connect_retry_timeout_max=connect_retry_timeout)
         self.dpcsh_port = dpcsh_port
         self.qemu_ssh_ports = qemu_ssh_ports
         self.container_name = container_name
         self.internal_ip = internal_ip
+        self.host_type = host_type
 
     def describe(self):
         self.docker_host.describe()
@@ -186,7 +192,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                                           dpcsh_port=asset_properties["pool2_ports"][0]["external"],
                                           qemu_ssh_ports=asset_properties["pool1_ports"],
                                           container_name=asset_properties["name"],
-                                          internal_ip=asset_properties["internal_ip"])
+                                          internal_ip=asset_properties["internal_ip"],
+                                          host_type=asset_properties["host_type"])
         return obj
 
     def post_init(self):

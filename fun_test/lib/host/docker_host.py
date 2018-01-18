@@ -65,6 +65,9 @@ class DockerHost(Linux, ToDictMixin):
     SSH_USERNAME = "root"
     SSH_PASSWORD = "fun123"
 
+    TYPE_DESKTOP = "TYPE_DESKTOP"
+    TYPE_BARE_METAL = "TYPE_BARE_METAL"
+
     STORAGE_IMAGE_NAME = "integration_jenkins_fetch"
 
 
@@ -76,6 +79,7 @@ class DockerHost(Linux, ToDictMixin):
                                          ssh_password=properties["mgmt_ssh_password"],
                                          ssh_port=properties["mgmt_ssh_port"])
         self.remote_api_port = properties["remote_api_port"]
+        self.type = properties["type"] # DESKTOP, BARE_METAL
         self.spec = properties
         self.TO_DICT_VARS.extend(["containers_assets"])
         self.pool0_allocated_ports = []

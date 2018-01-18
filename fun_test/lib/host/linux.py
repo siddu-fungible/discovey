@@ -153,10 +153,10 @@ class Linux(object, ToDictMixin):
     def trace(self, enable, id):
         self.logger.trace(enable=enable, id=id)
 
-    def ip_route_add(self, network, gateway, outbound_interface):
+    def ip_route_add(self, network, gateway, outbound_interface, timeout=30):
         # "ip route add 10.1.0.0/16  via 172.17.0.1 dev eth0"
         command = "ip route add {} via {} dev {}".format(network, gateway, outbound_interface)
-        return self.sudo_command(command)
+        return self.sudo_command(command, timeout=timeout)
 
     def _debug_expect_buffer(self):
         fun_test.debug("Expect Buffer Before:%s" % self.handle.before)

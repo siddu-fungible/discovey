@@ -1,4 +1,5 @@
 from fun_settings import *
+from lib.system.fun_test import FunTestSystemException
 from lib.system.utils import parse_file_to_json
 from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1
@@ -48,7 +49,12 @@ class AssetManager:
 
     @fun_test.safe
     def get_any_docker_host(self):
-        docker_hosts = parse_file_to_json(self.DOCKER_HOSTS_ASSET_SPEC)
+        docker_hosts_spec_file = self.DOCKER_HOSTS_ASSET_SPEC
+        if not fun_test.get_environment_variable("REGRESSION_SERVER"):
+            docker_hosts_spec_file = fun_test.get_environment_variable("DOCKER_HOSTS_SPEC_FILE")
+            if not docker_hosts_spec_file:
+                raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
+        docker_hosts = parse_file_to_json(docker_hosts_spec_file)
         fun_test.simple_assert(docker_hosts, "At least one docker host")
         asset = DockerHost.get(docker_hosts[0])
         return asset
@@ -83,6 +89,7 @@ class AssetManager:
                                                                                                 50003, 50004],
                                                                            dpcsh_internal_ports=[
                                                                                F1.INTERNAL_DPCSH_PORT])
+                container_asset["host_type"] = self.docker_host.type # DESKTOP, BARE_METAL
 
                 fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))
                 orchestrator = DockerContainerOrchestrator.get(container_asset)
