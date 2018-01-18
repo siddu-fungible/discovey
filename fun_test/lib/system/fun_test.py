@@ -174,7 +174,7 @@ class FunTest:
         return os.path.basename(artifact_file)
 
     def get_test_case_artifact_file_name(self, post_fix_name):
-        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         return artifact_file
 
     def enable_pause_on_failure(self):
