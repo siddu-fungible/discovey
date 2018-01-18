@@ -10,6 +10,8 @@
                     "type": "INTERFACE_TYPE_PCIE"
                 }
             },
+            "app": "epnvme_test",
+            "args": "",
             "start_mode": "START_MODE_CUSTOM_APP"
         }
     },

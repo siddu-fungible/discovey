@@ -50,12 +50,35 @@ class F1(Linux, ToDictMixin):
         self.external_dpcsh_port = None
         self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
-    def start(self, start_mode,
-              app="prem_test",
-              args=""):
-        started = False
+    def run_app(self, app="", args="", foreground=False, timeout=20, run_to_completion=False):
+        return self.start(start_mode=self.START_MODE_CUSTOM_APP,
+                          app=app,
+                          foreground=foreground,
+                          timeout=timeout,
+                          get_output=True,
+                          run_to_completion=run_to_completion)
+
+    def start(self, start_mode=None,
+              app="",
+              args="",
+              foreground=False,
+              timeout=20,
+              get_output=False,
+              run_to_completion=False):
+        result = None
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
+        if not start_mode:
+            if "start_mode" in self.spec:
+                start_mode = self.spec["start_mode"]
+            else:
+                start_mode = self.START_MODE_NORMAL
+
+        if not app:
+            app = "prem_test"
+            if "app" in self.spec:
+                app = self.spec["app"]
+
         if simulation_mode:
             if start_mode == self.START_MODE_NORMAL:
 
@@ -110,18 +133,25 @@ class F1(Linux, ToDictMixin):
                 # new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
                 #                                                                           self.FUN_OS_SIMULATION_PROCESS_NAME))
 
-                new_process_id = self.start_bg_process(
-                    command="{}/{} app={} {}".format(
+                if not args:
+                    if "args" in self.spec:
+                        args = self.spec["args"]
+
+                command = "{}/{} app={} {}".format(
                         self.SIMULATION_FUNOS_BUILD_PATH,
                         self.FUN_OS_SIMULATION_PROCESS_NAME,
-                        app, args),
-                    output_file=self.F1_LOG)
-                fun_test.sleep("Ensure FunOS is started", seconds=10)
-                fun_test.test_assert(new_process_id, "Started FunOs")
-                self.fun_os_process_id = new_process_id
-
-            started = True
-        return started
+                        app, args)
+                if not foreground:
+                    new_process_id = self.start_bg_process(command=command,
+                                                           output_file=self.F1_LOG)
+                    fun_test.sleep("Ensure FunOS is started", seconds=10)
+                    fun_test.test_assert(new_process_id, "Started FunOs")
+                    self.fun_os_process_id = new_process_id
+                else:
+                    result = self.command(command=command, timeout=timeout, run_to_completion=run_to_completion)
+            if not get_output:
+                result = True
+        return result
 
     def dpcsh_command(self, line):
         result = {}

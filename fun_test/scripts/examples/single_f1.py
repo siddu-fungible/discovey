@@ -25,7 +25,7 @@ class MyScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         pass
 
 
@@ -48,7 +48,10 @@ class FunTestCase1(FunTestCase):
         dut_instance0 = topology.get_dut_instance(index=0)
         fun_test.test_assert(dut_instance0, "Retrieved dut instance 0")
 
-        dut_instance0.start()
+        dut_instance0.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
+        dut_instance0.run_app(app="mdt_test", args="nvfile=nvfile", foreground=True, timeout=60)
+        dut_instance0.run_app(app="load_mods", foreground=True, timeout=60)
+        dut_instance0.start(foreground=True, run_to_completion=True)
 
         fio = topology.get_tg_instance(tg_index=0)
         destination_ip = dut_instance0.data_plane_ip

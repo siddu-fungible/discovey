@@ -22,6 +22,21 @@ class AssetManager:
     def cleanup(self):
         for orchestrator in self.orchestrators:
             if orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
+                # TODO: We need to map container to the container type
+                # if it is an F1 container we should retrieve F1 logs,
+                # if it is a Tg container we should retrieve tg logs
+
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="f1.log.txt")
+                container_asset = self.docker_host.get_container_asset(name=orchestrator.container_name)
+                if container_asset:
+                    fun_test.scp(source_ip=container_asset["host_ip"],
+                                 source_file_path=F1.F1_LOG,
+                                 source_username=container_asset["mgmt_ssh_username"],
+                                 source_password=container_asset["mgmt_ssh_password"],
+                                 source_port=container_asset["mgmt_ssh_port"],
+                                 target_file_path=artifact_file_name)
+                    fun_test.add_auxillary_file(description="F1 Log", filename=artifact_file_name)
+
                 self.docker_host.stop_container(orchestrator.container_name)
                 fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
                 self.docker_host.remove_container(orchestrator.container_name)

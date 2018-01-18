@@ -253,6 +253,12 @@ class DockerHost(Linux, ToDictMixin):
                 if not ignore_error:
                     fun_test.critical(str(ex))
 
+    def get_container_asset(self, name):
+        result = {}
+        if name in self.containers_assets:
+            result = self.containers_assets[name]
+        return result
+
     @fun_test.safe
     def setup_container(self,
                         image_name,

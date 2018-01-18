@@ -324,7 +324,10 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def command(self, command, sync=False, timeout=60, sync_timeout=0.3, custom_prompts=None, wait_until=None,
-                wait_until_timeout=60, include_last_line=False, include_first_line=False):
+                wait_until_timeout=60, include_last_line=False, include_first_line=False, run_to_completion=None):
+        if run_to_completion:
+            fun_test.critical("run_to_completion is not recommended")
+            timeout = 9999
         if self.use_paramiko:
             return self._paramiko_command(command=command, timeout=timeout)
         buf = ''
