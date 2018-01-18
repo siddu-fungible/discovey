@@ -1,7 +1,8 @@
-FROM ubuntu:17.04
+FROM ubuntu:18.04
 ARG QEMU_DIR=qemu
-ARG X86_64_FS_URL=http://dochub.fungible.local/doc/jenkins/cc-linux-yocto/latest/x86_64/fun-image-x86-64-qemux86-64.ext4
-ARG X86_64_KERNEL_URL=http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/x86_64/bzImage
+ARG DOCKHUB_FUNGIBLE_LOCAL=dockhub.fungible.local
+ARG X86_64_FS_URL=http://${DOCKHUB_FUNGIBLE_LOCAL}/doc/jenkins/cc-linux-yocto/latest/x86_64/fun-image-x86-64-qemux86-64.ext4
+ARG X86_64_KERNEL_URL=http://${DOCKHUB_FUNGIBLE_LOCAL}/doc/jenkins/fungible-host-drivers/latest/x86_64/bzImage
 
 # Begin
 
@@ -11,6 +12,7 @@ ARG X86_64_KERNEL_URL=http://dochub.fungible.local/doc/jenkins/fungible-host-dri
 
 
 # ##### All SSH Related stuff
+RUN rm -vf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y libasan3 iproute2 libpixman-1-dev libglib2.0-dev net-tools openssh-server curl libpng-dev libsdl1.2debian libfdt-dev
 # python sudo
 RUN mkdir /var/run/sshd

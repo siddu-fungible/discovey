@@ -23,6 +23,7 @@ if [ $# -ne 1 ]; then
     usage
     exit 1
 fi
+dochub_fungible_local=10.1.20.99
 base_url=$1
 dpcsh_name=dpcsh
 dpcsh_url=$base_url/$dpcsh_name
@@ -34,7 +35,7 @@ qemu_tgz_url=$base_url/$qemu_tgz_name
 pcbios_tgz_name=pc-bios.tgz
 pcbios_tgz_url=$base_url/$pcbios_tgz_name
 modules_tgz_name=modules.tgz
-modules_tgz_url=http://dochub.fungible.local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
+modules_tgz_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
 
 echo "Base URL: $base_url"
 echo "Dpsch URL: $dpcsh_url"
