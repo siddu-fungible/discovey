@@ -3,7 +3,7 @@
 set -e
 usage()
 {
-    echo "Usage: startup.sh <build url>"
+    echo "Usage: startup.sh <build url> True <funos command line>"
 }
 
 curl_fetch()
@@ -36,6 +36,7 @@ pcbios_tgz_name=pc-bios.tgz
 pcbios_tgz_url=$base_url/$pcbios_tgz_name
 modules_tgz_name=modules.tgz
 modules_tgz_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
+dpcsh_tcp_proxy_default_internal_port=5000
 
 echo "Base URL: $base_url"
 echo "Dpsch URL: $dpcsh_url"
@@ -71,6 +72,23 @@ tar -xf $funos_tgz_name build/$funos_posix_name
 mv build/$funos_posix_name $funos_posix_name
 rm -rf build
 chmod 777 $dpcsh_name
+
+echo "-----------------------"
+echo "Starting Dpch tcp proxy
+echo "-----------------------"
+if [ "$2" == "True" ]; then
+    cd /; ./dpcsh  --tcp_proxy $dpcsh_tcp_proxy_default_internal_port &> /tmp/dpcsh.log &
+    sleep 5
+fi
+
+
+if [ "$3" != "" ]; then
+    echo "-------------------"
+    echo "funos-posix command
+    echo "-------------------"
+    $3
+fi
+
 
 
 echo "-------------------"
