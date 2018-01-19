@@ -60,7 +60,7 @@ class DockerHost(Linux, ToDictMixin):
     BASE_CONTAINER_SSH_PORT = 3219
     BASE_POOL1_PORT = 2219
     BASE_POOL2_PORT = 40219
-    CONTAINER_START_UP_TIME_DEFAULT = 30
+    CONTAINER_START_UP_TIME_DEFAULT = 60
 
     SSH_USERNAME = "root"
     SSH_PASSWORD = "fun123"
@@ -384,7 +384,7 @@ class DockerHost(Linux, ToDictMixin):
 
         return container_asset
 
-    def ensure_container_running(self, container_name, max_wait_time=60):
+    def ensure_container_running(self, container_name, max_wait_time=120):
         result = None
         timer = FunTimer(max_time=max_wait_time)
         while not timer.is_expired():
@@ -393,6 +393,8 @@ class DockerHost(Linux, ToDictMixin):
                 result = True
                 break
             fun_test.sleep(seconds=5, message="Re-checking the container status")
+        if timer.is_expired():
+            fun_test.critical("Timer expired waiting for container to run")
         return result
 
 

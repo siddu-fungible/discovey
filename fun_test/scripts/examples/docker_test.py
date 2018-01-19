@@ -7,6 +7,6 @@ if __name__ == "__main__":
     deployed_assets = topology_helper.quick_docker_deploy(num_f1=1, num_tg=1)
     pprint.pprint(deployed_assets)
     time.sleep(15)
-    topology_helper.quick_docker_deploy(cleanup=True)
+    # topology_helper.quick_docker_deploy(cleanup=True)
 
 
