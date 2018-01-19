@@ -1,21 +1,13 @@
-from lib.host.traffic_generator import TrafficGenerator
 from lib.system.fun_test import *
 from lib.topology.topology_helper import TopologyHelper
-from lib.topology.dut import Dut, DutInterface
-from lib.host.storage_controller import StorageController
-from lib.fun.f1 import F1
-import uuid
-
-# fun_test.enable_debug()
-# fun_test.enable_pause_on_failure()
 
 
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. i.e Start POSIM and Allocate a QEMU instance
-        2. Make the QEMU instance available for the testcase
-                              """)
+        1. Setup one F1 container
+        2. No F1 related process is started
+        """)
 
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict) use locally defined dictionary variable
@@ -32,9 +24,12 @@ class MyScript(FunTestScript):
 class FunTestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Single F1",
+                              summary="Start apps on F1",
                               steps="""
-                              1. 
+    1. Create the nvfile
+    2. Run the app mdt_test
+    3. Run the app load_mods
+    4. Start FunOs in dpc-server mode
                               """)
 
     def setup(self):

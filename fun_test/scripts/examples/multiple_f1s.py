@@ -56,8 +56,9 @@ topology_dict = {
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. i.e Start POSIM and Allocate a QEMU instance
-        2. Make the QEMU instance available for the testcase
+        1. Deploy multiple containers with F1 
+        2. Deploy one container with a traffic generator
+        3. Start the F1s in dpc-server mode
                               """)
 
     def setup(self):
@@ -75,13 +76,10 @@ class MyScript(FunTestScript):
 class FunTestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Setting up a replica",
+                              summary="Use StorageController",
                               steps="""
-        1. Create a local thin volume on dut instances 0 and 1
-        2. Export (Attach) this local thin volume to dut instance 2 
-        3. On Dut instance 2:
-           a. Import the above local thin volume (Create RDS volume) from both dut instance 0 and 1
-           b. Attach a replica volume using the 2 volumes imported at step a. 
+        1. Use StorageController to connect to the dpcsh tcp proxy for each of the 3 F1s
+        2. Configure ip_cfg 
                               """)
 
     def setup(self):
