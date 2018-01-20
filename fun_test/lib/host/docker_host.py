@@ -179,14 +179,22 @@ class DockerHost(Linux, ToDictMixin):
                                build_url,
                                ssh_internal_ports,
                                qemu_internal_ports,
-                               dpcsh_internal_ports):
+                               dpcsh_internal_ports,
+                               funos_command=None,
+                               dpc_server=False
+                               ):
         storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  #TODO
+        command = build_url
+        if funos_command:
+            command += " {}".format(funos_command)
+            if dpc_server:
+                command += " True"
         return self.setup_container(image_name=storage_image_name,
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,
                                     pool1_internal_ports=qemu_internal_ports,
                                     pool2_internal_ports=dpcsh_internal_ports,
-                                    command=build_url)
+                                    command=command)
 
     def describe_storage_container(self, container_asset):
         fun_test.log_section("Container: {}".format(container_asset["name"]))
@@ -378,7 +386,10 @@ class DockerHost(Linux, ToDictMixin):
                 if allocated_container:
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
+                    self.command("docker logs {}".format(container_name))
                     break
+                else:
+                    self.command("docker logs {}".format(container_name))
 
 
 

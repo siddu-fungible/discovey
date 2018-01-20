@@ -206,7 +206,8 @@ class TopologyHelper:
                             f1_base_name="quick_deploy_f1",
                             num_tg=0,
                             tg_base_name="quick_deploy_tg",
-                            cleanup=False):
+                            cleanup=False,
+                            funos_command=None):
 
         docker_host = AssetManager().get_any_docker_host()
         docker_host.connect()
@@ -224,11 +225,13 @@ class TopologyHelper:
                                                                        build_url,
                                                                        ssh_internal_ports,
                                                                        qemu_internal_ports,
-                                                                       dpcsh_internal_ports)
+                                                                       dpcsh_internal_ports,
+                                                                       funos_command=funos_command,
+                                                                       dpc_server=True)
                 docker_host.describe_storage_container(container_asset)
                 container_asset["container_name"] = container_asset["name"]
                 container_asset["qemu_ports"] = container_asset["pool1_ports"]
-                container_asset["dpsch_proxy_port"] = container_asset["pool2_ports"]
+                container_asset["dpcsh_proxy_port"] = container_asset["pool2_ports"][0]
                 del container_asset["name"]
                 del container_asset["pool1_ports"]
                 del container_asset["pool2_ports"]
