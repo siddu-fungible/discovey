@@ -24,7 +24,7 @@ if __name__ == "__main__":
         while count > 0:
             try:
                 storage_controller = StorageController(target_ip=f1_external_ip, target_port=f1_external_dpcsh_proxy_port)
-                storage_controller.command("peek /stats")
+                storage_controller.command("peek /stats", expected_command_duration=3)
                 break
             except:
                 time.sleep(5)
