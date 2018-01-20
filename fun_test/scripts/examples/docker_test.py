@@ -2,8 +2,11 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 import time
 import pprint
+import os
+
 
 if __name__ == "__main__":
+    os.environ["DOCKER_HOSTS_SPEC_FILE"] = "my-docker-hosts.json"
     topology_helper = TopologyHelper()
     deployed_assets = topology_helper.quick_docker_deploy(num_f1=1,
                                                           num_tg=1,
@@ -11,7 +14,6 @@ if __name__ == "__main__":
                                                           funos_command="'/funos-posix app=load_mods --dpc-server'")
     pprint.pprint(deployed_assets)
     time.sleep(15)
-    # topology_helper.quick_docker_deploy(cleanup=True)
 
     f1_asset_0 = deployed_assets['f1_assets'][0]
     f1_external_ip = f1_asset_0["host_ip"]
@@ -29,5 +31,7 @@ if __name__ == "__main__":
 
 
 
+
+    topology_helper.quick_docker_deploy(cleanup=True)
 
 
