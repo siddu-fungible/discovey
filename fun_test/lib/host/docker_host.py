@@ -336,6 +336,8 @@ class DockerHost(Linux, ToDictMixin):
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
                 fun_test.sleep("Really Ensuring container is started", seconds=15)
+                if self.type == self.TYPE_DESKTOP:
+                    fun_test.sleep("Additional sleep for {}".format(self.type), seconds=15)
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
@@ -346,6 +348,7 @@ class DockerHost(Linux, ToDictMixin):
 
 
                 fun_test.log("Launched container: {}".format(container_name))
+                self.sudo_command("docker logs {}".format(container_name))
 
                 port_retries += 1
                 container_asset = {"host_ip": self.host_ip}
@@ -384,12 +387,12 @@ class DockerHost(Linux, ToDictMixin):
                 fun_test.critical(ex)
                 self.destroy_container(container_name=container_name)
                 if allocated_container:
+                    self.sudo_command("docker logs {}".format(container_name))
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
-                    self.command("docker logs {}".format(container_name))
                     break
                 else:
-                    self.command("docker logs {}".format(container_name))
+                    self.sudo_command("docker logs {}".format(container_name))
 
 
 
