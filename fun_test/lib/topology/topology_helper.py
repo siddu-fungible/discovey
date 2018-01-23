@@ -7,11 +7,13 @@ from lib.host.traffic_generator import Fio, LinuxHost
 from lib.system.fun_test import FunTestLibException
 from topology import ExpandedTopology
 from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
-
+from lib.system.utils import parse_file_to_json
 
 class TopologyHelper:
-    def __init__(self, spec=None):
+    def __init__(self, spec=None, spec_file=None):
         self.spec = spec
+        if spec_file:
+            self.spec = parse_file_to_json(file_name=spec_file)
         self.expanded_topology = None
 
     def get_resource_requirements(self):
@@ -29,20 +31,30 @@ class TopologyHelper:
 
         self.expanded_topology = ExpandedTopology()
         # fun_test.simple_assert("dut_info" in spec, "dut_info in spec")  #TODO
+        if "dut_repeat" in spec:
+            repeat_count = spec["dut_repeat"]["count"]
+            spec["dut_info"] = {}
+            spec_dut_info = spec["dut_info"]
+            repeat_dut_info = spec["dut_repeat"]["info"]
+            for index in range(repeat_count):
+                spec_dut_info[index] = repeat_dut_info
+
         if "dut_info" in spec:
             duts = spec["dut_info"]
             for dut_index, dut_info in duts.items():
+                dut_index = int(dut_index)
                 dut_type = dut_info["type"]
                 start_mode = F1.START_MODE_NORMAL
                 if "start_mode" in dut_info:
                     start_mode = dut_info["start_mode"]
 
                 # Create DUT object
-                dut_obj = Dut(type=dut_type, index=dut_index, start_mode=start_mode)
+                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info)
                 interfaces = dut_info["interface_info"]
 
                 # Assign endpoints on interfaces
                 for interface_index, interface_info in interfaces.items():
+                    interface_index = int(interface_index)
                     dut_interface_obj = dut_obj.add_interface(index=interface_index, type=interface_info['type'])
                     if "hosts" in interface_info:
                         dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"])
@@ -60,6 +72,7 @@ class TopologyHelper:
         if "tg_info" in spec:
             tgs = spec["tg_info"]
             for tg_index, tg_info in tgs.items():
+                tg_index = int(tg_index)
                 tg_type = tg_info["type"]
                 if tg_type == Fio.TRAFFIC_GENERATOR_TYPE_FIO:
                     self.expanded_topology.tgs[tg_index] = FioEndPoint()
@@ -131,7 +144,7 @@ class TopologyHelper:
 
         d = topology.to_dict()
         topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
-                                                                         contents=json.dumps(d))
+                                                                         contents=json.dumps(d, indent=4))
         fun_test.set_topology_json_filename(filename=topology_json_artifact)
         return True  # TODO
 
@@ -146,7 +159,7 @@ class TopologyHelper:
             if not orchestrator_obj:
                 orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
-            dut_instance = orchestrator_obj.launch_dut_instance(start_mode=dut_obj.start_mode,
+            dut_instance = orchestrator_obj.launch_dut_instance(spec=dut_obj.spec,
                                                                 external_dpcsh_port=orchestrator_obj.dpcsh_port)
             fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
             dut_obj.set_instance(dut_instance)
@@ -192,32 +205,52 @@ class TopologyHelper:
                             build_url="http://dochub.fungible.local/doc/jenkins/funos/latest/",
                             f1_base_name="quick_deploy_f1",
                             num_tg=0,
-                            tg_base_name="quick_deploy_tg"):
-        f1_assets = []
-        tg_assets = []
+                            tg_base_name="quick_deploy_tg",
+                            cleanup=False,
+                            funos_command=None):
+
         docker_host = AssetManager().get_any_docker_host()
+        docker_host.connect()
+        if not cleanup:
+            self.f1_assets = []
+            self.tg_assets = []
 
-        for index in range(num_f1):
-            container_name = "{}_{}".format(f1_base_name, index)
-            ssh_internal_ports = [22]
-            qemu_internal_ports = [50001, 50002, 50004]
-            dpcsh_internal_ports = [5000]
+            for index in range(num_f1):
+                container_name = "{}_{}".format(f1_base_name, index)
+                ssh_internal_ports = [22]
+                qemu_internal_ports = [50001, 50002, 50004]
+                dpcsh_internal_ports = [5000]
 
-            container_asset = docker_host.setup_storage_container(container_name,
-                                                                   build_url,
-                                                                   ssh_internal_ports,
-                                                                   qemu_internal_ports,
-                                                                   dpcsh_internal_ports)
-            docker_host.describe_storage_container(container_asset)
-            f1_assets.append(container_asset)
+                container_asset = docker_host.setup_storage_container(container_name,
+                                                                       build_url,
+                                                                       ssh_internal_ports,
+                                                                       qemu_internal_ports,
+                                                                       dpcsh_internal_ports,
+                                                                       funos_command=funos_command,
+                                                                       dpc_server=True)
+                docker_host.describe_storage_container(container_asset)
+                container_asset["container_name"] = container_asset["name"]
+                container_asset["qemu_ports"] = container_asset["pool1_ports"]
+                container_asset["dpcsh_proxy_port"] = container_asset["pool2_ports"][0]
+                del container_asset["name"]
+                del container_asset["pool1_ports"]
+                del container_asset["pool2_ports"]
+                self.f1_assets.append(container_asset)
 
-        for index in range(num_tg):
-            container_name = "{}_{}".format(tg_base_name, index)
-            ssh_internal_ports = [22]
-            container_asset = docker_host.setup_fio_container(container_name,
-                                                                   ssh_internal_ports)
-            tg_assets.append(container_asset)
-        return {"f1_assets": f1_assets, "tg_assets": tg_assets}
+            for index in range(num_tg):
+                container_name = "{}_{}".format(tg_base_name, index)
+                ssh_internal_ports = [22]
+                container_asset = docker_host.setup_fio_container(container_name, ssh_internal_ports)
+                container_asset["container_name"] = container_asset["name"]
+                del container_asset["name"]
+                del container_asset["pool1_ports"]
+                del container_asset["pool2_ports"]
+                self.tg_assets.append(container_asset)
+        else:
+            for asset in self.f1_assets + self.tg_assets:
+                docker_host.destroy_container(asset["container_name"])
+
+        return {"f1_assets": self.f1_assets, "tg_assets": self.tg_assets}
 
 
 if __name__ == "__main__":

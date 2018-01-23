@@ -153,10 +153,10 @@ class Linux(object, ToDictMixin):
     def trace(self, enable, id):
         self.logger.trace(enable=enable, id=id)
 
-    def ip_route_add(self, network, gateway, outbound_interface):
+    def ip_route_add(self, network, gateway, outbound_interface, timeout=30):
         # "ip route add 10.1.0.0/16  via 172.17.0.1 dev eth0"
         command = "ip route add {} via {} dev {}".format(network, gateway, outbound_interface)
-        return self.sudo_command(command)
+        return self.sudo_command(command, timeout=timeout)
 
     def _debug_expect_buffer(self):
         fun_test.debug("Expect Buffer Before:%s" % self.handle.before)
@@ -324,7 +324,10 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def command(self, command, sync=False, timeout=60, sync_timeout=0.3, custom_prompts=None, wait_until=None,
-                wait_until_timeout=60, include_last_line=False, include_first_line=False):
+                wait_until_timeout=60, include_last_line=False, include_first_line=False, run_to_completion=None):
+        if run_to_completion:
+            fun_test.critical("run_to_completion is not recommended")
+            timeout = 9999
         if self.use_paramiko:
             return self._paramiko_command(command=command, timeout=timeout)
         buf = ''
@@ -1268,44 +1271,44 @@ class Linux(object, ToDictMixin):
     '''
 
     @fun_test.safe
-    def fio(self, dest_ip, timeout=60, **kargs):
+    def fio(self, destination_ip, timeout=60, **kwargs):
 
         fio_command = "fio"
         fio_result = ""
         fio_dict = {}
 
-        fun_test.debug(kargs)
+        fun_test.debug(kwargs)
 
         # Building the fio command
-        if 'name' not in kargs:
+        if 'name' not in kwargs:
             fio_command += " --name=fun_nvmeof"
 
-        if 'ioengine' not in kargs:
+        if 'ioengine' not in kwargs:
             fio_command += " --ioengine=fun"
 
-        fio_command += " --dest_ip={}".format(dest_ip)
+        fio_command += " --dest_ip={}".format(destination_ip)
 
-        if 'source_ip' not in kargs:
+        if 'source_ip' not in kwargs:
             fio_command += " --source_ip={}".format(self.internal_ip)
 
-        if 'numjobs' not in kargs:
+        if 'numjobs' not in kwargs:
             fio_command += " --numjobs=1"
 
-        if 'io_queues' not in kargs:
+        if 'io_queues' not in kwargs:
             fio_command += " --io_queues=2"
 
-        if 'nrfiles' not in kargs:
+        if 'nrfiles' not in kwargs:
             fio_command += " --nrfiles=1"
 
-        if 'nqn' not in kargs:
+        if 'nqn' not in kwargs:
             fio_command += " --nqn=nqn.2017-05.com.fungible:nss-uuid1"
 
-        if 'nvme_mode' not in kargs:
+        if 'nvme_mode' not in kwargs:
             fio_command += " --nvme_mode=IO_ONLY"
 
-        if kargs:
-            for key in kargs:
-                fio_command += " --" + key + "=" + str(kargs[key])
+        if kwargs:
+            for key in kwargs:
+                fio_command += " --" + key + "=" + str(kwargs[key])
 
         fun_test.debug(fio_command)
 
@@ -1348,12 +1351,10 @@ class Linux(object, ToDictMixin):
                 value = int(re.sub(r'(\d+)(.*)', r'\1', value))
                 fio_dict[mode][field] = value
 
-        match = ""
         match = re.search(r'read: IOPS=(\d+)', fio_result)
         if match:
             fio_dict["read"]["iops"] = int(match.group(1))
 
-        match = ""
         match = re.search(r'write: IOPS=(\d+)', fio_result)
         if match:
             fio_dict["write"]["iops"] = int(match.group(1))

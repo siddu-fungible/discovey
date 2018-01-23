@@ -1,4 +1,5 @@
 from fun_settings import *
+from lib.system.fun_test import FunTestSystemException
 from lib.system.utils import parse_file_to_json
 from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1
@@ -21,6 +22,21 @@ class AssetManager:
     def cleanup(self):
         for orchestrator in self.orchestrators:
             if orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
+                # TODO: We need to map container to the container type
+                # if it is an F1 container we should retrieve F1 logs,
+                # if it is a Tg container we should retrieve tg logs
+
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="f1.log.txt")
+                container_asset = self.docker_host.get_container_asset(name=orchestrator.container_name)
+                if container_asset:
+                    fun_test.scp(source_ip=container_asset["host_ip"],
+                                 source_file_path=F1.F1_LOG,
+                                 source_username=container_asset["mgmt_ssh_username"],
+                                 source_password=container_asset["mgmt_ssh_password"],
+                                 source_port=container_asset["mgmt_ssh_port"],
+                                 target_file_path=artifact_file_name)
+                    fun_test.add_auxillary_file(description="F1 Log", filename=artifact_file_name)
+
                 self.docker_host.stop_container(orchestrator.container_name)
                 fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
                 self.docker_host.remove_container(orchestrator.container_name)
@@ -48,7 +64,12 @@ class AssetManager:
 
     @fun_test.safe
     def get_any_docker_host(self):
-        docker_hosts = parse_file_to_json(self.DOCKER_HOSTS_ASSET_SPEC)
+        docker_hosts_spec_file = self.DOCKER_HOSTS_ASSET_SPEC
+        if not fun_test.get_environment_variable("REGRESSION_SERVER"):
+            docker_hosts_spec_file = fun_test.get_environment_variable("DOCKER_HOSTS_SPEC_FILE")
+            if not docker_hosts_spec_file:
+                raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
+        docker_hosts = parse_file_to_json(docker_hosts_spec_file)
         fun_test.simple_assert(docker_hosts, "At least one docker host")
         asset = DockerHost.get(docker_hosts[0])
         return asset
@@ -71,7 +92,8 @@ class AssetManager:
                 if not self.docker_host:
                     self.docker_host = self.get_any_docker_host()
                 fun_test.simple_assert(self.docker_host, "Docker host available")
-                fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
+                if not fun_test.get_environment_variable("DOCKER_URL"):
+                    fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
                 fun_test.log("Setting up the integration container for index: {} url: {}".format(index, build_url))
                 container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), index)
 
@@ -82,6 +104,7 @@ class AssetManager:
                                                                                                 50003, 50004],
                                                                            dpcsh_internal_ports=[
                                                                                F1.INTERNAL_DPCSH_PORT])
+                container_asset["host_type"] = self.docker_host.type # DESKTOP, BARE_METAL
 
                 fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))
                 orchestrator = DockerContainerOrchestrator.get(container_asset)

@@ -150,30 +150,37 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                  dpcsh_port,
                  qemu_ssh_ports,
                  container_name,
-                 internal_ip):
+                 internal_ip,
+                 host_type=DockerHost.TYPE_BARE_METAL):
+        connect_retry_timeout = 20
+        if host_type == DockerHost.TYPE_DESKTOP:
+            connect_retry_timeout = 60
         super(SimulationOrchestrator, self).__init__(host_ip=host_ip,
                                                      ssh_username=ssh_username,
                                                      ssh_password=ssh_password,
-                                                     ssh_port=ssh_port)
+                                                     ssh_port=ssh_port,
+                                                     connect_retry_timeout_max=connect_retry_timeout)
         self.dpcsh_port = dpcsh_port
         self.qemu_ssh_ports = qemu_ssh_ports
         self.container_name = container_name
         self.internal_ip = internal_ip
+        self.host_type = host_type
 
     def describe(self):
         self.docker_host.describe()
 
     @fun_test.safe
-    def launch_dut_instance(self, start_mode, external_dpcsh_port):
+    def launch_dut_instance(self, spec, external_dpcsh_port):
         f1_obj = DockerF1(host_ip=self.host_ip,
                           ssh_username=self.ssh_username,
                           ssh_password=self.ssh_password,
-                          ssh_port=self.ssh_port)
+                          ssh_port=self.ssh_port,
+                          external_dpcsh_port=external_dpcsh_port,
+                          spec=spec)
         f1_obj.set_data_plane_ip(data_plane_ip=self.internal_ip)
 
         # Start FunOS
-        fun_test.test_assert(f1_obj.start(start_mode=start_mode,
-                                          external_dpcsh_port=external_dpcsh_port),
+        fun_test.test_assert(f1_obj.start(start_mode=spec["start_mode"]),
                              "DockerContainerOrchestrator: Start FunOS")
         return f1_obj
 
@@ -186,7 +193,8 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
                                           dpcsh_port=asset_properties["pool2_ports"][0]["external"],
                                           qemu_ssh_ports=asset_properties["pool1_ports"],
                                           container_name=asset_properties["name"],
-                                          internal_ip=asset_properties["internal_ip"])
+                                          internal_ip=asset_properties["internal_ip"],
+                                          host_type=asset_properties["host_type"])
         return obj
 
     def post_init(self):
@@ -202,14 +210,12 @@ class DockerHostOrchestrator(Orchestrator, DockerHost):
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST
 
     def launch_fio_instance(self, index):
-        id = index + fun_test.get_suite_execution_id()
-        container_name = "{}_{}".format("integration_fio", id)
+        container_name = "{}_{}_{}".format("integration_fio", fun_test.get_suite_execution_id(), index)
         container_asset = self.setup_fio_container(container_name=container_name, ssh_internal_ports=[22])
         return Fio.get(asset_properties=container_asset)
 
     def launch_linux_instance(self, index):
-        id = index + fun_test.get_suite_execution_id()
-        container_name = "{}_{}".format("integration_lnx", id)
+        container_name = "{}_{}_{}".format("integration_linux", fun_test.get_suite_execution_id(), index)
         container_asset = self.setup_linux_container(container_name=container_name, ssh_internal_ports=[22])
         linux = Linux.get(asset_properties=container_asset)
         linux.internal_ip = container_asset["internal_ip"]

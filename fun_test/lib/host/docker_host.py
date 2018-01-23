@@ -65,6 +65,9 @@ class DockerHost(Linux, ToDictMixin):
     SSH_USERNAME = "root"
     SSH_PASSWORD = "fun123"
 
+    TYPE_DESKTOP = "TYPE_DESKTOP"
+    TYPE_BARE_METAL = "TYPE_BARE_METAL"
+
     STORAGE_IMAGE_NAME = "integration_jenkins_fetch"
 
 
@@ -76,6 +79,7 @@ class DockerHost(Linux, ToDictMixin):
                                          ssh_password=properties["mgmt_ssh_password"],
                                          ssh_port=properties["mgmt_ssh_port"])
         self.remote_api_port = properties["remote_api_port"]
+        self.type = properties["type"] # DESKTOP, BARE_METAL
         self.spec = properties
         self.TO_DICT_VARS.extend(["containers_assets"])
         self.pool0_allocated_ports = []
@@ -141,7 +145,11 @@ class DockerHost(Linux, ToDictMixin):
 
     def connect(self):
         if not self.client:
-            self.client = DockerClient(base_url='tcp://{}:{}'.format(self.host_ip, self.remote_api_port))
+            docker_url = fun_test.get_environment_variable("DOCKER_URL")
+            url = 'tcp://{}:{}'.format(self.host_ip, self.remote_api_port)
+            if docker_url:
+                url = docker_url
+            self.client = DockerClient(base_url=url)
         return None  #TODO: validate this
 
     @fun_test.safe
@@ -171,14 +179,22 @@ class DockerHost(Linux, ToDictMixin):
                                build_url,
                                ssh_internal_ports,
                                qemu_internal_ports,
-                               dpcsh_internal_ports):
+                               dpcsh_internal_ports,
+                               funos_command=None,
+                               dpc_server=False
+                               ):
         storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  #TODO
+        command = build_url
+        if funos_command:
+            command += " {}".format(funos_command)
+            if dpc_server:
+                command += " True"
         return self.setup_container(image_name=storage_image_name,
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,
                                     pool1_internal_ports=qemu_internal_ports,
                                     pool2_internal_ports=dpcsh_internal_ports,
-                                    command=build_url)
+                                    command=command)
 
     def describe_storage_container(self, container_asset):
         fun_test.log_section("Container: {}".format(container_asset["name"]))
@@ -227,7 +243,7 @@ class DockerHost(Linux, ToDictMixin):
         container.remove()
 
     @fun_test.safe
-    def destroy_container(self, container_name):
+    def destroy_container(self, container_name, ignore_error=False):
         container = self.get_container_by_name(name=container_name)
         if container:
 
@@ -235,13 +251,21 @@ class DockerHost(Linux, ToDictMixin):
                 container.stop()
                 fun_test.debug("Stopped Container: {}".format(container.name))
             except Exception as ex:
-                fun_test.critical(str(ex))
+                if not ignore_error:
+                    fun_test.critical(str(ex))
 
             try:
                 container.remove()
                 fun_test.debug("Removed Container: {}".format(container.name))
             except Exception as ex:
-                fun_test.critical(str(ex))
+                if not ignore_error:
+                    fun_test.critical(str(ex))
+
+    def get_container_asset(self, name):
+        result = {}
+        if name in self.containers_assets:
+            result = self.containers_assets[name]
+        return result
 
     @fun_test.safe
     def setup_container(self,
@@ -312,6 +336,8 @@ class DockerHost(Linux, ToDictMixin):
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
                 fun_test.sleep("Really Ensuring container is started", seconds=15)
+                if self.type == self.TYPE_DESKTOP:
+                    fun_test.sleep("Additional sleep for {}".format(self.type), seconds=15)
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
@@ -322,6 +348,7 @@ class DockerHost(Linux, ToDictMixin):
 
 
                 fun_test.log("Launched container: {}".format(container_name))
+                self.sudo_command("docker logs {}".format(container_name))
 
                 port_retries += 1
                 container_asset = {"host_ip": self.host_ip}
@@ -360,15 +387,18 @@ class DockerHost(Linux, ToDictMixin):
                 fun_test.critical(ex)
                 self.destroy_container(container_name=container_name)
                 if allocated_container:
+                    self.sudo_command("docker logs {}".format(container_name))
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
                     break
+                else:
+                    self.sudo_command("docker logs {}".format(container_name))
 
 
 
         return container_asset
 
-    def ensure_container_running(self, container_name, max_wait_time=60):
+    def ensure_container_running(self, container_name, max_wait_time=120):
         result = None
         timer = FunTimer(max_time=max_wait_time)
         while not timer.is_expired():
@@ -377,6 +407,8 @@ class DockerHost(Linux, ToDictMixin):
                 result = True
                 break
             fun_test.sleep(seconds=5, message="Re-checking the container status")
+        if timer.is_expired():
+            fun_test.critical("Timer expired waiting for container to run")
         return result
 
 
