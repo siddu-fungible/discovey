@@ -53,6 +53,8 @@ class MyScript(FunTestScript):
         linux_host = topology.get_tg_instance(tg_index=0)
         destination_ip = dut_instance.data_plane_ip
 
+        command_timeout = 5
+
         # Initializing volume related configs
         volume_details = {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
                           "name": "thin-block1"}
@@ -67,7 +69,8 @@ class MyScript(FunTestScript):
         fun_test.test_assert(command_result["status"], "Enabling counters on Dut Instance {}".format(0))
 
         command_result = {}
-        command_result = storage_controller.ip_cfg(ip=dut_instance.data_plane_ip)
+        command_result = storage_controller.ip_cfg(ip=dut_instance.data_plane_ip,
+                                                   expected_command_duration=command_timeout)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "ip_cfg {} on Dut Instance {}".
                              format(dut_instance.data_plane_ip, 0))
@@ -76,13 +79,15 @@ class MyScript(FunTestScript):
         thin_uuid = str(uuid.uuid4()).replace("-", "")[:10]
         command_result = storage_controller.create_thin_block_volume(capacity=volume_details["capacity"],
                                                                      block_size=volume_details["block_size"],
-                                                                     name=volume_details["name"], uuid=thin_uuid)
+                                                                     name=volume_details["name"], uuid=thin_uuid,
+                                                                     expected_command_duration=command_timeout)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "create_thin_block_volume on Dut Instance {}".format(0))
 
         command_result = {}
         command_result = storage_controller.attach_volume(ns_id=volume_details["ns_id"], uuid=thin_uuid,
-                                                          remote_ip=linux_host.internal_ip)
+                                                          remote_ip=linux_host.internal_ip,
+                                                          expected_command_duration=command_timeout)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Attaching thin local block volume on Dut Instance {}".format(0))
 
@@ -467,7 +472,7 @@ class FioRandWriteRandReadOnly(FunTestCase):
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = linux_host.fio(dest_ip=destination_ip, rw=mode, bs=fio_block_size,
+                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
                                                          size=fio_size, iodepth=fio_iodepth, timeout=fio_timeout)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
@@ -673,7 +678,7 @@ class FioSeqReadWriteMix(FunTestCase):
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = linux_host.fio(dest_ip=destination_ip, rw=mode, bs=fio_block_size,
+                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
                                                          size=fio_size, iodepth=fio_iodepth, rwmixread=fio_rwmixread,
                                                          timeout=fio_timeout)
                 fun_test.log("FIO Command Output:")
@@ -886,7 +891,7 @@ class FioRandReadWriteMix(FunTestCase):
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = linux_host.fio(dest_ip=destination_ip, rw=mode, bs=fio_block_size,
+                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
                                                          size=fio_size, iodepth=fio_iodepth, rwmixread=fio_rwmixread,
                                                          timeout=fio_timeout)
                 fun_test.log("FIO Command Output:")
@@ -1113,7 +1118,7 @@ class FioLargeWriteReadOnly(FunTestCase):
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[size][mode] = {}
-                fio_output[size][mode] = linux_host.fio(dest_ip=destination_ip, rw=mode, bs=fio_block_size,
+                fio_output[size][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
                                                         size=size, iodepth=fio_iodepth, timeout=fio_timeout)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[size][mode])
