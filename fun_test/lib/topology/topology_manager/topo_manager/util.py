@@ -2,6 +2,7 @@ import os
 import time
 import math
 import subprocess
+from shutil import copyfile
 from netaddr import IPNetwork
 from config import *
 
@@ -82,15 +83,27 @@ def create_route_map(name, community):
     return route_map
 
 
-def create_ssh_config(config_str):
+def create_ssh_config(config_str, init=0):
 
     homefolder = os.path.expanduser('~')
     ssh_config_file = os.path.abspath('%s/.ssh/config' % homefolder)
+    ssh_backup_file = os.path.abspath('%s/.ssh/backup_config' % homefolder)
 
-    fp = open(ssh_config_file, 'w')
+    if init:
+        copyfile(ssh_config_file, ssh_backup_file)
+
+    fp = open(ssh_config_file, 'a')
 
     fp.write(config_str)
     fp.close()
+
+def restore_ssh_config():
+
+    homefolder = os.path.expanduser('~')
+    ssh_config_file = os.path.abspath('%s/.ssh/config' % homefolder)
+    ssh_backup_file = os.path.abspath('%s/.ssh/backup_config' % homefolder)
+    copyfile(ssh_backup_file, ssh_config_file)
+
 
 def convert_ip_to_48bits(ip_addr):
     ip = ''.join([ip.zfill(3) for ip in ip_addr.split('.')])

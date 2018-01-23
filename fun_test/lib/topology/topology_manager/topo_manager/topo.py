@@ -360,7 +360,7 @@ class Topology(object):
             for t in threads:
                 t.join()
         
-        self.populate_ssh_config()
+        self.populate_ssh_config(init=1)
         self.deactivate_partial_topo(offRacks, offLeafs, offSpines)
         self.build_prefix_count()
         self.state = 'running'
@@ -875,8 +875,13 @@ class Topology(object):
                 # pretty(self.neighbor_prefix_counts)
 
 
-    def populate_ssh_config(self):
+    def populate_ssh_config(self, init=0, cleanup=0):
         ssh_config = ''
+
+        if cleanup:
+            restore_ssh_config()
+            return
+
         for vm_obj in self.leaf_vm_objs:
             if flat_topo:
                 for node in vm_obj.leafs:
@@ -906,7 +911,7 @@ class Topology(object):
                            (node.name, node.vm_ip, node.host_ssh_port)
                 ssh_config += node_ssh
 
-        create_ssh_config(ssh_config)
+        create_ssh_config(ssh_config, init)
 
 
     def cleanup(self):
@@ -925,6 +930,7 @@ class Topology(object):
             time.sleep(2)
             out = run_commands(commands=[docker_swarm_leave_force_cmd])
 
+        self.populate_ssh_config(cleanup=1)
         self.state = ''
 
     def printRacks(self, rack_ids):
