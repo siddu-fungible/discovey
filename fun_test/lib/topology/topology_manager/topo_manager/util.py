@@ -90,7 +90,11 @@ def create_ssh_config(config_str, init=0):
     ssh_backup_file = os.path.abspath('%s/.ssh/backup_config' % homefolder)
 
     if init:
-        copyfile(ssh_config_file, ssh_backup_file)
+        if os.path.exists(ssh_config_file):
+            copyfile(ssh_config_file, ssh_backup_file)
+        else:
+            open(ssh_config_file, 'w').close()
+            open(ssh_backup_file, 'w').close()
 
     fp = open(ssh_config_file, 'a')
 
@@ -103,7 +107,7 @@ def restore_ssh_config():
     ssh_config_file = os.path.abspath('%s/.ssh/config' % homefolder)
     ssh_backup_file = os.path.abspath('%s/.ssh/backup_config' % homefolder)
     copyfile(ssh_backup_file, ssh_config_file)
-
+    os.remove(ssh_backup_file)
 
 def convert_ip_to_48bits(ip_addr):
     ip = ''.join([ip.zfill(3) for ip in ip_addr.split('.')])
