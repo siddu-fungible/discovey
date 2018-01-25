@@ -165,6 +165,7 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
         payload["num_passed"] = num_passed
         payload["num_failed"] = num_failed
         payload["owner_email"] = suite_execution.owner_email
+        payload["instance_name"] = suite_execution.instance_name
 
         result["data"] = payload
         result["status"] = True
