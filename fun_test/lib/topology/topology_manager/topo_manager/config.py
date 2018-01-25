@@ -17,7 +17,7 @@ tg_container = 'tgen:v3'
 spine_container = 'frr:v4'
 
 #IPs of compute engines on which docker containers will be launched
-vm_ips = ['192.168.56.101']
+vm_ips = ['127.0.0.1']
 
 #Uname/passwd of compute engines
 vm_user = 'ptf'
