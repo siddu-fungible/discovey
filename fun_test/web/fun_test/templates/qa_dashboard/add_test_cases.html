@@ -1,0 +1,43 @@
+<div class="modal-header">
+    <h3 class="modal-title">Edit TCM-{{ jiraId }}</h3>
+</div>
+<div class="modal-body">
+    <table class="table table-nonfluid table-bordered">
+        <tr>
+            <td class="col-md-1">
+                <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
+                <button ng-click="validateClick()" class="button btn-sm btn-info">Validate</button>
+            </td>
+            <td class="col-md-10" style="vertical-align:middle;">
+                <label class="col-md-1" for="jql">JQL</label>
+                <fun-field klass="col-md-11" id="jql" type="text" min-length="2" max-length="100" bind-value="jql"></fun-field>
+            </td>
+        </tr>
+    </table>
+
+    <label ng-if="jqlValid" class="label label-success">JQL Valid</label>
+    <label ng-if="!jqlValid && validating" class="label label-danger">JQL InValid</label>
+    <table class="table">
+        <tr>
+            <th></th>
+            <th>Id</th>
+            <th>Summary</th>
+            <th>Module</th>
+            <th>Components</th>
+        </tr>
+        <tr ng-repeat="testCase in testCases track by $index">
+            <td></td>
+            <td>{{ testCase.jira_id }}</td>
+            <td>{{ testCase.summary }}</td>
+            <td></td>
+            <td>
+                <label class="label label-primary" ng-repeat="component in testCase.components"> {{ component }}
+                </label>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-success" ng-click="submit()">Submit</button>
+    <button class="btn" ng-click="$dismiss()">Cancel</button>
+</div>

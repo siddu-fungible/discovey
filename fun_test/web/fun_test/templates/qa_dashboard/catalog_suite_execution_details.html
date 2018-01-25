@@ -49,63 +49,66 @@
                     <div class="panel panel-primary">
                         <div class="panel-heading">{{ $ctrl.instanceName }}</div>
                         <div class="panel-body" ng-switch="currentView">
-                            <table ng-switch-when="all" class="table table-nonfluid">
-                                <tr>
-                                    <th></th>
-                                    <th>Jira Id</th>
-                                    <th>Summary</th>
-                                    <th>Module</th>
-                                    <th class="absorbing-column">Components</th>
-                                    <th>Result</th>
-                                    <th>Info</th>
-                                    <th>Bugs</th>
-                                    <th>Comments</th>
-                                </tr>
-                                <tbody id="suite-execution-details-table">
-                                <tr ng-repeat="(jiraId, info) in executionDetails.jira_ids">
-                                    <td>{{ $index + 1 }}</td>
-                                    <td><a target="_blank"
-                                           href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
-                                    </td>
-                                    <td class="absorbing-column">{{ info.summary }}</td>
-                                    <td>{{ info.module }}</td>
-                                    <td>
-                                        <label class="label label-primary"
-                                               ng-repeat="component in info.components"> {{ component }}</label>
-                                    </td>
-                                    <td><label ng-if="info.summaryResult" class="label label-
-                                        {{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
-                                    <td>
-                                        <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable"
-                                           >Details</a>
-                                        <table class="table collapse" id="info-table-{{ $index }}">
-                                            <tr>
-                                                <th>Owner</th>
-                                                <th>TestBed</th>
-                                                <th>Result</th>
-                                                <th>Result Override</th>
-                                            </tr>
-                                            <tbody>
-                                            <tr ng-repeat="instance in info.instances">
-                                                <td>{{ instance.owner }}</td>
-                                                <td>{{ instance.test_bed }}</td>
-                                                <td>{{ instance.result }}</td>
-                                                <td>
-                                                    <select ng-options="option for option in overrideOptions"
-                                                            ng-model="selectedOverride">
-                                                    </select>
-                                                    <button class="btn btn-primary btn-sm"
-                                                            ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">
-                                                        Submit
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
+                            <div ng-switch-when="all">
+                                <button class="fa fa-plus" ng-click="addTestCasesClick()"></button>
+                                <table class="table table-nonfluid">
+                                    <tr>
+                                        <th></th>
+                                        <th>Jira Id</th>
+                                        <th>Summary</th>
+                                        <th>Module</th>
+                                        <th class="absorbing-column">Components</th>
+                                        <th>Result</th>
+                                        <th>Info</th>
+                                        <th>Bugs</th>
+                                        <th>Comments</th>
+                                    </tr>
+                                    <tbody id="suite-execution-details-table">
+                                    <tr ng-repeat="(jiraId, info) in executionDetails.jira_ids">
+                                        <td>{{ $index + 1 }}</td>
+                                        <td><a target="_blank"
+                                               href="http://jira.fungible.local/browse/TCM-{{ jiraId }}">TCM-{{ jiraId }}</a>
+                                        </td>
+                                        <td class="absorbing-column">{{ info.summary }}</td>
+                                        <td>{{ info.module }}</td>
+                                        <td>
+                                            <label class="label label-primary"
+                                                   ng-repeat="component in info.components"> {{ component }}</label>
+                                        </td>
+                                        <td><label ng-if="info.summaryResult" class="label label-
+                                            {{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
+                                        <td>
+                                            <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable"
+                                               >Details</a>
+                                            <table class="table collapse" id="info-table-{{ $index }}">
+                                                <tr>
+                                                    <th>Owner</th>
+                                                    <th>TestBed</th>
+                                                    <th>Result</th>
+                                                    <th>Result Override</th>
+                                                </tr>
+                                                <tbody>
+                                                <tr ng-repeat="instance in info.instances">
+                                                    <td>{{ instance.owner }}</td>
+                                                    <td>{{ instance.test_bed }}</td>
+                                                    <td>{{ instance.result }}</td>
+                                                    <td>
+                                                        <select ng-options="option for option in overrideOptions"
+                                                                ng-model="selectedOverride">
+                                                        </select>
+                                                        <button class="btn btn-primary btn-sm"
+                                                                ng-click="overrideSubmitClick($parent.jiraId, $index, instance.execution_id, selectedOverride)">
+                                                            Submit
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                             <div ng-switch-when="components">
                                 <label class="label label-primary">Overall</label>
                                 <table class="table table-nonfluid table-responsive">
