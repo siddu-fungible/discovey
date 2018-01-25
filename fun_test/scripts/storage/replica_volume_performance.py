@@ -1382,9 +1382,9 @@ class FioLargeWriteReadOnly(FunTestCase):
 if __name__ == "__main__":
 
     myscript = MyScript()
-    # myscript.add_test_case(FioSeqWriteSeqReadOnly)
-    # myscript.add_test_case(FioRandWriteRandReadOnly)
-    # myscript.add_test_case(FioSeqReadWriteMix)
-    # myscript.add_test_case(FioRandReadWriteMix)
-    myscript.add_test_case(FioLargeWriteReadOnly())
+    myscript.add_test_case(FioSeqWriteSeqReadOnly())
+    # myscript.add_test_case(FioRandWriteRandReadOnly())
+    # myscript.add_test_case(FioSeqReadWriteMix())
+    # myscript.add_test_case(FioRandReadWriteMix())
+    # myscript.add_test_case(FioLargeWriteReadOnly())
     myscript.run()
