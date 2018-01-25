@@ -56,7 +56,9 @@
                     $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
                         $scope.fetchBasicIssueAttributes(true).then(function () {
                             $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
-                            $scope.currentView = "components";
+                            //$scope.currentView = "components";
+                            $scope.currentView = "all";
+
                             $scope.testCaseViewInstances = null;
                             $scope.currentTestCaseViewComponent = null;
                             $scope.resetInstanceMetrics();
@@ -524,6 +526,17 @@
             })
         };
 
+        $scope.addTestCasesClick = function () {
+            $modal.open({
+                templateUrl: "/static/qa_dashboard/add_test_cases.html",
+                controller: ['$modalInstance', '$scope', 'commonService', AddTestCasesController]
+                }).result.then(function () {
+
+            }, function () {
+
+            })
+        };
+
 
         $scope.editTestCaseClick = function (jiraId, instance) {
             if(instance.result !== "FAILED") {
@@ -698,12 +711,33 @@
             }
         };
 
+    }
 
-        /*
-        function deletePerson() {
-            people.splice(people.indexOf(person), 1);
-            $modalInstance.close();
-        }*/
+    function AddTestCasesController($modalInstance, $scope, commonService) {
+        let ctrl = this;
+        $scope.status = "idle";
+        $scope.jqlValid = false;
+        $scope.validating = false;
+
+        $scope.validateClick = function () {
+            $scope.validating = true;
+            $scope.testCases = null;
+            let payload = {};
+            payload["jqls"] = [$scope.jql];
+
+            let message = "AddTestCasesController";
+            $scope.status = "Fetching JIRA entries";
+            $scope.jqlValid = false;
+            commonService.apiPost("/tcm/preview_catalog", payload, message).then(function (data) {
+                $scope.status = "idle";
+                if(data) {
+                    $scope.jqlValid = true;
+                    $scope.testCases = data.test_cases;
+                }
+                let i = 0;
+            });
+        };
+
     }
 
 })(window.angular);
