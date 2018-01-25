@@ -1237,7 +1237,7 @@ class FioLargeWriteReadOnly(FunTestCase):
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
 
         fio_timeout = 600
-        fio_modes = ['read', 'randread', 'write', 'randwrite']
+        fio_modes = ['write', 'read', 'randwrite', 'randread']
         # End of benchmarking json file parsing
 
         fio_result = {}
@@ -1382,9 +1382,9 @@ class FioLargeWriteReadOnly(FunTestCase):
 if __name__ == "__main__":
 
     myscript = MyScript()
-    myscript.add_test_case(FioSeqWriteSeqReadOnly)
-    myscript.add_test_case(FioRandWriteRandReadOnly)
-    myscript.add_test_case(FioSeqReadWriteMix)
-    myscript.add_test_case(FioRandReadWriteMix)
+    # myscript.add_test_case(FioSeqWriteSeqReadOnly)
+    # myscript.add_test_case(FioRandWriteRandReadOnly)
+    # myscript.add_test_case(FioSeqReadWriteMix)
+    # myscript.add_test_case(FioRandReadWriteMix)
     myscript.add_test_case(FioLargeWriteReadOnly())
     myscript.run()
