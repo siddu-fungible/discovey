@@ -181,7 +181,8 @@ class DockerHost(Linux, ToDictMixin):
                                qemu_internal_ports,
                                dpcsh_internal_ports,
                                funos_command=None,
-                               dpc_server=False
+                               dpc_server=False,
+                               pre_dpcsh_sleep=None
                                ):
         storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  #TODO
         command = build_url
@@ -189,6 +190,8 @@ class DockerHost(Linux, ToDictMixin):
             command += " {}".format(funos_command)
             if dpc_server:
                 command += " True"
+            if pre_dpcsh_sleep:
+                command += " {}".format(pre_dpcsh_sleep)
         return self.setup_container(image_name=storage_image_name,
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,

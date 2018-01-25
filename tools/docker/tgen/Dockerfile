@@ -12,7 +12,8 @@ ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Copy necessary binaries into container
-ADD http://10.1.20.67:5000/static/media/fio /usr/bin/fio
+COPY fio /usr/bin/fio
+#ADD http://10.1.20.67:5000/static/media/fio /usr/bin/fio
 RUN chmod 777 /usr/bin/fio
 
 ENV PATH "/usr/local/bin/:/sbin:/bin:/usr/sbin:/usr/bin"

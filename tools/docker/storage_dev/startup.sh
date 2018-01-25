@@ -3,7 +3,7 @@
 set -e
 usage()
 {
-    echo "Usage: startup.sh <build url> True <funos command line>"
+    echo "Usage: startup.sh <build url> <funos command line> True <delay>" 
 }
 
 curl_fetch()
@@ -81,10 +81,14 @@ if [ "$2" != "" ]; then
     /$funos_posix_name app=mdt_test nvfile=nvfile &> /tmp/f1mdt.log
     $2 &> /tmp/f1.log &
     if [ "$3" == "True" ]; then
-        echo "-----------------------"
-        echo "Starting Dpch tcp proxy"
-        echo "-----------------------"
-        sleep 20
+        echo "------------------------"
+        echo "Starting Dpcsh tcp proxy"
+        echo "------------------------"
+        if [ "$4" == "" ]; then
+            sleep 20
+        else
+            sleep $4
+        fi
         cd /; ./dpcsh  --tcp_proxy $dpcsh_tcp_proxy_default_internal_port &> /tmp/dpcsh.log &
         sleep 5
     fi
