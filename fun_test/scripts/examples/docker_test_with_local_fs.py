@@ -14,12 +14,14 @@ if __name__ == "__main__":
     os.environ["DOCKER_HOSTS_SPEC_FILE"] = "my_docker_hosts.json"
     num_f1 = 2
     topology_helper = TopologyHelper()
+    host_directory = "/root/my-build"
+    container_mount_directory = "/my-build"
     deployed_assets = topology_helper.quick_docker_deploy(num_f1=num_f1,
                                                           num_tg=1,
-                                                          funos_command="'/my-build/funos-posix app=mdt_test nvfile=nvfile; /my-build/funos-posix app=load_mods --dpc-server'", 
+                                                          funos_command="'{0}/funos-posix app=mdt_test nvfile=nvfile; {0}/funos-posix app=load_mods --dpc-server'".format(container_mount_directory), 
                                                           pre_dpcsh_sleep=120, # Required to ensure dpcsh proxy is started only after load_mods above completes
-                                                          dpcsh_directory="/my-build",
-                                                          mount="/root/my-build:/my-build")
+                                                          dpcsh_directory=container_mount_directory,
+                                                          mount="{}:{}".format(host_directory, container_mount_directory))
     pprint.pprint(deployed_assets)
     time.sleep(15)
 

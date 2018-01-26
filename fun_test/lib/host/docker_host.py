@@ -379,6 +379,9 @@ class DockerHost(Linux, ToDictMixin):
                 container_asset["internal_ip"] = internal_ip
                 container_asset["name"] = container_name
                 self.containers_assets[container_name] = container_asset
+                self.pool0_allocated_ports = port_allocator0.allocated_ports
+                self.pool1_allocated_ports = port_allocator1.allocated_ports
+                self.pool2_allocated_ports = port_allocator2.allocated_ports
                 break
             except APIError as ex:
                 message = str(ex)
