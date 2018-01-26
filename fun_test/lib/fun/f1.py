@@ -36,6 +36,7 @@ class F1(Linux, ToDictMixin):
         self.spec = spec
         self.dpcsh_tcp_proxy_process_id = None
         self.fun_os_process_id = None
+        self.last_start_parameters = {}
 
     @staticmethod
     def get(asset_properties):
@@ -68,6 +69,15 @@ class F1(Linux, ToDictMixin):
               get_output=False,
               run_to_completion=False):
         result = None
+        self.last_start_parameters = {
+            "app": app,
+            "args": args,
+            "foreground": foreground,
+            "timeout": timeout,
+            "get_output": get_output,
+            "run_to_completion": run_to_completion
+        }
+
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
         if not start_mode:
@@ -185,9 +195,19 @@ class F1(Linux, ToDictMixin):
         self.fun_os_process_id = None
         self.dpcsh_tcp_proxy_process_id = None
 
+    @fun_test.safe
     def restart(self):
         self.stop()
-        return self.start()
+        if self.last_start_parameters:
+            result = self.start(app=self.last_start_parameters["app"],
+                                args=self.last_start_parameters["args"],
+                                timeout=self.last_start_parameters["timeout"],
+                                get_output=self.last_start_parameters["get_output"],
+                                foreground=self.last_start_parameters["foreground"],
+                                run_to_completion=self.last_start_parameters["run_to_completion"])
+        else:
+            result = self.start()
+        return result
 
 
 class DockerF1(F1, ToDictMixin):

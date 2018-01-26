@@ -88,7 +88,7 @@ class DockerHost(Linux, ToDictMixin):
         self.pool2_allocated_ports = []
 
     def health(self):
-        fun_test.debug("Health of {}".format(self.name))
+        fun_test.log("Determining Health of Docker Host: {}".format(self.name))
         health_result = {"result": False,
                          "error_message": None}
         images = self.get_images()
@@ -103,7 +103,7 @@ class DockerHost(Linux, ToDictMixin):
                 break
             else:
                 health_result["result"] = True
-
+        fun_test.log("Health: {}".format("OK" if health_result else "FAILED"))
         return health_result
 
     def get_images(self):
@@ -150,7 +150,7 @@ class DockerHost(Linux, ToDictMixin):
             url = 'tcp://{}:{}'.format(self.host_ip, self.remote_api_port)
             if docker_url:
                 url = docker_url
-            self.client = DockerClient(base_url=url)
+            self.client = DockerClient(base_url=url, timeout=15)
         return None  #TODO: validate this
 
     @fun_test.safe
