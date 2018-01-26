@@ -630,14 +630,14 @@ class FunTest:
         #target_port, source_file_path, target_username, target_ip, target_file_path)
         the_password = source_password
         if target_ip:
-            scp_command = "scp -P {} {} {}@{}:{}".format(target_port,
+            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(target_port,
                                                          source_file_path,
                                                          target_username,
                                                          target_ip,
                                                          target_file_path)
             target_password = the_password
         elif source_ip:
-            scp_command = "scp -P {} {}@{}:{} {}".format(source_port,
+            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(source_port,
                                                          source_username,
                                                          source_ip,
                                                          source_file_path,

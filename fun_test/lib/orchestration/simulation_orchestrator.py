@@ -88,7 +88,8 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
             i = Qemu(host_ip=self.host_ip,
                      ssh_username="root",  # stack
                      ssh_password="stack",
-                     ssh_port=external_ssh_port, connect_retry_timeout_max=300)  # TODO
+                     ssh_port=external_ssh_port,
+                     connect_retry_timeout_max=60)  # TODO
 
 
             self.command("cd {}".format(self.QEMU_PATH))

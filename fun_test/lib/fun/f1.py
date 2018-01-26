@@ -34,6 +34,8 @@ class F1(Linux, ToDictMixin):
                                  ssh_port=ssh_port)
         self.external_dpcsh_port =  external_dpcsh_port
         self.spec = spec
+        self.dpcsh_tcp_proxy_process_id = None
+        self.fun_os_process_id = None
 
     @staticmethod
     def get(asset_properties):
@@ -119,11 +121,11 @@ class F1(Linux, ToDictMixin):
                                                                 self.FUN_OS_SIMULATION_PROCESS_NAME),
                             output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
-                        dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
+                        self.dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
                                                                             self.DPCSH_PROCESS_NAME,
                                                                             self.INTERNAL_DPCSH_PORT),
                                                                             output_file=self.DPCSH_PROXY_LOG)
-                        fun_test.test_assert(dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
+                        fun_test.test_assert(self.dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
 
                         fun_test.test_assert(new_process_id, "Started FunOs")
                         self.fun_os_process_id = new_process_id
@@ -174,6 +176,18 @@ class F1(Linux, ToDictMixin):
         if self.fun_os_process_id:
             self.kill_process(process_id=self.fun_os_process_id, signal=9)
         super(F1, self).disconnect()
+
+    def stop(self):
+        fun_test.debug("Stopping F1: {}".format(self))
+        self.kill_process(self.fun_os_process_id, signal=9)
+        fun_test.sleep("Kill FunOs")
+        self.cleanup()
+        self.fun_os_process_id = None
+        self.dpcsh_tcp_proxy_process_id = None
+
+    def restart(self):
+        self.stop()
+        return self.start()
 
 
 class DockerF1(F1, ToDictMixin):
