@@ -19,3 +19,8 @@ To run a single FRR container instance, do this:
 To run a fungible DC topology using FRR container, see here:
 
 	https://github.com/fungible-inc/Integration/tree/master/fun_test/lib/topology/topology_manager 
+
+If attempting to build FRR inside the docker container (for portability), then:
+
+1. git clone FRR source to local directory.
+2. Use frr-Dockerfile to build the container.

@@ -1,0 +1,96 @@
+FROM ubuntu:16.04
+MAINTAINER Amit Surana <amit.surana@fungible.com> 
+
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    iputils-ping \
+    traceroute \
+    sysstat \
+    supervisor \
+    libasan2 \
+    git autoconf automake libtool make gawk libreadline-dev \
+    texinfo dejagnu pkg-config libpam0g-dev libjson-c-dev bison flex \
+    python-pytest libc-ares-dev python3-dev libsystemd-dev python-ipaddr
+
+RUN mkdir -p /var/run/sshd /var/run/dpcsh /var/run/funos-posix /var/log/supervisor
+
+RUN echo 'root:fun123' | chpasswd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
+
+RUN groupadd -g 92 frr
+RUN groupadd -r -g 85 frrvty
+RUN adduser --system --ingroup frr --home /var/run/frr/ --gecos "FRRouting suite" --shell /sbin/nologin frr
+RUN usermod -a -G frrvty frr
+
+RUN install -m 755 -o frr -g frr -d /root/fungible
+RUN install -m 755 -o frr -g frr -d /root/fungible/frr
+COPY frr /root/fungible/frr
+WORKDIR  /root/fungible/frr
+RUN ./bootstrap.sh
+RUN ./configure \
+    --prefix=/usr \
+    --enable-exampledir=/usr/share/doc/frr/examples/ \
+    --localstatedir=/var/run/frr \
+    --sbindir=/usr/lib/frr \
+    --sysconfdir=/etc/frr \
+    --enable-pimd \
+    --enable-watchfrr \
+    --enable-ospfclient=yes \
+    --enable-ospfapi=yes \
+    --enable-multipath=64 \
+    --enable-user=frr \
+    --enable-group=frr \
+    --enable-vty-group=frrvty \
+    --enable-configfile-mask=0640 \
+    --enable-logfile-mask=0640 \
+    --enable-rtadv \
+    --enable-fpm \
+    --enable-systemd=yes \
+    --with-pkg-git-version \
+    --with-pkg-extra-version=-MyOwnFRRVersion 
+
+RUN make
+RUN make install
+
+RUN install -m 755 -o frr -g frr -d /var/log/frr
+RUN install -m 755 -o frr -g frr /dev/null /var/log/frr/bgpd.log
+RUN install -m 755 -o frr -g frr /dev/null /var/log/frr/isisd.log
+RUN install -m 755 -o frr -g frr /dev/null /var/log/frr/zebra.log
+RUN install -m 775 -o frr -g frrvty -d /etc/frr
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/zebra.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/bgpd.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/ospfd.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/ospf6d.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/isisd.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/ripd.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/ripngd.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/pimd.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/ldpd.conf
+RUN install -m 640 -o frr -g frr /dev/null /etc/frr/nhrpd.conf    
+RUN install -m 640 -o frr -g frrvty /dev/null /etc/frr/vtysh.conf
+
+RUN sed -i 's/#net.ipv4.ip_forward=./net.ipv4.ip_forward=1/g' /etc/sysctl.conf 
+
+COPY conf/frr /etc/default/frr
+RUN chmod 644 /etc/default/frr
+COPY conf/daemons /etc/frr/daemons
+RUN chmod 644 /etc/frr/daemons
+COPY conf/daemons.conf /etc/frr/daemons.conf
+RUN chmod 644 /etc/frr/daemons.conf
+COPY conf/zebra.conf /etc/frr/zebra.conf
+RUN chmod 644 /etc/frr/zebra.conf
+COPY conf/bgpd.conf /etc/frr/bgpd.conf
+RUN chmod 644 /etc/frr/bgpd.conf
+COPY conf/isisd.conf /etc/frr/isisd.conf
+RUN chmod 644 /etc/frr/isisd.conf
+RUN chown frr:frrvty /etc/frr/zebra.conf /etc/frr/bgpd.conf /etc/frr/isisd.conf
+COPY conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN install -m 775 -d /usr/lib/frr
+RUN install -m 775 -o frr -g frrvty -d /etc/frr
+
+ENV PATH "/usr/lib/frr/:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin"
+CMD ["/usr/bin/supervisord"]
