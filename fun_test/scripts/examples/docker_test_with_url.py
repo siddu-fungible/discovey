@@ -4,6 +4,8 @@ import time
 import pprint
 import os
 
+# This example illustrates how we could spin 2 F1s and a traffic generator container
+# The F1 in the containers use the binaries found at "build_url"
 
 if __name__ == "__main__":
     os.environ["DOCKER_HOSTS_SPEC_FILE"] = "my_docker_hosts.json"
