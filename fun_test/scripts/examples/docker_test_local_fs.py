@@ -4,7 +4,6 @@ from lib.host.linux import Linux
 import time
 import pprint
 import os
-import pdb
 
 
 if __name__ == "__main__":
@@ -40,7 +39,6 @@ if __name__ == "__main__":
                 time.sleep(5)
                 count -= 1
 
-    pdb.set_trace()
+    print("Cleaning up")
     topology_helper.quick_docker_deploy(cleanup=True)
-
-
+    
