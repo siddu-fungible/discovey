@@ -8,7 +8,7 @@ ARG X86_64_KERNEL_URL=http://${DOCKHUB_FUNGIBLE_LOCAL}/doc/jenkins/fungible-host
 
 # ##### All SSH Related stuff
 RUN rm -vf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y libasan3 iproute2 libpixman-1-dev libglib2.0-dev net-tools openssh-server curl libpng-dev libsdl1.2debian libfdt-dev gdb
+RUN apt-get update && apt-get install -y libasan3 iproute2 net-tools openssh-server curl gdb
 # python sudo
 RUN mkdir /var/run/sshd
 RUN echo 'root:fun123' | chpasswd

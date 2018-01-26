@@ -3,6 +3,7 @@ from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
 from docker.errors import APIError
 from docker import DockerClient
+from docker.types.services import Mount
 import re, collections
 
 # fun_test.enable_debug()
@@ -181,20 +182,29 @@ class DockerHost(Linux, ToDictMixin):
                                qemu_internal_ports,
                                dpcsh_internal_ports,
                                funos_command=None,
-                               dpc_server=False
+                               dpc_server=False,
+                               pre_dpcsh_sleep=None,
+                               dpcsh_directory=None,
+                               mounts=None,
                                ):
         storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  #TODO
         command = build_url
+        if not build_url:
+            command = "None"
         if funos_command:
             command += " {}".format(funos_command)
             if dpc_server:
                 command += " True"
+            if pre_dpcsh_sleep:
+                command += " {}".format(pre_dpcsh_sleep)
+            if dpcsh_directory:
+                command += " {}".format(dpcsh_directory)
         return self.setup_container(image_name=storage_image_name,
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,
                                     pool1_internal_ports=qemu_internal_ports,
                                     pool2_internal_ports=dpcsh_internal_ports,
-                                    command=command)
+                                    command=command, mounts=mounts)
 
     def describe_storage_container(self, container_asset):
         fun_test.log_section("Container: {}".format(container_asset["name"]))
@@ -274,7 +284,8 @@ class DockerHost(Linux, ToDictMixin):
                         command=None,
                         pool0_internal_ports=None,
                         pool1_internal_ports=None,
-                        pool2_internal_ports=None):
+                        pool2_internal_ports=None,
+                        mounts=None):
         container_asset = {}
         allocated_container = None
 
@@ -319,13 +330,21 @@ class DockerHost(Linux, ToDictMixin):
                 pool1_allocation = port_allocator1.prepare_ports_dict(ports_dict=ports_dict)
                 pool2_allocation = port_allocator2.prepare_ports_dict(ports_dict=ports_dict)
 
+
+                mount_objects = []
+                if mounts:
+                    for mount_string in mounts:
+                        if mount_string:
+                            parts = mount_string.split(":")
+                            one_mount = Mount(target=parts[1], source=parts[0], type="bind", read_only=True)
+                            mount_objects.append(one_mount)
                 if command:
                     allocated_container = self.client.containers.run(image_name,
                                                command=command,
                                                detach=True,
                                                privileged=True,
                                                ports=ports_dict,
-                                               name=container_name)
+                                               name=container_name, mounts=mount_objects)
                 else:
                     allocated_container = self.client.containers.run(image_name,
                                                detach=True,
@@ -360,6 +379,9 @@ class DockerHost(Linux, ToDictMixin):
                 container_asset["internal_ip"] = internal_ip
                 container_asset["name"] = container_name
                 self.containers_assets[container_name] = container_asset
+                self.pool0_allocated_ports = port_allocator0.allocated_ports
+                self.pool1_allocated_ports = port_allocator1.allocated_ports
+                self.pool2_allocated_ports = port_allocator2.allocated_ports
                 break
             except APIError as ex:
                 message = str(ex)

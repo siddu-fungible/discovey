@@ -4,15 +4,17 @@ import time
 import pprint
 import os
 
+# This example illustrates how we could spin 2 F1s and a traffic generator container
+# The F1 in the containers use the binaries found at "build_url"
 
 if __name__ == "__main__":
-    os.environ["DOCKER_HOSTS_SPEC_FILE"] = "my-docker-hosts.json"
+    os.environ["DOCKER_HOSTS_SPEC_FILE"] = "my_docker_hosts.json"
     num_f1 = 2
     topology_helper = TopologyHelper()
     deployed_assets = topology_helper.quick_docker_deploy(num_f1=num_f1,
                                                           num_tg=1,
                                                           build_url="http://10.1.20.99/doc/jenkins/funos/latest/",
-                                                          funos_command="'/funos-posix app=load_mods --dpc-server'")
+                                                          funos_command="'/funos-posix app=mdt_test nvfile=nvfile; /funos-posix app=load_mods --dpc-server'")
     pprint.pprint(deployed_assets)
     time.sleep(15)
 
