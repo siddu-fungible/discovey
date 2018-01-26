@@ -357,6 +357,7 @@ class DockerHost(Linux, ToDictMixin):
                 fun_test.sleep("Really Ensuring container is started", seconds=15)
                 if self.type == self.TYPE_DESKTOP:
                     fun_test.sleep("Additional sleep for {}".format(self.type), seconds=15)
+                self.sudo_command("docker logs {}".format(container_name))
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
