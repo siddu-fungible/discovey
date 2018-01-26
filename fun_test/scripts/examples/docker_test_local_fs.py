@@ -7,7 +7,7 @@ import os
 
 
 if __name__ == "__main__":
-    os.environ["DOCKER_HOSTS_SPEC_FILE"] = "my-docker-hosts.json"
+    os.environ["DOCKER_HOSTS_SPEC_FILE"] = "my_docker_hosts.json"
     num_f1 = 2
     topology_helper = TopologyHelper()
     deployed_assets = topology_helper.quick_docker_deploy(num_f1=num_f1,
