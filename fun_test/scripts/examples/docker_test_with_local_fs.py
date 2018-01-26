@@ -16,6 +16,13 @@ if __name__ == "__main__":
     topology_helper = TopologyHelper()
     host_directory = "/root/my-build"
     container_mount_directory = "/my-build"
+
+    # Ensure funos-posix and dpcsh are found in host_directory
+    paths_to_validate = ["{}/funos-posix".format(host_directory), "{}/dpcsh".format(host_directory)]
+    for path_to_validate in paths_to_validate:
+        if not os.path.exists(path_to_validate):
+            raise Exception ("{} does not exist".format(path_to_validate))
+
     deployed_assets = topology_helper.quick_docker_deploy(num_f1=num_f1,
                                                           num_tg=1,
                                                           funos_command="'{0}/funos-posix app=mdt_test nvfile=nvfile; {0}/funos-posix app=load_mods --dpc-server'".format(container_mount_directory), 
