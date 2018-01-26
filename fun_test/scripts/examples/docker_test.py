@@ -12,7 +12,7 @@ if __name__ == "__main__":
     deployed_assets = topology_helper.quick_docker_deploy(num_f1=num_f1,
                                                           num_tg=1,
                                                           build_url="http://10.1.20.99/doc/jenkins/funos/latest/",
-                                                          funos_command="'/funos-posix app=load_mods --dpc-server'")
+                                                          funos_command="'/funos-posix app=mdt_test nvfile=nvfile; /funos-posix app=load_mods --dpc-server'")
     pprint.pprint(deployed_assets)
     time.sleep(15)
 

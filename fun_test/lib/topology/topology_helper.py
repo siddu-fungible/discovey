@@ -202,13 +202,15 @@ class TopologyHelper:
 
     def quick_docker_deploy(self,
                             num_f1=0,
-                            build_url="http://dochub.fungible.local/doc/jenkins/funos/latest/",
+                            build_url=None,
                             f1_base_name="quick_deploy_f1",
                             num_tg=0,
                             tg_base_name="quick_deploy_tg",
                             cleanup=False,
                             funos_command=None,
-                            pre_dpcsh_sleep=None):
+                            pre_dpcsh_sleep=None,
+                            dpcsh_directory=None,
+                            mount=None):
 
         docker_host = AssetManager().get_any_docker_host()
         docker_host.connect()
@@ -228,7 +230,9 @@ class TopologyHelper:
                                                                        qemu_internal_ports,
                                                                        dpcsh_internal_ports,
                                                                        funos_command=funos_command,
-                                                                       dpc_server=True, pre_dpcsh_sleep=pre_dpcsh_sleep)
+                                                                       dpc_server=True, pre_dpcsh_sleep=pre_dpcsh_sleep,
+                                                                       dpcsh_directory=dpcsh_directory,
+                                                                       mounts=[mount])
                 docker_host.describe_storage_container(container_asset)
                 container_asset["container_name"] = container_asset["name"]
                 container_asset["qemu_ports"] = container_asset["pool1_ports"]
