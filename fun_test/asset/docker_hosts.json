@@ -14,7 +14,7 @@
       },
       {
         "category": "fio_traffic_generator",
-        "name": "tgen:v3"
+        "name": "tgen:v4"
       },
       {
         "category": "linux_traffic_generator",
