@@ -13,3 +13,4 @@ pathos==0.2.1
 python-dateutil==2.6.1
 pytz==2013.7
 xlsxwriter==1.0.2
+pyOpenSSL==16.2.0
