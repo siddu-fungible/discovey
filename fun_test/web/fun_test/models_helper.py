@@ -5,6 +5,7 @@ from django.utils import timezone
 import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
@@ -97,15 +98,21 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
     return result
 
 def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULT_CHOICES[0][0]):
-    te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
-                           test_case_id=test_case_id,
-                           suite_execution_id=suite_execution_id,
-                           result=result,
-                           started_time=get_current_time(), #timezone.now(), #get_current_time(),
-                           script_path=path)
-    te.save()
-    add_test_case_execution_id(suite_execution_id=suite_execution_id,
-                               test_case_execution_id=te.execution_id)
+    te = None
+    try:
+        entries = TestCaseExecution.objects.get(test_case_id=test_case_id, suite_execution_id=suite_execution_id)
+        if entries.count():
+            te = entries[0]
+    except ObjectDoesNotExist:
+        te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
+                               test_case_id=test_case_id,
+                               suite_execution_id=suite_execution_id,
+                               result=result,
+                               started_time=get_current_time(),  # timezone.now(), #get_current_time(),
+                               script_path=path)
+        te.save()
+        add_test_case_execution_id(suite_execution_id=suite_execution_id,
+                                   test_case_execution_id=te.execution_id)
     return te
 
 def update_test_case_execution(test_case_execution_id, suite_execution_id, result):

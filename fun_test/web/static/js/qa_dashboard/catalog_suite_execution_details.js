@@ -529,12 +529,19 @@
         $scope.addTestCasesClick = function () {
             $modal.open({
                 templateUrl: "/static/qa_dashboard/add_test_cases.html",
-                controller: ['$modalInstance', '$scope', 'commonService', AddTestCasesController]
-                }).result.then(function () {
+                controller: ['$modalInstance', '$scope', 'commonService', 'suiteExecutionId', 'ownerEmail', AddTestCasesController],
+                resolve: {
+                    suiteExecutionId: function () {
+                        return $scope.executionDetails.suite_execution_id;
+                    },
+                    ownerEmail: function () {
+                        return $scope.executionDetails.owner_email;
+                    }
+                }}).result.then(function () {
 
-            }, function () {
+                }, function () {
 
-            })
+                })
         };
 
 
@@ -713,11 +720,13 @@
 
     }
 
-    function AddTestCasesController($modalInstance, $scope, commonService) {
+    function AddTestCasesController($modalInstance, $scope, commonService, suiteExecutionId, ownerEmail) {
         let ctrl = this;
         $scope.status = "idle";
         $scope.jqlValid = false;
         $scope.validating = false;
+        $scope.suiteExecutionId = suiteExecutionId;
+        $scope.ownerEmail = ownerEmail;
 
         $scope.validateClick = function () {
             $scope.validating = true;
@@ -737,6 +746,19 @@
                 let i = 0;
             });
         };
+
+        $scope.submit = function () {
+            let payload = {};
+            payload["suite_execution_id"] = $scope.suiteExecutionId;
+            payload["owner_email"] = $scope.ownerEmail;
+            payload["test_cases"] = $scope.testCases;
+            commonService.apiPost('/tcm/catalog_execution_add_test_cases', payload).then(function (data) {
+                $modalInstance.close();
+                $window.location.reload();
+
+            });
+        };
+
 
     }
 
