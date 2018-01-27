@@ -10,4 +10,4 @@ fun_test/web/static/logs/*.log.txt
 fun_test/web/static/logs/s_*
 fun_test/web/static/jobs/archived/*.archived.*
 fun_test/web/dump.rdb
-*idea/
+*idea*/
