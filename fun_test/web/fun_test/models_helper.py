@@ -100,9 +100,9 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
 def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULT_CHOICES[0][0]):
     te = None
     try:
-        entries = TestCaseExecution.objects.get(test_case_id=test_case_id, suite_execution_id=suite_execution_id)
-        if entries.count():
-            te = entries[0]
+        entry = TestCaseExecution.objects.filter(test_case_id=test_case_id, suite_execution_id=suite_execution_id)
+        if entry.count():
+            te = entry[0]
     except ObjectDoesNotExist:
         te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
                                test_case_id=test_case_id,

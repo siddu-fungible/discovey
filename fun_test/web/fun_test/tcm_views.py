@@ -69,10 +69,10 @@ def initialize_catalog_test_case_execution(jira_id, suite_execution_id, owner_em
                                                   suite_execution_id=suite_execution_id,
                                                   path="")
     try:
-        entries = CatalogTestCaseExecution.objects.get(catalog_suite_execution_id=suite_execution_id,
-                                                      jira_id=jira_id)
+        CatalogTestCaseExecution.objects.get(catalog_suite_execution_id=suite_execution_id,
+                                             jira_id=jira_id,
+                                             execution_id=test_case_execution.execution_id)
 
-        # cte = entries[0]
     except ObjectDoesNotExist:
         cte = CatalogTestCaseExecution(jira_id=jira_id,
                                        execution_id=test_case_execution.execution_id,
