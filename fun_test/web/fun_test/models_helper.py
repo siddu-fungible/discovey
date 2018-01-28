@@ -98,21 +98,15 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
     return result
 
 def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULT_CHOICES[0][0]):
-    te = None
-    try:
-        entry = TestCaseExecution.objects.filter(test_case_id=test_case_id, suite_execution_id=suite_execution_id)
-        if entry.count():
-            te = entry[0]
-    except ObjectDoesNotExist:
-        te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
-                               test_case_id=test_case_id,
-                               suite_execution_id=suite_execution_id,
-                               result=result,
-                               started_time=get_current_time(),  # timezone.now(), #get_current_time(),
-                               script_path=path)
-        te.save()
-        add_test_case_execution_id(suite_execution_id=suite_execution_id,
-                                   test_case_execution_id=te.execution_id)
+    te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
+                           test_case_id=test_case_id,
+                           suite_execution_id=suite_execution_id,
+                           result=result,
+                           started_time=get_current_time(),  # timezone.now(), #get_current_time(),
+                            script_path=path)
+    te.save()
+    add_test_case_execution_id(suite_execution_id=suite_execution_id,
+                               test_case_execution_id=te.execution_id)
     return te
 
 def update_test_case_execution(test_case_execution_id, suite_execution_id, result):

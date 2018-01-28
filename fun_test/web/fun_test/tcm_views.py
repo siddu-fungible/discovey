@@ -66,20 +66,14 @@ def remove_catalog(request, catalog_name):
 
 def initialize_catalog_test_case_execution(jira_id, suite_execution_id, owner_email):
     test_case_execution = add_test_case_execution(test_case_id=jira_id,
-                                                  suite_execution_id=suite_execution_id,
-                                                  path="")
-    try:
-        CatalogTestCaseExecution.objects.get(catalog_suite_execution_id=suite_execution_id,
-                                             jira_id=jira_id,
-                                             execution_id=test_case_execution.execution_id)
-
-    except ObjectDoesNotExist:
-        cte = CatalogTestCaseExecution(jira_id=jira_id,
-                                       execution_id=test_case_execution.execution_id,
-                                       catalog_suite_execution_id=suite_execution_id,
-                                       engineer=Engineer.objects.get(email=owner_email),
-                                       test_bed=TestBed.objects.get(name="simulation"))
-        cte.save()
+                                              suite_execution_id=suite_execution_id,
+                                              path="")
+    cte = CatalogTestCaseExecution(jira_id=jira_id,
+                                   execution_id=test_case_execution.execution_id,
+                                   catalog_suite_execution_id=suite_execution_id,
+                                   engineer=Engineer.objects.get(email=owner_email),
+                                   test_bed=TestBed.objects.get(name="simulation"))
+    cte.save()
 
 
 @csrf_exempt
@@ -130,6 +124,11 @@ def catalog_execution_add_test_cases(request):
 
 
     for test_case in test_cases:
+        entries = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution_id,
+                                                          jira_id=test_case["jira_id"])
+        if entries.count():
+            continue
+
         initialize_catalog_test_case_execution(jira_id=test_case["jira_id"],
                                                suite_execution_id=suite_execution_id,
                                                owner_email=owner_email)
