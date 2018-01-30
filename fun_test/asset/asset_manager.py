@@ -88,8 +88,6 @@ class AssetManager:
         fun_test.debug("Getting orchestrator")
         orchestrator = None
         try:
-
-
             if type == OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION:
                 orchestrator = SimulationOrchestrator.get(self.get_any_simple_host())
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
@@ -98,6 +96,8 @@ class AssetManager:
                     build_url = DEFAULT_BUILD_URL
                 else:
                     build_url = fun_test.build_url
+                if fun_test.local_settings and "BUILD_URL" in fun_test.local_settings:
+                    build_url = fun_test.local_settings["BUILD_URL"]
                 if not self.docker_host:
                     self.docker_host = self.get_any_docker_host()
                 fun_test.simple_assert(self.docker_host, "Docker host available")
