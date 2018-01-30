@@ -56,8 +56,8 @@
                     $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
                         $scope.fetchBasicIssueAttributes(true).then(function () {
                             $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
-                            //$scope.currentView = "components";
-                            $scope.currentView = "all";
+                            $scope.currentView = "components";
+                            //$scope.currentView = "all";
 
                             $scope.testCaseViewInstances = null;
                             $scope.currentTestCaseViewComponent = null;
