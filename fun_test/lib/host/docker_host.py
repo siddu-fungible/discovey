@@ -103,7 +103,7 @@ class DockerHost(Linux, ToDictMixin):
                 break
             else:
                 health_result["result"] = True
-        fun_test.log("Health: {}".format("OK" if health_result else "FAILED"))
+        fun_test.log("Health: {}".format("OK" if health_result["result"] else "FAILED"))
         return health_result
 
     def get_images(self):
