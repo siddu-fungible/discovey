@@ -15,7 +15,7 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 # Please run ./setup_fio.sh before doing docker build
 #COPY fio /usr/bin/fio
 #ADD http://10.1.20.67:5000/static/media/fio /usr/bin/fio
-ADD fio /usr/bin.fio
+ADD fio /usr/bin/fio
 RUN chmod 777 /usr/bin/fio
 
 ENV PATH "/usr/local/bin/:/sbin:/bin:/usr/sbin:/usr/bin"
