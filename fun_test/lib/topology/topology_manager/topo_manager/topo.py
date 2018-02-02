@@ -1301,9 +1301,9 @@ class VM(object):
         if src_node:
             dst_list = self.get_dst_list(src_node, dsts)
             for dst in dst_list:
-                self.linkRepair(src_node, dst, oper)
-                if oper == 'loss':
-                    self.topo.update_prefix_counts(src, dst, 'up')
+                if self.linkRepair(src_node, dst, oper):
+                    if oper == 'loss':
+                        self.topo.update_prefix_counts(src, dst, 'up')
 
 
     def linkRepair(self, src_node, dst, oper):
@@ -1312,7 +1312,7 @@ class VM(object):
 
         if dst not in src_node.interfaces:
             self.logger.warning('Invalid destination %s for linkRepair from %s. Skipping over' % (dst, src_node.name))
-            return
+            return 0
 
         my_intf_name = src_node.interfaces[dst]['my_intf_name']
         peer_intf_name = src_node.interfaces[dst]['peer_intf_name']
@@ -1335,6 +1335,7 @@ class VM(object):
 
         src_node.interfaces[dst]['state'] = 'up'
 
+        return 1
       
     def linksImpair(self, src, dsts, oper, param1, param2, param3):
 
@@ -1342,9 +1343,9 @@ class VM(object):
         if src_node:
             dst_list = self.get_dst_list(src_node, dsts)
             for dst in dst_list:
-                self.linkImpair(src_node, dst, oper, param1, param2, param3)
-                if oper == 'loss' and param1 == '100%':
-                    self.topo.update_prefix_counts(src, dst)
+                if self.linkImpair(src_node, dst, oper, param1, param2, param3):
+                    if oper == 'loss' and param1 == '100%':
+                        self.topo.update_prefix_counts(src, dst)
 
     def linkImpair(self, src_node, dst, oper, param1, param2, param3):
 
@@ -1352,7 +1353,7 @@ class VM(object):
 
         if dst not in src_node.interfaces:
             self.logger.warning('Invalid destination %s for linkImpair from %s. Skipping over' % (dst, src_node.name))
-            return
+            return 0
 
         my_intf_name = src_node.interfaces[dst]['my_intf_name']
         peer_intf_name = src_node.interfaces[dst]['peer_intf_name']
@@ -1403,6 +1404,8 @@ class VM(object):
         out = exec_remote_commands([(self.ip, [netem_impair_cmd])], [], logger=self.logger)
         if netem_impair_cmd_1:
             out = exec_remote_commands([(dst_vm_ip, [netem_impair_cmd_1])], [], logger=self.logger)
+
+        return 1
 
     def flatLinkImpair(self, src, dsts):
         src_node = self.get_node(src) 
@@ -1667,7 +1670,6 @@ class Node(object):
         self.vm_obj = vm_obj
         self.node_id = str(node_id)
         self.rack_id = str(rack_id)
-        self.asn = str(rack_asn)
         self.tn = None
         self.state = 'init'
         self.zebra_port = self.get_host_port()
@@ -1700,9 +1702,11 @@ class Node(object):
 
         if self.rack_id == '0':
             self.type = 'spine'
+            self.asn = str(node_id+64000)
             self.public_network = spine_lo_subnets.pop(0)
         else:
             self.type = 'leaf'
+            self.asn = str(rack_asn)
             self.public_network = f1_public_subnet.pop(0)
 
         self.loopback_ips = self.add_loopback_ips()
