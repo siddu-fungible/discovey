@@ -36,6 +36,15 @@ class AssetManager:
                                  source_port=container_asset["mgmt_ssh_port"],
                                  target_file_path=artifact_file_name)
                     fun_test.add_auxillary_file(description="F1 Log", filename=artifact_file_name)
+                    if hasattr(orchestrator, "QEMU_LOG"):
+                        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="qemu.log.txt")
+                        fun_test.scp(source_ip=container_asset["host_ip"],
+                                     source_file_path=orchestrator.QEMU_LOG,
+                                     source_username=container_asset["mgmt_ssh_username"],
+                                     source_password=container_asset["mgmt_ssh_password"],
+                                     source_port=container_asset["mgmt_ssh_port"],
+                                     target_file_path=artifact_file_name)
+                        fun_test.add_auxillary_file(description="QEMU Log", filename=artifact_file_name)
 
                 self.docker_host.stop_container(orchestrator.container_name)
                 fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
@@ -79,8 +88,6 @@ class AssetManager:
         fun_test.debug("Getting orchestrator")
         orchestrator = None
         try:
-
-
             if type == OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION:
                 orchestrator = SimulationOrchestrator.get(self.get_any_simple_host())
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
@@ -89,6 +96,8 @@ class AssetManager:
                     build_url = DEFAULT_BUILD_URL
                 else:
                     build_url = fun_test.build_url
+                if fun_test.local_settings and "BUILD_URL" in fun_test.local_settings:
+                    build_url = fun_test.local_settings["BUILD_URL"]
                 if not self.docker_host:
                     self.docker_host = self.get_any_docker_host()
                 fun_test.simple_assert(self.docker_host, "Docker host available")

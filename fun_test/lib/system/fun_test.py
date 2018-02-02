@@ -95,6 +95,9 @@ class FunTest:
         parser.add_argument('--disable_fun_test',
                             dest="disable_fun_test",
                             default=None)
+        parser.add_argument('--local_settings_file',
+                            dest="local_settings_file",
+                            default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
             return
@@ -104,6 +107,8 @@ class FunTest:
         self.selected_test_case_ids = None
         self.current_test_case_execution_id = None
         self.build_url = args.build_url
+        self.local_settings_file = args.local_settings_file
+        self.local_settings = {}
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
 
@@ -143,13 +148,28 @@ class FunTest:
                                           log_file=html_log_file,
                                           full_script_path=self.absolute_script_file_name)
         reload(sys)
-        sys.setdefaultencoding('UTF8') #Needed for xml
+        sys.setdefaultencoding('UTF8')  # Needed for xml
         self.counter = 0  # Mostly used for testing
 
         self.log_timestamps = True
         self.log_function_name = False
         self.pause_on_failure = False
         self.shared_variables = {}
+        if self.local_settings_file:
+            self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
+
+    def parse_file_to_json(self, file_name):
+        result = None
+        if os.path.exists(file_name):
+            try:
+                with open(file_name, "r") as infile:
+                    contents = infile.read()
+                    result = json.loads(contents)
+            except Exception as ex:
+                raise Exception("{} has an invalid json format".format(file_name))
+        else:
+            raise Exception("{} path does not exist".format(file_name))
+        return result
 
     def get_absolute_script_path(self):
         return self.absolute_script_file_name
@@ -630,14 +650,14 @@ class FunTest:
         #target_port, source_file_path, target_username, target_ip, target_file_path)
         the_password = source_password
         if target_ip:
-            scp_command = "scp -P {} {} {}@{}:{}".format(target_port,
+            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(target_port,
                                                          source_file_path,
                                                          target_username,
                                                          target_ip,
                                                          target_file_path)
             target_password = the_password
         elif source_ip:
-            scp_command = "scp -P {} {}@{}:{} {}".format(source_port,
+            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(source_port,
                                                          source_username,
                                                          source_ip,
                                                          source_file_path,

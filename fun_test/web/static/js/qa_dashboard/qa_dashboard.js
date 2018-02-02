@@ -82,10 +82,14 @@
         function validateApiResult (apiResult, message) {
             let result = false;
             let data = apiResult["data"];
-            if (!data["status"]) {
-                showError(message, 10 * 1000, data);
+            if(!(data instanceof Object) || !("status" in data)) {
+                showError(message + " No status field in response", 10 * 1000, data);
             } else {
-                result = true;
+                if (!data["status"]) {
+                    showError(message, 10 * 1000, data);
+                } else {
+                    result = true;
+                }
             }
             return result;
         }
@@ -131,6 +135,9 @@
                 detailedMessage = "Error Message: " + result.error_message;
             }
             detailedMessage += "\n" + stack;
+            if((result instanceof Object) && ("data" in result)) {
+                detailedMessage = "\n" + "Result data: " + "\n" + result["data"];
+            }
             addLogEntry(message, detailedMessage);
 
             $rootScope.commonErrorMessage = message;
@@ -180,6 +187,7 @@
         }
 
         function apiGet (url, message) {
+            message = "URL: " + url + " " + message;
             return $http.get(url).then(function (result) {
                 let data = null;
                 if (validateApiResult(result, message)) {
@@ -187,12 +195,13 @@
                 }
                 return data;
             }).catch(function (result) {
-                showHttpError(message, result);
+                showError(message, 10 * 1000, result);
             });
 
         }
 
         function apiPost (url, payload, message) {
+            message = "URL: " + url + " " + message;
             return $http.post(url, payload).then(function (result) {
                 let data = null;
                 if (validateApiResult(result, message)) {
@@ -200,7 +209,7 @@
                 }
                 return data;
             }).catch(function(result){
-                showHttpError(message, result);
+                showError(message, 10 * 1000, result);
             });
         }
 

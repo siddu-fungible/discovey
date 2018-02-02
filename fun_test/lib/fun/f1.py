@@ -34,6 +34,9 @@ class F1(Linux, ToDictMixin):
                                  ssh_port=ssh_port)
         self.external_dpcsh_port =  external_dpcsh_port
         self.spec = spec
+        self.dpcsh_tcp_proxy_process_id = None
+        self.fun_os_process_id = None
+        self.last_start_parameters = {}
 
     @staticmethod
     def get(asset_properties):
@@ -66,6 +69,15 @@ class F1(Linux, ToDictMixin):
               get_output=False,
               run_to_completion=False):
         result = None
+        self.last_start_parameters = {
+            "app": app,
+            "args": args,
+            "foreground": foreground,
+            "timeout": timeout,
+            "get_output": get_output,
+            "run_to_completion": run_to_completion
+        }
+
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
         if not start_mode:
@@ -119,11 +131,11 @@ class F1(Linux, ToDictMixin):
                                                                 self.FUN_OS_SIMULATION_PROCESS_NAME),
                             output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
-                        dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
+                        self.dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
                                                                             self.DPCSH_PROCESS_NAME,
                                                                             self.INTERNAL_DPCSH_PORT),
                                                                             output_file=self.DPCSH_PROXY_LOG)
-                        fun_test.test_assert(dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
+                        fun_test.test_assert(self.dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
 
                         fun_test.test_assert(new_process_id, "Started FunOs")
                         self.fun_os_process_id = new_process_id
@@ -174,6 +186,28 @@ class F1(Linux, ToDictMixin):
         if self.fun_os_process_id:
             self.kill_process(process_id=self.fun_os_process_id, signal=9)
         super(F1, self).disconnect()
+
+    def stop(self):
+        fun_test.debug("Stopping F1: {}".format(self))
+        self.kill_process(self.fun_os_process_id, signal=9)
+        fun_test.sleep("Kill FunOs")
+        self.cleanup()
+        self.fun_os_process_id = None
+        self.dpcsh_tcp_proxy_process_id = None
+
+    @fun_test.safe
+    def restart(self):
+        self.stop()
+        if self.last_start_parameters:
+            result = self.start(app=self.last_start_parameters["app"],
+                                args=self.last_start_parameters["args"],
+                                timeout=self.last_start_parameters["timeout"],
+                                get_output=self.last_start_parameters["get_output"],
+                                foreground=self.last_start_parameters["foreground"],
+                                run_to_completion=self.last_start_parameters["run_to_completion"])
+        else:
+            result = self.start()
+        return result
 
 
 class DockerF1(F1, ToDictMixin):

@@ -88,7 +88,7 @@ class DockerHost(Linux, ToDictMixin):
         self.pool2_allocated_ports = []
 
     def health(self):
-        fun_test.debug("Health of {}".format(self.name))
+        fun_test.log("Determining Health of Docker Host: {}".format(self.name))
         health_result = {"result": False,
                          "error_message": None}
         images = self.get_images()
@@ -103,7 +103,7 @@ class DockerHost(Linux, ToDictMixin):
                 break
             else:
                 health_result["result"] = True
-
+        fun_test.log("Health: {}".format("OK" if health_result["result"] else "FAILED"))
         return health_result
 
     def get_images(self):
@@ -150,7 +150,7 @@ class DockerHost(Linux, ToDictMixin):
             url = 'tcp://{}:{}'.format(self.host_ip, self.remote_api_port)
             if docker_url:
                 url = docker_url
-            self.client = DockerClient(base_url=url)
+            self.client = DockerClient(base_url=url, timeout=15)
         return None  #TODO: validate this
 
     @fun_test.safe
@@ -355,12 +355,14 @@ class DockerHost(Linux, ToDictMixin):
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
                 fun_test.sleep("Really Ensuring container is started", seconds=15)
-                if self.type == self.TYPE_DESKTOP:
+                if fun_test.local_settings and "CONTAINER_START_TIME" in fun_test.local_settings:
+                    fun_test.sleep("Additional sleep for {}".format(self.type), seconds=fun_test.local_settings["CONTAINER_START_TIME"])
+                elif self.type == self.TYPE_DESKTOP:
                     fun_test.sleep("Additional sleep for {}".format(self.type), seconds=15)
+                self.sudo_command("docker logs {}".format(container_name))
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
-
 
                 allocated_container = self.client.containers.get(container_name)
                 internal_ip = allocated_container.attrs["NetworkSettings"]["IPAddress"]

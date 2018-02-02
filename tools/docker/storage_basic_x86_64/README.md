@@ -14,7 +14,7 @@ and the following fetched from other sources
 
 Build:
 ```
-sudo docker build . -t storage_basic_x86_64
+sudo docker build . -t storage_basic_x86_64 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99
 ```
 
 Run:

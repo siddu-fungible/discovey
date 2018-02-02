@@ -1,3 +1,5 @@
 [
-  {"path": "scratch/clean_sanity.py"}
+  {"path": "scratch/clean_sanity.py"},
+  {"path": "examples/sanity.py"}
+
 ]

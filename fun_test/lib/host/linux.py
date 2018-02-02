@@ -196,7 +196,7 @@ class Linux(object, ToDictMixin):
             elapsed_time = 0
             while elapsed_time < self.connect_retry_timeout_max:
                 if attempt:
-                    fun_test.log("Attempting connect: %d" % (attempt))
+                    fun_test.log("Attempting connect: {}, Remaining time: {}".format(attempt, self.connect_retry_timeout_max - elapsed_time))
                 if not self.use_telnet:
                     fun_test.debug(
                         "Attempting SSH connect to %s username: %s password: %s" % (self.host_ip,
@@ -778,6 +778,10 @@ class Linux(object, ToDictMixin):
             self.handle.expect(self.prompt_terminator, timeout=0.1)
         except pexpect.ExceptionPexpect:
             pass
+
+    @fun_test.safe
+    def cleanup(self):
+        self.command("rm -rf {}/*".format(self.tmp_dir))
 
     @fun_test.safe
     def sendline(self, c):

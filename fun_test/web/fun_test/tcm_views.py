@@ -1,9 +1,10 @@
 from fun_settings import TCMS_PROJECT
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
-import logging, json
+import logging
+import json
 from web.fun_test.tcm_common import CATALOG_CATEGORIES
-from web_global import initialize_result, api_safe_json_response
+from web.web_global import initialize_result, api_safe_json_response
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager
@@ -64,6 +65,18 @@ def remove_catalog(request, catalog_name):
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
 
+def initialize_catalog_test_case_execution(jira_id, suite_execution_id, owner_email):
+    test_case_execution = add_test_case_execution(test_case_id=jira_id,
+                                              suite_execution_id=suite_execution_id,
+                                              path="")
+    cte = CatalogTestCaseExecution(jira_id=jira_id,
+                                   execution_id=test_case_execution.execution_id,
+                                   catalog_suite_execution_id=suite_execution_id,
+                                   engineer=Engineer.objects.get(email=owner_email),
+                                   test_bed=TestBed.objects.get(name="simulation"))
+    cte.save()
+
+
 @csrf_exempt
 def execute_catalog(request):
     result = initialize_result(failed=True)
@@ -85,6 +98,7 @@ def execute_catalog(request):
 
     test_cases = CatalogSuite.objects.get(name=catalog_name).test_cases.all()
     for test_case in test_cases:
+        '''
         test_case_execution = add_test_case_execution(test_case_id=test_case.jira_id,
                                                       suite_execution_id=suite_execution.execution_id,
                                                       path="")
@@ -94,6 +108,31 @@ def execute_catalog(request):
                                        engineer=Engineer.objects.get(email=owner_email),
                                        test_bed=TestBed.objects.get(name="simulation"))
         cte.save()
+        '''
+        initialize_catalog_test_case_execution(jira_id=test_case.jira_id,
+                                               suite_execution_id=suite_execution.execution_id,
+                                               owner_email=owner_email)
+    result["status"] = True
+    return HttpResponse(json.dumps(result))
+
+@csrf_exempt
+def catalog_execution_add_test_cases(request):
+    result = initialize_result(failed=True)
+    request_json = json.loads(request.body)
+    test_cases = request_json["test_cases"]
+    suite_execution_id = request_json["suite_execution_id"]
+    owner_email = request_json["owner_email"]
+
+
+    for test_case in test_cases:
+        entries = CatalogTestCaseExecution.objects.filter(catalog_suite_execution_id=suite_execution_id,
+                                                          jira_id=test_case["jira_id"])
+        if entries.count():
+            continue
+
+        initialize_catalog_test_case_execution(jira_id=test_case["jira_id"],
+                                               suite_execution_id=suite_execution_id,
+                                               owner_email=owner_email)
     result["status"] = True
     return HttpResponse(json.dumps(result))
 

@@ -2,6 +2,8 @@ import traceback
 from django.http import HttpResponse
 import json
 
+PRIMARY_SETTINGS_FILE = "web.fun_test.settings"
+
 def initialize_result(failed=False):
     status = True
     if failed:

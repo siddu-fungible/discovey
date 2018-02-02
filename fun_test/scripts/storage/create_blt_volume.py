@@ -17,7 +17,7 @@ topology_dict = {
             "type": Dut.DUT_TYPE_FSU,
             "interface_info": {
                 0: {
-                    "vms": 1,
+                    "vms": 0,
                     "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
@@ -41,7 +41,8 @@ class MyScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables and fun_test.shared_variables["topology"]:
+            TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
 
 
 class FunTestCase1(FunTestCase):
