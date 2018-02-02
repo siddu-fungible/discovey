@@ -9,12 +9,12 @@ flat_topo = False
 network_only = True 
 
 if network_only:
-    leaf_container = 'frr:v6'
+    leaf_container = 'frr:v2'
 else:
     leaf_container = 'testdemo:latest'
 
 tg_container = 'tgen:v3'
-spine_container = 'frr:v4'
+spine_container = 'frr:v1'
 
 #IPs of compute engines on which docker containers will be launched
 vm_ips = ['127.0.0.1']
