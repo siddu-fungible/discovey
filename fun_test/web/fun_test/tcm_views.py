@@ -1,9 +1,10 @@
 from fun_settings import TCMS_PROJECT
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
-import logging, json
+import logging
+import json
 from web.fun_test.tcm_common import CATALOG_CATEGORIES
-from web_global import initialize_result, api_safe_json_response
+from web.web_global import initialize_result, api_safe_json_response
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager

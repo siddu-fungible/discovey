@@ -8,6 +8,9 @@ import os
 from django.db import models
 from fun_global import RESULTS
 from web.fun_test.jira_models import *
+from web.fun_test.metrics_models import *
+
+from web.fun_test.site_state import site_state
 
 RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 

@@ -18,6 +18,7 @@ from django.contrib import admin
 from . import views, regression_views
 from . import tcm_views
 from . import common_views
+from . import metrics_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 regression_urls = [
@@ -82,16 +83,24 @@ common_urls = [
     url(r'^home$', common_views.home)
 ]
 
+metric_urls = [
+    url(r'^$', metrics_views.index),
+    url(r'^metrics_list', metrics_views.metrics_list)
+]
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     url(r'^tools/', include('tools.urls')),
     url(r'^regression/', include(regression_urls)),
-    url(r'^tcm/', include(tcm_urls)), # urls related to test-case manangement
+    url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
+    url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
     url(r'^common/', include(common_urls)),
+
     url(r'^$', common_views.home)
 
 ]
+
 
 urlpatterns += staticfiles_urlpatterns()

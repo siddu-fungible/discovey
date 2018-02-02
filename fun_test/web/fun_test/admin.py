@@ -3,6 +3,7 @@ from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer
 from web.fun_test.models import CatalogTestCase, CatalogSuite, CatalogSuiteExecution
 from web.fun_test.models import CatalogTestCaseExecution
 from web.fun_test.models import TestBed
+from web.fun_test.metrics_model_admin import *
 
 @admin.register(SuiteExecution)
 class SuiteExecutionAdmin(admin.ModelAdmin):
