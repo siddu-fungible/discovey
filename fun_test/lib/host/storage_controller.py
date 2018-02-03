@@ -149,9 +149,29 @@ class StorageController():
                                   "pvol_id": pvol_id}}
         return self.json_command(create_dict, expected_command_duration=expected_command_duration)
 
+    def create_volume(self, expected_command_duration=1, **kwargs):
+        volume_dict = {}
+        volume_dict["class"] = "volume"
+        volume_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
+        volume_dict["params"] = {}
+        if kwargs:
+            for key in kwargs:
+                volume_dict["params"][key] = kwargs[key]
+        return self.json_command(volume_dict, expected_command_duration=expected_command_duration)
+
     def peek(self, props_tree):
         props_tree = "peek " + props_tree
         return self.command(props_tree)
+
+    def fail_volume(self, expected_command_duration=1, **kwargs):
+        volume_dict = {}
+        volume_dict["class"] = "volume"
+        volume_dict["opcode"] = "VOL_ADMIN_OPCODE_INJECT_FAULT"
+        volume_dict["params"] = {}
+        if kwargs:
+            for key in kwargs:
+                volume_dict["params"][key] = kwargs[key]
+        return self.json_command(volume_dict, expected_command_duration=expected_command_duration)
 
 
 if __name__ == "__main__":
