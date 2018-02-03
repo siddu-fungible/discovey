@@ -1,6 +1,6 @@
 from lib.system.fun_test import fun_test
 import os
-import types, collections, json
+import types, collections, json, commentjson
 from pathos.multiprocessing import ProcessingPool, cpu_count
 
 
@@ -72,13 +72,26 @@ class MultiProcessingTasks:
         return self.p_results[task_key].get(timeout=1)
 
 
-def parse_file_to_json(file_name):
+def old_parse_file_to_json(file_name):
     result = None
     if os.path.exists(file_name):
         try:
             with open(file_name, "r") as infile:
                 contents = infile.read()
                 result = json.loads(contents)
+        except Exception as ex:
+            fun_test.critical("{} has an invalid json format".format(file_name))
+    else:
+        fun_test.critical("{} path does not exist".format(file_name))
+    return result
+
+
+def parse_file_to_json(file_name):
+    result = None
+    if os.path.exists(file_name):
+        try:
+            with open(file_name, "r") as infile:
+                result = commentjson.load(infile)
         except Exception as ex:
             fun_test.critical("{} has an invalid json format".format(file_name))
     else:
