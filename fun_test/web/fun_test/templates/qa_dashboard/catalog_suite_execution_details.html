@@ -1,6 +1,6 @@
 <div class="content">
     <h4>{{ executionDetails.instance_name }}</h4>
-    <h5>Owner: {{ executionDetails.owner_email }}</h5>
+    <span class="fa fa-envelope" id="summary_collapse"><a href="mailto:{{ executionDetails.owner_email }}" target="_top">{{ executionDetails.owner_email }}</a></span>
     <div class="row">
         <div class="col-lg-10 col-xl-7">
             <div ng-if="overallProgressValues" class="row">
@@ -308,7 +308,7 @@
             </div>
         </div>
 
-        <div id="test-case-view" class="col-lg-12 col-xl-6" ng-if="testCaseViewInstances && currentView === 'components'">
+        <div id="test-case-view" class="col-lg-12 col-xl-5" ng-if="testCaseViewInstances && currentView === 'components'">
             <button class="btn btn-primary fa fa-pencil" ng-click="bulkEditTestCaseClick()">Bulk Edit</button>
             <legend>{{ currentTestCaseViewComponent }}</legend>
             <table class="table table-borderless table-nonfluid">
