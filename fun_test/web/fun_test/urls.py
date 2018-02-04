@@ -85,7 +85,11 @@ common_urls = [
 
 metric_urls = [
     url(r'^$', metrics_views.index),
-    url(r'^metrics_list', metrics_views.metrics_list)
+    url(r'^metrics_list', metrics_views.metrics_list),
+    url(r'^describe_table/(.*)$', metrics_views.describe_table),
+    url(r'^chart_list$', metrics_views.chart_list),
+    url(r'^charts_info$', metrics_views.charts_info),
+    url(r'^data$', metrics_views.data)
 ]
 
 urlpatterns = [

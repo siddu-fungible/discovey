@@ -132,15 +132,16 @@
 
             let detailedMessage = "";
             if(result && result.hasOwnProperty("error_message")) {
-                detailedMessage = "Error Message: " + result.error_message;
+                detailedMessage += "Error Message: " + result.error_message;
             }
             detailedMessage += "\n" + stack;
             if((result instanceof Object) && ("data" in result)) {
-                detailedMessage = "\n" + "Result data: " + "\n" + result["data"];
+                detailedMessage += "\n" + "Result data: " + "\n" + result["data"];
             }
             addLogEntry(message, detailedMessage);
 
             $rootScope.commonErrorMessage = message;
+            $rootScope.commonAlertLink = "/common/alerts_page#1";
             let t = 10000;
             if (timeout) {
                 t = timeout;

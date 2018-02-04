@@ -5,7 +5,25 @@
     <script src="{% static "js/qa_dashboard/metrics.js" %}"></script>
 {% endblock %}
 {% block content %}
+    {% verbatim %}
 <div class="content" ng-controller="metricsController">
-    Metrics
+    <label>Choose a metric table</label>
+    <select ng-options="option for option in metricsList" ng-model="selectedMetric" ng-change="selectedMetricChange(selectedMetric)">
+    </select>
+    <div>
+        <label>Current data-sets</label>
+        <table class="table table-nonfluid">
+            <tr>
+                <th ng-repeat="(fieldName, info) in currentTableFields" ng-if="info.choices.length">{{ fieldName }}</th>
+            </tr>
+            <tr>
+                <td ng-repeat="(fieldName, info) in currentTableFields" ng-if="info.choices.length">
+                    <select ng-options="choice[1] for choice in info.choices" ng-model="hmm">
+                    </select>
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>
+{% endverbatim %}
 {% endblock %}

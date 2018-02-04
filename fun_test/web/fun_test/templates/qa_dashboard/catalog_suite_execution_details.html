@@ -8,11 +8,11 @@
                     <fun-chart values="overallProgressValues" series="series" show-legend="true"
                                title="Overall progress" charting="charting" auto-update="autoUpdate" chart-type="pie"
                                colors="colors"
-                               width="250" height="250" update-charts-now="updateOverallProgressChartsNow"></fun-chart>
+                               width="300" height="300" update-charts-now="updateOverallProgressChartsNow"></fun-chart>
                 </div>
                 <div ng-if="moduleProgressValues" class="col-lg-4">
                     <fun-chart values="moduleProgressValues" colors="colors" title="Module progress"
-                               width="250" height="250" chart-type="horizontal_colored_bar_chart" yaxis-title="Percentage"
+                               width="300" height="300" chart-type="horizontal_colored_bar_chart" yaxis-title="Percentage"
                                series="series" charting="charting" update-charts-now="updateModuleProgressChartsNow"></fun-chart>
                 </div>
             </div>
@@ -116,15 +116,15 @@
                                 <table class="table table-nonfluid table-responsive">
                                     <tr>
                                         <th>Total</th>
-                                        <th>Passed</th>
-                                        <th>Failed</th>
-                                        <th>Blocked</th>
-                                        <th>Pending</th>
+                                        <th ng-bind-html="getLabel('Passed')"></th>
+                                        <th ng-bind-html="getLabel('Failed')"></th>
+                                        <th ng-bind-html="getLabel('Blocked')"></th>
+                                        <th ng-bind-html="getLabel('Pending')"></th>
                                         <th>Progress</th>
-                                        <th>Passed %</th>
-                                        <th>Failed %</th>
-                                        <th>Blocked %</th>
-                                        <th>Pending %</th>
+                                        <th ng-bind-html="getLabel('Passed%')"></th>
+                                        <th ng-bind-html="getLabel('Failed%')"></th>
+                                        <th ng-bind-html="getLabel('Blocked%')"></th>
+                                        <th ng-bind-html="getLabel('Pending%')"></th>
                                     </tr>
                                     <tr>
                                         <td>
@@ -182,15 +182,15 @@
 
                                         </th>
                                         <th>Total</th>
-                                        <th>Passed</th>
-                                        <th>Failed</th>
-                                        <th>Blocked</th>
-                                        <th>Pending</th>
+                                        <th ng-bind-html="getLabel('Passed')"></th>
+                                        <th ng-bind-html="getLabel('Failed')"></th>
+                                        <th ng-bind-html="getLabel('Blocked')"></th>
+                                        <th ng-bind-html="getLabel('Pending')"></th>
                                         <th>Progress</th>
-                                        <th>Passed %</th>
-                                        <th>Failed %</th>
-                                        <th>Blocked %</th>
-                                        <th>Pending %</th>
+                                        <th ng-bind-html="getLabel('Passed%')"></th>
+                                        <th ng-bind-html="getLabel('Failed%')"></th>
+                                        <th ng-bind-html="getLabel('Blocked%')"></th>
+                                        <th ng-bind-html="getLabel('Pending%')"></th>
                                         <th>
 
                                         </th>
@@ -242,14 +242,14 @@
                                                 <tr>
                                                     <th>Component</th>
                                                     <th>Total</th>
-                                                    <th>Passed</th>
-                                                    <th>Failed</th>
-                                                    <th>Pending</th>
-                                                    <th>Blocked</th>
+                                                    <th ng-bind-html="getLabel('Passed')"></th>
+                                                    <th ng-bind-html="getLabel('Failed')"></th>
+                                                    <th ng-bind-html="getLabel('Pending')"></th>
+                                                    <th ng-bind-html="getLabel('Blocked')"></th>
                                                     <th>Progress</th>
-                                                    <th>Passed %</th>
-                                                    <th>Failed %</th>
-                                                    <th>Pending %</th>
+                                                    <th ng-bind-html="getLabel('Passed%')"></th>
+                                                    <th ng-bind-html="getLabel('Failed%')"></th>
+                                                    <th ng-bind-html="getLabel('Pending%')"></th>
                                                     <th></th>
                                                 </tr>
                                                 <tr ng-repeat="component in componentList">

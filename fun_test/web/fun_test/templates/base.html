@@ -135,7 +135,7 @@
 {% verbatim %}
 <div class="content" ng-controller="QaDashBoardController" ng-if="showCommonError">
     <div class="alert alert-danger alert-dismissible show" role="alert">
-        <strong>{{ commonErrorMessage }}</strong> {{ detailError }}
+        <strong>{{ commonErrorMessage }} </strong>&nbsp <a href="{{ commonAlertLink }}">Details</a> {{ detailError }}
         <button type="button" class="close" aria-label="Close">
             <span aria-hidden="true" ng-click="closeCommonError()">&times;</span>
         </button>

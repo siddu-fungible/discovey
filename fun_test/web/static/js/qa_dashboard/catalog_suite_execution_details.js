@@ -87,6 +87,31 @@
             $scope.moduleInfo[module].showingDetails = !$scope.moduleInfo[module].showingDetails;
         };
 
+        $scope.getLabel = (text) => {
+            let title = "U";
+            let labelClass = "";
+            let briefText = "";
+            if(text.includes("Passed")) {
+                briefText = "P";
+                labelClass = "label-success";
+            } else if(text.includes("Failed")) {
+                briefText = "F";
+                labelClass = "label-danger";
+            } else if(text.includes("Pending")) {
+                briefText = "Pn";
+                labelClass = "label-default"
+            } else if(text.includes("Blocked")) {
+                labelClass = "label-blocked";
+                briefText = "B"
+            }
+            if(text.includes("%")) {
+                briefText += "%";
+            }
+            let s = '<label data-placement="top" data-toggle="tooltip" title="' + text + '" class="label ';
+            s += labelClass + '">' + briefText + "</label>";
+            return s;
+        };
+
         $scope.resultToClass = function (result) {
             return resultToClass(result);
         };
