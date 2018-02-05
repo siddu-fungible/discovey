@@ -7,8 +7,7 @@ import os, sys
 
 class StorageController(DpcshClient):
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
-        super(StorageController, self).__init__(target_ip=target_ip, target_port=target_port, verbose=verbose)
-        self.mode = mode
+        super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
 
     def ip_cfg(self, ip, expected_command_duration=1):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip":ip}}
