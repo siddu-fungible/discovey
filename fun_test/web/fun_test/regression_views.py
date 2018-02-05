@@ -9,8 +9,8 @@ from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
-from web.fun_test.models import CatalogSuiteExecution
-from web_global import initialize_result
+from web.fun_test.models import CatalogSuiteExecution, Module
+from web.web_global import initialize_result, api_safe_json_response
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
@@ -216,6 +216,12 @@ def catalog_test_case_execution_summary_result(request, suite_execution_id, jira
     except Exception as ex:
         result["error_message"] = str(ex)
     return HttpResponse(json.dumps(result))
+
+
+@csrf_exempt
+@api_safe_json_response
+def modules(request):
+    return [x.name for x in Module.objects.all()]
 
 @csrf_exempt
 def catalog_test_case_execution_summary_result_multiple_jiras(request):

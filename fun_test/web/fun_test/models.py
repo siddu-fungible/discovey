@@ -8,7 +8,6 @@ import os
 from django.db import models
 from fun_global import RESULTS
 from web.fun_test.jira_models import *
-from web.fun_test.metrics_models import *
 
 from web.fun_test.site_state import site_state
 
@@ -126,6 +125,11 @@ class CatalogTestCaseExecution(models.Model):
     def __str__(self):
         return "{} {} {} {}".format(self.execution_id, self.jira_id, self.engineer, self.test_bed)
 
+class Module(models.Model):
+    name = models.TextField(unique=True)
+    verbose_name = models.TextField(default="Verbose Name")
+
+from web.fun_test.metrics_models import *
 
 if __name__ == "__main__":
     #import django

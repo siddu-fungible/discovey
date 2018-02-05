@@ -3,6 +3,7 @@ from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer
 from web.fun_test.models import CatalogTestCase, CatalogSuite, CatalogSuiteExecution
 from web.fun_test.models import CatalogTestCaseExecution
 from web.fun_test.models import TestBed
+from web.fun_test.models import Module
 from web.fun_test.metrics_model_admin import *
 
 @admin.register(SuiteExecution)
@@ -40,4 +41,8 @@ class TestBedAdmin(admin.ModelAdmin):
 
 @admin.register(CatalogTestCaseExecution)
 class CatalogTestCaseExecutionAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Module)
+class ModuleAdmin(admin.ModelAdmin):
     pass

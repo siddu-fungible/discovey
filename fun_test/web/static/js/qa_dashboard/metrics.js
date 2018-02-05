@@ -19,6 +19,12 @@ function MetricsController($scope, $http, commonService, $timeout) {
 
     };
 
+    $scope.fetchModules = () => {
+        commonService.apiGet("/regression/modules", "fetchModules").then((modules) => {
+
+        })
+    };
+
     $scope.fetchMetricsList = function () {
         commonService.apiGet("/metrics/metrics_list", "fetchMetricsList").then(function(metricsList) {
             $scope.metricsList = metricsList;

@@ -92,5 +92,5 @@ if __name__ == "__main__":
     }
     MetricChart.objects.all().delete()
     MetricChart(chart_name="Chart 1", data_sets=json.dumps([data_set1, data_set2]),
-                metric_model_name="Performance1").save()
+                metric_model_name="Performance1", module="networking").save()
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
