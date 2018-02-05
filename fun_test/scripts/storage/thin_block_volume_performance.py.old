@@ -34,7 +34,7 @@ topology_dict = {
 }
 
 
-class BLTVolumePerformanceScript(FunTestScript):
+class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Start POSIM and create a Linux instance
@@ -47,18 +47,95 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.test_assert(topology, "Ensure deploy is successful")
         fun_test.shared_variables["topology"] = topology
 
+        dut_instance = topology.get_dut_instance(index=0)
+        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
+
+        linux_host = topology.get_tg_instance(tg_index=0)
+        destination_ip = dut_instance.data_plane_ip
+
+        command_timeout = 5
+
+        # Initializing volume related configs
+        volume_details = {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
+                          "name": "thin-block1"}
+
+        # Configuring Local thin block volume
+        storage_controller = StorageController(target_ip=dut_instance.host_ip,
+                                               target_port=dut_instance.external_dpcsh_port)
+
+        command_result = {}
+        command_result = storage_controller.command("enable_counters")
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Enabling counters on Dut Instance {}".format(0))
+
+        command_result = {}
+        command_result = storage_controller.ip_cfg(ip=dut_instance.data_plane_ip,
+                                                   expected_command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "ip_cfg {} on Dut Instance {}".
+                             format(dut_instance.data_plane_ip, 0))
+
+        command_result = {}
+        thin_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+        command_result = storage_controller.create_thin_block_volume(capacity=volume_details["capacity"],
+                                                                     block_size=volume_details["block_size"],
+                                                                     name=volume_details["name"], uuid=thin_uuid,
+                                                                     expected_command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "create_thin_block_volume on Dut Instance {}".format(0))
+
+        command_result = {}
+        command_result = storage_controller.attach_volume(ns_id=volume_details["ns_id"], uuid=thin_uuid,
+                                                          remote_ip=linux_host.internal_ip,
+                                                          expected_command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Attaching thin local block volume on Dut Instance {}".format(0))
+
+        fun_test.shared_variables["volume_details"] = volume_details
+        fun_test.shared_variables["storage_controller"] = storage_controller
+        fun_test.shared_variables["thin_uuid"] = thin_uuid
+
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         pass
 
 
-class BLTVolumePerformanceTestcase(FunTestCase):
+class FioSeqWriteSeqReadOnly(FunTestCase):
     def describe(self):
-        pass
+        self.set_test_details(id=1,
+                              summary="Sequential Write & Read only performance of Thin Provisioned local block volume "
+                                      "over RDS",
+                              steps='''
+        1. Create a local thin block volume in dut instances 0.
+        2. Export (Attach) this local thin volume to the external Linux instance/container. 
+        3. Run the FIO sequential write and read only test(without verify) for various block size and IO depth from the 
+        external Linux server and check the performance are inline with the expected threshold. 
+        ''')
 
     def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
 
         testcase = self.__class__.__name__
+
+        topology = fun_test.shared_variables["topology"]
+        dut_instance = topology.get_dut_instance(index=0)
+        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
+
+        linux_host = topology.get_tg_instance(tg_index=0)
+        destination_ip = dut_instance.data_plane_ip
+
+        volume_details = fun_test.shared_variables["volume_details"]
+        storage_controller = fun_test.shared_variables["storage_controller"]
+        thin_uuid = fun_test.shared_variables["thin_uuid"]
+
+        # Start of benchmarking json file parsing and initializing various varaibles to run this testcase
+        # Initializing fio_bs_iodepth variable as a list of tuples in which the first element of the tuple refers the
+        # block size & second one refers the iodepth going to used for that block size
 
         benchmark_parsing = True
         benchmark_file = ""
@@ -72,24 +149,43 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             benchmark_parsing = False
             fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
                               format(testcase, benchmark_file))
-            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-
-        for k, v in benchmark_dict[testcase].iteritems():
-            setattr(self, k, v)
 
         # Setting the list of block size and IO depth combo
+        fio_bs_iodepth = []
         if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
             benchmark_parsing = False
             fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
                               "the {} file".format(testcase, benchmark_file))
+        fio_bs_iodepth = benchmark_dict[testcase]['fio_bs_iodepth']
+        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
+                     format(testcase, fio_bs_iodepth))
+
+        fio_size = "16m"
+        fio_timeout = 120
+        fio_modes = ['write', 'read']
 
         # Setting expected FIO results
+        expected_fio_result = {}
         if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
             benchmark_parsing = False
             fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
                               "testcase is not available in the {} file".format(testcase, benchmark_file))
+        expected_fio_result = benchmark_dict[testcase]['expected_fio_result']
+        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
+                     format(testcase, expected_fio_result))
 
-        if len(self.fio_bs_iodepth) != len(self.expected_fio_result.keys()):
+        # expected_fio_result = {
+        #    (4, 32): {'write': {'write': {'bw': 646, 'iops': 161}},
+        #              'read': {'read': {'bw': 726, 'iops': 181}}},
+        #    (8, 16): {'write': {'write': {'bw': 1066, 'iops': 133}},
+        #              'read': {'read': {'bw': 1236, 'iops': 154}}},
+        #    (16, 16): {'write': {'write': {'bw': 1419, 'iops': 88}},
+        #               'read': {'read': {'bw': 1793, 'iops': 111}}},
+        #    (32, 64): {'write': {'write': {'bw': 1593, 'iops': 49}},
+        #               'read': {'read': {'bw': 2143, 'iops': 66}}}
+        # }
+
+        if len(fio_bs_iodepth) != len(expected_fio_result.keys()):
             benchmark_parsing = False
             fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
 
@@ -99,87 +195,26 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             benchmark_parsing = False
             fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
                               "the {} file".format(testcase, benchmark_file))
+        expected_volume_stats = benchmark_dict[testcase]['expected_volume_stats']
+        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
+                     format(testcase, expected_volume_stats))
 
-        if 'fio_pass_threshold' not in benchmark_dict[testcase]:
-            self.fio_pass_threshold = .05
+        # expected_volume_stats = {'write': {'fault_injection': 0, 'num_reads': 0, 'num_writes': 4096},
+        #                         'read': {'fault_injection': 0, 'num_reads': 4096, 'num_writes': 0}}
+
+        if 'pass_threshold' not in benchmark_dict[testcase]:
+            pass_threshold = .05
             fun_test.log("Setting passing threshold to {} for this {} testcase, because its not set in the {} file".
-                         format(self.fio_pass_threshold, testcase, benchmark_file))
+                         format(pass_threshold, testcase, benchmark_file))
+        pass_threshold = benchmark_dict[testcase]['pass_threshold']
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
-                     format(testcase, self.fio_bs_iodepth))
-        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
-                     format(testcase, self.expected_fio_result))
-        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
-                     format(testcase, self.expected_volume_stats))
         # End of benchmarking json file parsing
-
-        topology = fun_test.shared_variables["topology"]
-        dut_instance = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
-
-        linux_host = topology.get_tg_instance(tg_index=0)
-        destination_ip = dut_instance.data_plane_ip
-
-        if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
-            fun_test.shared_variables["blt"] = {}
-            fun_test.shared_variables["blt"]["setup_created"] = False
-
-            # Configuring Local thin block volume
-            storage_controller = StorageController(target_ip=dut_instance.host_ip,
-                                                   target_port=dut_instance.external_dpcsh_port)
-
-            command_result = {}
-            command_result = storage_controller.command("enable_counters")
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")
-
-            command_result = {}
-            command_result = storage_controller.ip_cfg(ip=dut_instance.data_plane_ip,
-                                                       expected_command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg {} on Dut Instance 0".
-                                 format(dut_instance.data_plane_ip))
-
-            command_result = {}
-            self.thin_uuid = str(uuid.uuid4()).replace("-", "")[:10]
-            command_result = storage_controller.create_thin_block_volume(capacity=self.volume_details["capacity"],
-                                                                         block_size=self.volume_details["block_size"],
-                                                                         name=self.volume_details["name"],
-                                                                         uuid=self.thin_uuid,
-                                                                         expected_command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
-
-            command_result = {}
-            command_result = storage_controller.attach_volume(ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid,
-                                                              remote_ip=linux_host.internal_ip,
-                                                              expected_command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
-
-            fun_test.shared_variables["blt"]["setup_created"] = True
-            fun_test.shared_variables["blt"]["storage_controller"] = storage_controller
-            fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-
-    def run(self):
-
-        testcase = self.__class__.__name__
-
-        topology = fun_test.shared_variables["topology"]
-        dut_instance = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
-
-        linux_host = topology.get_tg_instance(tg_index=0)
-        destination_ip = dut_instance.data_plane_ip
-
-        storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
-        self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
 
         fio_result = {}
         internal_result = {}
 
-        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
+        props_tree = "{}/{}/{}/{}".format("storage", "volumes", volume_details["type"], thin_uuid)
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -188,20 +223,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         final_volume_status = {}
         diff_volume_stats = {}
 
-        for combo in self.fio_bs_iodepth:
+        for combo in fio_bs_iodepth:
             fio_result[combo] = {}
             internal_result[combo] = {}
             initial_volume_status[combo] = {}
             fio_output[combo] = {}
             final_volume_status[combo] = {}
             diff_volume_stats[combo] = {}
-
-            if combo in self.expected_volume_stats:
-                expected_volume_stats = self.expected_volume_stats[combo]
-            else:
-                expected_volume_stats = self.expected_volume_stats
-
-            for mode in self.fio_modes:
+            for mode in fio_modes:
 
                 tmp = combo.split(',')
                 fio_block_size = tmp[0].strip('() ') + 'k'
@@ -217,7 +246,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 initial_volume_status[combo][mode] = {}
 
                 command_result = storage_controller.peek(props_tree)
-                fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance 0")
+                fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance {}".format(0))
                 initial_volume_status[combo][mode] = command_result["data"]
                 fun_test.log("Volume Status at the beginning of the test:")
                 fun_test.log(initial_volume_status[combo][mode])
@@ -225,7 +254,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
-                                                         iodepth=fio_iodepth, **self.fio_cmd_args)
+                                                         size=fio_size, iodepth=fio_iodepth, timeout=fio_timeout)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
@@ -242,90 +271,55 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
                 # Finding the difference between the internal volume stats before and after the test
                 diff_volume_stats[combo][mode] = {}
-                for fkey, fvalue in final_volume_status[combo][mode].items():
-                    if fkey not in expected_volume_stats[mode] or fkey == "fault_injection":
-                        diff_volume_stats[combo][mode][fkey] = fvalue
-                        continue
-                    if fkey in initial_volume_status[combo][mode]:
-                        ivalue = initial_volume_status[combo][mode][fkey]
-                        diff_volume_stats[combo][mode][fkey] = fvalue - ivalue
+                for key, value in final_volume_status[combo][mode].items():
+                    if key in initial_volume_status[combo][mode]:
+                        diff_volume_stats[combo][mode][key] = final_volume_status[combo][mode][key] - \
+                                                              initial_volume_status[combo][mode][key]
                 fun_test.log("Difference of volume status before and after the test:")
                 fun_test.log(diff_volume_stats[combo][mode])
 
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
-                for op, stats in self.expected_fio_result[combo][mode].items():
+                for op, stats in expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
                         actual = fio_output[combo][mode][op][field]
-                        if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
+                        if actual < (value * (1 - pass_threshold)):
                             fio_result[combo][mode] = False
                             fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
                                               format(op, field, actual, value))
-                        elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
+                        elif actual > (value * (1 + pass_threshold)):
                             fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
                                                                                                          actual, value))
                         else:
                             fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
 
                 # Comparing the internal volume stats with the expected value
-                for ekey, evalue in expected_volume_stats[mode].items():
-                    if ekey in diff_volume_stats[combo][mode]:
-                        actual = diff_volume_stats[combo][mode][ekey]
-                        if actual != evalue:
-                            if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
-                                fun_test.critical("Final {} value {} is within the expected range {}".
-                                                  format(ekey, actual, evalue))
-                            elif (actual > evalue) and ((actual - evalue) <= self.volume_pass_threshold):
-                                fun_test.critical("Final {} value {} is within the expected range {}".
-                                                  format(ekey, actual, evalue))
-                            else:
-                                internal_result[combo][mode] = False
-                                fun_test.critical("Final {} value {} is not equal to the expected value {}".
-                                                  format(ekey, actual, evalue))
+                for key in expected_volume_stats[mode].keys():
+                    if key in diff_volume_stats[combo][mode]:
+                        if diff_volume_stats[combo][mode][key] != expected_volume_stats[mode][key]:
+                            internal_result[combo][mode] = False
+                            fun_test.critical("Final {} value {} is not equal to the expected value {}".
+                                              format(key, diff_volume_stats[combo][mode][key],
+                                                     expected_volume_stats[mode][key]))
                         else:
                             fun_test.log("Final {} value {} is equal to the expected value {}".
-                                         format(ekey, actual, evalue))
+                                         format(key, diff_volume_stats[combo][mode][key],
+                                                expected_volume_stats[mode][key]))
                     else:
                         internal_result[combo][mode] = False
-                        fun_test.critical("{} is not found in volume status".format(ekey))
+                        fun_test.critical("{} is not found in volume status".format(key))
 
         # Posting the final status of the test result
         fun_test.log(fio_result)
         fun_test.log(internal_result)
-        for combo in self.fio_bs_iodepth:
-            for mode in self.fio_modes:
+        for combo in fio_bs_iodepth:
+            for mode in fio_modes:
                 fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
                                                               "combo {}".format(mode, combo))
                 fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
                                                                    "size & IO depth combo {}".format(mode, combo))
 
-    def cleanup(self):
-        pass
 
-
-class BLTFioSeqWriteSeqReadOnly(BLTVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Sequential Write & Read only performance of Thin Provisioned local block volume "
-                                      "over RDS",
-                              steps='''
-        1. Create a local thin block volume in dut instances 0.
-        2. Export (Attach) this local thin volume to the external Linux instance/container. 
-        3. Run the FIO sequential write and read only test(without verify) for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold. 
-        ''')
-
-    def setup(self):
-        super(BLTFioSeqWriteSeqReadOnly, self).setup()
-
-    def run(self):
-        super(BLTFioSeqWriteSeqReadOnly, self).run()
-
-    def cleanup(self):
-        super(BLTFioSeqWriteSeqReadOnly, self).cleanup()
-
-
-class BLTFioRandWriteRandReadOnly(BLTVolumePerformanceTestcase):
+class FioRandWriteRandReadOnly(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
                               summary='Random Write & Read only performance of Thin Provisioned local block volume over'
@@ -338,16 +332,213 @@ class BLTFioRandWriteRandReadOnly(BLTVolumePerformanceTestcase):
         ''')
 
     def setup(self):
-        super(BLTFioRandWriteRandReadOnly, self).setup()
-
-    def run(self):
-        super(BLTFioRandWriteRandReadOnly, self).run()
+        pass
 
     def cleanup(self):
-        super(BLTFioRandWriteRandReadOnly, self).cleanup()
+        pass
+
+    def run(self):
+
+        testcase = self.__class__.__name__
+
+        topology = fun_test.shared_variables["topology"]
+        dut_instance = topology.get_dut_instance(index=0)
+        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
+
+        linux_host = topology.get_tg_instance(tg_index=0)
+        destination_ip = dut_instance.data_plane_ip
+
+        volume_details = fun_test.shared_variables["volume_details"]
+        storage_controller = fun_test.shared_variables["storage_controller"]
+        thin_uuid = fun_test.shared_variables["thin_uuid"]
+
+        # Start of benchmarking json file parsing and initializing various varaibles to run this testcase
+        # Initializing fio_bs_iodepth variable as a list of tuples in which the first element of the tuple refers the
+        # block size & second one refers the iodepth going to used for that block size
+
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+
+        # Setting the list of block size and IO depth combo
+        fio_bs_iodepth = []
+        if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
+            benchmark_parsing = False
+            fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
+                              "the {} file".format(testcase, benchmark_file))
+        fio_bs_iodepth = benchmark_dict[testcase]['fio_bs_iodepth']
+        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
+                     format(testcase, fio_bs_iodepth))
+
+        fio_size = "16m"
+        fio_timeout = 120
+        fio_modes = ['randwrite', 'randread']
+
+        # Setting expected FIO results
+        expected_fio_result = {}
+        if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
+                              "testcase is not available in the {} file".format(testcase, benchmark_file))
+        expected_fio_result = benchmark_dict[testcase]['expected_fio_result']
+        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
+                     format(testcase, expected_fio_result))
+
+        # expected_fio_result = {
+        #    (4, 32): {'randwrite': {'write': {'bw': 616, 'iops': 152}},
+        #              'randread': {'read': {'bw': 677, 'iops': 169}}},
+        #    (8, 8): {'randwrite': {'write': {'bw': 979, 'iops': 122}},
+        #             'randread': {'read': {'bw': 1088, 'iops': 136}}},
+        #    (16, 16): {'randwrite': {'write': {'bw': 1327, 'iops': 83}},
+        #               'randread': {'read': {'bw': 1544, 'iops': 96}}},
+        #    (32, 16): {'randwrite': {'write': {'bw': 1538, 'iops': 47}},
+        #               'randread': {'read': {'bw': 1891, 'iops': 59}}}
+        # }
+
+        if len(fio_bs_iodepth) != len(expected_fio_result.keys()):
+            benchmark_parsing = False
+            fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
+
+        # Setting the expected volume level internal stats at the end of every FIO run
+        if ('expected_volume_stats' not in benchmark_dict[testcase] or
+                not benchmark_dict[testcase]['expected_volume_stats']):
+            benchmark_parsing = False
+            fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
+                              "the {} file".format(testcase, benchmark_file))
+        expected_volume_stats = benchmark_dict[testcase]['expected_volume_stats']
+        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
+                     format(testcase, expected_volume_stats))
+
+        # expected_volume_stats = {'randwrite': {'fault_injection': 0, 'num_reads': 0, 'num_writes': 4096},
+        #                         'randread': {'fault_injection': 0, 'num_reads': 4096, 'num_writes': 0}}
+
+        if 'pass_threshold' not in benchmark_dict[testcase]:
+            pass_threshold = .05
+            fun_test.log("Setting passing threshold to {} for this {} testcase, because its not set in the {} file".
+                         format(pass_threshold, testcase, benchmark_file))
+        pass_threshold = benchmark_dict[testcase]['pass_threshold']
+
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        # End of benchmarking json file parsing
+
+        fio_result = {}
+        internal_result = {}
+
+        props_tree = "{}/{}/{}/{}".format("storage", "volumes", volume_details["type"], thin_uuid)
+
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write & read
+        # only modes
+        initial_volume_status = {}
+        fio_output = {}
+        final_volume_status = {}
+        diff_volume_stats = {}
+
+        for combo in fio_bs_iodepth:
+            fio_result[combo] = {}
+            internal_result[combo] = {}
+            initial_volume_status[combo] = {}
+            fio_output[combo] = {}
+            final_volume_status[combo] = {}
+            diff_volume_stats[combo] = {}
+            for mode in fio_modes:
+
+                tmp = combo.split(',')
+                fio_block_size = tmp[0].strip('() ') + 'k'
+                fio_iodepth = tmp[1].strip('() ')
+                fio_result[combo][mode] = True
+                internal_result[combo][mode] = True
+
+                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
+                             format(mode, fio_block_size, fio_iodepth))
+
+                # Pulling in the initial volume stats in dictionary format
+                command_result = {}
+                initial_volume_status[combo][mode] = {}
+
+                command_result = storage_controller.peek(props_tree)
+                # fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance {}".format(0))
+                initial_volume_status[combo][mode] = command_result["data"]
+                fun_test.log("Volume Status at the beginning of the test:")
+                fun_test.log(initial_volume_status[combo][mode])
+
+                # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
+                fio_output[combo][mode] = {}
+                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
+                                                         size=fio_size, iodepth=fio_iodepth, timeout=fio_timeout)
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fio_output[combo][mode])
+                # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
+                fun_test.sleep("Sleeping for 5 seconds between iterations", 5)
+
+                # Getting the volume stats after the FIO test
+                command_result = {}
+                final_volume_status[combo][mode] = {}
+                command_result = storage_controller.peek(props_tree)
+                # fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
+                final_volume_status[combo][mode] = command_result["data"]
+                fun_test.log("Volume Status at the end of the test:")
+                fun_test.log(final_volume_status[combo][mode])
+
+                # Finding the difference between the internal volume stats before and after the test
+                diff_volume_stats[combo][mode] = {}
+                for key, value in final_volume_status[combo][mode].items():
+                    if key in initial_volume_status[combo][mode]:
+                        diff_volume_stats[combo][mode][key] = final_volume_status[combo][mode][key] - \
+                                                              initial_volume_status[combo][mode][key]
+                fun_test.log("Difference of volume status before and after the test:")
+                fun_test.log(diff_volume_stats[combo][mode])
+
+                # Comparing the FIO results with the expected value for the current block size and IO depth combo
+                for op, stats in expected_fio_result[combo][mode].items():
+                    for field, value in stats.items():
+                        actual = fio_output[combo][mode][op][field]
+                        if actual < (value * (1 - pass_threshold)):
+                            fio_result[combo][mode] = False
+                            fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
+                                              format(op, field, actual, value))
+                        elif actual > (value * (1 + pass_threshold)):
+                            fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
+                                                                                                         actual, value))
+                        else:
+                            fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
+
+                # Comparing the internal volume stats with the expected value
+                for key in expected_volume_stats[mode].keys():
+                    if key in diff_volume_stats[combo][mode]:
+                        if diff_volume_stats[combo][mode][key] != expected_volume_stats[mode][key]:
+                            internal_result[combo][mode] = False
+                            fun_test.critical("Final {} value {} is not equal to the expected value {}".
+                                              format(key, diff_volume_stats[combo][mode][key],
+                                                     expected_volume_stats[mode][key]))
+                        else:
+                            fun_test.log("Final {} value {} is equal to the expected value {}".
+                                         format(key, diff_volume_stats[combo][mode][key],
+                                                expected_volume_stats[mode][key]))
+                    else:
+                        internal_result[combo][mode] = False
+                        fun_test.critical("{} is not found in volume status".format(key))
+
+        # Posting the final status of the test result
+        fun_test.log(fio_result)
+        fun_test.log(internal_result)
+        for combo in fio_bs_iodepth:
+            for mode in fio_modes:
+                fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
+                                                              "combo {}".format(mode, combo))
+                fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
+                                                                   "size & IO depth combo {}".format(mode, combo))
 
 
-class BLTFioSeqReadWriteMix(BLTVolumePerformanceTestcase):
+class FioSeqReadWriteMix(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
                               summary='Sequential 75% Write & 25% Read performance of Thin Provisioned local block '
@@ -360,35 +551,204 @@ class BLTFioSeqReadWriteMix(BLTVolumePerformanceTestcase):
         ''')
 
     def setup(self):
-        super(BLTFioSeqReadWriteMix, self).setup()
-
-    def run(self):
-        super(BLTFioSeqReadWriteMix, self).run()
+        pass
 
     def cleanup(self):
-        super(BLTFioSeqReadWriteMix, self).cleanup()
-
-
-class BLTFioRandReadWriteMix(BLTVolumePerformanceTestcase):
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary='Random 75% Write & 25% Read performance of Thin Provisioned local block '
-                                      'volume over RDS',
-                              steps='''
-        1. Create a local thin block volume in dut instances 0.
-        2. Export (Attach) this local thin volume to the external Linux instance/container. 
-        3. Run the FIO random write and read mix test with 3:1 ratio for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold. 
-        ''')
-
-    def setup(self):
-        super(BLTFioRandReadWriteMix, self).setup()
+        pass
 
     def run(self):
-        super(BLTFioRandReadWriteMix, self).run()
 
-    def cleanup(self):
-        super(BLTFioRandReadWriteMix, self).cleanup()
+        testcase = self.__class__.__name__
+
+        topology = fun_test.shared_variables["topology"]
+        dut_instance = topology.get_dut_instance(index=0)
+        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
+
+        linux_host = topology.get_tg_instance(tg_index=0)
+        destination_ip = dut_instance.data_plane_ip
+
+        volume_details = fun_test.shared_variables["volume_details"]
+        storage_controller = fun_test.shared_variables["storage_controller"]
+        thin_uuid = fun_test.shared_variables["thin_uuid"]
+
+        # Start of benchmarking json file parsing and initializing various varaibles to run this testcase
+        # Initializing fio_bs_iodepth variable as a list of tuples in which the first element of the tuple refers the
+        # block size & second one refers the iodepth going to used for that block size
+
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+
+        # Setting the list of block size and IO depth combo
+        fio_bs_iodepth = []
+        if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
+            benchmark_parsing = False
+            fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
+                              "the {} file".format(testcase, benchmark_file))
+        fio_bs_iodepth = benchmark_dict[testcase]['fio_bs_iodepth']
+        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
+                     format(testcase, fio_bs_iodepth))
+
+        fio_size = "16m"
+        fio_rwmixread = 25
+        fio_timeout = 120
+        fio_modes = ['rw', ]
+
+        # Setting expected FIO results
+        expected_fio_result = {}
+        if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
+                              "testcase is not available in the {} file".format(testcase, benchmark_file))
+        expected_fio_result = benchmark_dict[testcase]['expected_fio_result']
+        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
+                     format(testcase, expected_fio_result))
+
+        if len(fio_bs_iodepth) != len(expected_fio_result.keys()):
+            benchmark_parsing = False
+            fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
+
+        # Setting the expected volume level internal stats at the end of every FIO run
+        if ('expected_volume_stats' not in benchmark_dict[testcase] or
+                not benchmark_dict[testcase]['expected_volume_stats']):
+            benchmark_parsing = False
+            fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
+                              "the {} file".format(testcase, benchmark_file))
+        expected_volume_stats = benchmark_dict[testcase]['expected_volume_stats']
+        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
+                     format(testcase, expected_volume_stats))
+
+        if 'pass_threshold' not in benchmark_dict[testcase]:
+            pass_threshold = .05
+            fun_test.log("Setting passing threshold to {} for this {} testcase, because its not set in the {} file".
+                         format(pass_threshold, testcase, benchmark_file))
+        pass_threshold = benchmark_dict[testcase]['pass_threshold']
+
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        # End of benchmarking json file parsing
+
+        fio_result = {}
+        internal_result = {}
+
+        props_tree = "{}/{}/{}/{}".format("storage", "volumes", volume_details["type"], thin_uuid)
+
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write & read
+        # only modes
+        initial_volume_status = {}
+        fio_output = {}
+        final_volume_status = {}
+        diff_volume_stats = {}
+
+        for combo in fio_bs_iodepth:
+            fio_result[combo] = {}
+            internal_result[combo] = {}
+            initial_volume_status[combo] = {}
+            fio_output[combo] = {}
+            final_volume_status[combo] = {}
+            diff_volume_stats[combo] = {}
+            for mode in fio_modes:
+
+                tmp = combo.split(',')
+                fio_block_size = tmp[0].strip('() ') + 'k'
+                fio_iodepth = tmp[1].strip('() ')
+                fio_result[combo][mode] = True
+                internal_result[combo][mode] = True
+
+                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
+                             format(mode, fio_block_size, fio_iodepth))
+
+                # Pulling in the initial volume stats in dictionary format
+                command_result = {}
+                initial_volume_status[combo][mode] = {}
+
+                command_result = storage_controller.peek(props_tree)
+                # fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance {}".format(0))
+                initial_volume_status[combo][mode] = command_result["data"]
+                fun_test.log("Volume Status at the beginning of the test:")
+                fun_test.log(initial_volume_status[combo][mode])
+
+                # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
+                fio_output[combo][mode] = {}
+                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
+                                                         size=fio_size, iodepth=fio_iodepth, rwmixread=fio_rwmixread,
+                                                         timeout=fio_timeout)
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fio_output[combo][mode])
+                # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
+                fun_test.sleep("Sleeping for 5 seconds between iterations", 5)
+
+                # Getting the volume stats after the FIO test
+                command_result = {}
+                final_volume_status[combo][mode] = {}
+                command_result = storage_controller.peek(props_tree)
+                # fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
+                final_volume_status[combo][mode] = command_result["data"]
+                fun_test.log("Volume Status at the end of the test:")
+                fun_test.log(final_volume_status[combo][mode])
+
+                # Finding the difference between the internal volume stats before and after the test
+                diff_volume_stats[combo][mode] = {}
+                for key, value in final_volume_status[combo][mode].items():
+                    if key in initial_volume_status[combo][mode]:
+                        diff_volume_stats[combo][mode][key] = final_volume_status[combo][mode][key] - \
+                                                              initial_volume_status[combo][mode][key]
+                fun_test.log("Difference of volume status before and after the test:")
+                fun_test.log(diff_volume_stats[combo][mode])
+
+                # Comparing the FIO results with the expected value for the current block size and IO depth combo
+                for op, stats in expected_fio_result[combo][mode].items():
+                    for field, value in stats.items():
+                        actual = fio_output[combo][mode][op][field]
+                        if actual < (value * (1 - pass_threshold)):
+                            fio_result[combo][mode] = False
+                            fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
+                                              format(op, field, actual, value))
+                        elif actual > (value * (1 + pass_threshold)):
+                            fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
+                                                                                                         actual, value))
+                        else:
+                            fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
+
+                # Comparing the internal volume stats with the expected value
+                for key in expected_volume_stats[combo].keys():
+                    deviation = int(tmp[0].strip('() ')) / 4
+                    if key in diff_volume_stats[combo][mode]:
+                        if diff_volume_stats[combo][mode][key] < (expected_volume_stats[combo][key] - deviation):
+                            internal_result[combo][mode] = False
+                            fun_test.critical("Final {} value {} is lesser than the expected value {}".
+                                              format(key, diff_volume_stats[combo][mode][key],
+                                                     expected_volume_stats[combo][key]))
+                        elif diff_volume_stats[combo][mode][key] > (expected_volume_stats[combo][key] + deviation):
+                            internal_result[combo][mode] = False
+                            fun_test.critical("Final {} value {} is greater than the expected value {}".
+                                              format(key, diff_volume_stats[combo][mode][key],
+                                                     expected_volume_stats[combo][key]))
+                        else:
+                            fun_test.log("Final {} value {} is around the expected value {} within the expected "
+                                         "deviation {}".format(key, diff_volume_stats[combo][mode][key],
+                                                               expected_volume_stats[combo][key], deviation))
+                    else:
+                        internal_result[combo][mode] = False
+                        fun_test.critical("{} is not found in volume status".format(key))
+
+        # Posting the final status of the test result
+        fun_test.log(fio_result)
+        fun_test.log(internal_result)
+        for combo in fio_bs_iodepth:
+            for mode in fio_modes:
+                fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
+                                                              "combo {}".format(mode, combo))
+                fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
+                                                                   "size & IO depth combo {}".format(mode, combo))
 
 
 class FioRandReadWriteMix(FunTestCase):
@@ -834,10 +1194,10 @@ class FioLargeWriteReadOnly(FunTestCase):
 
 if __name__ == "__main__":
 
-    bltscript = BLTVolumePerformanceScript()
-    # bltscript.add_test_case(BLTFioSeqWriteSeqReadOnly())
-    # bltscript.add_test_case(BLTFioRandWriteRandReadOnly())
-    bltscript.add_test_case(BLTFioSeqReadWriteMix())
-    bltscript.add_test_case(BLTFioRandReadWriteMix())
+    myscript = MyScript()
+    myscript.add_test_case(FioSeqWriteSeqReadOnly())
+    # myscript.add_test_case(FioRandWriteRandReadOnly())
+    # myscript.add_test_case(FioSeqReadWriteMix())
+    # myscript.add_test_case(FioRandReadWriteMix())
     # myscript.add_test_case(FioLargeWriteReadOnly())
-    bltscript.run()
+    myscript.run()

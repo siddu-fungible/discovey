@@ -3,23 +3,23 @@
     "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
                        "name": "thin-block1"},
     "command_timeout": 5,
-    "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 120},
+    "fio_cmd_args": {"io_queues": 2, "size": "16m", "timeout": 120},
     "fio_modes": ["write", "read"],
-    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
+    "fio_bs_iodepth": ["(4, 32)", "(8, 16)", "(16, 16)", "(32, 64)"],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 0,
     "expected_fio_result": {
-      "(4, 1)": {"write": {"write": {"bw": 66, "iops": 16}},
-                 "read": {"read": {"bw": 218, "iops": 54}}},
-      "(8, 1)": {"write": {"write": {"bw": 128, "iops": 15}},
-                 "read": {"read": {"bw": 400, "iops": 50}}},
-      "(16, 1)": {"write": {"write": {"bw": 238, "iops": 14}},
-                  "read": {"read": {"bw": 686, "iops": 42}}},
-      "(32, 1)": {"write": {"write": {"bw": 424, "iops": 13}},
-                  "read": {"read": {"bw": 1040, "iops": 31}}}
+      "(4, 32)": {"write": {"write": {"bw": 646, "iops": 161}},
+                  "read": {"read": {"bw": 726, "iops": 181}}},
+      "(8, 16)": {"write": {"write": {"bw": 1066, "iops": 133}},
+                  "read": {"read": {"bw": 1236, "iops": 154}}},
+      "(16, 16)": {"write": {"write": {"bw": 1419, "iops": 88}},
+                   "read": {"read": {"bw": 1793, "iops": 111}}},
+      "(32, 64)": {"write": {"write": {"bw": 1593, "iops": 49}},
+                   "read": {"read": {"bw": 2143, "iops": 66}}}
     },
-    "expected_volume_stats": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-                              "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}
+    "expected_volume_stats": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 4096},
+                              "read": {"fault_injection": 0, "num_reads": 4096, "num_writes": 0}}
   },
   "BLTFioRandWriteRandReadOnly": {
     "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
@@ -27,21 +27,21 @@
     "command_timeout": 5,
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 120},
     "fio_modes": ["randwrite", "randread"],
-    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
+    "fio_bs_iodepth": ["(4, 32)", "(8, 8)", "(16, 16)", "(32, 16)"],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 0,
     "expected_fio_result": {
-      "(4, 1)": {"randwrite": {"write": {"bw": 66, "iops": 16}},
-                 "randread": {"read": {"bw": 218, "iops": 54}}},
-      "(8, 1)": {"randwrite": {"write": {"bw": 128, "iops": 15}},
-                 "randread": {"read": {"bw": 406, "iops": 50}}},
-      "(16, 1)": {"randwrite": {"write": {"bw": 238, "iops": 14}},
-                  "randread": {"read": {"bw": 682, "iops": 42}}},
-      "(32, 1)": {"randwrite": {"write": {"bw": 426, "iops": 13}},
-                  "randread": {"read": {"bw": 1030, "iops": 32}}}
+      "(4, 32)": {"randwrite": {"write": {"bw": 616, "iops": 152}},
+                  "randread": {"read": {"bw": 677, "iops": 169}}},
+      "(8, 8)": {"randwrite": {"write": {"bw": 979, "iops": 122}},
+                 "randread": {"read": {"bw": 1088, "iops": 136}}},
+      "(16, 16)": {"randwrite": {"write": {"bw": 1327, "iops": 83}},
+                   "randread": {"read": {"bw": 1544, "iops": 96}}},
+      "(32, 16)": {"randwrite": {"write": {"bw": 1538, "iops": 47}},
+                   "randread": {"read": {"bw": 1891, "iops": 59}}}
     },
-    "expected_volume_stats": {"randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-                              "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}
+    "expected_volume_stats": {"randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 4096},
+                              "randread": {"fault_injection": 0, "num_reads": 4096, "num_writes": 0}}
   },
   "BLTFioSeqReadWriteMix": {
     "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
@@ -49,24 +49,24 @@
     "command_timeout": 5,
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 120},
     "fio_modes": ["rw"],
-    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
+    "fio_bs_iodepth": ["(4, 16)", "(8, 16)", "(16, 8)", "(32, 8)"],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 0,
     "expected_fio_result": {
-      "(4, 1)": {"rw": {"write": {"bw": 58, "iops": 14},
-                        "read": {"bw": 18, "iops": 4}}},
-      "(8, 1)": {"rw": {"write": {"bw": 114, "iops": 14},
-                        "read": {"bw": 37, "iops": 4}}},
-      "(16, 1)": {"rw": {"write": {"bw": 212, "iops": 13},
-                         "read": {"bw": 80, "iops": 5}}},
-      "(32, 1)": {"rw": {"write": {"bw": 350, "iops": 11},
-                         "read": {"bw": 148, "iops": 4}}}
+      "(4, 16)": {"rw": {"write": {"bw": 512, "iops": 127},
+                         "read": {"bw": 161, "iops": 40}}},
+      "(8, 16)": {"rw": {"write": {"bw": 837, "iops": 104},
+                         "read": {"bw": 268, "iops": 33}}},
+      "(16, 8)": {"rw": {"write": {"bw": 1074, "iops": 66},
+                         "read": {"bw": 339, "iops": 21}}},
+      "(32, 8)": {"rw": {"write": {"bw": 1210, "iops": 37},
+                         "read": {"bw": 403, "iops": 12}}}
     },
     "expected_volume_stats": {
-      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 246, "num_writes": 778}},
-      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 256, "num_writes": 768}},
-      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 280, "num_writes": 744}},
-      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 304, "num_writes": 720}}
+      "(4, 16)": {"rw": {"fault_injection": 0, "num_reads": 984, "num_writes": 3112}},
+      "(8, 16)": {"rw": {"fault_injection": 0, "num_reads": 994, "num_writes": 3102}},
+      "(16, 8)": {"rw": {"fault_injection": 0, "num_reads": 984, "num_writes": 3112}},
+      "(32, 8)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 3072}}
     }
   },
   "BLTFioRandReadWriteMix": {
@@ -75,24 +75,24 @@
     "command_timeout": 5,
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 120},
     "fio_modes": ["randrw"],
-    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
+    "fio_bs_iodepth": ["(4, 32)", "(8, 64)", "(16, 16)", "(32, 8)"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 10,
+    "volume_pass_threshold": 0,
     "expected_fio_result": {
-      "(4, 1)": {"randrw": {"write": {"bw": 60, "iops": 14},
-                            "read": {"bw": 18, "iops": 4}}},
-      "(8, 1)": {"randrw": {"write": {"bw": 112, "iops": 14},
-                            "read": {"bw": 37, "iops": 4}}},
-      "(16, 1)": {"randrw": {"write": {"bw": 206, "iops": 12},
-                             "read": {"bw": 78, "iops": 4}}},
-      "(32, 1)": {"randrw": {"write": {"bw": 350, "iops": 10},
-                             "read": {"bw": 146, "iops": 4}}}
+      "(4, 32)": {"randrw": {"write": {"bw": 564, "iops": 140},
+                             "read": {"bw": 178, "iops": 44}}},
+      "(8, 64)": {"randrw": {"write": {"bw": 897, "iops": 112},
+                             "read": {"bw": 287, "iops": 35}}},
+      "(16, 16)": {"randrw": {"write": {"bw": 1221, "iops": 75},
+                              "read": {"bw": 386, "iops": 23}}},
+      "(32, 8)": {"randrw": {"write": {"bw": 1346, "iops": 41},
+                             "read": {"bw": 449, "iops": 13}}}
     },
     "expected_volume_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 301, "num_writes": 778}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 278, "num_writes": 768}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 288, "num_writes": 744}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 307, "num_writes": 720}}
+      "(4, 32)": {"randrw": {"fault_injection": 0, "num_reads": 1968, "num_writes": 3112}},
+      "(8, 64)": {"randrw": {"fault_injection": 0, "num_reads": 1430, "num_writes": 3102}},
+      "(16, 16)": {"randrw": {"fault_injection": 0, "num_reads": 1195, "num_writes": 3112}},
+      "(32, 8)": {"randrw": {"fault_injection": 0, "num_reads": 1137, "num_writes": 3072}}
     }
   },
   "FioLargeWriteReadOnly": {
