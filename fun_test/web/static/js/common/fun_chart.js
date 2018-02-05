@@ -183,6 +183,57 @@
                                     colors: ctrl.colors
                                 }]
                             });
+                        } else if (ctrl.chartType === "line-chart") {
+
+                            Highcharts.chart("c-" + $scope.genId, {
+                                title: {
+                                    text: ctrl.title
+                                },
+
+                                subtitle: {
+                                    text: 'Source: '
+                                },
+                                xAxis: {
+                                    categories: ctrl.series
+                                },
+
+                                yAxis: {
+                                    title: {
+                                        text: 'Number of Employees'
+                                    }
+                                },
+                                legend: {
+                                    layout: 'vertical',
+                                    align: 'right',
+                                    verticalAlign: 'middle'
+                                },
+
+                                plotOptions: {
+                                    series: {
+                                        label: {
+                                            connectorAllowed: false
+                                        }
+                                    }
+                                },
+
+                                series: ctrl.values,
+
+                                responsive: {
+                                    rules: [{
+                                        condition: {
+                                            maxWidth: 500
+                                        },
+                                        chartOptions: {
+                                            legend: {
+                                                layout: 'horizontal',
+                                                align: 'center',
+                                                verticalAlign: 'bottom'
+                                            }
+                                        }
+                                    }]
+                                }
+
+                            });
                         }
                         /*$timeout($scope.updatePlot, 10);*/
                     }, 1000);

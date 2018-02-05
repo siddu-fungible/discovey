@@ -13,9 +13,9 @@ class Performance1(models.Model):
     key = models.CharField(max_length=30)
     input1 = models.CharField(max_length=30, choices=[(0, "input1_0"), (1, "input1_1")])
     input2 = models.IntegerField(choices=[(0, 123), (1, 345)])
-    output1 = models.IntegerField()
-    output2 = models.IntegerField()
-    output3 = models.CharField(max_length=30)
+    output1 = models.IntegerField(verbose_name="Output 1 description")
+    output2 = models.IntegerField(verbose_name="Output 2 description")
+    output3 = models.CharField(max_length=30, verbose_name="Output 3 description")
 
 
 

@@ -2,6 +2,7 @@ import os
 import django
 import json
 from web.web_global import PRIMARY_SETTINGS_FILE
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1
@@ -45,8 +46,12 @@ if __name__ == "__main__":
     performance1_helper = Performance1Helper()
     performance1_helper.clear()
     performance1_helper.add_entry(key="123", input1="input1_0", input2=12, output1=34, output2=56, output3="output3_1")
-    performance1_helper.add_entry(key="123", input1="input1_1", input2=12, output1=30, output2=71, output3="output3_2")
-    performance1_helper.add_entry(key="123", input1="input1_2", input2=12, output1=44, output2=5, output3="output3_3")
+    performance1_helper.add_entry(key="143", input1="input1_0", input2=12, output1=56, output2=56, output3="output3_1")
+    performance1_helper.add_entry(key="156", input1="input1_0", input2=12, output1=56, output2=56, output3="output3_1")
+
+    performance1_helper.add_entry(key="123", input1="input1_1", input2=12, output1=67, output2=71, output3="output3_2")
+    performance1_helper.add_entry(key="143", input1="input1_1", input2=12, output1=97, output2=71, output3="output3_2")
+    performance1_helper.add_entry(key="156", input1="input1_1", input2=12, output1=12, output2=71, output3="output3_2")
 
     output_info = {
         "name": "output1",
@@ -54,29 +59,31 @@ if __name__ == "__main__":
         "max": 100
     }
     data_set1 = {"inputs": {
-            "input1": "input1_0",
-            "input2": 12
-        },
-            "output": {
-                "name": "output1",
-                "min": 0,
-                "max": 100
-            }
-    }
-    data_set2 = {"inputs": {
-            "input1": "input1_1",
-            "input2": 12
-        },
+        "input1": "input1_0",
+        "input2": 12
+    },
         "output": {
             "name": "output1",
             "min": 0,
             "max": 100
-        }
+        },
+        "name": "data-set1"
+    }
+    data_set2 = {"inputs": {
+        "input1": "input1_1",
+        "input2": 12
+    },
+        "output": {
+            "name": "output1",
+            "min": 0,
+            "max": 100
+        },
+        "name": "data-set2"
     }
     data_set3 = {"inputs": {
-            "input1": "input1_1",
-            "input2": "input2_1"
-        },
+        "input1": "input1_1",
+        "input2": "input2_1"
+    },
         "output": {
             "name": "output1",
             "min": 0,
@@ -84,6 +91,6 @@ if __name__ == "__main__":
         }
     }
     MetricChart.objects.all().delete()
-    MetricChart(chart_name="Chart 1", data_sets=json.dumps([data_set1, data_set2]), metric_model_name="Performance1").save()
-    MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
-
+    MetricChart(chart_name="Chart 1", data_sets=json.dumps([data_set1, data_set2]),
+                metric_model_name="Performance1").save()
+    # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
