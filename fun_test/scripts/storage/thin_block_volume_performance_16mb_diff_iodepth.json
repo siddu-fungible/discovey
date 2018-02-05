@@ -96,9 +96,15 @@
     }
   },
   "FioLargeWriteReadOnly": {
-    "pass_threshold": 0.05,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
+                       "name": "thin-block1"},
+    "command_timeout": 5,
+    "fio_cmd_args": {"io_queues": 2, "timeout": 120},
+    "fio_modes": ["write", "read", "randwrite", "randread"],
     "fio_bs_iodepth": "(32, 64)",
-    "fio_size": ["256m", "512m", "896m"],
+    "fio_sizes": ["256m", "512m", "896m"],
+    "fio_pass_threshold": 0.05,
+    "volume_pass_threshold": 0,
     "expected_fio_result": {
       "256m": {"write": {"write": {"bw": 1602, "iops": 49}},
               "read": {"read": {"bw": 3253, "iops": 101}},
