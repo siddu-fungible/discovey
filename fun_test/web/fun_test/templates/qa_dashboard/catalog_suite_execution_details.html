@@ -6,13 +6,13 @@
             <div ng-if="overallProgressValues" class="row">
                 <div ng-if="overallProgressValues" class="col-lg-4">
                     <fun-chart values="overallProgressValues" series="series" show-legend="true"
-                               title="Overall progress" charting="charting" auto-update="autoUpdate" chart-type="pie"
+                               title="overallProgressTitle" charting="charting" auto-update="autoUpdate" chart-type="pie"
                                colors="colors"
                                width="300" height="300" update-charts-now="updateOverallProgressChartsNow"></fun-chart>
                 </div>
                 <div ng-if="moduleProgressValues" class="col-lg-4">
-                    <fun-chart values="moduleProgressValues" colors="colors" title="Module progress"
-                               width="300" height="300" chart-type="horizontal_colored_bar_chart" yaxis-title="Percentage"
+                    <fun-chart values="moduleProgressValues" colors="colors" title="moduleProgressTitle"
+                               width="300" height="300" chart-type="horizontal_colored_bar_chart" yaxis-title="moduleProgressYaxisTitle"
                                series="series" charting="charting" update-charts-now="updateModuleProgressChartsNow"></fun-chart>
                 </div>
             </div>

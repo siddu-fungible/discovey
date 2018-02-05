@@ -13,6 +13,8 @@ function MetricsController($scope, $http, commonService, $timeout) {
         /*$scope.fetchMetricsData("Performance1", "Chart 1");*/
         $scope.series = ["123", "143", 156];
         $scope.charting = true;
+        $scope.chart1Title = "Chart 1";
+        $scope.chart1YaxisTitle = "";
 
 
     };
@@ -54,42 +56,51 @@ function MetricsController($scope, $http, commonService, $timeout) {
 
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo) => {
         $scope.title = chartName;
-        let payload = {};
-        payload["metric_model_name"] = metricModelName;
-        payload["chart_name"] = chartName;
-        commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
 
-            let keySet = new Set();
-            let firstDataSet = allDataSets[0];
-            firstDataSet.forEach((oneRecord) => {
-                keySet.add(oneRecord.key.toString());
-            });
-            let keyList = Array.from(keySet);
+        commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
+            let payload = {};
+            payload["metric_model_name"] = metricModelName;
+            payload["chart_name"] = chartName;
 
-            let chartDataSets = [];
-            let dataSetIndex = 0;
-            allDataSets.forEach((oneDataSet) => {
+            commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
 
-                let oneChartDataArray = [];
-                for(let i = 0; i < keyList.length; i++) {
-                    let output = null;
-                    for(let j = 0; j < oneDataSet.length; j++) {
-                        let oneRecord = oneDataSet[j];
-                        if(oneRecord.key.toString() === keyList[i]) {
-                            output = oneRecord[chartInfo.data_sets[0].output.name];
-                            break;
+                let keySet = new Set();
+                let firstDataSet = allDataSets[0];
+                firstDataSet.forEach((oneRecord) => {
+                    keySet.add(oneRecord.key.toString());
+                });
+                let keyList = Array.from(keySet);
+
+                let chartDataSets = [];
+                let dataSetIndex = 0;
+                allDataSets.forEach((oneDataSet) => {
+
+                    let oneChartDataArray = [];
+                    for(let i = 0; i < keyList.length; i++) {
+                        let output = null;
+                        for(let j = 0; j < oneDataSet.length; j++) {
+                            let oneRecord = oneDataSet[j];
+                            if(oneRecord.key.toString() === keyList[i]) {
+                                let outputName = chartInfo.data_sets[0].output.name;
+                                output = oneRecord[outputName];
+                                $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
+                                break;
+                            }
                         }
+                        oneChartDataArray.push(output);
                     }
-                    oneChartDataArray.push(output);
-                }
-                let oneChartDataSet = {name: chartInfo.data_sets[dataSetIndex].name, data: oneChartDataArray};
-                chartDataSets.push(oneChartDataSet);
-                dataSetIndex++;
+                    let oneChartDataSet = {name: chartInfo.data_sets[dataSetIndex].name, data: oneChartDataArray};
+                    chartDataSets.push(oneChartDataSet);
+                    dataSetIndex++;
+                });
+                $scope.someValues = chartDataSets;
             });
-            $scope.someValues = chartDataSets;
 
 
         });
+
+
     }
 }
 

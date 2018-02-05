@@ -34,7 +34,9 @@ def describe_table(request, table_name):
             choices = None
             if hasattr(field, "choices"):
                 choices = field.choices
-            payload[field.name] = {"choices": choices}
+            if hasattr(field, "verbose_name"):
+                verbose_name = field.verbose_name
+            payload[field.name] = {"choices": choices, "verbose_name": verbose_name}
         result = payload
     return result
 

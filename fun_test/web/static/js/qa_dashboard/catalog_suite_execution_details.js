@@ -44,6 +44,10 @@
             $scope.lastTestCaseViewList = [];
             $scope.selectAllTestCases = false;
 
+            $scope.overallProgressTitle = "Overall progress";
+            $scope.moduleProgressTitle = "Module progress";
+            $scope.moduleProgressYaxisTitle = "Percentage";
+
             $scope.fetchModuleComponentMapping().then(function (result) {
                 if (result) {
                     $scope.moduleComponentMapping = result;

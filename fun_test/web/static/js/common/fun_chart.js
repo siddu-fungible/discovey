@@ -184,7 +184,7 @@
                                 }]
                             });
                         } else if (ctrl.chartType === "line-chart") {
-
+                            let series = angular.copy(ctrl.values);
                             Highcharts.chart("c-" + $scope.genId, {
                                 title: {
                                     text: ctrl.title
@@ -194,12 +194,15 @@
                                     text: 'Source: '
                                 },
                                 xAxis: {
-                                    categories: ctrl.series
+                                    categories: ctrl.series,
+                                    title: {
+                                        text: ctrl.xaxisTitle
+                                    }
                                 },
 
                                 yAxis: {
                                     title: {
-                                        text: 'Number of Employees'
+                                        text: ctrl.yaxisTitle
                                     }
                                 },
                                 legend: {
@@ -216,7 +219,7 @@
                                     }
                                 },
 
-                                series: ctrl.values,
+                                series: series,
 
                                 responsive: {
                                     rules: [{
@@ -276,13 +279,14 @@
             updateChartsNow: '=',
             showLegend: '<',
             series: '<',
-            title: '@',
+            title: '<',
             minimal: '<',
             chartType: '@',
             colors: '<',
             width: '@',
             height: '@',
-            yaxisTitle: '@'
+            xaxisTitle: '<',
+            yaxisTitle: '<'
         }
     });
 
