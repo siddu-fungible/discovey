@@ -77,10 +77,9 @@ def data(request):
         d = {}
         for input_name, input_value in inputs.iteritems():
             d[input_name] = input_value
-        result = {}
         try:
-            result = model.objects.get(**d)
-            data.append(model_to_dict(result))
+            result = model.objects.filter(**d)
+            data.append([model_to_dict(x) for x in result])
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
     return data
