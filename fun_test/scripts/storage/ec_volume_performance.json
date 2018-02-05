@@ -1,19 +1,28 @@
 {
   "EC21FioSeqWriteSeqReadOnly": {
+    // Erasure coding ratio
     "ec_coding": {"ndata": 2, "nparity": 1},
     "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
                      "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
     "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456},
     "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096},
+    // timeout used for the storage controller
+    "command_timeout": 5,
     "use_lsv": 1,
+    // Head room needed for the LS volume in percentage
     "lsv_pct": 0.3,
     "check_lsv_stats": 0,
     "ns_id": 1,
+    // FIO commandline arguments
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 180},
     "fio_modes": ["write", "read"],
+    // The below is the list of tuples in which the first element of the tuple represents the FIO block size in kB and
+    // the second element represents the IO depth
     // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
+    // Passing threshold for the FIO results from the expected benchmark values
     "fio_pass_threshold": 0.05,
+    // Passing threshold of the internal volume stats from the expected benchmark values
     "volume_pass_threshold": 33,
     "expected_fio_result": {
       "(4, 1)": {"write": {"write": {"bw": 74, "iops": 16}},
@@ -40,6 +49,7 @@
                      "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
     "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456},
     "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096},
+    "command_timeout": 5,
     "use_lsv": 1,
     "lsv_pct": 0.3,
     "check_lsv_stats": 0,
@@ -74,6 +84,7 @@
                      "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
     "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456},
     "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096},
+    "command_timeout": 5,
     "use_lsv": 1,
     "trigger_plex_failure": 1,
     "failure_plex_indices": [1],
@@ -110,6 +121,7 @@
                      "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
     "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456},
     "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096},
+    "command_timeout": 5,
     "use_lsv": 1,
     "lsv_pct": 0.3,
     "check_lsv_stats": 0,
@@ -154,6 +166,7 @@
                      "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
     "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456},
     "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096},
+    "command_timeout": 5,
     "use_lsv": 1,
     "lsv_pct": 0.3,
     "check_lsv_stats": 0,

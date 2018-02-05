@@ -131,7 +131,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(dut, "Retrieved dut instance 0")
         linux_host = topology.get_tg_instance(tg_index=0)
 
-        self.command_timeout = 5
         self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
 
         if self.use_lsv:
