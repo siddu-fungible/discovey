@@ -1,0 +1,86 @@
+'use strict';
+
+
+function FunMetricChartController($scope, commonService) {
+
+    let ctrl = this;
+
+    ctrl.$onInit = function () {
+        $scope.status = "idle";
+        $scope.fetchChartInfo();
+        $scope.values = null;
+        $scope.charting = true;
+    };
+
+    $scope.fetchChartInfo = () => {
+        let payload = {};
+        payload["metric_model_name"] = ctrl.modelName;
+        payload["chart_name"] = ctrl.chartName;
+        // Fetch chart info
+        commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo)
+        })
+    };
+
+    $scope.fetchMetricsData = (metricModelName, chartName, chartInfo) => {
+        $scope.title = chartName;
+
+        commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
+            let payload = {};
+            payload["metric_model_name"] = metricModelName;
+            payload["chart_name"] = chartName;
+
+            commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
+
+                let keySet = new Set();
+                let firstDataSet = allDataSets[0];
+                firstDataSet.forEach((oneRecord) => {
+                    keySet.add(oneRecord.key.toString());
+                });
+                let keyList = Array.from(keySet);
+                $scope.series = keyList;
+
+                let chartDataSets = [];
+                let dataSetIndex = 0;
+                allDataSets.forEach((oneDataSet) => {
+
+                    let oneChartDataArray = [];
+                    for(let i = 0; i < keyList.length; i++) {
+                        let output = null;
+                        for(let j = 0; j < oneDataSet.length; j++) {
+                            let oneRecord = oneDataSet[j];
+                            if(oneRecord.key.toString() === keyList[i]) {
+                                let outputName = chartInfo.data_sets[0].output.name;
+                                output = oneRecord[outputName];
+                                $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
+                                break;
+                            }
+                        }
+                        oneChartDataArray.push(output);
+                    }
+                    let oneChartDataSet = {name: chartInfo.data_sets[dataSetIndex].name, data: oneChartDataArray};
+                    chartDataSets.push(oneChartDataSet);
+                    dataSetIndex++;
+                });
+                $scope.values = chartDataSets;
+            });
+        });
+    }
+}
+
+angular.module('qa-dashboard').component("funMetricChart", {
+        template: '<fun-chart values="values" series="series"\n' +
+        '                   title="$ctrl.chartName" charting="charting" chart-type="line-chart"\n' +
+        '                   width="$ctrl.width" height="$ctrl.height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle">\n' +
+        '                   \n' +
+        '        </fun-chart>',
+
+        bindings: {
+                    chartName: '<',
+                    modelName: '<',
+                    width: '@',
+                    height: '@'
+                  },
+        controller: FunMetricChartController
+ });
