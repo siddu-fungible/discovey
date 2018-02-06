@@ -7,30 +7,28 @@
 {% block content %}
     {% verbatim %}
 <div class="content" ng-controller="metricsController">
-    <label>Choose a metric table</label>
-    <select ng-options="option for option in metricsList" ng-model="selectedMetric" ng-change="selectedMetricChange(selectedMetric)">
-    </select>
-    <div>
-        <label>Current data-sets</label>
-        <table class="table table-nonfluid">
-            <tr>
-                <th ng-repeat="(fieldName, info) in currentTableFields" ng-if="info.choices.length">{{ fieldName }}</th>
-            </tr>
-            <tr>
-                <td ng-repeat="(fieldName, info) in currentTableFields" ng-if="info.choices.length">
-                    <select ng-options="choice[1] for choice in info.choices" ng-model="hmm">
-                    </select>
-                </td>
-            </tr>
-        </table>
-    </div>
-                <div class="col-lg-4">
-                    <fun-chart values="someValues" series="series"
-                               title="chart1Title" charting="charting" chart-type="line-chart"
-                               width="300" height="300" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle">
+    <label>Select module</label>
+    <select ng-options="module.name as module.verbose_name for module in modules" ng-model="selectedModule" ng-change="moduleChange()"></select>
 
-                    </fun-chart>
-                </div>
+    <div ng-if="selectedModule">
+
+        <div ng-repeat="(modelName, modelInfo) in modelsInfo[selectedModule]">
+            <h4>{{ modelName }}</h4>
+            <table class="table">
+                <tr>
+                    <th>
+                        Chart Name
+                    </th>
+                </tr>
+                <tr ng-repeat="chartInfo in modelInfo.charts">
+                    <td>
+                        {{ chartInfo }}&nbsp<a href="#" ng-click="editChartClick(chartInfo, modelName)">Edit</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
 </div>
 {% endverbatim %}
 {% endblock %}

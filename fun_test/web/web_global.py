@@ -1,8 +1,10 @@
 import traceback
 from django.http import HttpResponse
 import json
+import os
 
 PRIMARY_SETTINGS_FILE = "web.fun_test.settings"
+
 
 def initialize_result(failed=False):
     status = True
@@ -21,3 +23,11 @@ def api_safe_json_response(the_function):
             result["error_message"] = "Exception: {}\n {}".format(str(ex), traceback.format_exc())
         return HttpResponse(json.dumps(result))
     return inner
+
+
+def is_regression_server():
+    return "REGRESSION_SERVER" in os.environ
+
+
+def is_performance_server():
+    return "PERFORMANCE_SERVER" in os.environ

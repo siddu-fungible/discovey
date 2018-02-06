@@ -247,7 +247,6 @@
         ctrl.$onInit = function () {
 
             //["Sent", "Received"];
-            $scope.traceCount = ctrl.series.length;
             $scope.xValue = 0;
             $scope.values = {};
             angular.forEach(ctrl.series, function (input) {

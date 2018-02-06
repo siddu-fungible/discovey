@@ -221,7 +221,7 @@ def catalog_test_case_execution_summary_result(request, suite_execution_id, jira
 @csrf_exempt
 @api_safe_json_response
 def modules(request):
-    return [x.name for x in Module.objects.all()]
+    return [{"name": x.name, "verbose_name": x.verbose_name} for x in Module.objects.all()]
 
 @csrf_exempt
 def catalog_test_case_execution_summary_result_multiple_jiras(request):

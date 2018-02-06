@@ -5,7 +5,7 @@ from django.shortcuts import render
 from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
-from web.fun_test.metrics_models import MetricChart
+from web.fun_test.metrics_models import MetricChart, ModelMapping
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
@@ -32,12 +32,26 @@ def describe_table(request, table_name):
         payload = OrderedDict()
         for field in fields:
             choices = None
+            verbose_name = "verbose_name"
             if hasattr(field, "choices"):
                 choices = field.choices
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
             payload[field.name] = {"choices": choices, "verbose_name": verbose_name}
         result = payload
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def chart_info(request):
+    request_json = json.loads(request.body)
+    metric_model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+    result = None
+    if chart:
+        result = {"data_sets": json.loads(chart.data_sets)}
     return result
 
 
@@ -60,6 +74,47 @@ def chart_list(request):
     metric_model_name = request_json["metric_model_name"]
     charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
     return [chart.chart_name for chart in charts]
+
+
+@csrf_exempt
+@api_safe_json_response
+def charts_by_module(request):
+    request_json = json.loads(request.body)
+    module_name = request_json["module_name"]
+    entries = ModelMapping.objects.filter(module=module_name)
+    models = []
+    for entry in entries:
+        models.append(entry.model_name)
+    result = []
+    for model in models:
+        charts = MetricChart.objects.filter(metric_model_name=model)
+        for chart in charts:
+            result.append({"chart_name": chart.chart_name, "model": model})
+    return result
+
+
+@csrf_exempt
+def edit_chart(request, chart_name):
+    return render(request, 'qa_dashboard/edit_chart.html', locals())
+
+@csrf_exempt
+@api_safe_json_response
+def models_by_module(request):
+    request_json = json.loads(request.body)
+    module_name = request_json["module_name"]
+    entries = ModelMapping.objects.filter(module=module_name)
+    models = []
+    for entry in entries:
+        models.append(entry.model_name)
+    result = {}
+
+    for model in models:
+        charts = MetricChart.objects.filter(metric_model_name=model)
+        model_charts = []
+        result[model] = {"charts": model_charts}
+        for chart in charts:
+            model_charts.append(chart.chart_name)
+    return result
 
 
 @csrf_exempt

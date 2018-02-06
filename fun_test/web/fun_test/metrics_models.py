@@ -1,6 +1,4 @@
 from django.db import models
-from web.fun_test.site_state import site_state
-from web.fun_test.models import Module
 
 
 class MetricChart(models.Model):
@@ -8,8 +6,16 @@ class MetricChart(models.Model):
     data_sets = models.TextField(default="[]")
     chart_name = models.TextField(unique=True)
     metric_model_name = models.TextField(default="Performance1")
-    module = models.TextField(default="networking")
-    component = models.TextField(default="general")
+
+
+class ModelMapping(models.Model):
+    module = models.TextField()
+    component = models.TextField()
+    model_name = models.TextField(default="Performance1", unique=True)
+
+    def __str__(self):
+        return "{} {} {}".format(self.model_name, self.module, self.component)
+
 
 class Performance1(models.Model):
     key = models.CharField(max_length=30, verbose_name="Build no.")
@@ -22,5 +28,13 @@ class Performance1(models.Model):
     component = models.TextField(default="general")
 
 
+REGISTRANTS = [
+    {
+        "model": Performance1,
+        "model_name": "Performance1",
+        "module": "networking",
+        "component": "general"
+    }
 
-site_state.register_metric(Performance1, "Performance1")
+]
+

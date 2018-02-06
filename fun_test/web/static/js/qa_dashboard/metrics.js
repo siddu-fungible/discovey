@@ -1,38 +1,57 @@
 'use strict';
 
-function MetricsController($scope, $http, commonService, $timeout) {
+function MetricsController($scope, $http, commonService, $timeout, $modal) {
     let ctrl = this;
 
     ctrl.$onInit = function () {
         $scope.status = "idle";
         $scope.metricsList = [];
-        $scope.fetchMetricsList();
-        $scope.currentTableFields = null;
-        $scope.fetchChartList("Performance1");
-        $scope.fetchChartsInfo("Performance1");
-        /*$scope.fetchMetricsData("Performance1", "Chart 1");*/
-        $scope.series = ["123", "143", 156];
-        $scope.charting = true;
-        $scope.chart1Title = "Chart 1";
-        $scope.chart1YaxisTitle = "";
+        $scope.fetchModules();
+        $scope.modelsInfo = {};
 
+    };
+
+    $scope.moduleChange = () => {
+        console.log($scope.selectedModule);
+        let payload = {};
+        let thisModule = $scope.selectedModule;
+        if ($scope.selectedModule) {
+            payload["module_name"] = $scope.selectedModule;
+            /*
+            commonService.apiPost("/metrics/charts_by_module", payload, "fetchModules get charts by module").then((charts) => {
+
+                $scope.chartInfos[thisModule] = charts;
+                let i = 0;
+            })*/
+
+            commonService.apiPost("/metrics/models_by_module", payload, "moduleChange").then((models) => {
+                $scope.modelsInfo[thisModule] = models;
+            })
+        }
 
     };
 
     $scope.fetchModules = () => {
         commonService.apiGet("/regression/modules", "fetchModules").then((modules) => {
+            $scope.modules = modules;
+            $scope.modules.forEach((module) => {
+                let moduleName = module.name;
+                // Get charts by module
 
+            })
         })
     };
 
+    /*
+
     $scope.fetchMetricsList = function () {
-        commonService.apiGet("/metrics/metrics_list", "fetchMetricsList").then(function(metricsList) {
+        commonService.apiGet("/metrics/metrics_list", "fetchMetricsList").then(function (metricsList) {
             $scope.metricsList = metricsList;
         });
     };
 
     $scope.selectedMetricChange = function (selectedMetric) {
-        if($scope.selectedMetric) {
+        if ($scope.selectedMetric) {
             commonService.apiGet("/metrics/describe_table/" + $scope.selectedMetric, "selectedMetricChange").then(function (currentTableFields) {
                 $scope.currentTableFields = currentTableFields;
                 let i = 0;
@@ -59,56 +78,44 @@ function MetricsController($scope, $http, commonService, $timeout) {
 
         });
     };
+    */
 
-    $scope.fetchMetricsData = (metricModelName, chartName, chartInfo) => {
-        $scope.title = chartName;
-
-        commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
-            let payload = {};
-            payload["metric_model_name"] = metricModelName;
-            payload["chart_name"] = chartName;
-
-            commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
-
-                let keySet = new Set();
-                let firstDataSet = allDataSets[0];
-                firstDataSet.forEach((oneRecord) => {
-                    keySet.add(oneRecord.key.toString());
-                });
-                let keyList = Array.from(keySet);
-
-                let chartDataSets = [];
-                let dataSetIndex = 0;
-                allDataSets.forEach((oneDataSet) => {
-
-                    let oneChartDataArray = [];
-                    for(let i = 0; i < keyList.length; i++) {
-                        let output = null;
-                        for(let j = 0; j < oneDataSet.length; j++) {
-                            let oneRecord = oneDataSet[j];
-                            if(oneRecord.key.toString() === keyList[i]) {
-                                let outputName = chartInfo.data_sets[0].output.name;
-                                output = oneRecord[outputName];
-                                $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
-                                $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
-                                break;
-                            }
-                        }
-                        oneChartDataArray.push(output);
-                    }
-                    let oneChartDataSet = {name: chartInfo.data_sets[dataSetIndex].name, data: oneChartDataArray};
-                    chartDataSets.push(oneChartDataSet);
-                    dataSetIndex++;
-                });
-                $scope.someValues = chartDataSets;
-            });
+    $scope.editChartClick = (chartName, modelName) => {
+        $modal.open({
+            templateUrl: "/static/qa_dashboard/edit_chart.html",
+            controller: ['$modalInstance', '$scope', 'commonService', '$http', 'chartName', 'modelName', EditChartController],
+            resolve: {
+                chartName: () => {
+                    return chartName;
+                },
+                modelName: () => {
+                    return modelName;
+                }
+            }
+        }).result.then(function () {
+        })
 
 
-        });
+    };
 
+    function EditChartController($modalInstance, $scope, commonService, $http, chartName, modelName) {
+        let ctrl = this;
+        $scope.chartName = chartName;
+        $scope.modelName = modelName;
+
+        let payload = {};
+        payload["metric_model_name"] = modelName;
+        payload["chart_name"] = chartName;
+        // Fetch chart info
+        /*
+        commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
+            let i = 0;
+        })*/
 
     }
 }
+
+
 
 angular.module('qa-dashboard').controller("metricsController", MetricsController);
 

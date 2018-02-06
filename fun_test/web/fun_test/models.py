@@ -7,9 +7,9 @@ import os
 
 from django.db import models
 from fun_global import RESULTS
+from web.web_global import is_performance_server
 from web.fun_test.jira_models import *
 
-from web.fun_test.site_state import site_state
 
 RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 
@@ -129,7 +129,8 @@ class Module(models.Model):
     name = models.TextField(unique=True)
     verbose_name = models.TextField(default="Verbose Name")
 
-from web.fun_test.metrics_models import *
+if is_performance_server():
+    from web.fun_test.metrics_models import *
 
 if __name__ == "__main__":
     #import django
