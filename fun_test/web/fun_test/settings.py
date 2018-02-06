@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 from fun_settings import *
+from web.web_global import is_regression_server, is_performance_server
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -77,10 +78,16 @@ WSGI_APPLICATION = 'fun_test.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
+DEFAULT_DB_FILE = "db.sqlite3"
+if is_regression_server():
+    DEFAULT_DB_FILE = "regression.db.sqlite3"
+elif is_performance_server():
+    DEFAULT_DB_FILE = "performance.db.sqlite3"
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, DEFAULT_DB_FILE),
     }
 }
 '''
