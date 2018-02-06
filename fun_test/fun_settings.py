@@ -4,6 +4,7 @@ import sys
 FUN_TEST_DIR = dirname(abspath(__file__))
 SCHEDULER_DIR = FUN_TEST_DIR + "/scheduler"
 WEB_DIR = FUN_TEST_DIR + "/web"
+WEB_ROOT_DIR = WEB_DIR + "/fun_test"
 STATIC_RELATIVE_DIR = "/static"
 UPLOADS_RELATIVE_DIR = STATIC_RELATIVE_DIR + "/uploads"
 WEB_STATIC_DIR = WEB_DIR + STATIC_RELATIVE_DIR
