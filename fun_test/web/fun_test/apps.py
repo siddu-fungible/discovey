@@ -10,3 +10,4 @@ class FunTestConfig(AppConfig):
         if is_performance_server():
             site_state.register_metrics()
         site_state.register_users()
+        site_state.register_tags()

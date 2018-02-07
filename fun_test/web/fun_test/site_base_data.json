@@ -10,6 +10,9 @@
       "short_name": "John. A",
       "email": "john.abraham@fungible.com"
     }
+  ],
+  "tags": [
+    "jenkins-hourly"
   ]
 
 }
