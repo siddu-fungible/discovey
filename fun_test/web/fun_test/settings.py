@@ -103,7 +103,7 @@ DATABASES = {
     }
 }
 
-# DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
+DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
 
 
 '''
