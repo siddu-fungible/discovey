@@ -79,17 +79,33 @@ WSGI_APPLICATION = 'fun_test.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DEFAULT_DB_FILE = "db.sqlite3"
+REGRESSION_DB_FILE = "regression.db.sqlite3"
+PERFORMANCE_DB_FILE = "performance.db.sqlite3"
+USERS_DB_FILE = "users.db.sqlite3"
+
 if is_regression_server():
-    DEFAULT_DB_FILE = "regression.db.sqlite3"
+    DEFAULT_DB_FILE = REGRESSION_DB_FILE
 elif is_performance_server():
-    DEFAULT_DB_FILE = "performance.db.sqlite3"
+    DEFAULT_DB_FILE = PERFORMANCE_DB_FILE
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, DEFAULT_DB_FILE),
+    },
+    'users': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, USERS_DB_FILE)
+    },
+    'performance': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, PERFORMANCE_DB_FILE)
     }
 }
+
+DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
+
+
 '''
 DATABASES = {
     'default': {
