@@ -3,6 +3,7 @@ from web.fun_test.metrics_models import ModelMapping, REGISTRANTS
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import Engineer
 from web.fun_test.models import Tag
+from web.fun_test.models import TestBed
 import json
 
 site_state = None
@@ -46,6 +47,15 @@ class SiteState():
                                  model_name=registrant["model_name"],
                                  module=registrant["module"],
                                  component=registrant["component"])
+
+    def register_testbeds(self):
+        testbeds = self.site_base_data["testbeds"]
+        for testbed in testbeds:
+            try:
+                TestBed.objects.get(name=testbed)
+            except ObjectDoesNotExist:
+                t = TestBed(name=testbed)
+                t.save()
 
     def register_tags(self):
         for tag in self.site_base_data["tags"]:

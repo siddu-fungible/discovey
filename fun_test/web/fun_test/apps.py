@@ -7,8 +7,3 @@ class FunTestConfig(AppConfig):
 
     def ready(self):
         pass
-        # from web.fun_test.site_state import site_state
-        # if is_performance_server():
-        #    site_state.register_metrics()
-        # site_state.register_users()
-        # site_state.register_tags()
