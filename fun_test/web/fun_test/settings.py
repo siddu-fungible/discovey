@@ -103,7 +103,7 @@ DATABASES = {
     }
 }
 
-DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
+# DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
 
 
 '''
@@ -195,4 +195,4 @@ BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
 CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 
 
-# SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+SESSION_ENGINE = "django.contrib.sessions.backends.file"
