@@ -1,9 +1,10 @@
 from fun_settings import WEB_ROOT_DIR
-from web.fun_test.metrics_models import ModelMapping, REGISTRANTS
+from web.fun_test.metrics_models import ModelMapping, ANALYTICS_MAP
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import Engineer
 from web.fun_test.models import Tag
 from web.fun_test.models import TestBed
+from web.fun_test.models import Module
 import json
 
 site_state = None
@@ -42,11 +43,11 @@ class SiteState():
                 e.save()
 
     def register_metrics(self):
-        for registrant in REGISTRANTS:
-            self.register_metric(model=registrant["model"],
-                                 model_name=registrant["model_name"],
-                                 module=registrant["module"],
-                                 component=registrant["component"])
+        for model_name, model_info in ANALYTICS_MAP:
+            self.register_metric(model=model_info["model"],
+                                 model_name=model_name,
+                                 module=model_info["module"],
+                                 component=model_info["component"])
 
     def register_testbeds(self):
         testbeds = self.site_base_data["testbeds"]
@@ -64,6 +65,16 @@ class SiteState():
             except ObjectDoesNotExist:
                 t = Tag(tag=tag)
                 t.save()
+
+    def register_modules(self):
+        Module.objects.all().delete()
+        for module in self.site_base_data["modules"]:
+            try:
+                Module.objects.get(name=module["name"])
+            except ObjectDoesNotExist:
+                m = Module(name=module["name"], verbose_name=module["verbose_name"])
+                m.save()
+
 
 if not site_state:
     site_state = SiteState()

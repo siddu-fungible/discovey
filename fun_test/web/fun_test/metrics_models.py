@@ -26,15 +26,16 @@ class Performance1(models.Model):
     output3 = models.CharField(max_length=30, verbose_name="Output 3 description")
     module = models.TextField(default="networking")
     component = models.TextField(default="general")
+    tag = "analytics"
 
 
-REGISTRANTS = [
-    {
+ANALYTICS_MAP = {
+    "Performance1": {
         "model": Performance1,
-        "model_name": "Performance1",
         "module": "networking",
-        "component": "general"
+        "component": "general",
+        "verbose_name": "Performance 1 ..."
     }
 
-]
+}
 

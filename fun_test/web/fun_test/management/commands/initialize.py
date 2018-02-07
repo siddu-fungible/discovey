@@ -9,6 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         site_state.register_users()
         site_state.register_tags()
+        site_state.register_modules()
         if is_performance_server():
             site_state.register_metrics()
         if is_regression_server():
