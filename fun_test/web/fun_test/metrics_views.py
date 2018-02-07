@@ -123,11 +123,15 @@ def data(request):
     request_json = json.loads(request.body)
     metric_model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
+    preview_data_sets = request_json["preview_data_sets"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
 
     model = ANALYTICS_MAP[metric_model_name]["model"]
-    data_sets = chart.data_sets
-    data_sets = json.loads(data_sets)
+    if preview_data_sets is not None:
+        data_sets = preview_data_sets
+    else:
+        data_sets = chart.data_sets
+        data_sets = json.loads(data_sets)
     data = []
     for data_set in data_sets:
         inputs = data_set["inputs"]
