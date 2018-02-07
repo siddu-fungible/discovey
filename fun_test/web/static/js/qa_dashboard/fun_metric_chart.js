@@ -10,6 +10,9 @@ function FunMetricChartController($scope, commonService) {
         $scope.fetchChartInfo();
         $scope.values = null;
         $scope.charting = true;
+        //console.log(ctrl.width);
+        $scope.width = ctrl.width;
+        $scope.height = ctrl.height;
     };
 
     $scope.fetchChartInfo = () => {
@@ -72,7 +75,7 @@ function FunMetricChartController($scope, commonService) {
 angular.module('qa-dashboard').component("funMetricChart", {
         template: '<fun-chart values="values" series="series"\n' +
         '                   title="$ctrl.chartName" charting="charting" chart-type="line-chart"\n' +
-        '                   width="$ctrl.width" height="$ctrl.height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle">\n' +
+        '                   width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle">\n' +
         '                   \n' +
         '        </fun-chart>',
 

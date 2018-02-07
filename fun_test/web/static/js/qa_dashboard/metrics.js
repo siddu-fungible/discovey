@@ -102,15 +102,16 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         let ctrl = this;
         $scope.chartName = chartName;
         $scope.modelName = modelName;
+        $scope.chartInfo = null;
 
         let payload = {};
         payload["metric_model_name"] = modelName;
         payload["chart_name"] = chartName;
         // Fetch chart info
-        /*
+
         commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
-            let i = 0;
-        })*/
+            $scope.chartInfo = chartInfo;
+        })
 
     }
 }

@@ -186,6 +186,10 @@
                         } else if (ctrl.chartType === "line-chart") {
                             let series = angular.copy(ctrl.values);
                             Highcharts.chart("c-" + $scope.genId, {
+                                chart: {
+                                    height: ctrl.height,
+                                    width: ctrl.width
+                                },
                                 title: {
                                     text: ctrl.title
                                 },
@@ -210,7 +214,9 @@
                                     align: 'right',
                                     verticalAlign: 'middle'
                                 },
-
+                                credits: {
+                                    enabled: false
+                                },
                                 plotOptions: {
                                     series: {
                                         label: {
@@ -282,8 +288,8 @@
             minimal: '<',
             chartType: '@',
             colors: '<',
-            width: '@',
-            height: '@',
+            width: '<',
+            height: '<',
             xaxisTitle: '<',
             yaxisTitle: '<'
         }
