@@ -106,7 +106,6 @@ urlpatterns = [
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
     url(r'^common/', include(common_urls)),
-
     url(r'^$', common_views.home)
 
 ]

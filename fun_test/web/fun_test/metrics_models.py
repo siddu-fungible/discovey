@@ -29,12 +29,43 @@ class Performance1(models.Model):
     tag = "analytics"
 
 
+class PerformanceBlt(models.Model):
+    key = models.CharField(max_length=30, verbose_name="Build no.")
+    input1_block_size = models.CharField(max_length=10, choices=[(0, "4K"), (1, "8K"), (2, "16K")], verbose_name="Block size")
+    input2_mode = models.CharField(max_length=20, choices=[(0, "Read"), (1, "Read-Write")], verbose_name="R/W Mode")
+    output1_iops = models.IntegerField(verbose_name="IOPS")
+    output2_bw = models.IntegerField(verbose_name="Band-width")
+    output3_latency = models.IntegerField(verbose_name="Latency")
+    tag = "analytics"
+
+
+class PerformanceIkv(models.Model):
+    key = models.CharField(max_length=30, verbose_name="Build no.")
+    input1_put_value_size = models.IntegerField(verbose_name="PUT Value size", choices=[(0, 4096), (1, 8192)])
+    output1_put_per_seccond = models.IntegerField(verbose_name="PUTs per second")
+    tag = "analytics"
+
+
 ANALYTICS_MAP = {
     "Performance1": {
         "model": Performance1,
         "module": "networking",
         "component": "general",
         "verbose_name": "Performance 1 ..."
+    },
+
+    "PerformanceBlt": {
+        "model": PerformanceBlt,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "Block Local Thin Performance"
+    },
+
+    "PerformanceIkv": {
+        "model": PerformanceIkv,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "IKV PUT Performance"
     }
 
 }

@@ -43,7 +43,7 @@ class SiteState():
                 e.save()
 
     def register_metrics(self):
-        for model_name, model_info in ANALYTICS_MAP:
+        for model_name, model_info in ANALYTICS_MAP.iteritems():
             self.register_metric(model=model_info["model"],
                                  model_name=model_name,
                                  module=model_info["module"],
