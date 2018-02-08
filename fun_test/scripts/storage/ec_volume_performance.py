@@ -627,8 +627,8 @@ if __name__ == "__main__":
 
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(EC21FioSeqWriteSeqReadOnly())
-    # ecscript.add_test_case(EC21FioRandWriteRandReadOnly())
-    # ecscript.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
-    # ecscript.add_test_case(EC21FioSeqReadWriteMix())
-    # ecscript.add_test_case(EC21FioRandReadWriteMix())
+    ecscript.add_test_case(EC21FioRandWriteRandReadOnly())
+    ecscript.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
+    ecscript.add_test_case(EC21FioSeqReadWriteMix())
+    ecscript.add_test_case(EC21FioRandReadWriteMix())
     ecscript.run()
