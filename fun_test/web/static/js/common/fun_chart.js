@@ -227,6 +227,7 @@
 
                                 series: series,
 
+
                                 responsive: {
                                     rules: [{
                                         condition: {

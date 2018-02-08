@@ -40,6 +40,12 @@ function FunMetricChartController($scope, commonService) {
 
     $scope.getValidatedData = (data, minimum, maximum) => {
         let result = data;
+        result = {
+            y: data,
+            marker: {
+                radius: 3
+            },
+        };
         if(data < minimum || data > maximum) {
             result =
                 {
@@ -47,7 +53,7 @@ function FunMetricChartController($scope, commonService) {
                     marker: {
                         symbol: 'cross',
                         lineColor: 'red',
-                        lineWidth: 4
+                        lineWidth: 5
                     }
                 }
         }
