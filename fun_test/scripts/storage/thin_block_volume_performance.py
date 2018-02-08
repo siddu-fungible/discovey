@@ -193,6 +193,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         final_volume_status = {}
         diff_volume_stats = {}
 
+        table_data_headers = ["Operation", "Block Size", "IO Depth", "Write IOPS", "Read IOPS",
+                              "Write Throughput in KiB/s", "Read Throughput in KiBs", "Num Writes", "Num Reads",
+                              "Fault Injection"]
+        table_data_cols = ["mode", "block_size", "iodepth", "writeiops", "readiops", "writebw", "readbw", "num_writes",
+                           "num_reads", "fault_injection"]
+        table_data_rows = []
+
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
             internal_result[combo] = {}
@@ -213,6 +220,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fio_iodepth = tmp[1].strip('() ')
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
+                row_data_dict = {}
+                row_data_dict["mode"] = mode
+                row_data_dict["block_size"] = fio_block_size
+                row_data_dict["iodepth"] = fio_iodepth
 
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
                              format(mode, fio_block_size, fio_iodepth))
@@ -234,7 +245,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
-                fun_test.sleep("Sleeping for 5 seconds between iterations", 5)
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
 
                 # Getting the volume stats after the FIO test
                 command_result = {}
@@ -263,47 +275,77 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
                         actual = fio_output[combo][mode][op][field]
+                        row_data_dict[op+field] = actual
                         if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
                             fio_result[combo][mode] = False
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "FAILED", value, actual)
                             fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
                                               format(op, field, actual, value))
                         elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "PASSED", value, actual)
                             fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
                                                                                                          actual, value))
                         else:
+                            fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "PASSED", value, actual)
                             fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
 
                 # Comparing the internal volume stats with the expected value
                 for ekey, evalue in expected_volume_stats[mode].items():
                     if ekey in diff_volume_stats[combo][mode]:
                         actual = diff_volume_stats[combo][mode][ekey]
+                        row_data_dict[ekey] = actual
                         if actual != evalue:
                             if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
+                                fun_test.add_checkpoint("{} check for the {} test for the block size & IO depth combo "
+                                                        "{}".format(ekey, mode, combo), "PASSED", evalue, actual)
                                 fun_test.critical("Final {} value {} is within the expected range {}".
                                                   format(ekey, actual, evalue))
                             elif (actual > evalue) and ((actual - evalue) <= self.volume_pass_threshold):
+                                fun_test.add_checkpoint("{} check for the {} test for the block size & IO depth combo "
+                                                        "{}".format(ekey, mode, combo), "PASSED", evalue,
+                                                        actual)
                                 fun_test.critical("Final {} value {} is within the expected range {}".
                                                   format(ekey, actual, evalue))
                             else:
                                 internal_result[combo][mode] = False
+                                fun_test.add_checkpoint("{} check for the {} test for the block size & IO depth combo "
+                                                        "{}".format(ekey, mode, combo), "FAILED", evalue, actual)
                                 fun_test.critical("Final {} value {} is not equal to the expected value {}".
                                                   format(ekey, actual, evalue))
                         else:
+                            fun_test.add_checkpoint("{} check for the {} test for the block size & IO depth combo "
+                                                    "{}".format(ekey, mode, combo), "PASSED", evalue, actual)
                             fun_test.log("Final {} value {} is equal to the expected value {}".
                                          format(ekey, actual, evalue))
                     else:
                         internal_result[combo][mode] = False
                         fun_test.critical("{} is not found in volume status".format(ekey))
 
+                # Building the table raw for this variation
+                row_data_list = []
+                for i in table_data_cols:
+                    if i not in row_data_dict:
+                        row_data_list.append(0)
+                    else:
+                        row_data_list.append(row_data_dict[i])
+                table_data_rows.append(row_data_list)
+
+        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+
         # Posting the final status of the test result
+        test_result = True
         fun_test.log(fio_result)
         fun_test.log(internal_result)
         for combo in self.fio_bs_iodepth:
             for mode in self.fio_modes:
-                fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
-                                                              "combo {}".format(mode, combo))
-                fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
-                                                                   "size & IO depth combo {}".format(mode, combo))
+                if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                    test_result = False
+
+        fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
         pass
@@ -439,6 +481,20 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
         final_volume_status = {}
         diff_volume_stats = {}
 
+        tmp = self.fio_bs_iodepth.split(',')
+
+        fio_block_size = tmp[0].strip('() ') + 'k'
+        self.fio_cmd_args["bs"] = fio_block_size
+
+        fio_iodepth = tmp[1].strip('() ')
+        self.fio_cmd_args["iodepth"] = fio_iodepth
+
+        table_data_headers = ["Operation", "Size", "Write IOPS", "Read IOPS", "Write Throughput in KiB/s",
+                              "Read Throughput in KiB/s", "Num Writes", "Num Reads", "Fault Injection"]
+        table_data_cols = ["mode", "size", "writeiops", "readiops", "writebw", "readbw", "num_writes", "num_reads",
+                           "fault_injection"]
+        table_data_rows = []
+
         for size in self.fio_sizes:
 
             # The below check needs to be removed once the bugs #324 get resolved
@@ -455,19 +511,12 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 # The below check needs to be removed once the bugs #299 get resolved
                 if (size == "256m") and (mode == "write" or mode == "randwrite"):
                     continue
-                tmp = self.fio_bs_iodepth.split(',')
-
-                fio_block_size = tmp[0].strip('() ') + 'k'
-                self.fio_cmd_args["bs"] = fio_block_size
-
-                fio_iodepth = tmp[1].strip('() ')
-                self.fio_cmd_args["iodepth"] = fio_iodepth
 
                 fio_result[size][mode] = True
                 internal_result[size][mode] = True
-
-                fun_test.log("Running FIO {} only test for the size {} with the block size & IO depth set to {} & {}"
-                             .format(mode, size, fio_block_size, fio_iodepth))
+                row_data_dict = {}
+                row_data_dict["mode"] = mode
+                row_data_dict["size"] = size
 
                 # Pulling in the initial volume stats in dictionary format
                 command_result = {}
@@ -480,13 +529,16 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 fun_test.log(initial_volume_status[size][mode])
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
+                fun_test.log("Running FIO {} only test for the size {} with the block size & IO depth set to {} & {}"
+                             .format(mode, size, fio_block_size, fio_iodepth))
                 fio_output[size][mode] = {}
                 fio_output[size][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, size=size,
                                                         **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[size][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
-                fun_test.sleep("Sleeping for 5 seconds between iterations", 5)
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
 
                 # Getting the volume stats after the FIO test
                 command_result = {}
@@ -515,40 +567,76 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 for op, stats in self.expected_fio_result[size][mode].items():
                     for field, value in stats.items():
                         actual = fio_output[size][mode][op][field]
+                        row_data_dict[op + field] = actual
                         if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
                             fio_result[size][mode] = False
+                            fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
+                                                    "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
+                                                    "FAILED", value, actual)
                             fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
                                               format(op, field, actual, value))
                         elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
+                            fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
+                                                    "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
+                                                    "PASSED", value, actual)
                             fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
                                                                                                          actual, value))
                         else:
+                            fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
+                                                    "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
+                                                    "PASSED", value, actual)
                             fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
 
                 # Comparing the internal volume stats with the expected value
                 for ekey, evalue in self.expected_volume_stats[size][mode].items():
                     if ekey in diff_volume_stats[size][mode]:
                         actual = diff_volume_stats[size][mode][ekey]
+                        row_data_dict[ekey] = actual
                         if actual != evalue:
                             if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
+                                fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth combo "
+                                                        "{} & {}".format(ekey, size, mode, fio_block_size, fio_iodepth),
+                                                        "PASSED", evalue, actual)
                                 fun_test.critical("Final {} value {} is within the expected range {}".
                                                   format(ekey, actual, evalue))
                             elif (actual > evalue) and ((actual - evalue) <= self.volume_pass_threshold):
+                                fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth combo "
+                                                        "{} & {}".format(ekey, size, mode, fio_block_size, fio_iodepth),
+                                                        "PASSED", evalue, actual)
                                 fun_test.critical("Final {} value {} is within the expected range {}".
                                                   format(ekey, actual, evalue))
                             internal_result[size][mode] = False
+                            fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth combo "
+                                                    "{} & {}".format(ekey, size, mode, fio_block_size, fio_iodepth),
+                                                    "FAILED", evalue, actual)
                             fun_test.critical("Final {} value {} is not equal to the expected value {}".
                                               format(ekey, actual, evalue))
                         else:
+                            fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth combo "
+                                                    "{} & {}".format(ekey, size, mode, fio_block_size, fio_iodepth),
+                                                    "PASSED", evalue, actual)
                             fun_test.log("Final {} value {} is equal to the expected value {}".
                                          format(ekey, actual, evalue))
                     else:
                         internal_result[size][mode] = False
                         fun_test.critical("{} is not found in volume status".format(ekey))
 
+                # Building the table raw for this variation
+                row_data_list = []
+                for i in table_data_cols:
+                    if i not in row_data_dict:
+                        row_data_list.append(0)
+                    else:
+                        row_data_list.append(row_data_dict[i])
+                table_data_rows.append(row_data_list)
+
+        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+
         # Posting the final status of the test result
         fun_test.log(fio_result)
         fun_test.log(internal_result)
+        test_result = True
         for size in self.fio_sizes:
             # The below check needs to be removed once the bugs #324 get resolved
             if size == "512m" or size == "896m":
@@ -557,12 +645,10 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 # The below check needs to be removed once the bugs #299 get resolved
                 if (size == "256m") and (mode == "write" or mode == "randwrite"):
                     continue
-                fun_test.test_assert(fio_result[size][mode], "FIO {} {} performance check for the block size & IO "
-                                                             "depth set to {} & {}".format(size, mode, fio_block_size,
-                                                                                           fio_iodepth))
-                fun_test.test_assert(internal_result[size][mode], "Volume stats check for the {} {} test for the block "
-                                                                  "size & IO depth set to {} & {}".
-                                     format(size, mode, fio_block_size, fio_iodepth))
+                if not fio_result[size][mode] or not internal_result[size][mode]:
+                    test_result = False
+
+        fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
         super(BLTFioLargeWriteReadOnly, self).cleanup()
@@ -575,5 +661,5 @@ if __name__ == "__main__":
     bltscript.add_test_case(BLTFioRandWriteRandReadOnly())
     bltscript.add_test_case(BLTFioSeqReadWriteMix())
     bltscript.add_test_case(BLTFioRandReadWriteMix())
-    bltscript.add_test_case(BLTFioLargeWriteReadOnly())
+    # bltscript.add_test_case(BLTFioLargeWriteReadOnly())
     bltscript.run()
