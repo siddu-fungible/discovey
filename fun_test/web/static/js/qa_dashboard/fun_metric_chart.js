@@ -38,6 +38,22 @@ function FunMetricChartController($scope, commonService) {
         })
     };
 
+    $scope.getValidatedData = (data, minimum, maximum) => {
+        let result = data;
+        if(data < minimum || data > maximum) {
+            result =
+                {
+                    y: data,
+                    marker: {
+                        symbol: 'cross',
+                        lineColor: 'red',
+                        lineWidth: 4
+                    }
+                }
+        }
+        return result;
+    };
+
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
 
@@ -78,7 +94,10 @@ function FunMetricChartController($scope, commonService) {
                                 break;
                             }
                         }
-                        oneChartDataArray.push(output);
+                        let thisMinimum = chartInfo.data_sets[dataSetIndex].output.min;
+                        let thisMaximum = chartInfo.data_sets[dataSetIndex].output.max;
+
+                        oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
                     }
                     let oneChartDataSet = {name: chartInfo.data_sets[dataSetIndex].name, data: oneChartDataArray};
                     chartDataSets.push(oneChartDataSet);

@@ -100,15 +100,18 @@ if __name__ == "__main__":
     PerformanceBlt.objects.all().delete()
     PerformanceIkv.objects.all().delete()
 
+    r = random.Random()
+    r.seed("test")
+
     # Generate data for PerformanceBlt
     for build in builds:
         block_sizes = ["4K", "8K", "16K"]
         modes = ["Read", "Read-Write"]
         for block_size in block_sizes:
             for mode in modes:
-                iops = random.randint(0, 100)
-                bw = random.randint(0, 200)
-                latency = random.randint(0, 300)
+                iops = r.randint(0, 100)
+                bw = r.randint(0, 200)
+                latency = r.randint(0, 300)
                 p = PerformanceBlt(key=build, input1_block_size=block_size, input2_mode=mode, output1_iops=iops, output2_bw=bw, output3_latency=latency)
                 p.save()
 
@@ -120,7 +123,7 @@ if __name__ == "__main__":
         "output": {
             "name": "output1_iops",
             "min": 0,
-            "max": 100
+            "max": 85
         },
         "name": "Block-size:4K Mode: Read"
     }
@@ -131,7 +134,7 @@ if __name__ == "__main__":
         "output": {
             "name": "output1_iops",
             "min": 0,
-            "max": 100
+            "max": 75
         },
         "name": "Block-size:8K Mode: Read"
     }
@@ -142,9 +145,9 @@ if __name__ == "__main__":
         "output": {
             "name": "output1_iops",
             "min": 0,
-            "max": 100
+            "max": 75
         },
-        "name": "Block-size:8K Mode: Read"
+        "name": "Block-size:8K Mode: Read-Write"
     }
 
     MetricChart(chart_name="BLT Performance", data_sets=json.dumps([data_set1, data_set2, data_set3]),
@@ -155,7 +158,7 @@ if __name__ == "__main__":
     for build in builds:
         put_value_sizes = [4096, 8192]
         for put_value_size in put_value_sizes:
-            output1_put_per_seccond = random.randint(0, 300)
+            output1_put_per_seccond = r.randint(0, 300)
             p = PerformanceIkv(key=build, input1_put_value_size=put_value_size, output1_put_per_seccond=output1_put_per_seccond)
             p.save()
 
@@ -166,7 +169,7 @@ if __name__ == "__main__":
         "output": {
             "name": "output1_put_per_seccond",
             "min": 0,
-            "max": 100
+            "max": 275
         },
         "name": "PUT Value size: 4096"
     }
@@ -176,7 +179,7 @@ if __name__ == "__main__":
         "output": {
             "name": "output1_put_per_seccond",
             "min": 0,
-            "max": 100
+            "max": 275
         },
         "name": "PUT Value size: 8192"
     }
