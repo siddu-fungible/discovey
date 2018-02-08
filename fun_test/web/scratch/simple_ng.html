@@ -10,7 +10,9 @@ function myController($scope) {
     this.$onInit = function () {
         console.log("init");
         console.log(this.name);
-    }
+        let s = "john, john2";
+        console.log(s.split(","));
+    };
 
     $scope.testClick = function () {
         console.log("testClick");

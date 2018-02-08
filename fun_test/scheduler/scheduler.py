@@ -187,11 +187,12 @@ class SuiteWorker(Thread):
 
             del job_id_threads[self.job_id]
             models_helper.finalize_suite_execution(suite_execution_id=self.job_id)
-            send_summary_mail(job_id=self.job_id)
-
         else:
-            pass #TODO: Send error report
-            send_summary_mail(job_id=self.job_id)
+            pass  # TODO: Send error report
+        to_addresses = []
+        if "email_list" in self.job_spec:
+            to_addresses = self.job_spec["email_list"]
+        send_summary_mail(job_id=self.job_id, to_addresses=to_addresses)
 
 
 

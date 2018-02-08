@@ -96,6 +96,10 @@
             payload["suite_path"] = $scope.selectedSuite;
             payload["build_url"] = $scope.buildUrl;
             payload["tags"] = $scope._getSelectedtags();
+            if($scope.emails) {
+                $scope.emails = $scope.emails.split(",");
+                payload["email_list"] = $scope.emails
+            }
 
             if($scope.schedulingOptions) {
                 payload = $scope.getSchedulingOptions(payload);

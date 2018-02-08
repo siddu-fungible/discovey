@@ -36,6 +36,8 @@
                                 </small>
                             </ui-select-choices>
                         </ui-select>
+                        <label for="emails">Specify comma-separated e-mail</label>
+                        <input id="emails" name="emails" ng-model="emails" type="text" required/>
                     </div>
                     <fieldset ng-if="selectedInfo" class="title">
                         <legend>{{ selectedSuite }}</legend>
