@@ -284,6 +284,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
                                               message="Ensuring fault_injection got enabled")
 
+        table_data_headers = ["Operation", "Block Size", "IO Depth", "Write IOPS", "Read IOPS",
+                              "Write Throughput in KiB/s", "Read Throughput in KiBs", "Num Writes", "Num Reads",
+                              "Fault Injection"]
+        table_data_cols = ["mode", "block_size", "iodepth", "writeiops", "readiops", "writebw", "readbw", "num_writes",
+                           "num_reads", "fault_injection"]
+        table_data_rows = []
+
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
             internal_result[combo] = {}
@@ -304,6 +311,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_iodepth = tmp[1].strip('() ')
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
+                row_data_dict = {}
+                row_data_dict["mode"] = mode
+                row_data_dict["block_size"] = fio_block_size
+                row_data_dict["iodepth"] = fio_iodepth
 
                 # Pulling initial volume stats of all the volumes from the DUT in dictionary format
                 fun_test.log("Pulling initial stats of the all the volumes from the DUT in dictionary format before "
@@ -378,14 +389,21 @@ class ECVolumeLevelTestcase(FunTestCase):
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
                         actual = fio_output[combo][mode][op][field]
+                        row_data_dict[op + field] = actual
                         if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
                             fio_result[combo][mode] = False
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "FAILED", value, actual)
                             fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
                                               format(op, field, actual, value))
                         elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "PASSED", value, actual)
                             fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
                                                                                                          actual, value))
                         else:
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "PASSED", value, actual)
                             fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
 
                 # Comparing the internal volume stats with the expected value
@@ -398,36 +416,66 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 continue
                             if ekey in diff_volume_stats[combo][mode][type][index]:
                                 actual = diff_volume_stats[combo][mode][type][index][ekey]
+                                row_data_dict[ekey] = actual
                                 if actual != evalue:
                                     if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
+                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
+                                                                "block size & IO depth combo {}".
+                                                                format(ekey, type, index, mode, combo), "PASSED",
+                                                                evalue, actual)
                                         fun_test.critical("Final {} value {} of {} {} volume is within the expected "
-                                                          "range {}".format(ekey, actual, type, index, evalue, type,
-                                                                            index))
+                                                          "range {}".format(ekey, actual, type, index, evalue))
                                     elif (actual > evalue) and ((actual - evalue) <= self.volume_pass_threshold):
+                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
+                                                                "block size & IO depth combo {}".
+                                                                format(ekey, type, index, mode, combo), "PASSED",
+                                                                evalue, actual)
                                         fun_test.critical("Final {} value {} of {} {} volume is within the expected "
-                                                          "range {}".format(ekey, actual, type, index, evalue, type,
-                                                                            index))
+                                                          "range {}".format(ekey, actual, type, index, evalue))
                                     else:
                                         internal_result[combo][mode] = False
+                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
+                                                                "block size & IO depth combo {}".
+                                                                format(ekey, type, index, mode, combo), "FAILED",
+                                                                evalue, actual)
                                         fun_test.critical("Final {} value {} of {} {} volume is not equal to the "
-                                                          "expected value {}".format(ekey, actual, type, index, evalue,
-                                                                                     type, index))
+                                                          "expected value {}".format(ekey, actual, type, index, evalue))
                                 else:
+                                    fun_test.add_checkpoint("{} check for {} {} volume for {} test for the block "
+                                                            "size & IO depth combo {}".
+                                                            format(ekey, type, index, mode, combo), "PASSED",
+                                                            evalue, actual)
                                     fun_test.log("Final {} value {} of {} {} volume is equal to the expected value {}".
                                                  format(ekey, actual, type, index, evalue))
                             else:
                                 internal_result[combo][mode] = False
                                 fun_test.critical("{} is not found in {} {} volume status".format(ekey, type, index))
 
+                # Building the table raw for this variation
+                row_data_list = []
+                for i in table_data_cols:
+                    if i not in row_data_dict:
+                        row_data_list.append(0)
+                    else:
+                        row_data_list.append(row_data_dict[i])
+                table_data_rows.append(row_data_list)
+
+        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+
         # Posting the final status of the test result
         fun_test.log(fio_result)
         fun_test.log(internal_result)
+        test_result = True
         for combo in self.fio_bs_iodepth:
             for mode in self.fio_modes:
-                fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
-                                                              "combo {}".format(mode, combo))
-                fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
-                                                                   "size & IO depth combo {}".format(mode, combo))
+                if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                    test_result = False
+                # fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
+                #                                              "combo {}".format(mode, combo))
+                # fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
+                #                                                   "size & IO depth combo {}".format(mode, combo))
+        fun_test.test_assert(test_result, self.summary)
 
     def old_run(self):
 
@@ -579,8 +627,8 @@ if __name__ == "__main__":
 
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(EC21FioSeqWriteSeqReadOnly())
-    ecscript.add_test_case(EC21FioRandWriteRandReadOnly())
-    ecscript.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
-    ecscript.add_test_case(EC21FioSeqReadWriteMix())
-    ecscript.add_test_case(EC21FioRandReadWriteMix())
+    # ecscript.add_test_case(EC21FioRandWriteRandReadOnly())
+    # ecscript.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
+    # ecscript.add_test_case(EC21FioSeqReadWriteMix())
+    # ecscript.add_test_case(EC21FioRandReadWriteMix())
     ecscript.run()
