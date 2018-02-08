@@ -121,7 +121,7 @@ if __name__ == "__main__":
         "input2_mode": "Read"
     },
         "output": {
-            "name": "output3_latency",
+            "name": "output1_iops",
             "min": 0,
             "max": 85
         },
@@ -132,12 +132,39 @@ if __name__ == "__main__":
         "input2_mode": "Read"
     },
         "output": {
-            "name": "output3_latency",
+            "name": "output1_iops",
             "min": 0,
             "max": 75
         },
         "name": "Block-size:8K Mode: Read"
     }
+    data_set3 = {"inputs": {
+        "input1_block_size": "8K",
+        "input2_mode": "Read-Write"
+    },
+        "output": {
+            "name": "output1_iops",
+            "min": 0,
+            "max": 75
+        },
+        "name": "Block-size:8K Mode: Read-Write"
+    }
+
+    MetricChart(chart_name="BLT Performance IOPS", data_sets=json.dumps([data_set1, data_set2, data_set3]),
+                metric_model_name="PerformanceBlt").save()
+
+    data_set1 = {"inputs": {
+        "input1_block_size": "4K",
+        "input2_mode": "Read"
+    },
+        "output": {
+            "name": "output3_latency",
+            "min": 0,
+            "max": 85
+        },
+        "name": "Block-size:4K Mode: Read"
+    }
+
     data_set3 = {"inputs": {
         "input1_block_size": "8K",
         "input2_mode": "Read-Write"
@@ -150,10 +177,7 @@ if __name__ == "__main__":
         "name": "Block-size:8K Mode: Read-Write"
     }
 
-    MetricChart(chart_name="BLT Performance IOPS", data_sets=json.dumps([data_set1, data_set2, data_set3]),
-                metric_model_name="PerformanceBlt").save()
-
-    MetricChart(chart_name="BLT Performance Latency", data_sets=json.dumps([data_set1, data_set2, data_set3]),
+    MetricChart(chart_name="BLT Performance Latency", data_sets=json.dumps([data_set1, data_set3]),
                 metric_model_name="PerformanceBlt").save()
 
     # Generate data for PerformanceIkv

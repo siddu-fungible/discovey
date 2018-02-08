@@ -195,7 +195,7 @@
                                 },
 
                                 subtitle: {
-                                    text: 'Source: '
+                                    text: ''
                                 },
                                 xAxis: {
                                     categories: ctrl.series,

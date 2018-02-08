@@ -98,6 +98,10 @@ def edit_chart(request, chart_name):
     return render(request, 'qa_dashboard/edit_chart.html', locals())
 
 @csrf_exempt
+def view_all_storage_charts(request):
+    return render(request, 'qa_dashboard/analytics_chart_dashboard.html', locals())
+
+@csrf_exempt
 @api_safe_json_response
 def models_by_module(request):
     request_json = json.loads(request.body)

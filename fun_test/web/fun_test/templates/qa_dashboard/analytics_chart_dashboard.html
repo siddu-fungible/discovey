@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/analytics_chart_dashboard.js" %}"></script>
+
+{% endblock %}
+
+{% block content %}
+    {% verbatim %}
+    <div ng-controller="analyticsChartDashboardController">
+        <div class="row">
+            <div class="col-xl-4 col-lg-3 card">
+                <fun-metric-chart chart-name="chart1Name" model-name="model1Name" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
+            </div>
+            <div class="col-xl-4 col-lg-3 card">
+                <fun-metric-chart chart-name="chart2Name" model-name="model2Name" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
+            </div>
+            <div class="col-xl-4 col-lg-3 card">
+                <fun-metric-chart chart-name="chart3Name" model-name="model3Name" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
+            </div>
+        </div>
+    </div>
+    {% endverbatim %}
+
+{% endblock %}

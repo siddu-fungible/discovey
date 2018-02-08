@@ -10,7 +10,9 @@
     <label>Select module</label>
     <select ng-options="module.name as module.verbose_name for module in modules" ng-model="selectedModule" ng-change="moduleChange()"></select>
 
+
     <div ng-if="selectedModule">
+        <a target="_blank" href="/metrics/view_all_storage_charts">View all storage charts</a>
 
         <div ng-repeat="(modelName, modelInfo) in modelsInfo[selectedModule]">
             <h4>{{ modelName }}</h4>
