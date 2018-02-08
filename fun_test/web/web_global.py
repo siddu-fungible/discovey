@@ -24,10 +24,3 @@ def api_safe_json_response(the_function):
         return HttpResponse(json.dumps(result))
     return inner
 
-
-def is_regression_server():
-    return "REGRESSION_SERVER" in os.environ
-
-
-def is_performance_server():
-    return "PERFORMANCE_SERVER" in os.environ

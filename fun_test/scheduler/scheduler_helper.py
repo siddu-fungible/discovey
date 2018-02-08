@@ -3,7 +3,7 @@ import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR
-from fun_global import RESULTS, is_regression_server, get_current_time
+from fun_global import RESULTS, is_regression_server, is_performance_server, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from django.utils import timezone
@@ -242,7 +242,7 @@ def send_summary_mail(job_id):
                                             suite_execution["num_passed"],
                                             suite_execution["num_failed"])
 
-        if is_regression_server():
+        if is_regression_server() or is_performance_server():
             result = send_mail(subject=subject, content=html)
             scheduler_logger.info("Sent mail")
             if not result["status"]:

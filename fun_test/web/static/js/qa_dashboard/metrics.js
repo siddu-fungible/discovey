@@ -114,6 +114,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
             $scope.chartInfo = chartInfo;
             $scope.copyChartInfo = angular.copy($scope.chartInfo);
+            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
             let i = 0;
         });
 

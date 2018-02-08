@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from web.fun_test.site_state import site_state
-from web.web_global import is_performance_server, is_regression_server
+from fun_global import is_performance_server, is_regression_server
 
 
 class Command(BaseCommand):
