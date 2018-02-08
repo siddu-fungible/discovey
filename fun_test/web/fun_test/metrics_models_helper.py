@@ -121,7 +121,7 @@ if __name__ == "__main__":
         "input2_mode": "Read"
     },
         "output": {
-            "name": "output1_iops",
+            "name": "output3_latency",
             "min": 0,
             "max": 85
         },
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         "input2_mode": "Read"
     },
         "output": {
-            "name": "output1_iops",
+            "name": "output3_latency",
             "min": 0,
             "max": 75
         },
@@ -143,16 +143,18 @@ if __name__ == "__main__":
         "input2_mode": "Read-Write"
     },
         "output": {
-            "name": "output1_iops",
+            "name": "output3_latency",
             "min": 0,
             "max": 75
         },
         "name": "Block-size:8K Mode: Read-Write"
     }
 
-    MetricChart(chart_name="BLT Performance", data_sets=json.dumps([data_set1, data_set2, data_set3]),
+    MetricChart(chart_name="BLT Performance IOPS", data_sets=json.dumps([data_set1, data_set2, data_set3]),
                 metric_model_name="PerformanceBlt").save()
 
+    MetricChart(chart_name="BLT Performance Latency", data_sets=json.dumps([data_set1, data_set2, data_set3]),
+                metric_model_name="PerformanceBlt").save()
 
     # Generate data for PerformanceIkv
     for build in builds:
