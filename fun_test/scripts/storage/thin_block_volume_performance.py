@@ -271,6 +271,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Difference of volume status before and after the test:")
                 fun_test.log(diff_volume_stats[combo][mode])
 
+                if not fio_output[combo][mode]:
+                    fio_result[combo][mode] = False
+                    fun_test.critical("No output from FIO test, hence moving to the next variation")
+                    continue
+
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
@@ -562,6 +567,11 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                         diff_volume_stats[size][mode][fkey] = fvalue - ivalue
                 fun_test.log("Difference of volume status before and after the test:")
                 fun_test.log(diff_volume_stats[size][mode])
+
+                if not fio_output[size][mode]:
+                    fio_result[size][mode] = False
+                    fun_test.critical("No output from FIO test, hence moving to the next variation")
+                    continue
 
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[size][mode].items():
