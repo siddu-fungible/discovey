@@ -1,7 +1,7 @@
 <div class="modal-header">
     <h3 class="modal-title">Edit chart: {{ chartName }}</h3>
 </div>
-<div class="modal-body">
+<div class="modal-body edit-modal-body">
     <fun-metric-chart chart-name="chartName" model-name="modelName" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
     <table class="table table-nonfluid" ng-repeat="dataSet in copyChartInfo.data_sets track by $index">
         <tr>
@@ -17,8 +17,10 @@
             <td>{{ dataSet.name }}</td>
             <td ng-repeat="(inputName, inputValue) in dataSet.inputs">{{ inputValue }}</td>
             <td>{{ dataSet.output.name }}</td>
-            <td>{{ dataSet.output.min }}</td>
-            <td>{{ dataSet.output.max }}</td>
+            <td>
+                <input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min" style="width: 100px">
+            </td>
+            <td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max" style="width: 100px"></td>
         </tr>
     </table>
 </div>

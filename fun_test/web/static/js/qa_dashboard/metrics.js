@@ -122,6 +122,12 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             let i = 0;
             $scope.previewDataSets = $scope.copyChartInfo.data_sets;
         };
+
+        $scope.submit = () => {
+            let i = 0;
+            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
+
+        }
     }
 }
 

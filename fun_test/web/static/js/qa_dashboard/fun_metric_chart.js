@@ -68,6 +68,10 @@ function FunMetricChartController($scope, commonService) {
             payload["metric_model_name"] = metricModelName;
             payload["chart_name"] = chartName;
             payload["preview_data_sets"] = previewDataSets;
+            let filterDataSets = chartInfo.data_sets;
+            if(previewDataSets) {
+                filterDataSets = previewDataSets;
+            }
 
             commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
                 if(allDataSets.length === 0) {
@@ -93,19 +97,19 @@ function FunMetricChartController($scope, commonService) {
                         for(let j = 0; j < oneDataSet.length; j++) {
                             let oneRecord = oneDataSet[j];
                             if(oneRecord.key.toString() === keyList[i]) {
-                                let outputName = chartInfo.data_sets[0].output.name;
+                                let outputName = filterDataSets[0].output.name;
                                 output = oneRecord[outputName];
                                 $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
                                 $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
                                 break;
                             }
                         }
-                        let thisMinimum = chartInfo.data_sets[dataSetIndex].output.min;
-                        let thisMaximum = chartInfo.data_sets[dataSetIndex].output.max;
+                        let thisMinimum = filterDataSets[dataSetIndex].output.min;
+                        let thisMaximum = filterDataSets[dataSetIndex].output.max;
 
                         oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
                     }
-                    let oneChartDataSet = {name: chartInfo.data_sets[dataSetIndex].name, data: oneChartDataArray};
+                    let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
                     chartDataSets.push(oneChartDataSet);
                     dataSetIndex++;
                 });
