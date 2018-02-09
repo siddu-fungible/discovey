@@ -642,22 +642,24 @@ class FunTest:
             target_username=None,
             target_password=None,
             target_port=22,
-            timeout=60):
+            timeout=60,
+            recursive=False):
         transfer_complete = False
         scp_command = ""
 
         #scp_command = "scp -P %d %s %s@%s:%s" % (
         #target_port, source_file_path, target_username, target_ip, target_file_path)
         the_password = source_password
+        recursive = " -r " if recursive else ""
         if target_ip:
-            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(target_port,
+            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive, target_port,
                                                          source_file_path,
                                                          target_username,
                                                          target_ip,
                                                          target_file_path)
             target_password = the_password
         elif source_ip:
-            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(source_port,
+            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(recursive, source_port,
                                                          source_username,
                                                          source_ip,
                                                          source_file_path,
