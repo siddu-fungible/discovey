@@ -232,8 +232,3 @@ class DockerF1(F1, ToDictMixin):
         self.data_plane_ip = data_plane_ip
         self.TO_DICT_VARS.append("data_plane_ip")
 
-    def __getstate__(self):
-        d = dict(self.__dict__)
-        del d['handle']
-        del d['logger']
-        return d

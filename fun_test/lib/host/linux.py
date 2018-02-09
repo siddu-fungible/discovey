@@ -137,6 +137,19 @@ class Linux(object, ToDictMixin):
     def post_init(self):
         pass
 
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        if 'handle' in d:
+            del d['handle']
+        if 'logger' in d:
+            del d['logger']
+        return d
+
+    def __setstate__(self, state):
+        state["logger"] = self.logger = LinuxLogger()  #TODO? What is the current logger?
+        state["handle"] = None
+        self.__dict__.update(state)
+
     def _set_defaults(self):
         self.tmp_dir = self.TMP_DIR_DEFAULT
         if self.ssh_username == 'root':

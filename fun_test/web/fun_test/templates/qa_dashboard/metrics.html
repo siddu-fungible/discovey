@@ -16,14 +16,20 @@
 
         <div ng-repeat="(modelName, modelInfo) in modelsInfo[selectedModule]">
             <h4>{{ modelName }}</h4>
-            <table class="table">
+            <table class="table table-bordered table-nonfluid">
                 <tr>
+                    <th>
+
+                    </th>
                     <th>
                         Charts
                     </th>
                 </tr>
                 <tr ng-repeat="chartInfo in modelInfo.charts">
-                    <td>
+                    <td class="fun-center">
+                        <button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:15px; color: red"></i></button>
+                    </td>
+                    <td class="fun-center">
                         {{ chartInfo }}&nbsp<a href="#" ng-click="editChartClick(chartInfo, modelName)">Edit</a>
                     </td>
                 </tr>
