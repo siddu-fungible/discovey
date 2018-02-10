@@ -1,12 +1,14 @@
-import sys, os
+import sys
+import os
 import traceback
 import collections
 import abc
-import time, json, pdb
+import pdb
 import inspect
 from fun_settings import *
 import fun_xml
-import argparse, threading
+import argparse
+import threading
 from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 import signal
@@ -14,6 +16,7 @@ from web.fun_test.web_interface import get_homepage_url
 import pexpect
 from uuid import getnode as get_mac
 import getpass
+
 
 class TestException(Exception):
     def __str__(self):
@@ -26,8 +29,10 @@ class TestException(Exception):
 class FunTestSystemException(Exception):
     pass
 
+
 class FunTestLibException(Exception):
     pass
+
 
 class FunTimer:
     def __init__(self, max_time=10000):
@@ -302,7 +307,6 @@ class FunTest:
         calling_module = self._get_calling_module(outer_frames)
         self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
 
-
     def _get_module_name(self, outer_frames):
         module_name = os.path.basename(outer_frames[0][1]).replace(".py", "")
         line_number = outer_frames[0][2]
@@ -480,10 +484,10 @@ class FunTest:
         self._print_summary()
 
     def _get_test_case_text(self,
-                               id,
-                               summary,
-                               steps="None",
-                               traffic="None"):
+                            id,
+                            summary,
+                            steps="None",
+                            traffic="None"):
 
         s = "Id:" + str(id)
         s += " " + summary + "\n"
@@ -506,9 +510,9 @@ class FunTest:
             self.fun_xml_obj.add_collapsible_tab_panel(header="Traces", panel_items=trace_items)
 
     def trace(self, id, log):
-        if not self.current_test_case_id in self.traces:
+        if self.current_test_case_id not in self.traces:
             self.traces[self.current_test_case_id] = {}
-        if not id in self.traces[self.current_test_case_id]:
+        if id not in self.traces[self.current_test_case_id]:
             self.traces[self.current_test_case_id][id] = log
         self.traces[self.current_test_case_id][id] += log
 
@@ -570,10 +574,10 @@ class FunTest:
                                             result=FunTest.PASSED)
 
     def add_checkpoint(self,
-                           checkpoint=None,
-                           result=PASSED,
-                           expected="",
-                           actual=""):
+                       checkpoint=None,
+                       result=PASSED,
+                       expected="",
+                       actual=""):
 
         self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint, result=result, expected=expected, actual=actual)
 
@@ -595,9 +599,9 @@ class FunTest:
 
         sys.argv.append("--disable_fun_test")
         test_cases = []
-        test_script = None
 
-        import imp, inspect
+        import imp
+        import inspect
 
         temp_module_name = self._get_flat_file_name(path=module_name)
 
@@ -620,8 +624,8 @@ class FunTest:
                 if issubclass(klass, FunTestScript):
                     if len(mros) > 1 and "lib.system.fun_test.FunTestScript" in str(mros[1]):
                         test_script = klass
-        #test_script_obj = test_script()
-        #test_case_order = test_script().test_case_order
+        # test_script_obj = test_script()
+        # test_case_order = test_script().test_case_order
         '''
         for entry in test_script().test_case_order:
             print entry["tc"]
@@ -646,24 +650,24 @@ class FunTest:
             recursive=False):
         transfer_complete = False
         scp_command = ""
-
-        #scp_command = "scp -P %d %s %s@%s:%s" % (
-        #target_port, source_file_path, target_username, target_ip, target_file_path)
-        the_password = source_password
         recursive = " -r " if recursive else ""
+        # scp_command = "scp -P %d %s %s@%s:%s" % (
+        # target_port, source_file_path, target_username, target_ip, target_file_path)
+        the_password = source_password
         if target_ip:
-            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive, target_port,
-                                                         source_file_path,
-                                                         target_username,
-                                                         target_ip,
-                                                         target_file_path)
+            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive,
+                                                                                            target_port,
+                                                                                            source_file_path,
+                                                                                            target_username,
+                                                                                            target_ip,
+                                                                                            target_file_path)
             target_password = the_password
         elif source_ip:
             scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(recursive, source_port,
-                                                         source_username,
-                                                         source_ip,
-                                                         source_file_path,
-                                                         target_file_path)
+                                                                                            source_username,
+                                                                                            source_ip,
+                                                                                            source_file_path,
+                                                                                            target_file_path)
 
         handle = pexpect.spawn(scp_command, env={"TERM": "dumb"}, maxread=4096)
         handle.logfile_read = fun_test
@@ -704,18 +708,20 @@ class FunTest:
 
         return transfer_complete
 
+
 fun_test = FunTest()
+
 
 class FunTestScript(object):
     __metaclass__ = abc.ABCMeta
     test_case_order = None
+
     def __init__(self):
         fun_test._initialize()
         self.test_cases = []
         self.summary = "Setup"
         self.steps = ""
         self.at_least_one_failed = False
-
 
     def set_test_details(self, steps):
         self.id = FunTest.SETUP_TC_ID
@@ -724,7 +730,6 @@ class FunTestScript(object):
     def add_test_case(self, test_case):
         self.test_cases.append(test_case)
         return self
-
 
     @abc.abstractmethod
     def describe(self):
@@ -741,8 +746,8 @@ class FunTestScript(object):
     @abc.abstractmethod
     def setup(self):
         fun_test._start_test(id=self.id,
-                               summary="Script setup",
-                               steps=self.steps)
+                             summary="Script setup",
+                             steps=self.steps)
         script_result = FunTest.FAILED
 
         setup_te = None
@@ -768,17 +773,17 @@ class FunTestScript(object):
                     new_order.append(main_test_case)
                     main_test_case._added_to_script = True
 
-                self.test_cases  = new_order
+                self.test_cases = new_order
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
                 setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
-                                                           suite_execution_id=fun_test.suite_execution_id,
-                                                           result=fun_test.IN_PROGRESS,
-                                                           path=fun_test.relative_path)
+                                                                 suite_execution_id=fun_test.suite_execution_id,
+                                                                 result=fun_test.IN_PROGRESS,
+                                                                 path=fun_test.relative_path)
 
                 for test_case in self.test_cases:
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
-                        if not test_case.id in fun_test.selected_test_case_ids:
+                        if test_case.id not in fun_test.selected_test_case_ids:
                             continue
                     te = models_helper.add_test_case_execution(test_case_id=test_case.id,
                                                                suite_execution_id=fun_test.suite_execution_id,
@@ -789,21 +794,21 @@ class FunTestScript(object):
             self.setup()
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                           suite_execution_id=fun_test.suite_execution_id,
-                                                           result=fun_test.PASSED)
+                                                         suite_execution_id=fun_test.suite_execution_id,
+                                                         result=fun_test.PASSED)
             script_result = FunTest.PASSED
         except (TestException) as ex:
             self.at_least_one_failed = True
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                       suite_execution_id=fun_test.suite_execution_id,
-                                                       result=fun_test.FAILED)
+                                                         suite_execution_id=fun_test.suite_execution_id,
+                                                         result=fun_test.FAILED)
         except (Exception) as ex:
             self.at_least_one_failed = True
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                       suite_execution_id=fun_test.suite_execution_id,
-                                                       result=fun_test.FAILED)
+                                                         suite_execution_id=fun_test.suite_execution_id,
+                                                         result=fun_test.FAILED)
             fun_test.critical(str(ex))
         fun_test._end_test(result=script_result)
 
@@ -812,8 +817,8 @@ class FunTestScript(object):
     @abc.abstractmethod
     def cleanup(self):
         fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
-                               summary="Script cleanup",
-                               steps=self.steps)
+                             summary="Script cleanup",
+                             steps=self.steps)
         result = FunTest.FAILED
         try:
             self.cleanup()
@@ -838,11 +843,11 @@ class FunTestScript(object):
 
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
-                        if not test_case.id in fun_test.selected_test_case_ids:
+                        if test_case.id not in fun_test.selected_test_case_ids:
                             continue
                     fun_test._start_test(id=test_case.id,
-                                           summary=test_case.summary,
-                                           steps=test_case.steps)
+                                         summary=test_case.summary,
+                                         steps=test_case.steps)
                     test_result = FunTest.FAILED
                     try:
                         if fun_test.suite_execution_id:
@@ -886,9 +891,9 @@ class FunTestScript(object):
         self._close()
 
 
-
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         self.id = None
         self.summary = None
