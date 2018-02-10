@@ -33,8 +33,6 @@ topology_dict = {
     }
 }
 
-fun_test.shared_variables["configured"] = False
-
 
 class ECVolumeLevelScript(FunTestScript):
     def describe(self):
@@ -126,10 +124,12 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # End of benchmarking json file parsing
 
-        topology = fun_test.shared_variables["topology"]
-        dut = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut, "Retrieved dut instance 0")
-        linux_host = topology.get_tg_instance(tg_index=0)
+        self.topology = fun_test.shared_variables["topology"]
+        self.dut = self.topology.get_dut_instance(index=0)
+        fun_test.test_assert(self.dut, "Retrieved dut instance 0")
+        self.linux_host = self.topology.get_tg_instance(tg_index=0)
+        self.storage_controller = StorageController(target_ip=self.dut.host_ip,
+                                                    target_port=self.dut.external_dpcsh_port)
 
         self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
 
@@ -157,17 +157,16 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.uuids["lsv"] = []
 
             # Configuring the controller
-            storage_controller = StorageController(target_ip=dut.host_ip, target_port=dut.external_dpcsh_port)
             command_result = {}
-            command_result = storage_controller.command("enable_counters")
+            command_result = self.storage_controller.command("enable_counters")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance 0")
 
             command_result = {}
-            command_result = storage_controller.ip_cfg(ip=dut.data_plane_ip,
-                                                       expected_command_duration=self.command_timeout)
+            command_result = self.storage_controller.ip_cfg(ip=self.dut.data_plane_ip,
+                                                            expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg {} on DUT instance 0".format(dut.data_plane_ip))
+            fun_test.test_assert(command_result["status"], "ip_cfg {} on DUT instance 0".format(self.dut.data_plane_ip))
 
             # Configuring ndata and nparity number of BLT volumes
             for type in sorted(self.ec_coding):
@@ -176,11 +175,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                     this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
                     self.uuids[type].append(this_uuid)
                     self.uuids["blt"].append(this_uuid)
-                    command_result = storage_controller.create_volume(type=self.volume_types[type],
-                                                                      capacity=self.volume_capacity[type],
-                                                                      block_size=self.volume_block[type],
-                                                                      name=type+str(i), uuid=this_uuid,
-                                                                      expected_command_duration=self.command_timeout)
+                    command_result = self.storage_controller.create_volume(
+                        type=self.volume_types[type], capacity=self.volume_capacity[type],
+                        block_size=self.volume_block[type], name=type+str(i), uuid=this_uuid,
+                        expected_command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create {} {} BLT volume on DUT instance 0".
                                          format(i, type))
@@ -188,13 +186,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Configuring EC volume on top of BLT volumes
             this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
             self.uuids["ec"].append(this_uuid)
-            command_result = storage_controller.create_volume(type=self.volume_types["ec"],
-                                                              capacity=self.volume_capacity["ec"],
-                                                              block_size=self.volume_block["ec"], name="ec1",
-                                                              uuid=this_uuid, ndata=self.ec_coding["ndata"],
-                                                              nparity=self.ec_coding["nparity"],
-                                                              pvol_id=self.uuids["blt"],
-                                                              expected_command_duration=self.command_timeout)
+            command_result = self.storage_controller.create_volume(
+                type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
+                name="ec1", uuid=this_uuid, ndata=self.ec_coding["ndata"], nparity=self.ec_coding["nparity"],
+                pvol_id=self.uuids["blt"], expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create EC volume on DUT instance 0")
             attach_uuid = this_uuid
@@ -203,34 +198,32 @@ class ECVolumeLevelTestcase(FunTestCase):
             if self.use_lsv:
                 this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
                 self.uuids["lsv"].append(this_uuid)
-                command_result = storage_controller.create_volume(type=self.volume_types["lsv"],
-                                                                  capacity=self.volume_capacity["lsv"],
-                                                                  block_size=self.volume_block["lsv"], name="lsv1",
-                                                                  uuid=this_uuid, group=self.ec_coding["ndata"],
-                                                                  pvol_id=self.uuids["ec"],
-                                                                  expected_command_duration=self.command_timeout)
+                command_result = self.storage_controller.create_volume(
+                    type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
+                    block_size=self.volume_block["lsv"], name="lsv1", uuid=this_uuid, group=self.ec_coding["ndata"],
+                    pvol_id=self.uuids["ec"], expected_command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create LS volume on DUT instance 0")
                 attach_uuid = this_uuid
 
             # Attaching/Exporting the EC/LS volume to the external server
             command_result = {}
-            command_result = storage_controller.attach_volume(ns_id=self.ns_id, uuid=attach_uuid,
-                                                              remote_ip=linux_host.internal_ip,
-                                                              expected_command_duration=self.command_timeout)
+            command_result = self.storage_controller.attach_volume(
+                ns_id=self.ns_id, uuid=attach_uuid, remote_ip=self.linux_host.internal_ip,
+                expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT instance 0")
 
             # disabling the error_injection for the EC volume
             command_result = {}
-            command_result = storage_controller.command("poke params/ecvol/error_inject 0")
+            command_result = self.storage_controller.command("poke params/ecvol/error_inject 0")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT instance 0")
 
             # Ensuring that the error_injection got disabled properly
             fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
             command_result = {}
-            command_result = storage_controller.peek("params/ecvol")
+            command_result = self.storage_controller.peek("params/ecvol")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT instance 0")
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
@@ -239,18 +232,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
             fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
 
-    # def fioseqwriteseqreadonly(self):
     def run(self):
 
         testcase = self.__class__.__name__
 
-        topology = fun_test.shared_variables["topology"]
-        dut = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut, "Retrieved dut instance 0")
-
-        linux_host = topology.get_tg_instance(tg_index=0)
-        destination_ip = dut.data_plane_ip
-
+        destination_ip = self.dut.data_plane_ip
         self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
@@ -268,27 +254,29 @@ class ECVolumeLevelTestcase(FunTestCase):
             volumes.append("lsv")
 
         # Check any plex needs to be induced to fail and if so do the same
-        storage_controller = StorageController(target_ip=dut.host_ip, target_port=dut.external_dpcsh_port)
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
-                command_result = storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                expected_command_duration=self.command_timeout)
+                command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
+                                                                     expected_command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
                                                                "UUID {}".format(self.uuids["ndata"][index]))
                 fun_test.sleep("Sleeping for a second to enable the fault_injection", 1)
                 props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
                                                   self.uuids["ndata"][index])
-                command_result = storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
                                               message="Ensuring fault_injection got enabled")
 
+        # table_data_headers = ["Operation", "Block Size", "IO Depth", "Write IOPS", "Read IOPS",
+        #                      "Write Throughput in KiB/s", "Read Throughput in KiBs", "Num Writes", "Num Reads",
+        #                      "Fault Injection"]
+        # table_data_cols = ["mode", "block_size", "iodepth", "writeiops", "readiops", "writebw", "readbw", "num_writes",
+        #                   "num_reads", "fault_injection"]
         table_data_headers = ["Operation", "Block Size", "IO Depth", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KiB/s", "Read Throughput in KiBs", "Num Writes", "Num Reads",
-                              "Fault Injection"]
-        table_data_cols = ["mode", "block_size", "iodepth", "writeiops", "readiops", "writebw", "readbw", "num_writes",
-                           "num_reads", "fault_injection"]
+                              "Write Throughput in KiB/s", "Read Throughput in KiBs"]
+        table_data_cols = ["mode", "block_size", "iodepth", "writeiops", "readiops", "writebw", "readbw"]
         table_data_rows = []
 
         for combo in self.fio_bs_iodepth:
@@ -326,7 +314,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         initial_volume_status[combo][mode][type][index] = {}
                         props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
                         command_result = {}
-                        command_result = storage_controller.peek(props_tree)
+                        command_result = self.storage_controller.peek(props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
                                                format(type, index))
                         initial_volume_status[combo][mode][type][index] = command_result["data"]
@@ -337,12 +325,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
                              "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
-                                                         iodepth=fio_iodepth, **self.fio_cmd_args)
+                fio_output[combo][mode] = self.linux_host.fio(destination_ip=destination_ip, rw=mode,
+                                                              bs=fio_block_size, iodepth=fio_iodepth,
+                                                              **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
-                fun_test.sleep("Sleeping for 5 seconds between iterations", 5)
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
                 # Pulling volume stats of all the volumes from the DUT in dictionary format after the test
                 fun_test.log("Pulling volume stats of all volumes after the FIO test")
@@ -353,7 +342,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         final_volume_status[combo][mode][type][index] = {}
                         props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
                         command_result = {}
-                        command_result = storage_controller.peek(props_tree)
+                        command_result = self.storage_controller.peek(props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
                                                format(type, index))
                         final_volume_status[combo][mode][type][index] = command_result["data"]
@@ -416,7 +405,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 continue
                             if ekey in diff_volume_stats[combo][mode][type][index]:
                                 actual = diff_volume_stats[combo][mode][type][index][ekey]
-                                row_data_dict[ekey] = actual
+                                # row_data_dict[ekey] = actual
                                 if actual != evalue:
                                     if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
                                         fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
@@ -486,22 +475,18 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def cleanup(self):
 
-        topology = fun_test.shared_variables["topology"]
-        dut = topology.get_dut_instance(index=0)
-
         # Check any plex needs to be re-enabled from failure_injection condition
-        storage_controller = StorageController(target_ip=dut.host_ip, target_port=dut.external_dpcsh_port)
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
-                command_result = storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                expected_command_duration=self.command_timeout)
+                command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
+                                                                     expected_command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
                                                                "having the UUID {}".format(self.uuids["ndata"][index]))
                 fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
                 props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
                                                   self.uuids["ndata"][index])
-                command_result = storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
                                               message="Ensuring fault_injection got enabled")
@@ -532,7 +517,7 @@ class EC21FioSeqWriteSeqReadOnly(ECVolumeLevelTestcase):
 
 class EC21FioSeqAndRandReadOnlyWithFailure(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary="Sequential and Random Read only performance of EC volume with a plex failure",
                               steps="""
         1. Create 3 BLT volumes on dut instance 0.
@@ -556,7 +541,7 @@ class EC21FioSeqAndRandReadOnlyWithFailure(ECVolumeLevelTestcase):
 
 class EC21FioRandWriteRandReadOnly(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=3,
                               summary="Random Write & Read only performance of EC volume",
                               steps="""
         1. Create 3 BLT volumes in dut instance 0.
@@ -579,7 +564,7 @@ class EC21FioRandWriteRandReadOnly(ECVolumeLevelTestcase):
 
 class EC21FioSeqReadWriteMix(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=4,
                               summary="Sequential 75% Write & 25% Read performance of EC volume",
                               steps="""
         1. Create 3 BLT volumes in dut instance 0.
@@ -602,7 +587,7 @@ class EC21FioSeqReadWriteMix(ECVolumeLevelTestcase):
 
 class EC21FioRandReadWriteMix(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=5,
                               summary="Random 75% Write & 25% Read performance of EC volume",
                               steps="""
         1. Create 3 BLT volumes in dut instance 0.
