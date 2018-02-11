@@ -192,13 +192,14 @@ class FunTest:
         next_id = self._get_next_thread_id()
         timer = threading.Timer(time_in_seconds, self._process_timer, [next_id])
         self.fun_test_timers.append(timer)
-        timer.start()
         self.fun_test_threads[next_id] = {
             "function": func,
             "kwargs": kwargs,
             "thread": None,
-            "as_thread": False
+            "as_thread": False,
+            "timer": timer
         }
+        timer.start()
         return next_id
 
     def execute_thread_after(self, time_in_seconds, func, **kwargs):
@@ -209,7 +210,8 @@ class FunTest:
             "function": func,
             "kwargs": kwargs,
             "as_thread": True,
-            "thread": None
+            "thread": None,
+            "timer": timer
         }
         timer.start()
         return next_id
@@ -226,7 +228,7 @@ class FunTest:
         else:
             func(**kwargs)
 
-    def join_thread(self, fun_test_thread_id):
+    def join_thread(self, fun_test_thread_id, sleep_time=5):
         thread_info = self.fun_test_threads[fun_test_thread_id]
         thread = thread_info["thread"]
         if thread:
@@ -238,11 +240,16 @@ class FunTest:
                 except RuntimeError as r:
                     r_string = str(r)
                     if "cannot join thread before it is started" not in r_string:
-                        fun_test.critical("Runtime error. {}".format(r))
+                        fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
                     else:
-                        fun_test.sleep("Waiting for thread to start")
+                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id), seconds=sleep_time)
+        else:
+            fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
+            timer = thread_info["timer"]
+            while timer.isAlive():
+                fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
 
-
+        fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
 
     def parse_file_to_json(self, file_name):

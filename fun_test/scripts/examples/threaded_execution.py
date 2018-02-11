@@ -34,12 +34,11 @@ class FunTestCase1(FunTestCase):
     def run(self):
         # Execute the function func as a thread after 5 seconds
         thread_id = fun_test.execute_thread_after(time_in_seconds=5, func=some_func, a=5)
-        fun_test.join_thread(fun_test_thread_id=thread_id)
+        fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
         # Execute the function func after 5 seconds
-        fun_test.execute_after(time_in_seconds=5, func=some_func, a=6)
-
-        fun_test.sleep("Just wait", seconds=10)
+        thread_id = fun_test.execute_after(time_in_seconds=5, func=some_func, a=6)
+        fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
 
 if __name__ == "__main__":
