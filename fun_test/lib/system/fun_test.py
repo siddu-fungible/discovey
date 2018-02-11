@@ -129,7 +129,6 @@ class FunTest:
 
         if threading.current_thread().__class__.__name__ == '_MainThread':
             signal.signal(signal.SIGINT, self.exit_gracefully)
-        # signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.initialized = False
         self.debug_enabled = False
@@ -162,6 +161,8 @@ class FunTest:
         self.shared_variables = {}
         if self.local_settings_file:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
+        self.wall_clock_timer = FunTimer()
+        self.wall_clock_timer.start()
 
     def parse_file_to_json(self, file_name):
         result = None
@@ -175,6 +176,9 @@ class FunTest:
         else:
             raise Exception("{} path does not exist".format(file_name))
         return result
+
+    def get_wall_clock_time(self):
+        return self.wall_clock_timer.elapsed_time()
 
     def get_absolute_script_path(self):
         return self.absolute_script_file_name
