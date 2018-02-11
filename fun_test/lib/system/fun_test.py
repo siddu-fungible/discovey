@@ -16,6 +16,8 @@ from web.fun_test.web_interface import get_homepage_url
 import pexpect
 from uuid import getnode as get_mac
 import getpass
+from threading import Thread
+from inspect import getargspec
 
 
 class TestException(Exception):
@@ -50,6 +52,20 @@ class FunTimer:
         return current_time - self.start_time
 
 
+class FunTestThread(Thread):
+    def __init__(self, func, **kwargs):
+        super(FunTestThread, self).__init__()
+        self.func = func
+        self.kwargs = kwargs
+
+    def run(self):
+        i = getargspec(self.func)
+        if i.args:
+            self.func(**self.kwargs)
+        else:
+            self.func()
+
+
 class FunTest:
     PASSED = RESULTS["PASSED"]
     FAILED = RESULTS["FAILED"]
@@ -74,6 +90,8 @@ class FunTest:
         "RESET": '\033[30m',
         "GREEN": '\033[92m'
     }
+
+    fun_test_thread_id = 0
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="FunTest")
@@ -163,6 +181,69 @@ class FunTest:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
         self.wall_clock_timer = FunTimer()
         self.wall_clock_timer.start()
+        self.fun_test_threads = {}
+        self.fun_test_timers = []
+
+    def _get_next_thread_id(self):
+        self.fun_test_thread_id += 1
+        return self.fun_test_thread_id
+
+    def execute_after(self, time_in_seconds, func, **kwargs):
+        next_id = self._get_next_thread_id()
+        timer = threading.Timer(time_in_seconds, self._process_timer, [next_id])
+        self.fun_test_timers.append(timer)
+        timer.start()
+        self.fun_test_threads[next_id] = {
+            "function": func,
+            "kwargs": kwargs,
+            "thread": None,
+            "as_thread": False
+        }
+        return next_id
+
+    def execute_thread_after(self, time_in_seconds, func, **kwargs):
+        next_id = self._get_next_thread_id()
+        timer = threading.Timer(time_in_seconds, self._process_timer, [next_id])
+        self.fun_test_timers.append(timer)
+        self.fun_test_threads[next_id] = {
+            "function": func,
+            "kwargs": kwargs,
+            "as_thread": True,
+            "thread": None
+        }
+        timer.start()
+        return next_id
+
+    def _process_timer(self, thread_id):
+        thread_info = self.fun_test_threads[thread_id]
+        func = thread_info["function"]
+        kwargs = thread_info["kwargs"]
+        as_thread = thread_info["as_thread"]
+        if as_thread:
+            t = FunTestThread(func, **kwargs)
+            thread_info["thread"] = t
+            t.start()
+        else:
+            func(**kwargs)
+
+    def join_thread(self, fun_test_thread_id):
+        thread_info = self.fun_test_threads[fun_test_thread_id]
+        thread = thread_info["thread"]
+        if thread:
+            success = False
+            while not success:
+                try:
+                    thread.join()
+                    success = True
+                except RuntimeError as r:
+                    r_string = str(r)
+                    if "cannot join thread before it is started" not in r_string:
+                        fun_test.critical("Runtime error. {}".format(r))
+                    else:
+                        fun_test.sleep("Waiting for thread to start")
+
+
+        return True
 
     def parse_file_to_json(self, file_name):
         result = None
@@ -485,6 +566,20 @@ class FunTest:
         self.initialized = True
 
     def close(self):
+        for timer in self.fun_test_timers:
+            fun_test.log("Waiting for active timers to stop")
+            while timer.is_alive():
+                time.sleep(1)
+
+        threads_to_check = []
+        for fun_test_thread_id, thread_info in self.fun_test_threads.iteritems():
+            thread = thread_info["thread"]
+            if thread and thread.isAlive():
+                threads_to_check.append(thread)
+        if threads_to_check:
+            fun_test.log("Joining pending threads")
+            for thread_to_check in threads_to_check:
+                thread_to_check.join()
         self._print_summary()
 
     def _get_test_case_text(self,
