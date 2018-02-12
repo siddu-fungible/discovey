@@ -1112,6 +1112,17 @@ class Linux(object, ToDictMixin):
         self.sudo_command("insmod {}".format(module))
 
     @fun_test.safe
+    def modprobe(self, module):
+        self.sudo_command("modprobe {}".format(module))
+
+    @fun_test.safe
+    def lsmod(self, module):
+        lsmod_output = self.sudo_command("lsmod | grep {}".format(module))
+        re_output = re.search(r'%s+\s+(\d+)\s+(\d)' % module, lsmod_output)
+        lsmod_dict = {"size": (int(re_output.group(1))), "used_by": (int(re_output.group(2)))}
+        return lsmod_dict
+
+    @fun_test.safe
     def nvme_setup(self):
         self.command("cd .") #TODO
         modules = ["nvme-core.ko", "nvme.ko"]
