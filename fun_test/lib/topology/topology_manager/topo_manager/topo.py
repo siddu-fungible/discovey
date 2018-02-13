@@ -1160,14 +1160,20 @@ class VM(object):
         if not vm_docker_run:
             self.logger.warning('No containers to launch')
             return
-
-        out = exec_send_file([(self.ip, vm_docker_run)], [], logger=self.logger)
-        out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
-        out = exec_send_file([(self.ip, params)], [], logger=self.logger)
-
+        
         if self.role == 'leaf' and not network_only:
-            self.logger.info('Waiting for PSIMs to be ready')
-            self.waitOnPsim()
+            for cmd in vm_docker_run.split('\n')[0:-1]:
+                out = exec_send_file([(self.ip, cmd)], [], logger=self.logger)
+                out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
+                self.logger.info('Waiting for PSIMs to be ready')
+                time.sleep(500) 
+            out = exec_send_file([(self.ip, params)], [], logger=self.logger)
+
+        else:
+            out = exec_send_file([(self.ip, vm_docker_run)], [], logger=self.logger)
+            out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
+            out = exec_send_file([(self.ip, params)], [], logger=self.logger)
+
         if not flat_topo:
             if self.role == 'leaf':
                 time.sleep(10)
@@ -1809,6 +1815,8 @@ class Node(object):
             container instance-id
         """
         router_image = docker_images[self.type]
+        self.ip = self.loopback_ips[0]
+
         if flat_topo:
             self.ip = str(f1_mgmt_ips.pop())
             self.public_network = self.ip
@@ -1822,24 +1830,52 @@ class Node(object):
                               '-p %s:5001 ' \
                               '%s &\n' % \
                       (docker_run_cmd, self.name, self.name, self.ip,
-                      self.host_ssh_port, self.dpcsh_port, router_image) 
+                      self.host_ssh_port, self.dpcsh_port, router_image)
         else:
             self.ip = self.loopback_ips[0]
-            self.docker_run = '%s ' \
-                              '--name %s ' \
-                              '--hostname ' \
-                              'node-%s ' \
-                              '-p %s:22 ' \
-                              '-p %s:2601 ' \
-                              '-p %s:2605 ' \
-                              '-p %s:2608 ' \
-                              '-p %s:5001 ' \
-                              '%s &\n' % \
-                     (docker_run_cmd, self.name, self.name,
-                      self.host_ssh_port, self.zebra_port, self.bgp_port,
-                      self.isis_port, self.dpcsh_port, router_image)
+            if self.type == 'leaf' and not network_only:
+                self.docker_run = '%s ' \
+                          '-v /home/%s:/home/%s ' \
+                          '-p %s:22 ' \
+                          '-p %s:2601 ' \
+                          '-p %s:2605 ' \
+                          '-p %s:2608 ' \
+                          '-v %s:/workspace ' \
+                          '-e WORKSPACE=/workspace ' \
+                          '-e DOCKER=TRUE ' \
+                          '-w /workspace ' \
+                          '--name %s ' \
+                          '--hostname %s ' \
+                          '-u %s ' \
+                          '%s %s &\n' % (docker_run_cmd, user, user, self.host_ssh_port, \
+                                         self.zebra_port, self.bgp_port, self.isis_port, \
+                                         workspace, self.name, self.name, user, router_image, startup)    
+            elif self.type == 'leaf':
+                self.docker_run = '%s ' \
+                          '-p %s:22 ' \
+                          '-p %s:2601 ' \
+                          '-p %s:2605 ' \
+                          '-p %s:2608 ' \
+                          '--name %s ' \
+                          '--hostname %s ' \
+                          '%s %s &\n' % (docker_run_cmd, self.host_ssh_port, \
+                                         self.zebra_port, self.bgp_port, self.isis_port, \
+                                         self.name, self.name, router_image, startup)
+            else:
+                self.docker_run = '%s ' \
+                                  '--name %s ' \
+                                  '--hostname ' \
+                                  'node-%s ' \
+                                  '-p %s:22 ' \
+                                  '-p %s:2601 ' \
+                                  '-p %s:2605 ' \
+                                  '-p %s:2608 ' \
+                                  '%s &\n' %  (docker_run_cmd, self.name, self.name, \
+                                               self.host_ssh_port, self.zebra_port, self.bgp_port, \
+                                               self.isis_port, router_image)
 
         self.logger.info('Docker command: %s' % self.docker_run)
+        
 
     def update_prefix_counts(self, action):
         for intf in self.interfaces:

@@ -1,3 +1,5 @@
+import os
+
 offRacks = 0 
 offLeafs = 0 
 offSpines = 0 
@@ -9,9 +11,11 @@ flat_topo = False
 network_only = True 
 
 if network_only:
-    leaf_container = 'frr:v2'
+    leaf_container = 'reg-nw-frr:v1' 
+    startup = '/opt/fungible/scripts/frr-startup.sh'
 else:
-    leaf_container = 'testdemo:latest'
+    leaf_container = 'reg-nw-full-build:v1'
+    startup = "/workspace/Integration/tools/docker/funcp/dev/startup.sh"
 
 tg_container = 'tgen:v3'
 spine_container = 'frr:v1'
@@ -20,6 +24,10 @@ spine_container = 'frr:v1'
 vm_ips = ['127.0.0.1']
 
 #Uname/passwd of compute engines
-vm_user = 'ptf'
+vm_user = 'regress'
+user = os.environ.get('USER')
+workspace = '/home/'+user+'/fungible'
+uid = str(os.getuid())
+gid = str(os.getgid())
 vm_passwd = 'fun123'
 container_passwd = 'fun123'
