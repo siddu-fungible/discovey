@@ -9,6 +9,9 @@ function FunFieldController($scope, commonService) {
         $scope.minLengthRequirementError = null;
         $scope.maxLengthRequirementError = null;
         $scope.errorStyle = "color: #a94442";
+        if(typeof ctrl.bindValue !== 'undefined') {
+            $scope.value = ctrl.bindValue;
+        }
 
     };
 

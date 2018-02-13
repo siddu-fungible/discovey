@@ -105,6 +105,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         $scope.chartInfo = null;
         $scope.copyChartInfo = null;
         $scope.previewDataSets = null;
+        $scope.addDataSet = null;
 
         let payload = {};
         payload["metric_model_name"] = modelName;
@@ -118,6 +119,69 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             let i = 0;
         });
 
+        $scope.addDataSetClick = () => {
+            let thisPreview = [];
+            let newDataSet = {};
+
+            commonService.apiGet("/metrics/describe_table/" + modelName, "fetchMetricsData").then(function (tableInfo) {
+                $scope.addDataSet = {};
+
+                let inputs = [];
+                angular.forEach(tableInfo, (fieldInfo, field) => {
+                    let oneField = {};
+                    oneField.name = field;
+                    if('choices' in fieldInfo && oneField.name.startsWith("input")) {
+                        oneField.choices = fieldInfo.choices.map((choice)=> { return choice[1]});
+                        inputs.push(oneField);
+                    }
+                });
+                $scope.addDataSet["inputs"] = inputs;
+                let firstChartInfoDataSet = $scope.copyChartInfo.data_sets[0];
+                let outputName = firstChartInfoDataSet.output.name;
+                $scope.addDataSet["output"] = {"name": outputName, "min": 0, "max": 99999};
+
+                newDataSet["inputs"] = {};
+                $scope.addDataSet["inputs"].forEach((oneField) => {
+                    newDataSet["inputs"][oneField.name] = oneField.selectedChoice;
+                })
+
+            });
+        };
+
+        $scope.addClick = () => {
+            //
+            let validDataSet = {};
+            validDataSet["inputs"] = {};
+            validDataSet["output"] = {};
+            if($scope.addDataSet) {
+                // lets validate all inputs
+                $scope.addDataSet["inputs"].forEach((oneField) => {
+                    if(!oneField.selectedChoice) {
+                        let message = "Please select a choice for " + oneField.name;
+                        alert(message);
+                        return commonService.showError(message);
+                    } else {
+                        validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
+
+                    }
+                });
+                if(!$scope.addDataSet.name) {
+                    let message = "Please provide a name for the data-set";
+                    alert(message);
+                    return commonService.showError(message);
+                } else {
+                    validDataSet["name"] = $scope.addDataSet.name;
+                    validDataSet["output"]["min"] = $scope.addDataSet["output"].min;
+                    validDataSet["output"]["max"] = $scope.addDataSet["output"].max;
+                }
+            }
+            $scope.addDataSet = null;
+
+            $scope.previewDataSets.push(validDataSet);
+            let i = 0;
+
+        };
+
         $scope.removeClick = (index) => {
             $scope.copyChartInfo.data_sets.splice(index, 1);
             let i = 0;
@@ -125,8 +189,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         };
 
         $scope.submit = () => {
-            let i = 0;
             $scope.previewDataSets = $scope.copyChartInfo.data_sets;
+
 
         }
     }
