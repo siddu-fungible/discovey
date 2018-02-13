@@ -88,6 +88,8 @@ if is_regression_server():
 elif is_performance_server():
     DEFAULT_DB_FILE = PERFORMANCE_DB_FILE
 
+print "DEFAULT DB: {}".format(DEFAULT_DB_FILE)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
