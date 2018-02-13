@@ -95,7 +95,8 @@ metric_urls = [
     url(r'^charts_by_module$', metrics_views.charts_by_module),
     url(r'^models_by_module$', metrics_views.models_by_module),
     url(r'^edit_chart/(.*)$', metrics_views.edit_chart),
-    url(r'^view_all_storage_charts$', metrics_views.view_all_storage_charts)
+    url(r'^view_all_storage_charts$', metrics_views.view_all_storage_charts),
+    url(r'^update_chart$', metrics_views.update_chart)
 ]
 
 urlpatterns = [

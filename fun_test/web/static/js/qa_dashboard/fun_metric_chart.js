@@ -24,7 +24,9 @@ function FunMetricChartController($scope, commonService) {
         }
         // let i = 0;
         // console.log(newvalue, oldvalue);
-        $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+        if($scope.chartInfo) {
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+        }
     }, true);
 
     $scope.fetchChartInfo = () => {

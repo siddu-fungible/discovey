@@ -42,44 +42,6 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         })
     };
 
-    /*
-
-    $scope.fetchMetricsList = function () {
-        commonService.apiGet("/metrics/metrics_list", "fetchMetricsList").then(function (metricsList) {
-            $scope.metricsList = metricsList;
-        });
-    };
-
-    $scope.selectedMetricChange = function (selectedMetric) {
-        if ($scope.selectedMetric) {
-            commonService.apiGet("/metrics/describe_table/" + $scope.selectedMetric, "selectedMetricChange").then(function (currentTableFields) {
-                $scope.currentTableFields = currentTableFields;
-                let i = 0;
-            });
-        }
-
-    };
-
-    $scope.fetchChartList = (metricModelName) => {
-        let payload = {};
-        payload["metric_model_name"] = metricModelName;
-        commonService.apiPost("/metrics/chart_list", payload, "fetchChartList").then((chartList) => {
-        });
-    };
-
-    $scope.fetchChartsInfo = function (metricModelName) {
-        let payload = {};
-        payload["metric_model_name"] = metricModelName;
-        commonService.apiPost("/metrics/charts_info", payload, "fetchChartsInfo").then((chartsInfo) => {
-            $scope.chartsInfo = chartsInfo;
-            angular.forEach($scope.chartsInfo, (chartInfo, chartName) => {
-                $scope.fetchMetricsData(metricModelName, chartName, chartInfo);
-            });
-
-        });
-    };
-    */
-
     $scope.editChartClick = (chartName, modelName) => {
         $modal.open({
             templateUrl: "/static/qa_dashboard/edit_chart.html",
@@ -93,7 +55,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
                 }
             }
         }).result.then(function () {
-        })
+        }).catch(function () {
+        });
 
 
     };
@@ -175,12 +138,12 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
                     validDataSet["output"]["max"] = $scope.addDataSet["output"].max;
                 }
             }
-            $scope.addDataSet = null;
 
             $scope.previewDataSets.push(validDataSet);
-            let i = 0;
+            $scope.addDataSet = null;
 
         };
+
 
         $scope.removeClick = (index) => {
             $scope.copyChartInfo.data_sets.splice(index, 1);
@@ -190,8 +153,13 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
 
         $scope.submit = () => {
             $scope.previewDataSets = $scope.copyChartInfo.data_sets;
-
-
+            let payload = {};
+            payload["metric_model_name"] = $scope.modelName;
+            payload["chart_name"] = $scope.chartName;
+            payload["data_sets"] = $scope.previewDataSets;
+            commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
+                alert("Submitted");
+            });
         }
     }
 }

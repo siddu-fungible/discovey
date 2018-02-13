@@ -103,6 +103,18 @@ def view_all_storage_charts(request):
 
 @csrf_exempt
 @api_safe_json_response
+def update_chart(request):
+    request_json = json.loads(request.body)
+    model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    data_sets = request_json["data_sets"]
+    c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
+    c.data_sets = json.dumps(data_sets)
+    c.save()
+    return "Ok"
+
+@csrf_exempt
+@api_safe_json_response
 def models_by_module(request):
     request_json = json.loads(request.body)
     module_name = request_json["module_name"]
