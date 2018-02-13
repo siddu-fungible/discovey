@@ -10,7 +10,22 @@ function FunMetricChartController($scope, commonService) {
         $scope.fetchChartInfo();
         $scope.values = null;
         $scope.charting = true;
+        //console.log(ctrl.width);
+        $scope.width = ctrl.width;
+        $scope.height = ctrl.height;
     };
+
+    $scope.$watch(function () {
+        return ctrl.previewDataSets;
+    }, function (newvalue, oldvalue) {
+        if (newvalue === oldvalue) {
+            console.log(newvalue, oldvalue);
+            return;
+        }
+        // let i = 0;
+        // console.log(newvalue, oldvalue);
+        $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+    }, true);
 
     $scope.fetchChartInfo = () => {
         let payload = {};
@@ -18,19 +33,51 @@ function FunMetricChartController($scope, commonService) {
         payload["chart_name"] = ctrl.chartName;
         // Fetch chart info
         commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo)
+            $scope.chartInfo = chartInfo;
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo, null)
         })
     };
 
-    $scope.fetchMetricsData = (metricModelName, chartName, chartInfo) => {
+    $scope.getValidatedData = (data, minimum, maximum) => {
+        let result = data;
+        result = {
+            y: data,
+            marker: {
+                radius: 3
+            },
+        };
+        if(data < minimum || data > maximum) {
+            result =
+                {
+                    y: data,
+                    marker: {
+                        symbol: 'cross',
+                        lineColor: 'red',
+                        lineWidth: 5
+                    }
+                }
+        }
+        return result;
+    };
+
+    $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
 
         commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
             let payload = {};
             payload["metric_model_name"] = metricModelName;
             payload["chart_name"] = chartName;
+            payload["preview_data_sets"] = previewDataSets;
+            let filterDataSets = chartInfo.data_sets;
+            if(previewDataSets) {
+                filterDataSets = previewDataSets;
+            }
 
             commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
+                if(allDataSets.length === 0) {
+                    $scope.values = null;
+                    return;
+                }
 
                 let keySet = new Set();
                 let firstDataSet = allDataSets[0];
@@ -50,16 +97,19 @@ function FunMetricChartController($scope, commonService) {
                         for(let j = 0; j < oneDataSet.length; j++) {
                             let oneRecord = oneDataSet[j];
                             if(oneRecord.key.toString() === keyList[i]) {
-                                let outputName = chartInfo.data_sets[0].output.name;
+                                let outputName = filterDataSets[0].output.name;
                                 output = oneRecord[outputName];
                                 $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
                                 $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
                                 break;
                             }
                         }
-                        oneChartDataArray.push(output);
+                        let thisMinimum = filterDataSets[dataSetIndex].output.min;
+                        let thisMaximum = filterDataSets[dataSetIndex].output.max;
+
+                        oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
                     }
-                    let oneChartDataSet = {name: chartInfo.data_sets[dataSetIndex].name, data: oneChartDataArray};
+                    let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
                     chartDataSets.push(oneChartDataSet);
                     dataSetIndex++;
                 });
@@ -72,7 +122,7 @@ function FunMetricChartController($scope, commonService) {
 angular.module('qa-dashboard').component("funMetricChart", {
         template: '<fun-chart values="values" series="series"\n' +
         '                   title="$ctrl.chartName" charting="charting" chart-type="line-chart"\n' +
-        '                   width="$ctrl.width" height="$ctrl.height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle">\n' +
+        '                   width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle">\n' +
         '                   \n' +
         '        </fun-chart>',
 
@@ -80,7 +130,8 @@ angular.module('qa-dashboard').component("funMetricChart", {
                     chartName: '<',
                     modelName: '<',
                     width: '@',
-                    height: '@'
+                    height: '@',
+                    previewDataSets: '<'
                   },
         controller: FunMetricChartController
  });

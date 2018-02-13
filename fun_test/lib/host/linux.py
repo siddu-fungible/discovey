@@ -137,6 +137,19 @@ class Linux(object, ToDictMixin):
     def post_init(self):
         pass
 
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        if 'handle' in d:
+            del d['handle']
+        if 'logger' in d:
+            del d['logger']
+        return d
+
+    def __setstate__(self, state):
+        state["logger"] = self.logger = LinuxLogger()  #TODO? What is the current logger?
+        state["handle"] = None
+        self.__dict__.update(state)
+
     def _set_defaults(self):
         self.tmp_dir = self.TMP_DIR_DEFAULT
         if self.ssh_username == 'root':
@@ -532,17 +545,20 @@ class Linux(object, ToDictMixin):
         return pid
 
     @fun_test.safe
-    def create_file(self, file_name, contents):
+    def create_file(self, file_name, contents, newline=True):
+        nl = ""
+        if not newline:
+            nl = " -n "
         self.command("touch %s" % file_name)
         lines = contents.split('\n')
         if len(lines):
             processed_line = lines[0].replace(r'"', r'\"')
-            self.command("echo \"%s\" > %s" % (processed_line, file_name))
+            self.command("echo %s \"%s\" > %s" % (nl, processed_line, file_name))
 
         if len(lines) > 1:
             for line in lines[1:]:
                 processed_line = line.replace(r'"', r'\"')
-                self.command("echo \"%s\" >> %s" % (processed_line, file_name))
+                self.command("echo %s \"%s\" >> %s" % (nl, processed_line, file_name))
         return file_name
 
     @fun_test.safe
@@ -1094,6 +1110,17 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def insmod(self, module):
         self.sudo_command("insmod {}".format(module))
+
+    @fun_test.safe
+    def modprobe(self, module):
+        self.sudo_command("modprobe {}".format(module))
+
+    @fun_test.safe
+    def lsmod(self, module):
+        lsmod_output = self.sudo_command("lsmod | grep {}".format(module))
+        re_output = re.search(r'%s+\s+(\d+)\s+(\d)' % module, lsmod_output)
+        lsmod_dict = {"size": (int(re_output.group(1))), "used_by": (int(re_output.group(2)))}
+        return lsmod_dict
 
     @fun_test.safe
     def nvme_setup(self):

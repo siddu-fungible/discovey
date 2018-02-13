@@ -73,6 +73,14 @@ class QemuColocatedHypervisorEndPoint(HypervisorEndPoint, ToDictMixin):
     def get_host_instance(self, host_index):
         return self.instances[host_index]
 
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        if 'handle' in d:
+            del d['handle']
+        if 'logger' in d:
+            del d['logger']
+        return d
+
 
 class SsdEndPoint(EndPoint):
     end_point_type = EndPoint.END_POINT_TYPE_SSD

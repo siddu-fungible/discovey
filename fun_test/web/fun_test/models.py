@@ -7,7 +7,7 @@ import os
 
 from django.db import models
 from fun_global import RESULTS
-from web.web_global import is_performance_server
+from fun_global import is_performance_server
 from web.fun_test.jira_models import *
 
 

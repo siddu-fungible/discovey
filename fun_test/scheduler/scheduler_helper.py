@@ -3,7 +3,7 @@ import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR
-from fun_global import RESULTS, is_regression_server, get_current_time
+from fun_global import RESULTS, is_regression_server, is_performance_server, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from django.utils import timezone
@@ -80,6 +80,7 @@ def queue_job(suite_path="unknown",
               repeat=False,
               schedule_in_minutes=None,
               repeat_in_minutes=None,
+              email_list=None,
               tags=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
@@ -104,6 +105,7 @@ def queue_job(suite_path="unknown",
         job_spec["schedule_in_minutes"] = schedule_in_minutes
         job_spec["repeat_in_minutes"] = repeat_in_minutes
         job_spec["tags"] = tags
+        job_spec["email_list"] = email_list
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
 
@@ -130,6 +132,8 @@ def re_queue_job(suite_execution_id,
         job_spec["test_case_ids"] = [test_case_execution_id]
         job_spec["suite_path"] = suite_path
         job_spec["script_path"] = script_path
+        if "email_list" in job_spec:
+            job_spec["email_list"] = job_spec["email_list"]
     for k in ["schedule_at", "schedule_in_minutes", "schedule_in_minutes_at", "repeat"]:
         try:
             del job_spec[k]
@@ -199,7 +203,7 @@ def _get_table(header_list, list_of_rows):
 
     return s
 
-def send_summary_mail(job_id):
+def send_summary_mail(job_id, to_addresses=None):
     suite_executions = models_helper._get_suite_executions(execution_id=job_id, save_test_case_info=True)
     suite_execution = suite_executions[0]
     scheduler_logger.info("Suite Execution: {}".format(str(suite_execution)))
@@ -242,8 +246,8 @@ def send_summary_mail(job_id):
                                             suite_execution["num_passed"],
                                             suite_execution["num_failed"])
 
-        if is_regression_server():
-            result = send_mail(subject=subject, content=html)
+        if is_regression_server() or is_performance_server():
+            result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
             scheduler_logger.info("Sent mail")
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))

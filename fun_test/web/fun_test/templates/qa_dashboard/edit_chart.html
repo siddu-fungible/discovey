@@ -1,9 +1,28 @@
 <div class="modal-header">
     <h3 class="modal-title">Edit chart: {{ chartName }}</h3>
 </div>
-<div class="modal-body">
-    <fun-metric-chart chart-name="chartName" model-name="modelName" width="500" height="500"> </fun-metric-chart>
-
+<div class="modal-body edit-modal-body">
+    <fun-metric-chart chart-name="chartName" model-name="modelName" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
+    <table class="table table-nonfluid" ng-repeat="dataSet in copyChartInfo.data_sets track by $index">
+        <tr>
+            <th></th>
+            <th>Name</th>
+            <th ng-repeat="(inputName, inputValue) in dataSet.inputs">{{ inputName }}</th>
+            <th>Output</th>
+            <th>Min</th>
+            <th>Max</th>
+        </tr>
+        <tr>
+            <td><button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:20px; color: red"></i></button></td>
+            <td>{{ dataSet.name }}</td>
+            <td ng-repeat="(inputName, inputValue) in dataSet.inputs">{{ inputValue }}</td>
+            <td>{{ dataSet.output.name }}</td>
+            <td>
+                <input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min" style="width: 100px">
+            </td>
+            <td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max" style="width: 100px"></td>
+        </tr>
+    </table>
 </div>
 <div class="modal-footer">
     <button class="btn btn-success" ng-click="submit()">Submit</button>

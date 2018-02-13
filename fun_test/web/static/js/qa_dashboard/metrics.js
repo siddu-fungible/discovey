@@ -102,16 +102,33 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         let ctrl = this;
         $scope.chartName = chartName;
         $scope.modelName = modelName;
+        $scope.chartInfo = null;
+        $scope.copyChartInfo = null;
+        $scope.previewDataSets = null;
 
         let payload = {};
         payload["metric_model_name"] = modelName;
         payload["chart_name"] = chartName;
         // Fetch chart info
-        /*
-        commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
-            let i = 0;
-        })*/
 
+        commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
+            $scope.chartInfo = chartInfo;
+            $scope.copyChartInfo = angular.copy($scope.chartInfo);
+            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
+            let i = 0;
+        });
+
+        $scope.removeClick = (index) => {
+            $scope.copyChartInfo.data_sets.splice(index, 1);
+            let i = 0;
+            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
+        };
+
+        $scope.submit = () => {
+            let i = 0;
+            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
+
+        }
     }
 }
 

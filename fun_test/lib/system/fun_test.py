@@ -1,12 +1,14 @@
-import sys, os
+import sys
+import os
 import traceback
 import collections
 import abc
-import time, json, pdb
+import pdb
 import inspect
 from fun_settings import *
 import fun_xml
-import argparse, threading
+import argparse
+import threading
 from fun_global import RESULTS, get_current_time
 from scheduler.scheduler_helper import *
 import signal
@@ -14,6 +16,9 @@ from web.fun_test.web_interface import get_homepage_url
 import pexpect
 from uuid import getnode as get_mac
 import getpass
+from threading import Thread
+from inspect import getargspec
+
 
 class TestException(Exception):
     def __str__(self):
@@ -26,8 +31,10 @@ class TestException(Exception):
 class FunTestSystemException(Exception):
     pass
 
+
 class FunTestLibException(Exception):
     pass
+
 
 class FunTimer:
     def __init__(self, max_time=10000):
@@ -43,6 +50,20 @@ class FunTimer:
     def elapsed_time(self):
         current_time = time.time()
         return current_time - self.start_time
+
+
+class FunTestThread(Thread):
+    def __init__(self, func, **kwargs):
+        super(FunTestThread, self).__init__()
+        self.func = func
+        self.kwargs = kwargs
+
+    def run(self):
+        i = getargspec(self.func)
+        if i.args:
+            self.func(**self.kwargs)
+        else:
+            self.func()
 
 
 class FunTest:
@@ -69,6 +90,8 @@ class FunTest:
         "RESET": '\033[30m',
         "GREEN": '\033[92m'
     }
+
+    fun_test_thread_id = 0
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="FunTest")
@@ -124,7 +147,6 @@ class FunTest:
 
         if threading.current_thread().__class__.__name__ == '_MainThread':
             signal.signal(signal.SIGINT, self.exit_gracefully)
-        # signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.initialized = False
         self.debug_enabled = False
@@ -157,6 +179,78 @@ class FunTest:
         self.shared_variables = {}
         if self.local_settings_file:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
+        self.wall_clock_timer = FunTimer()
+        self.wall_clock_timer.start()
+        self.fun_test_threads = {}
+        self.fun_test_timers = []
+
+    def _get_next_thread_id(self):
+        self.fun_test_thread_id += 1
+        return self.fun_test_thread_id
+
+    def execute_after(self, time_in_seconds, func, **kwargs):
+        next_id = self._get_next_thread_id()
+        timer = threading.Timer(time_in_seconds, self._process_timer, [next_id])
+        self.fun_test_timers.append(timer)
+        self.fun_test_threads[next_id] = {
+            "function": func,
+            "kwargs": kwargs,
+            "thread": None,
+            "as_thread": False,
+            "timer": timer
+        }
+        timer.start()
+        return next_id
+
+    def execute_thread_after(self, time_in_seconds, func, **kwargs):
+        next_id = self._get_next_thread_id()
+        timer = threading.Timer(time_in_seconds, self._process_timer, [next_id])
+        self.fun_test_timers.append(timer)
+        self.fun_test_threads[next_id] = {
+            "function": func,
+            "kwargs": kwargs,
+            "as_thread": True,
+            "thread": None,
+            "timer": timer
+        }
+        timer.start()
+        return next_id
+
+    def _process_timer(self, thread_id):
+        thread_info = self.fun_test_threads[thread_id]
+        func = thread_info["function"]
+        kwargs = thread_info["kwargs"]
+        as_thread = thread_info["as_thread"]
+        if as_thread:
+            t = FunTestThread(func, **kwargs)
+            thread_info["thread"] = t
+            t.start()
+        else:
+            func(**kwargs)
+
+    def join_thread(self, fun_test_thread_id, sleep_time=5):
+        thread_info = self.fun_test_threads[fun_test_thread_id]
+        thread = thread_info["thread"]
+        if thread:
+            success = False
+            while not success:
+                try:
+                    thread.join()
+                    success = True
+                except RuntimeError as r:
+                    r_string = str(r)
+                    if "cannot join thread before it is started" not in r_string:
+                        fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
+                    else:
+                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id), seconds=sleep_time)
+        else:
+            fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
+            timer = thread_info["timer"]
+            while timer.isAlive():
+                fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+
+        fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
+        return True
 
     def parse_file_to_json(self, file_name):
         result = None
@@ -170,6 +264,9 @@ class FunTest:
         else:
             raise Exception("{} path does not exist".format(file_name))
         return result
+
+    def get_wall_clock_time(self):
+        return self.wall_clock_timer.elapsed_time()
 
     def get_absolute_script_path(self):
         return self.absolute_script_file_name
@@ -301,7 +398,6 @@ class FunTest:
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
         self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
-
 
     def _get_module_name(self, outer_frames):
         module_name = os.path.basename(outer_frames[0][1]).replace(".py", "")
@@ -477,13 +573,27 @@ class FunTest:
         self.initialized = True
 
     def close(self):
+        for timer in self.fun_test_timers:
+            fun_test.log("Waiting for active timers to stop")
+            while timer.is_alive():
+                time.sleep(1)
+
+        threads_to_check = []
+        for fun_test_thread_id, thread_info in self.fun_test_threads.iteritems():
+            thread = thread_info["thread"]
+            if thread and thread.isAlive():
+                threads_to_check.append(thread)
+        if threads_to_check:
+            fun_test.log("Joining pending threads")
+            for thread_to_check in threads_to_check:
+                thread_to_check.join()
         self._print_summary()
 
     def _get_test_case_text(self,
-                               id,
-                               summary,
-                               steps="None",
-                               traffic="None"):
+                            id,
+                            summary,
+                            steps="None",
+                            traffic="None"):
 
         s = "Id:" + str(id)
         s += " " + summary + "\n"
@@ -506,9 +616,9 @@ class FunTest:
             self.fun_xml_obj.add_collapsible_tab_panel(header="Traces", panel_items=trace_items)
 
     def trace(self, id, log):
-        if not self.current_test_case_id in self.traces:
+        if self.current_test_case_id not in self.traces:
             self.traces[self.current_test_case_id] = {}
-        if not id in self.traces[self.current_test_case_id]:
+        if id not in self.traces[self.current_test_case_id]:
             self.traces[self.current_test_case_id][id] = log
         self.traces[self.current_test_case_id][id] += log
 
@@ -570,10 +680,10 @@ class FunTest:
                                             result=FunTest.PASSED)
 
     def add_checkpoint(self,
-                           checkpoint=None,
-                           result=PASSED,
-                           expected="",
-                           actual=""):
+                       checkpoint=None,
+                       result=PASSED,
+                       expected="",
+                       actual=""):
 
         self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint, result=result, expected=expected, actual=actual)
 
@@ -595,9 +705,9 @@ class FunTest:
 
         sys.argv.append("--disable_fun_test")
         test_cases = []
-        test_script = None
 
-        import imp, inspect
+        import imp
+        import inspect
 
         temp_module_name = self._get_flat_file_name(path=module_name)
 
@@ -620,8 +730,8 @@ class FunTest:
                 if issubclass(klass, FunTestScript):
                     if len(mros) > 1 and "lib.system.fun_test.FunTestScript" in str(mros[1]):
                         test_script = klass
-        #test_script_obj = test_script()
-        #test_case_order = test_script().test_case_order
+        # test_script_obj = test_script()
+        # test_case_order = test_script().test_case_order
         '''
         for entry in test_script().test_case_order:
             print entry["tc"]
@@ -642,26 +752,28 @@ class FunTest:
             target_username=None,
             target_password=None,
             target_port=22,
-            timeout=60):
+            timeout=60,
+            recursive=False):
         transfer_complete = False
         scp_command = ""
-
-        #scp_command = "scp -P %d %s %s@%s:%s" % (
-        #target_port, source_file_path, target_username, target_ip, target_file_path)
+        recursive = " -r " if recursive else ""
+        # scp_command = "scp -P %d %s %s@%s:%s" % (
+        # target_port, source_file_path, target_username, target_ip, target_file_path)
         the_password = source_password
         if target_ip:
-            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(target_port,
-                                                         source_file_path,
-                                                         target_username,
-                                                         target_ip,
-                                                         target_file_path)
+            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive,
+                                                                                            target_port,
+                                                                                            source_file_path,
+                                                                                            target_username,
+                                                                                            target_ip,
+                                                                                            target_file_path)
             target_password = the_password
         elif source_ip:
-            scp_command = "scp -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(source_port,
-                                                         source_username,
-                                                         source_ip,
-                                                         source_file_path,
-                                                         target_file_path)
+            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(recursive, source_port,
+                                                                                            source_username,
+                                                                                            source_ip,
+                                                                                            source_file_path,
+                                                                                            target_file_path)
 
         handle = pexpect.spawn(scp_command, env={"TERM": "dumb"}, maxread=4096)
         handle.logfile_read = fun_test
@@ -702,18 +814,20 @@ class FunTest:
 
         return transfer_complete
 
+
 fun_test = FunTest()
+
 
 class FunTestScript(object):
     __metaclass__ = abc.ABCMeta
     test_case_order = None
+
     def __init__(self):
         fun_test._initialize()
         self.test_cases = []
         self.summary = "Setup"
         self.steps = ""
         self.at_least_one_failed = False
-
 
     def set_test_details(self, steps):
         self.id = FunTest.SETUP_TC_ID
@@ -722,7 +836,6 @@ class FunTestScript(object):
     def add_test_case(self, test_case):
         self.test_cases.append(test_case)
         return self
-
 
     @abc.abstractmethod
     def describe(self):
@@ -739,8 +852,8 @@ class FunTestScript(object):
     @abc.abstractmethod
     def setup(self):
         fun_test._start_test(id=self.id,
-                               summary="Script setup",
-                               steps=self.steps)
+                             summary="Script setup",
+                             steps=self.steps)
         script_result = FunTest.FAILED
 
         setup_te = None
@@ -766,17 +879,17 @@ class FunTestScript(object):
                     new_order.append(main_test_case)
                     main_test_case._added_to_script = True
 
-                self.test_cases  = new_order
+                self.test_cases = new_order
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
                 setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
-                                                           suite_execution_id=fun_test.suite_execution_id,
-                                                           result=fun_test.IN_PROGRESS,
-                                                           path=fun_test.relative_path)
+                                                                 suite_execution_id=fun_test.suite_execution_id,
+                                                                 result=fun_test.IN_PROGRESS,
+                                                                 path=fun_test.relative_path)
 
                 for test_case in self.test_cases:
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
-                        if not test_case.id in fun_test.selected_test_case_ids:
+                        if test_case.id not in fun_test.selected_test_case_ids:
                             continue
                     te = models_helper.add_test_case_execution(test_case_id=test_case.id,
                                                                suite_execution_id=fun_test.suite_execution_id,
@@ -787,21 +900,21 @@ class FunTestScript(object):
             self.setup()
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                           suite_execution_id=fun_test.suite_execution_id,
-                                                           result=fun_test.PASSED)
+                                                         suite_execution_id=fun_test.suite_execution_id,
+                                                         result=fun_test.PASSED)
             script_result = FunTest.PASSED
         except (TestException) as ex:
             self.at_least_one_failed = True
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                       suite_execution_id=fun_test.suite_execution_id,
-                                                       result=fun_test.FAILED)
+                                                         suite_execution_id=fun_test.suite_execution_id,
+                                                         result=fun_test.FAILED)
         except (Exception) as ex:
             self.at_least_one_failed = True
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                       suite_execution_id=fun_test.suite_execution_id,
-                                                       result=fun_test.FAILED)
+                                                         suite_execution_id=fun_test.suite_execution_id,
+                                                         result=fun_test.FAILED)
             fun_test.critical(str(ex))
         fun_test._end_test(result=script_result)
 
@@ -810,8 +923,8 @@ class FunTestScript(object):
     @abc.abstractmethod
     def cleanup(self):
         fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
-                               summary="Script cleanup",
-                               steps=self.steps)
+                             summary="Script cleanup",
+                             steps=self.steps)
         result = FunTest.FAILED
         try:
             self.cleanup()
@@ -836,11 +949,11 @@ class FunTestScript(object):
 
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
-                        if not test_case.id in fun_test.selected_test_case_ids:
+                        if test_case.id not in fun_test.selected_test_case_ids:
                             continue
                     fun_test._start_test(id=test_case.id,
-                                           summary=test_case.summary,
-                                           steps=test_case.steps)
+                                         summary=test_case.summary,
+                                         steps=test_case.steps)
                     test_result = FunTest.FAILED
                     try:
                         if fun_test.suite_execution_id:
@@ -884,9 +997,9 @@ class FunTestScript(object):
         self._close()
 
 
-
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         self.id = None
         self.summary = None

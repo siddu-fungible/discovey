@@ -10,6 +10,26 @@
       "short_name": "John. A",
       "email": "john.abraham@fungible.com"
     }
+  ],
+  "tags": [
+    "jenkins-hourly"
+  ],
+  "testbeds": [
+    "simulation"
+  ],
+  "modules": [
+    {
+      "name": "networking",
+      "verbose_name": "Networking"
+    },
+    {
+      "name": "storage",
+      "verbose_name": "Storage"
+    },
+    {
+      "name": "system",
+      "verbose_name": "System"
+    }
   ]
 
 }

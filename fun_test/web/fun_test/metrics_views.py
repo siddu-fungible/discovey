@@ -5,7 +5,7 @@ from django.shortcuts import render
 from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
-from web.fun_test.metrics_models import MetricChart, ModelMapping
+from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
@@ -26,7 +26,7 @@ def metrics_list(request):
 @api_safe_json_response
 def describe_table(request, table_name):
     result = None
-    metric_model = site_state.get_metric_model_by_name(name=table_name)
+    metric_model = ANALYTICS_MAP[table_name]["model"]
     if metric_model:
         fields = metric_model._meta.get_fields()
         payload = OrderedDict()
@@ -98,6 +98,10 @@ def edit_chart(request, chart_name):
     return render(request, 'qa_dashboard/edit_chart.html', locals())
 
 @csrf_exempt
+def view_all_storage_charts(request):
+    return render(request, 'qa_dashboard/analytics_chart_dashboard.html', locals())
+
+@csrf_exempt
 @api_safe_json_response
 def models_by_module(request):
     request_json = json.loads(request.body)
@@ -123,11 +127,15 @@ def data(request):
     request_json = json.loads(request.body)
     metric_model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
+    preview_data_sets = request_json["preview_data_sets"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
 
-    model = site_state.get_metric_model_by_name(name=metric_model_name)
-    data_sets = chart.data_sets
-    data_sets = json.loads(data_sets)
+    model = ANALYTICS_MAP[metric_model_name]["model"]
+    if preview_data_sets is not None:
+        data_sets = preview_data_sets
+    else:
+        data_sets = chart.data_sets
+        data_sets = json.loads(data_sets)
     data = []
     for data_set in data_sets:
         inputs = data_set["inputs"]
