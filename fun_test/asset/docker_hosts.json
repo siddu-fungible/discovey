@@ -21,5 +21,28 @@
         "name": "tgen:v4"
       }
     ]
+  },
+  {
+    "name": "qa-ubuntu-01",
+    "type": "TYPE_BARE_METAL",
+    "host_ip": "10.1.21.45",
+    "mgmt_ssh_username": "auto_admin",
+    "mgmt_ssh_password": "fun123",
+    "mgmt_ssh_port": 22,
+    "remote_api_port": 4243,
+    "images": [
+      {
+        "category":  "storage_basic",
+        "name": "storage_basic_x86_64:latest"
+      },
+      {
+        "category": "fio_traffic_generator",
+        "name": "tgen:v4"
+      },
+      {
+        "category": "linux_traffic_generator",
+        "name": "tgen:v4"
+      }
+    ]
   }
 ]
