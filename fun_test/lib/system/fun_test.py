@@ -9,7 +9,7 @@ from fun_settings import *
 import fun_xml
 import argparse
 import threading
-from fun_global import RESULTS, get_current_time
+from fun_global import RESULTS, get_current_time, determine_version
 from scheduler.scheduler_helper import *
 import signal
 from web.fun_test.web_interface import get_homepage_url
@@ -183,6 +183,23 @@ class FunTest:
         self.wall_clock_timer.start()
         self.fun_test_threads = {}
         self.fun_test_timers = []
+        self.version = "1"
+        self.determine_version()
+
+    def determine_version(self):
+        print("Determining version...")
+        determined_version = determine_version(build_url=DEFAULT_BUILD_URL)
+        if determined_version:
+            self.version = determined_version
+        else:
+            print("Unable to determine the version. Defaulting...")
+        print ("Version: {}".format(self.version))
+
+    def set_version(self, version):
+        self.version = version
+
+    def get_version(self):
+        return self.version
 
     def _get_next_thread_id(self):
         self.fun_test_thread_id += 1

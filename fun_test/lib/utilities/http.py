@@ -3,7 +3,7 @@ import requests
 def fetch_text_file(url):
     result = None
     try:
-        requests_output = requests.get(url)
+        requests_output = requests.get(url, timeout=3)
         if requests_output.status_code == 200:
             result = requests_output.content
         else:
