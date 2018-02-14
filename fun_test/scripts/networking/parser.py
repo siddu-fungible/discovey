@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from asset.asset_manager import AssetManager
 from lib.host.docker_host import DockerHost
+from lib.host.linux import Linux
 from fun_settings import REGRESSION_USER, FUN_TEST_DIR
 
 class MyScript(FunTestScript):
@@ -52,7 +53,7 @@ class FunTestCase1(FunTestCase):
         workspace_mount = "{}:{}".format(workspace, target_workspace)
         container_name = "johns_parser"
 
-        docker_host.setup_container(image_name=image_name,
+        container_asset = docker_host.setup_container(image_name=image_name,
                                     container_name=container_name,
                                     command=entry_point,
                                     pool0_internal_ports=[22],
@@ -62,6 +63,11 @@ class FunTestCase1(FunTestCase):
                                     working_dir=target_workspace,
                                     auto_remove=True)
 
+        linux_obj = Linux(host_ip=container_asset["host_ip"],
+                          ssh_username=container_asset["mgmt_ssh_username"],
+                          ssh_password=container_asset["mgmt_ssh_password"],
+                          ssh_port=container_asset["mgmt_ssh_port"])
+        linux_obj.command("ls -ltr /")
         fun_test.add_checkpoint("Some checkpoint")
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
 
