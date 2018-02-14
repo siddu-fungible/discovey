@@ -117,6 +117,7 @@ def update_chart(request):
         c.save()
     return "Ok"
 
+
 @csrf_exempt
 @api_safe_json_response
 def models_by_module(request):

@@ -213,7 +213,9 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             payload["chart_name"] = $scope.chartName;
             payload["data_sets"] = $scope.previewDataSets;
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
-                alert("Submitted");
+                if(data) {
+                    alert("Submitted");
+                }
             });
         }
     }
