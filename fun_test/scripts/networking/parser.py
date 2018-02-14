@@ -67,9 +67,16 @@ class FunTestCase1(FunTestCase):
                           ssh_username=container_asset["mgmt_ssh_username"],
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
-        linux_obj.command("ls -ltr /")
-        fun_test.add_checkpoint("Some checkpoint")
-        fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
+        timer = FunTimer(max_time=180)
+        passed_found = False
+        while not timer.is_expired():
+            output = linux_obj.command("cat {}/nutest.log".format(target_workspace))
+            if "PASSED" in output:
+                fun_test.log("Success")
+                passed_found = True
+                break
+            fun_test.sleep("Nutest", seconds=10)
+        fun_test.test_assert(passed_found, "NuTest")
 
 
 if __name__ == "__main__":
