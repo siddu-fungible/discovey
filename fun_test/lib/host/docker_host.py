@@ -290,7 +290,8 @@ class DockerHost(Linux, ToDictMixin):
                         host_name=None,
                         user=None,
                         working_dir=None,
-                        auto_remove=None):
+                        auto_remove=None,
+                        read_only=False):
         container_asset = {}
         allocated_container = None
 
@@ -341,14 +342,13 @@ class DockerHost(Linux, ToDictMixin):
                     for mount_string in mounts:
                         if mount_string:
                             parts = mount_string.split(":")
-                            one_mount = Mount(target=parts[1], source=parts[0], type="bind", read_only=False)
+                            one_mount = Mount(target=parts[1], source=parts[0], type="bind", read_only=read_only)
                             mount_objects.append(one_mount)
                 if command:
                     allocated_container = self.client.containers.run(image_name,
                                                                      command=command,
                                                                      detach=True,
                                                                      privileged=True,
-   								     read_only=False,
                                                                      ports=ports_dict,
                                                                      name=container_name,
                                                                      mounts=mount_objects,
