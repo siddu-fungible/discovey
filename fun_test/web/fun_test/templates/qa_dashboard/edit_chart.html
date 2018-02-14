@@ -57,7 +57,7 @@
             <td><button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:20px; color: red"></i></button></td>
             <td>{{ dataSet.name }}</td>
             <td ng-repeat="(inputName, inputValue) in dataSet.inputs">{{ inputValue }}</td>
-            <td>{{ dataSet.name }}</td>
+            <td>{{ dataSet.output.name }}</td>
             <td>
                 <input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min" style="width: 100px">
             </td>
