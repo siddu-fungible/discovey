@@ -7,6 +7,7 @@ from lib.orchestration.simulation_orchestrator import SimulationOrchestrator, Do
 from lib.orchestration.simulation_orchestrator import DockerHostOrchestrator
 from lib.system.fun_test import fun_test
 from lib.orchestration.orchestrator import OrchestratorType
+from fun_global import *
 
 
 class AssetManager:
@@ -74,7 +75,7 @@ class AssetManager:
     @fun_test.safe
     def get_any_docker_host(self):
         docker_hosts_spec_file = self.DOCKER_HOSTS_ASSET_SPEC
-        if not fun_test.get_environment_variable("REGRESSION_SERVER"):
+        if (not is_regression_server()) and (not is_performance_server()) :
             docker_hosts_spec_file = fun_test.get_environment_variable("DOCKER_HOSTS_SPEC_FILE")
             if not docker_hosts_spec_file:
                 raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
