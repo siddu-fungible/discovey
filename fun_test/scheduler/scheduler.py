@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from fun_settings import *
-from fun_global import get_current_time, RESULTS
+from fun_global import get_current_time, RESULTS, determine_version
 import os
 import re
 import subprocess

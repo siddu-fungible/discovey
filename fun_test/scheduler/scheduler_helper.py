@@ -252,13 +252,6 @@ def send_summary_mail(job_id, to_addresses=None):
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))
 
-def determine_version(build_url):
-    content = fetch_text_file(url=build_url + "/" + BUILD_INFO_FILENAME)
-    version = None
-    if content:
-        content = content.strip()
-        version = int(content)
-    return version
 
 if __name__ == "__main__":
     print get_flat_console_log_file_name(path="/clean_sanity.py")
