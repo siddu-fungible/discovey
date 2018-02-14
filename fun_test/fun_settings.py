@@ -44,3 +44,5 @@ MAIL_SERVER = "localhost"
 AUTOMATION_EMAIL = "automation@fungible.com"
 
 SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
+
+REGRESSION_USER = "regression"

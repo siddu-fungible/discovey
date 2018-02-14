@@ -1,0 +1,72 @@
+from lib.system.fun_test import *
+from asset.asset_manager import AssetManager
+from lib.host.docker_host import DockerHost
+from fun_settings import REGRESSION_USER, FUN_TEST_DIR
+
+class MyScript(FunTestScript):
+    def describe(self):
+        self.set_test_details(steps=
+                              """
+        1. Step 1
+        2. Step 2
+        3. Step 3""")
+
+    def setup(self):
+        fun_test.log("Script-level setup")
+        fun_test.shared_variables["some_variable"] = 123
+
+    def cleanup(self):
+        fun_test.log("Script-level cleanup")
+
+
+class FunTestCase1(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Sanity Test 1",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+    def setup(self):
+        fun_test.log("Testcase setup")
+        fun_test.sleep("demo", seconds=1)
+
+    def cleanup(self):
+        fun_test.log("Testcase cleanup")
+
+    def run(self):
+        docker_host = AssetManager().get_any_docker_host()
+        user = REGRESSION_USER
+        workspace = dirname(abspath(dirname(abspath(FUN_TEST_DIR))))
+        name = "parser"
+        host_name = "parser"
+        image_name = "reg-nw-full-build:v1"
+        target_workspace = "/workspace"
+        entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(target_workspace)
+        environment_variables = {}
+        environment_variables["DOCKER"] = True
+        environment_variables["WORKSPACE"] = workspace
+        user_mount = "/home/{0}:/home/{0}".format(user)
+        workspace_mount = "{}:{}".format(workspace, target_workspace)
+        container_name = "johns_parser"
+
+        docker_host.setup_container(image_name=image_name,
+                                    container_name=container_name,
+                                    command=entry_point,
+                                    pool0_internal_ports=[22],
+                                    mounts=[user_mount, workspace_mount],
+                                    user=user,
+                                    host_name=host_name,
+                                    working_dir=target_workspace,
+                                    auto_remove=True)
+
+        fun_test.add_checkpoint("Some checkpoint")
+        fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
+
+
+if __name__ == "__main__":
+    myscript = MyScript()
+    myscript.add_test_case(FunTestCase1())
+    myscript.run()

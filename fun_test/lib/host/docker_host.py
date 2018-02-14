@@ -285,7 +285,12 @@ class DockerHost(Linux, ToDictMixin):
                         pool0_internal_ports=None,
                         pool1_internal_ports=None,
                         pool2_internal_ports=None,
-                        mounts=None):
+                        mounts=None,
+                        environment_variables=None,
+                        host_name=None,
+                        user=None,
+                        working_dir=None,
+                        auto_remove=None):
         container_asset = {}
         allocated_container = None
 
@@ -340,17 +345,23 @@ class DockerHost(Linux, ToDictMixin):
                             mount_objects.append(one_mount)
                 if command:
                     allocated_container = self.client.containers.run(image_name,
-                                               command=command,
-                                               detach=True,
-                                               privileged=True,
-                                               ports=ports_dict,
-                                               name=container_name, mounts=mount_objects)
+                                                                     command=command,
+                                                                     detach=True,
+                                                                     privileged=True,
+                                                                     ports=ports_dict,
+                                                                     name=container_name,
+                                                                     mounts=mount_objects,
+                                                                     environment=environment_variables,
+                                                                     hostname=host_name,
+                                                                     user=user,
+                                                                     working_dir=working_dir,
+                                                                     auto_remove=auto_remove)
                 else:
                     allocated_container = self.client.containers.run(image_name,
-                                               detach=True,
-                                               privileged=True,
-                                               ports=ports_dict,
-                                               name=container_name)
+                                                                     detach=True,
+                                                                     privileged=True,
+                                                                     ports=ports_dict,
+                                                                     name=container_name)
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
@@ -445,7 +456,7 @@ class DockerHost(Linux, ToDictMixin):
         return DockerHost(properties=asset_properties)
 
 if __name__ == "__main2__":
-    funos_url = "http://172.17.0.1:8080/fs/funos-posix"
+    # funos_url = "http://172.17.0.1:8080/fs/funos-posix"
     import asset.asset_manager
     dm = asset.asset_manager.AssetManager().get_any_docker_host()
     print dm.health()
