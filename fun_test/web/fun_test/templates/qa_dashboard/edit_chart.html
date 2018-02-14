@@ -1,8 +1,23 @@
 <div class="modal-header">
-    <h3 class="modal-title">Edit chart: {{ chartName }}</h3>
+    <h3 ng-if="mode === 'Edit'" class="modal-title">Edit chart: {{ chartName }}</h3>
+    <h3 ng-if="mode === 'Create'" class="modal-title">Create chart</h3>
 </div>
 <div class="modal-body edit-modal-body">
     <fun-metric-chart chart-name="chartName" model-name="modelName" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
+    <div ng-if="mode === 'Create'">
+        <table class="table table-nonfluid">
+            <tr>
+                <td><label>Chart name</label></td>
+                <td><fun-field type="text" min-length="1" max-length="100" required="true" bind-value="chartName"></td>
+            </tr>
+            <tr>
+                <td><label>Select output name</label></td>
+                <td>
+                    <select ng-model="input.selectedChoice" ng-options="choice for choice in input.choices"></select>
+                </td>
+            </tr>
+        </table>
+    </div>
     <span class="fa fa-plus"></span><a href="#" ng-click="addDataSetClick()">Add data-set</a>
 
     <div ng-if="addDataSet">

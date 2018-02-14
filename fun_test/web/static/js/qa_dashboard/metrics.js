@@ -42,6 +42,23 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         })
     };
 
+    $scope.addChartClick = (modelName) => {
+        $modal.open({
+            templateUrl: "/static/qa_dashboard/edit_chart.html",
+            controller: ['$modalInstance', '$scope', 'commonService', '$http', 'chartName', 'modelName', EditChartController],
+            resolve: {
+                chartName: () => {
+                    return null;
+                },
+                modelName: () => {
+                    return modelName;
+                }
+            }
+        }).result.then(function () {
+        }).catch(function () {
+        });
+    };
+
     $scope.editChartClick = (chartName, modelName) => {
         $modal.open({
             templateUrl: "/static/qa_dashboard/edit_chart.html",
@@ -57,12 +74,14 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         }).result.then(function () {
         }).catch(function () {
         });
-
-
     };
 
     function EditChartController($modalInstance, $scope, commonService, $http, chartName, modelName) {
         let ctrl = this;
+        $scope.mode = "Edit";
+        if(!chartName) {
+            $scope.mode = "Create";
+        }
         $scope.chartName = chartName;
         $scope.modelName = modelName;
         $scope.chartInfo = null;
