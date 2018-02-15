@@ -84,9 +84,9 @@
     "volume_pass_threshold": 10,
     "expected_fio_result": {
       "(4, 1)": {"randrw": {"write": {"bw": 60, "iops": 14, "latency": 58934},
-                            "read": {"bw": 18, "iops": 4, "latency": 16346}}},
+                            "read": {"bw": 18, "iops": 4, "latency": 18796}}},
       "(8, 1)": {"randrw": {"write": {"bw": 112, "iops": 14, "latency": 61474},
-                            "read": {"bw": 37, "iops": 4, "latency": 20056}}},
+                            "read": {"bw": 37, "iops": 4, "latency": 20640}}},
       "(16, 1)": {"randrw": {"write": {"bw": 206, "iops": 12, "latency": 66102},
                              "read": {"bw": 78, "iops": 4, "latency": 24106}}},
       "(32, 1)": {"randrw": {"write": {"bw": 350, "iops": 10, "latency": 77329},

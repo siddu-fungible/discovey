@@ -135,52 +135,50 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                      format(testcase, self.expected_volume_stats))
         # End of benchmarking json file parsing
 
-        topology = fun_test.shared_variables["topology"]
-        dut_instance = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
+        self.topology = fun_test.shared_variables["topology"]
+        self.dut_instance = self.topology.get_dut_instance(index=0)
+        fun_test.test_assert(self.dut_instance, "Retrieved dut instance 0")
 
-        linux_host = topology.get_tg_instance(tg_index=0)
-        destination_ip = dut_instance.data_plane_ip
+        self.linux_host = self.topology.get_tg_instance(tg_index=0)
+        destination_ip = self.dut_instance.data_plane_ip
+
+        self.storage_controller = StorageController(target_ip=self.dut_instance.host_ip,
+                                                    target_port=self.dut_instance.external_dpcsh_port)
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
 
             # Configuring Local thin block volume
-            storage_controller = StorageController(target_ip=dut_instance.host_ip,
-                                                   target_port=dut_instance.external_dpcsh_port)
-
             command_result = {}
-            command_result = storage_controller.command("enable_counters")
+            command_result = self.storage_controller.command("enable_counters")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")
 
             command_result = {}
-            command_result = storage_controller.ip_cfg(ip=dut_instance.data_plane_ip,
-                                                       expected_command_duration=self.command_timeout)
+            command_result = self.storage_controller.ip_cfg(ip=self.dut_instance.data_plane_ip,
+                                                            expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg {} on Dut Instance 0".
-                                 format(dut_instance.data_plane_ip))
+                                 format(self.dut_instance.data_plane_ip))
 
             command_result = {}
             self.thin_uuid = str(uuid.uuid4()).replace("-", "")[:10]
-            command_result = storage_controller.create_thin_block_volume(capacity=self.volume_details["capacity"],
-                                                                         block_size=self.volume_details["block_size"],
-                                                                         name=self.volume_details["name"],
-                                                                         uuid=self.thin_uuid,
-                                                                         expected_command_duration=self.command_timeout)
+            command_result = self.storage_controller.create_thin_block_volume(
+                capacity=self.volume_details["capacity"], block_size=self.volume_details["block_size"],
+                name=self.volume_details["name"], uuid=self.thin_uuid, expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
             command_result = {}
-            command_result = storage_controller.attach_volume(ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid,
-                                                              remote_ip=linux_host.internal_ip,
-                                                              expected_command_duration=self.command_timeout)
+            command_result = self.storage_controller.attach_volume(
+                ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, remote_ip=self.linux_host.internal_ip,
+                expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
 
             fun_test.shared_variables["blt"]["setup_created"] = True
-            fun_test.shared_variables["blt"]["storage_controller"] = storage_controller
+            # fun_test.shared_variables["blt"]["storage_controller"] = storage_controller
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
 
     def run(self):
@@ -188,14 +186,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
 
-        topology = fun_test.shared_variables["topology"]
-        dut_instance = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
+        destination_ip = self.dut_instance.data_plane_ip
 
-        linux_host = topology.get_tg_instance(tg_index=0)
-        destination_ip = dut_instance.data_plane_ip
-
-        storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
+        # storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
 
         fio_result = {}
@@ -250,7 +243,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 command_result = {}
                 initial_volume_status[combo][mode] = {}
 
-                command_result = storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(props_tree)
                 fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance 0")
                 initial_volume_status[combo][mode] = command_result["data"]
                 fun_test.log("Volume Status at the beginning of the test:")
@@ -258,8 +251,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
-                                                         iodepth=fio_iodepth, **self.fio_cmd_args)
+                fio_output[combo][mode] = self.linux_host.fio(destination_ip=destination_ip, rw=mode, bs=fio_block_size,
+                                                              iodepth=fio_iodepth, **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
@@ -269,7 +262,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # Getting the volume stats after the FIO test
                 command_result = {}
                 final_volume_status[combo][mode] = {}
-                command_result = storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(props_tree)
                 fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
                 final_volume_status[combo][mode] = command_result["data"]
                 fun_test.log("Volume Status at the end of the test:")
@@ -311,18 +304,19 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                             fio_result[combo][mode] = False
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
-                                              format(op, field, actual, value))
+                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
+                                              format(op, field, actual, row_data_dict[op + field][1:]))
                         # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
-                                                                                                         actual, value))
+                            fun_test.log("{} {} {} got increased more than the expected value {}".
+                                         format(op, field, actual, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
+                            fun_test.log("{} {} {} is within the expected range {}".
+                                         format(op, field, actual, row_data_dict[op + field][1:]))
 
                 # Comparing the internal volume stats with the expected value
                 for ekey, evalue in expected_volume_stats[mode].items():
@@ -410,7 +404,7 @@ class BLTFioSeqWriteSeqReadOnly(BLTVolumePerformanceTestcase):
 
 class BLTFioRandWriteRandReadOnly(BLTVolumePerformanceTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary='Random Write & Read only performance of Thin Provisioned local block volume over'
                                       ' RDS',
                               steps='''
@@ -432,7 +426,7 @@ class BLTFioRandWriteRandReadOnly(BLTVolumePerformanceTestcase):
 
 class BLTFioSeqReadWriteMix(BLTVolumePerformanceTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=3,
                               summary='Sequential 75% Write & 25% Read performance of Thin Provisioned local block '
                                       'volume over RDS',
                               steps='''
@@ -454,7 +448,7 @@ class BLTFioSeqReadWriteMix(BLTVolumePerformanceTestcase):
 
 class BLTFioRandReadWriteMix(BLTVolumePerformanceTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=4,
                               summary='Random 75% Write & 25% Read performance of Thin Provisioned local block '
                                       'volume over RDS',
                               steps='''
@@ -476,7 +470,7 @@ class BLTFioRandReadWriteMix(BLTVolumePerformanceTestcase):
 
 class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=5,
                               summary='Write & Read only performance(for both Sequential and random) for large sizes '
                                       'of Thin Provisioned local block volume over RDS',
                               steps='''
@@ -494,14 +488,9 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
 
-        topology = fun_test.shared_variables["topology"]
-        dut_instance = topology.get_dut_instance(index=0)
-        fun_test.test_assert(dut_instance, "Retrieved dut instance 0")
+        destination_ip = self.dut_instance.data_plane_ip
 
-        linux_host = topology.get_tg_instance(tg_index=0)
-        destination_ip = dut_instance.data_plane_ip
-
-        storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
+        # storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
 
         fio_result = {}
@@ -560,7 +549,7 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 command_result = {}
                 initial_volume_status[size][mode] = {}
 
-                command_result = storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(props_tree)
                 fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance {}".format(0))
                 initial_volume_status[size][mode] = command_result["data"]
                 fun_test.log("Volume Status at the beginning of the test:")
@@ -570,8 +559,8 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 fun_test.log("Running FIO {} only test for the size {} with the block size & IO depth set to {} & {}"
                              .format(mode, size, fio_block_size, fio_iodepth))
                 fio_output[size][mode] = {}
-                fio_output[size][mode] = linux_host.fio(destination_ip=destination_ip, rw=mode, size=size,
-                                                        **self.fio_cmd_args)
+                fio_output[size][mode] = self.linux_host.fio(destination_ip=destination_ip, rw=mode, size=size,
+                                                             **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[size][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
@@ -581,7 +570,7 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 # Getting the volume stats after the FIO test
                 command_result = {}
                 final_volume_status[size][mode] = {}
-                command_result = storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(props_tree)
                 fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
                 final_volume_status[size][mode] = command_result["data"]
                 fun_test.log("Volume Status at the end of the test:")
@@ -624,20 +613,21 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                             fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
                                                     "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
                                                     "FAILED", value, actual)
-                            fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
-                                              format(op, field, actual, value))
+                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
+                                              format(op, field, actual, row_data_dict[op + field][1:]))
                         # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
                             fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
                                                     "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
                                                     "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
-                                                                                                         actual, value))
+                            fun_test.log("{} {} {} got increased more than the expected value {}".
+                                         format(op, field, actual, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
                                                     "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
                                                     "PASSED", value, actual)
-                            fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
+                            fun_test.log("{} {} {} is within the expected range {}".
+                                         format(op, field, actual, row_data_dict[op + field][1:]))
 
                 # Comparing the internal volume stats with the expected value
                 for ekey, evalue in self.expected_volume_stats[size][mode].items():
