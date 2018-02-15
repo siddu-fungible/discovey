@@ -101,6 +101,36 @@ def edit_chart(request, chart_name):
 def view_all_storage_charts(request):
     return render(request, 'qa_dashboard/analytics_chart_dashboard.html', locals())
 
+
+@csrf_exempt
+def tables(request, metric_model_name, chart_name):
+    return render(request, 'qa_dashboard/analytics_tables.html', locals())
+
+@csrf_exempt
+@api_safe_json_response
+def table_data(request):
+    request_json = json.loads(request.body)
+    metric_model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    model = ANALYTICS_MAP[metric_model_name]["model"]
+    key = "key"
+    unique_keys = model.objects.values(key).distinct()
+    unique_keys = [x[key] for x in unique_keys]
+    data = {}
+    header_list = [x.name for x in model._meta.get_fields()]
+    data["headers"] = header_list
+    data["data"] = {}
+    the_data = data["data"]
+    for unique_key in unique_keys:
+        entries = model.objects.filter(key=unique_key)
+        the_data[unique_key] = []
+        row = the_data[unique_key]
+        for entry in entries:
+            for header in header_list:
+                row.append(getattr(entry, header))
+
+    return data
+
 @csrf_exempt
 @api_safe_json_response
 def update_chart(request):

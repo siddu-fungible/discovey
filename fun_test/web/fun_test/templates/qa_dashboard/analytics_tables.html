@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/analytics_tables.js" %}"></script>
+
+{% endblock %}
+
+{% block content %}
+    <div ng-controller="analyticsTablesController" ng-init="metricModelName = '{{ metric_model_name }}'; chartName = '{{ chart_name }}' ">
+            {% verbatim %}
+
+        <button ng-click="test()">Test</button>
+            {% endverbatim %}
+
+    </div>
+
+{% endblock %}

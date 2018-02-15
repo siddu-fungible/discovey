@@ -1,9 +1,9 @@
 from lib.system.fun_test import *
 from asset.asset_manager import AssetManager
-from lib.host.docker_host import DockerHost
 from lib.host.linux import Linux
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD, FUN_TEST_DIR
 import re
+
 
 class FunControlPlaneSanity(FunTestScript):
     def describe(self):
@@ -28,21 +28,20 @@ class FunControlPlaneSanity(FunTestScript):
         home_mount = "/home/{0}:/home/{0}".format(user)
         workspace_mount = "{}:{}".format(workspace, target_workspace)
 
-
         self.container_asset = self.docker_host.setup_container(image_name=f1_image_name,
-                                                      container_name=self.container_name,
-                                                      command=entry_point,
-                                                      pool0_internal_ports=[22],
-                                                      mounts=[home_mount, workspace_mount],
-                                                      user=user,
-                                                      host_name=f1_hostname,
-                                                      working_dir=target_workspace,
-                                                      auto_remove=True)
+                                                                container_name=self.container_name,
+                                                                command=entry_point,
+                                                                pool0_internal_ports=[22],
+                                                                mounts=[home_mount, workspace_mount],
+                                                                user=user,
+                                                                host_name=f1_hostname,
+                                                                working_dir=target_workspace,
+                                                                auto_remove=True,
+                                                                environment_variables=environment_variables)
 
         fun_test.test_assert(self.container_asset, "Container launched")
         fun_test.shared_variables["container_asset"] = self.container_asset
         fun_test.shared_variables["target_workspace"] = target_workspace
-
 
         linux_obj = Linux(host_ip=self.docker_host.host_ip,
                           ssh_username=self.docker_host.ssh_username,
@@ -53,16 +52,15 @@ class FunControlPlaneSanity(FunTestScript):
         while not timer.is_expired():
             output = linux_obj.command(command="docker logs {}".format(self.container_name), include_last_line=True)
             if re.search('Idling', output):
-                 container_up = True
-                 break
+                container_up = True
+                break
             fun_test.sleep("Waiting for container to come up", seconds=10)
         fun_test.test_assert(container_up, "Container UP")
 
-
     def cleanup(self):
         self.docker_host.destroy_container(
-                container_name=self.container_name,
-                ignore_error=True)
+            container_name=self.container_name,
+            ignore_error=True)
 
 
 class NwSanitySimpleL3Integration(FunTestCase):
@@ -94,13 +92,15 @@ class NwSanitySimpleL3Integration(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
-        output = linux_obj.command(command="sudo -E python {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > {}/nutest.log 2>&1"
-                                   .format(target_workspace, target_workspace), timeout=300)
+        output = linux_obj.command(
+            command="sudo -E python {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > {}/nutest.log 2>&1"
+            .format(target_workspace, target_workspace), timeout=300)
 
         timer = FunTimer(max_time=180)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/psim.log".format(qemu_status, target_workspace), include_last_line=True)
+            output = linux_obj.command(command="grep '{}' {}/psim.log".format(qemu_status, target_workspace),
+                                       include_last_line=True)
             if re.search(qemu_status, output):
                 fun_test.log("PSIM + QEMU up")
                 status = True
@@ -111,7 +111,8 @@ class NwSanitySimpleL3Integration(FunTestCase):
         timer = FunTimer(max_time=120)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/nutest.log".format(sanity_status, target_workspace), include_last_line=True) 
+            output = linux_obj.command(command="grep '{}' {}/nutest.log".format(sanity_status, target_workspace),
+                                       include_last_line=True)
             if re.search(sanity_status, output):
                 fun_test.log("NwSanitySimpleL3Integration Success")
                 status = True
@@ -136,9 +137,8 @@ class NwSanityPRV(FunTestCase):
         pass
 
     def run(self):
-
-        PRV_completed = "Start Traffic"
-        PRV_status = "ATTENTION: SOME TESTS DID NOT PASS"
+        prv_completed = "Start Traffic"
+        prv_status = "ATTENTION: SOME TESTS DID NOT PASS"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -149,7 +149,7 @@ class NwSanityPRV(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
-        output = linux_obj.command("cd /workspace/FunControlPlane")
+        output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
         output = linux_obj.command("make venv".format(target_workspace))
         output = linux_obj.command(
             command="{}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv  > {}/parser.log 2>&1".
@@ -158,21 +158,21 @@ class NwSanityPRV(FunTestCase):
         timer = FunTimer(max_time=240)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/parser.log".format(PRV_completed, target_workspace), include_last_line=True) 
-            if re.search(PRV_completed,output):
+            output = linux_obj.command(command="grep '{}' {}/parser.log".format(prv_completed, target_workspace),
+                                       include_last_line=True)
+            if re.search(prv_completed, output):
                 status = True
                 break
             fun_test.sleep("Waiting for NwSanityPRV to complete", seconds=60)
         fun_test.test_assert(status, "NwSanityPRV Completed")
 
-        output = linux_obj.command(command="grep '{}' {}/parser.log".format(PRV_status, target_workspace))
-        if not re.search(PRV_status, output):
+        output = linux_obj.command(command="grep '{}' {}/parser.log".format(prv_status, target_workspace))
+        if not re.search(prv_status, output):
             status = True
         else:
             status = False
 
         fun_test.test_assert(status, "NwSanityPRV")
-
 
     def cleanup(self):
         pass

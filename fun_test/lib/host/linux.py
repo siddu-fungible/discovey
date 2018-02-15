@@ -1110,11 +1110,11 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def insmod(self, module):
-        self.sudo_command("insmod {}".format(module))
+        return self.sudo_command("insmod {}".format(module))
 
     @fun_test.safe
     def modprobe(self, module):
-        self.sudo_command("modprobe {}".format(module))
+        return self.sudo_command("modprobe {}".format(module))
 
     @fun_test.safe
     def lsmod(self, module):
