@@ -5,7 +5,7 @@ from django.shortcuts import render
 from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
-from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP
+from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
@@ -120,15 +120,22 @@ def table_data(request):
     header_list = [x.name for x in model._meta.get_fields()]
     data["headers"] = header_list
     data["data"] = {}
+    '''
     the_data = data["data"]
     for unique_key in unique_keys:
         entries = model.objects.filter(key=unique_key)
         the_data[unique_key] = []
-        row = the_data[unique_key]
         for entry in entries:
+            row = []
             for header in header_list:
                 row.append(getattr(entry, header))
-
+            the_data[unique_key].append(row)
+    '''
+    serializer_map = {"VolumePerformance": VolumePerformanceSerializer}
+    serializer = serializer_map["VolumePerformance"]
+    all_entries = model.objects.all()
+    s = serializer(all_entries, many=True)
+    data["data"] = s.data
     return data
 
 @csrf_exempt

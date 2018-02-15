@@ -218,7 +218,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
                 if(data) {
                     alert("Submitted");
-                    $modalInstance.dismi`();
+                    $modalInstance.dismiss('cancel');
                 } else {
                     alert("Submission failed. Please check alerts");
                 }

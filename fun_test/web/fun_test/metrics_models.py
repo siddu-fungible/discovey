@@ -1,4 +1,5 @@
 from django.db import models
+from rest_framework.serializers import ModelSerializer
 
 
 class MetricChart(models.Model):
@@ -74,6 +75,14 @@ class VolumePerformance(models.Model):
                                                 self.output_write_bw,
                                                 self.output_write_latency,
                                                 self.output_read_latency)
+
+
+class VolumePerformanceSerializer(ModelSerializer):
+    class Meta:
+        model = VolumePerformance
+        fields = "__all__"
+        # fields = [x.name for x in VolumePerformance._meta.get_fields()]
+
 
 ANALYTICS_MAP = {
     "Performance1": {
