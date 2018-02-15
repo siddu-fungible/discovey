@@ -385,7 +385,7 @@ class DockerHost(Linux, ToDictMixin):
 
                 port_retries += 1
                 container_asset = {"host_ip": self.host_ip}
-                container_asset["mgmt_ssh_username"] = self.SSH_USERNAME
+                container_asset["mgmt_ssh_username"] = user if user else self.SSH_USERNAME
                 container_asset["mgmt_ssh_password"] = self.SSH_PASSWORD
                 container_asset["mgmt_ssh_port"] = pool0_allocation[0]["external"]
                 container_asset["pool1_ports"] = pool1_allocation

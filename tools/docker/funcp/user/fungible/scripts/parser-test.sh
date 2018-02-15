@@ -4,36 +4,23 @@ sudo /etc/init.d/ssh restart
 
 export WORKSPACE=`pwd`
 export TEST=$WORKSPACE/Integration/tools/docker/funcp
+export LC_ALL=C
+
 echo "Workspace : $WORKSPACE"
 
-if [ ! -d "frr" ]; then
-    git clone --branch fungible/master git@github.com:fungible-inc/frr.git
-    echo "Download FRR source"
-fi
+echo "Clone FunControlPlane and FunSDK Repo"
+sudo rm -rf funnel-as sonic-swss-common qemu_image FunControlPlane FunSDK
+git clone git@github.com:fungible-inc/FunControlPlane.git
+git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
 
-if [ ! -d "FunControlPlane" ]; then
-    git clone git@github.com:fungible-inc/FunControlPlane.git
-    echo "Download FunControlPlane source"
-fi
-
-#
-# Compile FunControl Plane
-#
-cd FunControlPlane
-make cleanall
-make -j 2 
-
-echo "#########"
-echo "Run PARSER tests"
-echo "#########"
-
-cd $WORKSPACE/FunControlPlane
-sudo -E python scripts/nutest/test_l3_traffic.py -n 12 -p --setuponly
+#cd $WORKSPACE/FunControlPlane
+#./scripts/nutest/test_l3_traffic -l
+#sudo -E python scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > $WORKSPACE/nutest.log 2>&1
 #./scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv.PrvTest_fpg_simple_tcp 
-./scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv
-sudo -E python scripts/nutest/test_l3_traffic.py -n 12 --kill
+#./scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv  > $WORKSPACE/parser.log 2>&1
+#sudo -E python scripts/nutest/test_l3_traffic.py -n 12 --kill
 
-echo "Testing Completed"
+echo "Container UP. Idling now"
 while [ 1 ]
     do
         sleep 1
