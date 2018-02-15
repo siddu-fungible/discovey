@@ -186,6 +186,12 @@ class FunTest:
         self.version = "1"
         self.determine_version()
 
+    def get_local_setting(self, setting):
+        result = None
+        if self.local_settings and setting in self.local_settings:
+            result = self.local_settings[setting]
+        return result
+
     def determine_version(self):
         print("Determining version...")
         determined_version = determine_version(build_url=DEFAULT_BUILD_URL)

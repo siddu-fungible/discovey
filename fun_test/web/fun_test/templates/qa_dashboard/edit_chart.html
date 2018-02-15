@@ -13,7 +13,7 @@
             <tr>
                 <td><label>Select output name</label></td>
                 <td>
-                    <select ng-change="outputChange()" ng-model="$parent.selectedOutput" ng-options="output for output in outputList"></select>
+                    <select ng-disabled="!showOutputSelection" ng-change="outputChange()" ng-model="$parent.selectedOutput" ng-options="output for output in outputList"></select>
                 </td>
             </tr>
         </table>

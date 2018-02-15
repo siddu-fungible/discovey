@@ -79,6 +79,10 @@ class AssetManager:
             docker_hosts_spec_file = fun_test.get_environment_variable("DOCKER_HOSTS_SPEC_FILE")
             if not docker_hosts_spec_file:
                 raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
+        local_setting_docker_host_spec_file = fun_test.get_local_setting(setting="DOCKER_HOSTS_SPEC_FILE")
+        if local_setting_docker_host_spec_file:
+            docker_hosts_spec_file = local_setting_docker_host_spec_file
+
         docker_hosts = parse_file_to_json(docker_hosts_spec_file)
         fun_test.simple_assert(docker_hosts, "At least one docker host")
         index = 0

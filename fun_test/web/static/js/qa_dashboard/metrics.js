@@ -91,6 +91,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         $scope.outputList = [];
         $scope.tableInfo = null;
         $scope.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
+        $scope.showOutputSelection = true;
 
         let payload = {};
         payload["metric_model_name"] = modelName;
@@ -166,6 +167,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         };
 
         $scope.addClick = () => {
+            $scope.showOutputSelection = false;
+
             //
             let validDataSet = {};
             validDataSet["inputs"] = {};
@@ -215,9 +218,11 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
                 if(data) {
                     alert("Submitted");
+                    $modalInstance.dismi`();
                 } else {
                     alert("Submission failed. Please check alerts");
                 }
+
             });
         }
     }
