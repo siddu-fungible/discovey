@@ -6,7 +6,7 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
-from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt
+from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
 
@@ -40,6 +40,45 @@ class Performance1Helper(MetricHelper):
                                  output3=output3)
         one_entry.save()
 
+
+class VolumePerformanceHelper(MetricHelper):
+    model = VolumePerformance
+
+    def __init__(self):
+        super(VolumePerformanceHelper, self).__init__(model=self.model)
+
+    def add_entry(self, key, volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw, write_latency, read_latency):
+        try:
+            entry = VolumePerformance.objects.get(key=key,
+                                                  input_volume=volume,
+                                                  input_test=test,
+                                                  input_block_size=block_size,
+                                                  input_io_depth=io_depth,
+                                                  input_size=size,
+                                                  input_operation=operation)
+            entry.output_write_iops = write_iops
+            entry.output_read_iops = read_iops
+            entry.output_write_bw = write_bw
+            entry.output_read_bw = read_bw
+            entry.output_write_latency = write_latency
+            entry.output_read_latency = read_latency
+            entry.save()
+        except ObjectDoesNotExist:
+            pass
+            one_entry = VolumePerformance(key=key,
+                                          input_volume=volume,
+                                          input_test=test,
+                                          input_block_size=block_size,
+                                          input_io_depth=io_depth,
+                                          input_size=size,
+                                          input_operation=operation,
+                                          output_write_iops=write_iops,
+                                          output_read_iops=read_iops,
+                                          output_write_bw=write_bw,
+                                          output_read_bw=read_bw,
+                                          output_write_latency=write_latency,
+                                          output_read_latency=read_latency)
+            one_entry.save()
 
 if __name__ == "__main__":
     # MetricChart.objects.all().delete()

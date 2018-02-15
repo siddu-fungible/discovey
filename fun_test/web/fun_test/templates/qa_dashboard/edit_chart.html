@@ -1,10 +1,27 @@
 <div class="modal-header">
-    <h3 class="modal-title">Edit chart: {{ chartName }}</h3>
+    <h3 ng-if="mode === 'Edit'" class="modal-title">Edit chart: {{ chartName }}</h3>
+    <h3 ng-if="mode === 'Create'" class="modal-title">Create chart</h3>
 </div>
 <div class="modal-body edit-modal-body">
     <fun-metric-chart chart-name="chartName" model-name="modelName" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
-    <span class="fa fa-plus"></span><a href="#" ng-click="addDataSetClick()">Add data-set</a>
-
+    <div ng-if="mode === 'Create'">
+        <table class="table table-nonfluid">
+            <tr>
+                <td><label>Chart name</label></td>
+                <td><fun-field type="text" min-length="1" max-length="100" required="true" bind-value="$parent.chartName"></td>
+            </tr>
+            <tr>
+                <td><label>Select output name</label></td>
+                <td>
+                    <select ng-disabled="!showOutputSelection" ng-change="outputChange()" ng-model="$parent.selectedOutput" ng-options="output for output in outputList"></select>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div ng-if="((mode==='Create') && selectedOutput && chartName) || (mode==='Edit')">
+        <span class="fa fa-plus"></span>
+        <a href="#" ng-click="addDataSetClick()">Add data-set</a>
+    </div>
     <div ng-if="addDataSet">
         <table class="table table-nonfluid">
             <tr ng-repeat="input in addDataSet.inputs">
@@ -18,16 +35,16 @@
                 </td>
             </tr>
             <tr>
-                <td><label>{{ addDataSet.output.name }}</label></td>
-                <td><label>Min</label><fun-field type="number" min="1" max="99999" required="true" bind-value="addDataSet.output.min"></td>
-                <td><label>Max</label><fun-field type="number" min="1" max="99999" required="true" bind-value="addDataSet.output.max"></td>
+                <td><label>{{ selectedOutput }}</label></td>
+                <td><label>Min</label><fun-field type="number" min="0" max="999999" required="true" bind-value="addDataSet.output.min"></td>
+                <td><label>Max</label><fun-field type="number" min="0" max="999999" required="true" bind-value="addDataSet.output.max"></td>
             </tr>
         </table>
         <button class="btn btn-primary" ng-click="addClick()">Add</button>
 
     </div>
 
-    <table class="table table-nonfluid table-borderless" ng-repeat="dataSet in copyChartInfo.data_sets track by $index">
+    <table class="table table-nonfluid table-borderless" ng-repeat="dataSet in previewDataSets track by $index">
         <tr>
             <th></th>
             <th>Name</th>
@@ -40,7 +57,7 @@
             <td><button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:20px; color: red"></i></button></td>
             <td>{{ dataSet.name }}</td>
             <td ng-repeat="(inputName, inputValue) in dataSet.inputs">{{ inputValue }}</td>
-            <td>{{ dataSet.name }}</td>
+            <td>{{ dataSet.output.name }}</td>
             <td>
                 <input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min" style="width: 100px">
             </td>

@@ -108,10 +108,15 @@ def update_chart(request):
     model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
     data_sets = request_json["data_sets"]
-    c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
-    c.data_sets = json.dumps(data_sets)
-    c.save()
+    try:
+        c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
+        c.data_sets = json.dumps(data_sets)
+        c.save()
+    except ObjectDoesNotExist:
+        c = MetricChart(metric_model_name=model_name, chart_name=chart_name, data_sets=json.dumps(data_sets))
+        c.save()
     return "Ok"
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -140,8 +145,11 @@ def data(request):
     metric_model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
     preview_data_sets = request_json["preview_data_sets"]
-    chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-
+    chart = None
+    try:
+        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+    except ObjectDoesNotExist:
+        pass
     model = ANALYTICS_MAP[metric_model_name]["model"]
     if preview_data_sets is not None:
         data_sets = preview_data_sets

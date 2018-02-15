@@ -26,6 +26,8 @@ function FunMetricChartController($scope, commonService) {
         // console.log(newvalue, oldvalue);
         if($scope.chartInfo) {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+        } else {
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, ctrl.previewDataSets); // TODO: Race condition on chartInfo
         }
     }, true);
 
@@ -34,7 +36,7 @@ function FunMetricChartController($scope, commonService) {
         payload["metric_model_name"] = ctrl.modelName;
         payload["chart_name"] = ctrl.chartName;
         // Fetch chart info
-        commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
+        commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
             $scope.chartInfo = chartInfo;
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo, null)
         })
@@ -64,15 +66,22 @@ function FunMetricChartController($scope, commonService) {
 
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
+        if(!chartName) {
+            return;
+        }
 
         commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
             let payload = {};
             payload["metric_model_name"] = metricModelName;
             payload["chart_name"] = chartName;
             payload["preview_data_sets"] = previewDataSets;
-            let filterDataSets = chartInfo.data_sets;
+            let filterDataSets = [];
             if(previewDataSets) {
                 filterDataSets = previewDataSets;
+            } else {
+                if(chartInfo){
+                    filterDataSets = chartInfo.data_sets;
+                }
             }
 
             commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {

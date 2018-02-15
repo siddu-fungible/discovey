@@ -34,6 +34,23 @@ topology_dict = {
 }
 
 
+def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
+                 write_latency, read_latency):
+    result = []
+    arg_list = post_results.func_code.co_varnames[:-3]
+    for arg in arg_list:
+        result.append(str(eval(arg)))
+    result = ",".join(result)
+    fun_test.log("Result: {}".format(result))
+
+
+def compare(actual, expected, threshold, operation):
+    if operation == "lesser":
+        return (actual < (expected * (1 - threshold)) and ((expected - actual) > 2))
+    else:
+        return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
+
+
 class ECVolumeLevelScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -48,8 +65,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        pass
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -235,6 +251,7 @@ class ECVolumeLevelTestcase(FunTestCase):
     def run(self):
 
         testcase = self.__class__.__name__
+        test_method = testcase[4:]
 
         destination_ip = self.dut.data_plane_ip
         self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
@@ -269,14 +286,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
                                               message="Ensuring fault_injection got enabled")
 
-        # table_data_headers = ["Operation", "Block Size", "IO Depth", "Write IOPS", "Read IOPS",
-        #                      "Write Throughput in KiB/s", "Read Throughput in KiBs", "Num Writes", "Num Reads",
-        #                      "Fault Injection"]
-        # table_data_cols = ["mode", "block_size", "iodepth", "writeiops", "readiops", "writebw", "readbw", "num_writes",
-        #                   "num_reads", "fault_injection"]
-        table_data_headers = ["Operation", "Block Size", "IO Depth", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KiB/s", "Read Throughput in KiBs"]
-        table_data_cols = ["mode", "block_size", "iodepth", "writeiops", "readiops", "writebw", "readbw"]
+        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+                              "Write Throughput in KiB/s", "Read Throughput in KiB/s", "Write Latency in uSecs",
+                              "Read Latency in uSecs"]
+        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
+                           "writelatency", "readlatency"]
         table_data_rows = []
 
         for combo in self.fio_bs_iodepth:
@@ -303,6 +317,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 row_data_dict["mode"] = mode
                 row_data_dict["block_size"] = fio_block_size
                 row_data_dict["iodepth"] = fio_iodepth
+                row_data_dict["size"] = self.fio_cmd_args["size"]
 
                 # Pulling initial volume stats of all the volumes from the DUT in dictionary format
                 fun_test.log("Pulling initial stats of the all the volumes from the DUT in dictionary format before "
@@ -331,7 +346,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
 
                 # Pulling volume stats of all the volumes from the DUT in dictionary format after the test
                 fun_test.log("Pulling volume stats of all volumes after the FIO test")
@@ -378,22 +394,32 @@ class ECVolumeLevelTestcase(FunTestCase):
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
                         actual = fio_output[combo][mode][op][field]
-                        row_data_dict[op + field] = actual
-                        if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
+                        row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
+                                                     int((value * (1 + self.fio_pass_threshold))))
+                        if field == "latency":
+                            ifop = "greater"
+                            elseop = "lesser"
+                        else:
+                            ifop = "lesser"
+                            elseop = "greater"
+                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
+                        if compare(actual, value, self.fio_pass_threshold, ifop):
                             fio_result[combo][mode] = False
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} got dropped more than the allowed threshold value {}".
-                                              format(op, field, actual, value))
-                        elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
+                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
+                                              format(op, field, actual, row_data_dict[op + field][1:]))
+                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
+                        elif compare(actual, value, self.fio_pass_threshold, elseop):
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".format(op, field,
-                                                                                                         actual, value))
+                            fun_test.log("{} {} {} got increased more than the expected range {}".
+                                         format(op, field, actual, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} is within the expected range {}".format(op, field, actual, value))
+                            fun_test.log("{} {} {} is within the expected range {}".
+                                         format(op, field, actual, row_data_dict[op + field][1:]))
 
                 # Comparing the internal volume stats with the expected value
                 for type in volumes:
@@ -448,6 +474,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
+                post_results("EC with volume level failure domain", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -460,18 +487,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             for mode in self.fio_modes:
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
-                # fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
-                #                                              "combo {}".format(mode, combo))
-                # fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
-                #                                                   "size & IO depth combo {}".format(mode, combo))
+
         fun_test.test_assert(test_result, self.summary)
-
-    def old_run(self):
-
-        testcase = self.__class__.__name__
-        method_str = re.split(r"EC\d+", testcase)[1].lower()
-        method_name = getattr(self, method_str)
-        method_name()
 
     def cleanup(self):
 
@@ -489,7 +506,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 command_result = self.storage_controller.peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
-                                              message="Ensuring fault_injection got enabled")
+                                              message="Ensuring fault_injection got disabled")
 
 
 class EC21FioSeqWriteSeqReadOnly(ECVolumeLevelTestcase):

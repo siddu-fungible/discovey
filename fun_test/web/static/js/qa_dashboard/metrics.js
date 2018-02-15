@@ -42,6 +42,23 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         })
     };
 
+    $scope.addChartClick = (modelName) => {
+        $modal.open({
+            templateUrl: "/static/qa_dashboard/edit_chart.html",
+            controller: ['$modalInstance', '$scope', 'commonService', '$http', 'chartName', 'modelName', EditChartController],
+            resolve: {
+                chartName: () => {
+                    return null;
+                },
+                modelName: () => {
+                    return modelName;
+                }
+            }
+        }).result.then(function () {
+        }).catch(function () {
+        });
+    };
+
     $scope.editChartClick = (chartName, modelName) => {
         $modal.open({
             templateUrl: "/static/qa_dashboard/edit_chart.html",
@@ -57,61 +74,101 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         }).result.then(function () {
         }).catch(function () {
         });
-
-
     };
 
     function EditChartController($modalInstance, $scope, commonService, $http, chartName, modelName) {
         let ctrl = this;
+        $scope.mode = "Edit";
+        if(!chartName) {
+            $scope.mode = "Create";
+        }
         $scope.chartName = chartName;
         $scope.modelName = modelName;
         $scope.chartInfo = null;
         $scope.copyChartInfo = null;
-        $scope.previewDataSets = null;
+        $scope.previewDataSets = [];
         $scope.addDataSet = null;
+        $scope.outputList = [];
+        $scope.tableInfo = null;
+        $scope.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
+        $scope.showOutputSelection = true;
 
         let payload = {};
         payload["metric_model_name"] = modelName;
         payload["chart_name"] = chartName;
-        // Fetch chart info
 
-        commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
-            $scope.chartInfo = chartInfo;
-            $scope.copyChartInfo = angular.copy($scope.chartInfo);
-            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
-            let i = 0;
-        });
-
-        $scope.addDataSetClick = () => {
-            let thisPreview = [];
-            let newDataSet = {};
-
+        $scope.describeTable = () => {
+            $scope.inputs = [];
             commonService.apiGet("/metrics/describe_table/" + modelName, "fetchMetricsData").then(function (tableInfo) {
-                $scope.addDataSet = {};
-
-                let inputs = [];
-                angular.forEach(tableInfo, (fieldInfo, field) => {
+                $scope.tableInfo = tableInfo;
+                angular.forEach($scope.tableInfo, (fieldInfo, field) => {
                     let oneField = {};
                     oneField.name = field;
                     if('choices' in fieldInfo && oneField.name.startsWith("input")) {
                         oneField.choices = fieldInfo.choices.map((choice)=> { return choice[1]});
-                        inputs.push(oneField);
+                        $scope.inputs.push(oneField);
+                    }
+                    if(oneField.name.startsWith("output")) {
+                        $scope.outputList.push(oneField.name);
                     }
                 });
-                $scope.addDataSet["inputs"] = inputs;
-                let firstChartInfoDataSet = $scope.copyChartInfo.data_sets[0];
-                let outputName = firstChartInfoDataSet.output.name;
-                $scope.addDataSet["output"] = {"name": outputName, "min": 0, "max": 99999};
-
-                newDataSet["inputs"] = {};
-                $scope.addDataSet["inputs"].forEach((oneField) => {
-                    newDataSet["inputs"][oneField.name] = oneField.selectedChoice;
-                })
-
             });
         };
 
+        $scope.outputChange = () => {
+            if($scope.selectedOutput) {
+                $scope.dummyChartInfo.output.name = $scope.selectedOutput;
+            }
+        };
+
+
+        $scope.describeTable();
+
+        // Fetch chart info
+
+
+        if($scope.chartName) {
+            commonService.apiPost("/metrics/chart_info", payload, "EditChartController: chart_info").then((chartInfo) => {
+                $scope.chartInfo = chartInfo;
+                //$scope.copyChartInfo = angular.copy($scope.chartInfo);
+                $scope.previewDataSets = $scope.chartInfo.data_sets;
+            });
+        } else {
+        }
+
+
+        $scope.addDataSetClick = () => {
+            //let newDataSet = {};
+
+            if(!$scope.tableInfo) {
+                return $scope.describeTable();
+            }
+            $scope.addDataSet = {};
+
+
+
+            $scope.addDataSet["inputs"] = $scope.inputs;
+            let outputName = "";
+            if($scope.previewDataSets.length > 0) {
+                let firstChartInfoDataSet = $scope.previewDataSets.data_sets[0];
+                outputName = firstChartInfoDataSet.output.name;
+                $scope.selectedOutput = outputName;
+            } else {
+                outputName = $scope.selectedOutput;
+            }
+
+            $scope.addDataSet["output"] = {"name": $scope.selectedOutput, "min": 0, "max": 99999};
+
+            /*newDataSet["inputs"] = {};
+            $scope.addDataSet["inputs"].forEach((oneField) => {
+                newDataSet["inputs"][oneField.name] = oneField.selectedChoice;
+            })*/
+
+        };
+
         $scope.addClick = () => {
+            $scope.showOutputSelection = false;
+
             //
             let validDataSet = {};
             validDataSet["inputs"] = {};
@@ -134,6 +191,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
                     return commonService.showError(message);
                 } else {
                     validDataSet["name"] = $scope.addDataSet.name;
+                    validDataSet["output"]["name"] = $scope.addDataSet["output"].name;
                     validDataSet["output"]["min"] = $scope.addDataSet["output"].min;
                     validDataSet["output"]["max"] = $scope.addDataSet["output"].max;
                 }
@@ -146,19 +204,25 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
 
 
         $scope.removeClick = (index) => {
-            $scope.copyChartInfo.data_sets.splice(index, 1);
-            let i = 0;
-            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
+            //$scope.copyChartInfo.data_sets.splice(index, 1);
+            $scope.previewDataSets.splice(index, 1);
+                //= $scope.copyChartInfo.data_sets;
         };
 
         $scope.submit = () => {
-            $scope.previewDataSets = $scope.copyChartInfo.data_sets;
+            //$scope.previewDataSets = $scope.copyChartInfo.data_sets;
             let payload = {};
             payload["metric_model_name"] = $scope.modelName;
             payload["chart_name"] = $scope.chartName;
             payload["data_sets"] = $scope.previewDataSets;
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
-                alert("Submitted");
+                if(data) {
+                    alert("Submitted");
+                    $modalInstance.dismi`();
+                } else {
+                    alert("Submission failed. Please check alerts");
+                }
+
             });
         }
     }

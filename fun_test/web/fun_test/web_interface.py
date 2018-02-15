@@ -1,10 +1,10 @@
 from fun_settings import WEB_SERVER_PORT
-from fun_global import is_regression_server
+from fun_global import is_regression_server, is_performance_server
 import socket
 
 def get_homepage_url():
     hostname = "localhost"
-    if is_regression_server():
+    if is_regression_server() or is_performance_server():
         hostname = socket.gethostname()
     s = "http://{}:{}".format(hostname, WEB_SERVER_PORT)
     return s
