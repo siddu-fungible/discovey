@@ -195,8 +195,7 @@ class SuiteWorker(Thread):
         email_on_fail_only = False
         if "email_on_fail_only" in self.job_spec:
             email_on_fail_only = self.job_spec["email_on_fail_only"]
-        if email_on_fail_only:
-            send_summary_mail(job_id=self.job_id, to_addresses=to_addresses)
+        send_summary_mail(job_id=self.job_id, to_addresses=to_addresses, email_on_fail_only=email_on_fail_only)
 
 
 def process_killed_jobs():
