@@ -1118,10 +1118,13 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def lsmod(self, module):
+        result = {}
         lsmod_output = self.sudo_command("lsmod | grep {}".format(module))
         re_output = re.search(r'%s+\s+(\d+)\s+(\d)' % module, lsmod_output)
-        lsmod_dict = {"size": (int(re_output.group(1))), "used_by": (int(re_output.group(2)))}
-        return lsmod_dict
+        if re_output:
+            result['size'] = int(re_output.group(1))
+            result['used_by'] = int(re_output.group(2))
+        return result
 
     @fun_test.safe
     def nvme_setup(self):
