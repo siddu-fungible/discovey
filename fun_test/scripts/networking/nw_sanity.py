@@ -58,7 +58,7 @@ class FunControlPlaneSanity(FunTestScript):
         fun_test.test_assert(container_up, "Container UP")
 
     def cleanup(self):
-        for log_file in ["nutest.txt", "ptf.log"]:
+        for log_file in ["psim.log", "nutest.txt", "ptf.log"]:
             artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=log_file)
             fun_test.scp(source_ip=self.container_asset["host_ip"],
                  source_file_path="{}/{}".format(self.target_workspace, log_file),
@@ -148,7 +148,7 @@ class NwSanityPRV(FunTestCase):
 
     def run(self):
         prv_completed = "Start Traffic"
-        prv_status = "ATTENTION"
+        prv_status = "ATTENTION|FAILED|RuntimeError"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -176,12 +176,11 @@ class NwSanityPRV(FunTestCase):
             fun_test.sleep("Waiting for NwSanityPRV to complete", seconds=60)
         fun_test.test_assert(status, "NwSanityPRV Completed")
 
-        output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(prv_status, target_workspace))
-        if not re.search(prv_status, output):
-            status = True
-        else:
-            status = False
-
+        status = True
+        output = linux_obj.command(command="grep -E '{}' {}/nutest.txt".format(prv_status, target_workspace))
+        for res in prv_status.split('|'):
+            if re.search(res, output):
+                status = False
         fun_test.test_assert(status, "NwSanityPRV Result")
 
 
