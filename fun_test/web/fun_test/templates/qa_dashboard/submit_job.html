@@ -1,46 +1,75 @@
 <div class="row">
-    <div class="col-sm-6">
+    <div class="col-xl-6 col-lg-6">
         <div class="panel panel-primary">
             <div class="panel-heading">Submit Job</div>
             <div class="panel-body">
                 <form name="submissionForm">
-                    <div class="form-group">
-                        <label for="build-url">Build URL</label>
-                        <input id="build-url" name="build-url" ng-model="buildUrl" type="text" required/>
-                    </div>
-                    <div class="form-group">
-                        <label for="suite-select">Select a suite</label>
-                        <select id="suite-select"
+                    <table class="table table-nonfluid">
+                        <tr>
+                            <td>
+                                <label for="build-url">Build URL</label>
+                            </td>
+                            <td>
+                                <input id="build-url" name="build-url" ng-model="buildUrl" type="text" required/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="suite-select">Select a suite</label>
+                            </td>
+                            <td>
+                                <select id="suite-select"
                                 ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteName"
-                                ng-model="selectedSuite" ng-change="changedValue(selectedSuite)"></select>
-                    </div>
+                                ng-model="selectedSuite" ng-change="changedValue(selectedSuite)">
 
+                                </select>
+                            </td>
 
-                    <div class="form-group">
-                        <p class="">
-                            <input class="form-check-input" type="checkbox" value="" ng-model="schedulingOptions">
-                            Show Scheduling Options
-                        </p>
-                        <!--button ng-click="testClick()" class="btn btn-primary">Test</button -->
-                        <button ng-if="selectedInfo" ng-click="submitClick(submissionForm.$valid)"
-                                class="btn btn-primary">Submit
-                        </button>
-                        <br>
-                        <label for="tag-select">Select a tag</label>
-                        <ui-select id="tag-select" multiple ng-model="$ctrl.selectedTags" theme="bootstrap" sortable="true">
-                            <ui-select-match placeholder="Select tag...">{{$item.name}}</ui-select-match>
-                            <ui-select-choices repeat="tag in tags | propsFilter: {name: $select.search}">
-                                <div ng-bind-html="tag.name | highlight: $select.search"></div>
-                                <small>
-                                    name: <span ng-bind-html="''+tag.name | highlight: $select.search"></span>
-                                </small>
-                            </ui-select-choices>
-                        </ui-select>
-                        <label for="emails">Specify comma-separated e-mail</label>
-                        <input id="emails" name="emails" ng-model="emails" type="text" required/>
-                        <label for="email-on-fail-only">Email on failures only</label>
-                        <input id="email-on-fail-only" type="checkbox" ng-checked="emailOnFailOnly" ng-model="emailOnFailOnly">
-                    </div>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="tag-select">Select a tag</label>
+                            </td>
+                            <td>
+                                <ui-select id="tag-select" multiple ng-model="$ctrl.selectedTags" theme="bootstrap" sortable="true">
+                                    <ui-select-match placeholder="Select tag...">{{$item.name}}</ui-select-match>
+                                    <ui-select-choices repeat="tag in tags | propsFilter: {name: $select.search}">
+                                        <div ng-bind-html="tag.name | highlight: $select.search"></div>
+                                        <small>
+                                            name: <span ng-bind-html="''+tag.name | highlight: $select.search"></span>
+                                        </small>
+                                    </ui-select-choices>
+                                </ui-select>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <label for="emails">Specify comma-separated e-mail</label>
+                            </td>
+                            <td>
+                                <input id="emails" name="emails" ng-model="emails" type="text" required/>
+                            </td>
+                            <td>
+                                <label for="email-on-fail-only">Email on failures only</label>
+                            </td>
+                            <td>
+                                <input id="email-on-fail-only" type="checkbox" ng-checked="emailOnFailOnly" ng-model="emailOnFailOnly">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                               <input class="form-check-input" type="checkbox" value="" ng-model="schedulingOptions">
+                                Show Scheduling Options
+                            </td>
+                            <td>
+                                <button ng-if="selectedInfo" ng-click="submitClick(submissionForm.$valid)"
+                                    class="btn btn-primary">Submit
+                                </button>
+                            </td>
+                        </tr>
+
+                    </table>
                     <fieldset ng-if="selectedInfo" class="title">
                         <legend>{{ selectedSuite }}</legend>
 
@@ -48,12 +77,15 @@
                             <table class="table table-nonfluid">
                                 <tr>
                                     <th style="background-color: #E4EFF2">
+
+                                    </th>
+                                    <th style="background-color: #E4EFF2">
                                         Scripts
                                     </th>
                                 </tr>
                                 <tr ng-repeat="scriptInfo in selectedInfo">
+                                    <td>{{ $index }}</td>
                                     <td>{{ scriptInfo.path }}</td>
-
                                 </tr>
                             </table>
                         </div>
@@ -65,7 +97,7 @@
 
         </div>
     </div>
-    <div class="col-sm-6" ng-show="schedulingOptions">
+    <div class="col-xl-6 col-lg-6" ng-show="schedulingOptions">
         <div class="panel panel-primary">
             <div class="panel-heading">Scheduling options</div>
             <div class="panel-body">

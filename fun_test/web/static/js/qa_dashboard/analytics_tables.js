@@ -59,12 +59,12 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
                 let lastKey = null;
                 headers.forEach((headerName) => {
                     if(headerName.startsWith("key")) {
-                        lastKey = headerName;
+                        lastKey = oneRemoteRow[headerName];
                     }
                     if(headerName.startsWith("input")) {
                         inputValueList.push(oneRemoteRow[headerName]);
                     } else if(headerName.startsWith("output")) {
-                        if(!headerName in rowOutput) {
+                        if(!rowOutput.hasOwnProperty(headerName)) {
                             rowOutput[headerName] = {};
                             uniqueKeys.forEach((uniqueKey) => {
                                 rowOutput[headerName][uniqueKey] = null;
@@ -76,13 +76,16 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
 
                 });
                 let preparedKey = $scope.prepareKey(inputValueList);
-                if(!preparedKey in processedTable) {
+                if(!processedTable.hasOwnProperty(preparedKey)) {
 
                     processedTable[preparedKey] = {"inputs": inputValueList, "outputs": {}};
                 }
                 headers.forEach((headerName) => {
-                    if(headerName.startsWith("ouput")) {
-                       processedTable[preparedKey].outputs
+                    if(headerName.startsWith("output")) {
+                        if(!processedTable[preparedKey].outputs.hasOwnProperty(headerName)) {
+                            processedTable[preparedKey].outputs[headerName] = {};
+                        }
+                        processedTable[preparedKey].outputs[headerName][lastKey] = oneRemoteRow[headerName];
                     }
                 })
 
