@@ -13,7 +13,7 @@ sudo rm -rf funnel-as sonic-swss-common qemu_image FunControlPlane FunSDK
 git clone git@github.com:fungible-inc/FunControlPlane.git
 git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
 cd $WORKSPACE/FunSDK
-scripts/bob --sdkup
+sudo scripts/bob --sdkup
 
 #cd $WORKSPACE/FunControlPlane
 #./scripts/nutest/test_l3_traffic -l

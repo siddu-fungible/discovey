@@ -58,14 +58,15 @@ class FunControlPlaneSanity(FunTestScript):
         fun_test.test_assert(container_up, "Container UP")
 
     def cleanup(self):
-        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="nutest.txt")
-        fun_test.scp(source_ip=self.container_asset["host_ip"],
-             source_file_path="{}/nutest.txt".format(self.target_workspace),
-             source_username=self.container_asset["mgmt_ssh_username"],
-             source_password=self.container_asset["mgmt_ssh_password"],
-             source_port=self.container_asset["mgmt_ssh_port"],
-             target_file_path=artifact_file_name)
-        fun_test.add_auxillary_file(description="NU Log", filename=artifact_file_name)
+        for log_file in ["nutest.txt", "ptf.log"]:
+            artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=log_file)
+            fun_test.scp(source_ip=self.container_asset["host_ip"],
+                 source_file_path="{}/{}".format(self.target_workspace, log_file),
+                 source_username=self.container_asset["mgmt_ssh_username"],
+                 source_password=self.container_asset["mgmt_ssh_password"],
+                 source_port=self.container_asset["mgmt_ssh_port"],
+                 target_file_path=artifact_file_name)
+            fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]), filename=artifact_file_name)
 
         self.docker_host.destroy_container(
             container_name=self.container_name,
@@ -147,7 +148,7 @@ class NwSanityPRV(FunTestCase):
 
     def run(self):
         prv_completed = "Start Traffic"
-        prv_status = "FAILED"
+        prv_status = "ATTENTION"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -161,10 +162,10 @@ class NwSanityPRV(FunTestCase):
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
         output = linux_obj.command("make venv".format(target_workspace))
         output = linux_obj.command(
-            command="{}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv  >> {}/nutest.txt 2>&1".
-                format(target_workspace, target_workspace), timeout=600)
+            command="{}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv >> {}/nutest.txt 2>&1"
+                        .format(target_workspace, target_workspace), timeout=600)
 
-        timer = FunTimer(max_time=240)
+        timer = FunTimer(max_time=600)
         status = False
         while not timer.is_expired():
             output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(prv_completed, target_workspace),
@@ -181,7 +182,7 @@ class NwSanityPRV(FunTestCase):
         else:
             status = False
 
-        fun_test.test_assert(status, "NwSanityPRV")
+        fun_test.test_assert(status, "NwSanityPRV Result")
 
 
     def cleanup(self):
