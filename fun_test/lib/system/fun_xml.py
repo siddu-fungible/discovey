@@ -142,7 +142,7 @@ class _XmlHead(Element):
 class TopologyPageContent:
     def __init__(self):
         self.tree = GenericElement("div", id="topology", class_name="tab-pane")
-        self.tree.text = ""
+        self.tree.text = "Topology"
 
     def get(self):
         return self.tree

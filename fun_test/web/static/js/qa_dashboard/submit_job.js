@@ -18,6 +18,7 @@
             ctrl.selectedTags = [];
             $scope.tags = [];
             $scope.fetchTags();
+            $scope.emailOnFailOnly = false;
         };
 
         $scope.fetchTags = function() {
@@ -96,6 +97,7 @@
             payload["suite_path"] = $scope.selectedSuite;
             payload["build_url"] = $scope.buildUrl;
             payload["tags"] = $scope._getSelectedtags();
+            payload["email_on_fail_only"] = $scope.emailOnFailOnly;
             if($scope.emails) {
                 $scope.emails = $scope.emails.split(",");
                 payload["email_list"] = $scope.emails

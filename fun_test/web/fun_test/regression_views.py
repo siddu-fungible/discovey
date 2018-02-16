@@ -63,24 +63,43 @@ def submit_job(request):
         build_url = request_json["build_url"]
         tags = request_json["tags"]
         email_list = None
+        email_on_fail_only = None
         if "email_list" in request_json:
             email_list = request_json["email_list"]
+        if "email_on_fail_only" in request_json:
+            email_on_fail_only = request_json["email_on_fail_only"]
+
         if "schedule_at" in request_json and request_json["schedule_at"]:
             schedule_at_value = request_json["schedule_at"]
             schedule_at_value = str(timezone.localtime(dateutil.parser.parse(schedule_at_value)))
             schedule_at_repeat = False
             if "schedule_at_repeat" in request_json:
                 schedule_at_repeat = request_json["schedule_at_repeat"]
-            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_at=schedule_at_value, repeat=schedule_at_repeat, email_list=email_list)
+            job_id = queue_job(suite_path=suite_path,
+                               build_url=build_url,
+                               schedule_at=schedule_at_value,
+                               repeat=schedule_at_repeat,
+                               email_list=email_list,
+                               email_on_fail_only=email_on_fail_only)
 
         elif "schedule_in_minutes" in request_json and request_json["schedule_in_minutes"]:
             schedule_in_minutes_value = request_json["schedule_in_minutes"]
             schedule_in_minutes_repeat = None
             if "schedule_in_minutes_repeat" in request_json:
                 schedule_in_minutes_repeat = request_json["schedule_in_minutes_repeat"]
-            job_id = queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=schedule_in_minutes_value, repeat_in_minutes=schedule_in_minutes_repeat, tags=tags, email_list=email_list)
+            job_id = queue_job(suite_path=suite_path,
+                               build_url=build_url,
+                               schedule_in_minutes=schedule_in_minutes_value,
+                               repeat_in_minutes=schedule_in_minutes_repeat,
+                               tags=tags,
+                               email_list=email_list,
+                               email_on_fail_only=email_on_fail_only)
         else:
-            job_id = queue_job(suite_path=suite_path, build_url=build_url, tags=tags, email_list=email_list)
+            job_id = queue_job(suite_path=suite_path,
+                               build_url=build_url,
+                               tags=tags,
+                               email_list=email_list,
+                               email_on_fail_only=email_on_fail_only)
     return HttpResponse(job_id)
 
 def static_serve_log_directory(request, suite_execution_id):

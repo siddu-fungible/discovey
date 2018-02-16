@@ -881,20 +881,29 @@ class FunTestScript(object):
 
         setup_te = None
         try:
+            if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
+                setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
+                                                                 suite_execution_id=fun_test.suite_execution_id,
+                                                                 result=fun_test.IN_PROGRESS,
+                                                                 path=fun_test.relative_path)
             if self.test_case_order:
                 new_order = []
                 for entry in self.test_case_order:
                     tc_name = entry["tc"]
                     main_test_case = self._get_test_case_by_name(tc_name=tc_name)
                     if not main_test_case:
-                        raise Exception("Unable to find test-case {} in list. Did you forget to append to the script?".format(tc_name))
+                        raise Exception(
+                            "Unable to find test-case {} in list. Did you forget to append to the script?".format(
+                                tc_name))
 
                     if "dependencies" in entry:
                         dependencies = entry["dependencies"]
                         for dependency in dependencies:
                             t = self._get_test_case_by_name(tc_name=dependency)
                             if not t:
-                                raise Exception("Unable to find test-case {} in list. Did you forget to append to the script?".format(dependency))
+                                raise Exception(
+                                    "Unable to find test-case {} in list. Did you forget to append to the script?".format(
+                                        dependency))
                             else:
                                 new_order.append(t)
                                 t._added_to_script = True
@@ -903,22 +912,17 @@ class FunTestScript(object):
                     main_test_case._added_to_script = True
 
                 self.test_cases = new_order
-            if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
-                setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
-                                                                 suite_execution_id=fun_test.suite_execution_id,
-                                                                 result=fun_test.IN_PROGRESS,
-                                                                 path=fun_test.relative_path)
 
-                for test_case in self.test_cases:
-                    test_case.describe()
-                    if fun_test.selected_test_case_ids:
-                        if test_case.id not in fun_test.selected_test_case_ids:
-                            continue
-                    te = models_helper.add_test_case_execution(test_case_id=test_case.id,
-                                                               suite_execution_id=fun_test.suite_execution_id,
-                                                               result=fun_test.NOT_RUN,
-                                                               path=fun_test.relative_path)
-                    test_case.execution_id = te.execution_id
+            for test_case in self.test_cases:
+                test_case.describe()
+                if fun_test.selected_test_case_ids:
+                    if test_case.id not in fun_test.selected_test_case_ids:
+                        continue
+                te = models_helper.add_test_case_execution(test_case_id=test_case.id,
+                                                           suite_execution_id=fun_test.suite_execution_id,
+                                                           result=fun_test.NOT_RUN,
+                                                           path=fun_test.relative_path)
+                test_case.execution_id = te.execution_id
 
             self.setup()
             if setup_te:
