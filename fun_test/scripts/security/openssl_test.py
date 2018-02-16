@@ -63,7 +63,7 @@ class OpenSslTestCase1(FunTestCase):
     def cleanup(self):
         return True
 
-    def compute_all_digests(self, host, openssl_template):
+    def compute_sha1_digests(self, host, openssl_template):
         # parse the input vectors file
         file_path = fun_test.get_script_parent_directory() + vector_path
         digest_dict = openssl_template.parse_input(file_path)
@@ -83,10 +83,8 @@ class OpenSslTestCase1(FunTestCase):
 
         host = topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
         openssl_template = OpenSslTemplate(host)
-        openssl_template.setup_verify()
-
-        compute_digests_flag = self.compute_all_digests(host, openssl_template)
-        fun_test.test_assert(compute_digests_flag, "Digests match")
+        openssl_template.setup()
+        fun_test.test_assert((self.compute_sha1_digests(host, openssl_template)), "sha1 digests match")
 
 
 if __name__ == "__main__":
