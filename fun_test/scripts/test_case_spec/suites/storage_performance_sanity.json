@@ -1,3 +1,5 @@
 [
-  {"path": "storage/thin_block_volume_performance.py"}
+  {"path": "storage/thin_block_volume_performance.py"},
+  {"path": "storage/ec_volume_performance.py"},
+  {"path": "storage/ec_dpu_performance.py"}
 ]
