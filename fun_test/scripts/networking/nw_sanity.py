@@ -21,12 +21,12 @@ class FunControlPlaneSanity(FunTestScript):
         self.container_name = "parser"
         f1_hostname = "parser"
         f1_image_name = "reg-nw-user:v1"
-        target_workspace = "/workspace"
-        entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(target_workspace)
+        self.target_workspace = "/workspace"
+        entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(self.target_workspace)
         environment_variables = {"DOCKER": True,
                                  "WORKSPACE": workspace}
         home_mount = "/home/{0}:/home/{0}".format(user)
-        workspace_mount = "{}:{}".format(workspace, target_workspace)
+        workspace_mount = "{}:{}".format(workspace, self.target_workspace)
 
         self.container_asset = self.docker_host.setup_container(image_name=f1_image_name,
                                                                 container_name=self.container_name,
@@ -35,13 +35,13 @@ class FunControlPlaneSanity(FunTestScript):
                                                                 mounts=[home_mount, workspace_mount],
                                                                 user=user,
                                                                 host_name=f1_hostname,
-                                                                working_dir=target_workspace,
+                                                                working_dir=self.target_workspace,
                                                                 auto_remove=True,
                                                                 environment_variables=environment_variables)
 
         fun_test.test_assert(self.container_asset, "Container launched")
         fun_test.shared_variables["container_asset"] = self.container_asset
-        fun_test.shared_variables["target_workspace"] = target_workspace
+        fun_test.shared_variables["target_workspace"] = self.target_workspace
 
         linux_obj = Linux(host_ip=self.docker_host.host_ip,
                           ssh_username=self.docker_host.ssh_username,
@@ -58,6 +58,15 @@ class FunControlPlaneSanity(FunTestScript):
         fun_test.test_assert(container_up, "Container UP")
 
     def cleanup(self):
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="nutest.txt")
+        fun_test.scp(source_ip=self.container_asset["host_ip"],
+             source_file_path="{}/nutest.txt".format(self.target_workspace),
+             source_username=self.container_asset["mgmt_ssh_username"],
+             source_password=self.container_asset["mgmt_ssh_password"],
+             source_port=self.container_asset["mgmt_ssh_port"],
+             target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="NU Log", filename=artifact_file_name)
+
         self.docker_host.destroy_container(
             container_name=self.container_name,
             ignore_error=True)
@@ -93,7 +102,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
 
         output = linux_obj.command("bash")
         output = linux_obj.command(
-            command="sudo -E python {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > {}/nutest.log 2>&1"
+            command="sudo -E python {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > {}/nutest.txt 2>&1"
             .format(target_workspace, target_workspace), timeout=300)
 
         timer = FunTimer(max_time=180)
@@ -111,7 +120,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
         timer = FunTimer(max_time=120)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/nutest.log".format(sanity_status, target_workspace),
+            output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(sanity_status, target_workspace),
                                        include_last_line=True)
             if re.search(sanity_status, output):
                 fun_test.log("NwSanitySimpleL3Integration Success")
@@ -152,13 +161,13 @@ class NwSanityPRV(FunTestCase):
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
         output = linux_obj.command("make venv".format(target_workspace))
         output = linux_obj.command(
-            command="{}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv  > {}/parser.log 2>&1".
+            command="{}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv  >> {}/nutest.txt 2>&1".
                 format(target_workspace, target_workspace), timeout=600)
 
         timer = FunTimer(max_time=240)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/parser.log".format(prv_completed, target_workspace),
+            output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(prv_completed, target_workspace),
                                        include_last_line=True)
             if re.search(prv_completed, output):
                 status = True
@@ -166,13 +175,14 @@ class NwSanityPRV(FunTestCase):
             fun_test.sleep("Waiting for NwSanityPRV to complete", seconds=60)
         fun_test.test_assert(status, "NwSanityPRV Completed")
 
-        output = linux_obj.command(command="grep '{}' {}/parser.log".format(prv_status, target_workspace))
+        output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(prv_status, target_workspace))
         if not re.search(prv_status, output):
             status = True
         else:
             status = False
 
         fun_test.test_assert(status, "NwSanityPRV")
+
 
     def cleanup(self):
         pass
