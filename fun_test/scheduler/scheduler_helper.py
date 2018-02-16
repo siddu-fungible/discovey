@@ -81,7 +81,8 @@ def queue_job(suite_path="unknown",
               schedule_in_minutes=None,
               repeat_in_minutes=None,
               email_list=None,
-              tags=None):
+              tags=None,
+              email_on_fail_only=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
 
     if suite_path == "unknown":
@@ -106,15 +107,16 @@ def queue_job(suite_path="unknown",
         job_spec["repeat_in_minutes"] = repeat_in_minutes
         job_spec["tags"] = tags
         job_spec["email_list"] = email_list
+        job_spec["email_on_fail_only"] = email_on_fail_only
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
-
 
     f = open("{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION), "w")
     f.write(json.dumps(job_spec))
     f.close()
     print("Job Id: {} suite: {} Queued".format(job_id, suite_path))
     return job_id
+
 
 def get_archived_file_name(suite_execution_id):
     glob_str = ARCHIVED_JOBS_DIR + "/{}.{}".format(suite_execution_id,

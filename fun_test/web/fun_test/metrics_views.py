@@ -136,6 +136,7 @@ def table_data(request):
     all_entries = model.objects.all()
     s = serializer(all_entries, many=True)
     data["data"] = s.data
+    data["unique_keys"] = unique_keys
     return data
 
 @csrf_exempt

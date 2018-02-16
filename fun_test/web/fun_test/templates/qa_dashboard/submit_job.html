@@ -38,6 +38,8 @@
                         </ui-select>
                         <label for="emails">Specify comma-separated e-mail</label>
                         <input id="emails" name="emails" ng-model="emails" type="text" required/>
+                        <label for="email-on-fail-only">Email on failures only</label>
+                        <input id="email-on-fail-only" type="checkbox" ng-checked="emailOnFailOnly" ng-model="emailOnFailOnly">
                     </div>
                     <fieldset ng-if="selectedInfo" class="title">
                         <legend>{{ selectedSuite }}</legend>
