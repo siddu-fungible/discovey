@@ -77,10 +77,14 @@
                             <table class="table table-nonfluid">
                                 <tr>
                                     <th style="background-color: #E4EFF2">
+
+                                    </th>
+                                    <th style="background-color: #E4EFF2">
                                         Scripts
                                     </th>
                                 </tr>
                                 <tr ng-repeat="scriptInfo in selectedInfo">
+                                    <td>{{ $index }}</td>
                                     <td>{{ scriptInfo.path }}</td>
                                 </tr>
                             </table>
