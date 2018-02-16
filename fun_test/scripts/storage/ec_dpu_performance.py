@@ -52,11 +52,12 @@ class ECDPULevelScript(FunTestScript):
         else:
             for k, v in benchmark_dict["GlobalSetup"].items():
                 setattr(self, k, v)
-                if 'ec_coding' not in benchmark_dict['GlobalSetup'] or not benchmark_dict['GlobalSetup']['ec_coding']:
-                    fun_test.critical("EC coding is not available in the {} config file".format(benchmark_file))
-                    fun_test.log("Going to use the script level defaults")
-                    self.ec_coding["ndata"] = 2
-                    self.ec_coding["nparity"] = 1
+
+        if 'ec_coding' not in benchmark_dict['GlobalSetup'] or not benchmark_dict['GlobalSetup']['ec_coding']:
+            fun_test.critical("EC coding is not available in the {} config file".format(benchmark_file))
+            fun_test.log("Going to use the script level defaults")
+            self.ec_coding["ndata"] = 2
+            self.ec_coding["nparity"] = 1
 
         # Computing number DPUs needed and constructing the dut_info attribute of the topology_dict accordingly
         if hasattr(self, "ec_in_sep_dpu") and self.ec_in_sep_dpu:
