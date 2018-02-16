@@ -147,7 +147,7 @@ class NwSanityPRV(FunTestCase):
 
     def run(self):
         prv_completed = "Start Traffic"
-        prv_status = "ATTENTION: SOME TESTS DID NOT PASS"
+        prv_status = "FAILED"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
