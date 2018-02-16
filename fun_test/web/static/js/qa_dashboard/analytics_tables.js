@@ -18,7 +18,14 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
         payload["metric_model_name"] = $scope.metricModelName;
         payload["chart_name"] = $scope.chartName;
         commonService.apiPost("/metrics/table_data", payload, "fetchTableData").then((data) => {
+            let remoteTable = data["data"];
+            let processedTable = {};
+            remoteTable.forEach((oneRemoteRow) => {
+                angular.forEach(oneRemoteRow, (value, key) => {
 
+                })
+            });
+            let o = 1;
         });
     };
 
