@@ -606,10 +606,7 @@ class ECDPULevelTestcase(FunTestCase):
             for mode in self.fio_modes:
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
-                # fun_test.test_assert(fio_result[combo][mode], "FIO {} performance check for the block size & IO depth "
-                #                                              "combo {}".format(mode, combo))
-                # fun_test.test_assert(internal_result[combo][mode], "Volume stats check for the {} test for the block "
-                #                                                   "size & IO depth combo {}".format(mode, combo))
+
         fun_test.test_assert(test_result, self.summary)
 
     def old_run(self):
@@ -661,9 +658,32 @@ class EC21FioSeqWriteSeqReadOnly(ECDPULevelTestcase):
         super(EC21FioSeqWriteSeqReadOnly, self).cleanup()
 
 
+class EC21FioRandWriteRandReadOnly(ECDPULevelTestcase):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Random Write & Read only performance of EC volume",
+                              steps="""
+        1. Create 3 BLT volumes in dut instance 0.
+        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
+        3. Create a LS volume on top of the EC volume based on use_lsv config.
+        4. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
+        5. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
+        external Linux server and check the performance are inline with the expected threshold.
+        """)
+
+    def setup(self):
+        super(EC21FioRandWriteRandReadOnly, self).setup()
+
+    def run(self):
+        super(EC21FioRandWriteRandReadOnly, self).run()
+
+    def cleanup(self):
+        super(EC21FioRandWriteRandReadOnly, self).cleanup()
+
+
 class EC21FioSeqAndRandReadOnlyWithFailure(ECDPULevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=3,
                               summary="Sequential and Random Read only performance of EC volume with a plex failure",
                               steps="""
         1. Create 3 BLT volumes on dut instance 0.
@@ -685,32 +705,9 @@ class EC21FioSeqAndRandReadOnlyWithFailure(ECDPULevelTestcase):
         super(EC21FioSeqAndRandReadOnlyWithFailure, self).cleanup()
 
 
-class EC21FioRandWriteRandReadOnly(ECDPULevelTestcase):
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Random Write & Read only performance of EC volume",
-                              steps="""
-        1. Create 3 BLT volumes in dut instance 0.
-        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
-        5. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioRandWriteRandReadOnly, self).setup()
-
-    def run(self):
-        super(EC21FioRandWriteRandReadOnly, self).run()
-
-    def cleanup(self):
-        super(EC21FioRandWriteRandReadOnly, self).cleanup()
-
-
 class EC21FioSeqReadWriteMix(ECDPULevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=4,
                               summary="Sequential 75% Write & 25% Read performance of EC volume",
                               steps="""
         1. Create 3 BLT volumes in dut instance 0.
@@ -733,7 +730,7 @@ class EC21FioSeqReadWriteMix(ECDPULevelTestcase):
 
 class EC21FioRandReadWriteMix(ECDPULevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=5,
                               summary="Random 75% Write & 25% Read performance of EC volume",
                               steps="""
         1. Create 3 BLT volumes in dut instance 0.
