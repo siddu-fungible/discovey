@@ -918,11 +918,12 @@ class FunTestScript(object):
                 if fun_test.selected_test_case_ids:
                     if test_case.id not in fun_test.selected_test_case_ids:
                         continue
-                te = models_helper.add_test_case_execution(test_case_id=test_case.id,
-                                                           suite_execution_id=fun_test.suite_execution_id,
-                                                           result=fun_test.NOT_RUN,
-                                                           path=fun_test.relative_path)
-                test_case.execution_id = te.execution_id
+                if fun_test.suite_execution_id:
+                    te = models_helper.add_test_case_execution(test_case_id=test_case.id,
+                                                               suite_execution_id=fun_test.suite_execution_id,
+                                                               result=fun_test.NOT_RUN,
+                                                               path=fun_test.relative_path)
+                    test_case.execution_id = te.execution_id
 
             self.setup()
             if setup_te:
