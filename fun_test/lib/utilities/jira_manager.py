@@ -178,12 +178,15 @@ class JiraManager:
         }
         return custom_field_mapping[field_name]
 
-    def summary_exists(self, summary):
+    def summary_exists(self, summary, module, components):
+        component_str = "component in (" + ",".join(components) + ")"
+        module_str = "module = {}".format(module)
         result = False
-        jql = "summary ~ \"{}\"".format(summary)
+        jql = "summary ~ \"{}\" and {} and {}".format(summary, component_str, module_str)
         try:
             issues = self.get_issues_by_jql(jql=jql)
-            result = len(issues)
+            if issues:
+                result = self.get_issue_attributes_by_issue(issues[0])["id"]
         except jira.exceptions.JIRAError as ex:
             logger.debug("JIRA summary {} does not exist".format(summary))
         except Exception as ex:
