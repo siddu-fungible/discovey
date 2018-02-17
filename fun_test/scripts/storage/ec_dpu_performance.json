@@ -74,7 +74,7 @@
       "(8, 1)": {"randwrite": {"write": {"bw": 104, "iops": 12, "latency": 75999}},
                  "randread": {"read": {"bw": 216, "iops": 28, "latency": 38804}}},
       "(16, 1)": {"randwrite": {"write": {"bw": 106, "iops": 6, "latency": 148784}},
-                  "randread": {"read": {"bw": 368, "iops": 22, "latency": 44646}}},
+                  "randread": {"read": {"bw": 358, "iops": 22, "latency": 44646}}},
       "(32, 1)": {"randwrite": {"write": {"bw": 108, "iops": 3, "latency": 293758}},
                   "randread": {"read": {"bw": 434, "iops": 14, "latency": 76213}}}
     },
@@ -144,7 +144,7 @@
     "volume_pass_threshold": 33,
     "expected_fio_result": {
       "(4, 1)": {"rw": {"write": {"bw": 52, "iops": 14, "latency": 60354},
-                         "read": {"bw": 16, "iops": 4, "latency": 44261}}},
+                         "read": {"bw": 16, "iops": 4, "latency": 46873}}},
       "(8, 1)": {"rw": {"write": {"bw": 90, "iops": 11, "latency": 68573},
                          "read": {"bw": 30, "iops": 3, "latency": 58149}}},
       "(16, 1)": {"rw": {"write": {"bw": 74, "iops": 4, "latency": 197908},
@@ -189,7 +189,7 @@
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 33,
     "expected_fio_result": {
-      "(4, 1)": {"randrw": {"write": {"bw": 54, "iops": 15, "latency": 60662},
+      "(4, 1)": {"randrw": {"write": {"bw": 52, "iops": 15, "latency": 60662},
                             "read": {"bw": 18, "iops": 4, "latency": 48818}}},
       "(8, 1)": {"randrw": {"write": {"bw": 90, "iops": 11, "latency": 69922},
                             "read": {"bw": 30, "iops": 3, "latency": 64897}}},
