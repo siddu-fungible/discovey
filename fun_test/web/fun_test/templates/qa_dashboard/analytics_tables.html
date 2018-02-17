@@ -7,12 +7,8 @@
 {% endblock %}
 
 {% block content %}
-    <div ng-controller="analyticsTablesController" ng-init="metricModelName = '{{ metric_model_name }}'; chartName = '{{ chart_name }}' ">
-            {% verbatim %}
+    <analytics-tables  model-name="{{ metric_model_name }}" chart-name="{{ chart_name }}">
 
-        <button ng-click="test()">Test</button>
-            {% endverbatim %}
-
-    </div>
+    </analytics-tables>
 
 {% endblock %}
