@@ -19,7 +19,7 @@ from django.core import serializers
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 MODULE_COMPONENT_MAP = {
-    "networking": ["nw-dma", "nw-le", "nw-cfg", "nw-nu-transit", "nw-bgp", "nw-isis"],
+    "networking": ["nw-dma", "nw-le", "nw-cfg", "nw-nu-transit", "nw-bgp", "nw-isis", "nw-underlay-transit"],
     "storage": ["st-nvmeof", "st-durable-volume", "st-likv"]
 }
 
