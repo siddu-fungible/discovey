@@ -34,6 +34,10 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
         });
     };
 
+    $scope.getVerboseName = (name) => {
+        return $scope.tableInfo[name].verbose_name;
+    };
+
 
     $scope.filterHeaders = (headers, input) => {
         if (!headers) {
