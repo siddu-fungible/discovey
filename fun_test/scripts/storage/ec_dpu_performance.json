@@ -34,13 +34,13 @@
     "volume_pass_threshold": 33,
     "expected_fio_result": {
       "(4, 1)": {"write": {"write": {"bw": 62, "iops": 16, "latency": 62216}},
-                 "read": {"read": {"bw": 122, "iops": 30, "latency": 33997}}},
+                 "read": {"read": {"bw": 116, "iops": 30, "latency": 35933}}},
       "(8, 1)": {"write": {"write": {"bw": 102, "iops": 12, "latency": 76084}},
-                 "read": {"read": {"bw": 222, "iops": 26, "latency": 35860}}},
+                 "read": {"read": {"bw": 212, "iops": 26, "latency": 38935}}},
       "(16, 1)": {"write": {"write": {"bw": 106, "iops": 6, "latency": 148219}},
-                  "read": {"read": {"bw": 368, "iops": 22, "latency": 41566}}},
+                  "read": {"read": {"bw": 354, "iops": 22, "latency": 46901}}},
       "(32, 1)": {"write": {"write": {"bw": 108, "iops": 3, "latency": 292512}},
-                  "read": {"read": {"bw": 448, "iops": 14, "latency": 68699}}}
+                  "read": {"read": {"bw": 434, "iops": 14, "latency": 76250}}}
     },
     "expected_volume_stats": {"write": {"ndata": {"0": {"fault_injection": 0, "num_reads": 35, "num_writes": 528},
                                                   "1": {"fault_injection": 0, "num_reads": 35, "num_writes": 528}},
@@ -70,13 +70,13 @@
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
       "(4, 1)": {"randwrite": {"write": {"bw": 64, "iops": 16, "latency": 62098}},
-                 "randread": {"read": {"bw": 120, "iops": 30, "latency": 33803}}},
+                 "randread": {"read": {"bw": 116, "iops": 30, "latency": 35641}}},
       "(8, 1)": {"randwrite": {"write": {"bw": 104, "iops": 12, "latency": 75999}},
-                 "randread": {"read": {"bw": 226, "iops": 28, "latency": 35608}}},
+                 "randread": {"read": {"bw": 216, "iops": 28, "latency": 38804}}},
       "(16, 1)": {"randwrite": {"write": {"bw": 106, "iops": 6, "latency": 148784}},
-                  "randread": {"read": {"bw": 378, "iops": 22, "latency": 40747}}},
+                  "randread": {"read": {"bw": 368, "iops": 22, "latency": 44646}}},
       "(32, 1)": {"randwrite": {"write": {"bw": 108, "iops": 3, "latency": 293758}},
-                  "randread": {"read": {"bw": 454, "iops": 14, "latency": 68558}}}
+                  "randread": {"read": {"bw": 434, "iops": 14, "latency": 76213}}}
     },
     "expected_volume_stats": {"randwrite": {"ndata": {"0": {"fault_injection": 0, "num_reads": 35, "num_writes": 528},
                                                       "1": {"fault_injection": 0, "num_reads": 35, "num_writes": 528}},
@@ -146,11 +146,11 @@
       "(4, 1)": {"rw": {"write": {"bw": 52, "iops": 14, "latency": 60354},
                          "read": {"bw": 16, "iops": 4, "latency": 44261}}},
       "(8, 1)": {"rw": {"write": {"bw": 90, "iops": 11, "latency": 68573},
-                         "read": {"bw": 30, "iops": 3, "latency": 55089}}},
+                         "read": {"bw": 30, "iops": 3, "latency": 58149}}},
       "(16, 1)": {"rw": {"write": {"bw": 74, "iops": 4, "latency": 197908},
                          "read": {"bw": 26, "iops": 1, "latency": 44442}}},
       "(32, 1)": {"rw": {"write": {"bw": 76, "iops": 2, "latency": 379485},
-                         "read": {"bw": 32, "iops": 1, "latency": 70768}}}
+                         "read": {"bw": 32, "iops": 1, "latency": 75142}}}
     },
     "expected_volume_stats": {
       "(4, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 156, "num_writes": 396},
@@ -192,11 +192,11 @@
       "(4, 1)": {"randrw": {"write": {"bw": 54, "iops": 15, "latency": 60662},
                             "read": {"bw": 18, "iops": 4, "latency": 48818}}},
       "(8, 1)": {"randrw": {"write": {"bw": 90, "iops": 11, "latency": 69922},
-                            "read": {"bw": 30, "iops": 3, "latency": 59133}}},
+                            "read": {"bw": 30, "iops": 3, "latency": 64897}}},
       "(16, 1)": {"randrw": {"write": {"bw": 72, "iops": 4, "latency": 117759},
-                             "read": {"bw": 26, "iops": 1, "latency": 77924}}},
+                             "read": {"bw": 26, "iops": 1, "latency": 83397}}},
       "(32, 1)": {"randrw": {"write": {"bw": 76, "iops": 2, "latency": 383977},
-                             "read": {"bw": 32, "iops": 1, "latency": 72112}}}
+                             "read": {"bw": 32, "iops": 1, "latency": 79587}}}
     },
     "expected_volume_stats": {
       "(4, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 146, "num_writes": 396},
