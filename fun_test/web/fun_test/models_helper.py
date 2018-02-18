@@ -222,9 +222,12 @@ def _get_suite_executions(execution_id=None,
         if "result" in suite_execution["fields"]:
             if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
                 suite_result = RESULTS["KILLED"]
+            if suite_execution["fields"]["result"] == RESULTS["ABORTED"]:
+                suite_result = RESULTS["ABORTED"]
+                num_failed = 1 if num_failed == 0 else num_failed
 
 
-        if save_suite_info:  #TODO: Perf too many saves
+        if save_suite_info or finalize:  #TODO: Perf too many saves
             se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
             if suite_result not in pending_states:
                 se.result = suite_result
