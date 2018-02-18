@@ -205,9 +205,9 @@ def _get_table(header_list, list_of_rows):
 
     return s
 
-def send_summary_mail(job_id, to_addresses=None, email_on_fail_only=None):
-    suite_executions = models_helper._get_suite_executions(execution_id=job_id, save_test_case_info=True)
-    suite_execution = suite_executions[0]
+
+def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_only=None):
+
     scheduler_logger.info("Suite Execution: {}".format(str(suite_execution)))
     if email_on_fail_only and suite_execution["suite_result"] == RESULTS["PASSED"]:
         return True
