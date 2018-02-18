@@ -2,7 +2,7 @@ import xlsxwriter
 import argparse
 import logging
 import sys
-from lib.utilities.fun_excel import TcmsExcel
+from lib.utilities.fun_excel import TcmsExcel, TEST_CASES_SHEET_NAME
 from lib.utilities.jira_manager import JiraManager
 
 logger = logging.getLogger(__name__)
@@ -45,31 +45,32 @@ if __name__ == "__main__":
 
     workbook = xlsxwriter.Workbook(output_file)
     format = workbook.add_format({'text_wrap': True})
-    worksheet = workbook.add_worksheet()
+    worksheet = workbook.add_worksheet(name=TEST_CASES_SHEET_NAME)
 
     jira_manager = JiraManager()
-    for row_index in range(tcms_excel.get_num_rows()):
+    for row_index in range(1, tcms_excel.get_num_rows()):
         columns = tcms_excel.get_columns_by_row(row_index=row_index)
         create_test_case = False
-        jira_id = tcms_excel.get_value_from_row_by_key(row=columns, key="Jira-Id")
+        jira_id = int(tcms_excel.get_value_from_row_by_key(row=columns, key="Jira-Id"))
 
 
         if not jira_id:
             logger.debug("We should create a test-case")
             create_test_case = True
 
+        module = tcms_excel.get_value_from_row_by_key(row=columns, key="Module")  # Done
+        components = tcms_excel.get_value_from_row_by_key(row=columns, key="Components") # Done
+        test_type = tcms_excel.get_value_from_row_by_key(row=columns, key="Test-type") # Done
+        test_bed = tcms_excel.get_value_from_row_by_key(row=columns, key="Test-bed") # Done
+        summary = tcms_excel.get_value_from_row_by_key(row=columns, key="Summary") # Done
+        priority = tcms_excel.get_value_from_row_by_key(row=columns, key="Priority") # Done
+        setup = tcms_excel.get_value_from_row_by_key(row=columns, key="Setup") # Done
+        description = tcms_excel.get_value_from_row_by_key(row=columns, key="Description") # Done
+        expected_result = tcms_excel.get_value_from_row_by_key(row=columns, key="Expected-result")
+        variations = tcms_excel.get_value_from_row_by_key(row=columns, key="Variations") # Done
+        automatable = tcms_excel.get_value_from_row_by_key(row=columns, key="Automatable") # Done
+
         if create_test_case:
-            module = tcms_excel.get_value_from_row_by_key(row=columns, key="Module")  # Done
-            components = tcms_excel.get_value_from_row_by_key(row=columns, key="Components") # Done
-            test_type = tcms_excel.get_value_from_row_by_key(row=columns, key="Test-type") # Done
-            test_bed = tcms_excel.get_value_from_row_by_key(row=columns, key="Test-bed") # Done
-            summary = tcms_excel.get_value_from_row_by_key(row=columns, key="Summary") # Done
-            priority = tcms_excel.get_value_from_row_by_key(row=columns, key="Priority") # Done
-            setup = tcms_excel.get_value_from_row_by_key(row=columns, key="Setup") # Done
-            description = tcms_excel.get_value_from_row_by_key(row=columns, key="Description") # Done
-            expected_result = tcms_excel.get_value_from_row_by_key(row=columns, key="Expected-result")
-            variations = tcms_excel.get_value_from_row_by_key(row=columns, key="Variations") # Done
-            automatable = tcms_excel.get_value_from_row_by_key(row=columns, key="Automatable") # Done
 
             components = [x.strip() for x in components.split(",")]
             summary_exists = False
@@ -103,6 +104,24 @@ if __name__ == "__main__":
                     error_seen = True
             else:
                 new_jira_id = existing_id
+        else:
+            components = [x.strip() for x in components.split(",")]
+
+            # Let's try to update the test-case
+            logger.debug("Updating JIRA for Id: {} {}".format(jira_id, summary))
+            jira_manager.update_test_case_with_fields(id=jira_id,
+                                                      summary=summary,
+                                                      module=module,
+                                                      components=components,
+                                                      test_type=test_type,
+                                                      priority=priority,
+                                                      expected_result=expected_result,
+                                                      automatable=automatable,
+                                                      test_bed=test_bed,
+                                                      description=description,
+                                                      setup=setup,
+                                                      variations=variations)
+            logger.debug("Updated")
 
         if error_seen:
             break
