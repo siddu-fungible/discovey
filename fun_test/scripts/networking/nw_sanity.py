@@ -103,7 +103,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
 
         output = linux_obj.command("bash")
         output = linux_obj.command(
-            command="sudo -E python {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > {}/nutest.txt 2>&1"
+            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > {}/nutest.txt 2>&1"
             .format(target_workspace, target_workspace), timeout=300)
 
         timer = FunTimer(max_time=180)
@@ -148,7 +148,7 @@ class NwSanityPRV(FunTestCase):
 
     def run(self):
         prv_completed = "Start Traffic"
-        prv_status = "ATTENTION|FAILED|RuntimeError"
+        prv_status = "ATTENTION|FAIL|ERROR|RuntimeError"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -162,7 +162,7 @@ class NwSanityPRV(FunTestCase):
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
         output = linux_obj.command("make venv".format(target_workspace))
         output = linux_obj.command(
-            command="{}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv >> {}/nutest.txt 2>&1"
+            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv >> {}/nutest.txt 2>&1"
                         .format(target_workspace, target_workspace), timeout=600)
 
         timer = FunTimer(max_time=600)
