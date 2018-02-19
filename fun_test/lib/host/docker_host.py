@@ -188,6 +188,8 @@ class DockerHost(Linux, ToDictMixin):
                                mounts=None,
                                ):
         storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  #TODO
+        if build_url:
+            build_url += "/Linux"
         command = build_url
         if not build_url:
             command = "None"
