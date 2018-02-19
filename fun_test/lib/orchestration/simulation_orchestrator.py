@@ -9,16 +9,16 @@ from orchestrator import OrchestratorType, Orchestrator
 
 
 class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
-    QEMU_PATH = "/home/jabraham/qemu/x86_64-softmmu"
+    QEMU_BASE_DIRECTORY = "/qemu"
+    QEMU_DIRECTORY = "/home/jabraham/qemu/x86_64-softmmu"
     QEMU_PROCESS = "qemu-system-x86_64"
     QEMU_INSTANCE_PORT = 2220
 
-    QEMU_FS = "fun-image-x86-64-qemux86-64.ext4"
-    QEMU_KERNEL = "bzImage"
+    QEMU_FS = "{}/fun-image-x86-64-qemux86-64.ext4".format(QEMU_BASE_DIRECTORY)
+    QEMU_KERNEL = "{}/bzImage".format(QEMU_BASE_DIRECTORY)
 
     QEMU_NCPUS = 2
-    QEMU_BIOS = "pc-bios"
-
+    QEMU_BIOS = "{}/qemu-Linux/share".format(QEMU_BASE_DIRECTORY)
     QEMU_LOG = "/tmp/qemu.log"
 
     QEMU_MODULES_TGZ = "modules.tgz"
@@ -54,8 +54,8 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
             if qemu_process_id:
                 self.kill_process(process_id=qemu_process_id, signal=9)
 
-            self.add_path(self.QEMU_PATH)
-            self.command("cd {}".format(self.QEMU_PATH))
+            self.add_path(self.QEMU_DIRECTORY)
+            self.command("cd {}".format(self.QEMU_DIRECTORY))
             self.command("pwd; ls -l")
             # command = './{} ubuntu_min.img -machine q35 -smp 1 -m 2048 -enable-kvm -device nvme-rem-fe,sim_id=0 -redir tcp:2220::22 -nographic'.format(self.QEMU_PROCESS)
             function = 0  # Dima: The default F1 config creates 3 PFs (AFAIR 0, 3, 7), all on HU 0, controller 0.
@@ -64,9 +64,9 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
 
             command = './{}  -daemonize -vnc :1 -machine q35,iommu=on -smp {} -m {} ' \
                       '-L {} ' \
-                      '-kernel ../{} ' \
+                      '-kernel {} ' \
                       '-append "root=/dev/vda rw highres=off ip=:::255.255.255.0:qemu-yocto:eth0:on oprofile.timer=1 console=ttyS0 console=tty0 mem={}M" ' \
-                      '-drive file=../{},format=raw,if=none,id=rootfs ' \
+                      '-drive file={},format=raw,if=none,id=rootfs ' \
                       '-device ioh3420,id=root_port1,addr=1c.0,port=1,chassis=1 ' \
                       '-device nvme-rem-fe,hu=0,controller=0,sim_id=nvme_test,bus=root_port1 -redir tcp:{}::22 ' \
                       '-device virtio-rng-pci ' \
@@ -92,7 +92,7 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                      connect_retry_timeout_max=60)  # TODO
 
 
-            self.command("cd {}".format(self.QEMU_PATH))
+            self.command("cd {}".format(self.QEMU_DIRECTORY))
             self.command("scp -P {} /{} root@127.0.0.1:".format(internal_ssh_port, self.QEMU_MODULES_TGZ),
                          custom_prompts={"(yes/no)\?*": "yes"})
             '''
@@ -137,7 +137,7 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
 
 class DockerContainerOrchestrator(SimulationOrchestrator):
     # An orchestrator (which happens to be a container) that is capable of spinning an F1 and multiple Qemu instances, all within one container
-    QEMU_PATH = "/qemu/x86_64-softmmu"
+    QEMU_DIRECTORY = "/qemu/qemu-Linux/bin"
     QEMU_PROCESS = "qemu-system-x86_64"
     docker_host = None
 
