@@ -1,6 +1,7 @@
 import xlrd
 import logging
 import sys
+from jira_manager import JiraManager
 from collections import OrderedDict
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -58,6 +59,10 @@ class TcmsExcel:
             raise Exception("We expect the column headers (first row) to be in this order: {}".format(str(expected_fields)))
 
 
+        # fetch allowed components
+        jira_manager = JiraManager()
+        allowed_components = jira_manager.get_project_component_names()
+
         # Validate each column:
         num_rows = self.get_num_rows()
         for row_index in range(1, num_rows):
@@ -68,8 +73,9 @@ class TcmsExcel:
             components = [component.strip() for component in component_value.split(",")]
             if not len(components):
                 raise Exception("At least one component is required")
+
             for component in components:
-                if not component in ALLOWED_COMPONENTS:
+                if component not in allowed_components:
                     raise Exception("Row: {} Component {} not allowed".format(row_index, component))
 
     def get_columns_by_row(self, row_index):

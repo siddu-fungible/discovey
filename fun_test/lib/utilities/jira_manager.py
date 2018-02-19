@@ -110,6 +110,9 @@ class JiraManager:
             components = self.jira.project_components(project=self.project_name)
         return components
 
+    def get_project_component_names(self):
+        return [str(x.name) for x in self.get_project_components()]
+
     def _get_jql_for_ids(self, ids):
         s = ""
         if len(ids):
