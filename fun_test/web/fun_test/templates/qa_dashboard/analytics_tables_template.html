@@ -1,0 +1,24 @@
+<table class="table table-nonfluid">
+    <tr>
+        <th style="color: darkgreen" ng-repeat="header in filterHeaders(headers, 'input')" rowspan="2">
+            {{ getVerboseName(header) }}
+        </th>
+        <th style="color: purple" ng-repeat="header in filterHeaders(headers, 'output')" rowspan="uniqueKeys.length">
+            {{ getVerboseName(header) }}
+        </th>
+    </tr>
+    <tr>
+        <th style="color: dodgerblue" ng-repeat="header in outputHeaders track by $index">
+            # {{ header }}
+        </th>
+    </tr>
+    <tr ng-repeat="(rowKey, rowInfo) in processedRows">
+        <td ng-repeat="value in rowInfo.inputs">
+            {{ value }}
+        </td>
+        <td ng-repeat="value in getOutputValues(rowKey) track by $index">
+            {{ value }}
+        </td>
+
+    </tr>
+</table>

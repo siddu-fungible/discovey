@@ -165,6 +165,44 @@ class JiraManager:
             logger.critical(str(ex))
         return issue_id
 
+    def update_test_case_with_fields(self,
+                                     id,
+                                     summary,
+                                     description,
+                                     module,
+                                     setup,
+                                     variations,
+                                     components,
+                                     test_type,
+                                     priority,
+                                     expected_result,
+                                     automatable=None,
+                                     test_bed=None):
+        jira = self.jira
+        issue_id = self.get_issue_id(id=id)
+        issue = jira.issue(issue_id)
+        components = [{"name": x} for x in components]
+        try:
+            project = self.get_project()
+            issue_dict = {
+                "summary": summary,
+                "description": description,
+                "components": components,
+                "priority": {"name": priority},
+                self._get_custom_field_string("module"): {"value": module},
+                self._get_custom_field_string("setup"): setup,
+                self._get_custom_field_string("variations"): variations,
+                self._get_custom_field_string("expected_result"): expected_result,
+                self._get_custom_field_string("test_type"): {"value": test_type},
+                # self._get_custom_field_string("test_bed"): [{"value": test_bed}],  #TODO
+                self._get_custom_field_string("automatable"): {"value": automatable}
+            }
+            issue.update(fields=issue_dict)
+            logger.debug("Issue: {} updated".format(issue_id))
+        except Exception as ex:
+            logger.critical(str(ex))
+        return issue_id
+
     def _get_custom_field_string(self, field_name):
         custom_field_mapping = {
             "setup": "customfield_10305",
@@ -178,12 +216,15 @@ class JiraManager:
         }
         return custom_field_mapping[field_name]
 
-    def summary_exists(self, summary):
+    def summary_exists(self, summary, module, components):
+        component_str = "component in (" + ",".join(components) + ")"
+        module_str = "module = {}".format(module)
         result = False
-        jql = "summary ~ \"{}\"".format(summary)
+        jql = "summary ~ \"{}\" and {} and {}".format(summary, component_str, module_str)
         try:
             issues = self.get_issues_by_jql(jql=jql)
-            result = len(issues)
+            if issues:
+                result = self.get_issue_attributes_by_issue(issues[0])["id"]
         except jira.exceptions.JIRAError as ex:
             logger.debug("JIRA summary {} does not exist".format(summary))
         except Exception as ex:

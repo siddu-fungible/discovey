@@ -4,9 +4,8 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
     let ctrl = this;
 
     ctrl.$onInit = function () {
-    };
-
-    ctrl.$postLink = function () {
+        $scope.metricModelName = ctrl.modelName;
+        $scope.chartName = ctrl.chartName;
 
         console.log($scope.metricModelName);
         console.log($scope.chartName);
@@ -35,6 +34,24 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
         });
     };
 
+    $scope.getVerboseName = (name) => {
+        return $scope.tableInfo[name].verbose_name;
+    };
+
+
+    $scope.filterHeaders = (headers, input) => {
+        if (!headers) {
+            return;
+        }
+        return headers.filter((header) => {
+            if(input === "input") {
+                return header.startsWith("input");
+            } else {
+                return header.startsWith("output");
+            }
+        });
+    };
+
     $scope.prepareKey = (valueList) => {
         let s = "";
         valueList.forEach((value) => {
@@ -43,21 +60,37 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
         return s;
     };
 
+    $scope.getOutputHeaders = () => {
+        let result = [];
+        if($scope.headers) {
+            let outputHeaders = $scope.filterHeaders($scope.headers, "output");
+            if(outputHeaders.length > 0) {
+                outputHeaders.forEach((outputHeader) => {
+                    $scope.uniqueKeys.forEach((uniqueKey) => {
+                        result.push(uniqueKey);
+                    })
+                });
+            }
+
+        }
+        return result;
+    };
+
     $scope.fetchTableData = () => {
         let payload = {};
         payload["metric_model_name"] = $scope.metricModelName;
         payload["chart_name"] = $scope.chartName;
         commonService.apiPost("/metrics/table_data", payload, "fetchTableData").then((data) => {
             let remoteTable = data["data"];
-            let headers = data["headers"];
-            let uniqueKeys = data["unique_keys"];
-            let processedTable = {};
+            $scope.headers = data["headers"];
+            $scope.uniqueKeys = data["unique_keys"];
+            $scope.processedRows = {};
 
             remoteTable.forEach((oneRemoteRow) => {
                 let inputValueList = [];
                 let rowOutput = {};
                 let lastKey = null;
-                headers.forEach((headerName) => {
+                $scope.headers.forEach((headerName) => {
                     if(headerName.startsWith("key")) {
                         lastKey = oneRemoteRow[headerName];
                     }
@@ -66,7 +99,7 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
                     } else if(headerName.startsWith("output")) {
                         if(!rowOutput.hasOwnProperty(headerName)) {
                             rowOutput[headerName] = {};
-                            uniqueKeys.forEach((uniqueKey) => {
+                            $scope.uniqueKeys.forEach((uniqueKey) => {
                                 rowOutput[headerName][uniqueKey] = null;
                             });
                         } else {
@@ -76,16 +109,16 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
 
                 });
                 let preparedKey = $scope.prepareKey(inputValueList);
-                if(!processedTable.hasOwnProperty(preparedKey)) {
+                if(!$scope.processedRows.hasOwnProperty(preparedKey)) {
 
-                    processedTable[preparedKey] = {"inputs": inputValueList, "outputs": {}};
+                    $scope.processedRows[preparedKey] = {"inputs": inputValueList, "outputs": {}};
                 }
-                headers.forEach((headerName) => {
+                $scope.headers.forEach((headerName) => {
                     if(headerName.startsWith("output")) {
-                        if(!processedTable[preparedKey].outputs.hasOwnProperty(headerName)) {
-                            processedTable[preparedKey].outputs[headerName] = {};
+                        if(!$scope.processedRows[preparedKey].outputs.hasOwnProperty(headerName)) {
+                            $scope.processedRows[preparedKey].outputs[headerName] = {};
                         }
-                        processedTable[preparedKey].outputs[headerName][lastKey] = oneRemoteRow[headerName];
+                        $scope.processedRows[preparedKey].outputs[headerName][lastKey] = oneRemoteRow[headerName];
                     }
                 })
 
@@ -94,16 +127,40 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
             // Time to look at the outputs
 
             let o = 1;
+            $scope.outputHeaders = $scope.getOutputHeaders();
+
         });
     };
 
     $scope.test = () => {
         console.log($scope.metricModelName);
 
+    };
+
+    $scope.getOutputValues = (rowKey) => {
+        let justValues = [];
+        $scope.filterHeaders($scope.headers, "output").forEach((outputHeader) => {
+            $scope.uniqueKeys.forEach((key) => {
+                let justOutputs = $scope.processedRows[rowKey].outputs;
+                justValues.push(justOutputs[outputHeader][key]);
+            });
+        });
+        return justValues;
     }
 
 }
 
 
-
+/*
 angular.module('qa-dashboard').controller("analyticsTablesController", AnalyticsTablesController);
+*/
+
+angular.module('qa-dashboard').component('analyticsTables', {
+        templateUrl: '/static/qa_dashboard/analytics_tables_template.html',
+        controller: AnalyticsTablesController,
+        bindings: {
+            modelName: '@',
+            chartName: '@'
+        }
+});
+

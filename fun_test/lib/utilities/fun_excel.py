@@ -25,7 +25,7 @@ FIELDS["Automatable"] = {}
 
 TEST_CASES_SHEET_NAME = "Test-cases"
 
-ALLOWED_COMPONENTS = ["nw-bgp", "nw-isis", "ikv", "crypto", "erasure-coding"]
+ALLOWED_COMPONENTS = ["nw-bgp", "nw-isis", "ikv", "crypto", "erasure-coding", "nw-underlay-transit"]
 
 
 class TcmsExcel:
