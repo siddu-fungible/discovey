@@ -1,4 +1,5 @@
 {
-  "DEFAULT_BUILD_URL": "",
-  "CONTAINER_START_TIME": 120
+  "BUILD_URL": "http://dochub.fungible.local/doc/jenkins/funsdk/latest",
+  "CONTAINER_START_TIME": 10,
+  "DOCKER_HOSTS_SPEC_FILE": "/tmp/my_docker_hosts.json"
 }

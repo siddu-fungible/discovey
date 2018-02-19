@@ -36,7 +36,7 @@ SYSTEM_TMP_DIR = "/tmp"
 sys.path.append(WEB_DIR)
 
 DOCKHUB_FUNGIBLE_LOCAL = "10.1.20.99"
-DEFAULT_BUILD_URL = "http://{}/doc/jenkins/funos/latest/".format(DOCKHUB_FUNGIBLE_LOCAL)
+DEFAULT_BUILD_URL = "http://{}/doc/jenkins/funsdk/latest".format(DOCKHUB_FUNGIBLE_LOCAL)
 TIME_ZONE = "America/Los_Angeles"
 
 
