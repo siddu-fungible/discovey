@@ -59,7 +59,7 @@
                     });
                     $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
                         $scope.fetchBasicIssueAttributes(true).then(function () {
-                            $scope.overrideOptions = ["PASSED", "FAILED"];  //TODO
+                            $scope.overrideOptions = ["PASSED", "FAILED", "NOT_RUN"];  //TODO
                             $scope.currentView = "components";
                             //$scope.currentView = "all";
 
