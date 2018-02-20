@@ -68,7 +68,7 @@ angular.module('qa-dashboard').component("activeReleases", {
     '                   <div class="panel-body"> '+
     '                       <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>\n' +
     '                       <div ng-if="releaseProgressValues" >\n' +
-    '                           <fun-chart values="releaseProgressValues" colors="colors" title="chartTitle"\n' +
+    '                           <fun-chart values="releaseProgressValues" colors="colors" width="400" height="400" title="chartTitle"\n' +
     '                                chart-type="vertical_colored_bar_chart" yaxis-title="yAxisTitle"\n' +
     '                               series="series" charting="charting"></fun-chart>\n' +
     '                       </div>\n' +
