@@ -51,9 +51,10 @@ if __name__ == "__main__":
     for row_index in range(1, tcms_excel.get_num_rows()):
         columns = tcms_excel.get_columns_by_row(row_index=row_index)
         create_test_case = False
-        jira_id = int(tcms_excel.get_value_from_row_by_key(row=columns, key="Jira-Id"))
+        jira_id = tcms_excel.get_value_from_row_by_key(row=columns, key="Jira-Id")
 
-
+        if jira_id:
+            jira_id = int(jira_id)
         if not jira_id:
             logger.debug("We should create a test-case")
             create_test_case = True

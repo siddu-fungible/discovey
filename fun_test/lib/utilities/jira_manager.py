@@ -90,9 +90,9 @@ class JiraManager:
     def get_issues(self, component=None):
         return self.get_issues_by_jql("component={}".format(component))
 
-    def get_issues_by_jql(self, jql):
+    def get_issues_by_jql(self, jql, max_results=1000):
         logger.info("JQL: {}".format(jql))
-        result = self.jira.search_issues(jql_str=jql)
+        result = self.jira.search_issues(jql_str=jql, maxResults=max_results)
         return result
 
     def get_project(self):
