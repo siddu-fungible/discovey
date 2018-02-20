@@ -620,7 +620,7 @@
 
     function BulkEditTestCasesController($modalInstance, $scope, commonService, $http, testCaseViewInstances) {
         let ctrl = this;
-        $scope.resultOptions = [null, "PASSED", "FAILED"];
+        $scope.resultOptions = [null, "PASSED", "FAILED", "NOT_RUN"];
         $scope.owners = [{"name": "No change"}];
         $scope.bugs = [];
         $scope.testCaseViewInstances = testCaseViewInstances;
