@@ -5,6 +5,7 @@ from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
 from lib.host.storage_controller import StorageController
 from lib.host.traffic_generator import TrafficGenerator
+from web.fun_test.analytics_models_helper import VolumePerformanceHelper
 import uuid, re
 
 '''
@@ -14,6 +15,23 @@ Script to track the performance of various read write combination of Erasure Cod
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, read_latency):
+    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "read_latency"]:
+        if eval("type({}) is tuple".format(i)):
+            exec ("{0} = {0}[0]".format(i))
+
+    VolumePerformanceHelper().add_entry(key=fun_test.get_version(),
+                                        volume=volume,
+                                        test=test,
+                                        block_size=block_size,
+                                        io_depth=int(io_depth),
+                                        size=size,
+                                        operation=operation,
+                                        write_iops=write_iops,
+                                        read_iops=read_iops,
+                                        write_bw=write_bw,
+                                        read_bw=read_bw,
+                                        write_latency=write_latency,
+                                        read_latency=read_latency)
     result = []
     arg_list = post_results.func_code.co_varnames[:-3]
     for arg in arg_list:
