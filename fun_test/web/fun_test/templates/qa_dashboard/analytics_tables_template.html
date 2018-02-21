@@ -3,7 +3,7 @@
         <th style="color: darkgreen" ng-repeat="header in filterHeaders(headers, 'input')" rowspan="2">
             {{ getVerboseName(header) }}
         </th>
-        <th style="color: purple" ng-repeat="header in filterHeaders(headers, 'output')" rowspan="uniqueKeys.length">
+        <th style="color: purple" ng-repeat="header in filterHeaders(headers, 'output')" colspan="{{ uniqueKeys.length }}">
             {{ getVerboseName(header) }}
         </th>
     </tr>
