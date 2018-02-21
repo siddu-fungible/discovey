@@ -72,7 +72,7 @@ class OpenSslTestCase1(FunTestCase):
         # compute and compare digests
         for index, digest_input in enumerate(input_list):
             host.create_file("{}{}.txt".format(base_file_name, index), contents=digest_input, newline=False)
-            digest_output = openssl_template.compute_digest(CryptoTemplate.dgst, CryptoTemplate.sha1,
+            digest_output = openssl_template.compute_digest(CryptoTemplate.DGST, CryptoTemplate.SHA1,
                                                             "{}{}.txt".format(base_file_name, index))
             fun_test.simple_assert((digest_output == digest_dict[digest_input]), "Digests match")
 

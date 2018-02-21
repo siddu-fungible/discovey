@@ -197,4 +197,5 @@ BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
 CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 
 
-SESSION_ENGINE = "django.contrib.sessions.backends.file"
+# SESSION_ENGINE = "django.contrib.sessions.backends.file"
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
