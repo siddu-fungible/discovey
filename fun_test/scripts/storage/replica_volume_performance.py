@@ -707,7 +707,7 @@ class FioRandReadWriteMix(ReplicaDPULevelTestcase):
 
 class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=6,
                               summary="Write & Read only performance(for both Sequential and random) for large sizes "
                                       "of replica volume",
                               steps="""
