@@ -1,0 +1,107 @@
+{
+  "FioSeqWriteSeqReadOnly": {
+    "pass_threshold": 0.05,
+    "fio_bs_iodepth": ["(4, 8)", "(8, 16)", "(16, 16)", "(32, 64)"],
+    "expected_fio_result": {
+      "(4, 8)": {"write": {"write": {"bw": 122, "iops": 30}},
+                  "read": {"read": {"bw": 303, "iops": 75}}},
+      "(8, 16)": {"write": {"write": {"bw": 122, "iops": 30}},
+                  "read": {"read": {"bw": 303, "iops": 75}}},
+      "(16, 16)": {"write": {"write": {"bw": 122, "iops": 30}},
+                   "read": {"read": {"bw": 303, "iops": 75}}},
+      "(32, 64)": {"write": {"write": {"bw": 122, "iops": 30}},
+                   "read": {"read": {"bw": 303, "iops": 75}}}
+    },
+    "expected_volume_stats": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 4096},
+                              "read": {"fault_injection": 0, "num_reads": 4096, "num_writes": 0}}
+  },
+  "FioRandWriteRandReadOnly": {
+    "pass_threshold": 0.05,
+    "fio_bs_iodepth": ["(4, 32)", "(8, 8)", "(16, 16)", "(32, 16)"],
+    "expected_fio_result": {
+      "(4, 32)": {"randwrite": {"write": {"bw": 122, "iops": 30}},
+                  "randread": {"read": {"bw": 303, "iops": 75}}},
+      "(8, 8)": {"randwrite": {"write": {"bw": 122, "iops": 30}},
+                 "randread": {"read": {"bw": 303, "iops": 75}}},
+      "(16, 16)": {"randwrite": {"write": {"bw": 122, "iops": 30}},
+                   "randread": {"read": {"bw": 303, "iops": 75}}},
+      "(32, 16)": {"randwrite": {"write": {"bw": 122, "iops": 30}},
+                   "randread": {"read": {"bw": 303, "iops": 75}}}
+    },
+    "expected_volume_stats": {"randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 4096},
+                              "randread": {"fault_injection": 0, "num_reads": 4096, "num_writes": 0}}
+  },
+  "FioSeqReadWriteMix": {
+    "pass_threshold": 0.05,
+    "fio_bs_iodepth": ["(4, 16)", "(8, 16)", "(16, 8)", "(32, 8)"],
+    "expected_fio_result": {
+      "(4, 16)": {"rw": {"write": {"bw": 122, "iops": 30},
+                         "read": {"bw": 303, "iops": 75}}},
+      "(8, 16)": {"rw": {"write": {"bw": 122, "iops": 30},
+                         "read": {"bw": 303, "iops": 75}}},
+      "(16, 8)": {"rw": {"write": {"bw": 122, "iops": 30},
+                         "read": {"bw": 303, "iops": 75}}},
+      "(32, 8)": {"rw": {"write": {"bw": 122, "iops": 30},
+                         "read": {"bw": 303, "iops": 75}}}
+    },
+    "expected_volume_stats": {
+      "(4, 16)": {"fault_injection": 0, "num_reads": 984, "num_writes": 3112},
+      "(8, 16)": {"fault_injection": 0, "num_reads": 994, "num_writes": 3102},
+      "(16, 8)": {"fault_injection": 0, "num_reads": 984, "num_writes": 3112},
+      "(32, 8)": {"fault_injection": 0, "num_reads": 1024, "num_writes": 3072}
+    }
+  },
+  "FioRandReadWriteMix": {
+    "pass_threshold": 0.05,
+    "fio_bs_iodepth": ["(4, 32)", "(8, 64)", "(16, 16)", "(32, 8)"],
+    "expected_fio_result": {
+      "(4, 32)": {"randrw": {"write": {"bw": 122, "iops": 30},
+                             "read": {"bw": 303, "iops": 75}}},
+      "(8, 64)": {"randrw": {"write": {"bw": 122, "iops": 30},
+                             "read": {"bw": 303, "iops": 75}}},
+      "(16, 16)": {"randrw": {"write": {"bw": 122, "iops": 30},
+                              "read": {"bw": 303, "iops": 75}}},
+      "(32, 8)": {"randrw": {"write": {"bw": 122, "iops": 30},
+                             "read": {"bw": 303, "iops": 75}}}
+    },
+    "expected_volume_stats": {
+      "(4, 32)": {"fault_injection": 0, "num_reads": 1968, "num_writes": 3112},
+      "(8, 64)": {"fault_injection": 0, "num_reads": 1430, "num_writes": 3102},
+      "(16, 16)": {"fault_injection": 0, "num_reads": 1195, "num_writes": 3112},
+      "(32, 8)": {"fault_injection": 0, "num_reads": 1137, "num_writes": 3072}
+    }
+  },
+  "FioLargeWriteReadOnly": {
+    "pass_threshold": 0.05,
+    "fio_bs_iodepth": "(32, 64)",
+    "fio_size": ["256m", "512m", "896m"],
+    "expected_fio_result": {
+      "256m": {"write": {"write": {"bw": 122, "iops": 30}},
+              "read": {"read": {"bw": 303, "iops": 75}},
+              "randwrite": {"write": {"bw": 122, "iops": 30}},
+              "randread": {"read": {"bw": 303, "iops": 75}}},
+      "512m": {"write": {"write": {"bw": 122, "iops": 30}},
+              "read": {"read": {"bw": 303, "iops": 75}},
+              "randwrite": {"write": {"bw": 122, "iops": 30}},
+              "randread": {"read": {"bw": 303, "iops": 75}}},
+      "896m": {"write": {"write": {"bw": 122, "iops": 30}},
+              "read": {"read": {"bw": 303, "iops": 75}},
+              "randwrite": {"write": {"bw": 122, "iops": 30}},
+              "randread": {"read": {"bw": 303, "iops": 75}}}
+    },
+    "expected_volume_stats": {
+      "256m": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "read": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0},
+              "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "randread": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}},
+      "512m": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "read": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0},
+              "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "randread": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}},
+      "896m": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "read": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0},
+              "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "randread": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}}
+    }
+  }
+}

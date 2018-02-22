@@ -331,7 +331,7 @@ class ECDPULevelTestcase(FunTestCase):
             command_result = self.storage_controller["ec"][0].create_volume(
                 type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
                 name="ec-1", uuid=this_uuid, ndata=self.global_setup["ec_coding"]["ndata"],
-                nparity=self.global_setup["ec_coding"]["nparity"], pvol_id=self.uuids["rds"],
+                nparity=self.global_setup["ec_coding"]["nparity"], pvol_id=ec_pvol_id,
                 expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create EC volume on last DUT instance")
@@ -628,13 +628,6 @@ class ECDPULevelTestcase(FunTestCase):
 
         fun_test.test_assert(test_result, self.summary)
 
-    def old_run(self):
-
-        testcase = self.__class__.__name__
-        method_str = re.split(r"EC\d+", testcase)[1].lower()
-        method_name = getattr(self, method_str)
-        method_name()
-
     def cleanup(self):
 
         # Check any plex needs to be re-enabled from failure_injection condition
@@ -659,11 +652,13 @@ class EC21FioSeqWriteSeqReadOnly(ECDPULevelTestcase):
         self.set_test_details(id=1,
                               summary="Sequential Write & Read only performance of EC volume",
                               steps="""
-        1. Create 3 BLT volumes on dut instance 0.
-        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
-        3. Create a LS volume on top of the EC volume.
-        4. Export (Attach) the above LS volume to external Linux instance/container. 
-        5. Run the FIO sequential write and read only test(without verify) for various block size and IO depth from the 
+        1. Create a BLT volumes on DUT instance 0-2.
+        2. Export these BLT volumes to the last DUT instance.
+        3. On the last Dut instance, import the above BLT volumes (Create RDS volume) from the DUT instance 0-2.
+        4. Create a 2:1 EC volume on top of the 3 BLT volumes.
+        5. Create a LS volume on top of the EC volume.
+        6. Export (Attach) the above LS volume to external Linux instance/container. 
+        7. Run the FIO sequential write and read only test(without verify) for various block size and IO depth from the 
         external Linux server and check the performance are inline with the expected threshold.
         """)
 
@@ -682,11 +677,13 @@ class EC21FioRandWriteRandReadOnly(ECDPULevelTestcase):
         self.set_test_details(id=2,
                               summary="Random Write & Read only performance of EC volume",
                               steps="""
-        1. Create 3 BLT volumes in dut instance 0.
-        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
-        5. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
+        1. Create a BLT volumes on DUT instance 0-2.
+        2. Export these BLT volumes to the last DUT instance.
+        3. On the last Dut instance, import the above BLT volumes (Create RDS volume) from the DUT instance 0-2.
+        4. Create a 2:1 EC volume on top of the 3 BLT volumes.
+        5. Create a LS volume on top of the EC volume.
+        6. Export (Attach) the above LS volume to external Linux instance/container.
+        7. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
         external Linux server and check the performance are inline with the expected threshold.
         """)
 
@@ -705,12 +702,14 @@ class EC21FioSeqAndRandReadOnlyWithFailure(ECDPULevelTestcase):
         self.set_test_details(id=3,
                               summary="Sequential and Random Read only performance of EC volume with a plex failure",
                               steps="""
-        1. Create 3 BLT volumes on dut instance 0.
-        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
-        3. Create a LS volume on top of the EC volume.
-        4. Export (Attach) the above LS volume to external Linux instance/container.
-        5. Inject failure in one of the ndata BLT volume
-        6. Run the FIO sequential and random read only test(without verify) for various block size and IO depth from the 
+        1. Create a BLT volumes on DUT instance 0-2.
+        2. Export these BLT volumes to the last DUT instance.
+        3. On the last Dut instance, import the above BLT volumes (Create RDS volume) from the DUT instance 0-2.
+        4. Create a 2:1 EC volume on top of the 3 BLT volumes.
+        5. Create a LS volume on top of the EC volume.
+        6. Export (Attach) the above LS volume to external Linux instance/container.
+        7. Inject failure in one of the ndata BLT volume
+        8. Run the FIO sequential and random read only test(without verify) for various block size and IO depth from the 
         external Linux server and check the performance are inline with the expected threshold.
         """)
 
@@ -729,11 +728,13 @@ class EC21FioSeqReadWriteMix(ECDPULevelTestcase):
         self.set_test_details(id=4,
                               summary="Sequential 75% Write & 25% Read performance of EC volume",
                               steps="""
-        1. Create 3 BLT volumes in dut instance 0.
-        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config.
-        5. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
-        6. Run the FIO sequential write and read mix test with 3:1 ratio for various block size and IO depth from the 
+        1. Create a BLT volumes on DUT instance 0-2.
+        2. Export these BLT volumes to the last DUT instance.
+        3. On the last Dut instance, import the above BLT volumes (Create RDS volume) from the DUT instance 0-2.
+        4. Create a 2:1 EC volume on top of the 3 BLT volumes.
+        5. Create a LS volume on top of the EC volume.
+        6. Export (Attach) the above LS volume to external Linux instance/container.
+        7. Run the FIO sequential write and read mix test with 3:1 ratio for various block size and IO depth from the 
         external Linux server and check the performance are inline with the expected threshold.
         """)
 
@@ -752,11 +753,13 @@ class EC21FioRandReadWriteMix(ECDPULevelTestcase):
         self.set_test_details(id=5,
                               summary="Random 75% Write & 25% Read performance of EC volume",
                               steps="""
-        1. Create 3 BLT volumes in dut instance 0.
-        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config.
-        5. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
-        6. Run the FIO random write and read mix test with 3:1 ratio for various block size and IO depth from the 
+        1. Create a BLT volumes on DUT instance 0-2.
+        2. Export these BLT volumes to the last DUT instance.
+        3. On the last Dut instance, import the above BLT volumes (Create RDS volume) from the DUT instance 0-2.
+        4. Create a 2:1 EC volume on top of the 3 BLT volumes.
+        5. Create a LS volume on top of the EC volume.
+        6. Export (Attach) the above LS volume to external Linux instance/container.
+        7. Run the FIO random write and read mix test with 3:1 ratio for various block size and IO depth from the 
         external Linux server and check the performance are inline with the expected threshold.
         """)
 
@@ -775,6 +778,7 @@ if __name__ == "__main__":
     ec_dpu_script = ECDPULevelScript()
     ec_dpu_script.add_test_case(EC21FioSeqWriteSeqReadOnly())
     ec_dpu_script.add_test_case(EC21FioRandWriteRandReadOnly())
+    # Commenting this case because of the bug #771
     # ec_dpu_script.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
     ec_dpu_script.add_test_case(EC21FioSeqReadWriteMix())
     ec_dpu_script.add_test_case(EC21FioRandReadWriteMix())
