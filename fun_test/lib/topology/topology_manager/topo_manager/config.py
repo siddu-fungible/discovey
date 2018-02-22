@@ -12,7 +12,7 @@ network_only = True
 
 if network_only:
     leaf_container = 'reg-nw-frr:v1' 
-    startup = '/opt/fungible/scripts/frr-startup.sh'
+    startup = '/opt/fungible/scripts/frr-run.sh'
 else:
     leaf_container = 'reg-nw-full-build:v1'
     startup = "/workspace/Integration/tools/docker/funcp/dev/startup.sh"
