@@ -108,7 +108,7 @@
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 300},
     "fio_modes": ["rw"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 0,
+    "volume_pass_threshold": 4,
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
       "(4, 1)": {"rw": {"write": {"bw": 30, "iops": 8, "latency": 113635},
@@ -145,7 +145,7 @@
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 300},
     "fio_modes": ["randrw"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 4,
+    "volume_pass_threshold": 20,
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
       "(4, 1)": {"randrw": {"write": {"bw": 31, "iops": 8, "latency": 113348},
@@ -153,16 +153,16 @@
       "(8, 1)": {"randrw": {"write": {"bw": 55, "iops": 7, "latency": 125954},
                              "read": {"bw": 18, "iops": 2, "latency": 61669}}},
       "(16, 1)": {"randrw": {"write": {"bw": 85, "iops": 5, "latency": 159196},
-                              "read": {"bw": 32, "iops": 2, "latency": 71772}}},
+                              "read": {"bw": 32, "iops": 2, "latency": 77138}}},
       "(32, 1)": {"randrw": {"write": {"bw": 115, "iops": 4, "latency": 229261},
                              "read": {"bw": 48, "iops": 2, "latency": 110855}}}
     },
     "expected_volume_stats": {
-      "(4, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 153, "num_writes": 778},
-                                     "1": {"fault_injection": 0, "num_reads": 148, "num_writes": 778}},
+      "(4, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 123, "num_writes": 778},
+                                     "1": {"fault_injection": 0, "num_reads": 123, "num_writes": 778}},
                              "replica": {"0": {"fault_injection": 0, "num_reads": 246, "num_writes": 778}}}},
-      "(8, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 138, "num_writes": 768},
-                                     "1": {"fault_injection": 0, "num_reads": 140, "num_writes": 768}},
+      "(8, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 128, "num_writes": 768},
+                                     "1": {"fault_injection": 0, "num_reads": 128, "num_writes": 768}},
                              "replica": {"0": {"fault_injection": 0, "num_reads": 256, "num_writes": 768}}}},
       "(16, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 144, "num_writes": 744},
                                       "1": {"fault_injection": 0, "num_reads": 144, "num_writes": 744}},
@@ -182,7 +182,7 @@
     "fio_cmd_args": {"io_queues": 2, "timeout": 780},
     "fio_modes": ["write", "read", "randwrite", "randread"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 4,
+    "volume_pass_threshold": 20,
     "fio_bs_iodepth": "(32, 1)",
     "fio_sizes": ["256m", "512m", "896m"],
     "expected_fio_result": {
