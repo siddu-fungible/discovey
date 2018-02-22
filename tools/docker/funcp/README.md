@@ -45,6 +45,6 @@ docker run --privileged=true --rm -d --name frr-1 --hostname frr-1  reg-nw-frr:v
 6. To run a FunCP container that runs the parser tests:
 
 ```
-docker run --privileged=true --rm -d -v /local/$USER:/home/$USER -v $WORKSPACE:/workspace -e WORKSPACE=/workspace -e DOCKER=TRUE -w /workspace --name frr-img --hostname frr-img -u $USER reg-nw-user:v1 /workspace/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh
+docker run --privileged=true --rm -d -v /home/$USER:/home/$USER -v $WORKSPACE:/workspace -e WORKSPACE=/workspace -e DOCKER=TRUE -w /workspace --name frr-img --hostname frr-img -u $USER reg-nw-user:v1 /workspace/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh
 ```
 
