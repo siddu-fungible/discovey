@@ -26,6 +26,7 @@ regression_urls = [
     url(r'^completed_jobs$', regression_views.completed_jobs),
     url(r'^pending_jobs$', regression_views.pending_jobs),
     url(r'^jenkins_jobs', regression_views.jenkins_jobs),
+    url(r'^jobs_by_tag/(.*)$', regression_views.jobs_by_tag),
     url(r'^suite_executions/(\d+)/(\d+)/(.*)$', regression_views.suite_executions),
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),
