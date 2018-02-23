@@ -7,6 +7,7 @@ class OpenSslTemplate(CryptoTemplate):
     OPENSSL = "openssl"
     OPENSSL_VERSION = "1.0.2k"
     DGST = "dgst"
+    HMAC = "hmac"
     SHA1 = "sha1"
     SHA224 = "sha224"
     SHA256 = "sha256"
@@ -32,11 +33,16 @@ class OpenSslTemplate(CryptoTemplate):
                                       message="OpenSSL version as expected")
         return True
 
-    def compute_digest(self, algorithm, digest_input, tool_type=None, engine=None):
-        #openssl_command = self.OPENSSL + " " + tool_type + " -" + CryptoTemplate.ENGINE + " " + CryptoTemplate.AF_ALG + " -" + algorithm + " " + digest_input
-        openssl_command = self.OPENSSL + " " + tool_type + " -" + algorithm + " " + digest_input
+    def compute_digest(self, algorithm, digest_input, engine=None):
+        #openssl_command = self.OPENSSL + " " + self.DGST + " -" + CryptoTemplate.ENGINE + " " + CryptoTemplate.AF_ALG + " -" + algorithm + " " + digest_input
+        openssl_command = self.OPENSSL + " " + self.DGST + " -" + algorithm + " " + digest_input
         digest_output = ((self.host.command(openssl_command)).split("="))[1].strip()
         return digest_output
+
+    def compute_hmac(self, algorithm, key, hmac_input, engine=None):
+        openssl_command = self.OPENSSL + " " + self.DGST + " -" + algorithm + " -" + self.HMAC + " " + key + " " + hmac_input
+        hmac_output = ((self.host.command(openssl_command)).split("="))[1].strip()
+        return hmac_output
 
     def get_error_logs(self):
         print "error logs"

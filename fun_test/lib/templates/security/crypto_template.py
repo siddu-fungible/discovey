@@ -39,7 +39,34 @@ class CryptoTemplate:
 
         return input_dict
 
-    def compute_digest(self, algorithm, digest_input, tool_type=None, engine=None):
+    def parse_input_hmac(self, file_path):
+        plaintext_list = []
+        key_list = []
+        digest_list = []
+        plaintext_key_dict={}
+        input_dict = {}
+
+        for line in open(file_path, 'r').read().split(','):
+            line_list = line.split("=")
+            if len(line_list) > 1:
+                if ".key" in line_list[0]:
+                    key_list.append((line_list[1].replace('"', '').replace('\n', '')).strip())
+                elif ".plaintext" in line_list[0]:
+                    text = (line_list[1].replace('"', '').replace('\n', '')).strip()
+                    plaintext_list.append(text)
+                elif ".digest" in line_list[0]:
+                    digest_list.append((line_list[1].replace('"', '').replace('\\x', '').replace('\n', '')).strip())
+
+        for plain_text, key, hmac in zip(plaintext_list, key_list, digest_list):
+            plaintext_key_dict[key] = plain_text
+            input_dict[hmac] = plaintext_key_dict
+
+        return input_dict
+
+    def compute_digest(self, algorithm, digest_input, engine=None):
+        return True
+
+    def compute_hmac(self, algorithm, key, hmac_input, engine=None):
         return True
 
     def encrypt(self, algorithm, encrypt_input, key):
