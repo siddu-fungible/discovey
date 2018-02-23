@@ -191,7 +191,7 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
             info["execution_id"] = te.execution_id
             info["suite_execution_id"] = te.catalog_suite_execution_id
             info["owner"] = te.engineer.short_name
-            tex = TestCaseExecution.objects.get(execution_id=te.execution_id)
+            tex = TestCaseExecution.objects.using('regression').get(execution_id=te.execution_id)
             info["result"] = tex.result
             info["bugs"] = tex.bugs
             info["comments"] = tex.comments

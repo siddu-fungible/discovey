@@ -220,7 +220,7 @@ def get_catalog_test_case_execution_summary_result(suite_execution_id, jira_id):
     num_passed = 0
     num_failed = 0
     for cte in ctes:
-        te = TestCaseExecution.objects.get(execution_id=cte.execution_id)
+        te = TestCaseExecution.objects.using('regression').get(execution_id=cte.execution_id)
         if te.result == RESULTS["PASSED"]:
             num_passed += 1
         if te.result == RESULTS["FAILED"]:

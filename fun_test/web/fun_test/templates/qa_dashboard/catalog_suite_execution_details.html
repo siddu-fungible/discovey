@@ -1,18 +1,23 @@
 <div class="content">
     <h4>{{ executionDetails.instance_name }}</h4>
-    <span class="fa fa-envelope" id="summary_collapse"><a href="mailto:{{ executionDetails.owner_email }}" target="_top">{{ executionDetails.owner_email }}</a></span>
+    <span class="fa fa-envelope" style="color: #ec971f" id="summary_collapse">&nbsp;<a href="mailto:{{ executionDetails.owner_email }}" target="_top">{{ executionDetails.owner_email }}</a></span>
     <div class="row">
-        <div class="col-lg-10 col-xl-7">
+        <div class="col-lg-10 col-xl-6">
             <div ng-if="overallProgressValues" class="row">
-                <div ng-if="overallProgressValues" class="col-lg-4">
+                <div ng-if="overallProgressValues" class="col-lg-5">
                     <fun-chart values="overallProgressValues" series="series" show-legend="true"
                                title="overallProgressTitle" charting="charting" auto-update="autoUpdate" chart-type="pie"
                                colors="colors"
                                width="300" height="300" update-charts-now="updateOverallProgressChartsNow"></fun-chart>
                 </div>
-                <div ng-if="moduleProgressValues" class="col-lg-4">
+                <div ng-if="moduleProgressValues" class="col-lg-5">
                     <fun-chart values="moduleProgressValues" colors="colors" title="moduleProgressTitle"
                                width="300" height="300" chart-type="horizontal_colored_bar_chart" yaxis-title="moduleProgressYaxisTitle"
+                               series="series" charting="charting" update-charts-now="updateModuleProgressChartsNow"></fun-chart>
+                </div>
+                <div>
+                    <fun-chart values="moduleProgressValues" colors="colors" title="moduleProgressTitle"
+                               width="300" height="300" chart-type="solidguage" yaxis-title="moduleProgressYaxisTitle"
                                series="series" charting="charting" update-charts-now="updateModuleProgressChartsNow"></fun-chart>
                 </div>
             </div>
@@ -80,8 +85,7 @@
                                         <td><label ng-if="info.summaryResult" class="label label-
                                             {{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
                                         <td>
-                                            <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable"
-                                               >Details</a>
+                                            <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable"><span class="fa fa-plus"></span></a>
                                             <table class="table collapse" id="info-table-{{ $index }}">
                                                 <tr>
                                                     <th>Owner</th>
@@ -230,8 +234,8 @@
                                         </td>
 
                                         <td>
-                                            <a ng-show="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Hide Details</a>
-                                            <a ng-hide="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)">Details</a>
+                                            <a ng-show="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)"><span class="fa fa-minus"></span></a>
+                                            <a ng-hide="moduleInfo[module].showingDetails" ng-click="moduleShowDetailsClick(module)"><span class="fa fa-plus"></span></a>
                                         </td>
                                     </tr>
                                     <tr ng-repeat-end ng-if="moduleInfo[module].showingDetails">
@@ -308,7 +312,7 @@
             </div>
         </div>
 
-        <div id="test-case-view" class="col-lg-12 col-xl-5" ng-if="testCaseViewInstances && currentView === 'components'">
+        <div id="test-case-view" class="col-lg-12 col-xl-6" ng-if="testCaseViewInstances && currentView === 'components'">
             <button class="btn btn-primary fa fa-pencil" ng-click="bulkEditTestCaseClick()">Bulk Edit</button>
             <legend>{{ currentTestCaseViewComponent }}</legend>
             <table class="table table-borderless table-nonfluid">
@@ -338,11 +342,11 @@
                         </div>
                     </td>
                     <td>
-                        <a ng-show="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Hide Details</a>
-                        <a ng-hide="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)">Details</a>
+                        <a ng-show="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)"><span class="fa fa-minus"></span></a>
+                        <a ng-hide="testCaseViewInstances[jiraId].showingDetails" ng-click="testCaseViewInstancesDetailsClick(jiraId)"><span class="fa fa-plus"></span></a>
                     </td>
                     <td>
-                        Count: {{ info.allBugs }}&nbsp<span ng-if="info.blockerCount">Blockers: {{ info.blockerCount }}</span>
+                        {{ info.allBugs }}&nbsp<span style="display: inline-flex" ng-if="info.blockerCount">Blocker: {{ info.blockerCount }}</span>
                     </td>
                 </tr>
                 <tr ng-repeat-end ng-if="info.show">
