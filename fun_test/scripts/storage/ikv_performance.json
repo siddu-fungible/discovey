@@ -55,7 +55,7 @@
     {
       "ip_size": 4096,
       "duration":15,
-      "min_put_per_sec":4,
+      "min_put_per_sec":2,
       "min_gets_per_sec": 2,
       "min_delete_per_sec": 7
     },
