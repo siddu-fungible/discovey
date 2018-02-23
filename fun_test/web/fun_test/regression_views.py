@@ -37,6 +37,12 @@ def jenkins_jobs(request):
     # tags = json.dumps(["none"])
     return render(request, 'qa_dashboard/regression.html', locals())
 
+def jobs_by_tag(request, tag):
+    filter_string = SUITE_EXECUTION_FILTERS["ALL"]
+    tags = json.dumps([tag])
+    # tags = json.dumps(["none"])
+    return render(request, 'qa_dashboard/regression.html', locals())
+
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
 
