@@ -563,6 +563,20 @@ class Linux(object, ToDictMixin):
         return file_name
 
     @fun_test.safe
+    def create_file_using_printf(self, file_name, contents):
+        self.command("touch %s" % file_name)
+        lines = contents.split('\n')
+        if len(lines):
+            processed_line = lines[0].replace(r'"', r'\"')
+            self.command("printf \"%s\" > %s" % (processed_line, file_name))
+
+        if len(lines) > 1:
+            for line in lines[1:]:
+                processed_line = line.replace(r'"', r'\"')
+                self.command("printf \"%s\" >> %s" % (processed_line, file_name))
+        return file_name
+
+    @fun_test.safe
     def create_temp_file(self, file_name, contents):
         return self.create_file(file_name=self.get_temp_file_path(file_name=file_name),
                                 contents=contents)
