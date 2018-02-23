@@ -80,11 +80,11 @@ class FunTestCase1(FunTestCase):
         result['Data Size'] = size
         result["Duration/sec )"] = duration
 
-        #open_ikv = ikv_obj.open()
-        #fun_test.test_assert(open_ikv['status'], message="Open likv store with ID: {}".format(ikv_obj.volume_id))
-        #fun_test.simple_assert(open_ikv['data']['status'] == 0, message="Open likv response")
+        # open_ikv = ikv_obj.open()
+        # fun_test.test_assert(open_ikv['status'], message="Open likv store with ID: {}".format(ikv_obj.volume_id))
+        # fun_test.simple_assert(open_ikv['data']['status'] == 0, message="Open likv response")
 
-        generator = ikv_obj.kv_generator(size=size, max_time=duration/2)
+        generator = ikv_obj.kv_generator(size=size, max_time=duration / 2)
         key_value_store = [{'key_hex': k, 'value_hex': v} for k, v in generator]
 
         store_len = len(key_value_store)
@@ -123,25 +123,17 @@ class FunTestCase1(FunTestCase):
         while not timer.is_expired():
             get_response = ikv_obj.get(key=key_value_store[get_count]['key_hex'])
             if get_response['status'] and get_response['data']['status'] == 0:
+                fun_test.test_assert_expected(actual=key_value_store[get_count]['value_hex'],
+                                              expected=get_response['data']['value'],
+                                              ignore_on_success=True,
+                                              message="Compare retrieved data with generated data for shasum: {}".
+                                              format(key_value_store[get_count]['key_hex']))
                 retrieved_data.append({'key_hex': key_value_store[get_count]['key_hex'],
                                        'value_hex': get_response['data']['value']})
                 get_count += 1
         result['Gets/sec'] = get_count / duration
         fun_test.test_assert(get_count, message="No of gets performed for size {0}bytes:  {1}".format(size, get_count))
 
-        gets_validated = 0
-        for index1 in retrieved_data:
-            for index2 in key_value_store:
-                if index1['key_hex'] == index2['key_hex']:
-                    fun_test.test_assert_expected(actual=index2['value_hex'],
-                                                  expected=index1['value_hex'],
-                                                  ignore_on_success=True,
-                                                  message="Compare retrieved data generated data")
-                    gets_validated += 1
-                    break
-
-        fun_test.test_assert_expected(actual=get_count, expected=gets_validated,
-                                      message="Puts performed validated with get data")
         bytes_per_sec = (get_count * size) / duration
         fun_test.test_assert(bytes_per_sec, message="Get performed at rate: {}bytes/sec".format(bytes_per_sec))
 
@@ -160,10 +152,10 @@ class FunTestCase1(FunTestCase):
         result['tombs'] = ikv_stats['data'][ikv_vol_id]['tombs']
         result['rehash'] = ikv_stats['data'][ikv_vol_id]['rehash']
         result['LIKV used space'] = ikv_stats['data'][ikv_vol_id]['LIKV used space']
-        #fun_test.sleep(message="volume resizing", seconds=3)
-        #close_ikv = ikv_obj.close()
-        #fun_test.test_assert(close_ikv['data']['status'] == 0,
-         #                    message="Close likv store with ID: {}".format(ikv_obj.volume_id))
+        # fun_test.sleep(message="volume resizing", seconds=3)
+        # close_ikv = ikv_obj.close()
+        # fun_test.test_assert(close_ikv['data']['status'] == 0,
+        #                    message="Close likv store with ID: {}".format(ikv_obj.volume_id))
         return result
 
     def run(self):
@@ -212,8 +204,8 @@ class FunTestCase1(FunTestCase):
                                      message="Deletes performed per second are grater than min")
                 table_header = response.keys()
                 table_data.append(response.values())
-        except Exception, e:
-            raise e.message
+        except Exception as e:
+            raise fun_test.critical(e.message)
         finally:
             if table_header:
                 fun_test.add_table(panel_header="Likv performance table",

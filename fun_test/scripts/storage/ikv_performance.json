@@ -74,14 +74,14 @@
       "min_delete_per_sec": 7
     },
     {
-      "ip_size": 20480,
+      "ip_size": 32768,
       "duration":30,
-      "min_put_per_sec":2,
-      "min_gets_per_sec": 2,
+      "min_put_per_sec":1,
+      "min_gets_per_sec": 1,
       "min_delete_per_sec": 7
     },
     {
-      "ip_size": 30720,
+      "ip_size": 65535,
       "duration": 30,
       "min_put_per_sec": 1,
       "min_gets_per_sec": 1,
