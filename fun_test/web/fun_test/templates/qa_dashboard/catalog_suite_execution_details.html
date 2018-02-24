@@ -378,7 +378,7 @@
                                 <td>
                                     <button class="fa fa-pencil" ng-click="editTestCaseClick(jiraId, instance)"></button>
                                     <div style="display: inline-block" ng-repeat="bug in instance.bugs track by $index">
-                                        <a target="_blank" >SW-{{ bug.id }}</a>
+                                        <a href="http://jira.fungible.local/browse/{{ bug.id }}" target="_blank" >{{ bug.id }}</a>
                                         <br>
                                     </div>
 
