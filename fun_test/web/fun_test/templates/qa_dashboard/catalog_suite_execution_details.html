@@ -140,9 +140,9 @@
                                         <td>
                                             <a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'FAILED')">{{ executionDetails.num_failed }}</a>
                                         </td>
-                                        <td><a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'BLOCKED')">{{ executionDetails.numBlocked }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'BLOCKED')">{{ executionDetails.num_blocked }}</a></td>
                                         <td>
-                                            <a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'PENDING')">{{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed }}</a>
+                                            <a href="#test-case-view" ng-click="moduleFilterClick('ALL', 'PENDING')">{{ executionDetails.num_total - executionDetails.num_passed - executionDetails.num_failed - executionDetails.num_blocked }}</a>
                                         </td>
 
                                         <td>
@@ -169,10 +169,10 @@
                                             {{ (executionDetails.num_failed)* 100/executionDetails.num_total | number: 2 | abs }}
                                         </td>
                                         <td>
-                                            {{ executionDetails.numBlocked * 100/executionDetails.num_total | number: 2 }}
+                                            {{ executionDetails.num_blocked * 100/executionDetails.num_total | number: 2 }}
                                         </td>
                                         <td>
-                                            {{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_unknown))  * 100/executionDetails.num_total | number: 2 }}
+                                            {{ (executionDetails.num_total - (executionDetails.num_passed + executionDetails.num_failed + executionDetails.num_blocked))  * 100/executionDetails.num_total | number: 2 }}
                                         </td>
 
                                     </tr>
@@ -207,7 +207,7 @@
                                         <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'PASSED')">{{ moduleInfo[module].numPassed }}</a></td>
                                         <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'FAILED')">{{ moduleInfo[module].numFailed }}</a></td>
                                         <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'BLOCKED')">{{ moduleInfo[module].numBlocked }}</a></td>
-                                        <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'PENDING')">{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed }}</a></td>
+                                        <td><a href="#test-case-view" ng-click="moduleFilterClick(module, 'PENDING')">{{ moduleInfo[module].numTotal - moduleInfo[module].numPassed - moduleInfo[module].numFailed - moduleInfo[module].numBlocked}}</a></td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar progress-bar-success" role="progressbar"
@@ -230,7 +230,7 @@
                                         <td>{{ (moduleInfo[module].numFailed * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
                                         <td>{{ (moduleInfo[module].numBlocked * 100)/moduleInfo[module].numTotal | number: 2 }}</td>
                                         <td>
-                                            {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}
+                                            {{ ((moduleInfo[module].numTotal - moduleInfo[module].numFailed - moduleInfo[module].numBlocked - moduleInfo[module].numPassed) * 100)/moduleInfo[module].numTotal | number: 2}}
                                         </td>
 
                                         <td>
@@ -270,7 +270,7 @@
                                                         <a href="#test-case-view" ng-click="componentFilterClick(component, 'FAILED')">{{ getComponentInfo(component).numFailed }}</a>
                                                     </td>
                                                     <td>
-                                                        <a href="#test-case-view" ng-click="componentFilterClick(component, 'PENDING')">{{ getComponentInfo(component).numTotal - getComponentInfo(component).numPassed - getComponentInfo(component).numFailed }}</a>
+                                                        <a href="#test-case-view" ng-click="componentFilterClick(component, 'PENDING')">{{ getComponentInfo(component).numTotal - getComponentInfo(component).numPassed - getComponentInfo(component).numFailed - getComponentInfo(component).numBlocked }}</a>
                                                     </td>
                                                     <td>
                                                         <a href="#test-case-view" ng-click="componentFilterClick(component, 'BLOCKED')">{{ getComponentInfo(component).numBlocked }}</a>
@@ -298,7 +298,7 @@
                                                     <td>
                                                         {{ getComponentInfo(component).numFailed * 100/getComponentInfo(component).numTotal | number: 2}}</td>
                                                     <td>
-                                                        {{ (getComponentInfo(component).numTotal - (getComponentInfo(component).numPassed + getComponentInfo(component).numFailed))  * 100/getComponentInfo(component).numTotal | number: 2}}</td>
+                                                        {{ (getComponentInfo(component).numTotal - (getComponentInfo(component).numPassed + getComponentInfo(component).numFailed + getComponentInfo(component).numBlocked))  * 100/getComponentInfo(component).numTotal | number: 2}}</td>
                                                     <!--td><a href="#" ng-click="componentFilterClick(component, 'TOTAL')"> Details</a></td-->
                                                 </tr>
                                             </table>

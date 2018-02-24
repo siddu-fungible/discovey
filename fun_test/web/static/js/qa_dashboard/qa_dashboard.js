@@ -67,6 +67,8 @@
                 klass = "default";
             } else if (result === "IN_PROGRESS") {
                 klass = "info";
+            } else if (result === "BLOCKED") {
+                klass = "blocked";
             }
             return klass;
         }
