@@ -1,6 +1,6 @@
 from web.fun_test.models import Engineer
 from web.fun_test.models import CatalogSuite, CatalogSuiteExecution, CatalogTestCaseExecution, TestCaseExecution, Module
-from web.fun_test.models import ModelMapping
+from web.fun_test.metrics_models import ModelMapping
 from web.fun_test.metrics_models import MetricChart, VolumePerformance
 
 class UsersRouter(object):
