@@ -1,5 +1,5 @@
 <div>
-    <div class="col-xl-6 col-lg-6">
+    <div class="col-xl-3 col-lg-6" style="border:1px solid black;">
         <table class="table table-nonfluid">
             <tr>
                 <th rowspan="2">
@@ -34,7 +34,7 @@
                     {{ row.feature }}
                 </td>
                 <td>
-                    {{ row.metric }}
+                    <a href="#" ng-click="showChart()">{{ row.metric }}</a>
                 </td>
                 <td>
                     {{ row.palladium_actual }}
@@ -50,8 +50,56 @@
             </tr>
         </table>
     </div>
-    <div class="col-xl-6 col-lg-6">
-        Lug
+    <div class="col-xl-3 col-lg-6">
+        <div class="card" ng-switch="chartName">
+            <div ng-switch-when="BLT Performance IOPS">
+                <fun-metric-chart chart-name="chartName" model-name="chartInfo[chartName].model" width="350"
+                                  height="350" preview-data-sets="previewDataSets"></fun-metric-chart>
+            </div>
+            <div ng-switch-when="BLT Write IOPS">
+                <fun-metric-chart chart-name="chartName" model-name="chartInfo[chartName].model" width="350"
+                                  height="350" preview-data-sets="previewDataSets"></fun-metric-chart>
+            </div>
+            <div ng-switch-when="BLT Write Latency">
+                <fun-metric-chart chart-name="chartName" model-name="chartInfo[chartName].model" width="350"
+                                  height="350" preview-data-sets="previewDataSets"></fun-metric-chart>
+            </div>
+        </div>
+        <br>
+        <br>
+        <p ng-if="chartName" style="width:350px; height:350px">
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
+            ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+            nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+            anim id est laborum."
+        </p>
+        <table ng-if="chartName" class="table">
+            <thead>
+            <tr>
+                <th>Firstname</th>
+                <th>Lastname</th>
+                <th>Email</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>John</td>
+                <td>Doe</td>
+                <td>john@example.com</td>
+            </tr>
+            <tr>
+                <td>Mary</td>
+                <td>Moe</td>
+                <td>mary@example.com</td>
+            </tr>
+            <tr>
+                <td>July</td>
+                <td>Dooley</td>
+                <td>july@example.com</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
 </div>

@@ -15,4 +15,4 @@ function AnalyticsChartDashboardController($scope, $http, commonService) {
 
 }
 
-angular.module('qa-dashboard').controller("analyticsChartDashboardController", AnalyticsChartDashboardController)
+angular.module('qa-dashboard').controller("analyticsChartDashboardController", AnalyticsChartDashboardController);

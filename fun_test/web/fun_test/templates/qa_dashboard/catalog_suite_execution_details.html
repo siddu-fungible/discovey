@@ -313,7 +313,7 @@
         </div>
 
         <div id="test-case-view" class="col-lg-12 col-xl-6" ng-if="testCaseViewInstances && currentView === 'components'">
-            <button class="btn btn-primary fa fa-pencil" ng-click="bulkEditTestCaseClick()">Bulk Edit</button>
+            <span style="padding: 10px" class="fa fa-pencil text-primary"></span><a href="#" ng-click="bulkEditTestCaseClick()">Bulk Edit</a>
             <legend>{{ currentTestCaseViewComponent }}</legend>
             <table class="table table-borderless table-nonfluid">
                 <tr>
