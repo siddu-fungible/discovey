@@ -12,7 +12,7 @@ class UsersRouter(object):
                 return "performance"
         if model in [CatalogSuite, CatalogSuiteExecution, CatalogTestCaseExecution]:
             return "regression"
-        elif model in [MetricChart, VolumePerformance, Module, Mo]:
+        elif model in [MetricChart, VolumePerformance, Module, ModelMapping]:
             return "performance"
         else:
             i = 0
