@@ -1,5 +1,5 @@
 from web.fun_test.models import Engineer
-from web.fun_test.models import CatalogSuite, CatalogSuiteExecution, CatalogTestCaseExecution, TestCaseExecution
+from web.fun_test.models import CatalogSuite, CatalogSuiteExecution, CatalogTestCaseExecution, TestCaseExecution, Module
 from web.fun_test.metrics_models import MetricChart, VolumePerformance
 
 class UsersRouter(object):
@@ -11,7 +11,7 @@ class UsersRouter(object):
                 return "performance"
         if model in [CatalogSuite, CatalogSuiteExecution, CatalogTestCaseExecution]:
             return "regression"
-        elif model in [MetricChart, VolumePerformance]:
+        elif model in [MetricChart, VolumePerformance, Module]:
             return "performance"
         else:
             i = 0
