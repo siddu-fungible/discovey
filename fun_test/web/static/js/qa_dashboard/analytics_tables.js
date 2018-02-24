@@ -151,10 +151,6 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
 }
 
 
-/*
-angular.module('qa-dashboard').controller("analyticsTablesController", AnalyticsTablesController);
-*/
-
 angular.module('qa-dashboard').component('analyticsTables', {
         templateUrl: '/static/qa_dashboard/analytics_tables_template.html',
         controller: AnalyticsTablesController,

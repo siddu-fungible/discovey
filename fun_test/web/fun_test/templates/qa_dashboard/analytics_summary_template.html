@@ -1,0 +1,57 @@
+<div>
+    <div class="col-xl-6 col-lg-6">
+        <table class="table table-nonfluid">
+            <tr>
+                <th rowspan="2">
+                    Feature
+                </th>
+                <th rowspan="2">
+                    Metric
+                </th>
+                <th rowspan="1" colspan="2">
+                    Palladium
+                </th>
+                <th rowspan="2">
+                    F1 Goal
+                </th>
+                <th>
+                    Status
+                </th>
+            </tr>
+            <tr>
+                <td>
+                    Actual
+                </td>
+                <td>
+                    Goal
+                </td>
+                <td>
+
+                </td>
+            </tr>
+            <tr ng-repeat="row in table">
+                <td>
+                    {{ row.feature }}
+                </td>
+                <td>
+                    {{ row.metric }}
+                </td>
+                <td>
+                    {{ row.palladium_actual }}
+                </td>
+                <td>
+                    {{ row.palladium_goal }}
+                </td>
+                <td>
+                    {{ row.f1_goal }}
+                </td>
+                <td ng-bind-html="getStatusIcon(row.result)">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-xl-6 col-lg-6">
+        Lug
+    </div>
+
+</div>

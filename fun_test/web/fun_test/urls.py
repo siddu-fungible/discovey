@@ -99,7 +99,8 @@ metric_urls = [
     url(r'^view_all_storage_charts$', metrics_views.view_all_storage_charts),
     url(r'^update_chart$', metrics_views.update_chart),
     url(r'^tables/(.*)/(.*)$', metrics_views.tables),
-    url(r'^table_data$', metrics_views.table_data)
+    url(r'^table_data$', metrics_views.table_data),
+    url(r'^summary$', metrics_views.summary_page)
 ]
 
 urlpatterns = [
