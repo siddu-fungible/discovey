@@ -49,7 +49,7 @@ function ActiveReleasesController($scope, $timeout, commonService) {
                     $scope.releaseProgressValues[thisInstance.fields.instance_name] = {
                         "Passed": (thisInstance.fields.numPassed * 100)/thisInstance.fields.numTotal,
                         "Failed": (thisInstance.fields.numFailed * 100)/thisInstance.fields.numTotal,
-                        "Blocked": (thisInstance.fields.numBlocked * 100)/thisInstance.fields.numBlocked,
+                        "Blocked": (thisInstance.fields.numBlocked * 100)/thisInstance.fields.numTotal,
                         "Pending": ((thisInstance.fields.numTotal - thisInstance.fields.numFailed - thisInstance.fields.numBlocked - thisInstance.fields.numPassed)  * 100)/thisInstance.fields.numTotal,
                         "Link": "/tcm/catalog_suite_execution_details_page/" + suiteExecutionId
                     };
