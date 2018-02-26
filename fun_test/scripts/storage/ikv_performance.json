@@ -35,14 +35,14 @@
       "ip_size": 40,
       "duration":15,
       "min_put_per_sec":5,
-      "min_gets_per_sec": 6,
+      "min_gets_per_sec": 4,
       "min_delete_per_sec": 7
     },
     {
       "ip_size": 512,
       "duration":15,
       "min_put_per_sec":3,
-      "min_gets_per_sec": 6,
+      "min_gets_per_sec": 4,
       "min_delete_per_sec": 7
     },
     {

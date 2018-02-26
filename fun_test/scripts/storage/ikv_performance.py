@@ -41,7 +41,7 @@ class IkvPerformance(FunTestScript):
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
         topology = topology_obj_helper.deploy()
-        topology_obj_helper.save(file_name="/tmp/pickle.pkl")
+        #topology_obj_helper.save(file_name="/tmp/pickle.pkl")
         # topology = topology_obj_helper.load(file_name="/tmp/pickle.pkl")
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Ensure deploy is successful")
@@ -55,6 +55,7 @@ class FunTestCase1(FunTestCase):
         self.set_test_details(id=1,
                               summary="LIKV Performance",
                               steps="""
+                              1. Create 3 Storage Volumes with size 
                               """)
 
     def setup(self):
@@ -159,10 +160,10 @@ class FunTestCase1(FunTestCase):
         return result
 
     def run(self):
-        topology_obj_helper = TopologyHelper(spec=topology_dict)
-        topology = topology_obj_helper.load('/tmp/pickle.pkl')
+        #topology_obj_helper = TopologyHelper(spec=topology_dict)
+        #topology = topology_obj_helper.load('/tmp/pickle.pkl')
         # set funos topoplogy
-        # topology = fun_test.shared_variables["topology"]
+        topology = fun_test.shared_variables["topology"]
         dut_instance = topology.get_dut_instance(index=0)
         dut_instance.restart()
 

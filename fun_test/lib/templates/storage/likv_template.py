@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 import hashlib
 import random
-from string import printable,ascii_letters
+from string import printable, ascii_letters
 
 from lib.host.storage_controller import *
 
@@ -139,13 +139,3 @@ class LikvTemplate(object):
                 data_str = char_str
             yield self.get_sha256_hex(data_str), data_str
             del data_str
-
-
-if __name__ == "__main__":
-    storage_obj = StorageController(target_port=40220,
-                                    target_ip="192.168.56.12",
-                                    mode="likv")
-    likv_obj = LikvTemplate(volume_info={},
-                            storage_controller_obj=storage_obj,
-                            likv_volume_id=10)
-    likv_obj.storage_controller_obj.peek("stats/likv")
