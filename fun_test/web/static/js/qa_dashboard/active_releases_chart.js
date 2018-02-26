@@ -7,7 +7,7 @@ function ActiveReleasesController($scope, $timeout, commonService) {
     ctrl.$onInit = function () {
         $scope.status = "idle";
         $scope.charting = true;
-        $scope.colors = ['#5cb85c', '#d9534f', 'Grey'];
+        $scope.colors = ['#5cb85c', '#d9534f', 'purple', 'Grey'];
 
         $scope.releaseProgressValues = {};
         $scope.series = ["Passed", "Failed", "Blocked", "Pending"];
