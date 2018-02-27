@@ -82,8 +82,7 @@
                                             <label class="label label-primary"
                                                    ng-repeat="component in info.components"> {{ component }}</label>
                                         </td>
-                                        <td><label ng-if="info.summaryResult" class="label label-
-                                            {{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
+                                        <td><label ng-if="info.summaryResult" class="label label-{{ resultToClass(info.summaryResult)}}">{{ info.summaryResult }}</label></td>
                                         <td>
                                             <a data-toggle="collapse" data-target="#info-table-{{ $index }}" class="clickable"><span class="fa fa-plus"></span></a>
                                             <table class="table collapse" id="info-table-{{ $index }}">
