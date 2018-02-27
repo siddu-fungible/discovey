@@ -294,3 +294,7 @@ input:checked + .slider:before {
 .modal-dialog {
     width: auto;
 }
+
+.progress-bar-blocked {
+    background-color: purple;
+}

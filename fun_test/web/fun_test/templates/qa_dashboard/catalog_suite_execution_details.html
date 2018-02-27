@@ -157,6 +157,11 @@
                                                              {{ executionDetails.num_failed * 100/executionDetails.num_total }}%">
                                                     F
                                                 </div>
+                                                <div class="progress-bar progress-bar-blocked" role="progressbar"
+                                                     style="width:
+                                                             {{ executionDetails.num_blocked * 100/executionDetails.num_total }}%">
+                                                    B
+                                                </div>
                                                 <div class="progress-bar progress-bar-info" role="progressbar"
                                                      style="width:0%">U
                                                 </div>
@@ -219,6 +224,11 @@
                                                      style="width:
                                                              {{ moduleInfo[module].numFailed * 100/moduleInfo[module].numTotal }}%">
                                                     F
+                                                </div>
+                                                <div class="progress-bar progress-bar-blocked" role="progressbar"
+                                                     style="width:
+                                                             {{ moduleInfo[module].numBlocked * 100/moduleInfo[module].numTotal }}%">
+                                                    B
                                                 </div>
                                                 <div class="progress-bar progress-bar-info" role="progressbar"
                                                      style="width:0%">U
@@ -287,6 +297,11 @@
                                                                  style="width:
                                                                          {{ getComponentInfo(component).numFailed * 100/getComponentInfo(component).numTotal }}%">
                                                                 F
+                                                            </div>
+                                                            <div class="progress-bar progress-bar-blocked" role="progressbar"
+                                                                 style="width:
+                                                                         {{ getComponentInfo(component).numBlocked * 100/getComponentInfo(component).numTotal }}%">
+                                                                B
                                                             </div>
                                                             <div class="progress-bar progress-bar-info" role="progressbar"
                                                                  style="width:0%">U
