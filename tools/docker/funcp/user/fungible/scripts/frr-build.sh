@@ -16,10 +16,17 @@ if [ ! -d "FunControlPlane" ]; then
     echo "Download FunControlPlane source"
 fi
 
+if [ ! -d "FunSDK" ]; then
+   git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
+   echo "Download FunSDK source"
+   cd FunSDK
+   sudo scripts/bob --sdkup
+fi
+
 #
 # Compile FunControl Plane
 #
-cd FunControlPlane
+cd $WORKSPACE/FunControlPlane
 make cleanall
 make -j 2 
 #

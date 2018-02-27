@@ -7,12 +7,12 @@ function AnalyticsChartDashboardController($scope, $http, commonService) {
         console.log("AnalyticsChartDashboardController");
         $scope.chart1Name = "BLT Performance IOPS";
         $scope.model1Name = "PerformanceBlt";
-        $scope.chart2Name = "BLT Performance Latency";
-        $scope.model2Name = "PerformanceBlt";
-        $scope.chart3Name = "IKV Performance";
-        $scope.model3Name = "PerformanceIkv";
+        $scope.chart2Name = "BLT Write IOPS";
+        $scope.model2Name = "VolumePerformance";
+        $scope.chart3Name = "BLT Write Latency";
+        $scope.model3Name = "VolumePerformance";
     };
 
 }
 
-angular.module('qa-dashboard').controller("analyticsChartDashboardController", AnalyticsChartDashboardController)
+angular.module('qa-dashboard').controller("analyticsChartDashboardController", AnalyticsChartDashboardController);

@@ -37,7 +37,10 @@
         <script src="{% static "js/common/fun_chart.js" %}"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
         <script data-require="ui-bootstrap@*" data-semver="0.12.1" src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.12.1.min.js"></script>
+        <script src="https://code.highcharts.com/highcharts-more.js"></script>
+        <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
         <script src="{% static "js/qa_dashboard/fun_metric_chart.js" %}"></script>
+
 
 
 
@@ -102,6 +105,7 @@
                         <li><a href="/regression/submit_job_page">Submit Job</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="/regression/jenkins_jobs">Jenkins Jobs</a></li>
+                        <li><a href="/regression/jobs_by_tag/network-sanity">Networking Sanity</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
@@ -115,9 +119,10 @@
                 </li>
                 <li class="dropdown">
                     <a href="#" style="color: white;background-color: #337ab7" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                       aria-expanded="false">Metrics<span class="caret"></span></a>
+                       aria-expanded="false">Performance<span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="/metrics">All</a> </li>
+                        <li><a href="/metrics/summary">Summary</a></li>
                     </ul>
                 </li>
             </ul>

@@ -106,6 +106,12 @@ def view_all_storage_charts(request):
 def tables(request, metric_model_name, chart_name):
     return render(request, 'qa_dashboard/analytics_tables.html', locals())
 
+
+@csrf_exempt
+def summary_page(request):
+    return render(request, 'qa_dashboard/analytics_summary_page.html', locals())
+
+
 @csrf_exempt
 @api_safe_json_response
 def table_data(request):

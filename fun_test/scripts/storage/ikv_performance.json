@@ -1,0 +1,91 @@
+{
+  "likv_volume_info": {
+    "volume_type": "VOL_TYPE_BLK_LOCAL_THIN",
+    "likv_volume_id": 10,
+    "max_keys": 131072,
+    "init_key": 4096,
+    "init_lvs_bytes": 1048576,
+    "max_lvs_bytes": 1073741824,
+    "volume_info": [
+      {
+        "name": "likv-dir-store",
+        "uuid": "0020-0001",
+        "capacity": 4198400,
+        "likv_type": "lvs_dir_store",
+        "block_size": 4096
+      },
+      {
+        "name": "likv-lvs-store",
+        "uuid": "0020-0002",
+        "capacity": 1073741824,
+        "likv_type": "lvs_volume",
+        "block_size": 4096
+      },
+      {
+        "name": "likv-lvs-allocator",
+        "uuid": "0020-0003",
+        "capacity": 5623808,
+        "likv_type": "lvs_allocator_store",
+        "block_size": 4096
+      }
+    ]
+  },
+  "test_params":[
+    {
+      "ip_size": 40,
+      "duration":15,
+      "min_put_per_sec":5,
+      "min_gets_per_sec": 4,
+      "min_delete_per_sec": 7
+    },
+    {
+      "ip_size": 512,
+      "duration":15,
+      "min_put_per_sec":3,
+      "min_gets_per_sec": 4,
+      "min_delete_per_sec": 7
+    },
+    {
+      "ip_size": 1024,
+      "duration":15,
+      "min_put_per_sec":2,
+      "min_gets_per_sec": 4,
+      "min_delete_per_sec": 7
+    },
+    {
+      "ip_size": 4096,
+      "duration":15,
+      "min_put_per_sec":2,
+      "min_gets_per_sec": 2,
+      "min_delete_per_sec": 7
+    },
+    {
+      "ip_size": 8132,
+      "duration":15,
+      "min_put_per_sec":2,
+      "min_gets_per_sec": 4,
+      "min_delete_per_sec": 7
+    },
+    {
+      "ip_size": 16384,
+      "duration":30,
+      "min_put_per_sec":2,
+      "min_gets_per_sec": 3,
+      "min_delete_per_sec": 7
+    },
+    {
+      "ip_size": 32768,
+      "duration":30,
+      "min_put_per_sec":1,
+      "min_gets_per_sec": 1,
+      "min_delete_per_sec": 7
+    },
+    {
+      "ip_size": 65535,
+      "duration": 30,
+      "min_put_per_sec": 1,
+      "min_gets_per_sec": 1,
+      "min_delete_per_sec": 7
+    }
+  ]
+}

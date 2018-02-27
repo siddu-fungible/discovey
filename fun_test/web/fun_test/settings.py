@@ -102,6 +102,10 @@ DATABASES = {
     'performance': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, PERFORMANCE_DB_FILE)
+    },
+    'regression': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, REGRESSION_DB_FILE)
     }
 }
 

@@ -9,7 +9,6 @@ import dill
 # fun_test.enable_debug()
 
 
-
 topology_dict = {
     "name": "Basic Storage",
     "dut_info": {
@@ -46,13 +45,16 @@ class MyScript(FunTestScript):
         TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         pass
 
+
 def get_hex(value):
     return ''.join(x.encode('hex') for x in value)
+
 
 def get_sha256_hex(value):
     m = hashlib.sha256()
     m.update(value)
     return get_hex(value=m.digest())
+
 
 class FunTestCase1(FunTestCase):
     def describe(self):
@@ -80,9 +82,7 @@ class FunTestCase1(FunTestCase):
                      target_file_path=artifact_file_name)
         fun_test.add_auxillary_file(description="F1 Log", filename=artifact_file_name)
 
-
     def run(self):
-
         topology = fun_test.shared_variables["topology"]
         dut_instance = topology.get_dut_instance(index=0)
 
@@ -90,7 +90,7 @@ class FunTestCase1(FunTestCase):
         storage_controller = StorageController(mode="likv",
                                                target_ip=dut_instance.host_ip,
                                                target_port=dut_instance.external_dpcsh_port)
-        contents = "0123456789012345678901234567890123456789012345678901234567890123456789"
+        contents = "012345678901234567890123456789012345 l6789012345678901234567890123456789"
         input_value = get_hex(contents)
         key_hex = get_sha256_hex(value=input_value)
         dir_vol_uuid = '0020-0001'
@@ -102,32 +102,28 @@ class FunTestCase1(FunTestCase):
         init_lvs_bytes = 1 << 20
         init_keys = 1 << 12
 
-
         storage_controller = StorageController(mode="storage",
                                                target_ip=dut_instance.host_ip,
                                                target_port=dut_instance.external_dpcsh_port)
         result = storage_controller.create_thin_block_volume(capacity=4198400,
-                                                      uuid=dir_vol_uuid,
-                                                      name="vol-likv-dir-1",
-                                                      block_size=4096)
+                                                             uuid=dir_vol_uuid,
+                                                             name="vol-likv-dir-1",
+                                                             block_size=4096)
         fun_test.test_assert(result["status"], "Create dir volume")
 
-
         result = storage_controller.create_thin_block_volume(capacity=1073741824,
-                                                      block_size=4096,
-                                                      name="vol-likv-lvs-1",
-                                                      uuid=lvs_vol_uuid)
+                                                             block_size=4096,
+                                                             name="vol-likv-lvs-1",
+                                                             uuid=lvs_vol_uuid)
 
         fun_test.test_assert(result["status"], "Create lvs volume")
 
         result = storage_controller.create_thin_block_volume(capacity=5623808,
-                                                      block_size=4096,
-                                                      name="vol-lvs-allocator-1",
-                                                      uuid=lvs_allocator_uuid)
+                                                             block_size=4096,
+                                                             name="vol-lvs-allocator-1",
+                                                             uuid=lvs_allocator_uuid)
 
         fun_test.test_assert(result["status"], "Create lvs allocator")
-
-
 
         storage_controller = StorageController(mode="likv",
                                                target_ip=dut_instance.host_ip,
@@ -151,8 +147,8 @@ class FunTestCase1(FunTestCase):
                     "volume_id": volume_id,
                     'dir_uuid': dir_vol_uuid,
                     'lvs_vol_uuid': lvs_vol_uuid,
-                    'lvs_allocator_uuid': lvs_allocator_uuid
-                    }
+                    'lvs_allocator_uuid': lvs_allocator_uuid,
+                    "options": 0}
         result = storage_controller.json_command(action="create", data=create_d)
         fun_test.test_assert(result["status"], "Likv create")
         open_d = {"volume_id": volume_id}
@@ -169,7 +165,8 @@ class FunTestCase1(FunTestCase):
         ba = bytearray.fromhex(result["data"]["value"])
         ba_str = str(ba)
 
-        fun_test.test_assert_expected(actual=contents, expected=ba_str, message="Ensure put value and get value are same")
+        fun_test.test_assert_expected(actual=contents, expected=ba_str,
+                                      message="Ensure put value and get value are same")
         result = storage_controller.command("peek stats/likv")
         fun_test.simple_assert(result["status"], "Fetch ikv stats")
         volume_id = str(volume_id)
@@ -178,6 +175,7 @@ class FunTestCase1(FunTestCase):
                                       expected=1, message="LIKV gets")
         fun_test.test_assert_expected(actual=result["data"][volume_id]["puts"],
                                       expected=1, message="LIKV puts")
+
 
 if __name__ == "__main__":
     myscript = MyScript()

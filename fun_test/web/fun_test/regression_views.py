@@ -37,6 +37,12 @@ def jenkins_jobs(request):
     # tags = json.dumps(["none"])
     return render(request, 'qa_dashboard/regression.html', locals())
 
+def jobs_by_tag(request, tag):
+    filter_string = SUITE_EXECUTION_FILTERS["ALL"]
+    tags = json.dumps([tag])
+    # tags = json.dumps(["none"])
+    return render(request, 'qa_dashboard/regression.html', locals())
+
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
 
@@ -213,17 +219,23 @@ def get_catalog_test_case_execution_summary_result(suite_execution_id, jira_id):
     te_count = ctes.count()
     num_passed = 0
     num_failed = 0
+    num_blocked = 0
     for cte in ctes:
-        te = TestCaseExecution.objects.get(execution_id=cte.execution_id)
+        te = TestCaseExecution.objects.using('regression').get(execution_id=cte.execution_id)
         if te.result == RESULTS["PASSED"]:
             num_passed += 1
         if te.result == RESULTS["FAILED"]:
             num_failed += 1
+        if te.result == RESULTS["BLOCKED"]:
+            num_blocked += 1
 
     if num_failed:
         summary_result = RESULTS["FAILED"]
     if num_passed == te_count:
         summary_result = RESULTS["PASSED"]
+    if num_blocked:
+        summary_result = RESULTS["BLOCKED"]
+
     # if num_passed == 0:
     #    summary_result = RESULTS["FAILED"]
     return summary_result

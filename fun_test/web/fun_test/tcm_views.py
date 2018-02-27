@@ -15,6 +15,7 @@ from django.db.transaction import atomic
 from web.fun_test.models_helper import add_suite_execution, add_test_case_execution
 from fun_global import get_current_time, RESULTS
 from django.core import serializers
+from django.apps import apps
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -29,6 +30,10 @@ MODULE_COMPONENT_MAP = {
                    'nw-ut-stress'],
     "storage": ["st-nvmeof", "st-durable-volume", "st-likv"]
 }
+
+def get_jira_manager():
+    app_config = apps.get_app_config('fun_test')
+    return app_config.get_jira_manager()
 
 def index(request):
     return render(request, 'qa_dashboard/tcm.html', locals())
@@ -162,8 +167,9 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
     result = initialize_result(failed=True)
     num_passed = 0
     num_failed = 0
+    num_blocked = 0
     num_total = 0
-    jira_manager = JiraManager()
+    jira_manager = get_jira_manager()
     try:
         suite_execution = CatalogSuiteExecution.objects.get(suite_execution_id=suite_execution_id)
         logger.info("Retrieved suite execution id: {}".format(suite_execution.suite_execution_id))
@@ -177,10 +183,10 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
             if te.jira_id not in payload["jira_ids"]:
                 payload["jira_ids"][te.jira_id] = {}
                 payload["jira_ids"][te.jira_id]["instances"] = []
-            if not "module_info" in payload:
+            if "module_info" not in payload:
                 payload["module_info"] = {}
                 for key in MODULE_COMPONENT_MAP:
-                    payload["module_info"][key] = {"numTotal": 0, "numPassed": 0, "numFailed": 0}
+                    payload["module_info"][key] = {"numTotal": 0, "numPassed": 0, "numFailed": 0, "numBlocked": 0}
             instances = payload["jira_ids"][te.jira_id]["instances"]
             this_module = None
             if with_jira_attributes:
@@ -191,7 +197,7 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
             info["execution_id"] = te.execution_id
             info["suite_execution_id"] = te.catalog_suite_execution_id
             info["owner"] = te.engineer.short_name
-            tex = TestCaseExecution.objects.get(execution_id=te.execution_id)
+            tex = TestCaseExecution.objects.using('regression').get(execution_id=te.execution_id)
             info["result"] = tex.result
             info["bugs"] = tex.bugs
             info["comments"] = tex.comments
@@ -199,6 +205,8 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
                 num_passed += 1
             if info["result"] == RESULTS["FAILED"]:
                 num_failed += 1
+            if info["result"] == RESULTS["BLOCKED"]:
+                num_blocked += 1
 
             if with_jira_attributes:
                 payload["module_info"][this_module]["numTotal"] += 1
@@ -206,10 +214,13 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
                     payload["module_info"][this_module]["numPassed"] += 1
                 if info["result"] == RESULTS["FAILED"]:
                     payload["module_info"][this_module]["numFailed"] += 1
+                if info["result"] == RESULTS["BLOCKED"]:
+                    payload["module_info"][this_module]["numBlocked"] += 1
             instances.append(info)
         payload["num_total"] = num_total
         payload["num_passed"] = num_passed
         payload["num_failed"] = num_failed
+        payload["num_blocked"] = num_blocked
         payload["owner_email"] = suite_execution.owner_email
         payload["instance_name"] = suite_execution.instance_name
 
@@ -244,7 +255,7 @@ def basic_issue_attributes(request):
     logger.info("basic_issue_attributes: " + str(request_json))
     jira_ids = request_json
     try:
-        issue_attributes = JiraManager().get_basic_issue_attributes_by_ids(ids=jira_ids)
+        issue_attributes = get_jira_manager().get_basic_issue_attributes_by_ids(ids=jira_ids)
         result["data"] = issue_attributes
         result["status"] = True
     except Exception as ex:
@@ -334,7 +345,7 @@ def update_catalog(request):
     flat_jql = " ".join(jqls)
 
     try:
-        jira_manager = JiraManager()
+        jira_manager = get_jira_manager()
         issues = jira_manager.get_issues_by_jql(jql=flat_jql)
         logger.info("Issues: " + str(issues))
         if issues:
@@ -360,7 +371,7 @@ def preview_catalog(request):
     jqls = request_json["jqls"]
     flat_jql = ""
     try:
-        jira_manager = JiraManager()
+        jira_manager = get_jira_manager()
         flat_jql = " ".join(jqls)
         issues = jira_manager.get_issues_by_jql(jql=flat_jql)
         logger.info("Issues: " + str(issues))
@@ -386,7 +397,7 @@ def catalog(request, catalog_name):
     payload["category"] = suite.category
     payload["test_cases"] = []
     payload["jqls"] = json.loads(suite.jqls)
-    jira_manager = JiraManager()
+    jira_manager = get_jira_manager()
 
     try:
         for test_case in suite.test_cases.all():
@@ -406,12 +417,12 @@ def create_catalog(request):
     request_json = json.loads(request.body)
     logger.info("Catalog info: " + str(request_json))
     try:
-        jira_manager = JiraManager()
+        jira_manager = get_jira_manager()
         issues = jira_manager.get_issues_by_jql(jql=request_json["jql"])
         logger.info("Issues: " + str(issues))
         jql = request_json["jql"]
         if issues:
-            pks =_create_catalog_test_case(issues)
+            pks = _create_catalog_test_case(issues)
             test_cases = CatalogTestCase.objects.filter(pk__in=pks)
             suite = CatalogSuite(name=request_json["name"],
                                  category=request_json["category"],

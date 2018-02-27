@@ -25,10 +25,9 @@ Topology manager can be run on standalone (single) physical server/VM or on a cl
          (i) sudo apt-get install -qy openvswitch-switch openvswitch-common
    (c) sudo apt-get install -y python-pip
    (d) sudo pip install paramiko zmq netaddr
-   (e) Copy relevant docker images from topo_manager@10.1.20.67 (pwd: fun123)
-         psim: PSIM + DPCSH + FRR 
-         frr_v4: FRR 
-         tgen_v3: Traffic Gen 
+   (e) Either build or copy relevant docker images from root@10.1.20.67:/home/asurana/docker_images/ (pwd: fun123)
+         Leaf FRR: reg-nw-frr:v1
+         spine FRR: frr:v1
        Once these images are copied, they can be loaded by doing:
          sudo docker load < image_name
    (f) Start ZMQ agent on all the VM (recv_zmq.py should be copied to each VM).
