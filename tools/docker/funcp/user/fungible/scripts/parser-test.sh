@@ -14,6 +14,8 @@ git clone git@github.com:fungible-inc/FunControlPlane.git
 git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
 cd $WORKSPACE/FunSDK
 sudo scripts/bob --sdkup
+cd $WORKSPACE/FunSDK/integration_test
+sudo lib/build_setup.py
 
 #cd $WORKSPACE/FunControlPlane
 #./scripts/nutest/test_l3_traffic -l

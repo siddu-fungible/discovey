@@ -19,9 +19,10 @@ fi
 if [ ! -d "FunSDK" ]; then
    git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
    echo "Download FunSDK source"
-   cd FunSDK
-   sudo scripts/bob --sdkup
 fi
+
+cd FunSDK
+sudo scripts/bob --sdkup
 
 #
 # Compile FunControl Plane
@@ -78,20 +79,6 @@ sudo chown -R frr:frrvty /etc/frr
 sudo chown frr:frrvty /etc/default/frr
 sudo chown -R frr:frrvty /opt/fungible/sbin/frr
 sudo /opt/fungible/sbin/frr/frr start
-
-#
-# Run Integration Test
-#
-#cd ../FunControlPlane
-#sudo -E ./networking/test/integration/test_l3_integration.py -p 
-# ./scripts/nutest/test_l3_traffic -p
-# Run Parser Tests
-#
-
-#cd $WORKSPACE/FunControlPlane
-#sudo -E python scripts/nutest/test_l3_traffic.py -n 12 --setuponly
-#./scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv
-#sudo -E python scripts/nutest/test_l3_traffic.py -n 12 --kill
 
 echo "Testing Completed"
 while [ 1 ]

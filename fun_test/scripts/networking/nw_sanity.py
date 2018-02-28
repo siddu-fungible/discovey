@@ -92,6 +92,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
 
         qemu_status = "qemux86-64 login:"
         sanity_status = "PASSED"
+        escape_seq = "grep"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -102,8 +103,10 @@ class NwSanitySimpleL3Integration(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
+        output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
+        output = linux_obj.command("make venv")
         output = linux_obj.command(
-            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > {}/nutest.txt 2>&1"
+            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -p -b -s > {}/nutest.txt 2>&1"
             .format(target_workspace, target_workspace), timeout=300)
 
         timer = FunTimer(max_time=180)
@@ -111,7 +114,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
         while not timer.is_expired():
             output = linux_obj.command(command="grep '{}' {}/psim.log".format(qemu_status, target_workspace),
                                        include_last_line=True)
-            if re.search(qemu_status, output):
+            if re.search(qemu_status, output) and not re.search(escape_seq, output): 
                 fun_test.log("PSIM + QEMU up")
                 status = True
                 break
@@ -123,7 +126,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
         while not timer.is_expired():
             output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(sanity_status, target_workspace),
                                        include_last_line=True)
-            if re.search(sanity_status, output):
+            if re.search(sanity_status, output) and not re.search(escape_seq, output):
                 fun_test.log("NwSanitySimpleL3Integration Success")
                 status = True
                 break
@@ -149,6 +152,7 @@ class NwSanityPRV(FunTestCase):
     def run(self):
         prv_completed = "Start Traffic"
         prv_status = "ATTENTION|FAIL|ERROR|RuntimeError"
+        escape_seq = "grep"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -160,9 +164,9 @@ class NwSanityPRV(FunTestCase):
 
         output = linux_obj.command("bash")
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
-        output = linux_obj.command("make venv".format(target_workspace))
+        output = linux_obj.command("make venv")
         output = linux_obj.command(
-            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv >> {}/nutest.txt 2>&1"
+            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic --testcase prv >> {}/nutest.txt 2>&1"
                         .format(target_workspace, target_workspace), timeout=600)
 
         timer = FunTimer(max_time=600)
@@ -170,7 +174,7 @@ class NwSanityPRV(FunTestCase):
         while not timer.is_expired():
             output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(prv_completed, target_workspace),
                                        include_last_line=True)
-            if re.search(prv_completed, output):
+            if re.search(prv_completed, output) and not re.search(escape_seq, output):
                 status = True
                 break
             fun_test.sleep("Waiting for NwSanityPRV to complete", seconds=60)
@@ -179,7 +183,7 @@ class NwSanityPRV(FunTestCase):
         status = True
         output = linux_obj.command(command="grep -E '{}' {}/nutest.txt".format(prv_status, target_workspace))
         for res in prv_status.split('|'):
-            if re.search(res, output):
+            if re.search(res, output) and not and not re.search(escape_seq, output):
                 status = False
         fun_test.test_assert(status, "NwSanityPRV Result")
 
