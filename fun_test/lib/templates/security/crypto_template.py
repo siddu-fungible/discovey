@@ -29,8 +29,7 @@ class CryptoTemplate:
             line_list = line.split("=")
             if len(line_list) > 1:
                 if ".plaintext" in line_list[0]:
-                    text = (line_list[1].replace('"', '').replace('\n', '')).strip()
-                    plaintext_list.append(text)
+                    plaintext_list.append((line_list[1].replace('"', '').replace('\n', '')).strip())
                 elif ".digest" in line_list[0]:
                     digest_list.append((line_list[1].replace('"', '').replace('\\x', '').replace('\n', '')).strip())
 
@@ -52,8 +51,7 @@ class CryptoTemplate:
                 if ".key" in line_list[0]:
                     key_list.append((line_list[1].replace('"', '').replace('\n', '')).strip())
                 elif ".plaintext" in line_list[0]:
-                    text = (line_list[1].replace('"', '').replace('\n', '')).strip()
-                    plaintext_list.append(text)
+                    plaintext_list.append((line_list[1].replace('"', '').replace('\n', '')).strip())
                 elif ".digest" in line_list[0]:
                     digest_list.append((line_list[1].replace('"', '').replace('\\x', '').replace('\n', '')).strip())
 
@@ -69,8 +67,8 @@ class CryptoTemplate:
     def compute_hmac(self, algorithm, key, hmac_input, engine=None):
         return True
 
-    def encrypt(self, algorithm, encrypt_input, key):
+    def encrypt(self, algorithm,  encrypt_input_file, encrypt_output_file, key):
         return True
 
-    def decrypt(self, algorithm, decrypt_input, key):
+    def decrypt(self, algorithm, decrypt_input_file, encrypt_output_file, key):
         return True
