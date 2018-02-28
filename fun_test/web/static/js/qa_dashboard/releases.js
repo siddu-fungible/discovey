@@ -34,6 +34,7 @@
                         let thisInstance = instance;
                         thisInstance.fields.numPassed = 0;
                         thisInstance.fields.numFailed = 0;
+                        thisInstance.fields.numBlocked = 0;
                         thisInstance.fields.numTotal = 0;
                         angular.forEach(data.jira_ids, function (info, jiraId) {
                             info.instances.forEach(function (instance) {
@@ -44,7 +45,9 @@
                                 if (instance.result === "FAILED") {
                                     thisInstance.fields.numFailed += 1;
                                 }
-
+                                if (instance.result === "BLOCKED") {
+                                    thisInstance.fields.numBlocked += 1;
+                                }
 
                             });
                         });

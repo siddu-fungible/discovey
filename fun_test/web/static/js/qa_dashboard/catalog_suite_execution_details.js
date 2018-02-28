@@ -55,11 +55,11 @@
 
                     $scope.moduleInfo = {};
                     angular.forEach($scope.moduleComponentMapping, function (info, module) {
-                        $scope.moduleInfo[module] = {showingDetails: false, numBlocked: 0};
+                        $scope.moduleInfo[module] = {showingDetails: false};
                     });
                     $scope.fetchCatalogSuiteExecutionDetails(true).then(function () {
                         $scope.fetchBasicIssueAttributes(true).then(function () {
-                            $scope.overrideOptions = ["PASSED", "FAILED", "NOT_RUN"];  //TODO
+                            $scope.overrideOptions = ["PASSED", "FAILED", "NOT_RUN", "SKIPPED", "BLOCKED"];  //TODO
                             $scope.currentView = "components";
                             //$scope.currentView = "all";
 
@@ -207,26 +207,14 @@
                 $scope.moduleInfo = data.module_info;
                 angular.forEach($scope.moduleInfo, function (info, moduleName) {
                     let passedPercentage = (info.numPassed * 100) / (info.numTotal);
-                    let pendingPercentage = ((info.numTotal - info.numPassed - info.numFailed) * 100) / (info.numTotal);
-
-
-                    $scope.moduleInfo[moduleName].numBlocked = 0;
-                    $scope.executionDetails.numBlocked = 0;
-                    let blockedSetOfTcs = new Set();
-                    $scope.moduleComponentMapping[moduleName].forEach(function (component) {
-                        if($scope.componentViewDetails.hasOwnProperty(component)) {
-                            /*$scope.moduleInfo[moduleName].numBlocked += $scope.componentViewDetails[component].numBlocked;*/
-                            angular.forEach($scope.componentViewDetails[component].jiraIds, function (info, jiraId) {
-                                if(info.blockerCount) {
-                                    blockedSetOfTcs.add(jiraId);
-                                }
-                            });
-                        }
-                    });
-                    $scope.moduleInfo[moduleName].numBlocked = blockedSetOfTcs.size;
-                    let moduleBlockedPercentage = $scope.moduleInfo[moduleName].numBlocked * 100/$scope.moduleInfo[moduleName].numTotal;
+                    let pendingPercentage = ((info.numTotal - info.numPassed - info.numFailed - info.numBlocked) * 100) / (info.numTotal);
                     let moduleFailedPercentage = $scope.moduleInfo[moduleName].numFailed * 100 / (info.numTotal);
-                    moduleFailedPercentage = Math.abs(moduleFailedPercentage - moduleBlockedPercentage);
+                    let moduleBlockedPercentage = $scope.moduleInfo[moduleName].numBlocked * 100/ (info.numTotal);
+
+
+                    //$scope.moduleInfo[moduleName].numBlocked = 0;
+                    //$scope.executionDetails.numBlocked = 0;
+                    //$scope.moduleInfo[moduleName].numBlocked = info.numBlocked;
 
                     $scope.moduleProgressValues[moduleName] = {
                         "Passed": passedPercentage,
@@ -235,12 +223,8 @@
                         "Pending": pendingPercentage,
                     };
 
-                    angular.forEach($scope.moduleInfo, function(info, moduleName) {
-                        $scope.executionDetails.numBlocked += $scope.moduleInfo[moduleName].numBlocked;
-                    });
-                    $scope.executionDetails.blockedPercentage = $scope.executionDetails.numBlocked * 100/$scope.executionDetails.num_total;
                     $scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
-                    $scope.overallProgressValues["Failed"] = Math.abs($scope.executionDetails.failedPercentage - $scope.executionDetails.blockedPercentage)
+                    $scope.overallProgressValues["Failed"] = $scope.executionDetails.failedPercentage;
                     $scope.overallProgressValues["Pending"] = $scope.executionDetails.pendingPercentage;
                     $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
                 });
@@ -255,12 +239,11 @@
             return commonService.apiGet('/tcm/catalog_suite_execution_details/' + ctrl.suiteExecutionId, message).then(function (data) {
                 $scope.status = "idle";
                 $scope.executionDetails = data;
-                $scope.executionDetails.numBlocked = 0;
                 if ($scope.executionDetails.num_total > 0) {
                     $scope.executionDetails.passedPercentage = $scope.executionDetails.num_passed * 100 / $scope.executionDetails.num_total;
-                    $scope.executionDetails.failedPercentage = Math.abs($scope.executionDetails.num_failed - $scope.executionDetails.numBlocked) * 100/$scope.executionDetails.num_total;
-                    $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed - $scope.executionDetails.numBlocked)) * 100 / $scope.executionDetails.num_total;
-                    $scope.executionDetails.blockedPercentage = $scope.executionDetails.numBlocked * 100/$scope.executionDetails.num_total;
+                    $scope.executionDetails.failedPercentage = $scope.executionDetails.num_failed * 100/$scope.executionDetails.num_total;
+                    $scope.executionDetails.pendingPercentage = ($scope.executionDetails.num_total - ($scope.executionDetails.num_passed + $scope.executionDetails.num_failed + $scope.executionDetails.num_blocked)) * 100 / $scope.executionDetails.num_total;
+                    $scope.executionDetails.blockedPercentage = $scope.executionDetails.num_blocked * 100/$scope.executionDetails.num_total;
                     /*$scope.overallProgressValues["Passed"] = $scope.executionDetails.passedPercentage;
                     $scope.overallProgressValues["Blocked"] = $scope.executionDetails.blockedPercentage;
                     $scope.overallProgressValues["Failed"] = $scope.executionDetails.failedPercentage;
@@ -299,19 +282,21 @@
             let numPassed = 0;
             let numFailed = 0;
             let numUnknown = 0;
+            let numBlocked = 0;
             let numTotal = 0;
             let allBugs = 0;
-            let instanceBlockerCount = 0;
+            //let instanceBlockerCount = 0;
             instances.forEach(function (instance) {
 
 
                 instance.bugs = angular.fromJson(instance.bugs);
                 allBugs += instance.bugs.length;
+                /*
                 instance.bugs.forEach(function (bug) {
                     if (bug.blocker) {
                         instanceBlockerCount += 1;
                     }
-                });
+                });*/
 
                 numTotal += 1;
                 if (instance.result === "PASSED") {
@@ -319,6 +304,9 @@
                 }
                 if (instance.result === "FAILED") {
                     numFailed += 1;
+                }
+                if (instance.result === "BLOCKED") {
+                    numBlocked += 1;
                 }
                 if (instance.result === "UNKNOWN") {
                     numUnknown += 1;
@@ -328,7 +316,6 @@
             $scope.componentViewDetails[component]["jiraIds"][jiraId] = {
                 "instances": $scope.executionDetails.jira_ids[jiraId].instances,
                 allBugs: allBugs,
-                blockerCount: instanceBlockerCount,
                 summary: $scope.executionDetails.jira_ids[jiraId].summary,
                 summaryResult: $scope.executionDetails.jira_ids[jiraId].summaryResult
             };
@@ -337,12 +324,14 @@
                 Object.assign($scope.testCaseViewInstances, $scope.componentViewDetails[component]["jiraIds"]);
             }
 
+            /*
             if(instanceBlockerCount) {
                 $scope.componentViewDetails[component].numBlocked += 1;
-            }
+            }*/
             $scope.componentViewDetails[component]["numPassed"] += numPassed;
             $scope.componentViewDetails[component]["numFailed"] += numFailed;
             $scope.componentViewDetails[component]["numUnknown"] += numUnknown;
+            $scope.componentViewDetails[component]["numBlocked"] += numBlocked;
             $scope.componentViewDetails[component]["numTotal"] += numTotal;
 
 
@@ -413,28 +402,11 @@
                         Object.assign($scope.testCaseViewInstances, $scope.componentViewDetails[component].jiraIds);
                     }
                 });
-            } else if(filter === "BLOCKED") {
-                angular.forEach($scope.componentViewDetails, function(info, component) {
-
-                    if (component !== "undefined" && ($scope.componentModuleMapping[component] === module || (module === "ALL"))) {
-                        angular.forEach(info.jiraIds, function (innerInfo, jiraId) {
-                            if (innerInfo.summaryResult === "FAILED" && innerInfo.blockerCount) {
-                                innerInfo.show = true;
-                                $scope.lastTestCaseViewList.push(jiraId);
-
-                            } else {
-                                innerInfo.show = false;
-                            }
-                        });
-                        Object.assign($scope.testCaseViewInstances, info.jiraIds);
-
-                    }
-                })
             } else if(filter === "PENDING") {
                 angular.forEach($scope.componentViewDetails, function(info, component) {
                     if(component !== "undefined" && ($scope.componentModuleMapping[component] === module || (module === "ALL"))) {
                         angular.forEach(info.jiraIds, function(innerInfo, jiraId) {
-                            if(innerInfo.summaryResult !== "PASSED" && innerInfo.summaryResult !== "FAILED") {
+                            if(innerInfo.summaryResult !== "PASSED" && innerInfo.summaryResult !== "FAILED" && innerInfo.summaryResult !== "BLOCKED" ) {
                                 innerInfo.show = true;
                                 $scope.lastTestCaseViewList.push(jiraId);
 
@@ -473,19 +445,9 @@
                     $scope.lastTestCaseViewList.push(jiraId);
                 });
                 $scope.currentTestCaseViewComponent = component;
-            } else if(filter === "BLOCKED") {
-                angular.forEach($scope.componentViewDetails[component].jiraIds, function(info, jiraId) {
-                    if(info.blockerCount) {
-                        info.show = true;
-                        $scope.lastTestCaseViewList.push(jiraId);
-                    } else {
-                        info.show = false;
-                    }
-                });
-
             } else if(filter === "PENDING") {
                 angular.forEach($scope.componentViewDetails[component].jiraIds, function(info, jiraId) {
-                    if(info.summaryResult !== "PASSED" && info.summaryResult !== "FAILED") {
+                    if(info.summaryResult !== "PASSED" && info.summaryResult !== "FAILED" && info.summaryResult !== "BLOCKED") {
                         info.show = true;
                         $scope.lastTestCaseViewList.push(jiraId);
 
@@ -559,6 +521,7 @@
             $modal.open({
                 templateUrl: "/static/qa_dashboard/add_test_cases.html",
                 controller: ['$modalInstance', '$scope', 'commonService', 'suiteExecutionId', 'ownerEmail', AddTestCasesController],
+                windowClass: "modal-dialog-auto",
                 resolve: {
                     suiteExecutionId: function () {
                         return $scope.executionDetails.suite_execution_id;
@@ -620,7 +583,7 @@
 
     function BulkEditTestCasesController($modalInstance, $scope, commonService, $http, testCaseViewInstances) {
         let ctrl = this;
-        $scope.resultOptions = [null, "PASSED", "FAILED", "NOT_RUN"];
+        $scope.resultOptions = [null, "PASSED", "FAILED", "NOT_RUN", "SKIPPED", "BLOCKED"];
         $scope.owners = [{"name": "No change"}];
         $scope.bugs = [];
         $scope.testCaseViewInstances = testCaseViewInstances;
@@ -646,9 +609,10 @@
             if($scope.selectedResult) {
                 console.log("yes");
             }
+            /*
             if($scope.bugs.length && ($scope.selectedResult !== "FAILED")) {
                 return commonService.showError("Please set the result to FAILED, if you need to add bugs");
-            }
+            }*/
 
             console.log($scope.selectedOwner);
             // Update test-case execution

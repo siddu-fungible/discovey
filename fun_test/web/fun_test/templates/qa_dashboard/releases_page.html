@@ -21,10 +21,12 @@
                     <th>Total</th>
                     <th>Passed</th>
                     <th>Failed</th>
+                    <th>Blocked</th>
                     <th>Pending</th>
                     <th>Progress</th>
                     <th>Passed %</th>
                     <th>Failed %</th>
+                    <th>Blocked %</th>
                     <th>Pending %</th>
                     <th>Active Release</th>
                 </tr>
@@ -36,7 +38,8 @@
                     <td>{{ summaryEntry.fields.numTotal }}</td>
                     <td>{{ summaryEntry.fields.numPassed }}</td>
                     <td>{{ summaryEntry.fields.numFailed }}</td>
-                    <td>{{ (summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) }}</td>
+                    <td>{{ summaryEntry.fields.numBlocked }}</td>
+                    <td>{{ (summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) - summaryEntry.fields.numBlocked }}</td>
                     <td>
                         <div class="progress" style="height: 20px;">
                             <div class="progress-bar progress-bar-success" role="progressbar"
@@ -49,6 +52,11 @@
                                          {{ (summaryEntry.fields.numFailed * 100)/summaryEntry.fields.numTotal }}%">
                                 F
                             </div>
+                            <div class="progress-bar progress-bar-blocked" role="progressbar"
+                                 style="width:
+                                         {{ (summaryEntry.fields.numBlocked * 100)/summaryEntry.fields.numTotal }}%">
+                                B
+                            </div>
                             <div class="progress-bar progress-bar-info" role="progressbar"
                                  style="width:0%">U
                             </div>
@@ -57,7 +65,9 @@
                     </td>
                     <td>{{ (summaryEntry.fields.numPassed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
                     <td>{{ (summaryEntry.fields.numFailed * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
-                    <td>{{ ((summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed) * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+                    <td>{{ (summaryEntry.fields.numBlocked * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
+
+                    <td>{{ ((summaryEntry.fields.numTotal - summaryEntry.fields.numPassed - summaryEntry.fields.numFailed - summaryEntry.fields.numBlocked) * 100)/summaryEntry.fields.numTotal | number: 2}}</td>
                     <td>
                         <label class="switch">
                             <input type="checkbox" ng-checked="summaryEntry.fields.active" ng-click="activeReleaseClick(summaryEntry.fields.suite_execution_id, $event)">

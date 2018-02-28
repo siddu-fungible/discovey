@@ -291,6 +291,10 @@ input:checked + .slider:before {
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
 }
 
-.modal-dialog {
+.modal-dialog-auto {
     width: auto;
+}
+
+.progress-bar-blocked {
+    background-color: purple;
 }

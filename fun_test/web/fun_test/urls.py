@@ -26,6 +26,7 @@ regression_urls = [
     url(r'^completed_jobs$', regression_views.completed_jobs),
     url(r'^pending_jobs$', regression_views.pending_jobs),
     url(r'^jenkins_jobs', regression_views.jenkins_jobs),
+    url(r'^jobs_by_tag/(.*)$', regression_views.jobs_by_tag),
     url(r'^suite_executions/(\d+)/(\d+)/(.*)$', regression_views.suite_executions),
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),
@@ -98,7 +99,8 @@ metric_urls = [
     url(r'^view_all_storage_charts$', metrics_views.view_all_storage_charts),
     url(r'^update_chart$', metrics_views.update_chart),
     url(r'^tables/(.*)/(.*)$', metrics_views.tables),
-    url(r'^table_data$', metrics_views.table_data)
+    url(r'^table_data$', metrics_views.table_data),
+    url(r'^summary$', metrics_views.summary_page)
 ]
 
 urlpatterns = [

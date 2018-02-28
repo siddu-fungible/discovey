@@ -1,5 +1,8 @@
 from web.fun_test.models import Engineer
-
+from web.fun_test.models import CatalogSuite, CatalogSuiteExecution, CatalogTestCaseExecution, TestCaseExecution, Module
+from web.fun_test.models import CatalogTestCase
+from web.fun_test.metrics_models import ModelMapping
+from web.fun_test.metrics_models import MetricChart, VolumePerformance
 
 class UsersRouter(object):
     def db_for_read(self, model, **hints):
@@ -8,6 +11,12 @@ class UsersRouter(object):
         if hasattr(model, "tag"):
             if model.tag == "analytics":
                 return "performance"
+        if model in [CatalogSuite, CatalogSuiteExecution, CatalogTestCaseExecution, CatalogTestCase]:
+            return "regression"
+        elif model in [MetricChart, VolumePerformance, Module, ModelMapping]:
+            return "performance"
+        else:
+            i = 0
         return 'default'
 
     def db_for_write(self, model, **hints):
