@@ -70,7 +70,7 @@ class OpenSslScript(FunTestScript):
         # compute and compare digests
         for index, hmac_input in enumerate(input_list):
             host.create_file("{}{}.bin".format(base_file_name, index), contents=(hmac_dict[hmac_input].values())[0])
-            digest_output = openssl_template.compute_hmac(algorithm, (hmac_dict[hmac_input].keys())[0], "{}{}.bin".format(base_file_name, index))
+            digest_output = openssl_template.compute_hmac(algorithm, "{}{}.bin".format(base_file_name, index), key=(hmac_dict[hmac_input].keys())[0])
             print digest_output
             fun_test.simple_assert((digest_output == hmac_input), "hmacs match")
 

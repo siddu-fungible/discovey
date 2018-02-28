@@ -64,7 +64,7 @@ class CryptoTemplate:
     def compute_digest(self, algorithm, digest_input, engine=None):
         return True
 
-    def compute_hmac(self, algorithm, key, hmac_input, engine=None):
+    def compute_hmac(self, algorithm, hmac_input, key_type=None, key=None, engine=None):
         return True
 
     def encrypt(self, algorithm,  encrypt_input_file, encrypt_output_file, key):

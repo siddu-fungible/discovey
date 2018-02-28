@@ -48,7 +48,7 @@ class OpenSslTemplate(CryptoTemplate):
         digest_output = ((self.host.command(openssl_command)).split("="))[1].strip()
         return digest_output
 
-    def compute_hmac(self, algorithm, key, hmac_input, engine=None):
+    def compute_hmac(self, algorithm, hmac_input, key_type=None, key=None, engine=None):
         openssl_command = self.OPENSSL + " " + self.DGST + " -" + algorithm + " -" + self.HMAC + " " + key + " " + hmac_input
         hmac_output = ((self.host.command(openssl_command)).split("="))[1].strip()
         return hmac_output
