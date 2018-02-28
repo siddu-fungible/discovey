@@ -494,11 +494,14 @@
             $scope.numDeleteResponses = 0;
 
             jiraIds.forEach((jiraId) => {
-               commonService.apiDelete("/tcm/remove_catalog_test_case_execution/" + ctrl.suiteExecutionId + "/" + jiraId).then(() => {
-
+                commonService.apiDelete("/tcm/remove_catalog_test_case_execution/" + ctrl.suiteExecutionId + "/" + jiraId).then(() => {
+                    $scope.numDeleteResponses += 1;
                 });
             });
             $scope.deleteInProgress = false;
+            if ($scope.numDeleteResponses > 0) {
+                $window.location.reload();
+            }
         };
 
         $scope._isOneTestCaseSelected = () => {
