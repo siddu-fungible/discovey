@@ -183,7 +183,7 @@ class NwSanityPRV(FunTestCase):
         status = True
         output = linux_obj.command(command="grep -E '{}' {}/nutest.txt".format(prv_status, target_workspace))
         for res in prv_status.split('|'):
-            if re.search(res, output) and not and not re.search(escape_seq, output):
+            if re.search(res, output) and not re.search(escape_seq, output):
                 status = False
         fun_test.test_assert(status, "NwSanityPRV Result")
 
