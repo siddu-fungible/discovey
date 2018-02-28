@@ -521,6 +521,7 @@
             $modal.open({
                 templateUrl: "/static/qa_dashboard/add_test_cases.html",
                 controller: ['$modalInstance', '$scope', 'commonService', 'suiteExecutionId', 'ownerEmail', AddTestCasesController],
+                windowClass: "modal-dialog-auto",
                 resolve: {
                     suiteExecutionId: function () {
                         return $scope.executionDetails.suite_execution_id;
