@@ -546,24 +546,7 @@ class Linux(object, ToDictMixin):
         return pid
 
     @fun_test.safe
-    def create_file(self, file_name, contents, newline=True):
-        nl = ""
-        if not newline:
-            nl = " -n "
-        self.command("touch %s" % file_name)
-        lines = contents.split('\n')
-        if len(lines):
-            processed_line = lines[0].replace(r'"', r'\"')
-            self.command("echo %s \"%s\" > %s" % (nl, processed_line, file_name))
-
-        if len(lines) > 1:
-            for line in lines[1:]:
-                processed_line = line.replace(r'"', r'\"')
-                self.command("echo %s \"%s\" >> %s" % (nl, processed_line, file_name))
-        return file_name
-
-    @fun_test.safe
-    def create_file_using_printf(self, file_name, contents):
+    def create_file(self, file_name, contents):
         self.command("touch %s" % file_name)
         lines = contents.split('\n')
         if len(lines):
