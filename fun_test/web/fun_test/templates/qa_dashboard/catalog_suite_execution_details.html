@@ -326,6 +326,9 @@
 
         <div id="test-case-view" class="col-lg-12 col-xl-6" ng-if="testCaseViewInstances && currentView === 'components'">
             <span style="padding: 10px" class="fa fa-pencil text-primary"></span><a href="#" ng-click="bulkEditTestCaseClick()">Bulk Edit</a>
+            <span style="padding: 10px" class="fa fa-trash text-danger"></span><a href="#" ng-click="bulkRemoveClick()">Bulk Delete</a>
+            <div ng-if="deleteInProgress" class="progress-bar progress-bar-success" role="progressbar" style="width:{{ numDeleteResponses * 100/numDeleteRequests }}%">Deleting...</div>
+
             <legend>{{ currentTestCaseViewComponent }}</legend>
             <table class="table table-borderless table-nonfluid">
                 <tr>
