@@ -26,13 +26,20 @@ function AnalyticsSummaryController($scope, $http, commonService) {
     };
 
     $scope.populateTable = () => {
-        let features = ["networking", "storage", "security", "system"];
+        let features = ["networking", "storage", "accelerators"];
+
+        let featureMetricMapping = {};
+        featureMetricMapping["networking"] = ["Packets per second", "Instructions per packet"];
+        featureMetricMapping["storage"] = ["Raw Volume MIOPS", "Durable Volume MIOPS", "Raw Volume Latency local", "Raw Volume Latency Remote"];
+        featureMetricMapping["accelerators"] = ["Crypto AES-GCM/XTS Throughput", "Hash Engines", "Regex Throughput", "EC Throughput", "ZIP throughput"];
+
+
         let results = ["PASSED", "FAILED"];
         features.forEach((feature) => {
-            for (let i = 0; i < 5; i++ ) {
+            featureMetricMapping[feature].forEach((metric) => {
                 let oneEntry = {};
                 oneEntry.feature = feature;
-                oneEntry.metric = "Metric " + Math.floor(Math.random() * 20);
+                oneEntry.metric = metric;
                 oneEntry.palladium_actual = Math.floor(Math.random() * 20);
                 oneEntry.palladium_goal = Math.floor(Math.random() * 20);
                 oneEntry.f1_goal = Math.floor(Math.random() * 20);
@@ -40,8 +47,9 @@ function AnalyticsSummaryController($scope, $http, commonService) {
                 //console.log(resultIndex);
                 oneEntry.result = results[resultIndex];
                 $scope.table.push(oneEntry);
+            });
 
-            }
+
         })
     };
 
