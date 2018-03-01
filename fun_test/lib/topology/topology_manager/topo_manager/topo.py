@@ -15,7 +15,7 @@ import logging
 class Topology(object):
     def __init__(self):
 
-        self.vm_ips = vm_ips 
+        self.vm_ips = config_dict['vm_ips']
         self.leaf_vm_ips = []
         self.spine_vm_ips = []
         self.leaf_vm_objs = []
@@ -38,7 +38,7 @@ class Topology(object):
         self.max_spines_per_vm = 0
         self.max_leafs_per_vm = 0
 
-        self.leaf_leaf_ovs =  0
+        self.leaf_leaf_ovs = 0
         self.leaf_leaf_ovs_ports = 0
 
         self.max_leaf_spine_ports_per_ovs = 0
@@ -57,7 +57,6 @@ class Topology(object):
         self.name = '%d_Racks__%d_Leafs/rack__%d_Spines' % \
                     (self.nRacks, self.nLeafs, self.nSpines)
         self.state = 'init'
-
 
     def __getstate__(self):
         d = dict(self.__dict__)
@@ -124,26 +123,26 @@ class Topology(object):
 
     def save(self, filename='topology.pkl'):
         
-        topo_state = {'leaf_vm_ips': self.leaf_vm_ips,\
-                      'spine_vm_ips': self.spine_vm_ips,\
-                      'leaf_vm_objs': self.leaf_vm_objs,\
-                      'spine_vm_objs': self.spine_vm_objs,\
-                      'nRacks': self.nRacks,\
-                      'nLeafs': self.nLeafs,\
-                      'nSpines': self.nSpines,\
-                      'leaf_vms': self.leaf_vms,\
-                      'spine_vms': self.spine_vms,\
-                      'all_spines': self.all_spines,\
-                      'max_racks_per_vm': self.max_racks_per_vm,\
-                      'max_spines_per_vm': self.max_spines_per_vm,\
-                      'max_leafs_per_vm': self.max_leafs_per_vm,\
-                      'iid': self.iid,\
-                      'state': self.state,\
-                      'f1_mgmt_ips': f1_mgmt_ips,\
-                      'flat_topo': flat_topo
+        topo_state = {'leaf_vm_ips': self.leaf_vm_ips,
+                      'spine_vm_ips': self.spine_vm_ips,
+                      'leaf_vm_objs': self.leaf_vm_objs,
+                      'spine_vm_objs': self.spine_vm_objs,
+                      'nRacks': self.nRacks,
+                      'nLeafs': self.nLeafs,
+                      'nSpines': self.nSpines,
+                      'leaf_vms': self.leaf_vms,
+                      'spine_vms': self.spine_vms,
+                      'all_spines': self.all_spines,
+                      'max_racks_per_vm': self.max_racks_per_vm,
+                      'max_spines_per_vm': self.max_spines_per_vm,
+                      'max_leafs_per_vm': self.max_leafs_per_vm,
+                      'iid': self.iid,
+                      'state': self.state,
+                      'f1_mgmt_ips': f1_mgmt_ips,
+                      'flat_topo': config_dict['flat_topo']
                       }
         self.logger.info('Saved topology to %s' % filename)
-        pickle.dump(topo_state, open(filename,'wb'))
+        pickle.dump(topo_state, open(filename, 'wb'))
 
     def load(self, filename='topology.pkl'):
 
@@ -195,7 +194,7 @@ class Topology(object):
             else:
                 self.logger.info('Topology fits in 1 VM')
                 return
-        if not flat_topo:
+        if not config_dict['flat_topo']:
             max_racks_per_vm = math.floor(max_containers_per_leaf_vm / self.nLeafs)
             self.leaf_vms = int(max(1, math.ceil(self.nRacks / max_racks_per_vm)))
         else:
@@ -216,7 +215,7 @@ class Topology(object):
         self.logger.info('\tTotal VMs used: %d' % self.total_vms)
         self.logger.info('\tNumber of Leaf VMs: %d. On each Leaf VM:' % self.leaf_vms)
 
-        if not flat_topo:
+        if not config_dict['flat_topo']:
             if self.leaf_vms == 1:
                 self.max_racks_per_vm = self.nRacks
             else:
@@ -254,9 +253,9 @@ class Topology(object):
 
         global f1_public_subnet, rack_subnets, spine_subnets, f1_mgmt_ips, spine_lo_subnets
 
-        if flat_topo:
-            all_ips= IPNetwork(f1_mgmt_net).iter_hosts()
-            #*4 to accomodate for 4 TGs/Leaf. Also adjust for docker0 IP
+        if config_dict['flat_topo']:
+            all_ips = IPNetwork(f1_mgmt_net).iter_hosts()
+            # *4 to accomodate for 4 TGs/Leaf. Also adjust for docker0 IP
             num_ips = self.nRacks*self.nLeafs + self.nLeafs*4 + 2 
             for i in range(1,num_ips):
                 f1_mgmt_ips.append(all_ips.next())
@@ -279,7 +278,6 @@ class Topology(object):
             spine_lo_subnets.append(all_subnets.next())
         f1_mgmt_ips = []
 
-
     def initialize(self):
 
         threads = [] 
@@ -301,7 +299,6 @@ class Topology(object):
                                              docker_restart_cmd])],
                                    [], logger=self.logger)
 
-        
     @timeit
     def create(self, nRacks, nLeafs, nSpines):
 
@@ -315,12 +312,12 @@ class Topology(object):
 
         self.logger.info('Creating Topology: %sx%sx%s' % (self.nRacks, self.nLeafs, self.nSpines))
 
-        self.available_vms = len(vm_ips)
+        self.available_vms = len(self.vm_ips)
         self.sizeUp()
         self.initialize()
         self.configureTopoSubnets()
 
-        if flat_topo:
+        if config_dict['flat_topo']:
             self.createMgmtOverlay()
             for vm_id,vm_ip in enumerate(self.leaf_vm_ips):
                 vm_obj = VM(self, vm_id+1, vm_ip, role='leaf')
@@ -336,7 +333,7 @@ class Topology(object):
             for vm_id,vm_ip in enumerate(self.spine_vm_ips):
                 vm_obj = VM(self, vm_id+1, vm_ip, role='spine')
                 self.spine_vm_objs.append(vm_obj)
-                if not flat_topo:
+                if not config_dict['flat_topo']:
                     vm_obj.configureBridges()
                 vm_obj.createSpines()
 
@@ -346,7 +343,7 @@ class Topology(object):
                 vm.configureLeafLinks()
       
         if self.available_vms == 1:
-            if not flat_topo:
+            if not config_dict['flat_topo']:
                 self.spine_vm_objs[0].run()
             self.leaf_vm_objs[0].run()
         else:         
@@ -361,7 +358,7 @@ class Topology(object):
                 t.join()
         
         self.populate_ssh_config(init=1)
-        self.deactivate_partial_topo(offRacks, offLeafs, offSpines)
+        self.deactivate_partial_topo(config_dict['off_racks'], config_dict['off_leafs'], config_dict['off_spines'])
         self.build_prefix_count()
         self.state = 'running'
 
@@ -430,7 +427,7 @@ class Topology(object):
                 time.sleep(2)
                 out = run_commands(commands=[docker_swarm_init_cmd])
                 worker_cmd = out['results'][0]['output'].split('\n')[4].strip()
-            except:
+            except Exception as ex:
                 time.sleep(1)
                 tries += 1
                 if tries == 5:
@@ -564,7 +561,7 @@ class Topology(object):
         if not self.isNodeValid(src):
             return
 
-        if flat_topo:
+        if config_dict['flat_topo']:
             if not isinstance(dsts, list):
                 self.logger.warning('For flat_topo, destinations must be list of nodes')
                 return
@@ -603,7 +600,7 @@ class Topology(object):
         if not self.isNodeValid(src):
             return
 
-        if flat_topo:
+        if config_dict['flat_topo']:
             if not isinstance(dsts, list):
                 self.logger.warning('For flat_topo, destinations must be list of nodes')
                 return
@@ -671,7 +668,7 @@ class Topology(object):
 
     def isNodeValid(self, node_name):
         rack_id, node_id = node_name.split('-')
-        if flat_topo:
+        if config_dict['flat_topo']:
             if (int(rack_id) > 0 or int(node_id) > self.nLeafs):
                 self.logger.warning('Node %s does not exist' % node_name)
                 return False
@@ -690,7 +687,7 @@ class Topology(object):
         if rack_id != '0':
             return self.leaf_vm_objs[(int(rack_id)-1)/self.max_racks_per_vm]
         else:
-            if flat_topo:
+            if config_dict['flat_topo']:
                 return self.leaf_vm_objs[(int(node_id)-1)/self.max_leafs_per_vm]
             else:
                 return self.spine_vm_objs[(int(node_id)-1)/self.max_spines_per_vm]
@@ -883,7 +880,7 @@ class Topology(object):
             return
 
         for vm_obj in self.leaf_vm_objs:
-            if flat_topo:
+            if config_dict['flat_topo']:
                 for node in vm_obj.leafs:
                     node_ssh = 'Host %s \n\tHostName %s \n\tUser root\n\tPort %s\n' %\
                                (node.name, node.vm_ip, node.host_ssh_port)
@@ -926,7 +923,7 @@ class Topology(object):
         for t in threads:
             t.join()
 
-        if flat_topo and self.total_vms > 1:
+        if config_dict['flat_topo'] and self.total_vms > 1:
             time.sleep(2)
             out = run_commands(commands=[docker_swarm_leave_force_cmd])
 
@@ -939,7 +936,7 @@ class Topology(object):
 
         output += '\tInactive: %s Racks, %s Leafs, %s Spines\n' % (self.offRacks, self.offLeafs, self.offSpines)
 
-        if flat_topo:
+        if config_dict['flat_topo']:
             self.logger.warning('Cannot print Racks for flat_topo')
             return
 
@@ -1000,7 +997,7 @@ class VM(object):
         self.logger = logging.getLogger(__name__)
 
         if self.role == 'leaf':
-            if not flat_topo:
+            if not config_dict['flat_topo']:
                 self.nRacks = self.get_rack_count()
                 self.nLeafs = topo.nLeafs
                 self.num_leafOVS = topo.leaf_leaf_ovs
@@ -1127,14 +1124,14 @@ class VM(object):
         vm_docker_run = ''
         vm_links = ''
         up_links = ''
-        if flat_topo:
+        if config_dict['flat_topo']:
             for leaf in  self.leafs:
                 leaf.run()
                 vm_docker_run += leaf.docker_run
                 vm_links += leaf.link_config
             params = {'role': self.role,
-                    'start_leaf_id': self.start_leaf_id,
-                    'end_leaf_id': self.end_leaf_id}
+                      'start_leaf_id': self.start_leaf_id,
+                      'end_leaf_id': self.end_leaf_id}
             self.logger.info('creating F1 containers')
         else:
             if self.role == 'leaf':
@@ -1161,7 +1158,7 @@ class VM(object):
             self.logger.warning('No containers to launch')
             return
         
-        if self.role == 'leaf' and not network_only:
+        if self.role == 'leaf' and not config_dict['network_only']:
             for cmd in vm_docker_run.split('\n')[0:-1]:
                 out = exec_send_file([(self.ip, cmd)], [], logger=self.logger)
                 out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
@@ -1174,7 +1171,7 @@ class VM(object):
             out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
             out = exec_send_file([(self.ip, params)], [], logger=self.logger)
 
-        if not flat_topo:
+        if not config_dict['flat_topo']:
             if self.role == 'leaf':
                 time.sleep(10)
                 for rack in self.racks:
@@ -1198,7 +1195,7 @@ class VM(object):
                 out = exec_remote_commands([(self.ip, [links_sh])], [], timeout=1200, logger=self.logger)
 
             if self.role == 'leaf':
-                self.unpauseRacks([rack.rack_id for rack in self.racks])
+                    self.unpauseRacks([rack.rack_id for rack in self.racks])
             else:
                 self.unpauseNodes([spine.name for spine in self.spines])
 
@@ -1463,7 +1460,7 @@ class VM(object):
     def get_node(self, node_name):
         rack_id, node_id = node_name.split('-')
         if rack_id == '0':
-            if flat_topo:
+            if config_dict['flat_topo']:
                 index = int(node_id) - ((self.id-1)*self.topo.max_leafs_per_vm) - 1
                 return self.leafs[index]
             else:
@@ -1476,7 +1473,7 @@ class VM(object):
     def get_nodes(self):
         nodes = []
         if self.role == 'leaf':
-            if flat_topo:
+            if config_dict['flat_topo']:
                 nodes.extend(self.leafs)
             else:
                 for rack in self.racks:
@@ -1541,7 +1538,7 @@ class VM(object):
             tgs = ''
             netns_cmd = []
             if self.role == 'leaf':
-                if flat_topo:
+                if config_dict['flat_topo']:
                     for leaf in self.leafs:
                         node_names += leaf.name
                         node_names += ' '
@@ -1571,7 +1568,7 @@ class VM(object):
             for netns in node_names.split():
                 netns_cmd.append(netns_del_cmd + netns)
             final_cleanup = [unpause_cmd] + [kill_cmd] + netns_cmd + docker_mnt_clean_cmd
-            if flat_topo and self.topo.total_vms > 1:
+            if config_dict['flat_topo'] and self.topo.total_vms > 1:
                 final_cleanup += [docker_swarm_leave_cmd]
             for cmd in final_cleanup:
                 output = exec_remote_commands([(self.ip, [cmd])], [], timeout=300, logger=self.logger)
@@ -1593,7 +1590,7 @@ class Rack(object):
         self.rack_id = rack_id
         self.asn = 64512 + rack_id
 
-        if not flat_topo:
+        if not config_dict['flat_topo']:
             self.rack_subnet = str(rack_subnets.pop(0))
             # At most 120 inter-F1 subnets
             self.inter_f1_subnets = list(IPNetwork(inter_f1_net).subnet(30))[:121]
@@ -1700,7 +1697,7 @@ class Node(object):
 
         self.name = '%s-%s' % (self.rack_id, self.node_id)
 
-        if flat_topo:
+        if config_dict['flat_topo']:
             self.rack_id = '0' 
             self.type = 'leaf'
             self.public_network = ''
@@ -1817,7 +1814,7 @@ class Node(object):
         router_image = docker_images[self.type]
         self.ip = self.loopback_ips[0]
 
-        if flat_topo:
+        if config_dict['flat_topo']:
             self.ip = str(f1_mgmt_ips.pop())
             self.public_network = self.ip
             self.docker_run = '%s ' \
@@ -1830,26 +1827,32 @@ class Node(object):
                               '-p %s:5001 ' \
                               '%s &\n' % \
                       (docker_run_cmd, self.name, self.name, self.ip,
-                      self.host_ssh_port, self.dpcsh_port, router_image)
+                       self.host_ssh_port, self.dpcsh_port, router_image)
         else:
             self.ip = self.loopback_ips[0]
-            if self.type == 'leaf' and not network_only:
-                self.docker_run = '%s ' \
-                          '-v /home/%s:/home/%s ' \
-                          '-p %s:22 ' \
-                          '-p %s:2601 ' \
-                          '-p %s:2605 ' \
-                          '-p %s:2608 ' \
-                          '-v %s:/workspace ' \
-                          '-e WORKSPACE=/workspace ' \
-                          '-e DOCKER=TRUE ' \
-                          '-w /workspace ' \
-                          '--name %s ' \
-                          '--hostname %s ' \
-                          '-u %s ' \
-                          '%s %s &\n' % (docker_run_cmd, user, user, self.host_ssh_port, \
-                                         self.zebra_port, self.bgp_port, self.isis_port, \
-                                         workspace, self.name, self.name, user, router_image, startup)    
+            if self.type == 'leaf' and not config_dict['network_only']:
+                try:
+                    if not user:
+                        raise Exception("Please Provide User Details")
+                    self.docker_run = '%s ' \
+                              '-v /home/%s:/home/%s ' \
+                              '-p %s:22 ' \
+                              '-p %s:2601 ' \
+                              '-p %s:2605 ' \
+                              '-p %s:2608 ' \
+                              '-v %s:/workspace ' \
+                              '-e WORKSPACE=/workspace ' \
+                              '-e DOCKER=TRUE ' \
+                              '-w /workspace ' \
+                              '--name %s ' \
+                              '--hostname %s ' \
+                              '-u %s ' \
+                              '%s %s &\n' % (docker_run_cmd, user, user, self.host_ssh_port,
+                                             self.zebra_port, self.bgp_port, self.isis_port,
+                                             workspace, self.name, self.name, user, router_image, startup)
+                except Exception as ex:
+                    self.logger.critical(str(ex))
+                    sys.exit(1)
             elif self.type == 'leaf':
                 self.docker_run = '%s ' \
                           '-p %s:22 ' \
@@ -1858,8 +1861,8 @@ class Node(object):
                           '-p %s:2608 ' \
                           '--name %s ' \
                           '--hostname %s ' \
-                          '%s %s &\n' % (docker_run_cmd, self.host_ssh_port, \
-                                         self.zebra_port, self.bgp_port, self.isis_port, \
+                          '%s %s &\n' % (docker_run_cmd, self.host_ssh_port,
+                                         self.zebra_port, self.bgp_port, self.isis_port,
                                          self.name, self.name, router_image, startup)
             else:
                 self.docker_run = '%s ' \
@@ -1870,12 +1873,11 @@ class Node(object):
                                   '-p %s:2601 ' \
                                   '-p %s:2605 ' \
                                   '-p %s:2608 ' \
-                                  '%s &\n' %  (docker_run_cmd, self.name, self.name, \
-                                               self.host_ssh_port, self.zebra_port, self.bgp_port, \
-                                               self.isis_port, router_image)
+                                  '%s &\n' % (docker_run_cmd, self.name, self.name,
+                                              self.host_ssh_port, self.zebra_port, self.bgp_port,
+                                              self.isis_port, router_image)
 
         self.logger.info('Docker command: %s' % self.docker_run)
-        
 
     def update_prefix_counts(self, action):
         for intf in self.interfaces:
@@ -1991,7 +1993,7 @@ class Node(object):
     def attachTG(self, tg_id):
         tg_obj = TrafficGenerator(self, tg_id)
         self.tgs.append(tg_obj)
-        if not flat_topo:
+        if not config_dict['flat_topo']:
             bridge_obj = self.bridge
             link_obj = Link(tg_obj, self, self.public_network, bridge_obj)
         tg_obj.run()
@@ -2064,8 +2066,9 @@ class Node(object):
                     self.tn.write(command.encode('ascii') + '\n')
                     linesout.append(self.tn.read_until('# ').replace('\r', ' '))
                 result = linesout
-            except:
+            except Exception as ex:
                 self.logger.warning('Failed to configure node %s. Telnet Failed' % self.name)
+                self.logger.warning(ex)
                 result = None
         finally:
             self.tn.close()
@@ -2225,7 +2228,7 @@ class Bridge(object):
             vlan += 1
         trunks = trunks.strip(',')
 
-        if not flat_topo:
+        if not config_dict['flat_topo']:
             vxlan_cmd =  'add-port %s vxlan-%d trunks=%s ' \
                          '-- set interface vxlan-%s type=vxlan ' \
                          'options:remote_ip=%s options:key=%s' % (self.name, self.vxlan_id,
@@ -2248,7 +2251,6 @@ class Bridge(object):
         #             'options:remote_ip=%s options:key=%s' % (self.name, self.vxlan_id,
         #                                                      trunks, self.vxlan_id, self.remote_ip,
         #                                                      self.vxlan_id)
-
 
         add_port_command = 'ovs-vsctl ' + port_cmd + '\n'
         add_intf_command = 'ovs-vsctl ' + intf_cmd + '\n'
@@ -2315,7 +2317,7 @@ class TrafficGenerator(object):
         
         router_image = docker_images[self.type]
         
-        if flat_topo:
+        if config_dict['flat_topo']:
             self.ip = str(f1_mgmt_ips.pop())
             docker_run = '%s --name %s --hostname %s --network mgmt --ip=%s -p %d:22 %s' % \
                      (docker_run_cmd, self.name, self.name, self.ip, self.host_ssh_port, router_image)
@@ -2330,7 +2332,7 @@ class TrafficGenerator(object):
         self.state = 'init'
         self.add_ns()
 
-        #if flat_topo:
+        #if config_dict['flat_topo']:
         #    self.state = 'running'
         #    return
 
@@ -2379,7 +2381,7 @@ class TrafficGenerator(object):
                                      'state': 'up'
                                      }
 
-        if not flat_topo:
+        if not config_dict['flat_topo']:
 
             self.ip = my_ip
 
@@ -2441,7 +2443,7 @@ class TrafficGenerator(object):
         self.container_conn = self.set_container_conn()
         if background:
             cmd = 'nohup ' + cmd + ' > /var/tmp/output 2>&1 &'
-            #cmd = 'echo $$ && exec ' + cmd + ' &> /var/tmp/output &'
+            # cmd = 'echo $$ && exec ' + cmd + ' &> /var/tmp/output &'
         out = run_commands(self.container_conn, [cmd])
         del self.container_conn
         return out
@@ -2477,12 +2479,14 @@ class TrafficGenerator(object):
     def get_host_port(self):
         return (base_port+self.node.vm_obj.topo.get_next_id())
 
+
 def main():
     topo = Topology()
-    topo.create(2,2,4)
+    topo.create(2, 2, 4)
     topo.save()
-    pretty(json.loads(getAccessInfo()))
+    pretty(json.loads(topo.getAccessInfo()))
     topo.cleanup()
+
 
 if __name__ == "__main__":
     main()
