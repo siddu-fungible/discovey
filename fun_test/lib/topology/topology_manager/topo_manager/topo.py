@@ -1,3 +1,4 @@
+from lib.system.fun_test import *
 import math
 import sys
 import re
@@ -9,7 +10,6 @@ import paramiko
 import time
 from send_zmq import *
 import pickle
-import logging
 
 
 class Topology(object):
@@ -52,20 +52,9 @@ class Topology(object):
 
         self.iid = 1
 
-        self.logger = logging.getLogger(__name__)
-
         self.name = '%d_Racks__%d_Leafs/rack__%d_Spines' % \
                     (self.nRacks, self.nLeafs, self.nSpines)
         self.state = 'init'
-
-    def __getstate__(self):
-        d = dict(self.__dict__)
-        del d['logger']
-        return d
-
-    def __setstate__(self, d):
-        d['logger'] = logging.getLogger(__name__)
-        self.__dict__.update(d) 
 
     def get_next_id(self):
         res = self.iid
@@ -141,14 +130,14 @@ class Topology(object):
                       'f1_mgmt_ips': f1_mgmt_ips,
                       'flat_topo': config_dict['flat_topo']
                       }
-        self.logger.info('Saved topology to %s' % filename)
+        fun_test.log('Saved topology to %s' % filename)
         pickle.dump(topo_state, open(filename, 'wb'))
 
     def load(self, filename='topology.pkl'):
 
         global f1_mgmt_ips, flat_topo
 
-        self.logger.info('Loaded topology from %s' % filename)
+        fun_test.log('Loaded topology from %s' % filename)
         topo_state = pickle.load(open(filename, 'rb'))
         
         self.leaf_vm_ips = topo_state['leaf_vm_ips']
@@ -172,15 +161,15 @@ class Topology(object):
     def sizeUp(self):
 
         if self.nRacks == 0 or self.nLeafs == 0:
-            self.logger.error('Number of Racks and/or Leafs/Racks cannot be 0. Exiting.')
+            fun_test.critical('Number of Racks and/or Leafs/Racks cannot be 0. Exiting.')
             sys.exit(1)
 
         if self.nSpines % self.nLeafs:
-            self.logger.error('Number of Spines should be a multiple of number of F1s/Rack. Exiting.')
+            fun_test.critical('Number of Spines should be a multiple of number of F1s/Rack. Exiting.')
             sys.exit(1)
 
         if len(self.vm_ips) == 1:
-            self.logger.info('All-in-one')
+            fun_test.log('All-in-one')
             self.total_vms = 1
             self.leaf_vm_ips = self.spine_vm_ips = self.vm_ips
             self.max_racks_per_vm = self.nRacks
@@ -189,10 +178,10 @@ class Topology(object):
             self.leaf_leaf_ovs = 1
             self.leaf_leaf_ovs_ports = (self.nLeafs * (self.nLeafs-1))*self.nRacks + self.nRacks*self.nSpines*2
             if (self.nRacks*self.nLeafs+self.nSpines) > max_containers_per_leaf_vm:
-                self.logger.info('Cannot fit requested topology in 1 VM')
+                fun_test.log('Cannot fit requested topology in 1 VM')
                 sys.exit(1)
             else:
-                self.logger.info('Topology fits in 1 VM')
+                fun_test.log('Topology fits in 1 VM')
                 return
         if not config_dict['flat_topo']:
             max_racks_per_vm = math.floor(max_containers_per_leaf_vm / self.nLeafs)
@@ -204,30 +193,30 @@ class Topology(object):
         self.total_vms = self.leaf_vms + self.spine_vms
 
         if self.total_vms > self.available_vms:
-            self.logger.error('Insufficient resources. Required VMs: %d' % (self.total_vms))
+            fun_test.critical('Insufficient resources. Required VMs: %d' % (self.total_vms))
             sys.exit(1)
 
         self.leaf_vm_ips = self.vm_ips[:self.leaf_vms]
         self.spine_vm_ips = self.vm_ips[self.leaf_vms:self.total_vms]
 
-        self.logger.info('Sufficient Resources to fulfil current requirement. Creating Topology with specs:')
-        self.logger.info('\tTopology: %dx%dx%d' % (self.nRacks, self.nLeafs, self.nSpines))
-        self.logger.info('\tTotal VMs used: %d' % self.total_vms)
-        self.logger.info('\tNumber of Leaf VMs: %d. On each Leaf VM:' % self.leaf_vms)
+        fun_test.log('Sufficient Resources to fulfil current requirement. Creating Topology with specs:')
+        fun_test.log('\tTopology: %dx%dx%d' % (self.nRacks, self.nLeafs, self.nSpines))
+        fun_test.log('\tTotal VMs used: %d' % self.total_vms)
+        fun_test.log('\tNumber of Leaf VMs: %d. On each Leaf VM:' % self.leaf_vms)
 
         if not config_dict['flat_topo']:
             if self.leaf_vms == 1:
                 self.max_racks_per_vm = self.nRacks
             else:
                 self.max_racks_per_vm = int(math.floor(max_containers_per_leaf_vm / self.nLeafs))
-            self.logger.info('\t\tMax Num of Racks: %d' % self.max_racks_per_vm)
+            fun_test.log('\t\tMax Num of Racks: %d' % self.max_racks_per_vm)
 
-            self.logger.info('\tNumber of Spine VMs: %d. On Each Spine VM:' % self.spine_vms)
+            fun_test.log('\tNumber of Spine VMs: %d. On Each Spine VM:' % self.spine_vms)
             if self.spine_vms == 1:
                 self.max_spines_per_vm = self.nSpines
             else:
                 self.max_spines_per_vm = int(math.floor(max_links_per_spine_vm/self.nRacks))
-            self.logger.info('\t\tMax Num of Spines: %d' % self.max_spines_per_vm)
+            fun_test.log('\t\tMax Num of Spines: %d' % self.max_spines_per_vm)
 
             num_leaf_leaf_ports = (self.nLeafs * (self.nLeafs -1)) * self.max_racks_per_vm
             self.leaf_leaf_ovs = int(max(1, math.ceil(num_leaf_leaf_ports/max_ports_per_ovs)))
@@ -246,8 +235,8 @@ class Topology(object):
                 self.max_leafs_per_vm = self.nLeafs
             else:
                 self.max_leafs_per_vm = int(max_containers_per_leaf_vm)
-            self.logger.info('\t\tMax Num of F1s: %d' % self.max_leafs_per_vm)            
-            self.logger.info('\tNumber of Spine VMs: %d. On Each Spine VM:' % self.spine_vms)
+            fun_test.log('\t\tMax Num of F1s: %d' % self.max_leafs_per_vm)            
+            fun_test.log('\tNumber of Spine VMs: %d. On Each Spine VM:' % self.spine_vms)
 
     def configureTopoSubnets(self):
 
@@ -297,7 +286,7 @@ class Topology(object):
                                              arp_ignore_default_cmd,
                                              vxlan_del_cmd,
                                              docker_restart_cmd])],
-                                   [], logger=self.logger)
+                                   [])
 
     @timeit
     def create(self, nRacks, nLeafs, nSpines):
@@ -307,10 +296,10 @@ class Topology(object):
         self.nSpines = nSpines
 
         if self.state == 'running':
-            self.logger.warning('Topology already up and running. Cannot call create() again')
+            fun_test.log('Topology already up and running. Cannot call create() again')
             return
 
-        self.logger.info('Creating Topology: %sx%sx%s' % (self.nRacks, self.nLeafs, self.nSpines))
+        fun_test.log('Creating Topology: %sx%sx%s' % (self.nRacks, self.nLeafs, self.nSpines))
 
         self.available_vms = len(self.vm_ips)
         self.sizeUp()
@@ -380,14 +369,14 @@ class Topology(object):
                     node_list.append(str(rack)+'-'+str(node))
             self.pauseNodes(node_list)
         else:
-            self.logger.warning('OffLeafs cant be greater than total Leafs')
+            fun_test.log('OffLeafs cant be greater than total Leafs')
         if offSpines > 0:
             spine_list = []
             for spine in range(self.nSpines-offSpines+1, self.nSpines+1):
                 spine_list.append('0-'+str(spine))
             self.pauseNodes(spine_list)
 
-        self.logger.info('Deactivating: %sx%sx%s' % (self.offRacks, self.offLeafs, self.offSpines))
+        fun_test.log('Deactivating: %sx%sx%s' % (self.offRacks, self.offLeafs, self.offSpines))
 
     def configureSpineLinks(self):
         for leaf_vm in self.leaf_vm_objs:
@@ -418,7 +407,7 @@ class Topology(object):
             return
 
         for vm_ip in self.vm_ips[1:]:
-            out = exec_remote_commands([(vm_ip, [docker_swarm_leave_cmd])], [], logger=self.logger)
+            out = exec_remote_commands([(vm_ip, [docker_swarm_leave_cmd])], [])
 
         tries = 0
         while True:
@@ -431,13 +420,13 @@ class Topology(object):
                 time.sleep(1)
                 tries += 1
                 if tries == 5:
-                    self.logger.error('Unable to form Swarm. Exiting..') 
+                    fun_test.critical('Unable to form Swarm. Exiting..') 
                     sys.exit(1)
             if worker_cmd:
                 break
 
         for vm_ip in self.vm_ips[1:]:
-            out = exec_remote_commands([(vm_ip, [worker_cmd])], [], logger=self.logger)
+            out = exec_remote_commands([(vm_ip, [worker_cmd])], [])
 
         tries = 0
         mgmt_driver = ''
@@ -453,7 +442,7 @@ class Topology(object):
                 time.sleep(1)
                 tries += 1
                 if tries == 5:
-                    self.logger.error('Unable to create Overlay MGMT n/w. Exiting..')
+                    fun_test.critical('Unable to create Overlay MGMT n/w. Exiting..')
                     sys.exit(1)
             if mgmt_driver:
                 break    
@@ -461,16 +450,16 @@ class Topology(object):
     def pauseRacks(self, rack_ids):
         vms = {}
         invalids = []
-        self.logger.info('pauseRacks called for %s' % rack_ids)
+        fun_test.log('pauseRacks called for %s' % rack_ids)
         for rack_id in rack_ids:
             if rack_id == 0 or rack_id > self.nRacks:
-                self.logger.warning('Invalid rack_id:%s. Skipping over' % rack_id)
+                fun_test.log('Invalid rack_id:%s. Skipping over' % rack_id)
                 invalids.append(rack_id)
                 continue
             vm = self.get_node_vm(str(rack_id)+'-'+str(1))
             vms.setdefault(vm, []).append(rack_id)
 
-        self.logger.info('Pausing Racks: %s' % list(set(rack_ids)-set(invalids))) 
+        fun_test.log('Pausing Racks: %s' % list(set(rack_ids)-set(invalids))) 
         
         threads = []
         for vm, rack_ids in vms.items():
@@ -484,7 +473,7 @@ class Topology(object):
     def pauseNodes(self, node_names):
         vms = {}
         invalids = []
-        self.logger.info('pauseNodes called for %s' % node_names)
+        fun_test.log('pauseNodes called for %s' % node_names)
         for node_name in node_names:
             if not self.isNodeValid(node_name):
                 invalids.append(node_name)
@@ -492,7 +481,7 @@ class Topology(object):
             vm = self.get_node_vm(node_name)
             vms.setdefault(vm, []).append(node_name)
 
-        self.logger.info('Pausing Nodes: %s' % list(set(node_names)-set(invalids)))
+        fun_test.log('Pausing Nodes: %s' % list(set(node_names)-set(invalids)))
 
         threads = []
         for vm, node_name in vms.items():
@@ -505,16 +494,16 @@ class Topology(object):
     def unpauseRacks(self, rack_ids):
         vms = {}
         invalids = []
-        self.logger.info('unpauseRacks called for %s' % rack_ids)
+        fun_test.log('unpauseRacks called for %s' % rack_ids)
         for rack_id in rack_ids:
             if rack_id == 0 or rack_id > self.nRacks:
-                self.logger.warning('Invalid rack_id: %s. Skipping over' % rack_id)
+                fun_test.log('Invalid rack_id: %s. Skipping over' % rack_id)
                 invalids.append(rack_id)
                 continue
             vm = self.get_node_vm(str(rack_id)+'-'+str(1))
             vms.setdefault(vm, []).append(rack_id)
 
-        self.logger.info('Unpausing Racks: %s' % list(set(rack_ids)-set(invalids)))
+        fun_test.log('Unpausing Racks: %s' % list(set(rack_ids)-set(invalids)))
 
         threads = []
         for vm, rack_ids in vms.items():
@@ -527,7 +516,7 @@ class Topology(object):
     def unpauseNodes(self, node_names):
         vms = {}
         invalids = []
-        self.logger.info('unpauseNodes called for %s' % node_names)
+        fun_test.log('unpauseNodes called for %s' % node_names)
         for node_name in node_names:
             if not self.isNodeValid(node_name):
                 invalids.append(node_name)
@@ -535,7 +524,7 @@ class Topology(object):
             vm = self.get_node_vm(node_name)
             vms.setdefault(vm, []).append(node_name)
 
-        self.logger.info('Unpausing Nodes: %s' % list(set(node_names)-set(invalids)))
+        fun_test.log('Unpausing Nodes: %s' % list(set(node_names)-set(invalids)))
 
         threads = []
         for vm, node_name in vms.items():
@@ -556,17 +545,17 @@ class Topology(object):
 
         invalids = []
 
-        self.logger.info('LinkImpair called for: %s %s %s %s %s %s' % (src, dsts, oper, param1, param2, param3))
+        fun_test.log('LinkImpair called for: %s %s %s %s %s %s' % (src, dsts, oper, param1, param2, param3))
 
         if not self.isNodeValid(src):
             return
 
         if config_dict['flat_topo']:
             if not isinstance(dsts, list):
-                self.logger.warning('For flat_topo, destinations must be list of nodes')
+                fun_test.log('For flat_topo, destinations must be list of nodes')
                 return
             if oper == 'shut' or oper == 'no_shut':
-                self.logger.warning('shut/no_shut not valid for flat_topo')
+                fun_test.log('shut/no_shut not valid for flat_topo')
                 return
 
             dst_nodes = []
@@ -578,7 +567,7 @@ class Topology(object):
                     dst_node = self.get_node(dst)
                     dst_nodes.append(dst_node)
 
-            self.logger.info('Flat Topo, LinkImpair: links from %s to %s' %(src, list(set(dsts)-set(invalids))))
+            fun_test.log('Flat Topo, LinkImpair: links from %s to %s' %(src, list(set(dsts)-set(invalids))))
             node_vm.flatLinkImpair(src, dst_nodes)
         else:
             node_vm = self.get_node_vm(src)
@@ -595,17 +584,17 @@ class Topology(object):
 
         invalids = []
 
-        self.logger.info('LinkRepair called for: %s %s %s' % (src, dsts, oper))
+        fun_test.log('LinkRepair called for: %s %s %s' % (src, dsts, oper))
 
         if not self.isNodeValid(src):
             return
 
         if config_dict['flat_topo']:
             if not isinstance(dsts, list):
-                self.logger.warning('For flat_topo, destinations must be list of nodes')
+                fun_test.log('For flat_topo, destinations must be list of nodes')
                 return
             if oper == 'shut' or oper == 'no_shut':
-                self.logger.warning('shut/no_shut not valid for flat_topo')
+                fun_test.log('shut/no_shut not valid for flat_topo')
                 return
 
             dst_nodes = []
@@ -617,7 +606,7 @@ class Topology(object):
                     dst_node = self.get_node(dst)
                     dst_nodes.append(dst_node)
 
-            self.logger.info('Flat Topo, LinkRepair: Links from %s to %s' %(src, list(set(dsts)-set(invalids))))
+            fun_test.log('Flat Topo, LinkRepair: Links from %s to %s' %(src, list(set(dsts)-set(invalids))))
             node_vm.flatLinkRepair(src, dst_nodes)
         else:
             node_vm = self.get_node_vm(src)
@@ -625,17 +614,17 @@ class Topology(object):
  
     def attachTG(self, node_name):
 
-        self.logger.info('Attaching TG to node: %s' % node_name)
+        fun_test.log('Attaching TG to node: %s' % node_name)
 
         if not self.isNodeValid(node_name):
             return
         node = self.get_node(node_name)
         if node.type == 'spine':
-            self.logger.warning('Cant attach TG to spine router')
+            fun_test.log('Cant attach TG to spine router')
             return 
         tg_id = node.get_next_tg_id()
         if tg_id > 4:
-            self.logger.warning('Reached limit of 4 TGs/Node. Cannot attach this TG')
+            fun_test.log('Reached limit of 4 TGs/Node. Cannot attach this TG')
             return None
         else:
             tg = node.attachTG(tg_id)
@@ -652,7 +641,7 @@ class Topology(object):
 
         node_name = '-'.join(tg_name.split('-')[1:])
         if not self.isNodeValid(node_name):
-            self.logger.warning('Invalid TG name: %s' % tg_name)
+            fun_test.log('Invalid TG name: %s' % tg_name)
             return
         tgs = self.get_tgs(node_name)
         if tgs:
@@ -660,24 +649,24 @@ class Topology(object):
                 if tg.name == tg_name:
                     return tg
             else:
-                self.logger.warning('Invalid TG name: %s' % tg_name)
+                fun_test.log('Invalid TG name: %s' % tg_name)
                 return None
         else:
-            self.logger.warning('No TGs attached to Node: %s' % node_name)
+            fun_test.log('No TGs attached to Node: %s' % node_name)
             return None
 
     def isNodeValid(self, node_name):
         rack_id, node_id = node_name.split('-')
         if config_dict['flat_topo']:
             if (int(rack_id) > 0 or int(node_id) > self.nLeafs):
-                self.logger.warning('Node %s does not exist' % node_name)
+                fun_test.log('Node %s does not exist' % node_name)
                 return False
             else:
                 return True
         if (int(rack_id) > self.nRacks) \
                 or (rack_id == '0' and int(node_id) > self.nSpines) \
                 or (int(node_id) > self.nLeafs):
-            self.logger.warning('Node %s does not exist' % node_name)
+            fun_test.log('Node %s does not exist' % node_name)
             return False
         else:
             return True
@@ -913,7 +902,7 @@ class Topology(object):
 
     def cleanup(self):
 
-        self.logger.info('cleaning up topology')
+        fun_test.log('cleaning up topology')
         all_vms = self.leaf_vm_objs + self.spine_vm_objs
         threads = []
         for vm in all_vms:
@@ -937,18 +926,18 @@ class Topology(object):
         output += '\tInactive: %s Racks, %s Leafs, %s Spines\n' % (self.offRacks, self.offLeafs, self.offSpines)
 
         if config_dict['flat_topo']:
-            self.logger.warning('Cannot print Racks for flat_topo')
+            fun_test.log('Cannot print Racks for flat_topo')
             return
 
         if '0' in rack_ids:
-            self.logger.warning('Cannot print Rack 0 as it does not exist')
+            fun_test.log('Cannot print Rack 0 as it does not exist')
             rack_ids.remove('0')
 
         if rack_ids:
             vms = {} 
             for rack_id in rack_ids:
                 if rack_id == '0' or int(rack_id) > self.nRacks:
-                    self.logger.warning('Invalid Rack-id: %s. Skipping over.' % rack_id)
+                    fun_test.log('Invalid Rack-id: %s. Skipping over.' % rack_id)
                     continue
                 vm = self.get_node_vm(str(rack_id)+'-'+str(1))
                 vms.setdefault(vm, []).append(rack_id)
@@ -959,7 +948,7 @@ class Topology(object):
                     if rack:
                         output += rack.__str__()
 
-            print output
+            fun_test.log(output)
 
 
     def __str__(self, rack_ids=None):
@@ -978,14 +967,13 @@ class Topology(object):
 class VM(object):
 
     def __init__(self, topo, vm_id, vm_ip, role=''):
-
         self.id = vm_id
         self.role = role
         self.ip = vm_ip 
         self.topo = topo
         self.nLeafs = topo.nLeafs
 
-        self.racks =  []
+        self.racks = []
         self.spines = []
         self.links = {}
         self.link_objs = []
@@ -993,8 +981,6 @@ class VM(object):
         self.leaf_bridges = []
         self.spine_bridges = []
         self.port_id = 1
-
-        self.logger = logging.getLogger(__name__)
 
         if self.role == 'leaf':
             if not config_dict['flat_topo']:
@@ -1014,15 +1000,6 @@ class VM(object):
             self.num_spineOVS = topo.leaf_vms
             self.start_vxlan_id = self.id
             self.start_spine_id, self.end_spine_id = self.get_spine_range()
-
-    def __getstate__(self):
-        d = dict(self.__dict__)
-        del d['logger']
-        return d
-
-    def __setstate__(self, d):
-        d['logger'] = logging.getLogger(__name__)
-        self.__dict__.update(d)
 
     def createRacks(self):
         for rack in range(self.start_rack_id, self.end_rack_id):
@@ -1132,7 +1109,7 @@ class VM(object):
             params = {'role': self.role,
                       'start_leaf_id': self.start_leaf_id,
                       'end_leaf_id': self.end_leaf_id}
-            self.logger.info('creating F1 containers')
+            fun_test.log('creating F1 containers')
         else:
             if self.role == 'leaf':
                 for rack in self.racks:
@@ -1143,7 +1120,7 @@ class VM(object):
                           'start_rack_id': self.start_rack_id,
                           'end_rack_id': self.end_rack_id,
                           'nLeafs': self.nLeafs}
-                self.logger.info('creating F1 containers')
+                fun_test.log('creating F1 containers')
             else:
                 for spine in  self.spines:
                     spine.run()
@@ -1152,24 +1129,24 @@ class VM(object):
                 params = {'role': self.role,
                           'start_spine_id': self.start_spine_id,
                           'end_spine_id': self.end_spine_id}
-                self.logger.info('creating Spine containers')
+                fun_test.log('creating Spine containers')
         
         if not vm_docker_run:
-            self.logger.warning('No containers to launch')
+            fun_test.log('No containers to launch')
             return
         
         if self.role == 'leaf' and not config_dict['network_only']:
             for cmd in vm_docker_run.split('\n')[0:-1]:
-                out = exec_send_file([(self.ip, cmd)], [], logger=self.logger)
-                out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
-                self.logger.info('Waiting for PSIMs to be ready')
+                out = exec_send_file([(self.ip, cmd)], [])
+                out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300)
+                fun_test.log('Waiting for PSIMs to be ready')
                 time.sleep(500) 
-            out = exec_send_file([(self.ip, params)], [], logger=self.logger)
+            out = exec_send_file([(self.ip, params)], [])
 
         else:
-            out = exec_send_file([(self.ip, vm_docker_run)], [], logger=self.logger)
-            out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300, logger=self.logger)
-            out = exec_send_file([(self.ip, params)], [], logger=self.logger)
+            out = exec_send_file([(self.ip, vm_docker_run)], [])
+            out = exec_remote_commands([(self.ip, [docker_run_sh])], [], timeout=300)
+            out = exec_send_file([(self.ip, params)], [])
 
         if not config_dict['flat_topo']:
             if self.role == 'leaf':
@@ -1188,11 +1165,11 @@ class VM(object):
                     bridge.run()
 
             if self.role == 'leaf':
-                self.logger.info('connecting F1/spine containers')
+                fun_test.log('connecting F1/spine containers')
 
             if (self.role == 'leaf' and self.topo.available_vms == 1) or self.topo.available_vms > 1:
-                out = exec_send_file([(self.ip, vm_links)], [], logger=self.logger)
-                out = exec_remote_commands([(self.ip, [links_sh])], [], timeout=1200, logger=self.logger)
+                out = exec_send_file([(self.ip, vm_links)], [])
+                out = exec_remote_commands([(self.ip, [links_sh])], [], timeout=1200)
 
             if self.role == 'leaf':
                     self.unpauseRacks([rack.rack_id for rack in self.racks])
@@ -1212,7 +1189,7 @@ class VM(object):
                     prefix_update_nodes.append(node)
 
         docker_pause = docker_pause_cmd + pause_list
-        out = exec_remote_commands([(self.ip, [docker_pause])], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [docker_pause])], [])
 
         if self.topo.state == 'running':
             for node in prefix_update_nodes:
@@ -1231,7 +1208,7 @@ class VM(object):
                 prefix_update_nodes.append(node_obj)
 
         docker_pause = docker_pause_cmd + pause_list
-        out = exec_remote_commands([(self.ip, [docker_pause])], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [docker_pause])], [])
 
         if self.topo.state == 'running':
             for node in prefix_update_nodes:
@@ -1251,7 +1228,7 @@ class VM(object):
                     prefix_update_nodes.append(node)
 
         docker_unpause = docker_unpause_cmd + unpause_list
-        out = exec_remote_commands([(self.ip, [docker_unpause])], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [docker_unpause])], [])
 
         if self.topo.state == 'running':
             for node in prefix_update_nodes:
@@ -1269,7 +1246,7 @@ class VM(object):
                 prefix_update_nodes.append(node_obj)
 
         docker_unpause = docker_unpause_cmd + unpause_list
-        out = exec_remote_commands([(self.ip, [docker_unpause])], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [docker_unpause])], [])
 
         if self.topo.state == 'running':
             for node in prefix_update_nodes:
@@ -1294,7 +1271,7 @@ class VM(object):
         elif isinstance(dsts, list):
             dst_list = dsts
         else:
-            self.logger.warning('Invalid input %s for linkImpair/Repair' % dst_list)
+            fun_test.log('Invalid input %s for linkImpair/Repair' % dst_list)
       
         return dst_list 
 
@@ -1314,7 +1291,7 @@ class VM(object):
         netem_repair_cmd_1 = ''
 
         if dst not in src_node.interfaces:
-            self.logger.warning('Invalid destination %s for linkRepair from %s. Skipping over' % (dst, src_node.name))
+            fun_test.log('Invalid destination %s for linkRepair from %s. Skipping over' % (dst, src_node.name))
             return 0
 
         my_intf_name = src_node.interfaces[dst]['my_intf_name']
@@ -1332,9 +1309,9 @@ class VM(object):
             if peer_type == 'leaf':
                 netem_repair_cmd += 'ip netns exec %s tc qdisc del dev %s root \n' % (dst, peer_intf_name)
 
-        out = exec_remote_commands([(self.ip, [netem_repair_cmd])], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [netem_repair_cmd])], [])
         if netem_repair_cmd_1:
-            out = exec_remote_commands([(dst_vm_ip, [netem_repair_cmd_1])], [], logger=self.logger)
+            out = exec_remote_commands([(dst_vm_ip, [netem_repair_cmd_1])], [])
 
         src_node.interfaces[dst]['state'] = 'up'
 
@@ -1355,7 +1332,7 @@ class VM(object):
         netem_impair_cmd_1 = ''
 
         if dst not in src_node.interfaces:
-            self.logger.warning('Invalid destination %s for linkImpair from %s. Skipping over' % (dst, src_node.name))
+            fun_test.log('Invalid destination %s for linkImpair from %s. Skipping over' % (dst, src_node.name))
             return 0
 
         my_intf_name = src_node.interfaces[dst]['my_intf_name']
@@ -1404,9 +1381,9 @@ class VM(object):
             else:
                 pass
 
-        out = exec_remote_commands([(self.ip, [netem_impair_cmd])], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [netem_impair_cmd])], [])
         if netem_impair_cmd_1:
-            out = exec_remote_commands([(dst_vm_ip, [netem_impair_cmd_1])], [], logger=self.logger)
+            out = exec_remote_commands([(dst_vm_ip, [netem_impair_cmd_1])], [])
 
         return 1
 
@@ -1420,7 +1397,7 @@ class VM(object):
                 iptables_impair_cmd += 'ip netns exec %s iptables -I OUTPUT -o eth0 -d %s -j DROP \n' % \
                                        (src_node.name, dst.ip)
 
-            out = exec_remote_commands([(self.ip, [iptables_impair_cmd])], [], logger=self.logger)
+            out = exec_remote_commands([(self.ip, [iptables_impair_cmd])], [])
 
     def flatLinkRepair(self, src, dsts):
         src_node = self.get_node(src)
@@ -1432,11 +1409,11 @@ class VM(object):
                 iptables_repair_cmd += 'ip netns exec %s iptables -D OUTPUT -o eth0 -d %s -j DROP \n' % \
                                        (src_node.name, dst.ip)
 
-            out = exec_remote_commands([(self.ip, [iptables_repair_cmd])], [], logger=self.logger)
+            out = exec_remote_commands([(self.ip, [iptables_repair_cmd])], [])
 
     @retry(tries=100, delay=20)
     def waitOnPsim(self):
-        out = exec_remote_commands([(self.ip, [psim_process_count])], [], logger=self.logger)
+        out = exec_remote_commands([(self.ip, [psim_process_count])], [])
         if int(out[0]['results'][0]['output']) == self.nRacks*self.nLeafs:
             return True
         else:
@@ -1444,7 +1421,7 @@ class VM(object):
 
     def get_rack_from_id(self, rack_id):
         if int(rack_id) > self.end_rack_id: 
-            self.logger.warning('Rack %s does not exist' % rack_id)
+            fun_test.log('Rack %s does not exist' % rack_id)
             return None
         index = int(rack_id) - ((self.id-1)*self.topo.max_racks_per_vm) -1
         return self.racks[index]
@@ -1452,7 +1429,7 @@ class VM(object):
     def get_rack_from_node(self, node_name):
         rack_id, node_id = node_name.split('-')
         if int(rack_id) > self.end_rack_id or int(node_id) > self.nLeafs: 
-            self.logger.warning('Node %s does not exist' % node_name)
+            fun_test.log('Node %s does not exist' % node_name)
             return None
         index = int(rack_id) - ((self.id-1)*self.topo.max_racks_per_vm) -1
         return self.racks[index]
@@ -1530,7 +1507,7 @@ class VM(object):
             if not 'leaf' in bridge.name:
                 bridge_cmd.append(ovs_del_br_cmd + bridge.name)
         for cmd in bridge_cmd:
-           output = exec_remote_commands([(self.ip, [cmd])], [], timeout=300, logger=self.logger)
+           output = exec_remote_commands([(self.ip, [cmd])], [], timeout=300)
 
     def cleanupNodes(self):
             bridge_names = ''
@@ -1571,7 +1548,7 @@ class VM(object):
             if config_dict['flat_topo'] and self.topo.total_vms > 1:
                 final_cleanup += [docker_swarm_leave_cmd]
             for cmd in final_cleanup:
-                output = exec_remote_commands([(self.ip, [cmd])], [], timeout=300, logger=self.logger)
+                output = exec_remote_commands([(self.ip, [cmd])], [], timeout=300)
 
 
 class Rack(object):
@@ -1693,7 +1670,6 @@ class Node(object):
         self.bgp_config = ''
         self.isis_config = ''
         self.tgs = []
-        self.logger = logging.getLogger(__name__)
 
         self.name = '%s-%s' % (self.rack_id, self.node_id)
 
@@ -1713,16 +1689,6 @@ class Node(object):
             self.public_network = f1_public_subnet.pop(0)
 
         self.loopback_ips = self.add_loopback_ips()
-    
-
-    def __getstate__(self):
-        d = dict(self.__dict__)
-        del d['logger']
-        return d
-
-    def __setstate__(self, d):
-        d['logger'] = logging.getLogger(__name__)
-        self.__dict__.update(d)
     
     def add_interface(self, dst=None, my_intf_name='', my_ip='',
                       prefixlen='', peer_intf_name='', peer_ip='', bridge_name='', vlan='' ):
@@ -1877,7 +1843,7 @@ class Node(object):
                                               self.host_ssh_port, self.zebra_port, self.bgp_port,
                                               self.isis_port, router_image)
 
-        self.logger.info('Docker command: %s' % self.docker_run)
+        fun_test.log('Docker command: %s' % self.docker_run)
 
     def update_prefix_counts(self, action):
         for intf in self.interfaces:
@@ -2017,7 +1983,7 @@ class Node(object):
         commands.append(docker_stop)
         commands.append(netns_del)
         for cmds in commands:
-            out = exec_remote_commands([(self.vm_ip, [cmds])], [], timeout=300, logger=self.logger)
+            out = exec_remote_commands([(self.vm_ip, [cmds])], [], timeout=300)
 
     def show_route(self):
         show_bgp_summ = ['show ip bgp summ']
@@ -2025,10 +1991,10 @@ class Node(object):
         bgp_summ = self.exec_command(self.bgp_port, show_bgp_summ)
         bgp_route = self.exec_command(self.zebra_port, show_ip_route_bgp)
         for i in bgp_summ[0].split('\n'):
-            print i
+            fun_test.log(i)
         for i in bgp_route[0].split('\n'):
-            print i
-        print '**** \n'
+            fun_test.log(i)
+        fun_test.log('**** \n')
 
     def exec_command(self, cmd, background=True):
         self.container_conn = self.set_container_conn()
@@ -2067,8 +2033,8 @@ class Node(object):
                     linesout.append(self.tn.read_until('# ').replace('\r', ' '))
                 result = linesout
             except Exception as ex:
-                self.logger.warning('Failed to configure node %s. Telnet Failed' % self.name)
-                self.logger.warning(ex)
+                fun_test.log('Failed to configure node %s. Telnet Failed' % self.name)
+                fun_test.log(ex)
                 result = None
         finally:
             self.tn.close()
@@ -2139,7 +2105,7 @@ class Link(object):
         subnet_ips = list(self.subnet.iter_hosts())[used_ips:]
 
         if len(subnet_ips) < 2:
-            self.logger.warning("Can't create TG due to IP exhaustion")
+            fun_test.log("Can't create TG due to IP exhaustion")
             return
         left_ip = str(subnet_ips.pop(0))
         right_ip = str(subnet_ips.pop(1))
@@ -2177,16 +2143,6 @@ class Bridge(object):
                         (self.name,self.name)
         self.leaf_vlan_ports = []
         self.spine_vlan_ports = []
-        self.logger = logging.getLogger(__name__)
-
-    def __getstate__(self):
-        d = dict(self.__dict__)
-        del d['logger']
-        return d
-
-    def __setstate__(self, d):
-        d['logger'] = logging.getLogger(__name__)
-        self.__dict__.update(d)
 
     def addLeafPorts(self, nPorts):
         port_cmd = ''
@@ -2262,7 +2218,7 @@ class Bridge(object):
 
     def run(self): 
         for cmd in self.commands.split('\n'):
-           output = exec_remote_commands([(self.vm_ip, [cmd])], [], timeout=300, logger=self.logger)
+           output = exec_remote_commands([(self.vm_ip, [cmd])], [], timeout=300)
 
     def get_leaf_port_pair(self):
         try:
@@ -2298,16 +2254,6 @@ class TrafficGenerator(object):
         self.interfaces = {}
         self.commands = ''
         self.route_command = 'ip route del 10.0.0.0/8\n'
-        self.logger = logging.getLogger(__name__)
-
-    def __getstate__(self):
-        d = dict(self.__dict__)
-        del d['logger']
-        return d
-
-    def __setstate__(self, d):
-        d['logger'] = logging.getLogger(__name__)
-        self.__dict__.update(d)
 
     def run(self):
         """ Start TG by running docker container
@@ -2325,9 +2271,9 @@ class TrafficGenerator(object):
             docker_run = '%s --name %s --hostname %s -p %d:22 %s' % \
                      (docker_run_cmd, self.name, self.name, self.host_ssh_port, router_image)
 
-        self.logger.info('Docker command: %s' % docker_run)
+        fun_test.log('Docker command: %s' % docker_run)
 
-        out = exec_remote_commands([(self.vm_ip, [docker_run])], [], logger=self.logger)
+        out = exec_remote_commands([(self.vm_ip, [docker_run])], [])
         
         self.state = 'init'
         self.add_ns()
@@ -2339,7 +2285,7 @@ class TrafficGenerator(object):
         command_list = self.commands.split('\n')
         for command in command_list:
             if command:
-                out = exec_remote_commands([(self.vm_ip, [command])], [], logger=self.logger)
+                out = exec_remote_commands([(self.vm_ip, [command])], [])
 
         self.state = 'running'
  
@@ -2409,20 +2355,20 @@ class TrafficGenerator(object):
 
     def start_iperf(self, dst, duration=5, background=False):
         if not dst:
-            self.logger.warning('TG called with None destination')
+            fun_test.log('TG called with None destination')
             return
         iperf_cmd = 'iperf3 -P 1  -b 200M -t %s -c %s ' % (duration, dst.ip)
-        self.logger.info('Starting iperf traffic %s' % iperf_cmd)
+        fun_test.log('Starting iperf traffic %s' % iperf_cmd)
         out = self.exec_command(iperf_cmd, background)
         self.state = 'running'
         return out['results'][0]['output'] 
 
     def start_ab(self, dst, duration=5, background=False):
         if not dst:
-            self.logger.warning('TG called with None destination')
+            fun_test.log('TG called with None destination')
             return
         ab_cmd = 'ab -n 1000 -c 100 http://%s:80/1mb' % dst.ip
-        self.logger.info('Starting ab traffic %s' % ab_cmd)
+        fun_test.log('Starting ab traffic %s' % ab_cmd)
         out = self.exec_command(ab_cmd, background)
         self.state = 'running'
         return out['results'][0]['output']
@@ -2466,15 +2412,15 @@ class TrafficGenerator(object):
             reference to docker netns
         """
         docker_pid = '%s %s' % (docker_pid_cmd, self.name)
-        out = exec_remote_commands([(self.vm_ip, [docker_pid])], [], logger=self.logger)
+        out = exec_remote_commands([(self.vm_ip, [docker_pid])], [])
         try:
             pid = out[0]['results'][0]['output'].strip()
         except:
-            self.logger.warning('Could not find TG container %s' % self.name)
+            fun_test.log('Could not find TG container %s' % self.name)
             return
 
         ns_ln = 'ln -s /proc/%s/ns/net /var/run/netns/%s' % (pid, self.name)
-        out = exec_remote_commands([(self.vm_ip, [ns_ln])], [], logger=self.logger)
+        out = exec_remote_commands([(self.vm_ip, [ns_ln])], [])
 
     def get_host_port(self):
         return (base_port+self.node.vm_obj.topo.get_next_id())
