@@ -56,7 +56,7 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
                                         read_latency=read_latency)
 
     result = []
-    arg_list = post_results.func_code.co_varnames[:-3]
+    arg_list = post_results.func_code.co_varnames[:12]
     for arg in arg_list:
         result.append(str(eval(arg)))
     result = ",".join(result)
@@ -85,6 +85,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def cleanup(self):
         TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        # pass
 
 
 class BLTVolumePerformanceTestcase(FunTestCase):
@@ -197,8 +198,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
 
             fun_test.shared_variables["blt"]["setup_created"] = True
-            # fun_test.shared_variables["blt"]["storage_controller"] = storage_controller
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
+
+            # Executing the FIO command to warm up the system
+            if self.warm_up_traffic:
+                fun_test.log("Executing the FIO command to warm up the system")
+                fio_output = self.linux_host.fio(destination_ip=destination_ip, **self.warm_up_fio_cmd_args)
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fio_output)
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
 
     def run(self):
 
@@ -209,18 +218,19 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         # storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-
-        fio_result = {}
-        internal_result = {}
-
-        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
+        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
-        initial_volume_status = {}
+        fio_result = {}
         fio_output = {}
+        internal_result = {}
+        initial_volume_status = {}
         final_volume_status = {}
         diff_volume_stats = {}
+        initial_stats = {}
+        final_stats = {}
+        diff_stats = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KiB/s", "Read Throughput in KiB/s", "Write Latency in uSecs",
@@ -231,16 +241,24 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
+            fio_output[combo] = {}
             internal_result[combo] = {}
             initial_volume_status[combo] = {}
-            fio_output[combo] = {}
             final_volume_status[combo] = {}
             diff_volume_stats[combo] = {}
+            initial_stats[combo] = {}
+            final_stats[combo] = {}
+            diff_stats[combo] = {}
 
             if combo in self.expected_volume_stats:
                 expected_volume_stats = self.expected_volume_stats[combo]
             else:
                 expected_volume_stats = self.expected_volume_stats
+
+            if combo in self.expected_stats:
+                expected_stats = self.expected_stats[combo]
+            else:
+                expected_stats = self.expected_stats
 
             for mode in self.fio_modes:
 
@@ -258,15 +276,35 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
                              format(mode, fio_block_size, fio_iodepth))
 
-                # Pulling in the initial volume stats in dictionary format
+                # Pulling the initial volume stats in dictionary format
                 command_result = {}
                 initial_volume_status[combo][mode] = {}
-
-                command_result = self.storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree)
                 fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance 0")
                 initial_volume_status[combo][mode] = command_result["data"]
                 fun_test.log("Volume Status at the beginning of the test:")
                 fun_test.log(initial_volume_status[combo][mode])
+
+                # Pulling the initial stats in dictionary format
+                initial_stats[combo][mode] = {}
+                for key, value in self.stats_list.items():
+                    if key not in initial_stats[combo][mode]:
+                        initial_stats[combo][mode][key] = {}
+                    if value:
+                        for item in value:
+                            props_tree = "{}/{}/{}".format("stats", key, item)
+                            command_result = self.storage_controller.peek(props_tree)
+                            fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
+                                                   format(props_tree))
+                            initial_stats[combo][mode][key][item] = command_result["data"]
+                    else:
+                        props_tree = "{}/{}".format("stats", key)
+                        command_result = self.storage_controller.peek(props_tree)
+                        fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
+                                               format(props_tree))
+                        initial_stats[combo][mode][key] = command_result["data"]
+                    fun_test.log("{} stats at the beginning of the test:".format(key))
+                    fun_test.log(initial_stats[combo][mode][key])
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
@@ -281,11 +319,32 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # Getting the volume stats after the FIO test
                 command_result = {}
                 final_volume_status[combo][mode] = {}
-                command_result = self.storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree)
                 fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
                 final_volume_status[combo][mode] = command_result["data"]
                 fun_test.log("Volume Status at the end of the test:")
                 fun_test.log(final_volume_status[combo][mode])
+
+                # Pulling the final stats in dictionary format
+                final_stats[combo][mode] = {}
+                for key, value in self.stats_list.items():
+                    if key not in final_stats[combo][mode]:
+                        final_stats[combo][mode][key] = {}
+                    if value:
+                        for item in value:
+                            props_tree = "{}/{}/{}".format("stats", key, item)
+                            command_result = self.storage_controller.peek(props_tree)
+                            fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
+                                                   format(props_tree))
+                            final_stats[combo][mode][key][item] = command_result["data"]
+                    else:
+                        props_tree = "{}/{}".format("stats", key)
+                        command_result = self.storage_controller.peek(props_tree)
+                        fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
+                                               format(props_tree))
+                        final_stats[combo][mode][key] = command_result["data"]
+                    fun_test.log("{} stats at the end of the test:".format(key))
+                    fun_test.log(final_stats[combo][mode][key])
 
                 # Finding the difference between the internal volume stats before and after the test
                 diff_volume_stats[combo][mode] = {}
@@ -300,6 +359,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         diff_volume_stats[combo][mode][fkey] = fvalue - ivalue
                 fun_test.log("Difference of volume status before and after the test:")
                 fun_test.log(diff_volume_stats[combo][mode])
+
+                # Finding the difference between the stats before and after the test
+                diff_stats[combo][mode] = {}
+                for key, value in self.stats_list.items():
+                    diff_stats[combo][mode][key] = {}
+                    for fkey, fvalue in final_stats[combo][mode][key].items():
+                        ivalue = initial_stats[combo][mode][key][fkey]
+                        diff_stats[combo][mode][key][fkey] = fvalue - ivalue
+                    fun_test.log("Difference of {} stats before and after the test:".format(key))
+                    fun_test.log(diff_stats[combo][mode][key])
 
                 if not fio_output[combo][mode]:
                     fio_result[combo][mode] = False
@@ -368,6 +437,44 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     else:
                         internal_result[combo][mode] = False
                         fun_test.critical("{} is not found in volume status".format(ekey))
+
+                # Comparing the internal stats with the expected value
+                for key, value in expected_stats[mode].items():
+                    for ekey, evalue in expected_stats[mode][key].items():
+                        if ekey in diff_stats[combo][mode][key]:
+                            actual = diff_stats[combo][mode][key][ekey]
+                            evalue_list = evalue.strip("()").split(",")
+                            expected = int(evalue_list[0])
+                            threshold = int(evalue_list[1])
+                            if actual != expected:
+                                if actual < expected:
+                                    fun_test.add_checkpoint(
+                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                        "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
+                                    fun_test.log("Final {} value {} of {} stats is less than the expected range "
+                                                 "{}".format(ekey, key, actual, expected))
+                                elif (actual > expected) and ((actual - expected) <= threshold):
+                                    fun_test.add_checkpoint(
+                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                        "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
+                                    fun_test.log("Final {} value {} of {} stats is within the expected range {}".
+                                                 format(ekey, key, actual, expected))
+                                else:
+                                    internal_result[combo][mode] = False
+                                    fun_test.add_checkpoint(
+                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                        "{}".format(ekey, key, mode, combo), "FAILED", expected, actual)
+                                    fun_test.critical("Final {} value of {} stats {} is not equal to the expected value"
+                                                      " {}".format(ekey, key, actual, expected))
+                            else:
+                                fun_test.add_checkpoint(
+                                    "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                    "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
+                                fun_test.log("Final {} value of {} stats is equal to the expected value {}".
+                                             format(ekey, key, actual, expected))
+                        else:
+                            internal_result[combo][mode] = False
+                            fun_test.critical("{} is not found in {} stat".format(ekey, key))
 
                 # Building the table row for this variation for both the script table and performance dashboard
                 row_data_list = []
@@ -511,18 +618,19 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
 
         # storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-
-        fio_result = {}
-        internal_result = {}
-
-        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
+        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
-        initial_volume_status = {}
+        fio_result = {}
         fio_output = {}
+        internal_result = {}
+        initial_volume_status = {}
         final_volume_status = {}
         diff_volume_stats = {}
+        initial_stats = {}
+        final_stats = {}
+        diff_stats = {}
 
         tmp = self.fio_bs_iodepth.split(',')
 
@@ -545,11 +653,15 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
             if size == "512m" or size == "896m":
                 continue
             fio_result[size] = {}
+            fio_output[size] = {}
             internal_result[size] = {}
             initial_volume_status[size] = {}
-            fio_output[size] = {}
             final_volume_status[size] = {}
             diff_volume_stats[size] = {}
+            initial_stats[size] = {}
+            final_stats[size] = {}
+            diff_stats[size] = {}
+
             for mode in self.fio_modes:
 
                 # The below check needs to be removed once the bugs #299 get resolved
@@ -567,12 +679,32 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 # Pulling in the initial volume stats in dictionary format
                 command_result = {}
                 initial_volume_status[size][mode] = {}
-
-                command_result = self.storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree)
                 fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance {}".format(0))
                 initial_volume_status[size][mode] = command_result["data"]
                 fun_test.log("Volume Status at the beginning of the test:")
                 fun_test.log(initial_volume_status[size][mode])
+
+                # Pulling the initial stats in dictionary format
+                initial_stats[size][mode] = {}
+                for key, value in self.stats_list.items():
+                    if key not in initial_stats[size][mode]:
+                        initial_stats[size][mode][key] = {}
+                    if value:
+                        for item in value:
+                            props_tree = "{}/{}/{}".format("stats", key, item)
+                            command_result = self.storage_controller.peek(props_tree)
+                            fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
+                                                   format(props_tree))
+                            initial_stats[size][mode][key][item] = command_result["data"]
+                    else:
+                        props_tree = "{}/{}".format("stats", key)
+                        command_result = self.storage_controller.peek(props_tree)
+                        fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
+                                               format(props_tree))
+                        initial_stats[size][mode][key] = command_result["data"]
+                    fun_test.log("{} stats at the beginning of the test:".format(key))
+                    fun_test.log(initial_stats[size][mode][key])
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test for the size {} with the block size & IO depth set to {} & {}"
@@ -589,11 +721,32 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 # Getting the volume stats after the FIO test
                 command_result = {}
                 final_volume_status[size][mode] = {}
-                command_result = self.storage_controller.peek(props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree)
                 fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
                 final_volume_status[size][mode] = command_result["data"]
                 fun_test.log("Volume Status at the end of the test:")
                 fun_test.log(final_volume_status[size][mode])
+
+                # Pulling the final stats in dictionary format
+                final_stats[size][mode] = {}
+                for key, value in self.stats_list.items():
+                    if key not in final_stats[size][mode]:
+                        final_stats[size][mode][key] = {}
+                    if value:
+                        for item in value:
+                            props_tree = "{}/{}/{}".format("stats", key, item)
+                            command_result = self.storage_controller.peek(props_tree)
+                            fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
+                                                   format(props_tree))
+                            final_stats[size][mode][key][item] = command_result["data"]
+                    else:
+                        props_tree = "{}/{}".format("stats", key)
+                        command_result = self.storage_controller.peek(props_tree)
+                        fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
+                                               format(props_tree))
+                        final_stats[size][mode][key] = command_result["data"]
+                    fun_test.log("{} stats at the end of the test:".format(key))
+                    fun_test.log(final_stats[size][mode][key])
 
                 # Finding the difference between the internal volume stats before and after the test
                 diff_volume_stats[size][mode] = {}
@@ -608,6 +761,16 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                         diff_volume_stats[size][mode][fkey] = fvalue - ivalue
                 fun_test.log("Difference of volume status before and after the test:")
                 fun_test.log(diff_volume_stats[size][mode])
+
+                # Finding the difference between the stats before and after the test
+                diff_stats[size][mode] = {}
+                for key, value in self.stats_list.items():
+                    diff_stats[size][mode][key] = {}
+                    for fkey, fvalue in final_stats[size][mode][key].items():
+                        ivalue = initial_stats[size][mode][key][fkey]
+                        diff_stats[size][mode][key][fkey] = fvalue - ivalue
+                    fun_test.log("Difference of {} stats before and after the test:".format(key))
+                    fun_test.log(diff_stats[size][mode][key])
 
                 if not fio_output[size][mode]:
                     fio_result[size][mode] = False
@@ -682,6 +845,48 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                         internal_result[size][mode] = False
                         fun_test.critical("{} is not found in volume status".format(ekey))
 
+                # Comparing the internal stats with the expected value
+                for key, value in self.expected_stats[size].items():
+                    for ekey, evalue in self.expected_stats[size][key].items():
+                        if ekey in diff_stats[size][mode][key]:
+                            actual = diff_stats[size][mode][key][ekey]
+                            evalue_list = evalue.strip("()").split(",")
+                            expected = int(evalue_list[0])
+                            threshold = int(evalue_list[1])
+                            if actual != expected:
+                                if actual < expected:
+                                    fun_test.add_checkpoint(
+                                        "{} check of {} stats for {} {} test for the block size & IO depth combo "
+                                        "{} & {}".format(ekey, key, size, mode, fio_block_size, fio_iodepth), "PASSED",
+                                        expected, actual)
+                                    fun_test.log("Final {} value {} of {} stats is less than the expected range "
+                                                 "{}".format(ekey, key, actual, expected))
+                                elif (actual > expected) and ((actual - expected) <= threshold):
+                                    fun_test.add_checkpoint(
+                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                        "{} & {}".format(ekey, key, size, mode, fio_block_size, fio_iodepth), "PASSED",
+                                        expected, actual)
+                                    fun_test.log("Final {} value {} of {} stats is within the expected range {}".
+                                                 format(ekey, key, actual, expected))
+                                else:
+                                    internal_result[size][mode] = False
+                                    fun_test.add_checkpoint(
+                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                        "{} & {}".format(ekey, key, size, mode, fio_block_size, fio_iodepth), "FAILED",
+                                        expected, actual)
+                                    fun_test.critical("Final {} value of {} stats {} is not equal to the expected value"
+                                                      " {}".format(ekey, key, actual, expected))
+                            else:
+                                fun_test.add_checkpoint(
+                                    "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                    "{} & {}".format(ekey, key, size, mode, fio_block_size, fio_iodepth), "PASSED",
+                                    expected, actual)
+                                fun_test.log("Final {} value of {} stats is equal to the expected value {}".
+                                             format(ekey, key, actual, expected))
+                        else:
+                            internal_result[size][mode] = False
+                            fun_test.critical("{} is not found in {} stat".format(ekey, key))
+
                 # Building the table raw for this variation
                 row_data_list = []
                 for i in table_data_cols:
@@ -723,5 +928,5 @@ if __name__ == "__main__":
     bltscript.add_test_case(BLTFioRandWriteRandReadOnly())
     bltscript.add_test_case(BLTFioSeqReadWriteMix())
     bltscript.add_test_case(BLTFioRandReadWriteMix())
-    bltscript.add_test_case(BLTFioLargeWriteReadOnly())
+    # bltscript.add_test_case(BLTFioLargeWriteReadOnly())
     bltscript.run()
