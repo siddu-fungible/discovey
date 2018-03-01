@@ -8,6 +8,7 @@ class CryptoTemplate:
     VERSION = "version"
     ENGINE = "engine"
     AF_ALG = "af_alg"
+    DIGEST_HMAC_SHA3 = "digest_hmac_sha3"
 
     def __init__(self, host):
         self.host = host
@@ -24,7 +25,6 @@ class CryptoTemplate:
         plaintext_list = []
         digest_list = []
         input_dict = {}
-
         for line in open(file_path, 'r').read().split(','):
             line_list = line.split("=")
             if len(line_list) > 1:
@@ -64,6 +64,13 @@ class CryptoTemplate:
     def compute_digest(self, algorithm, digest_input, engine=None):
         return True
 
+    """
+    example commands:   ./digest_hmac_sha3 "hmac(sha3-224-generic)" file.txt key_text_imm "Jefe"
+                        ./digest_hmac_sha3 "hmac(sha3-256-generic)" file.txt key_hex_imm "\x0b\x0b\x0b\x0b\x0b"
+                        ./digest_hmac_sha3 "hmac(sha3-224-generic)" file.txt key_hex_esc_imm "0b0b0b0b0b"
+                        ./openssl dgst -sha1 -hmac "Jefe" test.bin
+                        ./openssl dgst -sha1 -mac HMAC -macopt hexkey:4a656665  test.bin
+    """
     def compute_hmac(self, algorithm, hmac_input, key_type=None, key=None, engine=None):
         return True
 
