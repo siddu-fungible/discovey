@@ -129,6 +129,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
         self.topology = fun_test.shared_variables["topology"]
         self.global_setup = fun_test.shared_variables["global_setup"]
         self.linux_host = self.topology.get_tg_instance(tg_index=0)
+        destination_ip = self.global_setup["duts"]["replica"].data_plane_ip
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -328,6 +329,15 @@ class ReplicaDPULevelTestcase(FunTestCase):
             fun_test.shared_variables["replica"]["storage_controller"] = self.storage_controller
             fun_test.shared_variables["replica"]["setup_created"] = True
 
+            # Executing the FIO command to warm up the system
+            if self.warm_up_traffic:
+                fun_test.log("Executing the FIO command to warm up the system")
+                fio_output = self.linux_host.fio(destination_ip=destination_ip, **self.warm_up_fio_cmd_args)
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fio_output)
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
+
     def run(self):
 
         testcase = self.__class__.__name__
@@ -340,11 +350,14 @@ class ReplicaDPULevelTestcase(FunTestCase):
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
         fio_result = {}
+        fio_output = {}
         internal_result = {}
         initial_volume_status = {}
-        fio_output = {}
         final_volume_status = {}
         diff_volume_stats = {}
+        initial_stats = {}
+        final_stats = {}
+        diff_stats = {}
 
         volumes = ["blt", "replica"]
 
@@ -373,16 +386,24 @@ class ReplicaDPULevelTestcase(FunTestCase):
 
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
+            fio_output[combo] = {}
             internal_result[combo] = {}
             initial_volume_status[combo] = {}
-            fio_output[combo] = {}
             final_volume_status[combo] = {}
             diff_volume_stats[combo] = {}
+            initial_stats[combo] = {}
+            final_stats[combo] = {}
+            diff_stats[combo] = {}
 
             if combo in self.expected_volume_stats:
                 expected_volume_stats = self.expected_volume_stats[combo]
             else:
                 expected_volume_stats = self.expected_volume_stats
+
+            if combo in self.expected_stats:
+                expected_stats = self.expected_stats[combo]
+            else:
+                expected_stats = self.expected_stats
 
             for mode in self.fio_modes:
 
@@ -403,15 +424,40 @@ class ReplicaDPULevelTestcase(FunTestCase):
                     initial_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         initial_volume_status[combo][mode][type][index] = {}
-
-                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
-                        command_result = {}
-                        command_result = self.storage_controller[type][index].peek(props_tree)
+                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        command_result = self.storage_controller[type][index].peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT instance {}".
                                                format(index))
                         initial_volume_status[combo][mode][type][index] = command_result["data"]
                         fun_test.log("{} {} volume Status at the beginning of the test:".format(type, index))
                         fun_test.log(initial_volume_status[combo][mode][type][index])
+
+                # Pulling the initial stats in dictionary format
+                initial_stats[combo][mode] = {}
+                for type in volumes:
+                    initial_stats[combo][mode][type] = {}
+                    for index, uuid in enumerate(self.uuids[type]):
+                        initial_stats[combo][mode][type][index] = {}
+                        for key, value in self.stats_list.items():
+                            if key not in initial_stats[combo][mode][type][index]:
+                                initial_stats[combo][mode][type][index][key] = {}
+                            if value:
+                                for item in value:
+                                    props_tree = "{}/{}/{}".format("stats", key, item)
+                                    command_result = self.storage_controller[type][index].peek(props_tree)
+                                    fun_test.simple_assert(
+                                        command_result["status"], "Initial {} stats of {} {} DUT "
+                                                                  "instance".format(props_tree, type, index))
+                                    initial_stats[combo][mode][type][index][key][item] = command_result["data"]
+                            else:
+                                props_tree = "{}/{}".format("stats", key)
+                                command_result = self.storage_controller[type][index].peek(props_tree)
+                                fun_test.simple_assert(
+                                    command_result["status"], "Initial {} stats of {} {} DUT "
+                                                              "instance".format(props_tree, type, index))
+                                initial_stats[combo][mode][type][index][key] = command_result["data"]
+                            fun_test.log("{} stats of {} {} DUT at the beginning of the test:".format(key, type, index))
+                            fun_test.log(initial_stats[combo][mode][type][index][key])
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
@@ -431,14 +477,39 @@ class ReplicaDPULevelTestcase(FunTestCase):
                     final_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         final_volume_status[combo][mode][type][index] = {}
-                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
-                        command_result = {}
-                        command_result = self.storage_controller[type][index].peek(props_tree)
+                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        command_result = self.storage_controller[type][index].peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
                                                format(type, index))
                         final_volume_status[combo][mode][type][index] = command_result["data"]
                         fun_test.log("{} {} volume Status at the end of the test:".format(type, index))
                         fun_test.log(final_volume_status[combo][mode][type][index])
+
+                # Pulling the final stats in dictionary format
+                final_stats[combo][mode] = {}
+                for type in volumes:
+                    final_stats[combo][mode][type] = {}
+                    for index, uuid in enumerate(self.uuids[type]):
+                        final_stats[combo][mode][type][index] = {}
+                        for key, value in self.stats_list.items():
+                            if key not in final_stats[combo][mode][type][index]:
+                                final_stats[combo][mode][type][index][key] = {}
+                            if value:
+                                for item in value:
+                                    props_tree = "{}/{}/{}".format("stats", key, item)
+                                    command_result = self.storage_controller[type][index].peek(props_tree)
+                                    fun_test.simple_assert(
+                                        command_result["status"], "Final {} stats of {} {} DUT "
+                                                                  "instance".format(props_tree, type, index))
+                                    final_stats[combo][mode][type][index][key][item] = command_result["data"]
+                            else:
+                                props_tree = "{}/{}".format("stats", key)
+                                command_result = self.storage_controller[type][index].peek(props_tree)
+                                fun_test.simple_assert(command_result["status"], "Final {} stats of {} {} DUT instance".
+                                                       format(props_tree, type, index))
+                                final_stats[combo][mode][type][index][key] = command_result["data"]
+                            fun_test.log("{} stats of {} {} DUT at the end of the test:".format(key, type, index))
+                            fun_test.log(final_stats[combo][mode][type][index][key])
 
                 # Finding the difference between the internal volume stats before and after the test
                 diff_volume_stats[combo][mode] = {}
@@ -459,6 +530,21 @@ class ReplicaDPULevelTestcase(FunTestCase):
                         fun_test.log("Difference of {} {} volume status before and after the test:".
                                      format(type, index))
                         fun_test.log(diff_volume_stats[combo][mode][type][index])
+
+                # Finding the difference between the stats before and after the test
+                diff_stats[combo][mode] = {}
+                for type in volumes:
+                    diff_stats[combo][mode][type] = {}
+                    for index in range(len(self.uuids[type])):
+                        diff_stats[combo][mode][type][index] = {}
+                        for key, value in self.stats_list.items():
+                            diff_stats[combo][mode][type][index][key] = {}
+                            for fkey, fvalue in final_stats[combo][mode][type][index][key].items():
+                                ivalue = initial_stats[combo][mode][type][index][key][fkey]
+                                diff_stats[combo][mode][type][index][key][fkey] = fvalue - ivalue
+                            fun_test.log("Difference of {} stats of {} {} before and after the test:".format(key, type,
+                                                                                                             index))
+                            fun_test.log(diff_stats[combo][mode][type][index][key])
 
                 if not fio_output[combo][mode]:
                     fio_result[combo][mode] = False
@@ -540,6 +626,54 @@ class ReplicaDPULevelTestcase(FunTestCase):
                             else:
                                 internal_result[combo][mode] = False
                                 fun_test.critical("{} is not found in {} {} volume status".format(ekey, type, index))
+
+                # Comparing the internal stats with the expected value
+                for type in volumes:
+                    for index in range(len(self.uuids[type])):
+                        for key, value in expected_stats[mode][type][str(index)].items():
+                            for ekey, evalue in expected_stats[mode][type][str(index)][key].items():
+                                if ekey in diff_stats[combo][mode][type][index][key]:
+                                    actual = diff_stats[combo][mode][type][index][key][ekey]
+                                    evalue_list = evalue.strip("()").split(",")
+                                    expected = int(evalue_list[0])
+                                    threshold = int(evalue_list[1])
+                                    if actual != expected:
+                                        if actual < expected:
+                                            fun_test.add_checkpoint(
+                                                "{} check of {} stats for the {} test for the block size & IO depth "
+                                                "combo {} in {} {} DUT".format(ekey, key, mode, combo, type, index),
+                                                "PASSED", expected, actual)
+                                            fun_test.log("Final {} value {} of {} stats is less than the expected "
+                                                         "range {} in {} {} DUT".format(ekey, key, actual, expected,
+                                                                                        type, index))
+                                        elif (actual > expected) and ((actual - expected) <= threshold):
+                                            fun_test.add_checkpoint(
+                                                "{} check of {} stats for the {} test for the block size & IO depth "
+                                                "combo {} in {} {} DUT".format(ekey, key, mode, combo, type, index),
+                                                "PASSED", expected, actual)
+                                            fun_test.log("Final {} value {} of {} stats is within the expected range "
+                                                         "{} in {} {} DUT".format(ekey, key, actual, expected, type,
+                                                                                  index))
+                                        else:
+                                            internal_result[combo][mode] = False
+                                            fun_test.add_checkpoint(
+                                                "{} check of {} stats for the {} test for the block size & IO depth "
+                                                "combo {} in {} {} DUT".format(ekey, key, mode, combo, type, index),
+                                                "FAILED", expected, actual)
+                                            fun_test.critical("Final {} value of {} stats {} is not equal to the "
+                                                              "expected value {} in {} {} DUT".
+                                                              format(ekey, key, actual, expected, type, index))
+                                    else:
+                                        fun_test.add_checkpoint(
+                                            "{} check of {} stats for the {} test for the block size & IO depth combo "
+                                            "{} in {} {} DUT".format(ekey, key, mode, combo, type, index), "PASSED",
+                                            expected, actual)
+                                        fun_test.log("Final {} value of {} stats {} is equal to the expected value "
+                                                     "{} in {} {} DUT".format(ekey, key, actual, expected, type, index))
+                                else:
+                                    internal_result[combo][mode] = False
+                                    fun_test.critical("{} is not found in {} stat in {} {} DUT".format(ekey, key, type,
+                                                                                                       index))
 
                 # Building the table raw for this variation
                 row_data_list = []
@@ -707,7 +841,7 @@ class FioRandReadWriteMix(ReplicaDPULevelTestcase):
 
 class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=1,
                               summary="Write & Read only performance(for both Sequential and random) for large sizes "
                                       "of replica volume",
                               steps="""
@@ -736,11 +870,14 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
         # & read only modes
 
         fio_result = {}
+        fio_output = {}
         internal_result = {}
         initial_volume_status = {}
-        fio_output = {}
         final_volume_status = {}
         diff_volume_stats = {}
+        initial_stats = {}
+        final_stats = {}
+        diff_stats = {}
 
         volumes = ["blt", "replica"]
 
@@ -765,11 +902,15 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
             if size == "512m" or size == "896m":
                 continue
             fio_result[size] = {}
+            fio_output[size] = {}
             internal_result[size] = {}
             initial_volume_status[size] = {}
-            fio_output[size] = {}
             final_volume_status[size] = {}
             diff_volume_stats[size] = {}
+            initial_stats[size] = {}
+            final_stats[size] = {}
+            diff_stats[size] = {}
+
             for mode in self.fio_modes:
 
                 # The below check needs to be removed once the bugs #299 get resolved
@@ -784,7 +925,6 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                 row_data_dict["block_size"] = fio_block_size
                 row_data_dict["iodepth"] = fio_iodepth
 
-                # Pulling in the initial volume stats in dictionary format
                 # Pulling the initial volume stats from all the DUTs in dictionary format
                 fun_test.log("Pulling the initial volume stats from all the DUTs in dictionary format before the test")
                 initial_volume_status[size][mode] = {}
@@ -801,6 +941,33 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                         initial_volume_status[size][mode][type][index] = command_result["data"]
                         fun_test.log("{} {} volume Status at the beginning of the test:".format(type, index))
                         fun_test.log(initial_volume_status[size][mode][type][index])
+
+                # Pulling the initial stats in dictionary format
+                initial_stats[size][mode] = {}
+                for type in volumes:
+                    initial_stats[size][mode][type] = {}
+                    for index, uuid in enumerate(self.uuids[type]):
+                        initial_stats[size][mode][type][index] = {}
+                        for key, value in self.stats_list.items():
+                            if key not in initial_stats[size][mode][type][index]:
+                                initial_stats[size][mode][type][index][key] = {}
+                            if value:
+                                for item in value:
+                                    props_tree = "{}/{}/{}".format("stats", key, item)
+                                    command_result = self.storage_controller[type][index].peek(props_tree)
+                                    fun_test.simple_assert(
+                                        command_result["status"], "Initial {} stats of {} {} DUT "
+                                                                  "instance".format(props_tree, type, index))
+                                    initial_stats[size][mode][type][index][key][item] = command_result["data"]
+                            else:
+                                props_tree = "{}/{}".format("stats", key)
+                                command_result = self.storage_controller[type][index].peek(props_tree)
+                                fun_test.simple_assert(
+                                    command_result["status"], "Initial {} stats of {} {} DUT "
+                                                              "instance".format(props_tree, type, index))
+                                initial_stats[size][mode][type][index][key] = command_result["data"]
+                            fun_test.log("{} stats of {} {} DUT at the beginning of the test:".format(key, type, index))
+                            fun_test.log(initial_stats[size][mode][type][index][key])
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test for the size {} with the block size & IO depth set to {} & {}"
@@ -830,6 +997,32 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                         fun_test.log("{} {} volume Status at the end of the test:".format(type, index))
                         fun_test.log(final_volume_status[size][mode][type][index])
 
+                # Pulling the final stats in dictionary format
+                final_stats[size][mode] = {}
+                for type in volumes:
+                    final_stats[size][mode][type] = {}
+                    for index, uuid in enumerate(self.uuids[type]):
+                        final_stats[size][mode][type][index] = {}
+                        for key, value in self.stats_list.items():
+                            if key not in final_stats[size][mode][type][index]:
+                                final_stats[size][mode][type][index][key] = {}
+                            if value:
+                                for item in value:
+                                    props_tree = "{}/{}/{}".format("stats", key, item)
+                                    command_result = self.storage_controller[type][index].peek(props_tree)
+                                    fun_test.simple_assert(
+                                        command_result["status"], "Final {} stats of {} {} DUT "
+                                                                  "instance".format(props_tree, type, index))
+                                    final_stats[size][mode][type][index][key][item] = command_result["data"]
+                            else:
+                                props_tree = "{}/{}".format("stats", key)
+                                command_result = self.storage_controller[type][index].peek(props_tree)
+                                fun_test.simple_assert(command_result["status"], "Final {} stats of {} {} DUT instance".
+                                                       format(props_tree, type, index))
+                                final_stats[size][mode][type][index][key] = command_result["data"]
+                            fun_test.log("{} stats of {} {} DUT at the end of the test:".format(key, type, index))
+                            fun_test.log(final_stats[size][mode][type][index][key])
+
                 # Finding the difference between the internal volume stats before and after the test
                 diff_volume_stats[size][mode] = {}
                 for type in volumes:
@@ -849,6 +1042,21 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                         fun_test.log("Difference of {} {} volume status before and after the test:".
                                      format(type, index))
                         fun_test.log(diff_volume_stats[size][mode][type][index])
+
+                # Finding the difference between the stats before and after the test
+                diff_stats[size][mode] = {}
+                for type in volumes:
+                    diff_stats[size][mode][type] = {}
+                    for index in range(len(self.uuids[type])):
+                        diff_stats[size][mode][type][index] = {}
+                        for key, value in self.stats_list.items():
+                            diff_stats[size][mode][type][index][key] = {}
+                            for fkey, fvalue in final_stats[size][mode][type][index][key].items():
+                                ivalue = initial_stats[size][mode][type][index][key][fkey]
+                                diff_stats[size][mode][type][index][key][fkey] = fvalue - ivalue
+                            fun_test.log("Difference of {} stats of {} {} before and after the test:".format(key, type,
+                                                                                                             index))
+                            fun_test.log(diff_stats[size][mode][type][index][key])
 
                 if not fio_output[size][mode]:
                     fio_result[size][mode] = False
@@ -904,35 +1112,87 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                                     if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
                                         fun_test.add_checkpoint(
                                             "{} check for {} {} test for the {} {} volume with the block size & IO "
-                                            "depth combo {}".format(ekey, size, mode, type, index, fio_block_size,
-                                                                    fio_iodepth), "PASSED", evalue, actual)
+                                            "depth combo ({}, {})".format(ekey, size, mode, type, index, fio_block_size,
+                                                                          fio_iodepth), "PASSED", evalue, actual)
                                         fun_test.critical("Final {} value {} of {} {} volume is within the expected "
                                                           "range {}".format(ekey, actual, type, index, evalue))
                                     elif (actual > evalue) and ((actual - evalue) <= self.volume_pass_threshold):
                                         fun_test.add_checkpoint(
                                             "{} check for {} {} test for the {} {} volume with the block size & IO "
-                                            "depth combo {}".format(ekey, size, mode, type, index, fio_block_size,
-                                                                    fio_iodepth), "PASSED", evalue, actual)
+                                            "depth combo ({}, {})".format(ekey, size, mode, type, index, fio_block_size,
+                                                                          fio_iodepth), "PASSED", evalue, actual)
                                         fun_test.critical("Final {} value {} of {} {} volume is within the expected "
                                                           "range {}".format(ekey, actual, type, index, evalue))
                                     else:
                                         internal_result[size][mode] = False
                                         fun_test.add_checkpoint(
                                             "{} check for {} {} test for the {} {} volume with the block size & IO "
-                                            "depth combo {}".format(ekey, size, mode, type, index, fio_block_size,
-                                                                    fio_iodepth), "PASSED", evalue, actual)
+                                            "depth combo ({}, {})".format(ekey, size, mode, type, index, fio_block_size,
+                                                                          fio_iodepth), "PASSED", evalue, actual)
                                         fun_test.critical("Final {} value {} of {} {} volume is not equal to the "
                                                           "expected value {}".format(ekey, actual, type, index, evalue))
                                 else:
                                     fun_test.add_checkpoint(
                                         "{} check for {} {} test for the {} {} volume with the block size & IO "
-                                        "depth combo {}".format(ekey, size, mode, type, index, fio_block_size,
-                                                                fio_iodepth), "PASSED", evalue, actual)
+                                        "depth combo ({}, {})".format(ekey, size, mode, type, index, fio_block_size,
+                                                                      fio_iodepth), "PASSED", evalue, actual)
                                     fun_test.log("Final {} value {} of {} {} volume is equal to the expected value {}".
                                                  format(ekey, actual, type, index, evalue))
                             else:
                                 internal_result[size][mode] = False
                                 fun_test.critical("{} is not found in {} {} volume status".format(ekey, type, index))
+
+                # Comparing the internal stats with the expected value
+                for type in volumes:
+                    for index in range(len(self.uuids[type])):
+                        for key, value in self.expected_stats[size][mode][type][str(index)].items():
+                            for ekey, evalue in self.expected_stats[size][mode][type][str(index)][key].items():
+                                if ekey in diff_stats[size][mode][type][index][key]:
+                                    actual = diff_stats[size][mode][type][index][key][ekey]
+                                    evalue_list = evalue.strip("()").split(",")
+                                    expected = int(evalue_list[0])
+                                    threshold = int(evalue_list[1])
+                                    if actual != expected:
+                                        if actual < expected:
+                                            fun_test.add_checkpoint(
+                                                "{} check of {} stats for the {} {} test for the block size & IO depth "
+                                                "combo ({}, {}) in {} {} DUT".format(ekey, key, size, mode,
+                                                                                     fio_block_size, fio_iodepth, type,
+                                                                                     index), "PASSED", expected, actual)
+                                            fun_test.log("Final {} value {} of {} stats is less than the expected "
+                                                         "range {} in {} {} DUT".format(ekey, key, actual, expected,
+                                                                                        type, index))
+                                        elif (actual > expected) and ((actual - expected) <= threshold):
+                                            fun_test.add_checkpoint(
+                                                "{} check of {} stats for the {} {} test for the block size & IO depth "
+                                                "combo ({}, {}) in {} {} DUT".format(ekey, key, size, mode,
+                                                                                     fio_block_size, fio_iodepth, type,
+                                                                                     index), "PASSED", expected, actual)
+                                            fun_test.log("Final {} value {} of {} stats is within the expected range "
+                                                         "{} in {} {} DUT".format(ekey, key, actual, expected, type,
+                                                                                  index))
+                                        else:
+                                            internal_result[size][mode] = False
+                                            fun_test.add_checkpoint(
+                                                "{} check of {} stats for the {} {} test for the block size & IO depth "
+                                                "combo ({}, {}) in {} {} DUT".format(ekey, key, size, mode,
+                                                                                     fio_block_size, fio_iodepth, type,
+                                                                                     index), "FAILED", expected, actual)
+                                            fun_test.critical("Final {} value of {} stats {} is not equal to the "
+                                                              "expected value {} in {} {} DUT".
+                                                              format(ekey, key, actual, expected, type, index))
+                                    else:
+                                        fun_test.add_checkpoint(
+                                            "{} check of {} stats for the {} {} test for the block size & IO depth "
+                                            "combo ({}, {}) in {} {} DUT".format(ekey, key, size, mode, fio_block_size,
+                                                                                 fio_iodepth, type, index), "PASSED",
+                                            expected, actual)
+                                        fun_test.log("Final {} value of {} stats {} is equal to the expected value "
+                                                     "{} in {} {} DUT".format(ekey, key, actual, expected, type, index))
+                                else:
+                                    internal_result[size][mode] = False
+                                    fun_test.critical("{} is not found in {} stat in {} {} DUT".format(ekey, key, type,
+                                                                                                       index))
 
                 # Building the table raw for this variation
                 row_data_list = []
@@ -977,5 +1237,5 @@ if __name__ == "__main__":
     # replica_script.add_test_case(FioSeqAndRandReadOnlyWithFailure())
     replica_script.add_test_case(FioSeqReadWriteMix())
     replica_script.add_test_case(FioRandReadWriteMix())
-    replica_script.add_test_case(FioLargeWriteReadOnly())
+    # replica_script.add_test_case(FioLargeWriteReadOnly())
     replica_script.run()

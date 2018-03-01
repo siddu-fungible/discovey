@@ -4,72 +4,117 @@
                        "name": "thin-block1"},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 120},
     "fio_modes": ["write", "read"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 0,
     "expected_fio_result": {
-      "(4, 1)": {"write": {"write": {"bw": 66, "iops": 16, "latency": 59010}},
-                 "read": {"read": {"bw": 212, "iops": 52, "latency": 18813}}},
-      "(8, 1)": {"write": {"write": {"bw": 128, "iops": 15, "latency": 61735}},
-                 "read": {"read": {"bw": 384, "iops": 48, "latency": 20045}}},
-      "(16, 1)": {"write": {"write": {"bw": 238, "iops": 14, "latency": 65947}},
-                  "read": {"read": {"bw": 686, "iops": 42, "latency": 23815}}},
-      "(32, 1)": {"write": {"write": {"bw": 424, "iops": 13, "latency": 76273}},
-                  "read": {"read": {"bw": 980, "iops": 31, "latency": 31853}}}
+      "(4, 1)": {"write": {"write": {"bw": 52, "iops": 13, "latency": 76699}},
+                 "read": {"read": {"bw": 132, "iops": 33, "latency": 30080}}},
+      "(8, 1)": {"write": {"write": {"bw": 90, "iops": 12, "latency": 88305}},
+                 "read": {"read": {"bw": 211, "iops": 26, "latency": 37855}}},
+      "(16, 1)": {"write": {"write": {"bw": 165, "iops": 10, "latency": 96396}},
+                  "read": {"read": {"bw": 334, "iops": 21, "latency": 47879}}},
+      "(32, 1)": {"write": {"write": {"bw": 271, "iops": 8, "latency": 117866}},
+                  "read": {"read": {"bw": 475, "iops": 16, "latency": 67341}}}
     },
-    "expected_volume_stats": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-                              "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "write": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "read": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
   },
   "BLTFioRandWriteRandReadOnly": {
     "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
                        "name": "thin-block1"},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 0,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 120},
     "fio_modes": ["randwrite", "randread"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 0,
     "expected_fio_result": {
-      "(4, 1)": {"randwrite": {"write": {"bw": 66, "iops": 16, "latency": 60147}},
-                 "randread": {"read": {"bw": 218, "iops": 54, "latency": 19243}}},
-      "(8, 1)": {"randwrite": {"write": {"bw": 128, "iops": 15, "latency": 62741}},
-                 "randread": {"read": {"bw": 396, "iops": 50, "latency": 20839}}},
-      "(16, 1)": {"randwrite": {"write": {"bw": 238, "iops": 14, "latency": 67600}},
-                  "randread": {"read": {"bw": 682, "iops": 42, "latency": 24767}}},
-      "(32, 1)": {"randwrite": {"write": {"bw": 426, "iops": 13, "latency": 78365}},
-                  "randread": {"read": {"bw": 1030, "iops": 32, "latency": 33840}}}
+      "(4, 1)": {"randwrite": {"write": {"bw": 51, "iops": 14, "latency": 77250}},
+                 "randread": {"read": {"bw": 133, "iops": 33, "latency": 29964}}},
+      "(8, 1)": {"randwrite": {"write": {"bw": 93, "iops": 12, "latency": 85921}},
+                 "randread": {"read": {"bw": 175, "iops": 22, "latency": 45605}}},
+      "(16, 1)": {"randwrite": {"write": {"bw": 158, "iops": 11, "latency": 100663}},
+                  "randread": {"read": {"bw": 323, "iops": 21, "latency": 49388}}},
+      "(32, 1)": {"randwrite": {"write": {"bw": 263, "iops": 9, "latency": 121332}},
+                  "randread": {"read": {"bw": 442, "iops": 16, "latency": 72230}}}
     },
-    "expected_volume_stats": {"randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-                              "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}
+    "expected_volume_stats": {
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "randwrite": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "randread": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
   },
   "BLTFioSeqReadWriteMix": {
     "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
                        "name": "thin-block1"},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 0,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 120},
     "fio_modes": ["rw"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 0,
     "expected_fio_result": {
-      "(4, 1)": {"rw": {"write": {"bw": 58, "iops": 14, "latency": 60315},
-                        "read": {"bw": 18, "iops": 4, "latency": 20066}}},
-      "(8, 1)": {"rw": {"write": {"bw": 114, "iops": 14, "latency": 63224},
-                        "read": {"bw": 37, "iops": 4, "latency": 21890}}},
-      "(16, 1)": {"rw": {"write": {"bw": 212, "iops": 13, "latency": 67462},
-                         "read": {"bw": 80, "iops": 5, "latency": 25646}}},
-      "(32, 1)": {"rw": {"write": {"bw": 350, "iops": 11, "latency": 79586},
-                         "read": {"bw": 148, "iops": 4, "latency": 35046}}}
+      "(4, 1)": {"rw": {"write": {"bw": 46, "iops": 12, "latency": 78374},
+                        "read": {"bw": 15, "iops": 4, "latency": 36187}}},
+      "(8, 1)": {"rw": {"write": {"bw": 82, "iops": 10, "latency": 83581},
+                        "read": {"bw": 27, "iops": 3, "latency": 41127}}},
+      "(16, 1)": {"rw": {"write": {"bw": 141, "iops": 9, "latency": 94651},
+                         "read": {"bw": 53, "iops": 3, "latency": 49615}}},
+      "(32, 1)": {"rw": {"write": {"bw": 224, "iops": 7, "latency": 114512},
+                         "read": {"bw": 94, "iops": 3, "latency": 71312}}}
     },
     "expected_volume_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 246, "num_writes": 778}},
       "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 256, "num_writes": 768}},
       "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 280, "num_writes": 744}},
       "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 304, "num_writes": 720}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "rw": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
     }
   },
   "BLTFioRandReadWriteMix": {
@@ -77,26 +122,36 @@
                        "name": "thin-block1"},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 0,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 120},
     "fio_modes": ["randrw"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 10,
     "expected_fio_result": {
-      "(4, 1)": {"randrw": {"write": {"bw": 60, "iops": 14, "latency": 58934},
-                            "read": {"bw": 18, "iops": 4, "latency": 18796}}},
-      "(8, 1)": {"randrw": {"write": {"bw": 112, "iops": 14, "latency": 61474},
-                            "read": {"bw": 37, "iops": 4, "latency": 20640}}},
-      "(16, 1)": {"randrw": {"write": {"bw": 206, "iops": 12, "latency": 66102},
-                             "read": {"bw": 78, "iops": 4, "latency": 24106}}},
-      "(32, 1)": {"randrw": {"write": {"bw": 350, "iops": 10, "latency": 77329},
-                             "read": {"bw": 146, "iops": 4, "latency": 30938}}}
+      "(4, 1)": {"randrw": {"write": {"bw": 47, "iops": 12, "latency": 74696},
+                            "read": {"bw": 14, "iops": 4, "latency": 33942}}},
+      "(8, 1)": {"randrw": {"write": {"bw": 82, "iops": 10, "latency": 83006},
+                            "read": {"bw": 27, "iops": 3, "latency": 40949}}},
+      "(16, 1)": {"randrw": {"write": {"bw": 143, "iops": 9, "latency": 93406},
+                             "read": {"bw": 53, "iops": 3, "latency": 48274}}},
+      "(32, 1)": {"randrw": {"write": {"bw": 225, "iops": 7, "latency": 120676},
+                             "read": {"bw": 89, "iops": 3, "latency": 71028}}}
     },
     "expected_volume_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 246, "num_writes": 778}},
       "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 256, "num_writes": 768}},
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 280, "num_writes": 744}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 304, "num_writes": 720}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "randrw": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
     }
   },
   "BLTFioLargeWriteReadOnly": {
@@ -104,6 +159,8 @@
                        "name": "thin-block1"},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "timeout": 660},
     "fio_modes": ["write", "read", "randwrite", "randread"],
     "fio_bs_iodepth": "(32, 1)",
@@ -112,9 +169,9 @@
     "volume_pass_threshold": 0,
     "expected_fio_result": {
       "256m": {"write": {"write": {"bw": 426, "iops": 13, "latency": 1000}},
-              "read": {"read": {"bw": 1570, "iops": 48, "latency": 21641}},
+              "read": {"read": {"bw": 706, "iops": 22, "latency": 45276}},
               "randwrite": {"write": {"bw": 1640, "iops": 50, "latency": 1000}},
-              "randread": {"read": {"bw": 1570, "iops": 48, "latency": 21735}}},
+              "randread": {"read": {"bw": 708, "iops": 22, "latency": 45149}}},
       "512m": {"write": {"write": {"bw": 1602, "iops": 49, "latency": 1000}},
               "read": {"read": {"bw": 3253, "iops": 101, "latency": 1000}},
               "randwrite": {"write": {"bw": 1640, "iops": 50, "latency": 1000}},
@@ -139,6 +196,24 @@
               "read": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0},
               "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
               "randread": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "256m": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 2684354)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "512m": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 5368710)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "896m": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 9395240)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
     }
   }
 }
