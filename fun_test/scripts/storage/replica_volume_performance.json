@@ -27,9 +27,9 @@
       "(8, 1)": {"write": {"write": {"bw": 68, "iops": 9, "latency": 117631}},
                   "read": {"read": {"bw": 132, "iops": 17, "latency": 60520}}},
       "(16, 1)": {"write": {"write": {"bw": 101, "iops": 6, "latency": 158129}},
-                   "read": {"read": {"bw": 220, "iops": 14, "latency": 72405}}},
+                   "read": {"read": {"bw": 220, "iops": 14, "latency": 76286}}},
       "(32, 1)": {"write": {"write": {"bw": 139, "iops": 4, "latency": 229699}},
-                   "read": {"read": {"bw": 300, "iops": 9, "latency": 106658}}}
+                   "read": {"read": {"bw": 290, "iops": 9, "latency": 117641}}}
     },
     "expected_volume_stats": {
       "write": {"blt": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
@@ -106,7 +106,7 @@
                   "randread": {"read": {"bw": 74, "iops": 19, "latency": 53646}}},
       "(8, 1)": {"randwrite": {"write": {"bw": 68, "iops": 9, "latency": 116841}},
                  "randread": {"read": {"bw": 134, "iops": 17, "latency": 59427}}},
-      "(16, 1)": {"randwrite": {"write": {"bw": 103, "iops": 6, "latency": 154800}},
+      "(16, 1)": {"randwrite": {"write": {"bw": 97, "iops": 6, "latency": 163344}},
                    "randread": {"read": {"bw": 221, "iops": 14, "latency": 72369}}},
       "(32, 1)": {"randwrite": {"write": {"bw": 142, "iops": 4, "latency": 224509}},
                    "randread": {"read": {"bw": 300, "iops": 9, "latency": 106826}}}
@@ -125,19 +125,19 @@
       "randwrite": {
         "blt": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "replica": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
@@ -146,19 +146,19 @@
       "randread": {
         "blt": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "replica": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
@@ -267,7 +267,7 @@
                          "read": {"bw": 18, "iops": 2, "latency": 61878}}},
       "(16, 1)": {"rw": {"write": {"bw": 84, "iops": 5, "latency": 160892},
                          "read": {"bw": 31, "iops": 2, "latency": 75626}}},
-      "(32, 1)": {"rw": {"write": {"bw": 115, "iops": 4, "latency": 230047},
+      "(32, 1)": {"rw": {"write": {"bw": 109, "iops": 4, "latency": 242376},
                          "read": {"bw": 48, "iops": 2, "latency": 110071}}}
     },
     "expected_volume_stats": {
@@ -325,13 +325,13 @@
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
       "(4, 1)": {"randrw": {"write": {"bw": 31, "iops": 8, "latency": 113348},
-                             "read": {"bw": 9, "iops": 2, "latency": 51749}}},
+                             "read": {"bw": 9, "iops": 2, "latency": 56792}}},
       "(8, 1)": {"randrw": {"write": {"bw": 55, "iops": 7, "latency": 125954},
                              "read": {"bw": 18, "iops": 2, "latency": 61669}}},
       "(16, 1)": {"randrw": {"write": {"bw": 85, "iops": 5, "latency": 159196},
-                              "read": {"bw": 32, "iops": 2, "latency": 71772}}},
+                              "read": {"bw": 32, "iops": 2, "latency": 76383}}},
       "(32, 1)": {"randrw": {"write": {"bw": 115, "iops": 4, "latency": 229261},
-                             "read": {"bw": 48, "iops": 2, "latency": 110855}}}
+                             "read": {"bw": 48, "iops": 2, "latency": 116684}}}
     },
     "expected_volume_stats": {
       "(4, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 123, "num_writes": 778},
@@ -352,19 +352,19 @@
       "randrw": {
         "blt": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 693760)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 693760)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "replica": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 501504)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
