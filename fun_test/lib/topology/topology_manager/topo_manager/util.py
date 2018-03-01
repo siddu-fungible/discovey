@@ -1,3 +1,4 @@
+from lib.system.fun_test import *
 import os
 import time
 import math
@@ -14,9 +15,9 @@ def read_json_config():
     config_data = None
     try:
         config_data = json.loads(open(CONFIG_FILE).read())
-        print "CONFIG_TOPO: %s" % config_data
+        fun_test.log("CONFIG_TOPO: %s" % config_data)
     except Exception as ex:
-        print str(ex)
+        fun_test.log(str(ex))
 
     return config_data
 
@@ -186,11 +187,11 @@ def run_commands(host_linux=None, commands=None, sleep=0):
 
 def pretty(d, indent=0):
     for key, value in d.items():
-        print('\t' * indent + str(key))
+        fun_test.log('\t' * indent + str(key))
         if isinstance(value, dict):
             pretty(value, indent+1)
         else:
-            print('\t' * (indent+1) + str(value))
+            fun_test.log('\t' * (indent+1) + str(value))
 
 
 def timeit(method):
@@ -199,8 +200,7 @@ def timeit(method):
         result = method(*args, **kw)
         te = time.time()
 
-        print '%r (%r, %r) %2.2f sec' % \
-              (method.__name__, args, kw, te-ts)
+        fun_test.log('%r (%r, %r) %2.2f sec' % (method.__name__, args, kw, te-ts))
         return result
     return timed
 
