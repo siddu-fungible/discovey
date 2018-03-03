@@ -216,6 +216,19 @@
             });
         }
 
+        function apiDelete (url, payload, message) {
+            message = "URL: " + url + " " + message;
+            return $http.delete(url, payload).then(function (result) {
+                let data = null;
+                if (validateApiResult(result, message)) {
+                    data = result.data.data;
+                }
+                return data;
+            }).catch(function(result){
+                showError(message, 10 * 1000, result);
+            });
+        }
+
         function getColorForResult (result) {
             result = result.toUpperCase();
             let klass = "default";
@@ -241,6 +254,7 @@
             validateApiResult: validateApiResult,
             apiGet: apiGet,
             apiPost: apiPost,
+            apiDelete: apiDelete,
             addLogEntry: addLogEntry,
             getColorForResult: getColorForResult
         };

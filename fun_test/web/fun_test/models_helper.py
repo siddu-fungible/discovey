@@ -97,7 +97,7 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
         raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
     return result
 
-def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULT_CHOICES[0][0]):
+def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULTS["NOT_RUN"]):
     te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
                            test_case_id=test_case_id,
                            suite_execution_id=suite_execution_id,

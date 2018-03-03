@@ -48,6 +48,7 @@
             $scope.moduleProgressTitle = "Module progress";
             $scope.moduleProgressYaxisTitle = "Percentage";
 
+            $scope.deleteInProgress = false;
             $scope.fetchModuleComponentMapping().then(function (result) {
                 if (result) {
                     $scope.moduleComponentMapping = result;
@@ -477,16 +478,45 @@
         };
 
 
-
-        $scope.bulkEditTestCaseClick = function () {
+        $scope.bulkRemoveClick = function () {
             /* Ensure at least one test-case is selected */
+            if(!$scope._isOneTestCaseSelected()) {
+                return commonService.showError("Please select at least one test-case");
+            }
+            $scope.deleteInProgress = true;
+            let jiraIds = [];
+            angular.forEach($scope.testCaseViewInstances, function(info, jiraId) {
+                if (info.selected && info.show) {
+                    jiraIds.push(jiraId);
+                }
+            });
+            $scope.numDeleteRequests = jiraIds.length;
+            $scope.numDeleteResponses = 0;
+
+            jiraIds.forEach((jiraId) => {
+                commonService.apiDelete("/tcm/remove_catalog_test_case_execution/" + ctrl.suiteExecutionId + "/" + jiraId).then(() => {
+                    $scope.numDeleteResponses += 1;
+                });
+            });
+            $scope.deleteInProgress = false;
+            if ($scope.numDeleteResponses > 0) {
+                $window.location.reload();
+            }
+        };
+
+        $scope._isOneTestCaseSelected = () => {
             let oneTestCaseSelected = false;
             angular.forEach($scope.testCaseViewInstances, function (info, jiraId) {
                 if(info.selected) {
                     oneTestCaseSelected = true;
                 }
             });
-            if(!oneTestCaseSelected) {
+            return oneTestCaseSelected === true;
+        };
+
+        $scope.bulkEditTestCaseClick = function () {
+            /* Ensure at least one test-case is selected */
+            if(!$scope._isOneTestCaseSelected()) {
                 return commonService.showError("Please select at least one test-case");
             }
 

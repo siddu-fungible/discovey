@@ -90,6 +90,16 @@ def initialize_catalog_test_case_execution(jira_id, suite_execution_id, owner_em
 
 
 @csrf_exempt
+@api_safe_json_response
+def remove_catalog_test_case_execution(request, suite_execution_id, jira_id):
+    test_cases = CatalogTestCaseExecution.objects.filter(jira_id=jira_id, catalog_suite_execution_id=suite_execution_id).delete()
+    '''for test_case in test_cases:
+        test_case.delete()
+        test_case.save()'''
+    return "Ok"
+
+
+@csrf_exempt
 def execute_catalog(request):
     result = initialize_result(failed=True)
     request_json = json.loads(request.body)

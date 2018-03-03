@@ -14,6 +14,8 @@
     // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 180},
     "fio_modes": ["write", "read"],
     "fio_pass_threshold": 0.05,
@@ -25,16 +27,64 @@
       "(8, 1)": {"write": {"write": {"bw": 68, "iops": 9, "latency": 117631}},
                   "read": {"read": {"bw": 132, "iops": 17, "latency": 60520}}},
       "(16, 1)": {"write": {"write": {"bw": 101, "iops": 6, "latency": 158129}},
-                   "read": {"read": {"bw": 220, "iops": 14, "latency": 72405}}},
+                   "read": {"read": {"bw": 220, "iops": 14, "latency": 76286}}},
       "(32, 1)": {"write": {"write": {"bw": 139, "iops": 4, "latency": 229699}},
-                   "read": {"read": {"bw": 300, "iops": 9, "latency": 106658}}}
+                   "read": {"read": {"bw": 290, "iops": 9, "latency": 117641}}}
     },
-    "expected_volume_stats": {"write": {"blt": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-                                                "1": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}},
-                                        "replica": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}}},
-                              "read": {"blt": {"0": {"fault_injection": 0, "num_reads": 512, "num_writes": 0},
-                                               "1": {"fault_injection": 0, "num_reads": 512, "num_writes": 0}},
-                                       "replica": {"0": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}}}
+    "expected_volume_stats": {
+      "write": {"blt": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+                        "1": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}},
+                "replica": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}}},
+      "read": {"blt": {"0": {"fault_injection": 0, "num_reads": 512, "num_writes": 0},
+                       "1": {"fault_injection": 0, "num_reads": 512, "num_writes": 0}},
+               "replica": {"0": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "write": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      },
+      "read": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      }
+    }
   },
   "FioRandWriteRandReadOnly": {
     "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN", "rds": "VOL_TYPE_BLK_RDS", "replica": "VOL_TYPE_BLK_REPLICA"},
@@ -44,6 +94,8 @@
     // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 300},
     "fio_modes": ["randwrite", "randread"],
     "fio_pass_threshold": 0.05,
@@ -54,17 +106,65 @@
                   "randread": {"read": {"bw": 74, "iops": 19, "latency": 53646}}},
       "(8, 1)": {"randwrite": {"write": {"bw": 68, "iops": 9, "latency": 116841}},
                  "randread": {"read": {"bw": 134, "iops": 17, "latency": 59427}}},
-      "(16, 1)": {"randwrite": {"write": {"bw": 103, "iops": 6, "latency": 154800}},
+      "(16, 1)": {"randwrite": {"write": {"bw": 97, "iops": 6, "latency": 163344}},
                    "randread": {"read": {"bw": 221, "iops": 14, "latency": 72369}}},
       "(32, 1)": {"randwrite": {"write": {"bw": 142, "iops": 4, "latency": 224509}},
                    "randread": {"read": {"bw": 300, "iops": 9, "latency": 106826}}}
     },
-    "expected_volume_stats": {"randwrite": {"blt": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-                                                    "1": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}},
-                                            "replica": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}}},
-                              "randread": {"blt": {"0": {"fault_injection": 0, "num_reads": 512, "num_writes": 0},
-                                                   "1": {"fault_injection": 0, "num_reads": 512, "num_writes": 0}},
-                                           "replica": {"0": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}}}
+    "expected_volume_stats": {
+      "randwrite": {"blt": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+                            "1": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}},
+                    "replica": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}}},
+      "randread": {"blt": {"0": {"fault_injection": 0, "num_reads": 512, "num_writes": 0},
+                           "1": {"fault_injection": 0, "num_reads": 512, "num_writes": 0}},
+                   "replica": {"0": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "randwrite": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      },
+      "randread": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 468544)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      }
+    }
   },
   "FioSeqAndRandReadOnlyWithFailure": {
     "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN", "rds": "VOL_TYPE_BLK_RDS", "replica": "VOL_TYPE_BLK_REPLICA"},
@@ -75,6 +175,8 @@
     "iter_interval": 2,
     "trigger_plex_failure": 1,
     "failure_plex_indices": [1],
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 300},
     "fio_modes": ["read", "randread"],
     "fio_pass_threshold": 0.05,
@@ -90,13 +192,59 @@
       "(32, 1)": {"read": {"read": {"bw": 630, "iops": 20, "latency": 1000}},
                   "randread": {"read": {"bw": 630, "iops": 20, "latency": 1000}}}
     },
-    "expected_volume_stats": {"read": {"blt": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0},
-                                                 "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
-                                       "replica": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}},
-                              "randread": {"blt": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0},
-                                                     "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
-                                           "replica": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}}
-
+    "expected_volume_stats": {
+      "read": {"blt": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0},
+                       "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
+               "replica": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}},
+      "randread": {"blt": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0},
+                           "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
+                   "replica": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "read": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      },
+      "randread": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      }
+    }
   },
   "FioSeqReadWriteMix": {
     "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN", "rds": "VOL_TYPE_BLK_RDS", "replica": "VOL_TYPE_BLK_REPLICA"},
@@ -105,10 +253,12 @@
     "ns_id": {"blt": 1, "rds": 1, "replica": 1},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 300},
     "fio_modes": ["rw"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 4,
+    "volume_pass_threshold": 0,
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
       "(4, 1)": {"rw": {"write": {"bw": 30, "iops": 8, "latency": 113635},
@@ -117,7 +267,7 @@
                          "read": {"bw": 18, "iops": 2, "latency": 61878}}},
       "(16, 1)": {"rw": {"write": {"bw": 84, "iops": 5, "latency": 160892},
                          "read": {"bw": 31, "iops": 2, "latency": 75626}}},
-      "(32, 1)": {"rw": {"write": {"bw": 115, "iops": 4, "latency": 230047},
+      "(32, 1)": {"rw": {"write": {"bw": 109, "iops": 4, "latency": 242376},
                          "read": {"bw": 48, "iops": 2, "latency": 110071}}}
     },
     "expected_volume_stats": {
@@ -133,6 +283,30 @@
       "(32, 1)": {"rw": {"blt": {"0": {"fault_injection": 0, "num_reads": 152, "num_writes": 720},
                                  "1": {"fault_injection": 0, "num_reads": 152, "num_writes": 720}},
                          "replica": {"0": {"fault_injection": 0, "num_reads": 304, "num_writes": 720}}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "rw": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      }
     }
   },
   "FioRandReadWriteMix": {
@@ -142,20 +316,22 @@
     "ns_id": {"blt": 1, "rds": 1, "replica": 1},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "rwmixread": 25, "timeout": 300},
     "fio_modes": ["randrw"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 20,
+    "volume_pass_threshold": 4,
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
       "(4, 1)": {"randrw": {"write": {"bw": 31, "iops": 8, "latency": 113348},
-                             "read": {"bw": 9, "iops": 2, "latency": 51749}}},
+                             "read": {"bw": 9, "iops": 2, "latency": 56792}}},
       "(8, 1)": {"randrw": {"write": {"bw": 55, "iops": 7, "latency": 125954},
                              "read": {"bw": 18, "iops": 2, "latency": 61669}}},
       "(16, 1)": {"randrw": {"write": {"bw": 85, "iops": 5, "latency": 159196},
-                              "read": {"bw": 32, "iops": 2, "latency": 77138}}},
+                              "read": {"bw": 32, "iops": 2, "latency": 76383}}},
       "(32, 1)": {"randrw": {"write": {"bw": 115, "iops": 4, "latency": 229261},
-                             "read": {"bw": 48, "iops": 2, "latency": 110855}}}
+                             "read": {"bw": 48, "iops": 2, "latency": 116684}}}
     },
     "expected_volume_stats": {
       "(4, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 123, "num_writes": 778},
@@ -170,6 +346,30 @@
       "(32, 1)": {"randrw": {"blt": {"0": {"fault_injection": 0, "num_reads": 154, "num_writes": 720},
                                      "1": {"fault_injection": 0, "num_reads": 153, "num_writes": 720}},
                              "replica": {"0": {"fault_injection": 0, "num_reads": 304, "num_writes": 720}}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "randrw": {
+        "blt": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 693760)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          },
+          "1": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 693760)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        },
+        "replica": {
+          "0": {
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 501504)"},
+            "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+            "wustacks": {"in_use": "(0, 1)"}
+          }
+        }
+      }
     }
   },
   "FioLargeWriteReadOnly": {
@@ -179,10 +379,12 @@
     "ns_id": {"blt": 1, "rds": 1, "replica": 1},
     "command_timeout": 5,
     "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "timeout": 780},
     "fio_modes": ["write", "read", "randwrite", "randread"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 20,
+    "volume_pass_threshold": 4,
     "fio_bs_iodepth": "(32, 1)",
     "fio_sizes": ["256m", "512m", "896m"],
     "expected_fio_result": {
@@ -236,6 +438,267 @@
               "randread": {"blt": {"0": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0},
                                    "1": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}},
                            "replica": {"0": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "256m": {
+        "write": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "read": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "randwrite": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "randread": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        }
+      },
+      "512m": {
+        "write": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "read": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "randwrite": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "randread": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        }
+      },
+      "896m": {
+        "write": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "read": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "randwrite": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        },
+        "randread": {
+          "blt": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            },
+            "1": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          },
+          "replica": {
+            "0": {
+              "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+              "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+              "wustacks": {"in_use": "(0, 1)"}
+            }
+          }
+        }
+      }
     }
   }
 }

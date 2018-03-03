@@ -75,7 +75,8 @@ tcm_urls = [
     url(r'^set_active_release/(.*)/(.*)$', tcm_views.set_active_release),
     url(r'^releases_page$', tcm_views.releases_page),
     url(r'^releases$', tcm_views.releases),
-    url(r'^active_releases$', tcm_views.active_releases)
+    url(r'^active_releases$', tcm_views.active_releases),
+    url(r'^remove_catalog_test_case_execution/(.*)/(.*)$', tcm_views.remove_catalog_test_case_execution)
 ]
 
 common_urls = [
