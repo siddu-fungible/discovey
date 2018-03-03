@@ -150,7 +150,7 @@ class NwSanityPRV(FunTestCase):
         pass
 
     def run(self):
-        prv_completed = "Start Traffic"
+        prv_completed = "TEST RUN END"
         prv_status = "ATTENTION|FAIL|ERROR|RuntimeError"
         escape_seq = "grep"
 
@@ -172,7 +172,7 @@ class NwSanityPRV(FunTestCase):
         timer = FunTimer(max_time=600)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(prv_completed, target_workspace),
+            output = linux_obj.command(command="grep '{}' {}/ptf.log".format(prv_completed, target_workspace),
                                        include_last_line=True)
             if re.search(prv_completed, output) and not re.search(escape_seq, output):
                 status = True
