@@ -92,7 +92,6 @@ class NwSanitySimpleL3Integration(FunTestCase):
 
         qemu_status = "qemux86-64 login:"
         sanity_status = "PASSED"
-        escape_seq = "grep"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -114,7 +113,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
         while not timer.is_expired():
             output = linux_obj.command(command="grep '{}' {}/psim.log".format(qemu_status, target_workspace),
                                        include_last_line=True)
-            if re.search(qemu_status, output) and not re.search(escape_seq, output): 
+            if re.search(qemu_status, output):
                 fun_test.log("PSIM + QEMU up")
                 status = True
                 break
@@ -126,7 +125,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
         while not timer.is_expired():
             output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(sanity_status, target_workspace),
                                        include_last_line=True)
-            if re.search(sanity_status, output) and not re.search(escape_seq, output):
+            if re.search(sanity_status, output):
                 fun_test.log("NwSanitySimpleL3Integration Success")
                 status = True
                 break
@@ -152,7 +151,6 @@ class NwSanityPRV(FunTestCase):
     def run(self):
         prv_completed = "TEST RUN END"
         prv_status = "ATTENTION|FAIL|ERROR|RuntimeError"
-        escape_seq = "grep"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -172,9 +170,8 @@ class NwSanityPRV(FunTestCase):
         timer = FunTimer(max_time=600)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/ptf.log".format(prv_completed, target_workspace),
-                                       include_last_line=True)
-            if re.search(prv_completed, output) and not re.search(escape_seq, output):
+            output = linux_obj.command(command="grep '{}' {}/ptf.log".format(prv_completed, target_workspace))
+            if re.search(prv_completed, output):
                 status = True
                 break
             fun_test.sleep("Waiting for NwSanityPRV to complete", seconds=60)
@@ -183,7 +180,7 @@ class NwSanityPRV(FunTestCase):
         status = True
         output = linux_obj.command(command="grep -E '{}' {}/nutest.txt".format(prv_status, target_workspace))
         for res in prv_status.split('|'):
-            if re.search(res, output) and not re.search(escape_seq, output):
+            if re.search(res, output):
                 status = False
         fun_test.test_assert(status, "NwSanityPRV Result")
 
