@@ -26,12 +26,6 @@ topology_dict = {
 }
 
 
-def remove_duplicate_dicts(key_val_list):
-    temp = [fun_test.dict_to_json_string(x) for x in key_val_list]
-    temp2 = list(set(temp))
-    return [json.loads(x) for x in temp2]
-
-
 class IkvPerformance(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -41,7 +35,7 @@ class IkvPerformance(FunTestScript):
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
         topology = topology_obj_helper.deploy()
-        #topology_obj_helper.save(file_name="/tmp/pickle.pkl")
+        # topology_obj_helper.save(file_name="/tmp/pickle.pkl")
         # topology = topology_obj_helper.load(file_name="/tmp/pickle.pkl")
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Ensure deploy is successful")
@@ -55,8 +49,12 @@ class FunTestCase1(FunTestCase):
         self.set_test_details(id=1,
                               summary="LIKV Performance",
                               steps="""
-                              1. Create 3 Storage Volumes with size 
-                              """)
+                              1. Create 3 Storage Volumes.
+                              2. Perform likv calc vol size.
+                              3. Create likv store, open likv store.
+                              4. Read performance parameters from json file.
+                              5. Generate key value pairs for different size and perform put, get and delete and 
+                                 validate retrieved data.""")
 
     def setup(self):
         pass
@@ -100,9 +98,12 @@ class FunTestCase1(FunTestCase):
             put_response = ikv_obj.put(key_hex=key_value_store[put_count]['key_hex'],
                                        value_hex=key_value_store[put_count]['value_hex'],
                                        expected_timeout=expected_cmd_duration)
-            if put_response['status'] and put_response['data']['status'] == 0:
-                put_count += 1
-        result['Puts/sec'] = put_count / duration
+            fun_test.simple_assert(put_response['data']['status'] == ikv_obj.LIKV_STATUS_SUCCESS,
+                                   message="Check Put performed for key: {0} value: {1}".format(
+                                       key_value_store[put_count]['key_hex'],
+                                       key_value_store[put_count]['value_hex']))
+            put_count += 1
+        result['Puts/sec'] = "{0:.2f}".format(float(put_count) / float(duration))
         fun_test.test_assert(put_count, message="No of puts performed for size {0}bytes: {1}".format(size, put_count))
 
         # put remaining key values
@@ -119,20 +120,19 @@ class FunTestCase1(FunTestCase):
         del key_value_store1
 
         get_count = 0
-        retrieved_data = []
         timer = FunTimer(duration)
         while not timer.is_expired():
             get_response = ikv_obj.get(key=key_value_store[get_count]['key_hex'])
-            if get_response['status'] and get_response['data']['status'] == 0:
-                fun_test.test_assert_expected(actual=key_value_store[get_count]['value_hex'],
-                                              expected=get_response['data']['value'],
-                                              ignore_on_success=True,
-                                              message="Compare retrieved data with generated data for shasum: {}".
-                                              format(key_value_store[get_count]['key_hex']))
-                retrieved_data.append({'key_hex': key_value_store[get_count]['key_hex'],
-                                       'value_hex': get_response['data']['value']})
-                get_count += 1
-        result['Gets/sec'] = get_count / duration
+            fun_test.simple_assert(get_response['data']['status'] == ikv_obj.LIKV_STATUS_SUCCESS,
+                                   message="Retrieve data using get for key: {}".format(
+                                       key_value_store[put_count]['key_hex']))
+            fun_test.test_assert_expected(actual=key_value_store[get_count]['value_hex'],
+                                          expected=get_response['data']['value'],
+                                          ignore_on_success=True,
+                                          message="Compare retrieved data with generated data for shasum: {}".
+                                          format(key_value_store[get_count]['key_hex']))
+            get_count += 1
+        result['Gets/sec'] = "{0:.2f}".format(float(get_count) / float(duration))
         fun_test.test_assert(get_count, message="No of gets performed for size {0}bytes:  {1}".format(size, get_count))
 
         bytes_per_sec = (get_count * size) / duration
@@ -145,7 +145,7 @@ class FunTestCase1(FunTestCase):
             ikv_obj.delete_value(key=key_value_store[delete_count]['key_hex'])
             delete_count += 1
 
-        result['Deletes/sec'] = delete_count / duration
+        result['Deletes/sec'] = "{0:.2f}".format(float(delete_count) / float(duration))
         ikv_obj.storage_controller_obj.verbose = True
         ikv_stats = ikv_obj.storage_controller_obj.peek(props_tree="stats/likv")
         fun_test.simple_assert(ikv_stats['status'], message="Peek likv stats")
@@ -155,13 +155,13 @@ class FunTestCase1(FunTestCase):
         result['LIKV used space'] = ikv_stats['data'][ikv_vol_id]['LIKV used space']
         # fun_test.sleep(message="volume resizing", seconds=3)
         # close_ikv = ikv_obj.close()
-        # fun_test.test_assert(close_ikv['data']['status'] == 0,
+        # fun_test.test_assert(close_ikv['      data']['status'] == 0,
         #                    message="Close likv store with ID: {}".format(ikv_obj.volume_id))
         return result
 
     def run(self):
-        #topology_obj_helper = TopologyHelper(spec=topology_dict)
-        #topology = topology_obj_helper.load('/tmp/pickle.pkl')
+        # topology_obj_helper = TopologyHelper(spec=topology_dict)
+        # topology = topology_obj_helper.load('/tmp/pickle.pkl')
         # set funos topoplogy
         topology = fun_test.shared_variables["topology"]
         dut_instance = topology.get_dut_instance(index=0)
@@ -198,12 +198,13 @@ class FunTestCase1(FunTestCase):
                 fun_test.add_checkpoint("Performance sanity for {}bytes".format(data["ip_size"]))
                 response = self.ikv_performance(size=data["ip_size"], duration=data["duration"], ikv_obj=ikv_obj)
                 fun_test.test_assert(response['Puts/sec'] >= data["min_put_per_sec"],
-                                     message="Puts performed per second are grater than min rate")
+                                     message="Check Puts performed per second are greater than min rate")
                 fun_test.test_assert(response['Gets/sec'] >= data["min_gets_per_sec"],
-                                     message="Gets performed per second are grater than min rate")
+                                     message="Check Gets performed per second are greater than min rate")
                 fun_test.test_assert(response['Deletes/sec'] >= data["min_delete_per_sec"],
-                                     message="Deletes performed per second are grater than min")
-                table_header = response.keys()
+                                     message="Check Deletes performed per second are greater than min")
+                if test_params.index(data) < 1:
+                    table_header = response.keys()
                 table_data.append(response.values())
         except Exception as e:
             raise fun_test.critical(e.message)
