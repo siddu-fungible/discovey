@@ -51,12 +51,12 @@
     // The first element is the expected value and the second element is the maximum threshold in absolute value
     "expected_stats": {
       "write": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
         "wustacks": {"in_use": "(0, 1)"}
       },
       "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
         "wustacks": {"in_use": "(0, 1)"}
       }
@@ -104,12 +104,12 @@
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
       "randwrite": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 451328)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
         "wustacks": {"in_use": "(0, 1)"}
       },
       "randread": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 451328)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
         "wustacks": {"in_use": "(0, 1)"}
       }
@@ -159,12 +159,12 @@
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
       "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
         "wustacks": {"in_use": "(0, 1)"}
       },
       "randread": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
         "wustacks": {"in_use": "(0, 1)"}
       }
@@ -220,7 +220,7 @@
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
       "rw": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 549056)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
         "wustacks": {"in_use": "(0, 1)"}
       }
@@ -276,7 +276,7 @@
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
       "randrw": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
         "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
         "wustacks": {"in_use": "(0, 1)"}
       }
