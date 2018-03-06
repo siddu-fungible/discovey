@@ -137,5 +137,18 @@ class LikvTemplate(object):
                 data_str = "{0}{1}".format(padding_string, char_str)
             else:
                 data_str = char_str
-            yield self.get_sha256_hex(data_str), data_str
+            yield self.get_sha256_hex(data_str), self.get_hex(data_str)
             del data_str
+
+
+if __name__ == "__main__":
+    likv_obj = LikvTemplate(storage_controller_obj=StorageController(target_port=3220,
+                                                                     target_ip="192.168.56.1",
+                                                                     mode="likv"),
+                            volume_info={},
+                            likv_volume_id="10")
+    data = "012345678901234567890123456789012345 l6789012345678901234567890123456789"
+    key = likv_obj.get_sha256_hex(data)
+    val = likv_obj.get_hex(data)
+    print "key", key
+    print "val", val

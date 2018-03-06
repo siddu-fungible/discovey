@@ -32,6 +32,13 @@
   },
   "test_params":[
     {
+      "ip_size": 20,
+      "duration":15,
+      "min_put_per_sec":3,
+      "min_gets_per_sec": 4,
+      "min_delete_per_sec": 7
+    },
+    {
       "ip_size": 40,
       "duration":15,
       "min_put_per_sec":3,
@@ -47,43 +54,36 @@
     },
     {
       "ip_size": 1024,
-      "duration":15,
+      "duration":20,
       "min_put_per_sec":2,
       "min_gets_per_sec": 4,
       "min_delete_per_sec": 7
     },
     {
       "ip_size": 4096,
-      "duration":15,
+      "duration":20,
       "min_put_per_sec":2,
       "min_gets_per_sec": 2,
       "min_delete_per_sec": 7
     },
     {
       "ip_size": 8132,
-      "duration":15,
-      "min_put_per_sec":2,
-      "min_gets_per_sec": 4,
-      "min_delete_per_sec": 7
-    },
-    {
-      "ip_size": 16384,
-      "duration":30,
-      "min_put_per_sec":2,
+      "duration":25,
+      "min_put_per_sec":1,
       "min_gets_per_sec": 3,
       "min_delete_per_sec": 7
     },
     {
-      "ip_size": 32768,
+      "ip_size": 16384,
       "duration":30,
       "min_put_per_sec":1,
       "min_gets_per_sec": 1,
       "min_delete_per_sec": 7
     },
     {
-      "ip_size": 65535,
-      "duration": 30,
-      "min_put_per_sec": 1,
+      "ip_size": 32767,
+      "duration":30,
+      "min_put_per_sec":1,
       "min_gets_per_sec": 1,
       "min_delete_per_sec": 7
     }
