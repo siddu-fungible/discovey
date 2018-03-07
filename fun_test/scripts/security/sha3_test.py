@@ -1,8 +1,10 @@
 from lib.system.fun_test import *
 from lib.templates.security.sha3_template import Sha3Template
+from lib.templates.security.crypto_template import CryptoTemplate
 from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
+import time
 
 topology_dict = {
     "name": "Basic Security",
@@ -133,9 +135,56 @@ class Sha3TestCase2(FunTestCase):
         compute_hmacs_flag = self.compute_all_hmacs(host, sha3_template)
         fun_test.test_assert(compute_hmacs_flag, "Digests match?")
 
+class Sha3TestCase3(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Check the sha3 digests on huge files",
+                              steps="""
+        1. Parse input file
+        2. Run sha3 digest commands using digest_hmac tool
+        3. Compare with precomputed digests
+
+                              """)
+
+    def setup(self):
+        return True
+
+    def cleanup(self):
+        return True
+
+    def compute_all_digests(self, host, sha3_template, crypto_template):
+        for idx, digest_file_input in enumerate(sha3_digests_list):
+            # parse the input vectors file
+            if (idx < 3): #fix it
+                file_path = fun_test.get_script_parent_directory() + VECTOR_PATH + sha3_digests_list[idx][:-4] + "_huge.txt"
+                digest_dict = crypto_template.parse_input_huge(file_path)
+                input_list = digest_dict.keys()
+
+            #    compute and compare digests
+                for index, digest_input in enumerate(input_list):
+                    digest_output = sha3_template.compute_digest(Sha3Template.sha3_digests[idx],
+                                        "/home/root/" + digest_input + ".txt")
+                # fun_test.test_assert_expected(expected=digest_dict[digest_input], actual=digest_output, message="match!!",
+                #                              ignore_on_success=True)
+                    fun_test.simple_assert((digest_output == digest_dict[digest_input]), "Digests match?")
+
+        return True
+
+    def run(self):
+        topology = fun_test.shared_variables["topology"]
+
+        host = topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
+        sha3_template = Sha3Template(host)
+        sha3_template.setup_verify()
+        crypto_template = CryptoTemplate(host)
+        crypto_template.create_huge_file()
+        compute_digests_flag = self.compute_all_digests(host, sha3_template, crypto_template)
+        fun_test.test_assert(compute_digests_flag, "Digests match?")
+
 if __name__ == "__main__":
     crypto_accelerator_script = CryptoAcceleratorScript()
     crypto_accelerator_script.add_test_case(Sha3TestCase1())
     crypto_accelerator_script.add_test_case(Sha3TestCase2())
+    crypto_accelerator_script.add_test_case(Sha3TestCase3())
     crypto_accelerator_script.run()
 

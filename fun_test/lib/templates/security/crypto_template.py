@@ -1,6 +1,8 @@
 from lib.system.fun_test import fun_test
 
 
+
+
 class CryptoTemplate:
 
     # common variables used
@@ -9,9 +11,31 @@ class CryptoTemplate:
     ENGINE = "engine"
     AF_ALG = "af_alg"
     DIGEST_HMAC_SHA3 = "digest_hmac_sha3"
+    CREATE_FILE = "mygendata_big"
+    FILE_128MB = "134217728"
+    TOOLS_PATH = "/bin/"
+    TOOLS = ["mygendata_big"]
+
 
     def __init__(self, host):
         self.host = host
+
+    def copy_tools(self):
+        tool_path = fun_test.get_script_parent_directory() + self.TOOLS_PATH + self.TOOLS[0]
+        fun_test.scp(source_file_path=tool_path,
+                     target_file_path="/tmp/",
+                     target_ip=self.host.host_ip,
+                     target_port=self.host.ssh_port,
+                     target_username=self.host.ssh_username,
+                     target_password=self.host.ssh_password,
+                     recursive=True)
+
+    def create_huge_file(self):
+        #tool_path = fun_test.get_script_parent_directory() + self.TOOLS_PATH + CryptoTemplate.CREATE_FILE
+        tool_path = "/tmp/" + CryptoTemplate.CREATE_FILE
+        create_file_command = tool_path + " " + self.FILE_128MB + " > " + "/home/root/" + self.FILE_128MB + ".txt"
+        print "command: ", create_file_command
+        command_output = self.host.command(create_file_command)
 
     def load_funcrypto(self):
         self.host.modprobe(self.FUNCRYPTO)
@@ -35,6 +59,23 @@ class CryptoTemplate:
 
         for plain_text, digest in zip(plaintext_list, digest_list):
             input_dict[plain_text] = digest
+
+        return input_dict
+
+    def parse_input_huge(self, file_path):
+        size_list = []
+        digest_list = []
+        input_dict = {}
+        for line in open(file_path, 'r').read().split(','):
+            line_list = line.split("=")
+            if len(line_list) > 1:
+                if ".size" in line_list[0]:
+                    size_list.append((line_list[1].replace('"', '').replace('\n', '')).strip())
+                elif ".digest" in line_list[0]:
+                    digest_list.append((line_list[1].replace('"', '').replace('\\x', '').replace('\n', '')).strip())
+
+        for size, digest in zip(size_list, digest_list):
+            input_dict[size] = digest
 
         return input_dict
 

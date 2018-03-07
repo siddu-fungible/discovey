@@ -1,7 +1,7 @@
 from lib.system.fun_test import fun_test
 from lib.templates.security.crypto_template import CryptoTemplate
 
-TOOLS_PATH = "/bin/"
+#TOOLS_PATH = "/bin"
 
 class Sha3Template(CryptoTemplate):
 
@@ -12,14 +12,15 @@ class Sha3Template(CryptoTemplate):
         self.host = host
 
     def setup_verify(self):
-        tool_path = fun_test.get_script_parent_directory() + TOOLS_PATH + CryptoTemplate.DIGEST_HMAC_SHA3
+        tool_path = fun_test.get_script_parent_directory() + CryptoTemplate.TOOLS_PATH + CryptoTemplate.DIGEST_HMAC_SHA3
         fun_test.scp(source_file_path=tool_path,
-                     target_file_path="/tmp",
+                     target_file_path="/tmp/",
                      target_ip=self.host.host_ip,
                      target_port=self.host.ssh_port,
                      target_username=self.host.ssh_username,
                      target_password=self.host.ssh_password,
                      recursive=False)
+        CryptoTemplate.copy_tools(self)
         CryptoTemplate.load_funcrypto(self)
         CryptoTemplate.verify_funcrypto(self)
 
@@ -50,6 +51,8 @@ class Sha3Template(CryptoTemplate):
         else:
             zipped = zip(plaintext_list, digest_list, key_list, key_type_list)
             return zipped
+
+
 
     def compute_digest(self, algorithm, digest_input, engine=None):
         digest_sha3_command = "/tmp/" + CryptoTemplate.DIGEST_HMAC_SHA3 + " " + algorithm + " " + digest_input
