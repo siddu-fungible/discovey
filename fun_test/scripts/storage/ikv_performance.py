@@ -161,7 +161,7 @@ class FunTestCase1(FunTestCase):
         result['tombs'] = ikv_stats['data'][ikv_vol_id]['tombs']
         result['rehash'] = ikv_stats['data'][ikv_vol_id]['rehash']
         result['LIKV used space'] = ikv_stats['data'][ikv_vol_id]['LIKV used space']
-        # fun_test.sleep(message="volume resizing", seconds=3)
+        fun_test.sleep(message="volume resizing", seconds=3)
         # close_ikv = ikv_obj.close()
         # fun_test.test_assert(close_ikv['      data']['status'] == 0,
         #                    message="Close likv store with ID: {}".format(ikv_obj.volume_id))
