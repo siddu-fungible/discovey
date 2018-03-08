@@ -6,6 +6,9 @@ class LibkcapiTemplate(CryptoTemplate):
 
     GCM_AES = "gcm(aes)"
     CCM_AES = "ccm(aes)"
+    CTR_AES = "ctr(aes)"
+    ECB_AES = "ecb(aes)"
+    XTS_AES = "xts(aes)"
     AUTH_ENC = "authenc(hmac(sha1),cbc(aes))"
 
     def __init__(self, host):
@@ -29,8 +32,36 @@ class LibkcapiTemplate(CryptoTemplate):
         output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -c  \"" + algorithm + "\" -q " + cipher_text + " -t " + tag + " -i " + iv + " -k " + key + " -a " + assoc_data).strip()
         return output
 
-    def dec_gcm_ccm(self, algorithm, cipher_type, cipher_text, nonce, key, assoc_data, tag):
+    def enc_ccm_aes(self, algorithm, cipher_type, plain_text, nonce, key, assoc_data, tag):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -e -c  \"" + algorithm + "\" -p " + plain_text + " -t " + tag + " -n " + nonce + " -k " + key + " -a " + assoc_data).strip()
+        return output
+
+    def dec_ccm_aes(self, algorithm, cipher_type, cipher_text, nonce, key, assoc_data, tag):
         output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -c  \"" + algorithm + "\" -q " + cipher_text + " -t " + tag + " -n " + nonce + " -k " + key + " -a " + assoc_data).strip()
+        return output
+
+    def enc_ctr_aes(self, algorithm, cipher_type, plain_text, key, iv):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -e -c  \"" + algorithm + "\" -p " + plain_text + " -k " + key + " -i " + iv).strip()
+        return output
+
+    def dec_ctr_aes(self, algorithm, cipher_type, cipher_text, key, iv):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -c  \"" + algorithm + "\" -q " + cipher_text + " -i " + iv + " -k " + key).strip()
+        return output
+
+    def enc_ecb_aes(self, algorithm, cipher_type, plain_text, key):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -e -c  \"" + algorithm + "\" -p " + plain_text + " -k " + key ).strip()
+        return output
+
+    def dec_ecb_aes(self, algorithm, cipher_type, cipher_text, key):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -c  \"" + algorithm + "\" -q " + cipher_text + " -k " + key).strip()
+        return output
+
+    def enc_xts_aes(self, algorithm, cipher_type, plain_text, key, iv):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -e -c  \"" + algorithm + "\" -p " + plain_text + " -k " + key + " -i " + iv).strip()
+        return output
+
+    def dec_xts_aes(self, algorithm, cipher_type, cipher_text, key, iv):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -c  \"" + algorithm + "\" -q " + cipher_text + " -i " + iv + " -k " + key).strip()
         return output
 
     def auth_enc(self, algorithm, cipher_type, plain_text, key, iv, assoc_data, tag_len):
