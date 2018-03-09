@@ -75,7 +75,7 @@ class FunTestCase1(FunTestCase):
 
     def ikv_performance(self, size, duration, ikv_obj):
         result = collections.OrderedDict()
-        expected_cmd_duration = 2 if size < (16 << 10) else 5
+        expected_cmd_duration = 2 if size < (16 << 10) else 6
         result['Data Size'] = size
         result["Duration (sec)"] = duration
 
