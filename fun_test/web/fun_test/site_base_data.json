@@ -12,7 +12,9 @@
     }
   ],
   "tags": [
-    "jenkins-hourly"
+    "jenkins-hourly",
+    "network-sanity",
+    "alloc-speed-test"
   ],
   "testbeds": [
     "simulation"
