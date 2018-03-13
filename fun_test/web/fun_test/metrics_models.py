@@ -80,8 +80,8 @@ class VolumePerformance(models.Model):
 class AllocSpeedPerformance(models.Model):
     key = models.CharField(max_length=30, verbose_name="Build no.")
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
-    output_one_malloc_free_wu = models.IntegerField(verbose_name="Best time for one malloc/free (WU)")
-    output_one_malloc_free_threaded = models.IntegerField(verbose_name="Best time for one malloc/free (threaded)")
+    output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
+    output_one_malloc_free_threaded = models.IntegerField(verbose_name="Time in ns (Threaded)")
     tag = "analytics"
 
 
