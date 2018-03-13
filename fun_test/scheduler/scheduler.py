@@ -245,46 +245,44 @@ def process_queue():
     job_files.sort(key=os.path.getmtime)
 
     for job_file in job_files:
+        try:
+            # Execute
+            job_spec = parse_file_to_json(file_name=job_file)
+            job_id = job_spec["job_id"]
+            scheduler_logger.info("Process queue: {}".format(job_id))
+            current_time = get_current_time()
 
-        # Execute
-        job_spec = parse_file_to_json(file_name=job_file)
-        job_id = job_spec["job_id"]
-        scheduler_logger.info("Process queue: {}".format(job_id))
-        current_time = get_current_time()
+            schedule_it = True
+            scheduling_time = 1
+            if "schedule_in_minutes" in job_spec and job_spec["schedule_in_minutes"]:
+                scheduling_time = 60 * job_spec["schedule_in_minutes"]
+            elif "schedule_at" in job_spec and job_spec["schedule_at"]:
+                schedule_at_time_offset = dateutil.parser.parse(job_spec["schedule_at"]).replace(year=1, month=1, day=1)
+                current_time_offset = current_time.replace(year=1, month=1, day=1)
 
-        schedule_it = True
-        scheduling_time = 1
-        if "schedule_in_minutes" in job_spec and job_spec["schedule_in_minutes"]:
-            scheduling_time = 60 * job_spec["schedule_in_minutes"]
-        elif "schedule_at" in job_spec and job_spec["schedule_at"]:
-            schedule_at_time_offset = dateutil.parser.parse(job_spec["schedule_at"]).replace(year=1, month=1, day=1)
-            current_time_offset = current_time.replace(year=1, month=1, day=1)
+                total_seconds = (schedule_at_time_offset - current_time_offset).total_seconds()
+                if total_seconds < 0:
+                    scheduling_time = (24 * 60 * 3600) + total_seconds
+                elif total_seconds >= 0:
+                    scheduling_time = total_seconds
+                else:
+                    schedule_it = False  # TODO: Email, report a scheduling failure
 
-            total_seconds = (schedule_at_time_offset - current_time_offset).total_seconds()
-            if total_seconds < 0:
-                scheduling_time = (24 * 60 * 3600) + total_seconds
-            elif total_seconds >= 0:
-                scheduling_time = total_seconds
-            else:
-                schedule_it = False  # TODO: Email, report a scheduling failure
+            scheduler_logger.info("Job Id: {} Schedule it: {} Time: {}".format(job_id, schedule_it, scheduling_time))
+            if job_spec and schedule_it:
+                suite_worker_obj = SuiteWorker(job_spec=job_spec)
+                t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj,))
+                job_id_timers[suite_worker_obj.job_id] = t
+                models_helper.update_suite_execution(suite_execution_id=suite_worker_obj.job_id,
+                                                     scheduled_time=get_current_time() + datetime.timedelta(
+                                                         seconds=scheduling_time),
+                                                     result=RESULTS["SCHEDULED"])
 
-        scheduler_logger.info("Job Id: {} Schedule it: {} Time: {}".format(job_id, schedule_it, scheduling_time))
-        if job_spec and schedule_it:
-            suite_worker_obj = SuiteWorker(job_spec=job_spec)
-            t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj,))
-            job_id_timers[suite_worker_obj.job_id] = t
-            models_helper.update_suite_execution(suite_execution_id=suite_worker_obj.job_id,
-                                                 scheduled_time=get_current_time() + datetime.timedelta(
-                                                     seconds=scheduling_time),
-                                                 result=RESULTS["SCHEDULED"])
-            # if "tags" in job_spec:
-            #    tags = job_spec["tags"]
-            #    if "jenkins-hourly" in tags:
-            #        set_jenkins_hourly_execution_status(status=RESULTS["SCHEDULED"])
-            t.start()
+                t.start()
+        except Exception as ex:
+            scheduler_logger.critical(str(ex))
 
-        else:
-            raise SchedulerException("Unable to parse {}".format(job_file))
+
         de_queue_job(job_file)
 
 

@@ -511,12 +511,12 @@ class FunTest:
             start = 0
             end = min(len_k, max_chars_per_column)
             while start < len_k:
-                format = "{:<" + str(max_chars_per_column) + "} {}"
+                this_format = "{:<" + str(max_chars_per_column) + "} {}"
                 this_k = k[start: end]
                 if not start:
-                    print format.format(this_k, v)
+                    print this_format.format(this_k, v)
                 else:
-                    print format.format(this_k, "")
+                    print this_format.format(this_k, "")
                 if len_k > max_chars_per_column:
                     start += min(len_k - start, max_chars_per_column)
                     end += min(len_k - end, max_chars_per_column)
