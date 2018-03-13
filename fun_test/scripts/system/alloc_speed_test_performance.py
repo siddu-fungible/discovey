@@ -78,7 +78,11 @@ class FunTestCase1(FunTestCase):
             fun_test.test_assert_expected(actual=return_code, expected=0, message="Return code in test: {}".format(ALLOC_SPEED_TEST_TAG))
             fun_test.log("Malloc Free threaded: {}".format(output_one_malloc_free_threaded))
             fun_test.log("Malloc Free WU: {}".format(output_one_malloc_free_wu))
-            AllocSpeedPerformanceHelper().add_entry(key=jenkins_build_number, input_app="alloc_speed_test",
+            key = branch_fun_sdk
+            m = re.search(r'refs/tags/bld_(\d+)', branch_fun_sdk)
+            if m:
+                key = int(m.group(1))
+            AllocSpeedPerformanceHelper().add_entry(key=key, input_app="alloc_speed_test",
                                                     output_one_malloc_free_wu=output_one_malloc_free_wu,
                                                     output_one_malloc_free_threaded=output_one_malloc_free_threaded)
 
