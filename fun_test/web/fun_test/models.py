@@ -129,6 +129,12 @@ class Module(models.Model):
     name = models.TextField(unique=True)
     verbose_name = models.TextField(default="Verbose Name")
 
+class JenkinsJobIdMap(models.Model):
+    jenkins_job_id = models.IntegerField()
+    fun_sdk_branch = models.TextField(default="")
+    git_commit = models.TextField(default="")
+
+
 if is_performance_server():
     from web.fun_test.metrics_models import *
 

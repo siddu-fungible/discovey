@@ -20,4 +20,6 @@ if __name__ == "__main__":
                 "forget to activate a virtual environment?"
             )
         raise
+    os.environ["DISABLE_FUN_TEST"] = "1"
     execute_from_command_line(sys.argv)
+    del os.environ["DISABLE_FUN_TEST"]

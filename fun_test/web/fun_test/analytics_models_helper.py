@@ -7,6 +7,7 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
+from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
 
@@ -79,6 +80,28 @@ class VolumePerformanceHelper(MetricHelper):
                                           output_write_latency=write_latency,
                                           output_read_latency=read_latency)
             one_entry.save()
+
+
+class AllocSpeedPerformanceHelper(MetricHelper):
+    model = AllocSpeedPerformance
+
+    def __init__(self):
+        super(AllocSpeedPerformanceHelper, self).__init__(model=self.model)
+
+    def add_entry(self, key, input_app, output_one_malloc_free_wu, output_one_malloc_free_threaded):
+        try:
+            entry = AllocSpeedPerformance.objects.get(key=key, input_app=input_app)
+            entry.output_one_malloc_free_wu = output_one_malloc_free_wu
+            entry.output_one_malloc_free_threaded = output_one_malloc_free_threaded
+            entry.save()
+        except ObjectDoesNotExist:
+            pass
+            one_entry = AllocSpeedPerformance(key=key,
+                                              input_app=input_app,
+                                              output_one_malloc_free_wu=output_one_malloc_free_wu,
+                                              output_one_malloc_free_threaded=output_one_malloc_free_threaded)
+            one_entry.save()
+
 
 if __name__ == "__main__":
     # MetricChart.objects.all().delete()

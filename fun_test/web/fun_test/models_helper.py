@@ -14,7 +14,8 @@ from web.fun_test.models import (
     LastSuiteExecution,
     LastTestCaseExecution,
     RESULT_CHOICES,
-    TestCaseExecution
+    TestCaseExecution,
+    JenkinsJobIdMap
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -257,6 +258,17 @@ def _get_suite_executions(execution_id=None,
                 se.save()
 
     return all_objects_dict
+
+
+def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit):
+    try:
+        entry = JenkinsJobIdMap.objects.get(jenkins_job_id=jenkins_job_id, fun_sdk_branch=fun_sdk_branch, git_commit=git_commit)
+        entry.fun_sdk_branch = fun_sdk_branch
+        entry.git_commit = git_commit
+        entry.save()
+    except ObjectDoesNotExist:
+        entry = JenkinsJobIdMap(jenkins_job_id=jenkins_job_id, fun_sdk_branch=fun_sdk_branch, git_commit=git_commit)
+        entry.save()
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []

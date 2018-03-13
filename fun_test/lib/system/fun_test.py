@@ -94,6 +94,12 @@ class FunTest:
     fun_test_thread_id = 0
 
     def __init__(self):
+        if "DISABLE_FUN_TEST" in os.environ:
+
+            def black_hole(*args):
+                pass
+            self.log = black_hole
+            return
         parser = argparse.ArgumentParser(description="FunTest")
         parser.add_argument('--logs_dir',
                             dest="logs_dir",
@@ -160,7 +166,7 @@ class FunTest:
         script_file_name_without_extension = self.script_file_name.replace(".py", "")
 
         self.test_metrics = collections.OrderedDict()
-        self.logging_selected_modules = []
+
 
         html_log_file = "{}.html".format(script_file_name_without_extension)
         if self.relative_path:
@@ -172,7 +178,7 @@ class FunTest:
         reload(sys)
         sys.setdefaultencoding('UTF8')  # Needed for xml
         self.counter = 0  # Mostly used for testing
-
+        self.logging_selected_modules = []
         self.log_timestamps = True
         self.log_function_name = False
         self.pause_on_failure = False
@@ -678,7 +684,7 @@ class FunTest:
         self.test_assert(expression=expression, message=message, ignore_on_success=True)
 
     def test_assert_expected(self, expected, actual, message, ignore_on_success=False):
-        if not (type(actual) is dict) and (type(expected) is dict):
+        if not ((type(actual) is dict) and (type(expected) is dict)):
             expected = str(expected)
             actual = str(actual)
         assert_message = "ASSERT PASSED: expected={} actual={}, {}".format(expected, actual, message)

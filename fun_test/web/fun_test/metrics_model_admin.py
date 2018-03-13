@@ -2,6 +2,7 @@ from django.contrib import admin
 from web.fun_test.metrics_models import Performance1
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.metrics_models import ModelMapping, VolumePerformance
+from web.fun_test.metrics_models import AllocSpeedPerformance
 
 
 @admin.register(Performance1)
@@ -21,4 +22,9 @@ class ModelMappingAdmin(admin.ModelAdmin):
 
 @admin.register(VolumePerformance)
 class VolumePerformanceAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(AllocSpeedPerformance)
+class AllocSpeedPerformanceAdmin(admin.ModelAdmin):
     pass
