@@ -330,4 +330,6 @@ if __name__ == "__main__":
             process_queue()
         except SchedulerException as ex:
             scheduler_logger.critical(str(ex))
+        except Exception as ex:
+            scheduler_logger.critical(str(ex))
         # wait
