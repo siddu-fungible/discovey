@@ -48,7 +48,8 @@ regression_urls = [
         regression_views.catalog_test_case_execution_summary_result),
     url(r'^catalog_test_case_execution_summary_result_multiple_jiras$',
         regression_views.catalog_test_case_execution_summary_result_multiple_jiras),
-    url(r'^modules$', regression_views.modules)
+    url(r'^modules$', regression_views.modules),
+    url(r'^jenkins_job_id_maps$', regression_views.jenkins_job_id_map)
 ]
 
 tcm_urls = [

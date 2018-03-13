@@ -16,9 +16,31 @@
             <div class="col-xl-4 col-lg-3 card">
                 <fun-metric-chart chart-name="chart2Name" model-name="model2Name" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
             </div>
+        </div>
 
+        <div class="col-xl-6 col-lg-6">
+            <h3>Jenkins Job Id to git map</h3>
+            <table class="table-nonfluid table">
+                <tr>
+                    <th>Jenkins job-id</th>
+                    <th>Fun SDK branch</th>
+                    <th>Git commit</th>
+                </tr>
+                <tr ng-repeat="jenkinsJobIdentry in jenkinsJobIdMap">
+                    <td>
+                        {{ jenkinsJobIdentry.jenkins_job_id }}
+                    </td>
+                    <td>
+                        {{ jenkinsJobIdentry.fun_sdk_branch }}
+                    </td>
+                    <td>
+                        {{ jenkinsJobIdentry.git_commit }}
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
+
     {% endverbatim %}
 
 {% endblock %}

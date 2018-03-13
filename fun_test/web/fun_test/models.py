@@ -9,6 +9,7 @@ from django.db import models
 from fun_global import RESULTS
 from fun_global import is_performance_server
 from web.fun_test.jira_models import *
+from rest_framework.serializers import ModelSerializer
 
 
 RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
@@ -133,6 +134,11 @@ class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()
     fun_sdk_branch = models.TextField(default="")
     git_commit = models.TextField(default="")
+
+class JenkinsJobIdMapSerializer(ModelSerializer):
+    class Meta:
+        model = JenkinsJobIdMap
+        fields = "__all__"
 
 
 if is_performance_server():

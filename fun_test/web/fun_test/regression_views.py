@@ -1,4 +1,5 @@
-import json, os
+import json
+import os
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -10,6 +11,7 @@ import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
 from web.fun_test.models import CatalogSuiteExecution, Module
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 from web.web_global import initialize_result, api_safe_json_response
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
@@ -256,6 +258,14 @@ def catalog_test_case_execution_summary_result(request, suite_execution_id, jira
 @api_safe_json_response
 def modules(request):
     return [{"name": x.name, "verbose_name": x.verbose_name} for x in Module.objects.all()]
+
+@csrf_exempt
+@api_safe_json_response
+def jenkins_job_id_map(request):
+    all_entries = JenkinsJobIdMap.objects.all()
+    s = JenkinsJobIdMapSerializer(all_entries, many=True)
+    return s.data
+
 
 @csrf_exempt
 def catalog_test_case_execution_summary_result_multiple_jiras(request):
