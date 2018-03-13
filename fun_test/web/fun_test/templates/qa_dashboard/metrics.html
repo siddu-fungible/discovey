@@ -13,6 +13,8 @@
 
     <div ng-if="selectedModule">
         <a target="_blank" href="/metrics/view_all_storage_charts">View all storage charts</a>
+        <br>
+        <a target="_blank" href="/metrics/view_all_system_charts">View all system charts</a>
 
         <div ng-repeat="(modelName, modelInfo) in modelsInfo[selectedModule]">
             <h4>{{ modelName }}</h4>

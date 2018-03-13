@@ -84,6 +84,7 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
             let remoteTable = data["data"];
             $scope.headers = data["headers"];
             $scope.uniqueKeys = data["unique_keys"];
+            $scope.uniqueKeys.sort();
             $scope.processedRows = {};
 
             remoteTable.forEach((oneRemoteRow) => {

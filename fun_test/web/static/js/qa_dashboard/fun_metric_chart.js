@@ -7,7 +7,10 @@ function FunMetricChartController($scope, commonService) {
 
     ctrl.$onInit = function () {
         $scope.status = "idle";
-        //$scope.fetchChartInfo();
+        if(ctrl.chartName) {
+            $scope.fetchChartInfo();
+        }
+
         $scope.values = null;
         $scope.charting = true;
         //console.log(ctrl.width);
@@ -24,7 +27,6 @@ function FunMetricChartController($scope, commonService) {
         }
         // let i = 0;
         // console.log(newvalue, oldvalue);
-        $scope.fetchChartInfo();
         if($scope.chartInfo) {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
         } else {
@@ -97,6 +99,7 @@ function FunMetricChartController($scope, commonService) {
                     keySet.add(oneRecord.key.toString());
                 });
                 let keyList = Array.from(keySet);
+                keyList.sort();
                 $scope.series = keyList;
 
                 let chartDataSets = [];

@@ -6,6 +6,7 @@ from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer
+from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
@@ -97,9 +98,15 @@ def charts_by_module(request):
 def edit_chart(request, chart_name):
     return render(request, 'qa_dashboard/edit_chart.html', locals())
 
+
 @csrf_exempt
 def view_all_storage_charts(request):
     return render(request, 'qa_dashboard/analytics_chart_dashboard.html', locals())
+
+
+@csrf_exempt
+def view_all_system_charts(request):
+    return render(request, 'qa_dashboard/system_charts.html', locals())
 
 
 @csrf_exempt
@@ -137,8 +144,9 @@ def table_data(request):
                 row.append(getattr(entry, header))
             the_data[unique_key].append(row)
     '''
-    serializer_map = {"VolumePerformance": VolumePerformanceSerializer}
-    serializer = serializer_map["VolumePerformance"]
+    serializer_map = {"VolumePerformance": VolumePerformanceSerializer,
+                      "AllocSpeedPerformance": AllocSpeedPerformanceSerializer}
+    serializer = serializer_map[metric_model_name]
     all_entries = model.objects.all()
     s = serializer(all_entries, many=True)
     data["data"] = s.data
