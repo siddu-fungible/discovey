@@ -1,11 +1,11 @@
 import smtplib
 from email.mime.text import MIMEText
-from fun_settings import AUTOMATION_EMAIL
+from fun_settings import REGRESSION_EMAIL, TEAM_REGRESSION_EMAIL
 
-DEFAULT_TO_ADDRESSES = [AUTOMATION_EMAIL]
+DEFAULT_TO_ADDRESSES = [TEAM_REGRESSION_EMAIL]
 
 
-def send_mail(from_address="john.abraham@fungible.com", to_addresses=None, subject="", content=""):
+def send_mail(from_address=REGRESSION_EMAIL, to_addresses=None, subject="", content=""):
     result = {"status": False, "error_message": ""}
     if not to_addresses:
         to_addresses = DEFAULT_TO_ADDRESSES
