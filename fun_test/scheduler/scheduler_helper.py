@@ -136,7 +136,7 @@ def re_queue_job(suite_execution_id,
         job_spec["script_path"] = script_path
         if "email_list" in job_spec:
             job_spec["email_list"] = job_spec["email_list"]
-    for k in ["schedule_at", "schedule_in_minutes", "schedule_in_minutes_at", "repeat"]:
+    for k in ["schedule_at", "schedule_in_minutes", "schedule_in_minutes_at", "repeat", "repeat_in_minutes"]:
         try:
             del job_spec[k]
         except:
