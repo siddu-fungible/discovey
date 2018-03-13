@@ -42,6 +42,7 @@ class FunTestCase1(FunTestCase):
         response_dict = json.loads(response.text)
         fun_test.log(json.dumps(response_dict, indent=4))
         past_jobs = response_dict["past_jobs"]
+        job_info = {}
         for past_job in past_jobs:
             return_code = past_job["return_code"]
             job_id = past_job["job_id"]
@@ -50,7 +51,7 @@ class FunTestCase1(FunTestCase):
             git_commit = past_job["git_commit"]
 
             fun_test.log("Return code: {}".format(return_code))
-            fun_test.log("Jenkins job id: {}".format(job_id))
+            fun_test.log("Job id: {}".format(job_id))
             fun_test.log("Branch Fun SDK: {}".format(branch_fun_sdk))
             fun_test.log("Jenkins build number: {}".format(jenkins_build_number))
             fun_test.log("Git commit: {}".format(git_commit))
@@ -81,6 +82,19 @@ class FunTestCase1(FunTestCase):
                                                     output_one_malloc_free_wu=output_one_malloc_free_wu,
                                                     output_one_malloc_free_threaded=output_one_malloc_free_threaded)
 
+            job_info[int(jenkins_build_number)] = {"output_one_malloc_free_wu": output_one_malloc_free_wu,
+                                                   "output_one_malloc_free_threaded": output_one_malloc_free_threaded}
+
+        newest_build_number = max(job_info.keys())
+        expected_values = {}
+        expected_values["output_one_malloc_free_wu"] = {"expected": 1060, "min": 0, "max": 1113}
+        expected_values["output_one_malloc_free_threaded"] = {"expected": 582, "min": 0, "max": 611}
+        values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
+        for value_to_check in values_to_check:
+            expected, min_value, max_value = expected_values[value_to_check]["expected"], expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]
+            actual = job_info[newest_build_number][value_to_check]
+            fun_test.test_assert(actual >= min_value, "Build: {} Attr: {} Min: {} Actual: {}".format(newest_build_number, value_to_check, min_value, actual))
+            fun_test.test_assert(actual <= max_value, "Build: {} Attr: {} Max: {} Actual: {}".format(newest_build_number, value_to_check, max_value, actual))
 
 
 if __name__ == "__main__":
