@@ -326,5 +326,8 @@ if __name__ == "__main__":
     scheduler_logger.debug("Started Scheduler")
     while True:
         process_killed_jobs()
-        process_queue()
+        try:
+            process_queue()
+        except SchedulerException as ex:
+            scheduler_logger.critical(str(ex))
         # wait
