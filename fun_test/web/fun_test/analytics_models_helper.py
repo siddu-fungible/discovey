@@ -104,6 +104,8 @@ class AllocSpeedPerformanceHelper(MetricHelper):
 
 
 if __name__ == "__main__":
+    AllocSpeedPerformanceHelper().clear()
+if __name__ == "__main2__":
     # MetricChart.objects.all().delete()
 
     performance1_helper = Performance1Helper()

@@ -106,6 +106,9 @@ DATABASES = {
     'regression': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, REGRESSION_DB_FILE)
+    },
+    'OPTIONS': {
+        'timeout': 20,
     }
 }
 
