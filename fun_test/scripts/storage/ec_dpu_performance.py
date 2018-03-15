@@ -384,7 +384,7 @@ class ECDPULevelTestcase(FunTestCase):
             # Executing the FIO command to warm up the system
             if self.warm_up_traffic:
                 fun_test.log("Executing the FIO command to warm up the system")
-                fio_output = self.linux_host.fio(destination_ip=destination_ip, **self.warm_up_fio_cmd_args)
+                fio_output = self.linux_host.remote_fio(destination_ip=destination_ip, **self.warm_up_fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output)
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
@@ -526,7 +526,7 @@ class ECDPULevelTestcase(FunTestCase):
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
                              "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.linux_host.fio(
+                fio_output[combo][mode] = self.linux_host.remote_fio(
                     destination_ip=destination_ip, rw=mode, bs=fio_block_size, iodepth=fio_iodepth, **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])

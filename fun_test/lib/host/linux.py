@@ -1319,7 +1319,7 @@ class Linux(object, ToDictMixin):
         return fio_dict
 
     @fun_test.safe
-    def fio(self, destination_ip, timeout=60, **kwargs):
+    def remote_fio(self, destination_ip, timeout=60, **kwargs):
 
         fio_command = "fio"
         fio_result = ""
@@ -1353,6 +1353,84 @@ class Linux(object, ToDictMixin):
 
         if 'nvme_mode' not in kwargs:
             fio_command += " --nvme_mode=IO_ONLY"
+
+        if 'output-format' not in kwargs:
+            fio_command += " --output-format=json"
+
+        if kwargs:
+            for key in kwargs:
+                fio_command += " --" + key + "=" + str(kwargs[key])
+
+        fun_test.debug(fio_command)
+
+        # Executing the fio command
+        fio_result = self.command(command=fio_command, timeout=timeout)
+        # fio_result += '\n'
+        fun_test.debug(fio_result)
+
+        # Checking there is no error occured during the FIO test
+        match = ""
+        match = re.search(r'Assertion .* failed', fio_result, re.I)
+        if match:
+            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+            return fio_dict
+
+        # Trimming initial few lines to convert the output into a valid json format
+        before, sep, after = fio_result.partition("{")
+        trim_fio_result = sep + after
+        fun_test.debug(trim_fio_result)
+
+        # Converting the json into python dictionary
+        fio_result_dict = commentjson.loads(trim_fio_result)
+        fun_test.debug(fio_result_dict)
+
+        # Populating the resultant fio_dict dictionary
+        for operation in ["write", "read"]:
+            fio_dict[operation] = {}
+            for stat in ["bw", "iops", "latency"]:
+                if stat != "latency":
+                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][stat]))
+                else:
+                    for key in fio_result_dict["jobs"][0][operation].keys():
+                        if key.startswith("lat"):
+                            # Extracting the latency unit
+                            unit = key[-2:]
+                            # Converting the units into microseconds
+                            if unit == "ns":
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value /= 1000
+                                fio_dict[operation][stat] = value
+                            elif unit == "us":
+                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                            else:
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value *= 1000
+                                fio_dict[operation][stat] = value
+
+        fun_test.debug(fio_dict)
+        return fio_dict
+
+    @fun_test.safe
+    def fio(self, destination_ip, timeout=60, **kwargs):
+
+        fio_command = "fio"
+        fio_result = ""
+        fio_dict = {}
+
+        fun_test.debug(kwargs)
+
+        # Building the fio command
+        if 'name' not in kwargs:
+            fio_command += " --name=fun_nvmeof"
+
+        if 'numjobs' not in kwargs:
+            fio_command += " --numjobs=1"
+
+        if 'io_queues' not in kwargs:
+            fio_command += " --io_queues=2"
+
+        if 'nrfiles' not in kwargs:
+            fio_command += " --nrfiles=1"
 
         if 'output-format' not in kwargs:
             fio_command += " --output-format=json"
