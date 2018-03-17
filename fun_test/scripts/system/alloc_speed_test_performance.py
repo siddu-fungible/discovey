@@ -60,9 +60,11 @@ class FunTestCase1(FunTestCase):
                                                  fun_sdk_branch=branch_fun_sdk,
                                                  git_commit=git_commit)
             job_info_url = "{}/job/{}?format=json".format(LSF_WEB_SERVER_BASE_URL, job_id)
+            fun_test.log("URL: {}".format(job_info_url))
             response = requests.get(job_info_url)
             fun_test.test_assert(response.status_code == 200, "Fetch job info for {}".format(job_id))
             response_dict = json.loads(response.text)
+            fun_test.log(json.dumps(response_dict, indent=4))
             output_text = response_dict["output_text"]
             return_code = int(response_dict["return_code"])
 
