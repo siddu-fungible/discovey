@@ -44,8 +44,9 @@ class FunTestCase1(FunTestCase):
         past_jobs = response_dict["past_jobs"]
         job_info = {}
         for past_job in past_jobs:
-            return_code = past_job["return_code"]
+            return_code = -1
             job_id = past_job["job_id"]
+
             jenkins_build_number = past_job["jenkins_build_number"]
             branch_fun_sdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
@@ -63,6 +64,7 @@ class FunTestCase1(FunTestCase):
             fun_test.test_assert(response.status_code == 200, "Fetch job info for {}".format(job_id))
             response_dict = json.loads(response.text)
             output_text = response_dict["output_text"]
+            return_code = int(response_dict["return_code"])
 
             lines = output_text.split("\n")
             lines = [x for x in lines if "Best time" in x]
