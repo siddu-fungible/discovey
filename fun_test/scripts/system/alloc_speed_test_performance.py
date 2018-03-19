@@ -90,8 +90,8 @@ class FunTestCase1(FunTestCase):
                                                     output_one_malloc_free_wu=output_one_malloc_free_wu,
                                                     output_one_malloc_free_threaded=output_one_malloc_free_threaded)
 
-            job_info[int(jenkins_build_number)] = {"output_one_malloc_free_wu": output_one_malloc_free_wu,
-                                                   "output_one_malloc_free_threaded": output_one_malloc_free_threaded}
+            job_info[int(key)] = {"output_one_malloc_free_wu": output_one_malloc_free_wu,
+                                  "output_one_malloc_free_threaded": output_one_malloc_free_threaded}
 
         newest_build_number = max(job_info.keys())
         expected_values = {}
