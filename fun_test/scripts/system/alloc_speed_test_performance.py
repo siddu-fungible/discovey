@@ -95,7 +95,7 @@ class FunTestCase1(FunTestCase):
 
         newest_build_number = max(job_info.keys())
         expected_values = {}
-        expected_values["output_one_malloc_free_wu"] = {"expected": 1060, "min": 1, "max": 1113}
+        expected_values["output_one_malloc_free_wu"] = {"expected": 1114, "min": 1, "max": 1169}
         expected_values["output_one_malloc_free_threaded"] = {"expected": 582, "min": 1, "max": 611}
         values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
         for value_to_check in values_to_check:
