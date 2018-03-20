@@ -92,7 +92,7 @@ class FunTestCase1(FunTestCase):
                                                target_port=dut_instance.external_dpcsh_port)
         contents = "012345678901234567890123456789012345 l6789012345678901234567890123456789"
         input_value = get_hex(contents)
-        key_hex = get_sha256_hex(value=input_value)
+        key_hex = get_sha256_hex(value=contents)
         dir_vol_uuid = '0020-0001'
         lvs_vol_uuid = '0020-0002'
         lvs_allocator_uuid = '0020-0003'
@@ -129,17 +129,6 @@ class FunTestCase1(FunTestCase):
                                                target_ip=dut_instance.host_ip,
                                                target_port=dut_instance.external_dpcsh_port)
 
-        create_d = {"max_keys": max_keys,
-                    "lvs_vol_uuid": lvs_vol_uuid,
-                    "init_keys": init_keys,
-                    "volume_id": volume_id,
-                    "init_lvs_bytes": init_lvs_bytes,
-                    "lvs_allocator_uuid": lvs_allocator_uuid,
-                    "max_lvs_bytes": max_lvs_bytes,
-                    "dir_uuid": dir_vol_uuid}
-        result = storage_controller.json_command(action="cal_vols_size", data=create_d)
-        fun_test.test_assert(result["status"], "cal_vols_size")
-
         create_d = {"init_lvs_bytes": init_lvs_bytes,
                     "max_keys": max_keys,
                     "max_lvs_bytes": max_lvs_bytes,
@@ -148,7 +137,11 @@ class FunTestCase1(FunTestCase):
                     'dir_uuid': dir_vol_uuid,
                     'lvs_vol_uuid': lvs_vol_uuid,
                     'lvs_allocator_uuid': lvs_allocator_uuid,
-                    "options": 0}
+                    "options": 0,
+                    "lba_bytes_log2": 12}
+        result = storage_controller.json_command(action="cal_vols_size", data=create_d)
+        fun_test.test_assert(result["status"], "cal_vols_size")
+
         result = storage_controller.json_command(action="create", data=create_d)
         fun_test.test_assert(result["status"], "Likv create")
         open_d = {"volume_id": volume_id}

@@ -75,7 +75,7 @@ class FunTestCase1(FunTestCase):
 
     def ikv_performance(self, size, duration, ikv_obj):
         result = collections.OrderedDict()
-        expected_cmd_duration = 2 if size < (16 << 10) else 6
+        expected_cmd_duration = 2 if size < (8 << 10) else 6
         result['Data Size'] = size
         result["Duration (sec)"] = duration
 
@@ -119,8 +119,9 @@ class FunTestCase1(FunTestCase):
             leftover_insert = ikv_obj.put(key_hex=i['key_hex'],
                                           value_hex=i['value_hex'],
                                           expected_timeout=expected_cmd_duration)
-            if not leftover_insert['status']:
-                key_value_store.remove(i)
+            if leftover_insert['status']:
+                if not leftover_insert['data']['status']:
+                    key_value_store.remove(i)
 
         del key_value_store1
 
