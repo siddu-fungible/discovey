@@ -75,7 +75,7 @@ class FunTestCase1(FunTestCase):
 
     def ikv_performance(self, size, duration, ikv_obj):
         result = collections.OrderedDict()
-        expected_cmd_duration = 2 if size < (8 << 10) else 6
+        expected_cmd_duration = 2 if size < (4 << 10) else 6
         result['Data Size'] = size
         result["Duration (sec)"] = duration
 
@@ -110,11 +110,12 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(put_count, message="No of puts performed for size {0}bytes: {1}".format(size, put_count))
 
         # put remaining key values
-        additional_puts = put_count + 250
+        additional_puts = put_count + 75
         ulimit = additional_puts if additional_puts < store_len else store_len
         key_value_store1 = key_value_store[put_count:ulimit]
         key_value_store = key_value_store[:ulimit]
         store_len = len(key_value_store)
+        error_cnt = 0
         for i in key_value_store1:
             leftover_insert = ikv_obj.put(key_hex=i['key_hex'],
                                           value_hex=i['value_hex'],
@@ -122,6 +123,7 @@ class FunTestCase1(FunTestCase):
             if leftover_insert['status']:
                 if leftover_insert['data']['status']:
                     key_value_store.remove(i)
+            fun_test.test_assert(error_cnt < 10, message="10 puts failed check funos", ignore_on_success=True)
 
         del key_value_store1
 
