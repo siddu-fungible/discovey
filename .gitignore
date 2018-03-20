@@ -1,8 +1,6 @@
 *.pyc
 *.pkl
 *.log
-*.sqlite3
-*.png
 *.out
 fun_test/web/static/logs/*.html
 fun_test/web/static/logs/*json
@@ -15,4 +13,3 @@ fun_test/web/static/jobs/archived/*.archived.*
 fun_test/web/dump.rdb
 *idea*/
 fun_test/web/db.sqlite3
-manual_testing/
