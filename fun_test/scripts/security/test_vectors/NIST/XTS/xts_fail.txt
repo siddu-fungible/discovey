@@ -1,0 +1,23 @@
+{
+    'enc_xts(aes)':[
+
+       {    'cipher_type' : '1',
+            'plain_text' : 'b556cac9983f337345f81587f55a482a40',
+            'key' : '258a0e54b33347abb36fa24d28cae61902d514172df1a83756ae3932b9353f56',
+            'iv' : '720438c7211b6df569b40867b71d7989',
+            'result' : '4a48e2cf351572e2708ca9ad05a3ee2580'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : 'ebabce95b14d3c8d6fb350390790311c',
+            'key' : 'a1b90cba3f06ac353b2c343876081762090923026e91771815f29dab01932f2f',
+            'iv' : '4faef7117cda59c66e4b92013e768ad5',
+            'result' : '778ae8b43cb98d5a825081d5be471c63'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : 'f7049f8aa312aeb1ab99ad11a1d7a720',
+            'key' : '8f59462c1327fd6411cb6b02c04bf0a129f145c276a38693c745de3118c90a2f',
+            'iv' : 'f2b86793b29e730e4a627b6ee161706c',
+            'result' : 'e59fca86c3c906f3df67418636a28767'
+       }
+   ]
+}

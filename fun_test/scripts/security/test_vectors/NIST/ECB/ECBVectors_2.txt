@@ -1,0 +1,3209 @@
+{
+    'enc_ecb(aes)':[
+
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : '80000000000000000000000000000000',
+            'result' : '0edd33d3c621e546455bd8ba1418bec8'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'c0000000000000000000000000000000',
+            'result' : '4bc3f883450c113c64ca42e1112a9e87'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'e0000000000000000000000000000000',
+            'result' : '72a1da770f5d7ac4c9ef94d822affd97'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'f0000000000000000000000000000000',
+            'result' : '970014d634e2b7650777e8e84d03ccd8'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'f8000000000000000000000000000000',
+            'result' : 'f17e79aed0db7e279e955b5f493875a7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fc000000000000000000000000000000',
+            'result' : '9ed5a75136a940d0963da379db4af26a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fe000000000000000000000000000000',
+            'result' : 'c4295f83465c7755e8fa364bac6a7ea5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ff000000000000000000000000000000',
+            'result' : 'b1d758256b28fd850ad4944208cf1155'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ff800000000000000000000000000000',
+            'result' : '42ffb34c743de4d88ca38011c990890b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffc00000000000000000000000000000',
+            'result' : '9958f0ecea8b2172c0c1995f9182c0f3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffe00000000000000000000000000000',
+            'result' : '956d7798fac20f82a8823f984d06f7f5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fff00000000000000000000000000000',
+            'result' : 'a01bf44f2d16be928ca44aaf7b9b106b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fff80000000000000000000000000000',
+            'result' : 'b5f1a33e50d40d103764c76bd4c6b6f8'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffc0000000000000000000000000000',
+            'result' : '2637050c9fc0d4817e2d69de878aee8d'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffe0000000000000000000000000000',
+            'result' : '113ecbe4a453269a0dd26069467fb5b5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffff0000000000000000000000000000',
+            'result' : '97d0754fe68f11b9e375d070a608c884'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffff8000000000000000000000000000',
+            'result' : 'c6a0b3e998d05068a5399778405200b4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffc000000000000000000000000000',
+            'result' : 'df556a33438db87bc41b1752c55e5e49'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffe000000000000000000000000000',
+            'result' : '90fb128d3a1af6e548521bb962bf1f05'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffff000000000000000000000000000',
+            'result' : '26298e9c1db517c215fadfb7d2a8d691'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffff800000000000000000000000000',
+            'result' : 'a6cb761d61f8292d0df393a279ad0380'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffc00000000000000000000000000',
+            'result' : '12acd89b13cd5f8726e34d44fd486108'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffe00000000000000000000000000',
+            'result' : '95b1703fc57ba09fe0c3580febdd7ed4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffff00000000000000000000000000',
+            'result' : 'de11722d893e9f9121c381becc1da59a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffff80000000000000000000000000',
+            'result' : '6d114ccb27bf391012e8974c546d9bf2'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffc0000000000000000000000000',
+            'result' : '5ce37e17eb4646ecfac29b9cc38d9340'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffe0000000000000000000000000',
+            'result' : '18c1b6e2157122056d0243d8a165cddb'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffff0000000000000000000000000',
+            'result' : '99693e6a59d1366c74d823562d7e1431'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffff8000000000000000000000000',
+            'result' : '6c7c64dc84a8bba758ed17eb025a57e3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffc000000000000000000000000',
+            'result' : 'e17bc79f30eaab2fac2cbbe3458d687a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffe000000000000000000000000',
+            'result' : '1114bc2028009b923f0b01915ce5e7c4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffff000000000000000000000000',
+            'result' : '9c28524a16a1e1c1452971caa8d13476'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffff800000000000000000000000',
+            'result' : 'ed62e16363638360fdd6ad62112794f0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffc00000000000000000000000',
+            'result' : '5a8688f0b2a2c16224c161658ffd4044'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffe00000000000000000000000',
+            'result' : '23f710842b9bb9c32f26648c786807ca'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffff00000000000000000000000',
+            'result' : '44a98bf11e163f632c47ec6a49683a89'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffff80000000000000000000000',
+            'result' : '0f18aff94274696d9b61848bd50ac5e5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffc0000000000000000000000',
+            'result' : '82408571c3e2424540207f833b6dda69'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffe0000000000000000000000',
+            'result' : '303ff996947f0c7d1f43c8f3027b9b75'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffff0000000000000000000000',
+            'result' : '7df4daf4ad29a3615a9b6ece5c99518a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffff8000000000000000000000',
+            'result' : 'c72954a48d0774db0b4971c526260415'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffc000000000000000000000',
+            'result' : '1df9b76112dc6531e07d2cfda04411f0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffe000000000000000000000',
+            'result' : '8e4d8e699119e1fc87545a647fb1d34f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffff000000000000000000000',
+            'result' : 'e6c4807ae11f36f091c57d9fb68548d1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffff800000000000000000000',
+            'result' : '8ebf73aad49c82007f77a5c1ccec6ab4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffc00000000000000000000',
+            'result' : '4fb288cc2040049001d2c7585ad123fc'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffe00000000000000000000',
+            'result' : '04497110efb9dceb13e2b13fb4465564'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffff00000000000000000000',
+            'result' : '75550e6cb5a88e49634c9ab69eda0430'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffff80000000000000000000',
+            'result' : 'b6768473ce9843ea66a81405dd50b345'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffc0000000000000000000',
+            'result' : 'cb2f430383f9084e03a653571e065de6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffe0000000000000000000',
+            'result' : 'ff4e66c07bae3e79fb7d210847a3b0ba'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffff0000000000000000000',
+            'result' : '7b90785125505fad59b13c186dd66ce3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffff8000000000000000000',
+            'result' : '8b527a6aebdaec9eaef8eda2cb7783e5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffc000000000000000000',
+            'result' : '43fdaf53ebbc9880c228617d6a9b548b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffe000000000000000000',
+            'result' : '53786104b9744b98f052c46f1c850d0b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffff000000000000000000',
+            'result' : 'b5ab3013dd1e61df06cbaf34ca2aee78'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffff800000000000000000',
+            'result' : '7470469be9723030fdcc73a8cd4fbb10'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffc00000000000000000',
+            'result' : 'a35a63f5343ebe9ef8167bcb48ad122e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffe00000000000000000',
+            'result' : 'fd8687f0757a210e9fdf181204c30863'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffff00000000000000000',
+            'result' : '7a181e84bd5457d26a88fbae96018fb0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffff80000000000000000',
+            'result' : '653317b9362b6f9b9e1a580e68d494b5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffc0000000000000000',
+            'result' : '995c9dc0b689f03c45867b5faa5c18d1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffe0000000000000000',
+            'result' : '77a4d96d56dda398b9aabecfc75729fd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffff0000000000000000',
+            'result' : '84be19e053635f09f2665e7bae85b42d'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffff8000000000000000',
+            'result' : '32cd652842926aea4aa6137bb2be2b5e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffc000000000000000',
+            'result' : '493d4a4f38ebb337d10aa84e9171a554'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffe000000000000000',
+            'result' : 'd9bff7ff454b0ec5a4a2a69566e2cb84'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffff000000000000000',
+            'result' : '3535d565ace3f31eb249ba2cc6765d7a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffff800000000000000',
+            'result' : 'f60e91fc3269eecf3231c6e9945697c6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffc00000000000000',
+            'result' : 'ab69cfadf51f8e604d9cc37182f6635a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffe00000000000000',
+            'result' : '7866373f24a0b6ed56e0d96fcdafb877'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffff00000000000000',
+            'result' : '1ea448c2aac954f5d812e9d78494446a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffff80000000000000',
+            'result' : 'acc5599dd8ac02239a0fef4a36dd1668'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffc0000000000000',
+            'result' : 'd8764468bb103828cf7e1473ce895073'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffe0000000000000',
+            'result' : '1b0d02893683b9f180458e4aa6b73982'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffff0000000000000',
+            'result' : '96d9b017d302df410a937dcdb8bb6e43'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffff8000000000000',
+            'result' : 'ef1623cc44313cff440b1594a7e21cc6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffc000000000000',
+            'result' : '284ca2fa35807b8b0ae4d19e11d7dbd7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffe000000000000',
+            'result' : 'f2e976875755f9401d54f36e2a23a594'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffff000000000000',
+            'result' : 'ec198a18e10e532403b7e20887c8dd80'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffff800000000000',
+            'result' : '545d50ebd919e4a6949d96ad47e46a80'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffc00000000000',
+            'result' : 'dbdfb527060e0a71009c7bb0c68f1d44'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffe00000000000',
+            'result' : '9cfa1322ea33da2173a024f2ff0d896d'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffff00000000000',
+            'result' : '8785b1a75b0f3bd958dcd0e29318c521'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffff80000000000',
+            'result' : '38f67b9e98e4a97b6df030a9fcdd0104'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffc0000000000',
+            'result' : '192afffb2c880e82b05926d0fc6c448b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffe0000000000',
+            'result' : '6a7980ce7b105cf530952d74daaf798c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffff0000000000',
+            'result' : 'ea3695e1351b9d6858bd958cf513ef6c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffff8000000000',
+            'result' : '6da0490ba0ba0343b935681d2cce5ba1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffc000000000',
+            'result' : 'f0ea23af08534011c60009ab29ada2f1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffe000000000',
+            'result' : 'ff13806cf19cc38721554d7c0fcdcd4b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffff000000000',
+            'result' : '6838af1f4f69bae9d85dd188dcdf0688'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffff800000000',
+            'result' : '36cf44c92d550bfb1ed28ef583ddf5d7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffc00000000',
+            'result' : 'd06e3195b5376f109d5c4ec6c5d62ced'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffe00000000',
+            'result' : 'c440de014d3d610707279b13242a5c36'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffff00000000',
+            'result' : 'f0c5c6ffa5e0bd3a94c88f6b6f7c16b9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffff80000000',
+            'result' : '3e40c3901cd7effc22bffc35dee0b4d9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffc0000000',
+            'result' : 'b63305c72bedfab97382c406d0c49bc6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffe0000000',
+            'result' : '36bbaab22a6bd4925a99a2b408d2dbae'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffff0000000',
+            'result' : '307c5b8fcd0533ab98bc51e27a6ce461'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffff8000000',
+            'result' : '829c04ff4c07513c0b3ef05c03e337b5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffc000000',
+            'result' : 'f17af0e895dda5eb98efc68066e84c54'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffe000000',
+            'result' : '277167f3812afff1ffacb4a934379fc3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffff000000',
+            'result' : '2cb1dc3a9c72972e425ae2ef3eb597cd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffff800000',
+            'result' : '36aeaa3a213e968d4b5b679d3a2c97fe'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffc00000',
+            'result' : '9241daca4fdd034a82372db50e1a0f3f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffe00000',
+            'result' : 'c14574d9cd00cf2b5a7f77e53cd57885'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffff00000',
+            'result' : '793de39236570aba83ab9b737cb521c9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffff80000',
+            'result' : '16591c0f27d60e29b85a96c33861a7ef'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffc0000',
+            'result' : '44fb5c4d4f5cb79be5c174a3b1c97348'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffe0000',
+            'result' : '674d2b61633d162be59dde04222f4740'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffff0000',
+            'result' : 'b4750ff263a65e1f9e924ccfd98f3e37'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffff8000',
+            'result' : '62d0662d6eaeddedebae7f7ea3a4f6b6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffc000',
+            'result' : '70c46bb30692be657f7eaa93ebad9897'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffe000',
+            'result' : '323994cfb9da285a5d9642e1759b224a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffff000',
+            'result' : '1dbf57877b7b17385c85d0b54851e371'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffff800',
+            'result' : 'dfa5c097cdc1532ac071d57b1d28d1bd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffc00',
+            'result' : '3a0c53fa37311fc10bd2a9981f513174'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffe00',
+            'result' : 'ba4f970c0a25c41814bdae2e506be3b4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffff00',
+            'result' : '2dce3acb727cd13ccd76d425ea56e4f6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffff80',
+            'result' : '5160474d504b9b3eefb68d35f245f4b3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffc0',
+            'result' : '41a8a947766635dec37553d9a6c0cbb7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffe0',
+            'result' : '25d6cfe6881f2bf497dd14cd4ddf445b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffff0',
+            'result' : '41c78c135ed9e98c096640647265da1e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffff8',
+            'result' : '5a4d404d8917e353e92a21072c3b2305'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffc',
+            'result' : '02bc96846b3fdc71643f384cd3cc3eaf'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffe',
+            'result' : '9ba4a9143f4e5d4048521c4f8877d88e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffff',
+            'result' : 'a1f6258c877d5fcd8964484538bfc92c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : '800000000000000000000000000000000000000000000000',
+            'result' : 'de885dc87f5a92594082d02cc1e1b42c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'c00000000000000000000000000000000000000000000000',
+            'result' : '132b074e80f2a597bf5febd8ea5da55e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'e00000000000000000000000000000000000000000000000',
+            'result' : '6eccedf8de592c22fb81347b79f2db1f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'f00000000000000000000000000000000000000000000000',
+            'result' : '180b09f267c45145db2f826c2582d35c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'f80000000000000000000000000000000000000000000000',
+            'result' : 'edd807ef7652d7eb0e13c8b5e15b3bc0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fc0000000000000000000000000000000000000000000000',
+            'result' : '9978bcf8dd8fd72241223ad24b31b8a4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fe0000000000000000000000000000000000000000000000',
+            'result' : '5310f654343e8f27e12c83a48d24ff81'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ff0000000000000000000000000000000000000000000000',
+            'result' : '833f71258d53036b02952c76c744f5a1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ff8000000000000000000000000000000000000000000000',
+            'result' : 'eba83ff200cff9318a92f8691a06b09f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffc000000000000000000000000000000000000000000000',
+            'result' : 'ff620ccbe9f3292abdf2176b09f04eba'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffe000000000000000000000000000000000000000000000',
+            'result' : '7ababc4b3f516c9aafb35f4140b548f9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fff000000000000000000000000000000000000000000000',
+            'result' : 'aa187824d9c4582b0916493ecbde8c57'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fff800000000000000000000000000000000000000000000',
+            'result' : '1c0ad553177fd5ea1092c9d626a29dc4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffc00000000000000000000000000000000000000000000',
+            'result' : 'a5dc46c37261194124ecaebd680408ec'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffe00000000000000000000000000000000000000000000',
+            'result' : 'e4f2f2ae23e9b10bacfa58601531ba54'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffff00000000000000000000000000000000000000000000',
+            'result' : 'b7d67cf1a1e91e8ff3a57a172c7bf412'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffff80000000000000000000000000000000000000000000',
+            'result' : '26706be06967884e847d137128ce47b3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffc0000000000000000000000000000000000000000000',
+            'result' : 'b2f8b409b0585909aad3a7b5a219072a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffe0000000000000000000000000000000000000000000',
+            'result' : '5e4b7bff0290c78344c54a23b722cd20'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffff0000000000000000000000000000000000000000000',
+            'result' : '07093657552d4414227ce161e9ebf7dd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffff8000000000000000000000000000000000000000000',
+            'result' : 'e1af1e7d8bc225ed4dffb771ecbb9e67'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffc000000000000000000000000000000000000000000',
+            'result' : 'ef6555253635d8432156cfd9c11b145a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffe000000000000000000000000000000000000000000',
+            'result' : 'fb4035074a5d4260c90cbd6da6c3fceb'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffff000000000000000000000000000000000000000000',
+            'result' : '446ee416f9ad1c103eb0cc96751c88e1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffff800000000000000000000000000000000000000000',
+            'result' : '198ae2a4637ac0a7890a8fd1485445c9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffc00000000000000000000000000000000000000000',
+            'result' : '562012ec8faded0825fb2fa70ab30cbd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffe00000000000000000000000000000000000000000',
+            'result' : 'cc8a64b46b5d88bf7f247d4dbaf38f05'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffff00000000000000000000000000000000000000000',
+            'result' : 'a168253762e2cc81b42d1e5001762699'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffff80000000000000000000000000000000000000000',
+            'result' : '1b41f83b38ce5032c6cd7af98cf62061'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffc0000000000000000000000000000000000000000',
+            'result' : '61a89990cd1411750d5fb0dc988447d4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffe0000000000000000000000000000000000000000',
+            'result' : 'b5accc8ed629edf8c68a539183b1ea82'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffff0000000000000000000000000000000000000000',
+            'result' : 'b16fa71f846b81a13f361c43a851f290'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffff8000000000000000000000000000000000000000',
+            'result' : '4fad6efdff5975aee7692234bcd54488'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffc000000000000000000000000000000000000000',
+            'result' : 'ebfdb05a783d03082dfe5fdd80a00b17'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffe000000000000000000000000000000000000000',
+            'result' : 'eb81b584766997af6ba5529d3bdd8609'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffff000000000000000000000000000000000000000',
+            'result' : '0cf4ff4f49c8a0ca060c443499e29313'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffff800000000000000000000000000000000000000',
+            'result' : 'cc4ba8a8e029f8b26d8afff9df133bb6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffc00000000000000000000000000000000000000',
+            'result' : 'fefebf64360f38e4e63558f0ffc550c3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffe00000000000000000000000000000000000000',
+            'result' : '12ad98cbf725137d6a8108c2bed99322'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffff00000000000000000000000000000000000000',
+            'result' : '6afaa996226198b3e2610413ce1b3f78'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffff80000000000000000000000000000000000000',
+            'result' : '2a8ce6747a7e39367828e290848502d9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffc0000000000000000000000000000000000000',
+            'result' : '223736e8b8f89ca1e37b6deab40facf1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffe0000000000000000000000000000000000000',
+            'result' : 'c0f797e50418b95fa6013333917a9480'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffff0000000000000000000000000000000000000',
+            'result' : 'a758de37c2ece2a02c73c01fedc9a132'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffff8000000000000000000000000000000000000',
+            'result' : '3a9b87ae77bae706803966c66c73adbd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffc000000000000000000000000000000000000',
+            'result' : 'd365ab8df8ffd782e358121a4a4fc541'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffe000000000000000000000000000000000000',
+            'result' : 'c8dcd9e6f75e6c36c8daee0466f0ed74'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffff000000000000000000000000000000000000',
+            'result' : 'c79a637beb1c0304f14014c037e736dd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffff800000000000000000000000000000000000',
+            'result' : '105f0a25e84ac930d996281a5f954dd9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffc00000000000000000000000000000000000',
+            'result' : '42e4074b2927973e8d17ffa92f7fe615'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffe00000000000000000000000000000000000',
+            'result' : '4fe2a9d2c1824449c69e3e0398f12963'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffff00000000000000000000000000000000000',
+            'result' : 'b7f29c1e1f62847a15253b28a1e9d712'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffff80000000000000000000000000000000000',
+            'result' : '36ed5d29b903f31e8983ef8b0a2bf990'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffc0000000000000000000000000000000000',
+            'result' : '27b8070270810f9d023f9dd7ff3b4aa2'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffe0000000000000000000000000000000000',
+            'result' : '94d46e155c1228f61d1a0db4815ecc4b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffff0000000000000000000000000000000000',
+            'result' : 'ca6108d1d98071428eeceef1714b96dd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffff8000000000000000000000000000000000',
+            'result' : 'dc5b25b71b6296cf73dd2cdcac2f70b1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffc000000000000000000000000000000000',
+            'result' : '44aba95e8a06a2d9d3530d2677878c80'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffe000000000000000000000000000000000',
+            'result' : 'a570d20e89b467e8f5176061b81dd396'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffff000000000000000000000000000000000',
+            'result' : '758f4467a5d8f1e7307dc30b34e404f4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffff800000000000000000000000000000000',
+            'result' : 'bcea28e9071b5a2302970ff352451bc5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffc00000000000000000000000000000000',
+            'result' : '7523c00bc177d331ad312e09c9015c1c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffe00000000000000000000000000000000',
+            'result' : 'ccac61e3183747b3f5836da21a1bc4f4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffff00000000000000000000000000000000',
+            'result' : '707b075791878880b44189d3522b8c30'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffff80000000000000000000000000000000',
+            'result' : '7132d0c0e4a07593cf12ebb12be7688c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffc0000000000000000000000000000000',
+            'result' : 'effbac1644deb0c784275fe56e19ead3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffe0000000000000000000000000000000',
+            'result' : 'a005063f30f4228b374e2459738f26bb'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffff0000000000000000000000000000000',
+            'result' : '29975b5f48bb68fcbbc7cea93b452ed7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffff8000000000000000000000000000000',
+            'result' : 'cf3f2576e2afedc74bb1ca7eeec1c0e7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffc000000000000000000000000000000',
+            'result' : '07c403f5f966e0e3d9f296d6226dca28'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffe000000000000000000000000000000',
+            'result' : 'c8c20908249ab4a34d6dd0a31327ff1a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffff000000000000000000000000000000',
+            'result' : 'c0541329ecb6159ab23b7fc5e6a21bca'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffff800000000000000000000000000000',
+            'result' : '7aa1acf1a2ed9ba72bc6deb31d88b863'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffc00000000000000000000000000000',
+            'result' : '808bd8eddabb6f3bf0d5a8a27be1fe8a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffe00000000000000000000000000000',
+            'result' : '273c7d7685e14ec66bbb96b8f05b6ddd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffff00000000000000000000000000000',
+            'result' : '32752eefc8c2a93f91b6e73eb07cca6e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffff80000000000000000000000000000',
+            'result' : 'd893e7d62f6ce502c64f75e281f9c000'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffc0000000000000000000000000000',
+            'result' : '8dfd999be5d0cfa35732c0ddc88ff5a5'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffe0000000000000000000000000000',
+            'result' : '02647c76a300c3173b841487eb2bae9f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffff0000000000000000000000000000',
+            'result' : '172df8b02f04b53adab028b4e01acd87'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffff8000000000000000000000000000',
+            'result' : '054b3bf4998aeb05afd87ec536533a36'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffc000000000000000000000000000',
+            'result' : '3783f7bf44c97f065258a666cae03020'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffe000000000000000000000000000',
+            'result' : 'aad4c8a63f80954104de7b92cede1be1'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffff000000000000000000000000000',
+            'result' : 'cbfe61810fd5467ccdacb75800f3ac07'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffff800000000000000000000000000',
+            'result' : '830d8a2590f7d8e1b55a737f4af45f34'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffc00000000000000000000000000',
+            'result' : 'fffcd4683f858058e74314671d43fa2c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffe00000000000000000000000000',
+            'result' : '523d0babbb82f46ebc9e70b1cd41ddd0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffff00000000000000000000000000',
+            'result' : '344aab37080d7486f7d542a309e53eed'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffff80000000000000000000000000',
+            'result' : '56c5609d0906b23ab9caca816f5dbebd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffc0000000000000000000000000',
+            'result' : '7026026eedd91adc6d831cdf9894bdc6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffe0000000000000000000000000',
+            'result' : '88330baa4f2b618fc9d9b021bf503d5a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffff0000000000000000000000000',
+            'result' : 'fc9e0ea22480b0bac935c8a8ebefcdcf'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffff8000000000000000000000000',
+            'result' : '29ca779f398fb04f867da7e8a44756cb'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffc000000000000000000000000',
+            'result' : '51f89c42985786bfc43c6df8ada36832'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffe000000000000000000000000',
+            'result' : '6ac1de5fb8f21d874e91c53b560c50e3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffff000000000000000000000000',
+            'result' : '03aa9058490eda306001a8a9f48d0ca7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffff800000000000000000000000',
+            'result' : 'e34ec71d6128d4871865d617c30b37e3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffc00000000000000000000000',
+            'result' : '14be1c535b17cabd0c4d93529d69bf47'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffe00000000000000000000000',
+            'result' : 'c9ef67756507beec9dd3862883478044'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffff00000000000000000000000',
+            'result' : '40e231fa5a5948ce2134e92fc0664d4b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffff80000000000000000000000',
+            'result' : '03194b8e5dda5530d0c678c0b48f5d92'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffc0000000000000000000000',
+            'result' : '90bd086f237cc4fd99f4d76bde6b4826'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffe0000000000000000000000',
+            'result' : '19259761ca17130d6ed86d57cd7951ee'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffff0000000000000000000000',
+            'result' : 'd7cbb3f34b9b450f24b0e8518e54da6d'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffff8000000000000000000000',
+            'result' : '725b9caebe9f7f417f4068d0d2ee20b3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffc000000000000000000000',
+            'result' : '9d924b934a90ce1fd39b8a9794f82672'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffe000000000000000000000',
+            'result' : 'c50562bf094526a91c5bc63c0c224995'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffff000000000000000000000',
+            'result' : 'd2f11805046743bd74f57188d9188df7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffff800000000000000000000',
+            'result' : '8dd274bd0f1b58ae345d9e7233f9b8f3'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffc00000000000000000000',
+            'result' : '9d6bdc8f4ce5feb0f3bed2e4b9a9bb0b'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffe00000000000000000000',
+            'result' : 'fd5548bcf3f42565f7efa94562528d46'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffff00000000000000000000',
+            'result' : 'd2ccaebd3a4c3e80b063748131ba4a71'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffff80000000000000000000',
+            'result' : 'e03cb23d9e11c9d93f117e9c0a91b576'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffc0000000000000000000',
+            'result' : '78f933a2081ac1db84f69d10f4523fe0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffe0000000000000000000',
+            'result' : '4061f7412ed320de0edc8851c2e2436f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffff0000000000000000000',
+            'result' : '9064ba1cd04ce6bab98474330814b4d4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffff8000000000000000000',
+            'result' : '48391bffb9cfff80ac238c886ef0a461'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffc000000000000000000',
+            'result' : 'b8d2a67df5a999fdbf93edd0343296c9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffe000000000000000000',
+            'result' : 'aaca7367396b69a221bd632bea386eec'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffff000000000000000000',
+            'result' : 'a80fd5020dfe65f5f16293ec92c6fd89'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffff800000000000000000',
+            'result' : '2162995b8217a67f1abc342e146406f8'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffc00000000000000000',
+            'result' : 'c6a6164b7a60bae4e986ffac28dfadd9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffe00000000000000000',
+            'result' : '64e0d7f900e3d9c83e4b8f96717b2146'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffff00000000000000000',
+            'result' : '1ad2561de8c1232f5d8dbab4739b6cbb'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffff80000000000000000',
+            'result' : '279689e9a557f58b1c3bf40c97a90964'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffc0000000000000000',
+            'result' : 'c4637e4a5e6377f9cc5a8638045de029'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffe0000000000000000',
+            'result' : '492e607e5aea4688594b45f3aee3df90'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffff0000000000000000',
+            'result' : 'e8c4e4381feec74054954c05b777a00a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffff8000000000000000',
+            'result' : '91549514605f38246c9b724ad839f01d'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffc000000000000000',
+            'result' : '74b24e3b6fefe40a4f9ef7ac6e44d76a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffe000000000000000',
+            'result' : '2437a683dc5d4b52abb4a123a8df86c6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffff000000000000000',
+            'result' : 'bb2852c891c5947d2ed44032c421b85f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffff800000000000000',
+            'result' : '1b9f5fbd5e8a4264c0a85b80409afa5e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffc00000000000000',
+            'result' : '30dab809f85a917fe924733f424ac589'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffe00000000000000',
+            'result' : 'eaef5c1f8d605192646695ceadc65f32'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffff00000000000000',
+            'result' : 'b8aa90040b4c15a12316b78e0f9586fc'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffff80000000000000',
+            'result' : '97fac8297ceaabc87d454350601e0673'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffc0000000000000',
+            'result' : '9b47ef567ac28dfe488492f157e2b2e0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffe0000000000000',
+            'result' : '1b8426027ddb962b5c5ba7eb8bc9ab63'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffff0000000000000',
+            'result' : 'e917fc77e71992a12dbe4c18068bec82'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffff8000000000000',
+            'result' : 'dceebbc98840f8ae6daf76573b7e56f4'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffc000000000000',
+            'result' : '4e11a9f74205125b61e0aee047eca20d'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffe000000000000',
+            'result' : 'f60467f55a1f17eab88e800120cbc284'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffff000000000000',
+            'result' : 'd436649f600b449ee276530f0cd83c11'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffff800000000000',
+            'result' : '3bc0e3656a9e3ac7cd378a737f53b637'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffc00000000000',
+            'result' : '6bacae63d33b928aa8380f8d54d88c17'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffe00000000000',
+            'result' : '8935ffbc75ae6251bf8e859f085adcb9'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffff00000000000',
+            'result' : '93dc4970fe35f67747cb0562c06d875a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffff80000000000',
+            'result' : '14f9df858975851797ba604fb0d16cc7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffc0000000000',
+            'result' : '02ea0c98dca10b38c21b3b14e8d1b71f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffe0000000000',
+            'result' : '8f091b1b5b0749b2adc803e63dda9b72'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffff0000000000',
+            'result' : '05b389e3322c6da08384345a4137fd08'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffff8000000000',
+            'result' : '381308c438f35b399f10ad71b05027d8'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffc000000000',
+            'result' : '68c230fcfa9279c3409fc423e2acbe04'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffe000000000',
+            'result' : '1c84a475acb011f3f59f4f46b76274c0'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffff000000000',
+            'result' : '45119b68cb3f8399ee60066b5611a4d7'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffff800000000',
+            'result' : '9423762f527a4060ffca312dcca22a16'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffc00000000',
+            'result' : 'f361a2745a33f056a5ac6ace2f08e344'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffe00000000',
+            'result' : '5ef145766eca849f5d011536a6557fdb'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffff00000000',
+            'result' : 'c9af27b2c89c9b4cf4a0c4106ac80318'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffff80000000',
+            'result' : 'fb9c4f16c621f4eab7e9ac1d7551dd57'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffc0000000',
+            'result' : '138e06fba466fa70854d8c2e524cffb2'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffe0000000',
+            'result' : 'fb4bc78b225070773f04c40466d4e90c'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffff0000000',
+            'result' : '8b2cbff1ed0150feda8a4799be94551f'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffff8000000',
+            'result' : '08b30d7b3f27962709a36bcadfb974bd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffc000000',
+            'result' : 'fdf6d32e044d77adcf37fb97ac213326'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffe000000',
+            'result' : '93cb284ecdcfd781a8afe32077949e88'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffff000000',
+            'result' : '7b017bb02ec87b2b94c96e40a26fc71a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffff800000',
+            'result' : 'c5c038b6990664ab08a3aaa5df9f3266'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffc00000',
+            'result' : '4b7020be37fab6259b2a27f4ec551576'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffe00000',
+            'result' : '60136703374f64e860b48ce31f930716'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffff00000',
+            'result' : '8d63a269b14d506ccc401ab8a9f1b591'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffff80000',
+            'result' : 'd317f81dc6aa454aee4bd4a5a5cff4bd'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffc0000',
+            'result' : 'dddececd5354f04d530d76ed884246eb'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffe0000',
+            'result' : '41c5205cc8fd8eda9a3cffd2518f365a'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffff0000',
+            'result' : 'cf42fb474293d96eca9db1b37b1ba676'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffff8000',
+            'result' : 'a231692607169b4ecdead5cd3b10db3e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffc000',
+            'result' : 'ace4b91c9c669e77e7acacd19859ed49'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffe000',
+            'result' : '75db7cfd4a7b2b62ab78a48f3ddaf4af'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffff000',
+            'result' : 'c1faba2d46e259cf480d7c38e4572a58'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffff800',
+            'result' : '241c45bc6ae16dee6eb7bea128701582'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffc00',
+            'result' : '8fd03057cf1364420c2b78069a3e2502'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffe00',
+            'result' : 'ddb505e6cc1384cbaec1df90b80beb20'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffff00',
+            'result' : '5674a3bed27bf4bd3622f9f5fe208306'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffff80',
+            'result' : 'b687f26a89cfbfbb8e5eeac54055315e'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffffc0',
+            'result' : '0547dd32d3b29ab6a4caeb606c5b6f78'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffffe0',
+            'result' : '186861f8bc5386d31fb77f720c3226e6'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffff0',
+            'result' : 'eacf1e6c4224efb38900b185ab1dfd42'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffff8',
+            'result' : 'd241aab05a42d319de81d874f5c7b90d'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffffc',
+            'result' : '5eb9bc759e2ad8d2140a6c762ae9e1ab'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffffe',
+            'result' : '018596e15e78e2c064159defce5f3085'
+       },
+       {    'cipher_type' : '1',
+            'plain_text' : '00000000000000000000000000000000',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffffff',
+            'result' : 'dd8a493514231cbf56eccee4c40889fb'
+       },
+    ],
+
+    'dec_ecb(aes)':[
+
+       {    'cipher_type' : '1',
+            'cipher_text' : '0edd33d3c621e546455bd8ba1418bec8',
+            'key' : '80000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '4bc3f883450c113c64ca42e1112a9e87',
+            'key' : 'c0000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '72a1da770f5d7ac4c9ef94d822affd97',
+            'key' : 'e0000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '970014d634e2b7650777e8e84d03ccd8',
+            'key' : 'f0000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f17e79aed0db7e279e955b5f493875a7',
+            'key' : 'f8000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9ed5a75136a940d0963da379db4af26a',
+            'key' : 'fc000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c4295f83465c7755e8fa364bac6a7ea5',
+            'key' : 'fe000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b1d758256b28fd850ad4944208cf1155',
+            'key' : 'ff000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '42ffb34c743de4d88ca38011c990890b',
+            'key' : 'ff800000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9958f0ecea8b2172c0c1995f9182c0f3',
+            'key' : 'ffc00000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '956d7798fac20f82a8823f984d06f7f5',
+            'key' : 'ffe00000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a01bf44f2d16be928ca44aaf7b9b106b',
+            'key' : 'fff00000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b5f1a33e50d40d103764c76bd4c6b6f8',
+            'key' : 'fff80000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '2637050c9fc0d4817e2d69de878aee8d',
+            'key' : 'fffc0000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '113ecbe4a453269a0dd26069467fb5b5',
+            'key' : 'fffe0000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '97d0754fe68f11b9e375d070a608c884',
+            'key' : 'ffff0000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c6a0b3e998d05068a5399778405200b4',
+            'key' : 'ffff8000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'df556a33438db87bc41b1752c55e5e49',
+            'key' : 'ffffc000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '90fb128d3a1af6e548521bb962bf1f05',
+            'key' : 'ffffe000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '26298e9c1db517c215fadfb7d2a8d691',
+            'key' : 'fffff000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a6cb761d61f8292d0df393a279ad0380',
+            'key' : 'fffff800000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '12acd89b13cd5f8726e34d44fd486108',
+            'key' : 'fffffc00000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '95b1703fc57ba09fe0c3580febdd7ed4',
+            'key' : 'fffffe00000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'de11722d893e9f9121c381becc1da59a',
+            'key' : 'ffffff00000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6d114ccb27bf391012e8974c546d9bf2',
+            'key' : 'ffffff80000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5ce37e17eb4646ecfac29b9cc38d9340',
+            'key' : 'ffffffc0000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '18c1b6e2157122056d0243d8a165cddb',
+            'key' : 'ffffffe0000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '99693e6a59d1366c74d823562d7e1431',
+            'key' : 'fffffff0000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6c7c64dc84a8bba758ed17eb025a57e3',
+            'key' : 'fffffff8000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e17bc79f30eaab2fac2cbbe3458d687a',
+            'key' : 'fffffffc000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1114bc2028009b923f0b01915ce5e7c4',
+            'key' : 'fffffffe000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9c28524a16a1e1c1452971caa8d13476',
+            'key' : 'ffffffff000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ed62e16363638360fdd6ad62112794f0',
+            'key' : 'ffffffff800000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5a8688f0b2a2c16224c161658ffd4044',
+            'key' : 'ffffffffc00000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '23f710842b9bb9c32f26648c786807ca',
+            'key' : 'ffffffffe00000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '44a98bf11e163f632c47ec6a49683a89',
+            'key' : 'fffffffff00000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '0f18aff94274696d9b61848bd50ac5e5',
+            'key' : 'fffffffff80000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '82408571c3e2424540207f833b6dda69',
+            'key' : 'fffffffffc0000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '303ff996947f0c7d1f43c8f3027b9b75',
+            'key' : 'fffffffffe0000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7df4daf4ad29a3615a9b6ece5c99518a',
+            'key' : 'ffffffffff0000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c72954a48d0774db0b4971c526260415',
+            'key' : 'ffffffffff8000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1df9b76112dc6531e07d2cfda04411f0',
+            'key' : 'ffffffffffc000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8e4d8e699119e1fc87545a647fb1d34f',
+            'key' : 'ffffffffffe000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e6c4807ae11f36f091c57d9fb68548d1',
+            'key' : 'fffffffffff000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8ebf73aad49c82007f77a5c1ccec6ab4',
+            'key' : 'fffffffffff800000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '4fb288cc2040049001d2c7585ad123fc',
+            'key' : 'fffffffffffc00000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '04497110efb9dceb13e2b13fb4465564',
+            'key' : 'fffffffffffe00000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '75550e6cb5a88e49634c9ab69eda0430',
+            'key' : 'ffffffffffff00000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b6768473ce9843ea66a81405dd50b345',
+            'key' : 'ffffffffffff80000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'cb2f430383f9084e03a653571e065de6',
+            'key' : 'ffffffffffffc0000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ff4e66c07bae3e79fb7d210847a3b0ba',
+            'key' : 'ffffffffffffe0000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7b90785125505fad59b13c186dd66ce3',
+            'key' : 'fffffffffffff0000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8b527a6aebdaec9eaef8eda2cb7783e5',
+            'key' : 'fffffffffffff8000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '43fdaf53ebbc9880c228617d6a9b548b',
+            'key' : 'fffffffffffffc000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '53786104b9744b98f052c46f1c850d0b',
+            'key' : 'fffffffffffffe000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b5ab3013dd1e61df06cbaf34ca2aee78',
+            'key' : 'ffffffffffffff000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7470469be9723030fdcc73a8cd4fbb10',
+            'key' : 'ffffffffffffff800000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a35a63f5343ebe9ef8167bcb48ad122e',
+            'key' : 'ffffffffffffffc00000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fd8687f0757a210e9fdf181204c30863',
+            'key' : 'ffffffffffffffe00000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7a181e84bd5457d26a88fbae96018fb0',
+            'key' : 'fffffffffffffff00000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '653317b9362b6f9b9e1a580e68d494b5',
+            'key' : 'fffffffffffffff80000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '995c9dc0b689f03c45867b5faa5c18d1',
+            'key' : 'fffffffffffffffc0000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '77a4d96d56dda398b9aabecfc75729fd',
+            'key' : 'fffffffffffffffe0000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '84be19e053635f09f2665e7bae85b42d',
+            'key' : 'ffffffffffffffff0000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '32cd652842926aea4aa6137bb2be2b5e',
+            'key' : 'ffffffffffffffff8000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '493d4a4f38ebb337d10aa84e9171a554',
+            'key' : 'ffffffffffffffffc000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd9bff7ff454b0ec5a4a2a69566e2cb84',
+            'key' : 'ffffffffffffffffe000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '3535d565ace3f31eb249ba2cc6765d7a',
+            'key' : 'fffffffffffffffff000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f60e91fc3269eecf3231c6e9945697c6',
+            'key' : 'fffffffffffffffff800000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ab69cfadf51f8e604d9cc37182f6635a',
+            'key' : 'fffffffffffffffffc00000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7866373f24a0b6ed56e0d96fcdafb877',
+            'key' : 'fffffffffffffffffe00000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1ea448c2aac954f5d812e9d78494446a',
+            'key' : 'ffffffffffffffffff00000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'acc5599dd8ac02239a0fef4a36dd1668',
+            'key' : 'ffffffffffffffffff80000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd8764468bb103828cf7e1473ce895073',
+            'key' : 'ffffffffffffffffffc0000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1b0d02893683b9f180458e4aa6b73982',
+            'key' : 'ffffffffffffffffffe0000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '96d9b017d302df410a937dcdb8bb6e43',
+            'key' : 'fffffffffffffffffff0000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ef1623cc44313cff440b1594a7e21cc6',
+            'key' : 'fffffffffffffffffff8000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '284ca2fa35807b8b0ae4d19e11d7dbd7',
+            'key' : 'fffffffffffffffffffc000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f2e976875755f9401d54f36e2a23a594',
+            'key' : 'fffffffffffffffffffe000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ec198a18e10e532403b7e20887c8dd80',
+            'key' : 'ffffffffffffffffffff000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '545d50ebd919e4a6949d96ad47e46a80',
+            'key' : 'ffffffffffffffffffff800000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'dbdfb527060e0a71009c7bb0c68f1d44',
+            'key' : 'ffffffffffffffffffffc00000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9cfa1322ea33da2173a024f2ff0d896d',
+            'key' : 'ffffffffffffffffffffe00000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8785b1a75b0f3bd958dcd0e29318c521',
+            'key' : 'fffffffffffffffffffff00000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '38f67b9e98e4a97b6df030a9fcdd0104',
+            'key' : 'fffffffffffffffffffff80000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '192afffb2c880e82b05926d0fc6c448b',
+            'key' : 'fffffffffffffffffffffc0000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6a7980ce7b105cf530952d74daaf798c',
+            'key' : 'fffffffffffffffffffffe0000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ea3695e1351b9d6858bd958cf513ef6c',
+            'key' : 'ffffffffffffffffffffff0000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6da0490ba0ba0343b935681d2cce5ba1',
+            'key' : 'ffffffffffffffffffffff8000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f0ea23af08534011c60009ab29ada2f1',
+            'key' : 'ffffffffffffffffffffffc000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ff13806cf19cc38721554d7c0fcdcd4b',
+            'key' : 'ffffffffffffffffffffffe000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6838af1f4f69bae9d85dd188dcdf0688',
+            'key' : 'fffffffffffffffffffffff000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '36cf44c92d550bfb1ed28ef583ddf5d7',
+            'key' : 'fffffffffffffffffffffff800000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd06e3195b5376f109d5c4ec6c5d62ced',
+            'key' : 'fffffffffffffffffffffffc00000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c440de014d3d610707279b13242a5c36',
+            'key' : 'fffffffffffffffffffffffe00000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f0c5c6ffa5e0bd3a94c88f6b6f7c16b9',
+            'key' : 'ffffffffffffffffffffffff00000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '3e40c3901cd7effc22bffc35dee0b4d9',
+            'key' : 'ffffffffffffffffffffffff80000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b63305c72bedfab97382c406d0c49bc6',
+            'key' : 'ffffffffffffffffffffffffc0000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '36bbaab22a6bd4925a99a2b408d2dbae',
+            'key' : 'ffffffffffffffffffffffffe0000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '307c5b8fcd0533ab98bc51e27a6ce461',
+            'key' : 'fffffffffffffffffffffffff0000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '829c04ff4c07513c0b3ef05c03e337b5',
+            'key' : 'fffffffffffffffffffffffff8000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f17af0e895dda5eb98efc68066e84c54',
+            'key' : 'fffffffffffffffffffffffffc000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '277167f3812afff1ffacb4a934379fc3',
+            'key' : 'fffffffffffffffffffffffffe000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '2cb1dc3a9c72972e425ae2ef3eb597cd',
+            'key' : 'ffffffffffffffffffffffffff000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '36aeaa3a213e968d4b5b679d3a2c97fe',
+            'key' : 'ffffffffffffffffffffffffff800000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9241daca4fdd034a82372db50e1a0f3f',
+            'key' : 'ffffffffffffffffffffffffffc00000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c14574d9cd00cf2b5a7f77e53cd57885',
+            'key' : 'ffffffffffffffffffffffffffe00000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '793de39236570aba83ab9b737cb521c9',
+            'key' : 'fffffffffffffffffffffffffff00000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '16591c0f27d60e29b85a96c33861a7ef',
+            'key' : 'fffffffffffffffffffffffffff80000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '44fb5c4d4f5cb79be5c174a3b1c97348',
+            'key' : 'fffffffffffffffffffffffffffc0000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '674d2b61633d162be59dde04222f4740',
+            'key' : 'fffffffffffffffffffffffffffe0000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b4750ff263a65e1f9e924ccfd98f3e37',
+            'key' : 'ffffffffffffffffffffffffffff0000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '62d0662d6eaeddedebae7f7ea3a4f6b6',
+            'key' : 'ffffffffffffffffffffffffffff8000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '70c46bb30692be657f7eaa93ebad9897',
+            'key' : 'ffffffffffffffffffffffffffffc000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '323994cfb9da285a5d9642e1759b224a',
+            'key' : 'ffffffffffffffffffffffffffffe000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1dbf57877b7b17385c85d0b54851e371',
+            'key' : 'fffffffffffffffffffffffffffff000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'dfa5c097cdc1532ac071d57b1d28d1bd',
+            'key' : 'fffffffffffffffffffffffffffff800',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '3a0c53fa37311fc10bd2a9981f513174',
+            'key' : 'fffffffffffffffffffffffffffffc00',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ba4f970c0a25c41814bdae2e506be3b4',
+            'key' : 'fffffffffffffffffffffffffffffe00',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '2dce3acb727cd13ccd76d425ea56e4f6',
+            'key' : 'ffffffffffffffffffffffffffffff00',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5160474d504b9b3eefb68d35f245f4b3',
+            'key' : 'ffffffffffffffffffffffffffffff80',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '41a8a947766635dec37553d9a6c0cbb7',
+            'key' : 'ffffffffffffffffffffffffffffffc0',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '25d6cfe6881f2bf497dd14cd4ddf445b',
+            'key' : 'ffffffffffffffffffffffffffffffe0',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '41c78c135ed9e98c096640647265da1e',
+            'key' : 'fffffffffffffffffffffffffffffff0',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5a4d404d8917e353e92a21072c3b2305',
+            'key' : 'fffffffffffffffffffffffffffffff8',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '02bc96846b3fdc71643f384cd3cc3eaf',
+            'key' : 'fffffffffffffffffffffffffffffffc',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9ba4a9143f4e5d4048521c4f8877d88e',
+            'key' : 'fffffffffffffffffffffffffffffffe',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a1f6258c877d5fcd8964484538bfc92c',
+            'key' : 'ffffffffffffffffffffffffffffffff',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'de885dc87f5a92594082d02cc1e1b42c',
+            'key' : '800000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '132b074e80f2a597bf5febd8ea5da55e',
+            'key' : 'c00000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6eccedf8de592c22fb81347b79f2db1f',
+            'key' : 'e00000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '180b09f267c45145db2f826c2582d35c',
+            'key' : 'f00000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'edd807ef7652d7eb0e13c8b5e15b3bc0',
+            'key' : 'f80000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9978bcf8dd8fd72241223ad24b31b8a4',
+            'key' : 'fc0000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5310f654343e8f27e12c83a48d24ff81',
+            'key' : 'fe0000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '833f71258d53036b02952c76c744f5a1',
+            'key' : 'ff0000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'eba83ff200cff9318a92f8691a06b09f',
+            'key' : 'ff8000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ff620ccbe9f3292abdf2176b09f04eba',
+            'key' : 'ffc000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7ababc4b3f516c9aafb35f4140b548f9',
+            'key' : 'ffe000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'aa187824d9c4582b0916493ecbde8c57',
+            'key' : 'fff000000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1c0ad553177fd5ea1092c9d626a29dc4',
+            'key' : 'fff800000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a5dc46c37261194124ecaebd680408ec',
+            'key' : 'fffc00000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e4f2f2ae23e9b10bacfa58601531ba54',
+            'key' : 'fffe00000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b7d67cf1a1e91e8ff3a57a172c7bf412',
+            'key' : 'ffff00000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '26706be06967884e847d137128ce47b3',
+            'key' : 'ffff80000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b2f8b409b0585909aad3a7b5a219072a',
+            'key' : 'ffffc0000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5e4b7bff0290c78344c54a23b722cd20',
+            'key' : 'ffffe0000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '07093657552d4414227ce161e9ebf7dd',
+            'key' : 'fffff0000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e1af1e7d8bc225ed4dffb771ecbb9e67',
+            'key' : 'fffff8000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ef6555253635d8432156cfd9c11b145a',
+            'key' : 'fffffc000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fb4035074a5d4260c90cbd6da6c3fceb',
+            'key' : 'fffffe000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '446ee416f9ad1c103eb0cc96751c88e1',
+            'key' : 'ffffff000000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '198ae2a4637ac0a7890a8fd1485445c9',
+            'key' : 'ffffff800000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '562012ec8faded0825fb2fa70ab30cbd',
+            'key' : 'ffffffc00000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'cc8a64b46b5d88bf7f247d4dbaf38f05',
+            'key' : 'ffffffe00000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a168253762e2cc81b42d1e5001762699',
+            'key' : 'fffffff00000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1b41f83b38ce5032c6cd7af98cf62061',
+            'key' : 'fffffff80000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '61a89990cd1411750d5fb0dc988447d4',
+            'key' : 'fffffffc0000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b5accc8ed629edf8c68a539183b1ea82',
+            'key' : 'fffffffe0000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b16fa71f846b81a13f361c43a851f290',
+            'key' : 'ffffffff0000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '4fad6efdff5975aee7692234bcd54488',
+            'key' : 'ffffffff8000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ebfdb05a783d03082dfe5fdd80a00b17',
+            'key' : 'ffffffffc000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'eb81b584766997af6ba5529d3bdd8609',
+            'key' : 'ffffffffe000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '0cf4ff4f49c8a0ca060c443499e29313',
+            'key' : 'fffffffff000000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'cc4ba8a8e029f8b26d8afff9df133bb6',
+            'key' : 'fffffffff800000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fefebf64360f38e4e63558f0ffc550c3',
+            'key' : 'fffffffffc00000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '12ad98cbf725137d6a8108c2bed99322',
+            'key' : 'fffffffffe00000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6afaa996226198b3e2610413ce1b3f78',
+            'key' : 'ffffffffff00000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '2a8ce6747a7e39367828e290848502d9',
+            'key' : 'ffffffffff80000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '223736e8b8f89ca1e37b6deab40facf1',
+            'key' : 'ffffffffffc0000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c0f797e50418b95fa6013333917a9480',
+            'key' : 'ffffffffffe0000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a758de37c2ece2a02c73c01fedc9a132',
+            'key' : 'fffffffffff0000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '3a9b87ae77bae706803966c66c73adbd',
+            'key' : 'fffffffffff8000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd365ab8df8ffd782e358121a4a4fc541',
+            'key' : 'fffffffffffc000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c8dcd9e6f75e6c36c8daee0466f0ed74',
+            'key' : 'fffffffffffe000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c79a637beb1c0304f14014c037e736dd',
+            'key' : 'ffffffffffff000000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '105f0a25e84ac930d996281a5f954dd9',
+            'key' : 'ffffffffffff800000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '42e4074b2927973e8d17ffa92f7fe615',
+            'key' : 'ffffffffffffc00000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '4fe2a9d2c1824449c69e3e0398f12963',
+            'key' : 'ffffffffffffe00000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b7f29c1e1f62847a15253b28a1e9d712',
+            'key' : 'fffffffffffff00000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '36ed5d29b903f31e8983ef8b0a2bf990',
+            'key' : 'fffffffffffff80000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '27b8070270810f9d023f9dd7ff3b4aa2',
+            'key' : 'fffffffffffffc0000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '94d46e155c1228f61d1a0db4815ecc4b',
+            'key' : 'fffffffffffffe0000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ca6108d1d98071428eeceef1714b96dd',
+            'key' : 'ffffffffffffff0000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'dc5b25b71b6296cf73dd2cdcac2f70b1',
+            'key' : 'ffffffffffffff8000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '44aba95e8a06a2d9d3530d2677878c80',
+            'key' : 'ffffffffffffffc000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a570d20e89b467e8f5176061b81dd396',
+            'key' : 'ffffffffffffffe000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '758f4467a5d8f1e7307dc30b34e404f4',
+            'key' : 'fffffffffffffff000000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'bcea28e9071b5a2302970ff352451bc5',
+            'key' : 'fffffffffffffff800000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7523c00bc177d331ad312e09c9015c1c',
+            'key' : 'fffffffffffffffc00000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ccac61e3183747b3f5836da21a1bc4f4',
+            'key' : 'fffffffffffffffe00000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '707b075791878880b44189d3522b8c30',
+            'key' : 'ffffffffffffffff00000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7132d0c0e4a07593cf12ebb12be7688c',
+            'key' : 'ffffffffffffffff80000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'effbac1644deb0c784275fe56e19ead3',
+            'key' : 'ffffffffffffffffc0000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a005063f30f4228b374e2459738f26bb',
+            'key' : 'ffffffffffffffffe0000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '29975b5f48bb68fcbbc7cea93b452ed7',
+            'key' : 'fffffffffffffffff0000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'cf3f2576e2afedc74bb1ca7eeec1c0e7',
+            'key' : 'fffffffffffffffff8000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '07c403f5f966e0e3d9f296d6226dca28',
+            'key' : 'fffffffffffffffffc000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c8c20908249ab4a34d6dd0a31327ff1a',
+            'key' : 'fffffffffffffffffe000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c0541329ecb6159ab23b7fc5e6a21bca',
+            'key' : 'ffffffffffffffffff000000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7aa1acf1a2ed9ba72bc6deb31d88b863',
+            'key' : 'ffffffffffffffffff800000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '808bd8eddabb6f3bf0d5a8a27be1fe8a',
+            'key' : 'ffffffffffffffffffc00000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '273c7d7685e14ec66bbb96b8f05b6ddd',
+            'key' : 'ffffffffffffffffffe00000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '32752eefc8c2a93f91b6e73eb07cca6e',
+            'key' : 'fffffffffffffffffff00000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd893e7d62f6ce502c64f75e281f9c000',
+            'key' : 'fffffffffffffffffff80000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8dfd999be5d0cfa35732c0ddc88ff5a5',
+            'key' : 'fffffffffffffffffffc0000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '02647c76a300c3173b841487eb2bae9f',
+            'key' : 'fffffffffffffffffffe0000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '172df8b02f04b53adab028b4e01acd87',
+            'key' : 'ffffffffffffffffffff0000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '054b3bf4998aeb05afd87ec536533a36',
+            'key' : 'ffffffffffffffffffff8000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '3783f7bf44c97f065258a666cae03020',
+            'key' : 'ffffffffffffffffffffc000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'aad4c8a63f80954104de7b92cede1be1',
+            'key' : 'ffffffffffffffffffffe000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'cbfe61810fd5467ccdacb75800f3ac07',
+            'key' : 'fffffffffffffffffffff000000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '830d8a2590f7d8e1b55a737f4af45f34',
+            'key' : 'fffffffffffffffffffff800000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fffcd4683f858058e74314671d43fa2c',
+            'key' : 'fffffffffffffffffffffc00000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '523d0babbb82f46ebc9e70b1cd41ddd0',
+            'key' : 'fffffffffffffffffffffe00000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '344aab37080d7486f7d542a309e53eed',
+            'key' : 'ffffffffffffffffffffff00000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '56c5609d0906b23ab9caca816f5dbebd',
+            'key' : 'ffffffffffffffffffffff80000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7026026eedd91adc6d831cdf9894bdc6',
+            'key' : 'ffffffffffffffffffffffc0000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '88330baa4f2b618fc9d9b021bf503d5a',
+            'key' : 'ffffffffffffffffffffffe0000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fc9e0ea22480b0bac935c8a8ebefcdcf',
+            'key' : 'fffffffffffffffffffffff0000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '29ca779f398fb04f867da7e8a44756cb',
+            'key' : 'fffffffffffffffffffffff8000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '51f89c42985786bfc43c6df8ada36832',
+            'key' : 'fffffffffffffffffffffffc000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6ac1de5fb8f21d874e91c53b560c50e3',
+            'key' : 'fffffffffffffffffffffffe000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '03aa9058490eda306001a8a9f48d0ca7',
+            'key' : 'ffffffffffffffffffffffff000000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e34ec71d6128d4871865d617c30b37e3',
+            'key' : 'ffffffffffffffffffffffff800000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '14be1c535b17cabd0c4d93529d69bf47',
+            'key' : 'ffffffffffffffffffffffffc00000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c9ef67756507beec9dd3862883478044',
+            'key' : 'ffffffffffffffffffffffffe00000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '40e231fa5a5948ce2134e92fc0664d4b',
+            'key' : 'fffffffffffffffffffffffff00000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '03194b8e5dda5530d0c678c0b48f5d92',
+            'key' : 'fffffffffffffffffffffffff80000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '90bd086f237cc4fd99f4d76bde6b4826',
+            'key' : 'fffffffffffffffffffffffffc0000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '19259761ca17130d6ed86d57cd7951ee',
+            'key' : 'fffffffffffffffffffffffffe0000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd7cbb3f34b9b450f24b0e8518e54da6d',
+            'key' : 'ffffffffffffffffffffffffff0000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '725b9caebe9f7f417f4068d0d2ee20b3',
+            'key' : 'ffffffffffffffffffffffffff8000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9d924b934a90ce1fd39b8a9794f82672',
+            'key' : 'ffffffffffffffffffffffffffc000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c50562bf094526a91c5bc63c0c224995',
+            'key' : 'ffffffffffffffffffffffffffe000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd2f11805046743bd74f57188d9188df7',
+            'key' : 'fffffffffffffffffffffffffff000000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8dd274bd0f1b58ae345d9e7233f9b8f3',
+            'key' : 'fffffffffffffffffffffffffff800000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9d6bdc8f4ce5feb0f3bed2e4b9a9bb0b',
+            'key' : 'fffffffffffffffffffffffffffc00000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fd5548bcf3f42565f7efa94562528d46',
+            'key' : 'fffffffffffffffffffffffffffe00000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd2ccaebd3a4c3e80b063748131ba4a71',
+            'key' : 'ffffffffffffffffffffffffffff00000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e03cb23d9e11c9d93f117e9c0a91b576',
+            'key' : 'ffffffffffffffffffffffffffff80000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '78f933a2081ac1db84f69d10f4523fe0',
+            'key' : 'ffffffffffffffffffffffffffffc0000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '4061f7412ed320de0edc8851c2e2436f',
+            'key' : 'ffffffffffffffffffffffffffffe0000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9064ba1cd04ce6bab98474330814b4d4',
+            'key' : 'fffffffffffffffffffffffffffff0000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '48391bffb9cfff80ac238c886ef0a461',
+            'key' : 'fffffffffffffffffffffffffffff8000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b8d2a67df5a999fdbf93edd0343296c9',
+            'key' : 'fffffffffffffffffffffffffffffc000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'aaca7367396b69a221bd632bea386eec',
+            'key' : 'fffffffffffffffffffffffffffffe000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a80fd5020dfe65f5f16293ec92c6fd89',
+            'key' : 'ffffffffffffffffffffffffffffff000000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '2162995b8217a67f1abc342e146406f8',
+            'key' : 'ffffffffffffffffffffffffffffff800000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c6a6164b7a60bae4e986ffac28dfadd9',
+            'key' : 'ffffffffffffffffffffffffffffffc00000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '64e0d7f900e3d9c83e4b8f96717b2146',
+            'key' : 'ffffffffffffffffffffffffffffffe00000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1ad2561de8c1232f5d8dbab4739b6cbb',
+            'key' : 'fffffffffffffffffffffffffffffff00000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '279689e9a557f58b1c3bf40c97a90964',
+            'key' : 'fffffffffffffffffffffffffffffff80000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c4637e4a5e6377f9cc5a8638045de029',
+            'key' : 'fffffffffffffffffffffffffffffffc0000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '492e607e5aea4688594b45f3aee3df90',
+            'key' : 'fffffffffffffffffffffffffffffffe0000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e8c4e4381feec74054954c05b777a00a',
+            'key' : 'ffffffffffffffffffffffffffffffff0000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '91549514605f38246c9b724ad839f01d',
+            'key' : 'ffffffffffffffffffffffffffffffff8000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '74b24e3b6fefe40a4f9ef7ac6e44d76a',
+            'key' : 'ffffffffffffffffffffffffffffffffc000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '2437a683dc5d4b52abb4a123a8df86c6',
+            'key' : 'ffffffffffffffffffffffffffffffffe000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'bb2852c891c5947d2ed44032c421b85f',
+            'key' : 'fffffffffffffffffffffffffffffffff000000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1b9f5fbd5e8a4264c0a85b80409afa5e',
+            'key' : 'fffffffffffffffffffffffffffffffff800000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '30dab809f85a917fe924733f424ac589',
+            'key' : 'fffffffffffffffffffffffffffffffffc00000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'eaef5c1f8d605192646695ceadc65f32',
+            'key' : 'fffffffffffffffffffffffffffffffffe00000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b8aa90040b4c15a12316b78e0f9586fc',
+            'key' : 'ffffffffffffffffffffffffffffffffff00000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '97fac8297ceaabc87d454350601e0673',
+            'key' : 'ffffffffffffffffffffffffffffffffff80000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9b47ef567ac28dfe488492f157e2b2e0',
+            'key' : 'ffffffffffffffffffffffffffffffffffc0000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1b8426027ddb962b5c5ba7eb8bc9ab63',
+            'key' : 'ffffffffffffffffffffffffffffffffffe0000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'e917fc77e71992a12dbe4c18068bec82',
+            'key' : 'fffffffffffffffffffffffffffffffffff0000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'dceebbc98840f8ae6daf76573b7e56f4',
+            'key' : 'fffffffffffffffffffffffffffffffffff8000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '4e11a9f74205125b61e0aee047eca20d',
+            'key' : 'fffffffffffffffffffffffffffffffffffc000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f60467f55a1f17eab88e800120cbc284',
+            'key' : 'fffffffffffffffffffffffffffffffffffe000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd436649f600b449ee276530f0cd83c11',
+            'key' : 'ffffffffffffffffffffffffffffffffffff000000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '3bc0e3656a9e3ac7cd378a737f53b637',
+            'key' : 'ffffffffffffffffffffffffffffffffffff800000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '6bacae63d33b928aa8380f8d54d88c17',
+            'key' : 'ffffffffffffffffffffffffffffffffffffc00000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8935ffbc75ae6251bf8e859f085adcb9',
+            'key' : 'ffffffffffffffffffffffffffffffffffffe00000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '93dc4970fe35f67747cb0562c06d875a',
+            'key' : 'fffffffffffffffffffffffffffffffffffff00000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '14f9df858975851797ba604fb0d16cc7',
+            'key' : 'fffffffffffffffffffffffffffffffffffff80000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '02ea0c98dca10b38c21b3b14e8d1b71f',
+            'key' : 'fffffffffffffffffffffffffffffffffffffc0000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8f091b1b5b0749b2adc803e63dda9b72',
+            'key' : 'fffffffffffffffffffffffffffffffffffffe0000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '05b389e3322c6da08384345a4137fd08',
+            'key' : 'ffffffffffffffffffffffffffffffffffffff0000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '381308c438f35b399f10ad71b05027d8',
+            'key' : 'ffffffffffffffffffffffffffffffffffffff8000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '68c230fcfa9279c3409fc423e2acbe04',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffc000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '1c84a475acb011f3f59f4f46b76274c0',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffe000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '45119b68cb3f8399ee60066b5611a4d7',
+            'key' : 'fffffffffffffffffffffffffffffffffffffff000000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '9423762f527a4060ffca312dcca22a16',
+            'key' : 'fffffffffffffffffffffffffffffffffffffff800000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'f361a2745a33f056a5ac6ace2f08e344',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffc00000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5ef145766eca849f5d011536a6557fdb',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffe00000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c9af27b2c89c9b4cf4a0c4106ac80318',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffff00000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fb9c4f16c621f4eab7e9ac1d7551dd57',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffff80000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '138e06fba466fa70854d8c2e524cffb2',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffc0000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fb4bc78b225070773f04c40466d4e90c',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffe0000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8b2cbff1ed0150feda8a4799be94551f',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffff0000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '08b30d7b3f27962709a36bcadfb974bd',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffff8000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'fdf6d32e044d77adcf37fb97ac213326',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffc000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '93cb284ecdcfd781a8afe32077949e88',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffe000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '7b017bb02ec87b2b94c96e40a26fc71a',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffff000000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c5c038b6990664ab08a3aaa5df9f3266',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffff800000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '4b7020be37fab6259b2a27f4ec551576',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffc00000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '60136703374f64e860b48ce31f930716',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffe00000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8d63a269b14d506ccc401ab8a9f1b591',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffff00000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd317f81dc6aa454aee4bd4a5a5cff4bd',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffff80000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'dddececd5354f04d530d76ed884246eb',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffc0000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '41c5205cc8fd8eda9a3cffd2518f365a',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffe0000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'cf42fb474293d96eca9db1b37b1ba676',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffff0000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'a231692607169b4ecdead5cd3b10db3e',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffff8000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ace4b91c9c669e77e7acacd19859ed49',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffc000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '75db7cfd4a7b2b62ab78a48f3ddaf4af',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffe000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'c1faba2d46e259cf480d7c38e4572a58',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffff000',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '241c45bc6ae16dee6eb7bea128701582',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffff800',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '8fd03057cf1364420c2b78069a3e2502',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffc00',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'ddb505e6cc1384cbaec1df90b80beb20',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffe00',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5674a3bed27bf4bd3622f9f5fe208306',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffff00',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'b687f26a89cfbfbb8e5eeac54055315e',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffff80',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '0547dd32d3b29ab6a4caeb606c5b6f78',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffffc0',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '186861f8bc5386d31fb77f720c3226e6',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffffe0',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'eacf1e6c4224efb38900b185ab1dfd42',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffff0',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'd241aab05a42d319de81d874f5c7b90d',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffff8',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '5eb9bc759e2ad8d2140a6c762ae9e1ab',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffffc',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : '018596e15e78e2c064159defce5f3085',
+            'key' : 'fffffffffffffffffffffffffffffffffffffffffffffffe',
+            'result' : '00000000000000000000000000000000'
+       },
+       {    'cipher_type' : '1',
+            'cipher_text' : 'dd8a493514231cbf56eccee4c40889fb',
+            'key' : 'ffffffffffffffffffffffffffffffffffffffffffffffff',
+            'result' : '00000000000000000000000000000000'
+       }
+   ]
+}
