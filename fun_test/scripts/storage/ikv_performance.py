@@ -120,7 +120,7 @@ class FunTestCase1(FunTestCase):
                                           value_hex=i['value_hex'],
                                           expected_timeout=expected_cmd_duration)
             if leftover_insert['status']:
-                if not leftover_insert['data']['status']:
+                if leftover_insert['data']['status']:
                     key_value_store.remove(i)
 
         del key_value_store1
