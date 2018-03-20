@@ -110,7 +110,7 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(put_count, message="No of puts performed for size {0}bytes: {1}".format(size, put_count))
 
         # put remaining key values
-        additional_puts = put_count + 75
+        additional_puts = put_count + 100
         ulimit = additional_puts if additional_puts < store_len else store_len
         key_value_store1 = key_value_store[put_count:ulimit]
         key_value_store = key_value_store[:ulimit]
