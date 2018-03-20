@@ -121,7 +121,7 @@ class FunTestCase1(FunTestCase):
                                                           name=volume_name,
                                                           uuid=this_uuid)
             fun_test.test_assert(result["status"], "create_thin_block_volume on Dut Instance {}".format(index))
-            result = storage_controller.attach_volume(ns_id=ns_id, uuid=this_uuid, remote_ip=dut_instance2.data_plane_ip)
+            result = storage_controller.volume_attach_remote(ns_id=ns_id, uuid=this_uuid, remote_ip=dut_instance2.data_plane_ip)
             fun_test.test_assert(result["status"], "attach volume on Dut Instance {}".format(index))
 
         fun_test.add_checkpoint("Importing volumes on index 2")

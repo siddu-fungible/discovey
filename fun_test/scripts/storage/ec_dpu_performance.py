@@ -280,7 +280,7 @@ class ECDPULevelTestcase(FunTestCase):
                                          format(type, i))
 
                     # Attaching the BLT to the DPU in the which the EC volume going to be configured
-                    command_result = self.storage_controller[type][i].attach_volume(
+                    command_result = self.storage_controller[type][i].volume_attach_remote(
                         ns_id=self.ns_id[type], uuid=this_uuid, remote_ip=ec_dut.data_plane_ip,
                         expected_command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -354,7 +354,7 @@ class ECDPULevelTestcase(FunTestCase):
                 ns_id = self.ns_id["lsv"]
 
             # Attaching/Exporting the EC/LS volume to the external server
-            command_result = self.storage_controller["ec"][0].attach_volume(
+            command_result = self.storage_controller["ec"][0].volume_attach_remote(
                 ns_id=ns_id, uuid=attach_uuid, remote_ip=self.linux_host.internal_ip,
                 expected_command_duration=self.command_timeout)
             fun_test.log(command_result)

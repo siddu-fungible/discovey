@@ -245,7 +245,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Create BLT volume on {} DUT instance".format(i))
 
                 # Attaching the BLT to the DPU in the which the Replica volume going to be configured
-                command_result = self.storage_controller["blt"][i].attach_volume(
+                command_result = self.storage_controller["blt"][i].volume_attach_remote(
                     ns_id=self.ns_id["blt"], uuid=this_uuid, remote_ip=replica_dut.data_plane_ip,
                     expected_command_duration=self.command_timeout)
                 fun_test.log(command_result)
@@ -303,7 +303,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
             ns_id = self.ns_id["replica"]
 
             # Attaching/Exporting the Replica volume to the external server
-            command_result = self.storage_controller["replica"][0].attach_volume(
+            command_result = self.storage_controller["replica"][0].volume_attach_remote(
                 ns_id=ns_id, uuid=attach_uuid, remote_ip=self.linux_host.internal_ip,
                 expected_command_duration=self.command_timeout)
             fun_test.log(command_result)

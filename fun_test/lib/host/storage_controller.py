@@ -25,11 +25,17 @@ class StorageController(DpcshClient):
         create_dict["params"]["name"] = name
         return self.json_command(create_dict, expected_command_duration=expected_command_duration)
 
-    def attach_volume(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, expected_command_duration=3):
+    def volume_attach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, expected_command_duration=3):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
                                   "remote_ip": remote_ip}}
+        return self.json_command(attach_dict, expected_command_duration=expected_command_duration)
+
+    def volume_attach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=4, expected_command_duration=3):
+        attach_dict = {"class": "controller",
+                       "opcode": "ATTACH",
+                       "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_command(attach_dict, expected_command_duration=expected_command_duration)
 
     def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid, expected_command_duration=2):

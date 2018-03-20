@@ -191,7 +191,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
             command_result = {}
-            command_result = self.storage_controller.attach_volume(
+            command_result = self.storage_controller.volume_attach_remote(
                 ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, remote_ip=self.linux_host.internal_ip,
                 expected_command_duration=self.command_timeout)
             fun_test.log(command_result)

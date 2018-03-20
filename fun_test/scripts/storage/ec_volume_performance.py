@@ -245,7 +245,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Attaching/Exporting the EC/LS volume to the external server
             command_result = {}
-            command_result = self.storage_controller.attach_volume(
+            command_result = self.storage_controller.volume_attach_remote(
                 ns_id=self.ns_id, uuid=attach_uuid, remote_ip=self.linux_host.internal_ip,
                 expected_command_duration=self.command_timeout)
             fun_test.log(command_result)
