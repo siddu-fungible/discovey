@@ -3,6 +3,7 @@
 *.log
 *.sqlite3
 *.png
+*.out
 fun_test/web/static/logs/*.html
 fun_test/web/static/logs/*json
 fun_test/scripts/scratch/*.*
