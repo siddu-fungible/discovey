@@ -9,6 +9,7 @@ class LibkcapiTemplate(CryptoTemplate):
     CTR_AES = "ctr(aes)"
     ECB_AES = "ecb(aes)"
     XTS_AES = "xts(aes)"
+    CBC_AES = "cbc(aes)"
     AUTH_ENC = "authenc(hmac(sha1),cbc(aes))"
 
     def __init__(self, host):
@@ -16,7 +17,7 @@ class LibkcapiTemplate(CryptoTemplate):
 
     def setup(self,path):
         fun_test.scp(source_file_path=path, target_ip=self.host.host_ip, target_port=self.host.ssh_port, target_username=self.host.ssh_username, target_password=self.host.ssh_password,
-                     target_file_path="/tmp", recursive=True)
+                     target_file_path="/tmp", timeout=90, recursive=True)
         self.host.command("export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/libkcapi/lib")
         return True
 
@@ -66,4 +67,12 @@ class LibkcapiTemplate(CryptoTemplate):
 
     def auth_enc(self, algorithm, cipher_type, plain_text, key, iv, assoc_data, tag_len):
         output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -e -c  \"" + algorithm + "\" -p " + plain_text + " -k " + key + " -i " + iv + " -a " + assoc_data + " -l " + tag_len).strip()
+        return output
+
+    def enc_cbc_aes(self, algorithm, cipher_type, plain_text, key, iv):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -e -c  \"" + algorithm + "\" -p " + plain_text + " -k " + key + " -i " + iv).strip()
+        return output
+
+    def dec_cbc_aes(self, algorithm, cipher_type, cipher_text, key, iv):
+        output = self.host.command("/tmp/libkcapi/bin/kcapi -x " + cipher_type + " -c  \"" + algorithm + "\" -q " + cipher_text + " -i " + iv + " -k " + key).strip()
         return output

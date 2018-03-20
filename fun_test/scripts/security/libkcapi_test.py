@@ -287,14 +287,54 @@ class LibkcapiTestCase6(FunTestCase):
             fun_test.test_assert((enc_output == enc_dict['result']), "authenc verified ")
 
 
+class LibkcapiTestCase7(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Run cbc(aes) with libkcapi",
+                              steps="""
+        1. Encrypt and decrypt cbc(aes) with a sample plain text using kcapi command 
+        2. Compare with the known output and ensure they are equal
+
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = fun_test.shared_variables["input_dict"]
+        enc_dicts = []
+        dec_dicts = []
+        for dict in input_dict:
+            if dict == "enc_cbc(aes)":
+                enc_dicts = input_dict[dict]
+            elif dict == "dec_cbc(aes)":
+                dec_dicts = input_dict[dict]
+
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.enc_cbc_aes(LibkcapiTemplate.CBC_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
+                                              enc_dict['key'], enc_dict['iv'])).strip()
+            fun_test.test_assert((enc_output == enc_dict['result']), "cbc(aes) encryption verified ")
+
+        for dec_dict in dec_dicts:
+            dec_output = (libkcapi_template.dec_cbc_aes(LibkcapiTemplate.CBC_AES, dec_dict['cipher_type'],
+                                                        dec_dict['cipher_text'],
+                                                        dec_dict['key'], enc_dict['iv'])).strip()
+            fun_test.test_assert((dec_output == dec_dict['result']), "cbc(aes) decryption verified ")
+
+
 if __name__ == "__main__":
     libkcapi_script = LibkcapiScript()
 
-    libkcapi_script.add_test_case(LibkcapiTestCase1())
-    libkcapi_script.add_test_case(LibkcapiTestCase2())
-    libkcapi_script.add_test_case(LibkcapiTestCase3())
-    libkcapi_script.add_test_case(LibkcapiTestCase4())
-    libkcapi_script.add_test_case(LibkcapiTestCase5())
-    libkcapi_script.add_test_case(LibkcapiTestCase6())
+#    libkcapi_script.add_test_case(LibkcapiTestCase1())
+#    libkcapi_script.add_test_case(LibkcapiTestCase2())
+#    libkcapi_script.add_test_case(LibkcapiTestCase3())
+#    libkcapi_script.add_test_case(LibkcapiTestCase4())
+#    libkcapi_script.add_test_case(LibkcapiTestCase5())
+#    libkcapi_script.add_test_case(LibkcapiTestCase6())
+    libkcapi_script.add_test_case(LibkcapiTestCase7())
 
     libkcapi_script.run()
