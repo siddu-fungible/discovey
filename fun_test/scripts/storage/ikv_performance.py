@@ -103,8 +103,8 @@ class FunTestCase1(FunTestCase):
                     put_count += 1
                 else:
                     fun_test.log("Check Put performed for key: {0} value: {1}".format(
-                                       key_value_store[put_count]['key_hex'],
-                                       key_value_store[put_count]['value_hex']))
+                        key_value_store[put_count]['key_hex'],
+                        key_value_store[put_count]['value_hex']))
 
         result['Puts/sec'] = "{0:.2f}".format(put_count / float(duration))
         fun_test.test_assert(put_count, message="No of puts performed for size {0}bytes: {1}".format(size, put_count))
@@ -123,8 +123,12 @@ class FunTestCase1(FunTestCase):
             if leftover_insert['status']:
                 if leftover_insert['data']['status']:
                     key_value_store.remove(i)
-            fun_test.test_assert(error_cnt < 10, message="10 puts failed check funos", ignore_on_success=True)
-
+                    error_cnt += 1
+                    fun_test.test_assert(error_cnt < 10,
+                                         message="10 successive put calls failed check FunOs status",
+                                         ignore_on_success=True)
+            else:
+                error_cnt += 1
         del key_value_store1
 
         get_count = 0
@@ -132,16 +136,21 @@ class FunTestCase1(FunTestCase):
         while not timer.is_expired():
             get_response = ikv_obj.get(key=key_value_store[get_count]['key_hex'])
             if get_response['status']:
-                fun_test.test_assert_expected(actual=key_value_store[get_count]['value_hex'],
-                                              expected=get_response['data']['value'],
-                                              ignore_on_success=True,
-                                              message="Compare retrieved data with generated data for shasum: {}".
-                                              format(key_value_store[get_count]['key_hex']))
-                get_count += 1
+                if get_response['data']['status'] == ikv_obj.LIKV_STATUS_SUCCESS:
+                    if key_value_store[get_count]['value_hex'] == get_response['data']['value']:
+                        get_count += 1
+                    else:
+                        fun_test.test_assert_expected(actual=key_value_store[get_count]['value_hex'],
+                                                      expected=get_response['data']['value'],
+                                                      ignore_on_success=True,
+                                                      message="Compare retrieved data with generated data for shasum: {}".
+                                                      format(key_value_store[get_count]['key_hex']))
+                else:
+                    fun_test.simple_assert(get_response['data']['status'] == ikv_obj.LIKV_STATUS_SUCCESS,
+                                           message="Retrieve data using get for key: {}".format(
+                                               key_value_store[put_count]['key_hex']))
             else:
-                fun_test.simple_assert(get_response['data']['status'] == ikv_obj.LIKV_STATUS_SUCCESS,
-                                       message="Retrieve data using get for key: {}".format(
-                                           key_value_store[put_count]['key_hex']))
+                fun_test.test_assert(get_response['status'], message="IKV get call failed", ignore_on_success=True)
         result['Gets/sec'] = "{0:.2f}".format(float(get_count) / float(duration))
         fun_test.test_assert(get_count, message="No of gets performed for size {0}bytes:  {1}".format(size, get_count))
 
