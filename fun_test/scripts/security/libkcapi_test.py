@@ -25,7 +25,7 @@ topology_dict = {
 
 libkcapi_template = ""
 vector_path = "/test_vectors/kcapi_vectors.txt"
-
+cbc_vector_path = "/test_vectors/NIST/CBC/CBCVectors_1.txt"
 
 class LibkcapiScript(FunTestScript):
     def describe(self):
@@ -46,8 +46,8 @@ class LibkcapiScript(FunTestScript):
         fun_test.shared_variables["host"] = host
         fun_test.shared_variables["libkcapi_template"] = libkcapi_template
         fun_test.shared_variables["input_dict"] = input_dict
-        setup_path = fun_test.get_script_parent_directory()+ "/lib_crypto/libkcapi"
-        fun_test.test_assert(libkcapi_template.setup(setup_path), "libkcapi Setup complete")
+        # setup_path = fun_test.get_script_parent_directory()+ "/lib_crypto/libkcapi"
+        # fun_test.test_assert(libkcapi_template.setup(setup_path), "libkcapi Setup complete")
 
 
 
@@ -85,17 +85,18 @@ class LibkcapiTestCase1(FunTestCase):
                 dec_dicts = input_dict[dict]
 
         for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.enc_gcm_aes(LibkcapiTemplate.GCM_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
-                                      enc_dict['key'], enc_dict['iv'], enc_dict['assosc_data'],
-                                      enc_dict['tag_len'])).strip()
-            fun_test.test_assert((enc_output == enc_dict['result']), "gcm(aes) encryption verified ")
+            enc_output = (libkcapi_template.kcapi_encrypt(LibkcapiTemplate.GCM_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
+                                      enc_dict['key'], iv=enc_dict['iv'], assoc_data=enc_dict['assosc_data'],
+                                      tag_len=enc_dict['tag_len'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "gcm(aes) encryption verified")
 
         for dec_dict in dec_dicts:
-
-            dec_output = (libkcapi_template.dec_gcm_aes(LibkcapiTemplate.GCM_AES, dec_dict['cipher_type'], dec_dict['cipher_text'],
-                                      dec_dict['key'], dec_dict['iv'], dec_dict['assosc_data'],
-                                      dec_dict['tag'])).strip()
-            fun_test.test_assert((dec_output == dec_dict['result']), "gcm(aes) decryption verified ")
+            dec_output = (libkcapi_template.kcapi_decrypt(LibkcapiTemplate.GCM_AES, dec_dict['cipher_type'], dec_dict['cipher_text'],
+                                      dec_dict['key'], iv=dec_dict['iv'], assoc_data=dec_dict['assosc_data'],
+                                      tag=dec_dict['tag'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "gcm(aes) decryption verified")
 
 
 class LibkcapiTestCase2(FunTestCase):
@@ -117,7 +118,7 @@ class LibkcapiTestCase2(FunTestCase):
     def run(self):
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
         input_dict = fun_test.shared_variables["input_dict"]
-        enc_dicts =[]
+        enc_dicts = []
         dec_dicts = []
         for dict in input_dict:
             if dict == "enc_ccm(aes)":
@@ -125,16 +126,18 @@ class LibkcapiTestCase2(FunTestCase):
             elif dict == "dec_ccm(aes)":
                 dec_dicts = input_dict[dict]
         for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.enc_ccm_aes(LibkcapiTemplate.CCM_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
-                                      enc_dict['nonce'], enc_dict['key'], enc_dict['assosc_data'],
-                                      enc_dict['tag'])).strip()
-            fun_test.test_assert((enc_output == enc_dict['result']), "ccm(aes) encryption verified ")
+            enc_output = (libkcapi_template.kcapi_encrypt(LibkcapiTemplate.CCM_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
+                                      enc_dict['key'],nonce=enc_dict['nonce'], assoc_data=enc_dict['assosc_data'],
+                                      tag=enc_dict['tag'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "ccm(aes) encryption verified")
 
         for dec_dict in dec_dicts:
-            dec_output = (libkcapi_template.dec_ccm_aes(LibkcapiTemplate.CCM_AES, dec_dict['cipher_type'], dec_dict['cipher_text'],
-                                      dec_dict['nonce'], dec_dict['key'], dec_dict['assosc_data'],
-                                      dec_dict['tag'])).strip()
-            fun_test.test_assert((dec_output == dec_dict['result']), "ccm(aes) decryption verified ")
+            dec_output = (libkcapi_template.kcapi_decrypt(LibkcapiTemplate.CCM_AES, dec_dict['cipher_type'], dec_dict['cipher_text'],
+                                      dec_dict['key'], nonce=dec_dict['nonce'], assoc_data=dec_dict['assosc_data'],
+                                      tag=dec_dict['tag'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "ccm(aes) decryption verified")
 
 
 
@@ -166,15 +169,17 @@ class LibkcapiTestCase3(FunTestCase):
                 dec_dicts = input_dict[dict]
 
         for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.enc_ctr_aes(LibkcapiTemplate.CTR_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
-                                              enc_dict['key'], enc_dict['iv'])).strip()
-            fun_test.test_assert((enc_output == enc_dict['result']), "ctr(aes) encryption verified ")
+            enc_output = (libkcapi_template.kcapi_encrypt(LibkcapiTemplate.CTR_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
+                                              enc_dict['key'], iv=enc_dict['iv'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "ctr(aes) encryption verified")
 
         for dec_dict in dec_dicts:
-            dec_output = (libkcapi_template.dec_ctr_aes(LibkcapiTemplate.CTR_AES, dec_dict['cipher_type'],
+            dec_output = (libkcapi_template.kcapi_decrypt(LibkcapiTemplate.CTR_AES, dec_dict['cipher_type'],
                                                         dec_dict['cipher_text'],
-                                                        dec_dict['key'], dec_dict['iv'])).strip()
-            fun_test.test_assert((dec_output == dec_dict['result']), "ctr(aes) decryption verified ")
+                                                        dec_dict['key'], iv=dec_dict['iv'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "ctr(aes) decryption verified")
 
 
 
@@ -206,16 +211,17 @@ class LibkcapiTestCase4(FunTestCase):
                 dec_dicts = input_dict[dict]
 
         for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.enc_ecb_aes(LibkcapiTemplate.ECB_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
+            enc_output = (libkcapi_template.kcapi_encrypt(LibkcapiTemplate.ECB_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
                                               enc_dict['key'])).strip()
-            fun_test.test_assert((enc_output == enc_dict['result']), "ecb(aes) encryption verified ")
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "ecb(aes) encryption verified")
 
         for dec_dict in dec_dicts:
-            dec_output = (libkcapi_template.dec_ecb_aes(LibkcapiTemplate.ECB_AES, dec_dict['cipher_type'],
+            dec_output = (libkcapi_template.kcapi_decrypt(LibkcapiTemplate.ECB_AES, dec_dict['cipher_type'],
                                                         dec_dict['cipher_text'],
                                                         dec_dict['key'])).strip()
-            fun_test.test_assert((dec_output == dec_dict['result']), "ecb(aes) decryption verified ")
-
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "ecb(aes) decryption verified")
 
 class LibkcapiTestCase5(FunTestCase):
     def describe(self):
@@ -245,15 +251,17 @@ class LibkcapiTestCase5(FunTestCase):
                 dec_dicts = input_dict[dict]
 
         for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.enc_xts_aes(LibkcapiTemplate.XTS_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
-                                              enc_dict['key'], enc_dict['iv'])).strip()
-            fun_test.test_assert((enc_output == enc_dict['result']), "xts(aes) encryption verified ")
+            enc_output = (libkcapi_template.kcapi_encrypt(LibkcapiTemplate.XTS_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
+                                              enc_dict['key'], iv=enc_dict['iv'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "xts(aes) encryption verified")
 
         for dec_dict in dec_dicts:
-            dec_output = (libkcapi_template.dec_xts_aes(LibkcapiTemplate.XTS_AES, dec_dict['cipher_type'],
+            dec_output = (libkcapi_template.kcapi_decrypt(LibkcapiTemplate.XTS_AES, dec_dict['cipher_type'],
                                                         dec_dict['cipher_text'],
-                                                        dec_dict['key'], dec_dict['iv'])).strip()
-            fun_test.test_assert((dec_output == dec_dict['result']), "xts(aes) decryption verified ")
+                                                        dec_dict['key'], iv=dec_dict['iv'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "xts(aes) decryption verified")
 
 
 class LibkcapiTestCase6(FunTestCase):
@@ -280,11 +288,12 @@ class LibkcapiTestCase6(FunTestCase):
             if dict == "auth_enc":
                 enc_dicts = input_dict[dict]
         for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.auth_enc(LibkcapiTemplate.AUTH_ENC, enc_dict['cipher_type'], enc_dict['plain_text'],
-                                          enc_dict['key'], enc_dict['iv'], enc_dict['assosc_data'],
-                                          enc_dict['tag_len'])).strip()
+            enc_output = (libkcapi_template.kcapi_encrypt(LibkcapiTemplate.AUTH_ENC, enc_dict['cipher_type'], enc_dict['plain_text'],
+                                          enc_dict['key'], iv=enc_dict['iv'], assoc_data=enc_dict['assosc_data'],
+                                          tag_len=enc_dict['tag_len'])).strip()
 
-            fun_test.test_assert((enc_output == enc_dict['result']), "authenc verified ")
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "authenc verified")
 
 
 class LibkcapiTestCase7(FunTestCase):
@@ -305,7 +314,8 @@ class LibkcapiTestCase7(FunTestCase):
 
     def run(self):
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
-        input_dict = fun_test.shared_variables["input_dict"]
+        file_path = fun_test.get_script_parent_directory() + cbc_vector_path
+        input_dict = libkcapi_template.parse_input_libkcapi(file_path)
         enc_dicts = []
         dec_dicts = []
         for dict in input_dict:
@@ -315,26 +325,28 @@ class LibkcapiTestCase7(FunTestCase):
                 dec_dicts = input_dict[dict]
 
         for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.enc_cbc_aes(LibkcapiTemplate.CBC_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
-                                              enc_dict['key'], enc_dict['iv'])).strip()
-            fun_test.test_assert((enc_output == enc_dict['result']), "cbc(aes) encryption verified ")
+            enc_output = (libkcapi_template.kcapi_encrypt(LibkcapiTemplate.CBC_AES, enc_dict['cipher_type'], enc_dict['plain_text'],
+                                              enc_dict['key'], iv=enc_dict['iv'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "cbc(aes) encryption verified")
 
         for dec_dict in dec_dicts:
-            dec_output = (libkcapi_template.dec_cbc_aes(LibkcapiTemplate.CBC_AES, dec_dict['cipher_type'],
-                                                        dec_dict['cipher_text'],
-                                                        dec_dict['key'], enc_dict['iv'])).strip()
-            fun_test.test_assert((dec_output == dec_dict['result']), "cbc(aes) decryption verified ")
+            dec_output = (libkcapi_template.kcapi_decrypt(LibkcapiTemplate.CBC_AES, dec_dict['cipher_type'],
+                                                                dec_dict['cipher_text'], dec_dict['key'],
+                                                                iv=dec_dict['iv'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "cbc(aes) decryption verified")
 
 
 if __name__ == "__main__":
     libkcapi_script = LibkcapiScript()
 
-#    libkcapi_script.add_test_case(LibkcapiTestCase1())
-#    libkcapi_script.add_test_case(LibkcapiTestCase2())
-#    libkcapi_script.add_test_case(LibkcapiTestCase3())
-#    libkcapi_script.add_test_case(LibkcapiTestCase4())
-#    libkcapi_script.add_test_case(LibkcapiTestCase5())
-#    libkcapi_script.add_test_case(LibkcapiTestCase6())
+    libkcapi_script.add_test_case(LibkcapiTestCase1())
+    libkcapi_script.add_test_case(LibkcapiTestCase2())
+    libkcapi_script.add_test_case(LibkcapiTestCase3())
+    libkcapi_script.add_test_case(LibkcapiTestCase4())
+    libkcapi_script.add_test_case(LibkcapiTestCase5())
+    libkcapi_script.add_test_case(LibkcapiTestCase6())
     libkcapi_script.add_test_case(LibkcapiTestCase7())
 
     libkcapi_script.run()

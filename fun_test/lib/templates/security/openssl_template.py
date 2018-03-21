@@ -18,9 +18,6 @@ class OpenSslTemplate(CryptoTemplate):
     SHA512 = "sha512"
     AESCBC128 = "aes-128-cbc"
 
-    def __init__(self, host):
-        self.host = host
-
     def setup(self):
         self.load_funcrypto()
         self.verify_openssl_version()

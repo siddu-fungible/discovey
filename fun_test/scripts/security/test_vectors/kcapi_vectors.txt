@@ -8,7 +8,16 @@
             'assosc_data' : 'afcd7202d621e06ca53b70c2bdff7fb2',
             'tag_len' : '16',
             'result' : 'f4a3eacfbdadd3b1a17117b1d67ffc1f1e21efbbc6d83724a8c296e3bb8cda0c'
+        },
+        {   'cipher_type' : '2',
+            'plain_text' : '89154d0d4129d322e4487bafaa4f6b46',
+            'key' : 'c0ece3e63198af382b5603331cc23fa8',
+            'iv' : '7e489b83622e7228314d878d',
+            'assosc_data' : 'afcd7202d621e06ca53b70c2bdff7fb2',
+            'tag_len' : '15',
+            'result' : 'f4a3eacfbdadd3b1a17117b1d67ffc1f1e21efbbc6d83724a8c296e3bb8cda'
         }
+
     ],
 
     'dec_gcm(aes)':[
@@ -16,6 +25,14 @@
         {   'cipher_type' : '2',
             'cipher_text' : '0c14372e4567a02d23b58f0afc51a746',
             'tag' : '04ae740ef1135ee596b7c91e2288eace',
+            'iv' : '9fbd7193277f65600f7348ca',
+            'key' : '97de3c9d2b0676104decbd6e8cf6fe80',
+            'assosc_data' : '1a02d783682f87300b9d342f3afbb31e',
+            'result' : 'e8703b9b5ef5b454e295a4bae44c7e62'
+        },
+        {   'cipher_type' : '2',
+            'cipher_text' : '0c14372e4567a02d23b58f0afc51a746',
+            'tag' : '04ae740ef1135ee596b7c91e2288ea',
             'iv' : '9fbd7193277f65600f7348ca',
             'key' : '97de3c9d2b0676104decbd6e8cf6fe80',
             'assosc_data' : '1a02d783682f87300b9d342f3afbb31e',
