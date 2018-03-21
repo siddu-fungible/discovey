@@ -23,24 +23,15 @@ class LibkcapiTemplate(CryptoTemplate):
         input_dict = eval((open(file_path, 'r')).read())
         return input_dict
 
-    def kcapi_encrypt(self, algorithm, cipher_type, plain_text, key, iv=None, assoc_data=None, tag=None, tag_len=None, nonce=None):
-        cmd_str = self.KCAPI_PATH + " -x " + cipher_type + " -e -c  \"" + algorithm + "\" -p " + plain_text + " -k " + key
-        if iv:
-            cmd_str += " -i " + iv
-        if assoc_data:
-            cmd_str += " -a " + assoc_data
-        if tag:
-            cmd_str += " -t " + tag
-        if tag_len:
-            cmd_str += " -l " + tag_len
-        if nonce:
-            cmd_str += " -n " + nonce
-
-        output = self.host.command(cmd_str).strip()
-        return output
-
-    def kcapi_decrypt(self, algorithm, cipher_type, cipher_text, key, iv=None, assoc_data=None, tag=None, tag_len=None, nonce=None):
-        cmd_str = self.KCAPI_PATH + " -x " + cipher_type + " -c  \"" + algorithm + "\" -q " + cipher_text + " -k " + key
+    def kcapi_cmnd(self, algorithm, cipher_type, key, encrypt=True, plain_text=None, cipher_text=None, iv=None, assoc_data=None, tag=None, tag_len=None, nonce=None):
+        if encrypt:
+            cmd_str = self.KCAPI_PATH + " -x " + cipher_type + " -e -c  \"" + algorithm + "\" -k " + key
+        else:
+            cmd_str = self.KCAPI_PATH + " -x " + cipher_type + " -c  \"" + algorithm + "\" -k " + key
+        if plain_text:
+            cmd_str += " -p " + plain_text
+        if cipher_text:
+            cmd_str += " -q " + cipher_text
         if iv:
             cmd_str += " -i " + iv
         if assoc_data:
