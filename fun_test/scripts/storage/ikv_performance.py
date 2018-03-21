@@ -124,11 +124,11 @@ class FunTestCase1(FunTestCase):
                 if leftover_insert['data']['status']:
                     key_value_store.remove(i)
                     error_cnt += 1
-                    fun_test.test_assert(error_cnt < 10,
-                                         message="10 successive put calls failed check FunOs status",
-                                         ignore_on_success=True)
             else:
                 error_cnt += 1
+            fun_test.test_assert(error_cnt < 10,
+                                 message="10 successive put calls failed check FunOs status",
+                                 ignore_on_success=True)
         del key_value_store1
 
         get_count = 0
