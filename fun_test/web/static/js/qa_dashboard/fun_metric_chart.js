@@ -1,7 +1,7 @@
 'use strict';
 
 
-function FunMetricChartController($scope, commonService) {
+function FunMetricChartController($scope, commonService, $attrs) {
 
     let ctrl = this;
 
@@ -16,20 +16,32 @@ function FunMetricChartController($scope, commonService) {
         //console.log(ctrl.width);
         $scope.width = ctrl.width;
         $scope.height = ctrl.height;
+        $scope.pointClickCallback = null;
+        $scope.xAxisFormatter = null;
+        $scope.tooltipFormatter = null;
+        if (ctrl.pointClickCallback) {
+            $scope.pointClickCallback = (point) => {
+                ctrl.pointClickCallback()(point);
+            };
+        }
+
+        if (ctrl.xaxisFormatter) {
+            $scope.xAxisFormatter = (value) => {
+                if(!$attrs.xaxisFormatter) return null;
+                return ctrl.xaxisFormatter()(value);
+            };
+        }
+
+        if (ctrl.tooltipFormatter) {
+            $scope.tooltipFormatter = (x, y) => {
+                return ctrl.tooltipFormatter()(x, y);
+            };
+        }
+
         /*$scope.pointClickCallback = ctrl.pointClickCallback;*/
     };
 
-    $scope.pointClickCallback = (point) => {
-        ctrl.pointClickCallback()(point);
-    };
 
-    $scope.xAxisFormatter = (value) => {
-        return ctrl.xaxisFormatter()(value);
-    };
-
-    $scope.tooltipFormatter = (x, y) => {
-        return ctrl.tooltipFormatter()(x, y);
-    };
 
     $scope.$watch(function () {
         return ctrl.previewDataSets;

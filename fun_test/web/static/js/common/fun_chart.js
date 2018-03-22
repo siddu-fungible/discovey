@@ -255,13 +255,13 @@
                                 }
 
                             };
-                            if ($attrs.xaxisFormatter) {
+                            if (ctrl.xaxisFormatter && ctrl.xaxisFormatter()()) {
                                 chartInfo.xAxis["labels"] = {formatter: function () {
                                     return ctrl.xaxisFormatter()(this.value);
                                 }};
                             }
 
-                            if ($attrs.tooltipFormatter) {
+                            if (ctrl.tooltipFormatter !== "") {
                                 chartInfo.tooltip = {
                                     formatter: function () {
                                         return ctrl.tooltipFormatter()(this.x, this.y);
@@ -269,7 +269,7 @@
                                 }
                             }
 
-                            if ($attrs.pointClickCallback) {
+                            if (ctrl.pointClickCallback !== "") {
                                 chartInfo.plotOptions.series["point"] = {
                                     events: {
                                         click: function (e) {
