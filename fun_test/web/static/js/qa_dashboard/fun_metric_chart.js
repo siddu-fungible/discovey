@@ -16,6 +16,19 @@ function FunMetricChartController($scope, commonService) {
         //console.log(ctrl.width);
         $scope.width = ctrl.width;
         $scope.height = ctrl.height;
+        /*$scope.pointClickCallback = ctrl.pointClickCallback;*/
+    };
+
+    $scope.pointClickCallback = (point) => {
+        ctrl.pointClickCallback()(point);
+    };
+
+    $scope.xAxisFormatter = (value) => {
+        return ctrl.xaxisFormatter()(value);
+    };
+
+    $scope.tooltipFormatter = (x, y) => {
+        return ctrl.tooltipFormatter()(x, y);
     };
 
     $scope.$watch(function () {
@@ -137,7 +150,9 @@ function FunMetricChartController($scope, commonService) {
 angular.module('qa-dashboard').component("funMetricChart", {
         template: '<fun-chart values="values" series="series"\n' +
         '                   title="$ctrl.chartName" charting="charting" chart-type="line-chart"\n' +
-        '                   width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle">\n' +
+        '                   width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle"\n' +
+        '                   point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter"\n' +
+        '                   tooltip-formatter="tooltipFormatter">\n' +
         '                   \n' +
         '        </fun-chart>',
 
@@ -146,7 +161,10 @@ angular.module('qa-dashboard').component("funMetricChart", {
                     modelName: '<',
                     width: '@',
                     height: '@',
-                    previewDataSets: '<'
+                    previewDataSets: '<',
+                    pointClickCallback: '&',
+                    xaxisFormatter: '&',
+                    tooltipFormatter: '&'
                   },
         controller: FunMetricChartController
  });

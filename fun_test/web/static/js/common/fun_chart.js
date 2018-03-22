@@ -1,7 +1,7 @@
 (function (angular) {
     'use strict';
 
-    function FunChartController($scope, $http, $element, $timeout) {
+    function FunChartController($scope, $http, $element, $timeout, $attrs) {
         let ctrl = this;
 
         $scope.getRandomId = function () {
@@ -185,7 +185,7 @@
                             });
                         } else if (ctrl.chartType === "line-chart") {
                             let series = angular.copy(ctrl.values);
-                            Highcharts.chart("c-" + $scope.genId, {
+                            let chartInfo = {
                                 chart: {
                                     height: ctrl.height,
                                     width: ctrl.width
@@ -221,8 +221,19 @@
                                     series: {
                                         label: {
                                             connectorAllowed: false
+                                        },
+                                        point: {
+                                            events: {
+                                                click: function (e) {
+                                                    /*location.href = 'https://en.wikipedia.org/wiki/' +
+                                                        this.options.key;*/
+                                                    console.log(ctrl.pointClickCallback);
+                                                    ctrl.pointClickCallback()(e.point);
+                                                }
+                                            }
                                         }
                                     }
+
                                 },
 
                                 series: series,
@@ -243,7 +254,33 @@
                                     }]
                                 }
 
-                            });
+                            };
+                            if ($attrs.xaxisFormatter) {
+                                chartInfo.xAxis["labels"] = {formatter: function () {
+                                    return ctrl.xaxisFormatter()(this.value);
+                                }};
+                            }
+
+                            if ($attrs.tooltipFormatter) {
+                                chartInfo.tooltip = {
+                                    formatter: function () {
+                                        return ctrl.tooltipFormatter()(this.x, this.y);
+                                    }
+                                }
+                            }
+
+                            if ($attrs.pointClickCallback) {
+                                chartInfo.plotOptions.series["point"] = {
+                                    events: {
+                                        click: function (e) {
+                                            ctrl.pointClickCallback()(e.point);
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            Highcharts.chart("c-" + $scope.genId, chartInfo);
                         } else if (ctrl.chartType === "solidguage") {
                             Highcharts.chart("c-" + $scope.genId, {
                                 chart: {
@@ -411,7 +448,10 @@
             width: '<',
             height: '<',
             xaxisTitle: '<',
-            yaxisTitle: '<'
+            yaxisTitle: '<',
+            pointClickCallback: '&',
+            xaxisFormatter: '&',
+            tooltipFormatter: '&'
         }
     });
 

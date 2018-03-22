@@ -134,6 +134,7 @@ class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()
     fun_sdk_branch = models.TextField(default="")
     git_commit = models.TextField(default="")
+    software_date = models.IntegerField(default=0)
 
 class JenkinsJobIdMapSerializer(ModelSerializer):
     class Meta:

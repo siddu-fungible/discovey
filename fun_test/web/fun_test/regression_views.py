@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import logging
 import dateutil.parser
+import re
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -265,6 +266,20 @@ def jenkins_job_id_map(request):
     all_entries = JenkinsJobIdMap.objects.all()
     s = JenkinsJobIdMapSerializer(all_entries, many=True)
     return s.data
+
+@csrf_exempt
+@api_safe_json_response
+def build_to_date_map(request):
+    all_entries = JenkinsJobIdMap.objects.all()
+    build_info = {}
+    for entry in all_entries:
+        sdk_branch = entry.fun_sdk_branch
+        m = re.search(r'refs/tags/bld_(\d+)', sdk_branch)
+        key = 0
+        if m:
+            key = int(m.group(1))
+        build_info[key] = {"software_date": entry.software_date}
+    return build_info
 
 
 @csrf_exempt
