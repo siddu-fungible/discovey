@@ -12,11 +12,11 @@ class DpcshClient(object):
         self.mode = mode
         self.verbose = verbose
 
-    def sendall(self, data, expected_command_duration=1):
+    def sendall(self, data, command_duration=1):
         start = time.time()
         while data:
             elapsed_time = time.time() - start
-            if elapsed_time > expected_command_duration:
+            if elapsed_time > command_duration:
                 break
             try:
                 sent = self.sock.send(data)
@@ -27,14 +27,14 @@ class DpcshClient(object):
                     time.sleep(0.1)
                     continue
 
-    def _read(self, expected_command_duration=1):
+    def _read(self, command_duration=1):
         start = time.time()
         chunk = 1024
 
         output = ""
         while not output.endswith("\n"):
             elapsed_time = time.time() - start
-            if elapsed_time > expected_command_duration:
+            if elapsed_time > command_duration:
                 fun_test.critical("Command timeout")
                 break
             try:
@@ -59,15 +59,15 @@ class DpcshClient(object):
             self.sock.connect((self.target_ip, self.target_port))
             fcntl.fcntl(self.sock, fcntl.F_SETFL, os.O_NONBLOCK)
 
-    def command(self, command, expected_command_duration=2):
+    def command(self, command, command_duration=2):
         result = {"status": False, "data": None, "error_message": None, "command": command}
         output = ""
         try:
             self._connect()
             if self.verbose:
                 fun_test.log("DPCSH Send:" + command + "\n")
-            self.sendall("{}\n".format(command), expected_command_duration)
-            output = self._read(expected_command_duration)
+            self.sendall("{}\n".format(command), command_duration)
+            output = self._read(command_duration)
             if output:
                 result["raw_output"] = output
                 json_output = json.loads(output)
@@ -97,8 +97,8 @@ class DpcshClient(object):
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_command(self, data, action="", additional_info="", expected_command_duration=1):
+    def json_command(self, data, action="", additional_info="", command_duration=1):
         return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),
-                            expected_command_duration=expected_command_duration)
+                            command_duration=command_duration)
 
 
