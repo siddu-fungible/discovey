@@ -79,7 +79,7 @@ class LikvTemplate(object):
         fun_test.simple_assert(calc_output['status'], message="Execute likv_calc_vol_size")
         action_create = "create"
         likv_data["options"] = self.LIKV_COMPRESSION_ON if self.compression_enabled else self.LIKV_COMPRESSION_OFF
-        return self.storage_controller_obj.json_command(action=action_create, data=likv_data, expected_command_duration=2)
+        return self.storage_controller_obj.json_command(action=action_create, data=likv_data, command_duration=2)
 
     def open(self):
         action = "open"
@@ -89,25 +89,25 @@ class LikvTemplate(object):
         action = "close"
         return self.storage_controller_obj.json_command(data={"volume_id": self.volume_id}, action=action)
 
-    def put(self, key_hex, value_hex, expected_timeout=2, send_only=False):
+    def put(self, key_hex, value_hex, expected_timeout=2):
         json_data = {"key_hex": key_hex,
                      "value": value_hex,
                      "volume_id": self.volume_id}
         action = "put"
         return self.storage_controller_obj.json_command(data=json_data, action=action,
-                                                        expected_command_duration=expected_timeout)
+                                                        command_duration=expected_timeout)
 
-    def delete_value(self, key):
+    def delete_value(self, key, expected_timeout=2):
         action = "delete"
         json_data = {"key_hex": key,
                      "volume_id": self.volume_id}
-        return self.storage_controller_obj.json_command(data=json_data, action=action, expected_command_duration=2)
+        return self.storage_controller_obj.json_command(data=json_data, action=action, command_duration=expected_timeout)
 
-    def get(self, key):
+    def get(self, key, expected_timeout=2):
         action = "get"
         json_data = {"key_hex": key,
                      "volume_id": self.volume_id}
-        return self.storage_controller_obj.json_command(data=json_data, action=action)
+        return self.storage_controller_obj.json_command(data=json_data, action=action, command_duration=expected_timeout)
 
     def get_string(self, hex_value):
         return bytearray.fromhex(hex_value).decode()
