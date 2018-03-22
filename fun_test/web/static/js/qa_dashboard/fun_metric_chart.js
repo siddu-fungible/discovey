@@ -21,6 +21,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
         $scope.tooltipFormatter = null;
         if (ctrl.pointClickCallback) {
             $scope.pointClickCallback = (point) => {
+                if(!$attrs.pointClickCallback) return null;
                 ctrl.pointClickCallback()(point);
             };
         }
@@ -34,6 +35,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
 
         if (ctrl.tooltipFormatter) {
             $scope.tooltipFormatter = (x, y) => {
+                if(!$attrs.tooltipFormatter) return null;
                 return ctrl.tooltipFormatter()(x, y);
             };
         }

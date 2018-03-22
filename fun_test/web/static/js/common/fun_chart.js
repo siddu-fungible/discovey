@@ -261,7 +261,7 @@
                                 }};
                             }
 
-                            if (ctrl.tooltipFormatter !== "") {
+                            if (ctrl.tooltipFormatter && ctrl.tooltipFormatter()()) {
                                 chartInfo.tooltip = {
                                     formatter: function () {
                                         return ctrl.tooltipFormatter()(this.x, this.y);
@@ -269,7 +269,7 @@
                                 }
                             }
 
-                            if (ctrl.pointClickCallback !== "") {
+                            if (ctrl.pointClickCallback && ctrl.pointClickCallback()()) {
                                 chartInfo.plotOptions.series["point"] = {
                                     events: {
                                         click: function (e) {
