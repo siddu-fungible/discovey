@@ -7,6 +7,7 @@ from web.fun_test.analytics_models_helper import AllocSpeedPerformanceHelper
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
+TOLERANCE_PERCENTAGE = 5
 
 
 class MyScript(FunTestScript):
@@ -103,9 +104,14 @@ class FunTestCase1(FunTestCase):
 
         newest_build_number = max(job_info.keys())
         expected_values = {}
-        expected_values["output_one_malloc_free_wu"] = {"expected": 1114, "min": 1, "max": 1169}
-        expected_values["output_one_malloc_free_threaded"] = {"expected": 582, "min": 1, "max": 611}
+
+        expected_values["output_one_malloc_free_wu"] = {"expected": 660, "min": 1}
+        expected_values["output_one_malloc_free_threaded"] = {"expected": 402, "min": 1}
+
         values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
+        for value_to_check in values_to_check:
+            expected_values[value_to_check]["max"] = expected_values[value_to_check]["expected"] * (1 + (TOLERANCE_PERCENTAGE / 100))
+
         for value_to_check in values_to_check:
             expected, min_value, max_value = expected_values[value_to_check]["expected"], expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]
             actual = job_info[newest_build_number][value_to_check]
