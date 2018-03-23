@@ -8,7 +8,7 @@ import time
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 import commentjson
-
+import subprocess
 
 class NoLogger:
     def __init__(self):
@@ -94,7 +94,8 @@ class Linux(object, ToDictMixin):
                  telnet_password="zebra",
                  telnet_port=TELNET_PORT_DEFAULT,
                  connect_retry_timeout_max=20,
-                 use_paramiko=False):
+                 use_paramiko=False,
+                 localhost=None):
 
         self.host_ip = host_ip
         self.ssh_username = ssh_username
@@ -103,6 +104,7 @@ class Linux(object, ToDictMixin):
         self.connect_retry_timeout_max = connect_retry_timeout_max
         self.handle = None
 
+        self.localhost = localhost
         self.use_paramiko = use_paramiko
         self.paramiko_handle = None
         self.logger = LinuxLogger()
@@ -192,7 +194,8 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def _connect(self):
-
+        # if self.localhost:
+        #    return True
         if self.use_paramiko:
             return self._paramiko_connect()
         result = None
@@ -224,10 +227,18 @@ class Linux(object, ToDictMixin):
                     else:
                         ssh_command = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s' % (self.ssh_username,
                                                                                      self.host_ip)
-                    self.logger.log(ssh_command)
-                    self.handle = pexpect.spawn(ssh_command,
-                                                env={"TERM": "dumb"},
-                                                maxread=4096)
+                    if not self.localhost:
+                        self.logger.log(ssh_command)
+
+                        self.handle = pexpect.spawn(ssh_command,
+                                                    env={"TERM": "dumb"},
+                                                    maxread=4096)
+                    else:
+                        self.prompt_terminator = r'(\$ |# )'
+                        expects[2] = self.prompt_terminator + r'$'
+                        self.handle = pexpect.spawn("bash",
+                                                    env={"TERM": "dumb"},
+                                                    maxread=4096)
                 else:
                     fun_test.debug(
                         "Attempting Telnet connect to %s username: %s password: %s" % (self.host_ip,
@@ -339,6 +350,18 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def command(self, command, sync=False, timeout=60, sync_timeout=0.3, custom_prompts=None, wait_until=None,
                 wait_until_timeout=60, include_last_line=False, include_first_line=False, run_to_completion=None):
+
+        '''
+        if self.localhost:
+            sys.stdout.write(command + "\n")
+            popens = command.split()
+            process = subprocess.Popen(popens, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdout = process.communicate()[0]
+            sys.stdout.write(stdout)
+            return stdout
+        '''
+
+
         if run_to_completion:
             fun_test.critical("run_to_completion is not recommended")
             timeout = 9999
@@ -702,11 +725,12 @@ class Linux(object, ToDictMixin):
         self.saved_prompt_terminator = self.prompt_terminator
         self.set_prompt_terminator(prompt_terminator=r'# ')
         prompt = r'assword\s+for\s+%s: ' % self.ssh_username
+        mac_prompt = r'Password:.*'
         options_str = ""
         if preserve_environment:
             options_str += "-E "
         cmd = 'sudo {}bash'.format(options_str)
-        output = self.command(cmd, custom_prompts={prompt: self.ssh_password})
+        output = self.command(cmd, custom_prompts={prompt: self.ssh_password, mac_prompt: self.ssh_password})
         if "command not found" in output:
             result = False
         return result
