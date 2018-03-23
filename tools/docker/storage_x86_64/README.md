@@ -1,4 +1,4 @@
-# storage_basic_x86_64
+# storage_x86_64
 
 Purpose:
 ```
@@ -14,12 +14,12 @@ and the following fetched from other sources
 
 Build:
 ```
-sudo docker build . -t storage_basic_x86_64 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99
+sudo docker build . -t storage_x86_64 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99
 ```
 
 Run:
 ```
-sudo docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" storage_basic_x86_64 <build-url>
+sudo docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" storage_x86_64 <build-url>
 
 where build-url=http://dochub.fungible.local/doc/jenkins/funos/latest/
 ```
