@@ -8,7 +8,6 @@ import time
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 import commentjson
-import subprocess
 
 class NoLogger:
     def __init__(self):
@@ -194,8 +193,6 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def _connect(self):
-        # if self.localhost:
-        #    return True
         if self.use_paramiko:
             return self._paramiko_connect()
         result = None
@@ -350,17 +347,6 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def command(self, command, sync=False, timeout=60, sync_timeout=0.3, custom_prompts=None, wait_until=None,
                 wait_until_timeout=60, include_last_line=False, include_first_line=False, run_to_completion=None):
-
-        '''
-        if self.localhost:
-            sys.stdout.write(command + "\n")
-            popens = command.split()
-            process = subprocess.Popen(popens, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            stdout = process.communicate()[0]
-            sys.stdout.write(stdout)
-            return stdout
-        '''
-
 
         if run_to_completion:
             fun_test.critical("run_to_completion is not recommended")
