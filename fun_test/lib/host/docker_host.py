@@ -71,7 +71,6 @@ class DockerHost(Linux, ToDictMixin):
 
     STORAGE_IMAGE_NAME = "integration_jenkins_fetch"
 
-
     DOCKER_STATUS_RUNNING = "running"
     def __init__(self,
                  properties):
@@ -80,7 +79,10 @@ class DockerHost(Linux, ToDictMixin):
                                          ssh_password=properties["mgmt_ssh_password"],
                                          ssh_port=properties["mgmt_ssh_port"])
         self.remote_api_port = properties["remote_api_port"]
-        self.type = properties["type"] # DESKTOP, BARE_METAL
+        self.localhost = None
+        if "localhost" in properties:
+            self.localhost = properties["localhost"]
+        self.type = properties["type"]  # DESKTOP, BARE_METAL
         self.spec = properties
         self.TO_DICT_VARS.extend(["containers_assets"])
         self.pool0_allocated_ports = []
@@ -364,7 +366,13 @@ class DockerHost(Linux, ToDictMixin):
                                                                      detach=True,
                                                                      privileged=True,
                                                                      ports=ports_dict,
-                                                                     name=container_name)
+                                                                     name=container_name,
+                                                                     mounts=mount_objects,
+                                                                     environment=environment_variables,
+                                                                     hostname=host_name,
+                                                                     user=user,
+                                                                     working_dir=working_dir,
+                                                                     auto_remove=auto_remove)
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
