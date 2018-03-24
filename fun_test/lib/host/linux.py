@@ -605,12 +605,12 @@ class Linux(object, ToDictMixin):
                 reg = re.compile(r'(.*) (\S+)')
                 m = reg.search(line)
                 if m:
-                    files.append((m.group(1), m.group(2)))
+                    files.append({"info": m.group(1), "filename": m.group(2)})
             if line.startswith("d"):
                 reg = re.compile(r'(.*) (\S+)')
                 m = reg.search(line)
                 if m:
-                    files.append((m.group(1), m.group(2)))
+                    files.append({"info": m.group(1), "filename": m.group(2)})
         return files
 
     @fun_test.safe

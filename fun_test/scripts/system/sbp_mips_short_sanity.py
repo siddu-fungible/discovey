@@ -10,7 +10,9 @@ LOCAL_REPOSITORY_DIR = "/SBPFirmware"
 SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
 BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
-
+TEST_LOG_FILE = "/tmp/test.log"
+BOARD_TYPE = "zynq7_zc706"
+CPU = "m5150"
 
 class ContainerSetup(FunTestScript):
     def describe(self):
@@ -62,7 +64,7 @@ class ContainerSetup(FunTestScript):
 class TestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sanity Test",
+                              summary="secureboot=off, ",
                               steps="""
         1. Do something on the container.
                               """)
@@ -85,13 +87,37 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(sbp_setup.setup(), "Setup")
         linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
         linux_obj.command("ls -l")
-        files = linux_obj.list_files(".")
+        stimuli_dir = "{}/validation/stimuli/short".format(LOCAL_REPOSITORY_DIR)
+        files = linux_obj.list_files(stimuli_dir)
+
+        error_found = False
+
         for file in files:
-            fun_test.log(file)
-        output = linux_obj.command('python ./run_test.py --cpu=m5150 --board_type=zynq7_zc706 --bitstream={} --board={} -vv --secureboot=off ../../validation/stimuli/short/cmd_debug_access_chlg.py | tee /tmp/test.log'.format(BIT_STREAM, ZYNC_BOARD_IP))
-        fun_test.test_assert(re.search("ERROR:run_test.py:*errors", output), "Error found")
+            filename = file["filename"]
+            if not filename.endswith(".py"):
+                continue
+            stimuli_file = stimuli_dir + "/" + filename
+            fun_test.add_checkpoint(checkpoint="Stimuli file: {}".format(filename))
+            command = 'python ./run_test.py --cpu={} --board_type={} --bitstream={} --board={} -vv --secureboot=off {}'.format(
+                CPU, BOARD_TYPE, BIT_STREAM, ZYNC_BOARD_IP, stimuli_file)
+            output = linux_obj.command(command, timeout=260)
+            fun_test.test_assert(not re.search("ERROR:run_test.py:*errors", output),
+                                 "Error not found: {}".format(filename))
 
+            # stimuli_file = "{}/cmd_debug_access_chlg.py".format(stimuli_dir)
 
+        '''
+        stimuli_file = "{}/*.py".format(stimuli_dir)
+        command = 'python ./run_test.py --cpu={} --board_type={} --bitstream={} --board={} -vv --secureboot=off {}'.format(CPU, BOARD_TYPE, BIT_STREAM, ZYNC_BOARD_IP, stimuli_file)
+        output = linux_obj.command(command, timeout=200)
+        # try:
+        fun_test.test_assert(not re.search("ERROR:run_test.py:*errors", output), "Error not found: {}".format(filename))
+        #except:
+        #    error_found = True
+        #    fun_test.sleep(seconds=1, message="Wait before next run")
+
+        '''
+        fun_test.test_assert(not error_found, "No error found")
     def cleanup(self):
         pass
 
