@@ -7,7 +7,7 @@ ARG ZYNQ_SETUP_DIR=/zynq_setup
 RUN mkdir -p $ZYNQ_SETUP_DIR
 WORKDIR $ZYNQ_SETUP_DIR
 RUN rm -vf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y net-tools openssh-server curl sudo
+RUN apt-get update && apt-get install -y net-tools openssh-server curl sudo rsync
 RUN apt-get install -y libpthread-stubs0-dev gcc-multilib g++-multilib cmake cppcheck doxygen python-pip git screen
 RUN apt-get install -y libssl-dev gcc libc6-dev-armhf-cross libc6-dev-i386 libssl-dev
 
@@ -41,6 +41,11 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 EXPOSE 22
 
 ENV MIPS_ELF_ROOT=$ZYNQ_SETUP_DIR/mips-mti-elf/2016.05-03/
+
+RUN shebang='#!/usr/bin/env bash'; \
+env_vars="export MIPS_ELF_ROOT=$ZYNQ_SETUP_DIR/mips-mti-elf/2016.05-03"; \
+echo $shebang$'\n'$env_vars > /etc/profile.d/env_vars.sh
+
 
 # Add startup script
 COPY startup.sh /startup.sh

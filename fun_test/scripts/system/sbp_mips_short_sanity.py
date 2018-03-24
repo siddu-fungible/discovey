@@ -3,12 +3,12 @@ from asset.asset_manager import AssetManager
 from lib.host.linux import Linux
 from fun_settings import FUN_TEST_DIR
 import re
+from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
-ZYNQ_SETUP_DIR = "/zynq_setup"
-REPOSITORY_DIR = "/repository"
+
 LOCAL_REPOSITORY_DIR = "/SBPFirmware"
-SBP_FIRMWARE_REPO_DIR = "/Users/johnabraham/test/SBPFirmware"
-
+SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
+BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 
 
@@ -79,23 +79,18 @@ class TestCase1(FunTestCase):
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
 
-        linux_obj.command("ls -l {}".format(ZYNQ_SETUP_DIR))
-        linux_obj.command("ls -l {}".format(REPOSITORY_DIR))
-        # linux_obj.command("rsync {} {}".format(REPOSITORY_DIR, LOCAL_REPOSITORY_DIR))
-        linux_obj.command("cp -r {} {}".format(REPOSITORY_DIR, LOCAL_REPOSITORY_DIR))
-        tools_dir = LOCAL_REPOSITORY_DIR + "/tools"
-        linux_obj.command("export MIPS_ELF_ROOT={}/mips-mti-elf/2016.05-03".format(ZYNQ_SETUP_DIR))
-        linux_obj.command("cd {}; ./hsm_install.sh".format(tools_dir))
-        linux_obj.command("cd {}".format(LOCAL_REPOSITORY_DIR))
-        linux_obj.command("./test_software.sh")
-        linux_obj.command("mkdir ../build-sbp")
-        linux_obj.command("cd ../build-sbp")
-        linux_obj.command('cmake {} -DBUILD_ESECURE_UNITTESTS=0 -DBOARD_ADDRESS={}'.format(LOCAL_REPOSITORY_DIR,
-                                                                                           ZYNC_BOARD_IP))
-        linux_obj.command("make")
+        sbp_setup = SbpZynqSetupTemplate(host=linux_obj,
+                                         local_repository=LOCAL_REPOSITORY_DIR,
+                                         zynq_board_ip=ZYNC_BOARD_IP)
+        fun_test.test_assert(sbp_setup.setup(), "Setup")
         linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
-        linux_obj.command('python run_test.py --cpu=m5150 --board_type=zynq7_zc706 --bitstream=SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit --board={} -vv --secureboot=off ../../validation/stimuli/short/cmd_debug_access_chlg.py | tee test.log'.format(ZYNC_BOARD_IP))
-        fun_test.test_assert(True, "K")
+        linux_obj.command("ls -l")
+        files = linux_obj.list_files(".")
+        for file in files:
+            fun_test.log(file)
+        output = linux_obj.command('python ./run_test.py --cpu=m5150 --board_type=zynq7_zc706 --bitstream={} --board={} -vv --secureboot=off ../../validation/stimuli/short/cmd_debug_access_chlg.py | tee /tmp/test.log'.format(BIT_STREAM, ZYNC_BOARD_IP))
+        fun_test.test_assert(re.search("ERROR:run_test.py:*errors", output), "Error found")
+
 
     def cleanup(self):
         pass
