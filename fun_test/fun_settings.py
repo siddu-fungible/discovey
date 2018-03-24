@@ -2,6 +2,7 @@ from os.path import dirname, abspath
 import sys
 
 FUN_TEST_DIR = dirname(abspath(__file__))
+INTEGRATION_DIR = dirname(abspath(FUN_TEST_DIR))
 SCHEDULER_DIR = FUN_TEST_DIR + "/scheduler"
 WEB_DIR = FUN_TEST_DIR + "/web"
 WEB_ROOT_DIR = WEB_DIR + "/fun_test"
