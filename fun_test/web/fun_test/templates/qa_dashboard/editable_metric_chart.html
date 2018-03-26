@@ -1,8 +1,28 @@
 <div class="row">
-    <button ng-if="!editing" class="fa fa-pencil" ng-click="editClick()"></button>
     <fun-metric-chart chart-name="chartName" model-name="modelName" preview-data-sets="previewDataSets" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></fun-metric-chart>
 </div>
 
+<table class="table table-nonfluid table-bordered">
+    <thead>
+        <tr>
+            <th>Action</th>
+            <th>Min</th>
+            <th>Max</th>
+        </tr>
+
+    </thead>
+    <tr ng-repeat="dataSet in previewDataSets track by $index">
+        <td>
+            <button ng-if="!editing" class="fa fa-pencil" ng-click="editClick()"></button>
+        </td>
+        <td>
+            {{ dataSet.output.min }}
+        </td>
+        <td>
+            {{ dataSet.output.max }}
+        </td>
+    </tr>
+</table>
 
 <div ng-if="editing" class="panel panel-default col-lg-6 col-xl-6 col-xxl-6">
     <div class="panel-body">

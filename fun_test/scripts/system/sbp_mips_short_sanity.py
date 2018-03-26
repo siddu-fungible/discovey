@@ -202,4 +202,5 @@ class TestCase2(FunTestCase):
 if __name__ == "__main__":
     ts = ContainerSetup()
     ts.add_test_case(TestCase1())
+    ts.add_test_case(TestCase2())
     ts.run()
