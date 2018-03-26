@@ -32,7 +32,7 @@ class F1(Linux, ToDictMixin):
                                  ssh_username=ssh_username,
                                  ssh_password=ssh_password,
                                  ssh_port=ssh_port)
-        self.external_dpcsh_port =  external_dpcsh_port
+        self.external_dpcsh_port = external_dpcsh_port
         self.spec = spec
         self.dpcsh_tcp_proxy_process_id = None
         self.fun_os_process_id = None
@@ -102,9 +102,17 @@ class F1(Linux, ToDictMixin):
                     self.command("cd {}".format(self.SIMULATION_FUNOS_BUILD_PATH))
                     self.command("ulimit -Sc unlimited")
                     self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
-                    self.command("./funos-posix app=mdt_test nvfile=nvfile")
-                    self.interactive_command("./funos-posix app=prem_test sim_id=nvme_test nvfile=nvfile",
-                                             expected_prompt="Remote PCIe EP NVME Test")
+                    # self.command("./funos-posix app=mdt_test nvfile=nvfile")
+                    # self.interactive_command("./funos-posix app=prem_test sim_id=nvme_test nvfile=nvfile",
+                    #                          expected_prompt="Remote PCIe EP NVME Test")
+                    self.command("./{} app=mdt_test nvfile=nvfile &> {}".format(self.FUN_OS_SIMULATION_PROCESS_NAME,
+                                                                                self.F1_LOG))
+                    new_process_id = self.start_bg_process(
+                        command="./{} app=prem_test sim_id=nvme_test nvfile=nvfile".format(
+                            self.FUN_OS_SIMULATION_PROCESS_NAME), output_file=self.F1_LOG)
+                    fun_test.sleep("Ensure FunOS is started", seconds=10)
+                    fun_test.test_assert(new_process_id, "Started FunOs")
+
                 except:
                     pass  #TODO
             elif start_mode == self.START_MODE_DPCSH_ONLY:
