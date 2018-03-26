@@ -1,0 +1,37 @@
+<div class="row">
+    <button ng-if="!editing" class="fa fa-pencil" ng-click="editClick()"></button>
+    <fun-metric-chart chart-name="chartName" model-name="modelName" preview-data-sets="previewDataSets" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></fun-metric-chart>
+</div>
+
+
+<div ng-if="editing" class="panel panel-default col-lg-6 col-xl-6 col-xxl-6">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-lg-10 col-xl-10">
+                <table class="table table-nonfluid table-borderless"
+                       ng-repeat="dataSet in previewDataSets track by $index">
+                    <tr>
+                        <th>Min</th>
+                        <th>Max</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min"
+                                   style="width: 100px">
+                        </td>
+                        <td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max"
+                                   style="width: 100px"></td>
+                    </tr>
+                </table>
+                <button class="btn btn-success" ng-click="submit()">Submit</button>
+            </div>
+            <div class="col-lg-2 col-xl-2 pull-right">
+                <a href="#" ng-click="dismiss()">close</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+

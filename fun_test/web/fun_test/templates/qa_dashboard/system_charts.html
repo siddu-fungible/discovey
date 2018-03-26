@@ -3,20 +3,91 @@
 {% block javascript %}
     {{ block.super }}
     <script src="{% static "js/qa_dashboard/system_charts.js" %}"></script>
+    <script src="{% static "js/qa_dashboard/editable_metric_chart.js" %}"></script>
 
 {% endblock %}
 
 {% block content %}
     {% verbatim %}
     <div ng-controller="systemChartsController">
-        <div class="row">
-            <div class="col-xl-4 col-lg-3 card">
-                <fun-metric-chart chart-name="chart1Name" point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter" model-name="model1Name" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
+        <div class="">
+            <div class="col-xl-6 col-lg-6 col-xxl-6" >
+                <table class="table table-nonfluid">
+                    <tr>
+                        <th>
+                            Metric
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                    </tr>
+                    <tr>
+                    </tr>
+                    <tr ng-repeat="oneFeature in featureTable">
+                        <td>
+                            <a href="#" ng-click="showChart(oneFeature.chartName, oneFeature.metricModelName)">{{ oneFeature.name }}</a>
+                        </td>
+                        <td ng-bind-html="getStatusIcon(row.result)">
+                        </td>
+                    </tr>
+                </table>
             </div>
-            <div class="col-xl-4 col-lg-3 card">
-                <fun-metric-chart chart-name="chart2Name" model-name="model2Name" point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter" width="350" height="350" preview-data-sets="previewDataSets"> </fun-metric-chart>
+            <div class="card col-xl-6 col-lg-6 col-xxl-6">
+                <div class="" ng-switch="chartName">
+                    <editable-metric-chart chart-name="currentChartName" model-name="currentMetricModelName" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></editable-metric-chart>
+                </div>
+                <br>
+                <br>
+                <p ng-if="chartName" style="width:350px; height:350px">
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                    et
+                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                    aliquip ex
+                    ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+                    eu fugiat
+                    nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+                    mollit
+                    anim id est laborum."
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                    et
+                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                    aliquip ex
+                    ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+                    eu fugiat
+                    nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+                    mollit
+                    anim id est laborum."
+                </p>
+                <table ng-if="chartName" class="table">
+                    <thead>
+                    <tr>
+                        <th>Firstname</th>
+                        <th>Lastname</th>
+                        <th>Email</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>John</td>
+                        <td>Doe</td>
+                        <td>john@example.com</td>
+                    </tr>
+                    <tr>
+                        <td>Mary</td>
+                        <td>Moe</td>
+                        <td>mary@example.com</td>
+                    </tr>
+                    <tr>
+                        <td>July</td>
+                        <td>Dooley</td>
+                        <td>july@example.com</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
+
         </div>
+
 
         <div class="col-xl-6 col-lg-6">
             <h3>Jenkins Job Id to git map</h3>

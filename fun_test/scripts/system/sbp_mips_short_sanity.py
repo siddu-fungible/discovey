@@ -84,14 +84,18 @@ class TestCase1(FunTestCase):
         sbp_setup = SbpZynqSetupTemplate(host=linux_obj,
                                          local_repository=LOCAL_REPOSITORY_DIR,
                                          zynq_board_ip=ZYNC_BOARD_IP)
+
+        localhost = Linux(host_ip="127.0.0.1", localhost=True)
+        localhost.command("cd {}; git pull".format(SBP_FIRMWARE_REPO_DIR))
+        fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
         fun_test.test_assert(sbp_setup.setup(), "Setup")
         linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
         linux_obj.command("ls -l")
         stimuli_dir = "{}/validation/stimuli/short".format(LOCAL_REPOSITORY_DIR)
         files = linux_obj.list_files(stimuli_dir)
 
-        error_found = False
 
+        '''
         for file in files:
             filename = file["filename"]
             if not filename.endswith(".py"):
@@ -107,17 +111,21 @@ class TestCase1(FunTestCase):
             # stimuli_file = "{}/cmd_debug_access_chlg.py".format(stimuli_dir)
 
         '''
-        stimuli_file = "{}/*.py".format(stimuli_dir)
-        command = 'python ./run_test.py --cpu={} --board_type={} --bitstream={} --board={} -vv --secureboot=off {}'.format(CPU, BOARD_TYPE, BIT_STREAM, ZYNC_BOARD_IP, stimuli_file)
-        output = linux_obj.command(command, timeout=200)
-        # try:
-        fun_test.test_assert(not re.search("ERROR:run_test.py:*errors", output), "Error not found: {}".format(filename))
-        #except:
-        #    error_found = True
-        #    fun_test.sleep(seconds=1, message="Wait before next run")
 
-        '''
-        fun_test.test_assert(not error_found, "No error found")
+        stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
+        stimuli_files = linux_obj.list_files(stimuli_file)
+        fun_test.simple_assert(stimuli_files, "Atleast one stimuli file")
+
+        command = 'python ./run_test.py --cpu={} --board_type={} --bitstream={} --board={} -vv --secureboot=off {} &> {}'.format(CPU, BOARD_TYPE, BIT_STREAM, ZYNC_BOARD_IP, stimuli_file, TEST_LOG_FILE)
+        output = linux_obj.command(command, timeout=900)
+
+        linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
+        for stimuli_file in stimuli_files:
+            just_file_name = os.path.basename(stimuli_file["filename"])
+            local_log_file = "log/{}".format(just_file_name.replace(".py", ".log"))
+            last_line = linux_obj.command("tail {}".format(local_log_file))
+            fun_test.test_assert("[EXIT] SUCCESS" in last_line, message="{}: [EXIT] SUCCESS message found".format(just_file_name))
+
     def cleanup(self):
         pass
 

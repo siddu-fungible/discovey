@@ -26,6 +26,31 @@ class MetricHelper(object):
         self.model.objects.all().delete()
 
 
+class MetricChartHelper(object):
+    def __init__(self, chart_name, metric_model_name):
+        self.chart_name = chart_name
+        self.metric_model_name = metric_model_name
+        self.chart = MetricChart.objects.get(chart_name=chart_name, metric_model_name=metric_model_name)
+
+    def set_output_data_set(self, output_name, min_value, max_value):
+        data_sets = json.loads(self.chart.data_sets)
+        for data_set in data_sets:
+            if data_set["output"]["name"] == output_name:
+                data_set["output"]["min"] = min_value
+                data_set["output"]["max"] = max_value
+                break
+
+    def get_output_data_set(self, output_name):
+        result = {}
+        data_sets = json.loads(self.chart.data_sets)
+        for data_set in data_sets:
+            if data_set["output"]["name"] == output_name:
+                result["min"] = data_set["output"]["min"]
+                result["max"] = data_set["output"]["max"]
+                break
+        return result
+
+
 class Performance1Helper(MetricHelper):
     model = Performance1
 
@@ -101,6 +126,8 @@ class AllocSpeedPerformanceHelper(MetricHelper):
                                               output_one_malloc_free_wu=output_one_malloc_free_wu,
                                               output_one_malloc_free_threaded=output_one_malloc_free_threaded)
             one_entry.save()
+
+
 
 
 if __name__ == "__main__":
