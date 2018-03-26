@@ -22,12 +22,14 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     QEMU_LOG = "/tmp/qemu.log"
 
     QEMU_MODULES_TGZ = "modules.tgz"
+    QEMU_FUNCP_TGZ = "functrlp.tgz"
+
+    FUNCP_EXTRACT_LIST = ["build/posix/lib/libfunq.so", "build/posix/bin/funq-setup", "build/posix/bin/dpc"]
 
     INSTANCE_TYPE_QEMU = "INSTANCE_TYPE_QEMU"
     INSTANCE_TYPE_FSU = "INSTANCE_TYPE_FSU"
 
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION
-
 
     @staticmethod
     def get(asset_properties):
@@ -68,14 +70,9 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                       '-append "root=/dev/vda rw highres=off ip=:::255.255.255.0:qemu-yocto:eth0:on oprofile.timer=1 console=ttyS0 console=tty0 mem={}M" ' \
                       '-drive file={},format=raw,if=none,id=rootfs ' \
                       '-device ioh3420,id=root_port1,addr=1c.0,port=1,chassis=1 ' \
-                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=nvme_test,bus=root_port1 -redir tcp:{}::22 ' \
-                      '-device virtio-rng-pci ' \
-                      '-device virtio-blk-pci,drive=rootfs'.format(self.QEMU_PROCESS,
-                                qemu_num_cpus,
-                                qemu_memory,
-                                self.QEMU_BIOS,
-                                self.QEMU_KERNEL,
-                                qemu_memory,
+                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=nvme_test,bus=root_port1 -device virtio-rng-pci ' \
+                      '-device virtio-blk-pci,drive=rootfs -redir tcp:{}::22 -redir tcp:40220::40220'.\
+                format(self.QEMU_PROCESS, qemu_num_cpus, qemu_memory, self.QEMU_BIOS, self.QEMU_KERNEL, qemu_memory,
                        self.QEMU_FS, internal_ssh_port)
 
             # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
@@ -91,9 +88,12 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                      ssh_port=external_ssh_port,
                      connect_retry_timeout_max=60)  # TODO
 
-
             self.command("cd {}".format(self.QEMU_DIRECTORY))
+            # Copying the moudles.tgz into qemu host
             self.command("scp -P {} /{} root@127.0.0.1:".format(internal_ssh_port, self.QEMU_MODULES_TGZ),
+                         custom_prompts={"(yes/no)\?*": "yes"})
+            # Copying the functrlp.tgz containing the FunCP pre-compiled libs and bins into qemu host
+            self.command("scp -P {} /{} root@127.0.0.1:".format(internal_ssh_port, self.QEMU_FUNCP_TGZ),
                          custom_prompts={"(yes/no)\?*": "yes"})
             '''
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
@@ -101,6 +101,14 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
             self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
                          custom_prompts={"(yes/no)\?*": "yes"})
             '''
+            # Untaring the functrlp.tgz and copying the libs & bins needed to start the dpc-server inside the qemu host
+            for file in self.FUNCP_EXTRACT_LIST:
+                i.command("tar -xzf {} {}".format(self.QEMU_FUNCP_TGZ, file))
+            i.command("mkdir -p /usr/local/lib /usr/local/bin")
+            i.command("cp build/posix/lib/libfunq.so /usr/local/lib/")
+            i.command("cp build/posix/bin/funq-setup build/posix/bin/dpc /usr/local/bin/")
+
+            # Deploying the moudles.tgz into qemu host
             i.command("rm -rf /lib/modules")
             i.command("tar -xf {} -C /".format(self.QEMU_MODULES_TGZ))
             i.command("depmod -a")
