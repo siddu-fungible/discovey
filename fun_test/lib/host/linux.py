@@ -555,6 +555,21 @@ class Linux(object, ToDictMixin):
         return pid
 
     @fun_test.safe
+    def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
+
+        result = 0
+        dd_cmd = "dd if={} of={} bs={} count={}".format(input_file, output_file, block_size, count)
+        if kwargs:
+            for key, value in kwargs.items():
+                arg = key + "=" + str(value)
+                dd_cmd += " " + arg
+        output = self.command(command=dd_cmd, timeout=timeout)
+        match = re.search(r'(\d+) bytes', output)
+        if match:
+            result = match.group(1)
+        return result
+
+    @fun_test.safe
     def create_file(self, file_name, contents):
         self.command("touch %s" % file_name)
         lines = contents.split('\n')
@@ -618,12 +633,14 @@ class Linux(object, ToDictMixin):
                          command,
                          get_job_id=False,
                          output_file='/dev/null',
-                         timeout=3):
+                         timeout=3,
+                         nohup=True):
         command = command.rstrip()
         if output_file != "":
             command += r' &>' + output_file + " "
         command += r'&'
-        command = "nohup " + command
+        if nohup:
+            command = "nohup " + command
         job_id = None
         process_id = None
         try:
@@ -1071,8 +1088,10 @@ class Linux(object, ToDictMixin):
         command = "md5sum " + file_name + " | cut -d ' ' -f 1"
         try:
             output = self.sudo_command(command)
+            fun_test.debug(output)
             output_lines = output.split('\n')
-            result = output_lines[1].strip()
+            fun_test.debug(output_lines)
+            result = output_lines[0].strip()
         except Exception as ex:
             critical_str = str(ex)
             fun_test.critical(critical_str)
@@ -1283,7 +1302,7 @@ class Linux(object, ToDictMixin):
         # fio_result += '\n'
         fun_test.debug(fio_result)
 
-        # Checking there is no error occured during the FIO test
+        # Checking there is no error occurred during the FIO test
         match = ""
         match = re.search(r'Assertion .* failed', fio_result, re.I)
         if match:
