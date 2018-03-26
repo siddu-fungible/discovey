@@ -262,7 +262,7 @@ class ECDPULevelTestcase(FunTestCase):
                                          .format(type, i))
 
                     command_result = self.storage_controller[type][i].ip_cfg(
-                        ip=dut.data_plane_ip, expected_command_duration=self.command_timeout)
+                        ip=dut.data_plane_ip, command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "ip_cfg {} on {} {} DUT instance".format(dut.data_plane_ip, type, i))
@@ -274,7 +274,7 @@ class ECDPULevelTestcase(FunTestCase):
                     command_result = self.storage_controller[type][i].create_volume(
                         type=self.volume_types[type], capacity=self.volume_capacity[type],
                         block_size=self.volume_block[type], name=type+"-"+str(i), uuid=this_uuid,
-                        expected_command_duration=self.command_timeout)
+                        command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create BLT volume on {} {} DUT instance".
                                          format(type, i))
@@ -282,7 +282,7 @@ class ECDPULevelTestcase(FunTestCase):
                     # Attaching the BLT to the DPU in the which the EC volume going to be configured
                     command_result = self.storage_controller[type][i].volume_attach_remote(
                         ns_id=self.ns_id[type], uuid=this_uuid, remote_ip=ec_dut.data_plane_ip,
-                        expected_command_duration=self.command_timeout)
+                        command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Attaching BLT volume of {} {} DUT instance to the "
                                                                    "last DUT instance".format(type, i))
@@ -296,7 +296,7 @@ class ECDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Enabling counters in the last DUT instance")
 
                 command_result = self.storage_controller["ec"][0].ip_cfg(ip=ec_dut.data_plane_ip,
-                                                                         expected_command_duration=self.command_timeout)
+                                                                         command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"],
                                      "ip_cfg {} on last DUT instance".format(ec_dut.data_plane_ip))
@@ -316,7 +316,7 @@ class ECDPULevelTestcase(FunTestCase):
                             type=self.volume_types["rds"], capacity=self.volume_capacity["rds"],
                             block_size=self.volume_block["rds"], name=type+str(i)+"-rds", uuid=this_uuid,
                             remote_nsid=self.ns_id[type], remote_ip=dut.data_plane_ip,
-                            expected_command_duration=self.command_timeout)
+                            command_duration=self.command_timeout)
                         fun_test.log(command_result)
                         fun_test.test_assert(command_result["status"], "Create RDS volume for {} {} DUT instance".
                                              format(type, i))
@@ -333,7 +333,7 @@ class ECDPULevelTestcase(FunTestCase):
                 type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
                 name="ec-1", uuid=this_uuid, ndata=self.global_setup["ec_coding"]["ndata"],
                 nparity=self.global_setup["ec_coding"]["nparity"], pvol_id=ec_pvol_id,
-                expected_command_duration=self.command_timeout)
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create EC volume on last DUT instance")
             attach_uuid = this_uuid
@@ -347,7 +347,7 @@ class ECDPULevelTestcase(FunTestCase):
                     type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
                     block_size=self.volume_block["lsv"], name="lsv-1", uuid=this_uuid,
                     group=self.global_setup["ec_coding"]["ndata"], pvol_id=self.uuids["ec"],
-                    expected_command_duration=self.command_timeout)
+                    command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create LS volume on the last DUT instance")
                 attach_uuid = this_uuid
@@ -356,7 +356,7 @@ class ECDPULevelTestcase(FunTestCase):
             # Attaching/Exporting the EC/LS volume to the external server
             command_result = self.storage_controller["ec"][0].volume_attach_remote(
                 ns_id=ns_id, uuid=attach_uuid, remote_ip=self.linux_host.internal_ip,
-                expected_command_duration=self.command_timeout)
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching EC/LS volume in the last DUT instance")
 
@@ -420,7 +420,7 @@ class ECDPULevelTestcase(FunTestCase):
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
                 command_result = self.storage_controller["ndata"][index].fail_volume(
-                    uuid=self.uuids["ndata"][index], expected_command_duration=self.command_timeout)
+                    uuid=self.uuids["ndata"][index], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
                                                                "UUID {}".format(self.uuids["ndata"][index]))
@@ -775,7 +775,7 @@ class ECDPULevelTestcase(FunTestCase):
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
                 command_result = self.storage_controller["ndata"][index].fail_volume(
-                    uuid=self.uuids["ndata"][index], expected_command_duration=self.command_timeout)
+                    uuid=self.uuids["ndata"][index], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
                                                                "having the UUID {}".format(self.uuids["ndata"][index]))

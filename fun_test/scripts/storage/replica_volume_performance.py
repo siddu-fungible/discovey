@@ -229,7 +229,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Enabling counters on BLT {} DUT instance".format(i))
 
                 command_result = self.storage_controller["blt"][i].ip_cfg(
-                    ip=dut.data_plane_ip, expected_command_duration=self.command_timeout)
+                    ip=dut.data_plane_ip, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "ip_cfg {} on BLT {} DUT instance".
                                      format(dut.data_plane_ip, i))
@@ -240,14 +240,14 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 command_result = self.storage_controller["blt"][i].create_volume(
                     type=self.volume_types["blt"], capacity=self.volume_capacity["blt"],
                     block_size=self.volume_block["blt"], name="blt" + "-" + str(i), uuid=this_uuid,
-                    expected_command_duration=self.command_timeout)
+                    command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create BLT volume on {} DUT instance".format(i))
 
                 # Attaching the BLT to the DPU in the which the Replica volume going to be configured
                 command_result = self.storage_controller["blt"][i].volume_attach_remote(
                     ns_id=self.ns_id["blt"], uuid=this_uuid, remote_ip=replica_dut.data_plane_ip,
-                    expected_command_duration=self.command_timeout)
+                    command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching BLT volume of {} DUT instance to the last "
                                                                "DUT instance".format(i))
@@ -261,7 +261,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Enabling counters in the Replica DUT instance")
 
                 command_result = self.storage_controller["replica"][0].ip_cfg(
-                    ip=replica_dut.data_plane_ip, expected_command_duration=self.command_timeout)
+                    ip=replica_dut.data_plane_ip, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "ip_cfg {} on last DUT instance".
                                      format(replica_dut.data_plane_ip))
@@ -279,7 +279,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                         type=self.volume_types["rds"], capacity=self.volume_capacity["rds"],
                         block_size=self.volume_block["rds"], name="blt" + str(i) + "-rds", uuid=this_uuid,
                         remote_nsid=self.ns_id["blt"], remote_ip=dut.data_plane_ip,
-                        expected_command_duration=self.command_timeout)
+                        command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create RDS volume for BLT {} DUT instance".
                                          format(i))
@@ -296,7 +296,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 type=self.volume_types["replica"], capacity=self.volume_capacity["replica"],
                 block_size=self.volume_block["replica"], name="replica-1", uuid=this_uuid, pvol_id=replica_pvol_id,
                 pvol_type=self.volume_types["rds"], min_replicas_insync=self.global_setup["min_replicas_insync"],
-                expected_command_duration=self.command_timeout)
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create Replica volume on last DUT instance")
             attach_uuid = this_uuid
@@ -305,7 +305,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
             # Attaching/Exporting the Replica volume to the external server
             command_result = self.storage_controller["replica"][0].volume_attach_remote(
                 ns_id=ns_id, uuid=attach_uuid, remote_ip=self.linux_host.internal_ip,
-                expected_command_duration=self.command_timeout)
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching Replica volume in the last DUT instance")
 
@@ -365,7 +365,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
                 command_result = self.storage_controller["blt"][index].fail_volume(
-                    uuid=self.uuids["blt"][index], expected_command_duration=self.command_timeout)
+                    uuid=self.uuids["blt"][index], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Inject failure to the BLT volume having the "
                                                                "UUID {}".format(self.uuids["blt"][index]))
@@ -705,7 +705,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
                 command_result = self.storage_controller["blt"][index].fail_volume(
-                    uuid=self.uuids["blt"][index], expected_command_duration=self.command_timeout)
+                    uuid=self.uuids["blt"][index], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the BLT volume having the "
                                                                "UUID {}".format(self.uuids["ndata"][index]))
