@@ -7,12 +7,15 @@ from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
 
 LOCAL_REPOSITORY_DIR = "/SBPFirmware"
+DEVTOOLS_FIRMWARE_DIR = LOCAL_REPOSITORY_DIR + "/software/devtools/firmware"
 SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
 BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 TEST_LOG_FILE = "/tmp/test.log"
 BOARD_TYPE = "zynq7_zc706"
 CPU = "m5150"
+
+ENROLLMENT_MAGIC_NUMBER = "1E5C00B1"
 
 class ContainerSetup(FunTestScript):
     def describe(self):
@@ -55,11 +58,13 @@ class ContainerSetup(FunTestScript):
             fun_test.sleep("Waiting for container to come up", seconds=10)
         fun_test.test_assert(container_up, "Container UP")
 
+        localhost = Linux(host_ip="127.0.0.1", localhost=True)
+        localhost.command("cd {}; git pull".format(SBP_FIRMWARE_REPO_DIR))
+        fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
+
     def cleanup(self):
 
-        self.docker_host.destroy_container(
-            container_name=self.container_name,
-            ignore_error=True)
+        self.docker_host.destroy_container(container_name=self.container_name, ignore_error=True)
 
 
 class TestCase1(FunTestCase):
@@ -88,9 +93,7 @@ class TestCase1(FunTestCase):
                                          local_repository=LOCAL_REPOSITORY_DIR,
                                          zynq_board_ip=ZYNC_BOARD_IP)
 
-        localhost = Linux(host_ip="127.0.0.1", localhost=True)
-        localhost.command("cd {}; git pull".format(SBP_FIRMWARE_REPO_DIR))
-        fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
+
         fun_test.test_assert(sbp_setup.setup(), "Setup")
         linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
         linux_obj.command("ls -l")
@@ -129,6 +132,7 @@ class TestCase1(FunTestCase):
             last_line = linux_obj.command("tail {}".format(local_log_file))
             fun_test.test_assert("[EXIT] SUCCESS" in last_line, message="{}: [EXIT] SUCCESS message found".format(just_file_name))
 
+
     def cleanup(self):
         self.container_asset = fun_test.shared_variables["container_asset"]
         post_fix_name = "Test-case1-test-log.txt"
@@ -144,9 +148,10 @@ class TestCase1(FunTestCase):
 
 
 
+
 class TestCase2(FunTestCase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary="secureboot=on ",
                               steps="""
         1. Do something on the container.
@@ -154,6 +159,40 @@ class TestCase2(FunTestCase):
 
     def setup(self):
         pass
+
+    def enroll(self):
+        self.linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
+        linux_obj = self.linux_obj
+        stimuli_dir = "{}/validation/stimuli/short".format(LOCAL_REPOSITORY_DIR)
+        self.linux_obj.command('rm log/cmd_enroll_puf_chal.log')
+        stimuli_file = "{}/cmd_enroll_puf_chal.py".format(stimuli_dir)
+        command = 'python ./run_test.py --cpu={} --board_type={} --bitstream={} --board={} -vv --secureboot=on --nohostboot {} &> {}'.format(CPU, BOARD_TYPE, BIT_STREAM, ZYNC_BOARD_IP, stimuli_file, TEST_LOG_FILE)
+        output = linux_obj.command(command, timeout=900)
+        self.linux_obj.list_files(path="log/")
+        output = self.linux_obj.command("cat log/cmd_enroll_puf_chal_secboot.log")
+        certificate_contents = ""
+        m = re.search(
+            r'TBS Certificate log start.*memory\s+read.*bytes:(.*)\[INFO\].*Step 1-4: TBS Certificate log end', output,
+            re.MULTILINE | re.DOTALL)
+        fun_test.test_assert(m, message="Find TBS certificate section in log")
+        if m:
+            certificate_contents = m.group(1).strip()
+        fun_test.test_assert(certificate_contents.startswith(ENROLLMENT_MAGIC_NUMBER), message="Find magic in enrollment cert")
+        fun_test.log("TBS cert: {}".format(certificate_contents))
+
+        tbs_hex_file = "/tmp/tbs.hex"
+        tbs_bin_file = "/tmp/tbs.bin"
+        self.linux_obj.create_file(tbs_hex_file, contents=certificate_contents)
+
+        self.linux_obj.command("apt-get -y install xxd; xxd -r -p {} {}".format(tbs_hex_file, tbs_bin_file))
+
+        self.linux_obj.command("cd {}".format(DEVTOOLS_FIRMWARE_DIR))
+        enrollment_bin_file = "/tmp/enroll_cert.bin"
+        self.linux_obj.command("python3 ./generate_firmware_image.py sign -k fpk4 -f {} -o {}".format(tbs_bin_file, enrollment_bin_file))
+        fun_test.test_assert(self.linux_obj.list_files(enrollment_bin_file), message="Signed enrollment bin file")
+        linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
+        linux_obj.command("mv {} .".format(enrollment_bin_file))
+
 
     def run(self):
 
@@ -163,6 +202,8 @@ class TestCase2(FunTestCase):
                           ssh_username=container_asset["mgmt_ssh_username"],
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
+        self.linux_obj = linux_obj
+
 
         linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
         linux_obj.command("rm -rf log/*.log".format(SBP_FIRMWARE_REPO_DIR))
@@ -174,28 +215,16 @@ class TestCase2(FunTestCase):
         localhost.command("cd {}; git pull".format(SBP_FIRMWARE_REPO_DIR))
         fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
         fun_test.test_assert(sbp_setup.setup(), "Setup")
+        self.enroll()
+
+
         linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
         linux_obj.command("ls -l")
         stimuli_dir = "{}/validation/stimuli/short".format(LOCAL_REPOSITORY_DIR)
         files = linux_obj.list_files(stimuli_dir)
 
 
-        '''
-        for file in files:
-            filename = file["filename"]
-            if not filename.endswith(".py"):
-                continue
-            stimuli_file = stimuli_dir + "/" + filename
-            fun_test.add_checkpoint(checkpoint="Stimuli file: {}".format(filename))
-            command = 'python ./run_test.py --cpu={} --board_type={} --bitstream={} --board={} -vv --secureboot=off {}'.format(
-                CPU, BOARD_TYPE, BIT_STREAM, ZYNC_BOARD_IP, stimuli_file)
-            output = linux_obj.command(command, timeout=260)
-            fun_test.test_assert(not re.search("ERROR:run_test.py:*errors", output),
-                                 "Error not found: {}".format(filename))
 
-            # stimuli_file = "{}/cmd_debug_access_chlg.py".format(stimuli_dir)
-
-        '''
 
         stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
         stimuli_files = linux_obj.list_files(stimuli_file)
@@ -207,9 +236,11 @@ class TestCase2(FunTestCase):
         linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
         for stimuli_file in stimuli_files:
             just_file_name = os.path.basename(stimuli_file["filename"])
-            local_log_file = "log/{}".format(just_file_name.replace(".py", ".log"))
+            local_log_file = "log/{}".format(just_file_name.replace(".py", "_secboot.log"))
+            linux_obj.command("ls -ltr {}".format("log/*"))
             last_line = linux_obj.command("tail {}".format(local_log_file))
             fun_test.test_assert("[EXIT] SUCCESS" in last_line, message="{}: [EXIT] SUCCESS message found".format(just_file_name))
+
 
     def cleanup(self):
         self.container_asset = fun_test.shared_variables["container_asset"]
