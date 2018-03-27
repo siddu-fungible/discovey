@@ -10,11 +10,17 @@ class LibkcapiTemplate(CryptoTemplate):
     ECB_AES = "ecb(aes)"
     XTS_AES = "xts(aes)"
     CBC_AES = "cbc(aes)"
+    SHA1 = "sha1"
+    SHA224 = "sha224"
+    SHA256 = "sha256"
+    SHA384 = "sha384"
+    SHA512 = "sha512"
     AUTH_ENC = "authenc(hmac(sha1),cbc(aes))"
     KCAPI_PATH = "/usr/bin/kcapi"
 
     # def setup(self,path):
-    #     fun_test.scp(source_file_path=path, target_ip=self.host.host_ip, target_port=self.host.ssh_port, target_username=self.host.ssh_username, target_password=self.host.ssh_password,
+    #     fun_test.scp(source_file_path=path, target_ip=self.host.host_ip, target_port=self.host.ssh_port,
+    #                       target_username=self.host.ssh_username, target_password=self.host.ssh_password,
     #                  target_file_path="/tmp", timeout=90, recursive=True)
     #     self.host.command("export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/libkcapi/lib")
     #     return True
@@ -23,7 +29,8 @@ class LibkcapiTemplate(CryptoTemplate):
         input_dict = eval((open(file_path, 'r')).read())
         return input_dict
 
-    def kcapi_cmnd(self, algorithm, cipher_type, key, encrypt=True, plain_text=None, cipher_text=None, iv=None, assoc_data=None, tag=None, tag_len=None, nonce=None):
+    def kcapi_cmnd(self, algorithm, cipher_type, key, encrypt=True, plain_text=None, cipher_text=None, iv=None,
+                   assoc_data=None, tag=None, tag_len=None, nonce=None):
         if encrypt:
             cmd_str = self.KCAPI_PATH + " -x " + cipher_type + " -e -c  \"" + algorithm + "\" -k " + key
         else:
@@ -42,6 +49,13 @@ class LibkcapiTemplate(CryptoTemplate):
             cmd_str += " -l " + tag_len
         if nonce:
             cmd_str += " -n " + nonce
+
+        output = self.host.command(cmd_str).strip()
+        return output
+
+    def kcapi_dgst(self, algorithm, cipher_type, msg=None):
+
+        cmd_str = self.KCAPI_PATH + " -x " + cipher_type + " -c " + algorithm + " -p " + msg
 
         output = self.host.command(cmd_str).strip()
         return output
