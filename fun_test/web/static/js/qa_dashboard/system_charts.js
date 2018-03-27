@@ -10,6 +10,23 @@ function SystemChartsController($scope, $http, commonService) {
         $scope.model2Name = "AllocSpeedPerformance";
         $scope.fetchJenkinsJobIdMap();
         $scope.buildInfo = null;
+
+        $scope.featureTable = [];
+        let oneFeature = {
+            name: "Best time for 1 malloc/free (WU)",
+            chartName: "Best time for 1 malloc/free (WU)",
+            metricModelName: "AllocSpeedPerformance"};
+        $scope.featureTable.push(oneFeature);
+
+        oneFeature = {
+            name: "Best time for 1 malloc/free (Threaded)",
+            chartName: "Best time for 1 malloc/free (Threaded)",
+            metricModelName: "AllocSpeedPerformance"};
+        $scope.featureTable.push(oneFeature);
+
+
+        $scope.currentChartName = "Best time for 1 malloc/free (WU)";
+        $scope.currentMetricModelName = "AllocSpeedPerformance";
     };
 
     $scope.fetchJenkinsJobIdMap = () => {
@@ -21,6 +38,12 @@ function SystemChartsController($scope, $http, commonService) {
             })
         })
     };
+
+    $scope.showChart = (chartName, metricModelName) => {
+        $scope.currentChartName = chartName;
+        $scope.currentMetricModelName = metricModelName;
+    };
+
 
     $scope.pointClickCallback = (point) => {
         console.log(point);

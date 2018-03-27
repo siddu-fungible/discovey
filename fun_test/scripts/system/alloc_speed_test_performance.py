@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 import requests
 import json
 import re
-import web.fun_test.models_helper
+from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.analytics_models_helper import AllocSpeedPerformanceHelper
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
@@ -105,15 +105,25 @@ class FunTestCase1(FunTestCase):
         newest_build_number = max(job_info.keys())
         expected_values = {}
 
-        expected_values["output_one_malloc_free_wu"] = {"expected": 660, "min": 1}
-        expected_values["output_one_malloc_free_threaded"] = {"expected": 402, "min": 1}
-
+        metric_model_name = "AllocSpeedPerformance"
+        chart_map = {}
+        chart_map["output_one_malloc_free_wu"] = "Best time for 1 malloc/free (WU)"
+        chart_map["output_one_malloc_free_threaded"] = "Best time for 1 malloc/free (Threaded)"
         values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
-        for value_to_check in values_to_check:
-            expected_values[value_to_check]["max"] = expected_values[value_to_check]["expected"] * (1 + (TOLERANCE_PERCENTAGE / 100))
 
         for value_to_check in values_to_check:
-            expected, min_value, max_value = expected_values[value_to_check]["expected"], expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]
+            chart_helper = MetricChartHelper(chart_name=chart_map[value_to_check], metric_model_name=metric_model_name)
+            expected_values[value_to_check] = {"min": chart_helper.get_output_data_set(output_name=value_to_check)["min"],
+                                               "max": chart_helper.get_output_data_set(output_name=value_to_check)["max"]}
+
+        # expected_values["output_one_malloc_free_wu"] = {"expected": 660, "min": 1}
+        # expected_values["output_one_malloc_free_threaded"] = {"expected": 402, "min": 1}
+
+        # for value_to_check in values_to_check:
+        #    expected_values[value_to_check]["max"] = expected_values[value_to_check]["expected"] * (1 + (TOLERANCE_PERCENTAGE / 100))
+
+        for value_to_check in values_to_check:
+            min_value, max_value = expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]
             actual = job_info[newest_build_number][value_to_check]
             fun_test.test_assert(actual >= min_value, "Build: {} Attr: {} Min: {} Actual: {}".format(newest_build_number, value_to_check, min_value, actual))
             fun_test.test_assert(actual <= max_value, "Build: {} Attr: {} Max: {} Actual: {}".format(newest_build_number, value_to_check, max_value, actual))

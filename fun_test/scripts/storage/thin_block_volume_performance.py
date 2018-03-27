@@ -177,7 +177,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             command_result = {}
             command_result = self.storage_controller.ip_cfg(ip=self.dut_instance.data_plane_ip,
-                                                            expected_command_duration=self.command_timeout)
+                                                            command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg {} on Dut Instance 0".
                                  format(self.dut_instance.data_plane_ip))
@@ -186,14 +186,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             self.thin_uuid = str(uuid.uuid4()).replace("-", "")[:10]
             command_result = self.storage_controller.create_thin_block_volume(
                 capacity=self.volume_details["capacity"], block_size=self.volume_details["block_size"],
-                name=self.volume_details["name"], uuid=self.thin_uuid, expected_command_duration=self.command_timeout)
+                name=self.volume_details["name"], uuid=self.thin_uuid, command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
             command_result = {}
             command_result = self.storage_controller.volume_attach_remote(
                 ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, remote_ip=self.linux_host.internal_ip,
-                expected_command_duration=self.command_timeout)
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
 

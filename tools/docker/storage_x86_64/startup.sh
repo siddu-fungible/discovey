@@ -23,6 +23,7 @@ if [ $# -ne 1 ]; then
     usage
     exit 1
 fi
+
 dochub_fungible_local=10.1.20.99
 base_url=$1
 dpcsh_tgz_name=dpcsh.tgz
@@ -37,6 +38,7 @@ qemu_tgz_url=$base_url/$qemu_tgz_name
 # pcbios_tgz_url=$base_url/$pcbios_tgz_name
 modules_tgz_name=modules.tgz
 modules_tgz_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
+functrlp_tgz_url=http://$dochub_fungible_local/doc/jenkins/funcontrolplane/latest/functrlp.tgz
 
 echo "Base url: $base_url"
 echo "Dpsch tgz url: $dpcsh_tgz_url"
@@ -44,9 +46,10 @@ echo "FunOS tgz url: $funos_tgz_url"
 echo "Qemu tgz url: $qemu_tgz_url"
 # echo "PC Bios url: $pcbios_tgz_url"
 echo "Modules url: $modules_tgz_url"
+echo "FunCP url: $functrlp_tgz_url"
 
 
-arr=($dpcsh_tgz_url $funos_tgz_url $qemu_tgz_url $modules_tgz_url)
+arr=($dpcsh_tgz_url $funos_tgz_url $qemu_tgz_url $modules_tgz_url $functrlp_tgz_url)
 for url in "${arr[@]}"
     do
         curl_fetch $url

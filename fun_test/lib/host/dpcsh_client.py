@@ -59,6 +59,12 @@ class DpcshClient(object):
             self.sock.connect((self.target_ip, self.target_port))
             fcntl.fcntl(self.sock, fcntl.F_SETFL, os.O_NONBLOCK)
 
+    def disconnect(self):
+        if self.sock:
+            self.sock.close()
+        self.sock = None
+        return True
+
     def command(self, command, command_duration=2):
         result = {"status": False, "data": None, "error_message": None, "command": command}
         output = ""

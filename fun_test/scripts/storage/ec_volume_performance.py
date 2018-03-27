@@ -201,7 +201,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             command_result = {}
             command_result = self.storage_controller.ip_cfg(ip=self.dut.data_plane_ip,
-                                                            expected_command_duration=self.command_timeout)
+                                                            command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg {} on DUT instance 0".format(self.dut.data_plane_ip))
 
@@ -215,7 +215,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     command_result = self.storage_controller.create_volume(
                         type=self.volume_types[type], capacity=self.volume_capacity[type],
                         block_size=self.volume_block[type], name=type+str(i), uuid=this_uuid,
-                        expected_command_duration=self.command_timeout)
+                        command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create {} {} BLT volume on DUT instance 0".
                                          format(i, type))
@@ -226,7 +226,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             command_result = self.storage_controller.create_volume(
                 type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
                 name="ec1", uuid=this_uuid, ndata=self.ec_coding["ndata"], nparity=self.ec_coding["nparity"],
-                pvol_id=self.uuids["blt"], expected_command_duration=self.command_timeout)
+                pvol_id=self.uuids["blt"], command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create EC volume on DUT instance 0")
             attach_uuid = this_uuid
@@ -238,7 +238,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 command_result = self.storage_controller.create_volume(
                     type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
                     block_size=self.volume_block["lsv"], name="lsv1", uuid=this_uuid, group=self.ec_coding["ndata"],
-                    pvol_id=self.uuids["ec"], expected_command_duration=self.command_timeout)
+                    pvol_id=self.uuids["ec"], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create LS volume on DUT instance 0")
                 attach_uuid = this_uuid
@@ -247,7 +247,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             command_result = {}
             command_result = self.storage_controller.volume_attach_remote(
                 ns_id=self.ns_id, uuid=attach_uuid, remote_ip=self.linux_host.internal_ip,
-                expected_command_duration=self.command_timeout)
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT instance 0")
 
@@ -307,7 +307,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
                 command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                     expected_command_duration=self.command_timeout)
+                                                                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
                                                                "UUID {}".format(self.uuids["ndata"][index]))
@@ -627,7 +627,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
                 command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                     expected_command_duration=self.command_timeout)
+                                                                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
                                                                "having the UUID {}".format(self.uuids["ndata"][index]))
