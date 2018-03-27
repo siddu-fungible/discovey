@@ -188,7 +188,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
             if (data) {
                 alert("Submitted");
-                $modalInstance.dismiss('cancel');
+                $scope.dismiss();
             } else {
                 alert("Submission failed. Please check alerts");
             }
