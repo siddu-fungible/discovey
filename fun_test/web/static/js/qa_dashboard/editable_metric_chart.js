@@ -36,6 +36,10 @@ function EditableMetricChartController($scope, commonService, $attrs) {
             $scope.fetchChartInfo();
         });
 
+        $scope.currentDescription = "<b>Description:</b>";
+        $scope.currentDescription += "Abc" + "<br>";
+        $scope.currentDescription += "Def";
+
     };
 
     $scope.$watch(function () {
