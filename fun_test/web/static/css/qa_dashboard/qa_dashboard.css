@@ -298,3 +298,8 @@ input:checked + .slider:before {
 .progress-bar-blocked {
     background-color: purple;
 }
+
+thead {
+    background-color: #337ab7;
+    color: white;
+}

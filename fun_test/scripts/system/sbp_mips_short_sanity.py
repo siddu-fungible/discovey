@@ -56,6 +56,7 @@ class ContainerSetup(FunTestScript):
         fun_test.test_assert(container_up, "Container UP")
 
     def cleanup(self):
+
         self.docker_host.destroy_container(
             container_name=self.container_name,
             ignore_error=True)
@@ -81,6 +82,8 @@ class TestCase1(FunTestCase):
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
 
+        linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
+        linux_obj.command("rm -rf log/*.log".format(SBP_FIRMWARE_REPO_DIR))
         sbp_setup = SbpZynqSetupTemplate(host=linux_obj,
                                          local_repository=LOCAL_REPOSITORY_DIR,
                                          zynq_board_ip=ZYNC_BOARD_IP)
@@ -127,7 +130,18 @@ class TestCase1(FunTestCase):
             fun_test.test_assert("[EXIT] SUCCESS" in last_line, message="{}: [EXIT] SUCCESS message found".format(just_file_name))
 
     def cleanup(self):
-        pass
+        self.container_asset = fun_test.shared_variables["container_asset"]
+        post_fix_name = "Test-case1-test-log.txt"
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=post_fix_name)
+        fun_test.scp(source_ip=self.container_asset["host_ip"],
+                     source_file_path="{}".format(TEST_LOG_FILE),
+                     source_username=self.container_asset["mgmt_ssh_username"],
+                     source_password=self.container_asset["mgmt_ssh_password"],
+                     source_port=self.container_asset["mgmt_ssh_port"],
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(post_fix_name),
+                                    filename=artifact_file_name)
+
 
 
 class TestCase2(FunTestCase):
@@ -150,6 +164,8 @@ class TestCase2(FunTestCase):
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
 
+        linux_obj.command('cd {}/software/board_tests'.format(LOCAL_REPOSITORY_DIR))
+        linux_obj.command("rm -rf log/*.log".format(SBP_FIRMWARE_REPO_DIR))
         sbp_setup = SbpZynqSetupTemplate(host=linux_obj,
                                          local_repository=LOCAL_REPOSITORY_DIR,
                                          zynq_board_ip=ZYNC_BOARD_IP)
@@ -196,7 +212,18 @@ class TestCase2(FunTestCase):
             fun_test.test_assert("[EXIT] SUCCESS" in last_line, message="{}: [EXIT] SUCCESS message found".format(just_file_name))
 
     def cleanup(self):
-        pass
+        self.container_asset = fun_test.shared_variables["container_asset"]
+        post_fix_name = "Test-case2-test-log.txt"
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=post_fix_name)
+        fun_test.scp(source_ip=self.container_asset["host_ip"],
+                     source_file_path="{}".format(TEST_LOG_FILE),
+                     source_username=self.container_asset["mgmt_ssh_username"],
+                     source_password=self.container_asset["mgmt_ssh_password"],
+                     source_port=self.container_asset["mgmt_ssh_port"],
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(post_fix_name),
+                                    filename=artifact_file_name)
+
 
 
 if __name__ == "__main__":

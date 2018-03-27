@@ -13,7 +13,7 @@
     </thead>
     <tr ng-repeat="dataSet in previewDataSets track by $index">
         <td>
-            <button ng-if="!editing" class="fa fa-pencil" ng-click="editClick()"></button>
+            <button ng-if="!editing" class="fa fa-pencil" style="border: 0" ng-click="editClick()"></button>
         </td>
         <td>
             {{ dataSet.output.min }}
