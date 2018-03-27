@@ -36,10 +36,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
             $scope.fetchChartInfo();
         });
 
-        $scope.currentDescription = "<b>Description:</b>";
-        $scope.currentDescription += "Abc" + "<br>";
-        $scope.currentDescription += "Def";
-
+        $scope.currentDescription = "---";
     };
 
     $scope.$watch(function () {
@@ -100,6 +97,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
                 $scope.chartInfo = chartInfo;
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
+                $scope.currentDescription = $scope.chartInfo.description;
             });
         } else {
 
@@ -186,6 +184,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         payload["metric_model_name"] = $scope.modelName;
         payload["chart_name"] = $scope.chartName;
         payload["data_sets"] = $scope.previewDataSets;
+        payload["description"] = $scope.currentDescription;
         commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
             if (data) {
                 alert("Submitted");

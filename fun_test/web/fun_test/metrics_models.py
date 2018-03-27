@@ -3,10 +3,10 @@ from rest_framework.serializers import ModelSerializer
 
 
 class MetricChart(models.Model):
-
     data_sets = models.TextField(default="[]")
     chart_name = models.TextField(unique=True)
     metric_model_name = models.TextField(default="Performance1")
+    description = models.TextField(default="TBD")
 
 
 class ModelMapping(models.Model):

@@ -52,7 +52,7 @@ def chart_info(request):
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result = None
     if chart:
-        result = {"data_sets": json.loads(chart.data_sets)}
+        result = {"data_sets": json.loads(chart.data_sets), "description": chart.description}
     return result
 
 
@@ -160,9 +160,14 @@ def update_chart(request):
     model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
     data_sets = request_json["data_sets"]
+    description = None
+    if "description" in request_json:
+        description = request_json["description"]
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
         c.data_sets = json.dumps(data_sets)
+        if description:
+            c.description = description
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name, chart_name=chart_name, data_sets=json.dumps(data_sets))
