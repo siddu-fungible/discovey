@@ -107,7 +107,7 @@ class TestCase2(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="secureboot=on, with enrollment certificatte",
+                              summary="secureboot=on, with enrollment certificate",
                               steps="""
         1. Do something on the container.
                               """)
@@ -125,7 +125,8 @@ class TestCase2(FunTestCase):
         self.linux_obj = linux_obj
         sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP, bit_stream=BIT_STREAM)
         fun_test.test_assert(sbp_setup.setup(), "Setup")
-        fun_test.test_assert(sbp_setup.enroll(), "Enrollment")
+        if self.enroll:
+            fun_test.test_assert(sbp_setup.enroll(), "Enrollment")
 
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
         stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
@@ -158,7 +159,7 @@ class TestCase3(TestCase2):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="secureboot=on, with no enrollment certificatte",
+                              summary="secureboot=on, with no enrollment certificate",
                               steps="""
         1. Do something on the container.
                               """)
