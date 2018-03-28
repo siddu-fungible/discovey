@@ -13,6 +13,7 @@ class SbpZynqSetupTemplate:
     TEST_LOG_FILE = "/tmp/test.log"
     ENROLLMENT_MAGIC_NUMBER = "1E5C00B1"
     DEVTOOLS_FIRMWARE_DIR = LOCAL_REPOSITORY_DIR + "/software/devtools/firmware"
+    ENROLLMENT_CERT_BIN = "enroll_cert.bin"
 
     def __init__(self, host, zynq_board_ip, bit_stream=None):
         self.host = host
@@ -28,6 +29,7 @@ class SbpZynqSetupTemplate:
         fun_test.test_assert(self.setup_hsm(), "HSM install")
         fun_test.test_assert(self.setup_build(), "Cmake Build")
         fun_test.test_assert(self.clear_board_tests_logs(), "Clear board-tests logs")
+        self.clear_enrollment_bin()
 
         return True
 
@@ -63,6 +65,9 @@ class SbpZynqSetupTemplate:
     def clear_board_tests_logs(self):
         self.host.command("rm -rf {}/*".format(self.get_board_tests_log_dir()))
         return True
+
+    def clear_enrollment_bin(self):
+        self.host.command("rm {}/{}".format(self.get_board_tests_dir(), self.ENROLLMENT_CERT_BIN))
 
     def run_test_py(self,
                     secure_boot,
