@@ -299,7 +299,7 @@ input:checked + .slider:before {
     background-color: purple;
 }
 
-thead {
+.thead {
     background-color: #337ab7;
     color: white;
 }
