@@ -146,7 +146,7 @@ class SbpZynqSetupTemplate:
         tbs_bin_file = "/tmp/tbs.bin"
         self.host.create_file(tbs_hex_file, contents=certificate_contents)
 
-        # self.host.command("apt-get -y install xxd; xxd -r -p {} {}".format(tbs_hex_file, tbs_bin_file))
+        self.host.command("xxd -r -p {} {}".format(tbs_hex_file, tbs_bin_file))
 
         self.host.command("cd {}".format(self.DEVTOOLS_FIRMWARE_DIR))
         enrollment_bin_file = "/tmp/enroll_cert.bin"
