@@ -103,6 +103,7 @@ class TestCase1(FunTestCase):
 
 class TestCase2(FunTestCase):
     secure_boot = True
+    enroll = True
 
     def describe(self):
         self.set_test_details(id=2,
@@ -128,14 +129,14 @@ class TestCase2(FunTestCase):
 
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
         stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
-        if self.secure_boot:
+        if self.enroll:
             fun_test.test_assert(sbp_setup.run_test_py(secure_boot=self.secure_boot,
                                                        stimuli_file=stimuli_file),
                                  message="Run test py")
         else:
             fun_test.test_assert(not sbp_setup.run_test_py(secure_boot=self.secure_boot,
                                                            stimuli_file=stimuli_file),
-                                 message="Run test py should fail")
+                                 message="Run test py should fail without enrollment")
 
     def cleanup(self):
         self.container_asset = fun_test.shared_variables["container_asset"]
@@ -152,11 +153,12 @@ class TestCase2(FunTestCase):
 
 
 class TestCase3(TestCase2):
-    secure_boot = False
+    secure_boot = True
+    enroll = False
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="secureboot=off, with enrollment certificatte",
+                              summary="secureboot=on, with no enrollment certificatte",
                               steps="""
         1. Do something on the container.
                               """)
