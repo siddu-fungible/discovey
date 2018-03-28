@@ -107,12 +107,25 @@ class SbpZynqSetupTemplate:
             stimuli_files = self.host.list_files(stimuli_file)
             fun_test.simple_assert(stimuli_files, "Atleast one stimuli file")
 
+            error_found = False
+
             for stimuli_file in stimuli_files:
                 log_file_name = self.get_stimuli_log_filename(stimuli_file=stimuli_file["filename"],
                                                               secure_boot=secure_boot)
                 last_line = self.host.command("tail {}".format(log_file_name))
-                fun_test.test_assert("[EXIT] SUCCESS" in last_line, message="{}: [EXIT] SUCCESS message found".format(log_file_name))
-            result = True
+                try:
+                    fun_test.test_assert("[EXIT] SUCCESS" in last_line,
+                                         message="{}: [EXIT] SUCCESS message found".format(log_file_name))
+                except Exception as ex:
+                    error_found = True
+                    fun_test.critical(str(ex))
+
+            # Check test log too
+
+            output = self.host.command("grep -c {} {}".format("'ERROR:run_test.py:Tests completed with .* errors'", self.TEST_LOG_FILE))
+            fun_test.test_assert(not int(output.strip()), message="Completed with errors found in log")
+            result = True and not error_found
+
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -128,7 +141,7 @@ class SbpZynqSetupTemplate:
         return local_log_file
 
     def enroll(self):
-        stimuli_dir = "{}/validation/stimuli/short".format(self.local_repository)
+        stimuli_dir = "{}/validation/stimuli/enroll".format(self.local_repository)
         stimuli_file = "{}/cmd_enroll_puf_chal.py".format(stimuli_dir)
 
         fun_test.test_assert(self.run_test_py(secure_boot=True, stimuli_file=stimuli_file, no_host_boot=True),
