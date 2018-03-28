@@ -7,7 +7,7 @@ ARG ZYNQ_SETUP_DIR=/zynq_setup
 RUN mkdir -p $ZYNQ_SETUP_DIR
 WORKDIR $ZYNQ_SETUP_DIR
 RUN rm -vf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y net-tools openssh-server curl sudo rsync
+RUN apt-get update && apt-get install -y net-tools openssh-server curl sudo rsync xxd
 RUN apt-get install -y libpthread-stubs0-dev gcc-multilib g++-multilib cmake cppcheck doxygen python-pip git screen
 RUN apt-get install -y libssl-dev gcc libc6-dev-armhf-cross libc6-dev-i386 libssl-dev
 
