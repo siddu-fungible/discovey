@@ -163,11 +163,11 @@ class FunTestCase1(FunTestCase):
         result = storage_controller.command("peek stats/likv")
         fun_test.simple_assert(result["status"], "Fetch ikv stats")
         volume_id = str(volume_id)
-        fun_test.test_assert(result["data"][volume_id]["LIKV get bytes"], "LIKV get bytes")
-        fun_test.test_assert_expected(actual=result["data"][volume_id]["gets"],
-                                      expected=1, message="LIKV gets")
-        fun_test.test_assert_expected(actual=result["data"][volume_id]["puts"],
-                                      expected=1, message="LIKV puts")
+        fun_test.test_assert(result["data"][volume_id]["LIKV_USED_BYTES"], "LIKV get bytes")
+        fun_test.test_assert_expected(actual=result["data"][volume_id]["IKV_GETS"],
+                                      expected=1, message="IKV_GETS")
+        fun_test.test_assert_expected(actual=result["data"][volume_id]["IKV_PUTS"],
+                                      expected=1, message="IKV_PUTS")
 
 
 if __name__ == "__main__":
