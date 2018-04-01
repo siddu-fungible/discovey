@@ -65,14 +65,18 @@ class DpcshClient(object):
         self.sock = None
         return True
 
-    def command(self, command, command_duration=2):
+    def command(self, command, legacy=False, command_duration=2):
         result = {"status": False, "data": None, "error_message": None, "command": command}
         output = ""
         try:
             self._connect()
+            command = "{}\n".format(command)
+            if legacy:
+                command = "#!sh {}".format(command)
             if self.verbose:
                 fun_test.log("DPCSH Send:" + command + "\n")
-            self.sendall("{}\n".format(command), command_duration)
+
+            self.sendall(command, command_duration)
             output = self._read(command_duration)
             if output:
                 result["raw_output"] = output

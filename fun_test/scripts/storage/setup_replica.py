@@ -150,8 +150,7 @@ class FunTestCase1(FunTestCase):
                                                           pvol_id=rds_uuids)
         fun_test.test_assert(result["status"], "Create Replica volume on index: {}".format(2))
 
-
-        result = storage_controller.command("#!sh peek storage/volumes")
+        result = storage_controller.peek(props_tree="storage/volumes")
         fun_test.simple_assert(result["status"], "Peeking storage volume stats")
         fun_test.test_assert_expected(actual=len(result["data"]["VOL_TYPE_BLK_RDS"].keys()),
                                       expected=len(rds_uuids), message="Ensure RDS volumes are found ")
@@ -160,7 +159,6 @@ class FunTestCase1(FunTestCase):
 
 
 if __name__ == "__main__":
-
 
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())

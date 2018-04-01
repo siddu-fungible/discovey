@@ -85,7 +85,7 @@ class StorageController(DpcshClient):
 
     def peek(self, props_tree):
         props_tree = "peek " + props_tree
-        return self.command(props_tree)
+        return self.command(props_tree, legacy=True)
 
     def fail_volume(self, command_duration=1, **kwargs):
         volume_dict = {}
