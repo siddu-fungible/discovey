@@ -121,14 +121,17 @@ class FunTestCase1(FunTestCase):
         result = storage_controller.create_thin_block_volume(capacity=5623808,
                                                              block_size=4096,
                                                              name="vol-lvs-allocator-1",
-                                                             uuid=lvs_allocator_uuid)
+                                                             uuid=lvs_allocator_uuid,
+                                                             command_duration=3)
 
         fun_test.test_assert(result["status"], "Create lvs allocator")
+        storage_controller.disconnect()
 
         storage_controller = StorageController(mode="likv",
                                                target_ip=dut_instance.host_ip,
                                                target_port=dut_instance.external_dpcsh_port)
 
+        fun_test.sleep("After creating lvs allocator", seconds=2)
         create_d = {"init_lvs_bytes": init_lvs_bytes,
                     "max_keys": max_keys,
                     "max_lvs_bytes": max_lvs_bytes,
@@ -139,7 +142,7 @@ class FunTestCase1(FunTestCase):
                     'lvs_allocator_uuid': lvs_allocator_uuid,
                     "options": 0,
                     "lba_bytes_log2": 12}
-        result = storage_controller.json_command(action="cal_vols_size", data=create_d)
+        result = storage_controller.json_command(action="cal_vols_size", data=create_d, command_duration=3)
         fun_test.test_assert(result["status"], "cal_vols_size")
 
         result = storage_controller.json_command(action="create", data=create_d)

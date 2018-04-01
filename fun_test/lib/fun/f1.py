@@ -139,7 +139,7 @@ class F1(Linux, ToDictMixin):
                                                                 self.FUN_OS_SIMULATION_PROCESS_NAME),
                             output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
-                        self.dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy {}".format(self.DPCSH_PATH,
+                        self.dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy={}".format(self.DPCSH_PATH,
                                                                             self.DPCSH_PROCESS_NAME,
                                                                             self.INTERNAL_DPCSH_PORT),
                                                                             output_file=self.DPCSH_PROXY_LOG)

@@ -35,7 +35,7 @@ class DpcshClient(object):
         while not output.endswith("\n"):
             elapsed_time = time.time() - start
             if elapsed_time > command_duration:
-                fun_test.critical("Command timeout")
+                fun_test.critical("Command timeout: Output: {}".format(output))
                 break
             try:
                 buffer = self.sock.recv(chunk)
@@ -103,8 +103,11 @@ class DpcshClient(object):
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_command(self, data, action="", additional_info="", command_duration=1):
-        return self.command('{} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),
+    def json_execute(self, verb, data, command_duration=1):
+        jdict = {"verb": verb, "arguments": [data], "tid": 0}
+        return self.command('{}'.format(json.dumps(jdict)),
                             command_duration=command_duration)
 
-
+    def json_command(self, data, action="", additional_info="", command_duration=1):
+        return self.command('#!sh {} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),
+                            command_duration=command_duration)
