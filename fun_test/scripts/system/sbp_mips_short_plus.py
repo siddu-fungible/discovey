@@ -5,7 +5,8 @@ from fun_settings import FUN_TEST_DIR
 import re
 from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
-SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
+# SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
+SBP_FIRMWARE_REPO_DIR = "/Users/johnabraham/temp2/SBPFirmware"
 BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 
@@ -53,6 +54,7 @@ class ContainerSetup(FunTestScript):
 
         localhost = Linux(host_ip="127.0.0.1", localhost=True)
         localhost.command("cd {}; git pull".format(SBP_FIRMWARE_REPO_DIR))
+        # localhost.command("git checkout drop_0_5_0+silex")
         fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
 
     def cleanup(self):
@@ -88,7 +90,9 @@ class TestCase2(FunTestCase):
             fun_test.test_assert(sbp_setup.enroll(), "Enrollment")
 
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
-        stimuli_file = "{}/cmd_enroll_puf_chal.py".format(stimuli_dir)
+        # stimuli_file = "{}/test_stack_protection.py".format(stimuli_dir)
+        stimuli_file = "{}/test_rng_error.py".format(stimuli_dir)
+
         if self.enroll:
             fun_test.test_assert(sbp_setup.run_test_py(secure_boot=self.secure_boot,
                                                        stimuli_file=stimuli_file, timeout=900),

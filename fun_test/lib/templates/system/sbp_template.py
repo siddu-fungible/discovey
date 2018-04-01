@@ -14,6 +14,7 @@ class SbpZynqSetupTemplate:
     ENROLLMENT_MAGIC_NUMBER = "1E5C00B1"
     DEVTOOLS_FIRMWARE_DIR = LOCAL_REPOSITORY_DIR + "/software/devtools/firmware"
     ENROLLMENT_CERT_BIN = "enroll_cert.bin"
+    ENROLLMENT_TBS_BIN = "enroll_tbs.bin"
 
     def __init__(self, host, zynq_board_ip, bit_stream=None):
         self.host = host
@@ -67,7 +68,7 @@ class SbpZynqSetupTemplate:
         return True
 
     def clear_enrollment_bin(self):
-        self.host.command("rm {}/{}".format(self.get_board_tests_dir(), self.ENROLLMENT_CERT_BIN))
+        self.host.command("rm {}/{}".format(self.get_board_tests_dir(), self.ENROLLMENT_TBS_BIN))
 
     def run_test_py(self,
                     secure_boot,
@@ -161,17 +162,17 @@ class SbpZynqSetupTemplate:
         fun_test.log("TBS cert: {}".format(certificate_contents))
 
         tbs_hex_file = "/tmp/tbs.hex"
-        tbs_bin_file = "/tmp/tbs.bin"
+        tbs_bin_file = "/tmp/enroll_tbs.bin"
         self.host.create_file(tbs_hex_file, contents=certificate_contents)
 
         self.host.command("xxd -r -p {} {}".format(tbs_hex_file, tbs_bin_file))
 
         self.host.command("cd {}".format(self.DEVTOOLS_FIRMWARE_DIR))
         enrollment_bin_file = "/tmp/enroll_cert.bin"
-        self.host.command("python3 ./generate_firmware_image.py sign -k fpk4 -f {} -o {}".format(tbs_bin_file,
-                                                                                                 enrollment_bin_file))
-        fun_test.test_assert(self.host.list_files(enrollment_bin_file),
-                             message="Signed enrollment bin file")
+        # self.host.command("python3 ./generate_firmware_image.py sign -k fpk4 -f {} -o {}".format(tbs_bin_file,
+        #                                                                                         enrollment_bin_file))
+        # fun_test.test_assert(self.host.list_files(enrollment_bin_file),
+        #                     message="Signed enrollment bin file")
         self.host.command('cd {}'.format(self.get_board_tests_dir()))
-        self.host.command("mv {} .".format(enrollment_bin_file))
+        self.host.command("mv {} .".format(tbs_bin_file))
         return True
