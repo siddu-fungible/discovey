@@ -10,6 +10,10 @@ media_path = MEDIA_DIR + '/' + 'Linux/'
 dockhub_path = "{}/Linux/".format(DEFAULT_BUILD_URL)
 build_info_file = 'build_info.txt'
 build_info_url = "{}/build_info.txt".format(DEFAULT_BUILD_URL)
+fun_cp_path = "{}{}/doc/jenkins/funcontrolplane/latest/functrlp.tgz".format(protocol,DOCKHUB_FUNGIBLE_LOCAL)
+fun_cp = "functrlp.tgz"
+modules_path = "{}{}/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz".format(protocol,DOCKHUB_FUNGIBLE_LOCAL)
+modules = "modules.tgz"
 
 
 def download_file(web_addr, local_addr):
@@ -70,6 +74,8 @@ def download_files():
     files = ['dpcsh.tgz', 'funos.posix-base.tgz', 'qemu.tgz']
     for f in files:
         download_file(web_addr=dockhub_path + f, local_addr=media_path + f)
+    download_file(web_addr=fun_cp_path, local_addr=media_path+fun_cp)
+    download_file(web_addr=modules_path, local_addr=media_path+modules)
     download_file(web_addr=build_info_url, local_addr=media_path + build_info_file)
 
 
