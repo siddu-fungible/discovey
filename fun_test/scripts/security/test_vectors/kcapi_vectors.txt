@@ -84,7 +84,6 @@
         }
     ],
 
-
     'enc_ecb(aes)':[
 
         {   'cipher_type' : '1',
@@ -135,6 +134,18 @@
         }
     ],
 
+    'auth_dec':[
+
+        {   'cipher_type' : '2',
+            'cipher_text' : 'e353779c1079aeb82708942dbe77181a',
+            'key' : '0800010000000010000000000000000000000000000000000000000006a9214036b8a15b512e03d534120006',
+            'iv' : '3dafba429d9eb430b422da802c9fac41',
+            'assosc_data' : '3dafba429d9eb430b422da802c9fac41',
+            'tag' : '1b13cbaf895ee12c13c52ea3cceddcb50371a206',
+            'result' : '53696e676c6520626c6f636b206d7367'
+        }
+    ],
+
     'enc_cbc(aes)':[
 
        {    'cipher_type' : '1',
@@ -152,6 +163,74 @@
             'iv' : '00000000000000000000000000000000',
             'key' : '80000000000000000000000000000000',
             'result' : '00000000000000000000000000000000'
+       }
+   ],
+
+    'enc_rfc3686':[
+
+       {    'cipher_type' : '1',
+            'plain_text' : 'a8aee3ccb2f9dc2cbad410e9da76bc',
+            'iv' : 'bb975b666a2d34',
+            'key' : '0da155bd94bfb4517c1e74e35235968d60124dcc',
+            'result' : '1abc5a5343181e8e154cd8f1eb575d'
+       }
+   ],
+
+    'dec_rfc3686':[
+
+       {    'cipher_type' : '1',
+            'cipher_text' : '1abc5a5343181e8e154cd8f1eb575d',
+            'iv' : 'bb975b666a2d34',
+            'key' : '0da155bd94bfb4517c1e74e35235968d60124dcc',
+            'result' : 'a8aee3ccb2f9dc2cbad410e9da76bc'
+       }
+    ],
+
+    'enc_rfc4106':[
+
+       {    'cipher_type' : '2',
+            'plain_text' : 'a8aee3ccb2f9dc2cbad410e9da76bc',
+            'iv' : 'e798fc85e',
+            'key' : '0d619d0527b491484d1bfecf029be1c24226fb1a',
+            'tag_len' : '16',
+            'assosc_data' : 'f5d68104d994c0e68fd03afe798fc85e',
+            'result' : '23369c98c8a00a7ad5450f5408e4e2ad26d142ce1e0a47c25f30c54e7989be'
+       }
+   ],
+
+    'dec_rfc4106':[
+
+       {    'cipher_type' : '2',
+            'cipher_text' : '23369c98c8a00a7ad5450f5408e4e2',
+            'iv' : 'e798fc85e',
+            'key' : '0d619d0527b491484d1bfecf029be1c24226fb1a',
+            'assosc_data' : 'f5d68104d994c0e68fd03afe798fc85e',
+            'tag' : 'ad26d142ce1e0a47c25f30c54e7989be',
+            'result' : 'a8aee3ccb2f9dc2cbad410e9da76bc'
+       }
+   ],
+
+    'enc_rfc4309':[
+
+       {    'cipher_type' : '2',
+            'plain_text' : 'a8aee3ccb2f9dc2cbad410e9da76bc',
+            'iv' : 'e798fc85e',
+            'key' : '0d619d0527b491484d1bfecf029be1c24226fb',
+            'tag_len' : '16',
+            'assosc_data' : 'f5d68104d994c0e68fd03afe798fc85e',
+            'result' : '5b0af04ffb2950a69bf1a684b05d76e0dc4e5bbc191eb428cca6cb1abb99f5'
+       }
+   ],
+
+    'dec_rfc4309':[
+
+       {    'cipher_type' : '2',
+            'cipher_text' : '5b0af04ffb2950a69bf1a684b05d76',
+            'iv' : 'e798fc85e',
+            'key' : '0d619d0527b491484d1bfecf029be1c24226fb',
+            'assosc_data' : 'f5d68104d994c0e68fd03afe798fc85e',
+            'tag' : 'e0dc4e5bbc191eb428cca6cb1abb99f5',
+            'result' : 'a8aee3ccb2f9dc2cbad410e9da76bc'
        }
    ]
 

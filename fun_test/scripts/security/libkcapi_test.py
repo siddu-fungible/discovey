@@ -24,7 +24,8 @@ topology_dict = {
 }
 
 libkcapi_template = ""
-vector_path = "/test_vectors/NIST/DGST/SHA1.txt"
+vector_path = "/test_vectors/kcapi_vectors.txt"
+# vector_path = "/test_vectors/NIST/DGST/SHA1.txt"
 cbc_vector_path = "/test_vectors/NIST/CBC/cbctest.txt"
 
 
@@ -216,7 +217,8 @@ class LibkcapiTestCase4(FunTestCase):
 
         for enc_dict in enc_dicts:
             enc_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.ECB_AES, enc_dict['cipher_type'],
-                                                       enc_dict['key'], plain_text=enc_dict['plain_text'])).strip()
+                                                       enc_dict['key'], aux_param=" -s ",
+                                                       plain_text=enc_dict['plain_text'])).strip()
             fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
         fun_test.test_assert(True, "ecb(aes) encryption verified")
 
@@ -290,17 +292,30 @@ class LibkcapiTestCase6(FunTestCase):
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
         input_dict = fun_test.shared_variables["input_dict"]
         enc_dicts = []
+        dec_dicts = []
         for dict in input_dict:
             if dict == "auth_enc":
                 enc_dicts = input_dict[dict]
+            elif dict == "auth_dec":
+                dec_dicts = input_dict[dict]
+
         for enc_dict in enc_dicts:
             enc_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.AUTH_ENC, enc_dict['cipher_type'],
                                                        enc_dict['key'], plain_text=enc_dict['plain_text'],
                                                        iv=enc_dict['iv'], assoc_data=enc_dict['assosc_data'],
                                                        tag_len=enc_dict['tag_len'])).strip()
-
             fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
-        fun_test.test_assert(True, "authenc verified")
+            fun_test.test_assert(True, "auth encryption verified")
+
+        for dec_dict in dec_dicts:
+            dec_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.AUTH_ENC, dec_dict['cipher_type'],
+                                                       dec_dict['key'], cipher_text=dec_dict['cipher_text'],
+                                                       iv=dec_dict['iv'], assoc_data=dec_dict['assosc_data'],
+                                                       encrypt=False,
+                                                       tag=dec_dict['tag'])).strip()
+
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "auth decryption verified")
 
 
 class LibkcapiTestCase7(FunTestCase):
@@ -349,6 +364,136 @@ class LibkcapiTestCase7(FunTestCase):
 class LibkcapiTestCase8(FunTestCase):
     def describe(self):
         self.set_test_details(id=8,
+                              summary="Run rfc3686 with libkcapi",
+                              steps="""
+        1. Encrypt and decrypt rfc3686 with a sample plain text using kcapi command 
+        2. Compare with the known output and ensure they are equal
+
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = fun_test.shared_variables["input_dict"]
+        enc_dicts = []
+        dec_dicts = []
+        for dict in input_dict:
+            if dict == "enc_rfc3686":
+                enc_dicts = input_dict[dict]
+            elif dict == "dec_rfc3686":
+                dec_dicts = input_dict[dict]
+
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.RFC3686, enc_dict['cipher_type'],
+                                                       enc_dict['key'], plain_text=enc_dict['plain_text'],
+                                                       iv=enc_dict['iv'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "RFC3686 encryption verified")
+
+        for dec_dict in dec_dicts:
+            dec_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.RFC3686, dec_dict['cipher_type'],
+                                                       dec_dict['key'], cipher_text=dec_dict['cipher_text'],
+                                                       encrypt=False, iv=dec_dict['iv'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "RFC3686 decryption verified")
+
+
+class LibkcapiTestCase9(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Run rfc4106 with libkcapi",
+                              steps="""
+        1. Encrypt and decrypt rfc4106 with a sample plain text using kcapi command 
+        2. Compare with the known output and ensure they are equal
+
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = fun_test.shared_variables["input_dict"]
+        enc_dicts = []
+        dec_dicts = []
+        for dict in input_dict:
+            if dict == "enc_rfc4106":
+                enc_dicts = input_dict[dict]
+            elif dict == "dec_rfc4106":
+                dec_dicts = input_dict[dict]
+
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.RFC4106, enc_dict['cipher_type'],
+                                                       enc_dict['key'], plain_text=enc_dict['plain_text'],
+                                                       assoc_data=enc_dict['assosc_data'],
+                                                       tag_len=enc_dict['tag_len'], iv=enc_dict['iv'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "RFC4106 encryption verified")
+
+        for dec_dict in dec_dicts:
+            dec_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.RFC4106, dec_dict['cipher_type'],
+                                                       dec_dict['key'], cipher_text=dec_dict['cipher_text'],
+                                                       encrypt=False, tag=dec_dict['tag'],
+                                                       assoc_data=dec_dict['assosc_data'], iv=dec_dict['iv'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "RFC4106 decryption verified")
+
+
+class LibkcapiTestCase10(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="Run rfc4309 with libkcapi",
+                              steps="""
+        1. Encrypt and decrypt rfc4309 with a sample plain text using kcapi command 
+        2. Compare with the known output and ensure they are equal
+
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = fun_test.shared_variables["input_dict"]
+        enc_dicts = []
+        dec_dicts = []
+        for dict in input_dict:
+            if dict == "enc_rfc4309":
+                enc_dicts = input_dict[dict]
+            elif dict == "dec_rfc4309":
+                dec_dicts = input_dict[dict]
+
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.RFC4309, enc_dict['cipher_type'],
+                                                       enc_dict['key'], plain_text=enc_dict['plain_text'],
+                                                       assoc_data=enc_dict['assosc_data'],
+                                                       tag_len=enc_dict['tag_len'], iv=enc_dict['iv'])).strip()
+            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+        fun_test.test_assert(True, "RFC4309 encryption verified")
+
+        for dec_dict in dec_dicts:
+            dec_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.RFC4309, dec_dict['cipher_type'],
+                                                       dec_dict['key'], cipher_text=dec_dict['cipher_text'],
+                                                       encrypt=False, tag=dec_dict['tag'],
+                                                       assoc_data=dec_dict['assosc_data'], iv=dec_dict['iv'])).strip()
+            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+        fun_test.test_assert(True, "RFC4309 decryption verified")
+
+
+class LibkcapiTestCase11(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=11,
                               summary="Run SHA1 with libkcapi",
                               steps="""
         1. Compute digest for input.
@@ -376,9 +521,9 @@ class LibkcapiTestCase8(FunTestCase):
         fun_test.test_assert(True, "SHA1 verified")
 
 
-class LibkcapiTestCase9(FunTestCase):
+class LibkcapiTestCase12(FunTestCase):
     def describe(self):
-        self.set_test_details(id=9,
+        self.set_test_details(id=12,
                               summary="Run SHA224 with libkcapi",
                               steps="""
         1. Compute digest for input.
@@ -406,9 +551,9 @@ class LibkcapiTestCase9(FunTestCase):
         fun_test.test_assert(True, "SHA224 verified")
 
 
-class LibkcapiTestCase10(FunTestCase):
+class LibkcapiTestCase13(FunTestCase):
     def describe(self):
-        self.set_test_details(id=10,
+        self.set_test_details(id=13,
                               summary="Run SHA256 with libkcapi",
                               steps="""
         1. Compute digest for input.
@@ -436,9 +581,9 @@ class LibkcapiTestCase10(FunTestCase):
         fun_test.test_assert(True, "SHA256 verified")
 
 
-class LibkcapiTestCase11(FunTestCase):
+class LibkcapiTestCase14(FunTestCase):
     def describe(self):
-        self.set_test_details(id=11,
+        self.set_test_details(id=14,
                               summary="Run SHA384 with libkcapi",
                               steps="""
         1. Compute digest for input.
@@ -466,9 +611,9 @@ class LibkcapiTestCase11(FunTestCase):
         fun_test.test_assert(True, "SHA384 verified")
 
 
-class LibkcapiTestCase12(FunTestCase):
+class LibkcapiTestCase15(FunTestCase):
     def describe(self):
-        self.set_test_details(id=12,
+        self.set_test_details(id=15,
                               summary="Run SHA512 with libkcapi",
                               steps="""
         1. Compute digest for input.
@@ -499,17 +644,20 @@ class LibkcapiTestCase12(FunTestCase):
 if __name__ == "__main__":
     libkcapi_script = LibkcapiScript()
 
-    libkcapi_script.add_test_case(LibkcapiTestCase1())
-    libkcapi_script.add_test_case(LibkcapiTestCase2())
-    libkcapi_script.add_test_case(LibkcapiTestCase3())
-    libkcapi_script.add_test_case(LibkcapiTestCase4())
-    libkcapi_script.add_test_case(LibkcapiTestCase5())
-    libkcapi_script.add_test_case(LibkcapiTestCase6())
-    libkcapi_script.add_test_case(LibkcapiTestCase7())
-    libkcapi_script.add_test_case(LibkcapiTestCase8())
-    libkcapi_script.add_test_case(LibkcapiTestCase9())
+#    libkcapi_script.add_test_case(LibkcapiTestCase1())
+#    libkcapi_script.add_test_case(LibkcapiTestCase2())
+#    libkcapi_script.add_test_case(LibkcapiTestCase3())
+#    libkcapi_script.add_test_case(LibkcapiTestCase4())
+#    libkcapi_script.add_test_case(LibkcapiTestCase5())
+#    libkcapi_script.add_test_case(LibkcapiTestCase6())
+#    libkcapi_script.add_test_case(LibkcapiTestCase7())
+#    libkcapi_script.add_test_case(LibkcapiTestCase8())
+#    libkcapi_script.add_test_case(LibkcapiTestCase9())
     libkcapi_script.add_test_case(LibkcapiTestCase10())
-    libkcapi_script.add_test_case(LibkcapiTestCase11())
-    libkcapi_script.add_test_case(LibkcapiTestCase12())
+#    libkcapi_script.add_test_case(LibkcapiTestCase11())
+#    libkcapi_script.add_test_case(LibkcapiTestCase12())
+#   libkcapi_script.add_test_case(LibkcapiTestCase13())
+#   libkcapi_script.add_test_case(LibkcapiTestCase14())
+#   libkcapi_script.add_test_case(LibkcapiTestCase15())
 
     libkcapi_script.run()

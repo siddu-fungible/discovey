@@ -15,6 +15,9 @@ class LibkcapiTemplate(CryptoTemplate):
     SHA256 = "sha256"
     SHA384 = "sha384"
     SHA512 = "sha512"
+    RFC3686 = "rfc3686(ctr(aes))"
+    RFC4106 = "rfc4106(gcm(aes))"
+    RFC4309 = "rfc4309(ccm(aes))"
     AUTH_ENC = "authenc(hmac(sha1),cbc(aes))"
     KCAPI_PATH = "/usr/bin/kcapi"
 
@@ -30,7 +33,7 @@ class LibkcapiTemplate(CryptoTemplate):
         return input_dict
 
     def kcapi_cmnd(self, algorithm, cipher_type, key, encrypt=True, plain_text=None, cipher_text=None, iv=None,
-                   assoc_data=None, tag=None, tag_len=None, nonce=None):
+                   assoc_data=None, tag=None, tag_len=None, nonce=None, aux_param=None):
         if encrypt:
             cmd_str = self.KCAPI_PATH + " -x " + cipher_type + " -e -c  \"" + algorithm + "\" -k " + key
         else:
@@ -49,6 +52,8 @@ class LibkcapiTemplate(CryptoTemplate):
             cmd_str += " -l " + tag_len
         if nonce:
             cmd_str += " -n " + nonce
+        if aux_param:
+            cmd_str += aux_param
 
         output = self.host.command(cmd_str).strip()
         return output
