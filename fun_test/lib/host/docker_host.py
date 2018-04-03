@@ -113,7 +113,10 @@ class DockerHost(Linux, ToDictMixin):
         try:
             self.connect()
             # images = [y[0].split(":")[0] for y in [x.tags for x in self.client.images.list(all=True)] if y]
-            images = [x.tags[0] for x in self.client.images.list(all=True) if x.tags]
+            # a = self.client.images.list(all=True)
+            for x in self.client.images.list(all=True):
+                if x.tags:
+                    images.extend(x.tags)
 
         except Exception as ex:
             print ("get_images:" + str(ex))  #TODO: we use print as non fun-test code can access this
