@@ -100,22 +100,15 @@ class AssetManager:
                 orchestrator = SimulationOrchestrator.get(self.get_any_simple_host())
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
                 # Ensure a docker container is running
-                if not fun_test.build_url:
-                    build_url = DEFAULT_BUILD_URL
-                else:
-                    build_url = fun_test.build_url
-                if fun_test.local_settings and "BUILD_URL" in fun_test.local_settings:
-                    build_url = fun_test.local_settings["BUILD_URL"]
                 if not self.docker_host:
                     self.docker_host = self.get_any_docker_host()
                 fun_test.simple_assert(self.docker_host, "Docker host available")
                 if not fun_test.get_environment_variable("DOCKER_URL"):
                     fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
-                fun_test.log("Setting up the integration container for index: {} url: {}".format(index, build_url))
+                fun_test.log("Setting up the integration container for index: {}".format(index))
                 container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), index)
 
-                container_asset = self.docker_host.setup_storage_container(build_url=build_url,
-                                                                           container_name=container_name,
+                container_asset = self.docker_host.setup_storage_container(container_name=container_name,
                                                                            ssh_internal_ports=[22],
                                                                            qemu_internal_ports=[50001, 50002,
                                                                                                 50003, 50004],

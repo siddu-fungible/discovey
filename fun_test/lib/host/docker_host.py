@@ -5,7 +5,7 @@ from docker.errors import APIError
 from docker import DockerClient
 from docker.types.services import Mount
 import re, collections
-
+from fun_settings import DEFAULT_BUILD_URL
 # fun_test.enable_debug()
 
 
@@ -176,6 +176,7 @@ class DockerHost(Linux, ToDictMixin):
         images = [x["name"] for x in images if str(x["category"]) == category_name]
         return images[0]
 
+    '''
     @fun_test.safe
     def setup_storage_container(self,
                                container_name,
@@ -203,6 +204,47 @@ class DockerHost(Linux, ToDictMixin):
                 command += " {}".format(pre_dpcsh_sleep)
             if dpcsh_directory:
                 command += " {}".format(dpcsh_directory)
+        return self.setup_container(image_name=storage_image_name,
+                                    container_name=container_name,
+                                    pool0_internal_ports=ssh_internal_ports,
+                                    pool1_internal_ports=qemu_internal_ports,
+                                    pool2_internal_ports=dpcsh_internal_ports,
+                                    command=command, mounts=mounts)
+        
+    '''
+
+    @fun_test.safe
+    def setup_storage_container(self,
+                                container_name,
+                                ssh_internal_ports,
+                                qemu_internal_ports,
+                                dpcsh_internal_ports,
+                                mounts=None):
+        storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  # TODO
+        sdk_url = DEFAULT_BUILD_URL + "/Linux" if not fun_test.build_url else fun_test.build_url + "/Linux"
+        local_sdk_url = fun_test.get_local_setting("SDK_URL")
+        local_dpcsh_url = fun_test.get_local_setting("DPCSH_TGZ_URL")
+        local_funos_tgz_url = fun_test.get_local_setting("FUNOS_TGZ_URL")
+        local_qemu_tgz_url = fun_test.get_local_setting("QEMU_TGZ_URL")
+        local_modules_tgz_url = fun_test.get_local_setting("MODULES_TGZ_URL")
+        local_functrlp_tgz_url = fun_test.get_local_setting("FUNCTRLP_TGZ_URL")
+        local_dochub_ip = fun_test.get_local_setting("DOCHUB_IP")
+
+        sdk_url = sdk_url or local_sdk_url
+        command = " -s {}".format(sdk_url)
+        if local_dpcsh_url:
+            command += " -d {}".format(local_dpcsh_url)
+        if local_funos_tgz_url:
+            command += " -f {}".format(local_funos_tgz_url)
+        if local_qemu_tgz_url:
+            command += " -q {}".format(local_qemu_tgz_url)
+        if local_modules_tgz_url:
+            command += " -m {}".format(local_modules_tgz_url)
+        if local_functrlp_tgz_url:
+            command += " -c {}".format(local_functrlp_tgz_url)
+        if local_dochub_ip:
+            command += " -h {}".format(local_dochub_ip)
+
         return self.setup_container(image_name=storage_image_name,
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,
