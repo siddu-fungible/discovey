@@ -46,6 +46,7 @@ RUN shebang='#!/usr/bin/env bash'; \
 env_vars="export MIPS_ELF_ROOT=$ZYNQ_SETUP_DIR/mips-mti-elf/2016.05-03"; \
 echo $shebang$'\n'$env_vars > /etc/profile.d/env_vars.sh
 
+ADD FunSDK-small /FunSDK
 
 # Add startup script
 COPY startup.sh /startup.sh
