@@ -1,10 +1,5 @@
 #!/bin/bash
-
 set -e
-usage()
-{
-    echo "Usage: startup.sh <build url>"
-}
 
 curl_fetch()
 {
@@ -19,72 +14,102 @@ curl_fetch()
     fi
 }
 
-if [ $# -ne 1 ]; then
-    usage
-    exit 1
-fi
-
 dochub_fungible_local=10.1.20.99
-base_url=$1
-dpcsh_tgz_name=dpcsh.tgz
-dpcsh_tgz_url=$base_url/$dpcsh_tgz_name
-dpcsh_name=dpcsh
-funos_tgz_name=funos.posix-base.tgz
-funos_tgz_url=$base_url/$funos_tgz_name
-qemu_name=qemu-system-x86_64
-qemu_tgz_name=qemu.tgz
-qemu_tgz_url=$base_url/$qemu_tgz_name
-# pcbios_tgz_name=pc-bios.tgz
-# pcbios_tgz_url=$base_url/$pcbios_tgz_name
-modules_tgz_name=modules.tgz
+dpcsh_tgz_url=
+funos_tgz_url=
+qemu_tgz_url=
 modules_tgz_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
 functrlp_tgz_url=http://$dochub_fungible_local/doc/jenkins/funcontrolplane/latest/functrlp.tgz
+sdk_url=
+    
+QEMU_TGZ_NAME=qemu.tgz
+DPCSH_TGZ_NAME=dpcsh.tgz
+FUNOS_TGZ_NAME=funos.posix-base.tgz
+DPCSH_NAME=dpcsh
+FUNOS_POSIX_NAME=funos-posix
+QEMU_DIRECTORY=qemu
 
-echo "Base url: $base_url"
-echo "Dpsch tgz url: $dpcsh_tgz_url"
-echo "FunOS tgz url: $funos_tgz_url"
-echo "Qemu tgz url: $qemu_tgz_url"
-# echo "PC Bios url: $pcbios_tgz_url"
-echo "Modules url: $modules_tgz_url"
-echo "FunCP url: $functrlp_tgz_url"
+while getopts d:f:q:m:c:s:h: name
+do
+    case $name in
+    d)    dpcsh_tgz_url="$OPTARG";;
+    f)    funos_tgz_url="$OPTARG";;
+    q)    qemu_tgz_url="$OPTARG";;
+    m)    modules_tgz_url="$OPTARG";;
+    c)    functrlp_tgz_url="$OPTARG";;
+    h)    dochub_fungible_local="$OPTARG";;
+    s)    sdk_url="$OPTARG";;
+    ?)    printf "Usage: %s: [-d dpcsh tgz url] [-f funos tgz url] [-q qemu tgz url] [-m modules tgz url] [-c functrlp tgz url] [-h dochub ip] [-s sdk url]\n" $0
+          exit 2;;
+    esac
+done
+
+if [ -z "$sdk_url" ]; then
+    sdk_url=http://$dochub_fungible_local/doc/jenkins/funsdk/latest/Linux
+    printf "SDK url: $sdk_url\n"
+fi
+
+if [ -z "$funos_tgz_url" ]; then
+    funos_tgz_url=$sdk_url/$FUNOS_TGZ_NAME
+fi
+
+if [ -z "$qemu_tgz_url" ]; then
+    qemu_tgz_url=$sdk_url/$QEMU_TGZ_NAME
+fi
+
+if [ -z "$dcpsh_tgz_url" ]; then
+    dpcsh_tgz_url=$sdk_url/$DPCSH_TGZ_NAME
+fi
 
 
-arr=($dpcsh_tgz_url $funos_tgz_url $qemu_tgz_url $modules_tgz_url $functrlp_tgz_url)
-for url in "${arr[@]}"
-    do
-        curl_fetch $url
-    done
 
-echo "Fetched all files"
+if [ ! -z "$dpcsh_tgz_url" ]; then
+    printf "DPCSH tgz url: $dpcsh_tgz_url\n"
+    echo "----------------------"
+    echo "Setting up dpcsh files"
+    echo "----------------------"
+    curl_fetch $dpcsh_tgz_url
+    tar -xf $DPCSH_TGZ_NAME -C /tmp
+    mv /tmp/bin/Linux/$DPCSH_NAME $DPCSH_NAME
+    rm -rf /tmp/bin
+    chmod 777 $DPCSH_NAME
+fi
 
-echo "---------------------"
-echo "Setting up qemu files"
-echo "---------------------"
-qemu_directory=qemu
-tar -xvzf $qemu_tgz_name -C $qemu_directory
-# tar -xvzf $pcbios_tgz_name -C $qemu_directory
-qemu_linux_directory=$qemu_directory/qemu-Linux
-qemu_bin_directory=$qemu_linux_directory/bin
-qemu_name=qemu-system-x86_64
-chmod 777 $qemu_bin_directory/$qemu_name
-export PATH=$PATH:$qemu_bin_directory
+if [ ! -z "$funos_tgz_url" ]; then
+    printf "FunOS tgz url: $funos_tgz_url\n"
+    echo "----------------------"
+    echo "Setting up funos files"
+    echo "----------------------"
+    curl_fetch $funos_tgz_url
+    tar -xf $FUNOS_TGZ_NAME -C /tmp
+    mv /tmp/bin/$FUNOS_POSIX_NAME $FUNOS_POSIX_NAME
+    rm -rf /tmp/bin
 
+fi
 
-echo "----------------------"
-echo "Setting up funos files"
-echo "----------------------"
-funos_posix_name=funos-posix
-tar -xf $funos_tgz_name -C /tmp
-mv /tmp/bin/$funos_posix_name $funos_posix_name
-rm -rf /tmp/bin
+if [ ! -z "$qemu_tgz_url" ]; then
+    printf "QEMU tgz url: $qemu_tgz_url\n"
+    echo "---------------------"
+    echo "Setting up qemu files"
+    echo "---------------------"
+    curl_fetch $qemu_tgz_url
+    tar -xvzf $QEMU_TGZ_NAME -C $QEMU_DIRECTORY
+    qemu_linux_directory=$QEMU_DIRECTORY/qemu-Linux
+    qemu_bin_directory=$qemu_linux_directory/bin
+    QEMU_NAME=qemu-system-x86_64
+    chmod 777 $qemu_bin_directory/$QEMU_NAME
+    export PATH=$PATH:$qemu_bin_directory
 
-echo "----------------------"
-echo "Setting up dpcsh files"
-echo "----------------------"
-tar -xf $dpcsh_tgz_name -C /tmp
-mv /tmp/bin/Linux/$dpcsh_name $dpcsh_name
-rm -rf /tmp/bin
-chmod 777 $dpcsh_name
+fi
+if [ ! -z "$modules_tgz_url" ]; then
+    printf "Modules tgz url: $modules_tgz_url\n"
+    curl_fetch $modules_tgz_url
+fi
+
+if [ ! -z "$functrlp_tgz_url" ]; then
+    printf "Fun Ctrl plane tgz url: $functrlp_tgz_url\n"
+    curl_fetch $functrlp_tgz_url
+fi
 
 
 echo "-------------------"
@@ -93,7 +118,10 @@ echo "-------------------"
 /etc/init.d/ssh restart
 echo "Started SSH Server"
 
+echo "-----------------"
 echo "Setup is complete"
+echo "-----------------"
+
 echo "Idling forever"
 while [ 1 ]
     do
