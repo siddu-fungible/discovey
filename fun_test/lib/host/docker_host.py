@@ -112,8 +112,6 @@ class DockerHost(Linux, ToDictMixin):
         images = []
         try:
             self.connect()
-            # images = [y[0].split(":")[0] for y in [x.tags for x in self.client.images.list(all=True)] if y]
-            # a = self.client.images.list(all=True)
             for x in self.client.images.list(all=True):
                 if x.tags:
                     images.extend(x.tags)
