@@ -91,7 +91,7 @@ class TestCase2(FunTestCase):
 
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
         # stimuli_file = "{}/test_stack_protection.py".format(stimuli_dir)
-        stimuli_file = "{}/test_rng_error.py".format(stimuli_dir)
+        stimuli_file = "{}/test_tamper.py".format(stimuli_dir)
 
         if self.enroll:
             fun_test.test_assert(sbp_setup.run_test_py(secure_boot=self.secure_boot,

@@ -1,3 +1,4 @@
 [
-  {"path": "system/sbp_mips_short_sanity.py"}
+  {"path": "system/sbp_mips_short_sanity.py"},
+  {"path": "system/sbp_mips_external_pke.py"}
 ]

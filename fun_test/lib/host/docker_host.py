@@ -108,6 +108,17 @@ class DockerHost(Linux, ToDictMixin):
         fun_test.log("Health: {}".format("OK" if health_result["result"] else "FAILED"))
         return health_result
 
+    def wait_for_handoff(self, container_name, handoff_string, max_time=180):
+        result = False
+        timer = FunTimer(max_time=max_time)
+        while not timer.is_expired():
+            output = self.command(command="docker logs {}".format(container_name), include_last_line=True)
+            if re.search(handoff_string, output):
+                result = True
+                break
+            fun_test.sleep("Waiting for container handoff string", seconds=2)
+        return result
+
     def get_images(self):
         images = []
         try:

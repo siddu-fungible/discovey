@@ -3,7 +3,7 @@ from asset.asset_manager import AssetManager
 from lib.host.linux import Linux
 from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
-BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit"
+BIT_STREAM = "SilexBitfiles/esecure_top_fpga_pke_20180309.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 
 
@@ -21,10 +21,11 @@ class ContainerSetup(FunTestScript):
         container_asset = fun_test.shared_variables["container_asset"]
         self.docker_host.destroy_container(container_name=container_asset["name"], ignore_error=True)
 
+
 class TestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="secureboot=off",
+                              summary="secureboot=on",
                               steps="""
         1. Do something on the container.
                               """)
@@ -44,7 +45,7 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(sbp_setup.setup(), "Setup")
 
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
-        stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
+        stimuli_file = "{}/test_pke.py".format(stimuli_dir)
 
         fun_test.test_assert(sbp_setup.run_test_py(secure_boot=False, stimuli_file=stimuli_file),
                              message="Run test py")
@@ -63,13 +64,15 @@ class TestCase1(FunTestCase):
                                     filename=artifact_file_name)
 
 
-class TestCase2(FunTestCase):
-    secure_boot = True
-    enroll = True
+class TestPke(FunTestCase):
+    secure_boot = False
+    enroll = False
+    stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+    stimuli_file = "{}/test_pke.py".format(stimuli_dir)
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="secureboot=on, with enrollment certificate",
+                              summary="test_pke.py",
                               steps="""
         1. Do something on the container.
                               """)
@@ -90,16 +93,11 @@ class TestCase2(FunTestCase):
         if self.enroll:
             fun_test.test_assert(sbp_setup.enroll(), "Enrollment")
 
-        stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
-        stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
-        if self.enroll:
-            fun_test.test_assert(sbp_setup.run_test_py(secure_boot=self.secure_boot,
-                                                       stimuli_file=stimuli_file),
-                                 message="Run test py")
-        else:
-            fun_test.test_assert(not sbp_setup.run_test_py(secure_boot=self.secure_boot,
-                                                           stimuli_file=stimuli_file),
-                                 message="Run test py should fail without enrollment")
+        fun_test.test_assert(sbp_setup.run_test_py(secure_boot=self.secure_boot,
+                                                   no_host_boot=True,
+                                                   stimuli_file=self.stimuli_file),
+                             message="Run test py")
+
 
     def cleanup(self):
         self.container_asset = fun_test.shared_variables["container_asset"]
@@ -115,20 +113,19 @@ class TestCase2(FunTestCase):
                                     filename=artifact_file_name)
 
 
-class TestCase3(TestCase2):
-    secure_boot = True
-    enroll = False
+class TestHostSamples(TestPke):
+    stimuli_dir = "{}/validation/stimuli/host".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+    stimuli_file = "{}/host_samples.py".format(stimuli_dir)
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="secureboot=on, with no enrollment certificate",
+                              summary="host_samples.py",
                               steps="""
         1. Do something on the container.
                               """)
 
 if __name__ == "__main__":
     ts = ContainerSetup()
-    ts.add_test_case(TestCase1())
-    ts.add_test_case(TestCase2())
-    ts.add_test_case(TestCase3())
+    ts.add_test_case(TestPke())
+    ts.add_test_case(TestHostSamples())
     ts.run()

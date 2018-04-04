@@ -1,6 +1,10 @@
 from lib.system.fun_test import fun_test
+from fun_settings import FUN_TEST_DIR, INTEGRATION_DIR
+from asset.asset_manager import AssetManager
+from lib.host.linux import Linux
 import os
 import re
+
 
 class SbpZynqSetupTemplate:
     ZYNQ_SETUP_DIR = "/zynq_setup"
@@ -15,14 +19,47 @@ class SbpZynqSetupTemplate:
     DEVTOOLS_FIRMWARE_DIR = LOCAL_REPOSITORY_DIR + "/software/devtools/firmware"
     ENROLLMENT_CERT_BIN = "enroll_cert.bin"
     ENROLLMENT_TBS_BIN = "enroll_tbs.bin"
+    SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
 
     def __init__(self, host, zynq_board_ip, bit_stream=None):
         self.host = host
         self.local_repository = self.LOCAL_REPOSITORY_DIR
         self.zynq_board_ip = zynq_board_ip
-        self.host.command("echo $MIPS_ELF_ROOT")
-        self.host.command("ls -l {}".format(self.ZYNQ_SETUP_DIR))
+        if host:
+            self.host.command("echo $MIPS_ELF_ROOT")
+            self.host.command("ls -l {}".format(self.ZYNQ_SETUP_DIR))
         self.bit_stream = bit_stream
+
+    def setup_container(self):
+        self.docker_host = AssetManager().get_any_docker_host()
+        workspace = os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(FUN_TEST_DIR))))
+        self.container_name = "this_container"
+        image_name = "sbp_basic:latest"
+        self.target_workspace = "/workspace"
+        environment_variables = {"DOCKER": True,
+                                 "WORKSPACE": workspace}
+        repository_mount = "{}:/repository".format(self.SBP_FIRMWARE_REPO_DIR)
+
+        self.container_asset = self.docker_host.setup_container(image_name=image_name,
+                                                                container_name=self.container_name,
+                                                                command="-b 123",
+                                                                pool0_internal_ports=[22],
+                                                                mounts=[repository_mount],
+                                                                working_dir="/",
+                                                                auto_remove=True,
+                                                                environment_variables=environment_variables)
+
+        fun_test.test_assert(self.container_asset, "Container launched")
+        fun_test.shared_variables["container_asset"] = self.container_asset
+        fun_test.shared_variables["target_workspace"] = self.target_workspace
+
+        fun_test.test_assert(self.docker_host.wait_for_handoff(container_name=self.container_name,
+                                                               handoff_string="Idling"), message="Container handoff")
+
+        localhost = Linux(host_ip="127.0.0.1", localhost=True)
+        localhost.command("cd {}; git pull".format(self.SBP_FIRMWARE_REPO_DIR))
+        fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
+        return self.container_asset
 
     def setup(self):
         fun_test.test_assert(self.setup_local_repository(),
