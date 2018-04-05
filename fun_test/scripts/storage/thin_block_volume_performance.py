@@ -171,7 +171,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Configuring Local thin block volume
             command_result = {}
-            command_result = self.storage_controller.command("enable_counters")
+            command_result = self.storage_controller.command(command="enable_counters", legacy=True)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")
 
@@ -399,8 +399,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
+                            fun_test.log("{} {} {} got {} than the expected value {}".
+                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
@@ -803,8 +803,8 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                             fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
                                                     "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
                                                     "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
+                            fun_test.log("{} {} {} got {} than the expected value {}".
+                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
                                                     "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
@@ -929,5 +929,5 @@ if __name__ == "__main__":
     bltscript.add_test_case(BLTFioRandWriteRandReadOnly())
     bltscript.add_test_case(BLTFioSeqReadWriteMix())
     bltscript.add_test_case(BLTFioRandReadWriteMix())
-    # bltscript.add_test_case(BLTFioLargeWriteReadOnly())
+    bltscript.add_test_case(BLTFioLargeWriteReadOnly())
     bltscript.run()
