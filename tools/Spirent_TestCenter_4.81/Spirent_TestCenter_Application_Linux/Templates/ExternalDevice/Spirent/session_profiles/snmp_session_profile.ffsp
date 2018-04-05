@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<SessionTemplate version="3.4.1.41207">
-    <baseApplication>com.fnfr.svt.applications.snmp</baseApplication>
-    <sessionProperties type="com.fnfr.svt.applications.snmp.documents.DeviceProperties">
-        <ipAddress inherit="false">10.61.37.13</ipAddress>
-    </sessionProperties>
-    <nickName>ss</nickName>
-</SessionTemplate>

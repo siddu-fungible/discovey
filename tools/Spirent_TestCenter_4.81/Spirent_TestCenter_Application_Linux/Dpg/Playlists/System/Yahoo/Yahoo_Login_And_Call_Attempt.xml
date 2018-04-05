@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Playlist name="Yahoo_Login_And_Call_Attempt" type="stream">
-  <MetaData description="Yahoo_Login_And_Call_Attempt" protocol="Yahoo" application="Yahoo" createDate=""/>
-  <Streams>
-    <Stream file="System/Yahoo/Yahoo_Command.xml" name="Command" description="Command" startTime="0" dataDelay="16" serverPort="5050" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
-    <Stream file="System/Yahoo/Yahoo_SSL_Login.xml" name="SSL_Login" description="SSL_Login" startTime="657" dataDelay="16" serverPort="443" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
-    <Stream file="System/Yahoo/Yahoo_SSL_SIP_Registration_And_Call_Attempt.xml" name="SSL_SIP_Registration_And_Call_Attempt" description="SSL_SIP_Registration_And_Call_Attempt" startTime="5809" dataDelay="97" serverPort="443" sapeeServerIp="192.168.1.2" minDelay="0" maxDelay="4294967295"/>
-  </Streams>
-</Playlist>

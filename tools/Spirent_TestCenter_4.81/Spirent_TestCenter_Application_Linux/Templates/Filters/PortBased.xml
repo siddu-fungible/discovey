@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<frame>
-   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="template_schema.xsd" name="PortBased" showName="Customer Encap Port-based" version="1.0" category="802.1ah Customer Encapsulation" readonly="true" validate="true" firstPdu="mimethernet:EthernetII" description="Customer Encap Port-based">
-      <pdus>
-<pdu name="proto1" pdu="mimethernet:EthernetII" />
-</pdus>
-</template>
-</frame>

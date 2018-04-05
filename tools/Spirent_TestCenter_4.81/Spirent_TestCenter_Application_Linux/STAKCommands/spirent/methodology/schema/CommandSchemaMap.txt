@@ -1,5 +1,0 @@
-{
-    "RunSqlCommand": "SqlCommand",
-    "AddToDbTableCommand": "SqlCommand",
-    "SetPropertyFromQueryCommand": "SqlSetCommand"
-}

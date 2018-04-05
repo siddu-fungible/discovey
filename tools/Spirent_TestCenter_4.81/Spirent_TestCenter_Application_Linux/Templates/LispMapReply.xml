@@ -1,13 +1,0 @@
-<frame>
-  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
-    name="LispMapReply"
-    showName="Lisp Map Reply"
-    version="1.00"
-    category="Routing"    readonly="true"    validate="true"
-    firstPdu="udp:Udp"
-    description="UDP and LISP Map Reply" >    <pdus>
-      <pdu name="udp_1" pdu="udp:Udp"/>      <pdu name="lisp_1" pdu="lisp:LispMapReply"/>
-    </pdus>
-  </template>
-</frame>

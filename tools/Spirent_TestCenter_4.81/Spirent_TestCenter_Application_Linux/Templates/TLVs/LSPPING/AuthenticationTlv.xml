@@ -1,8 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<frame>
-  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="LSPPING Authentication TLV" showName="Authentication TLV" version="1.00" category="LSPPING TLV" readonly="true" validate="true" firstPdu="lspping:AuthenticationTlv" description="LSPPING Authentication TLV">
-    <pdus>
-      <pdu name="proto1" pdu="lspping:AuthenticationTlv" />
-    </pdus>
-  </template>
-</frame>

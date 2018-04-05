@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Playlist name="SMB_DCERPC_for_Printer" type="stream">
-  <MetaData description="SMB_DCERPC_for_Printer" protocol="SMB_DCERPC_for_Printer" application="SMB_DCERPC_for_Printer" createDate=""/>
-  <Streams>
-    <Stream file="System/SMB_DCERPC_for_Printer/SMB_DCERPC.xml" name="SMB_DCERPC" description="SMB_DCERPC" startTime="0" dataDelay="0" serverPort="139" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
-  </Streams>
-</Playlist>

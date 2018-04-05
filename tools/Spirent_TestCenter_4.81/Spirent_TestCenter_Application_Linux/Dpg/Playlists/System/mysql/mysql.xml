@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Playlist name="mysql" type="stream">
-  <MetaData description="mysql" protocol="mysql" application="mysql" createDate=""/>
-  <Streams>
-    <Stream file="System/mysql/Mysql_Create_Tables_and Queries.xml" name="Mysql_Create_Tables_and Queries" description="Mysql_Create_Tables_and Queries" startTime="0" dataDelay="1" serverPort="3306" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="0"/>
-  </Streams>
-</Playlist>

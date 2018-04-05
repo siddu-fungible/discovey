@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Playlist name="Gnutella_1" type="stream">
-  <MetaData description="Gnutella_1" protocol="Gnutella" application="Gnutella" createDate=""/>
-  <Streams>
-    <Stream file="System/Gnutella/Gnutella_Ping_Pong_Query_1.xml" name="Ping_Pong_Query_1" description="Ping_Pong_Query_1" startTime="0" dataDelay="66" serverPort="24087" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
-  </Streams>
-</Playlist>

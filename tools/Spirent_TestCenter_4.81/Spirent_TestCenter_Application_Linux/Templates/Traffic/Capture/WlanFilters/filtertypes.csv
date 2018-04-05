@@ -1,3 +1,0 @@
-type mgt,802.11 Management Frame Types
-type ctl,802.11 Control Frame Types
-type data,802.11 Data Frame Types

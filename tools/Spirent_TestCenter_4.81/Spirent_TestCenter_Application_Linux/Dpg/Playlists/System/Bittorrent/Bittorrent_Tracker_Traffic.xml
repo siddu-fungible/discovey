@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Playlist name="Bittorrent_Tracker_Traffic" type="stream">
-  <MetaData description="Bittorrent_Tracker_Traffic" protocol="Bittorrent" application="Bittorrent" createDate=""/>
-  <Streams>
-    <Stream file="System/Bittorrent/Bittorrent_Tracker_Update.xml" name="Tracker_Update" description="Tracker_Update" startTime="0" dataDelay="2" serverPort="6969" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
-  </Streams>
-</Playlist>

@@ -1,5 +1,0 @@
-#!/table/table/aramani_py/lastOne/64bitPybsd/spirent_linux_libs/bin/python2.7
-
-import pydoc
-if __name__ == '__main__':
-    pydoc.cli()
