@@ -83,8 +83,12 @@ class StorageController(DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
-    def peek(self, props_tree):
+    def peek(self, props_tree, command_duration=2):
         props_tree = "peek " + props_tree
+        return self.command(props_tree, legacy=True)
+
+    def poke(self, props_tree, command_duration=2):
+        props_tree = "poke " + props_tree
         return self.command(props_tree, legacy=True)
 
     def fail_volume(self, command_duration=1, **kwargs):

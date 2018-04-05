@@ -195,7 +195,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Configuring the controller
             command_result = {}
-            command_result = self.storage_controller.command("enable_counters")
+            command_result = self.storage_controller.command(command="enable_counters", legacy=True)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance 0")
 
@@ -253,7 +253,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # disabling the error_injection for the EC volume
             command_result = {}
-            command_result = self.storage_controller.command("poke params/ecvol/error_inject 0")
+            command_result = self.storage_controller.poke("params/ecvol/error_inject 0")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT instance 0")
 
@@ -506,8 +506,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected range {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
+                            fun_test.log("{} {} {} got {} than the expected range {}".
+                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)

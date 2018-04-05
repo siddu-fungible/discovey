@@ -224,7 +224,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 dut = self.global_setup["duts"]["blt"][i]
                 self.storage_controller["blt"].append(StorageController(target_ip=dut.host_ip,
                                                                         target_port=dut.external_dpcsh_port))
-                command_result = self.storage_controller["blt"][i].command("enable_counters")
+                command_result = self.storage_controller["blt"][i].command(command="enable_counters", legacy=True)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Enabling counters on BLT {} DUT instance".format(i))
 
@@ -256,7 +256,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
             # Configuring the controller in the DUT in case if the Replica volume needs to configured in a separate DPU
             if self.global_setup["replica_in_sep_dpu"]:
                 # Configuring the controller
-                command_result = self.storage_controller["replica"][0].command("enable_counters")
+                command_result = self.storage_controller["replica"][0].command(command="enable_counters", legacy=True)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Enabling counters in the Replica DUT instance")
 
@@ -311,14 +311,14 @@ class ReplicaDPULevelTestcase(FunTestCase):
 
             # disabling the error_injection for the replica volume
             command_result = {}
-            command_result = self.storage_controller["replica"][0].command("poke params/repvol/error_inject 0")
+            command_result = self.storage_controller["replica"][0].poke("params/repvol/error_inject 0")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Disabling error_injection in the last DUT instance")
 
             # Ensuring that the error_injection got disabled properly
             fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
             command_result = {}
-            command_result = self.storage_controller["replica"][0].command("peek params/repvol")
+            command_result = self.storage_controller["replica"][0].peek("params/repvol")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Retrieving error_injection status from the last DUT "
                                                            "instance")
@@ -574,8 +574,8 @@ class ReplicaDPULevelTestcase(FunTestCase):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
+                            fun_test.log("{} {} {} got {} than the expected value {}".
+                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
@@ -1088,8 +1088,8 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                             fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
                                                     "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
                                                     "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
+                            fun_test.log("{} {} {} got {} than the expected value {}".
+                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} check for {} {} test for the block size & IO depth set to {} "
                                                     "& {}".format(field, size, mode, fio_block_size, fio_iodepth),
