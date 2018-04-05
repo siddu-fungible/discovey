@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="coap"
+  showName="CoAP"
+  version="1.00"
+  description="This is a sample PDU library for Constrained Application Protocol (CoAP) as defined in XML Stream Editor."
+  userdefined="true">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="CoAPMessageType" type="INTEGER" bitLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="0 - Confirmable" value="0" />
+        <VAL_ENUM uiShowName="1 - Non-Confirmable" value="1" />
+        <VAL_ENUM uiShowName="2 - Acknowledgement" value="2" />
+        <VAL_ENUM uiShowName="3 - Reset" value="3" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="CoAPCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="000 - Empty message" value="0" />
+        <VAL_ENUM uiShowName="001 - GET" value="1" />
+        <VAL_ENUM uiShowName="002 - POST" value="2" />
+        <VAL_ENUM uiShowName="003 - PUT" value="3" />
+        <VAL_ENUM uiShowName="004 - DELETE" value="4" />
+        
+        <VAL_ENUM uiShowName="065 - 2.01 Created" value="65" />
+        <VAL_ENUM uiShowName="066 - 2.02 Deleted" value="66" />
+        <VAL_ENUM uiShowName="067 - 2.03 Valid" value="67" />
+        <VAL_ENUM uiShowName="068 - 2.04 Changed" value="68" /> 
+        <VAL_ENUM uiShowName="069 - 2.05 Content" value="69" />
+
+        <VAL_ENUM uiShowName="128 - 4.00 Bad Request" value="128" />
+        <VAL_ENUM uiShowName="129 - 4.01 Unauthorized" value="129" />
+        <VAL_ENUM uiShowName="130 - 4.02 Bad Option" value="130" />
+        <VAL_ENUM uiShowName="131 - 4.03 Forbidden" value="131" />
+        <VAL_ENUM uiShowName="132 - 4.04 Not Found" value="132" />
+        <VAL_ENUM uiShowName="133 - 4.05 Method Not Allowed" value="133" />
+        <VAL_ENUM uiShowName="141 - 4.13 Request Entity Too Large" value="141" />
+        <VAL_ENUM uiShowName="143 - 4.15 Unsupported Media Type" value="143" />
+        
+        <VAL_ENUM uiShowName="160 - 5.00 Internal Server Error" value="160" />
+        <VAL_ENUM uiShowName="161 - 5.01 Not Implemented" value="161" />
+        <VAL_ENUM uiShowName="162 - 5.02 Bad Gateway" value="162" />
+        <VAL_ENUM uiShowName="163 - 5.03 Service Unavailable" value="163" />
+        <VAL_ENUM uiShowName="164 - 5.04 Gateway Timeout" value="164" />
+        <VAL_ENUM uiShowName="165 - 5.05 Proxying Not Supported" value="165" />       
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    
+    <!-- CoAP Option Length Selection ==================================== -->
+   
+    <TYPE_DEF name="LengthTwelveBits" type="SEQUENCE" unitType="ELEMENT" uiShowName="Length">
+        <FIELD name="lengthTwelve" type="BITSTRING" bitLength="12"
+            defaultValue="111100000000"
+            uiShowName="Length" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="LengthFourBits" type="SEQUENCE" unitType="ELEMENT" uiShowName="Length">
+        <FIELD name="lengthFour" type="INTEGER" bitLength="4"
+            minValue="0"
+            maxValue="14"
+            defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAP4BITLENGTH"
+            uiShowName="Length" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="LengthSizeChoice" type="CHOICE" unitType="ELEMENT" uiShowName="Length size">
+        <FIELD name="lengthSizeTwelveBits" type="LengthTwelveBits"
+            uiShowName="12 bits" />
+        <FIELD name="lengthSizeFourBits" type="LengthFourBits"
+            uiShowName="4 bits" />
+    </TYPE_DEF>
+    
+  
+    <!-- CoAP Options ==================================================== -->
+
+    <TYPE_DEF name="ContentTypeOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Content-Type">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="1"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="length" type="INTEGER" bitLength="4"
+            minValue="1"
+            maxValue="2"
+            defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAP4BITLENGTH"
+            uiShowName="Length" />
+
+		<FIELD name="value" type="OCTETSTRING" minByteLength="1" maxByteLength="2"
+			defaultValue="0"
+            uiShowFormat="INTEGER"
+            uiShowName="Content-Type" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="MaxAgeOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Max-Age">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="2"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="length" type="INTEGER" bitLength="4"
+            minValue="1"
+            maxValue="4"
+            defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAP4BITLENGTH"
+            uiShowName="Length" />
+            
+        <FIELD name="value" type="OCTETSTRING" minByteLength="1" maxByteLength="4"
+			defaultValue="3C"
+            uiShowFormat="INTEGER"
+            uiShowName="Max-Age" />    
+    </TYPE_DEF>
+   
+    <TYPE_DEF name="ProxyUriOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Proxy-Uri">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="3"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+    
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="lengthSize" type="LengthSizeChoice"
+            defaultValue="lengthSizeFourBits"
+            uiShowName="Length size" />
+
+		<FIELD name="value" type="ASCII" minByteLength="0" maxByteLength="270"
+			defaultValue=""
+            uiShowName="Proxy-Uri" />
+    </TYPE_DEF>
+   
+    <TYPE_DEF name="ETagOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="ETag">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="4"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="length" type="INTEGER" bitLength="4"
+            minValue="0"
+            maxValue="8"
+            defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAP4BITLENGTH"
+            uiShowName="Length" />
+
+		<FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="8"
+			defaultValue=""
+            uiShowName="ETag" />
+    </TYPE_DEF>
+   
+    <TYPE_DEF name="UriHostOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Uri-Host">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="5"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="lengthSize" type="LengthSizeChoice"
+            defaultValue="lengthSizeFourBits"
+            uiShowName="Length size" />
+
+		<FIELD name="value" type="ASCII" minByteLength="0" maxByteLength="270"
+			defaultValue=""
+            uiShowName="Uri-Host" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LocationPathOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Location-Path">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="6"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="lengthSize" type="LengthSizeChoice"
+            defaultValue="lengthSizeFourBits"
+            uiShowName="Length size" />
+
+		<FIELD name="value" type="ASCII" minByteLength="0" maxByteLength="270"
+			defaultValue=""
+            uiShowName="Location-Path" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="UriPortOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Uri-Port">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="7"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="length" type="INTEGER" bitLength="4"
+            minValue="1"
+            maxValue="2"
+            defaultValue="1"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAP4BITLENGTH"
+            uiShowName="Length" />
+
+		<FIELD name="value" type="OCTETSTRING" minByteLength="1" maxByteLength="2"
+			defaultValue="0"
+            uiShowFormat="INTEGER"
+            uiShowName="Uri-Port" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LocationQueryOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Location-Query">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="8"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="lengthSize" type="LengthSizeChoice"
+            defaultValue="lengthSizeFourBits"
+            uiShowName="Length size" />
+
+		<FIELD name="value" type="ASCII" minByteLength="0" maxByteLength="270"
+			defaultValue=""
+            uiShowName="Location-Query" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="UriPathOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Uri-Path">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="9"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="lengthSize" type="LengthSizeChoice"
+            defaultValue="lengthSizeFourBits"
+            uiShowName="Length size" />
+
+		<FIELD name="value" type="ASCII" minByteLength="0" maxByteLength="270"
+			defaultValue=""
+            uiShowName="Uri-Path" />
+	</TYPE_DEF> 
+
+    <TYPE_DEF name="TokenOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Token">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="11"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="length" type="INTEGER" bitLength="4"
+            minValue="0"
+            maxValue="8"
+            defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAP4BITLENGTH"
+            uiShowName="Length" />
+
+		<FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="8"
+			defaultValue=""
+            uiShowName="Token" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="UriQueryOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Uri-Query">
+        <FIELD name="number" type="INTEGER" bitLength="16"
+            doNotBuild="true"
+			defaultValue="15"
+            uiControlState="ALLOW_OVERRIDE"
+			uiShowName="Number" />
+            
+		<FIELD name="delta" type="INTEGER" bitLength="4"
+			defaultValue="0"
+            uiControlState="ALLOW_OVERRIDE"
+            procfnTarget="COAPOPTIONDELTA"
+			uiShowName="Delta" />
+            
+        <FIELD name="lengthSize" type="LengthSizeChoice"
+            defaultValue="lengthSizeFourBits"
+            uiShowName="Length size" />
+
+		<FIELD name="value" type="ASCII" minByteLength="0" maxByteLength="270"
+			defaultValue=""
+            uiShowName="Uri-Query" />
+	</TYPE_DEF>
+
+
+    <!-- CoAP Options Choice List ======================================== -->
+
+    <TYPE_DEF name="CoAPOptionList" type="CHOICE" unitType="ELEMENT" uiShowName="Options">
+      <FIELD name="contentTypeOption" type="ContentTypeOption" 
+          uiShowName="Content-Type Option" />
+
+      <FIELD name="maxAgeOption" type="MaxAgeOption" 
+          uiShowName="Max-Age Option" />
+
+      <FIELD name="proxyUriOption" type="ProxyUriOption" 
+          uiShowName="Proxy-Uri Option" />
+
+      <FIELD name="eTagOption" type="ETagOption" 
+          uiShowName="ETag Option" />
+
+      <FIELD name="uriHostOption" type="UriHostOption" 
+          uiShowName="Uri-Host Option" />
+
+      <FIELD name="locationPathOption" type="LocationPathOption" 
+          uiShowName="Location-Path Option" />
+
+      <FIELD name="uriPortOption" type="UriPortOption" 
+          uiShowName="Uri-Port Option" />
+
+      <FIELD name="locationQueryOption" type="LocationQueryOption" 
+          uiShowName="Location-Query Option" />
+
+      <FIELD name="uriPathOption" type="UriPathOption" 
+          uiShowName="Uri-Path Option" />
+
+      <FIELD name="tokenOption" type="TokenOption" 
+          uiShowName="Token Option" />
+
+      <FIELD name="uriQueryOption" type="UriQueryOption" 
+          uiShowName="Uri-Query Option" />
+    </TYPE_DEF>
+
+    
+    <TYPE_DEF name="CoAPOption" type="SEQUENCE" unitType="ELEMENT" uiShowName="Option">
+		<FIELD name="option" type="CoAPOptionList"
+			defaultValue="contentTypeOption"
+            uiShowName="Name" />
+	</TYPE_DEF>
+
+    <TYPE_DEF name="CoAPOptions" type="SEQUENCE_OF" minOccurs="0" maxOccurs="999" elementType="CoAPOption" unitType="ELEMENT" />
+ 
+        
+    <!-- CoAP Header ===================================================== -->
+    
+    <TYPE_DEF name="CoAP" type="SEQUENCE" unitType="HEADER"
+        uiShowName="CoAP Header">
+
+      <FIELD name="version" type="INTEGER" bitLength="2"
+          defaultValue="1"
+          uiControlState="ALLOW_OVERRIDE"
+          uiShowCommon="false"
+          uiShowName="Version" />
+
+      <FIELD name="type" type="CoAPMessageType"
+          defaultValue="0"
+          uiShowName="Type" />
+
+      <FIELD name="optionCount" type="INTEGER" bitLength="4"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="COAPOPTIONCOUNT"
+          uiShowName="Option Count" />          
+          
+      <FIELD name="code" type="CoAPCode"
+          defaultValue="1"
+          uiShowName="Code" />
+
+      <FIELD name="messageId" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Message ID" />
+
+      <FIELD name="options" type="CoAPOptions"
+          uiShowName="Options" />
+
+      <NEXT_HEADERS>
+           <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		   <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="0" />
+           <NXT_HDR id="csmp:CSMP" name="CSMP" />
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>
+

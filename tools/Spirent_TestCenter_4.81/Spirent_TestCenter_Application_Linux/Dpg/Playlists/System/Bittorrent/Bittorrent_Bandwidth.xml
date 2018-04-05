@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="Bittorrent_Bandwidth" type="stream">
+  <MetaData description="Bittorrent_Bandwidth" protocol="Bittorrent" application="Bittorrent" createDate=""/>
+  <Streams>
+    <Stream file="System/Bittorrent/Bittorrent_Tracker_Update.xml" name="Tracker_Update" description="Tracker_Update" startTime="0" dataDelay="2" serverPort="6969" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="0"/>
+    <Stream file="System/Bittorrent/Bittorrent_Download_8Mb_File.xml" name="Download_8Mb_File" description="Download_8Mb_File" startTime="683" dataDelay="37" serverPort="6881" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="0"/>
+  </Streams>
+</Playlist>

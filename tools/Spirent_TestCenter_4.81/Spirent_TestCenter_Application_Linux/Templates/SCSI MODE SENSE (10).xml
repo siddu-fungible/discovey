@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ScsiModeSense10"
+    showName="SCSI MODE SENSE (10)"
+    version="1.00"
+    category="SCSI"
+    readonly="true"
+    validate="true"
+    firstPdu="scsi:ModeSense10"
+    description="SCSI MODE SENSE (10)">
+
+    <pdus>
+      <pdu name="modesense10" pdu="scsi:ModeSense10"/>
+    </pdus>
+
+  </template>
+</frame>

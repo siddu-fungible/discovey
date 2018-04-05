@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5162" serializationBase="true" 
+ Identifier="IPTV\Port Results"
+ PrimaryClass="Port"
+ Description="object://core/Port"
+ Path="IPTV"
+ CustomDisplayPath="Triple Play\IPTV"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="Port Results">
+  <RealTimeResultColumnDefinition id="5163" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 123">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5164" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 9">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5165" 
+   GroupName="IPTV Port Results"
+   GroupId="object://customgroup/e1f7b1e9-e3eb-4860-866b-27a5acd87795/Main"
+   ColumnClassName="IptvPortResults IptvPortResults IptvPortResults IptvPortResults IptvPortResults IptvPortResults IptvPortResults"
+   ColumnPropertyName="DroppedFrameCount ReorderedFrameCount DuplicateFrameCount LateFrameCount PrbsErrorCount TotalPkts TotalPktRate"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, IptvPortResults.DroppedFrameCount AS &apos;Dropped Frame Count&apos;, IptvPortResults.ReorderedFrameCount AS &apos;Reordered Frame Count&apos;, IptvPortResults.DuplicateFrameCount AS &apos;Duplicate Frame Count&apos;, IptvPortResults.LateFrameCount AS &apos;Late Frame Count&apos;, IptvPortResults.PrbsErrorCount AS &apos;PRBS Bit Error Count&apos;, IptvPortResults.TotalPkts AS &apos;# Total Packets&apos;, IptvPortResults.TotalPktRate AS &apos;Total Packet Rate (Packets/sec)&apos; FROM IptvPortResults, Port WHERE ( IptvPortResults.ParentHnd = Port.Handle AND IptvPortResults.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 10">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5167" 
+   ConfigClassId="port"
+   ResultClassId="iptvportresults"
+   ResultRootList="8"
+   PropertyIdArray="iptvportresults.droppedframecount iptvportresults.reorderedframecount iptvportresults.duplicateframecount iptvportresults.lateframecount iptvportresults.prbserrorcount iptvportresults.totalpkts iptvportresults.totalpktrate"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 5">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5168" 
+   ColumnClassName="IptvPortResults"
+   ColumnPropertyName="DroppedFrameCount"
+   ColumnDescription=""
+   ColumnWidth="127"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 124">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5169" 
+   ColumnClassName="IptvPortResults"
+   ColumnPropertyName="ReorderedFrameCount"
+   ColumnDescription=""
+   ColumnWidth="136"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 125">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5170" 
+   ColumnClassName="IptvPortResults"
+   ColumnPropertyName="DuplicateFrameCount"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 126">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5171" 
+   ColumnClassName="IptvPortResults"
+   ColumnPropertyName="LateFrameCount"
+   ColumnDescription=""
+   ColumnWidth="106"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 127">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5172" 
+   ColumnClassName="IptvPortResults"
+   ColumnPropertyName="PrbsErrorCount"
+   ColumnDescription=""
+   ColumnWidth="121"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 128">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5173" 
+   ColumnClassName="IptvPortResults"
+   ColumnPropertyName="TotalPkts"
+   ColumnDescription=""
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 129">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5174" 
+   ColumnClassName="IptvPortResults"
+   ColumnPropertyName="TotalPktRate"
+   ColumnDescription=""
+   ColumnWidth="175"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 130">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

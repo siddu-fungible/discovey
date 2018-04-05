@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="icmp" showName="Icmp" version="1.00"
+    description="This is a sample PDU library for Icmp as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="IcmpType" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Echo Reply" value="0" />
+        <VAL_ENUM uiShowName="Destination Unreachable" value="3" />
+        <VAL_ENUM uiShowName="Source Quench" value="4" />
+        <VAL_ENUM uiShowName="Redirect" value="5" />
+        <VAL_ENUM uiShowName="Echo Request" value="8" />
+		<VAL_ENUM uiShowName="Router Advertisement" value="9" />
+		<VAL_ENUM uiShowName="Router Solicitation" value="10" />
+        <VAL_ENUM uiShowName="Time Exceeded" value="11" />
+        <VAL_ENUM uiShowName="Parameter Problem" value="12" />
+        <VAL_ENUM uiShowName="Timestamp Request" value="13" />
+        <VAL_ENUM uiShowName="Timestamp Reply" value="14" />
+        <VAL_ENUM uiShowName="Information Request" value="15" />
+        <VAL_ENUM uiShowName="Information Reply" value="16" />
+		<VAL_ENUM uiShowName="Address Mask Request" value="17" />
+		<VAL_ENUM uiShowName="Address Mask Reply" value="18" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpIpData" type="SEQUENCE" unitType="ELEMENT" >
+      <FIELD name="ipHdr" type="ipv4:IPv4" uiShowName="IP Header" />
+      <FIELD name="data" type="OCTETSTRING"
+             minByteLength="0" maxByteLength="1000"
+             defaultValue="0000000000000000"
+             uiShowName="Data" />
+
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="IcmpDestUnreachCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Net Unreachable" value="0" />
+        <VAL_ENUM uiShowName="Host Unreachable" value="1" />
+        <VAL_ENUM uiShowName="Protocol Unreachable" value="2" />
+        <VAL_ENUM uiShowName="Port Unreachable" value="3" />
+        <VAL_ENUM uiShowName="Fragmentation Needed" value="4" />
+        <VAL_ENUM uiShowName="Source Route Failed" value="5" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="IcmpDestUnreach" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Destination Unreachable" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="3"
+         uiShowName="Type" />
+      <FIELD name="code" type="IcmpDestUnreachCode"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="unused" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Unused" />
+      <FIELD name="ipData" type="IcmpIpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpTimeExceededCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Time To Live Exceeded" value="0" />
+        <VAL_ENUM uiShowName="Fragment Reassembly Time Exceeded" value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpTimeExceeded" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Time Exceeded" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="11"
+         uiShowName="Type" />
+      <FIELD name="code" type="IcmpTimeExceededCode"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="unused" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Unused" />
+      <FIELD name="ipData" type="IcmpIpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpParameterProblemCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Pointer Indicates Error" value="0" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpParameterProblem" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Parameter Problem" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="12"
+         uiShowName="Type" />
+      <FIELD name="code" type="IcmpParameterProblemCode"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="pointer" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Pointer" />
+      <FIELD name="unused" type="INTEGER" bitLength="24"
+         defaultValue="0"
+         uiShowName="Unused" />
+      <FIELD name="ipData" type="IcmpIpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="IcmpSourceQuench" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Source Quench" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="4"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="unused" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Unused" />
+      <FIELD name="ipData" type="IcmpIpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpRedirectCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Redirect Datagrams for Network" value="0" />
+        <VAL_ENUM uiShowName="Redirect Datagrams for Host" value="1" />
+        <VAL_ENUM uiShowName="Redirect Datagrams for ToS and Network" value="2" />
+        <VAL_ENUM uiShowName="Redirect Datagrams for ToS and Host" value="3" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpRedirect" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Redirect" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="5"
+         uiShowName="Type" />
+      <FIELD name="code" type="IcmpRedirectCode"
+         defaultValue="0"
+         uiShowName="Code" />
+	  <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="gateway" type="IPV4ADDR"
+         defaultValue="192.0.0.1"
+         uiShowName="Gateway Address" /> 
+      <FIELD name="ipData" type="IcmpIpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpEchoRequest" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Echo Request" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="8"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+      <FIELD name="data" type="OCTETSTRING" minByteLength="0"
+          maxByteLength="10000" defaultValue="0000"
+          uiShowName="Echo Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpEchoReply" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Echo Reply" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="0"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+      <FIELD name="data" type="OCTETSTRING" minByteLength="0"
+          maxByteLength="10000" defaultValue="0000"
+          uiShowName="Echo Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpTimestampRequest" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Timestamp Request" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="13"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+      <FIELD name="originate" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Originate Timestamp" />
+      <FIELD name="receive" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Receive Timestamp" />
+      <FIELD name="transmit" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Transmit Timestamp" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpTimestampReply" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Timestamp Reply" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="14"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+      <FIELD name="originate" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Originate Timestamp" />
+      <FIELD name="receive" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Receive Timestamp" />
+      <FIELD name="transmit" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Transmit Timestamp" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpInfoRequest" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Information Request" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="15"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpInfoReply" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Information Reply" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="16"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+    </TYPE_DEF>
+	
+	<TYPE_DEF name="RouterAddressStructure" type="SEQUENCE" unitType="ELEMENT" uiShowName="Icmp Router Address" >
+	  <FIELD name="routerAddress" type="IPV4ADDR"
+          defaultValue="225.0.0.1" 
+          uiShowName="Router Address" />
+	  <FIELD name="preferenceLevel" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Preference Level" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="RouterAddressList" type="SET_OF" elementType="RouterAddressStructure"
+        minOccurs="0" maxOccurs="1000" unitType="ELEMENT" />
+		
+    <TYPE_DEF name="IcmpRouterAdvertisement" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Router Advertisement" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="9"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="advertiseCount" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Advertise Count" />
+      <FIELD name="addrEntrySize" type="INTEGER" bitLength="8"
+          defaultValue="2"
+          uiShowName="Address Entry Size" />
+      <FIELD name="lifeTime" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Life Time" />
+	  <FIELD name="routerAddressList" type="RouterAddressList"
+          uiShowName="Router Address List" />
+    </TYPE_DEF>
+	
+	 <TYPE_DEF name="IcmpRouterSolicitation" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Router Solicitation" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="10"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+	   <FIELD name="reserved" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Reserved" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IcmpMaskRequest" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Address Mask Request" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="17"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+	   <FIELD name="addrMask" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Address Mask" />
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="IcmpMaskReply" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmp Address Mask Reply" >
+      <FIELD name="type" type="IcmpType"
+         defaultValue="18"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="ICMPCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+      <FIELD name="addrMask" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Address Mask" />
+    </TYPE_DEF>
+  </TYPE_DEFS>
+</PDU_LIBRARY>

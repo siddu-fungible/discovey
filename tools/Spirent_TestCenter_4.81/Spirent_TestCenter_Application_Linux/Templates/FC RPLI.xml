@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCRPLI" 
+    showName="FC RPLI" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:Rpli" 
+    description="FC RPLI">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:Rpli">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>01</gsSubType>
+          <commandRespondCode>029B</commandRespondCode>
+        </ctIuPreamble>
+        <osLunMapEntries>
+          <OsLunMapEntry name="OsLunMapEntry_0">
+          </OsLunMapEntry>
+        </osLunMapEntries>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

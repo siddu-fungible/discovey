@@ -1,0 +1,287 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Result set schema",
+  "description": "Schema file that describes the attributes of a result set",
+  "type": "object",
+  "properties": {
+    "result_set": {
+      "description": "Result set root",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the result set",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the result set"
+        },
+        "test": {
+          "description": "Use as a test result set",
+          "type": "boolean",
+          "default": "false"
+        },
+        "bll": {
+          "description": "BLL properties of the result set",
+          "type": "object",
+          "properties": {
+            "group": {
+              "description": "Group the result set belongs",
+              "type": "string",
+              "examples": [
+                "stream",
+                "port"
+              ]
+            },
+            "plugin": {
+              "description": "Plugin the result set belongs to",
+              "type": "string",
+              "examples": [
+                "l2l3",
+                "datacenter"
+              ]
+            }
+          },
+          "required": [
+            "plugin"
+          ]
+        },
+        "il": {
+          "description": "IL properties of the result set",
+          "type": "object",
+          "properties": {
+            "table_name": {
+              "description": "IL table name of the result set",
+              "type": "string"
+            },
+            "message_set": {
+              "description": "IL message set",
+              "type": "string",
+              "examples": [
+                "Generator_3"
+              ]
+            },
+            "default_subscription_facts": {
+              "description": "Facts needed by default for IL subscription",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              }
+            }
+          },
+          "required": [
+            "table_name",
+            "message_set"
+          ]
+        },
+        "dimension_sets": {
+          "description": "Required dimension sets for the result set",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          }
+        },
+        "primary_dimension_set": {
+          "description": "Primary dimension set of the result set",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "facts": {
+          "description": "Array of result set facts",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Name of the fact",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              },
+              "display_name": {
+                "type": "string",
+                "description": "Display name of the fact"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the fact"
+              },
+              "il": {
+                "description": "IL properties of the fact",
+                "type": "object",
+                "properties": {
+                  "column_def": {
+                    "description": "Fact column definition either IL column name or query with column name",
+                    "type": "string"
+                  },
+                  "data_type": {
+                    "description": "Fact IL data type",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "column_def",
+                  "data_type"
+                ]
+              },
+              "db": {
+                "description": "Fact properties used in database",
+                "type": "object",
+                "properties": {
+                  "data_type": {
+                    "description": "Data type of the fact used in database",
+                    "type": "string",
+                    "enum": [
+                      "timestamp",
+                      "event",
+                      "integer",
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "base_unit": {
+                    "description": "Base unit of the Fact",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "bits",
+                      "bits_per_sec",
+                      "bytes",
+                      "bytes_per_sec",
+                      "secs",
+                      "msecs",
+                      "usecs",
+                      "frames",
+                      "frames_per_sec",
+                      "cells",
+                      "cells_per_sec",
+                      "quanta",
+                      "codewords",
+                      "codewords_per_sec"
+                    ]
+                  }
+                },
+                "required": [
+                  "data_type",
+                  "base_unit"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "display_name",
+              "description",
+              "il",
+              "db"
+            ]
+          }
+        },
+        "derived_facts": {
+          "description": "Array of result set derived facts, original fact should be present in the same file and should be listed in referred_facts",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Name of the derived fact",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              },
+              "display_name": {
+                "type": "string",
+                "description": "Display name of the derived fact"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the derived fact"
+              },
+              "referred_facts":{
+                 "type": "array",
+                 "minItems": 1,
+                 "uniqueItems": true,
+                 "items": {
+                    "type": "string",
+                    "description": "Name of the referred fact",
+                    "pattern": "^[a-z][a-z0-9_]{0,63}$"
+                 }
+              },
+              "db": {
+                "description": "Fact properties used in database",
+                "type": "object",
+                "properties": {
+                  "data_type": {
+                    "description": "Data type of the fact used in database",
+                    "type": "string",
+                    "enum": [
+                      "timestamp",
+                      "event",
+                      "integer",
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "base_unit": {
+                    "description": "Base unit of the Fact",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "bits",
+                      "bits_per_sec",
+                      "bytes",
+                      "bytes_per_sec",
+                      "secs",
+                      "msecs",
+                      "usecs",
+                      "frames",
+                      "frames_per_sec",
+                      "cells",
+                      "cells_per_sec",
+                      "quanta",
+                      "codewords",
+                      "codewords_per_sec"
+                    ]
+                  },
+                  "query": {
+                    "type": "string",
+                    "description": "Query for the derived fact"
+                  }
+                },
+                "required": [
+                  "data_type",
+                  "base_unit",
+                  "query"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "display_name",
+              "description",
+              "referred_facts",
+              "db"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "bll",
+        "il",
+        "dimension_sets",
+        "primary_dimension_set",
+        "facts"
+      ]
+    }
+  },
+  "required": [
+    "result_set"
+  ]
+}

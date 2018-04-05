@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="PriorityFlowControl"
+    showName="Priority Flow Control"
+    version="1.00"
+    category="MAC Control"
+    readonly="true"
+    validate="true"
+    firstPdu="ethernetpause:PFC"
+    description="Priority Flow Control" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ethernetpause:PFC"/>
+    </pdus>
+  </template>
+</frame>

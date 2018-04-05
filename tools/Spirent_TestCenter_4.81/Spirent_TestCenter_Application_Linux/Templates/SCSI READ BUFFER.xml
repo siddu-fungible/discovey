@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ScsiReadBuffer"
+    showName="SCSI READ BUFFER"
+    version="1.00"
+    category="SCSI"
+    readonly="true"
+    validate="true"
+    firstPdu="scsi:ReadBuffer"
+    description="SCSI READ BUFFER">
+
+    <pdus>
+      <pdu name="readbuffer" pdu="scsi:ReadBuffer"/>
+    </pdus>
+
+  </template>
+</frame>

@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="OncRpcv2RpcMsgRejectedReplyAuthError"
+    showName="rpc_msg rejected_reply AUTH_ERROR"
+    version="1.00"
+    category="ONC RPCv2"
+    readonly="true"
+    validate="true"
+    firstPdu="oncrpcv2:RpcMsg"
+    description="ONC RPCv2 rpc_msg Rejected Reply Auth Error" >
+
+    <pdus>
+      <pdu name="proto1" pdu="oncrpcv2:RpcMsg" />
+      <pdu name="proto2" pdu="oncrpcv2:ReplyBody" />
+      <pdu name="proto3" pdu="oncrpcv2:RejectedReply" />
+      <pdu name="proto4" pdu="oncrpcv2:RejectedReplyAuthStat" />
+    </pdus>
+  </template>
+</frame>

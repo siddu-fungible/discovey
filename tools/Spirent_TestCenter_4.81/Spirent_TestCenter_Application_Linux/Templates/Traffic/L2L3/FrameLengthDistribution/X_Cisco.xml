@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<FrameLengthDistribution id="5263" serializationBase="true" 
+ Seed="10900842"
+ Active="TRUE"
+ Name="X_Cisco">
+  <FrameLengthDistributionSlot id="5264" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="40"
+   MinFrameLength="39"
+   MaxFrameLength="41"
+   Weight="7"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 31">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5265" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="128"
+   MinFrameLength="128"
+   MaxFrameLength="1518"
+   Weight="1"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 32">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5266" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="576"
+   MinFrameLength="575"
+   MaxFrameLength="577"
+   Weight="4"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 33">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5267" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="1500"
+   MinFrameLength="1499"
+   MaxFrameLength="1500"
+   Weight="1"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 34">
+  </FrameLengthDistributionSlot>
+</FrameLengthDistribution>

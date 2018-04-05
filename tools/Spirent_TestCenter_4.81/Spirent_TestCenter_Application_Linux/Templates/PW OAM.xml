@@ -1,0 +1,31 @@
+<frame>
+
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+
+    name="PseudowireStatusMsg" 
+
+    showName="PW OAM"
+
+    version="1.0"
+
+    category="MPLS"
+
+    readonly="true"
+
+    validate="true"
+
+    firstPdu="pwOAM:PseudowireStatusMsg"
+
+    description="PW-OAM">
+
+    <pdus>
+
+      <pdu name="pwOAM1" pdu="pwOAM:PseudowireStatusMsg" />
+
+    </pdus>    
+
+  </template>
+
+</frame>

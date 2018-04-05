@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="pim" showName="PIM" version="1.00"
+    description="This is a sample PDU library for PIM as defined in XML Stream Editor.">
+ 
+  <TYPE_DEFS>
+ 
+    <TYPE_DEF name="PimMessageType" type="INTEGER" bitLength="4" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Hello" value="0" />
+        <VAL_ENUM uiShowName="Register" value="1" />
+        <VAL_ENUM uiShowName="Register-Stop" value="2" />
+        <VAL_ENUM uiShowName="Join/Prune" value="3" />
+        <VAL_ENUM uiShowName="Bootstrap" value="4" />
+        <VAL_ENUM uiShowName="Assert" value="5" />
+        <VAL_ENUM uiShowName="Graft" value="6" />
+        <VAL_ENUM uiShowName="Graft-Ack" value="7" />
+        <VAL_ENUM uiShowName="Candidate-RP-Advertisement" value="8" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    
+
+    <TYPE_DEF name="Pimv4Header" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIMv4 Header" >
+			
+      <FIELD name="version" type="INTEGER" bitLength="4"
+          defaultValue="2"
+          uiShowName="Version" />
+          
+      <FIELD name="type" type="PimMessageType"
+          defaultValue="0"
+          uiShowName="Message Type" />
+          
+      <FIELD name="reserved" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Reserved" />
+          
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          uiControlState="ALLOW_OVERRIDE" 
+          defaultValue="0"
+          procfnTarget="PIMCHECKSUM"
+          uiNoShowModifier="Interface,Filter"
+          uiShowName="Checksum" />
+
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="Pimv6Header" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIMv6 Header" >
+			
+      <FIELD name="version" type="INTEGER" bitLength="4"
+          defaultValue="2"
+          uiShowName="Version" />
+          
+      <FIELD name="type" type="PimMessageType"
+          defaultValue="0"
+          uiShowName="Message Type" />
+          
+      <FIELD name="reserved" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Reserved" />
+          
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE" 
+          procfnTarget="PIMPSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Filter"
+          uiShowName="Checksum" />
+
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="EncodedUnicastIpv4Address" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Encoded Unicast IPv4 Address" >
+			
+      <FIELD name="addrFamily" type="types:AddressFamilies8Bit"
+          defaultValue="1"
+          uiShowName="Encoded Unicast Address Family" />
+          
+      <FIELD name="encodingType" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Encoding Type" />
+          
+      <FIELD name="address" type="IPV4ADDR"
+          defaultValue="192.0.0.1"
+          uiShowName="Unicast IP Address" />
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EncodedUnicastIpv6Address" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Encoded Unicast IPv6 Address" >
+			
+      <FIELD name="addrFamily" type="types:AddressFamilies8Bit"
+          defaultValue="2"
+          uiShowName="Encoded Unicast Address Family" />
+          
+      <FIELD name="encodingType" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Encoding Type" />
+          
+      <FIELD name="address" type="IPV6ADDR"
+          defaultValue="2000:0000:0000:0000:0000:0000:0000:0001"
+          uiShowName="Unicast IP Address" />
+
+    </TYPE_DEF>
+
+    
+    <TYPE_DEF name="EncodedGroupIpv4Address" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Encoded Group IPv4 Address" >
+			
+      <FIELD name="addrFamily" type="types:AddressFamilies8Bit"
+          defaultValue="1"
+          uiShowName="Encoded Unicast Address Family" />
+          
+      <FIELD name="encodingType" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Encoding Type" />
+          
+      <FIELD name="bBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address B-bit" />
+          
+      <FIELD name="reserved" type="BITSTRING" bitLength="6"
+          defaultValue="000000"
+          uiShowName="Reserved" />
+          
+      <FIELD name="zBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Z-bit" />
+          
+      <FIELD name="maskLen" type="INTEGER" bitLength="8"
+          defaultValue="24"
+          uiShowName="Mask Length" />
+          
+      <FIELD name="address" type="IPV4ADDR"
+          defaultValue="225.0.0.1"
+          uiShowName="Group IP Address" />
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EncodedGroupIpv6Address" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Encoded Group IPv6 Address" >
+			
+      <FIELD name="addrFamily" type="types:AddressFamilies8Bit"
+          defaultValue="2"
+          uiShowName="Encoded Unicast Address Family" />
+          
+      <FIELD name="encodingType" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Encoding Type" />
+          
+      <FIELD name="bBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address B-bit" />
+          
+      <FIELD name="reserved" type="BITSTRING" bitLength="6"
+          defaultValue="000000"
+          uiShowName="Reserved" />
+          
+      <FIELD name="zBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Z-bit" />
+          
+      <FIELD name="maskLen" type="INTEGER" bitLength="8"
+          defaultValue="24"
+          uiShowName="Mask Length" />
+          
+      <FIELD name="address" type="IPV6ADDR"
+          defaultValue="FF1E:0000:0000:0000:0000:0000:0000:0001"
+          uiShowName="Group IPv6 Address" />
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EncodedSourceIpv4Address" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Encoded Source IPv4 Address" >
+		    
+      <FIELD name="addrFamily" type="types:AddressFamilies8Bit"
+          defaultValue="1"
+          uiShowName="Encoded Source Address Family" />
+          
+      <FIELD name="encoding-type" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Encoding Type" />
+          
+      <FIELD name="reserved" type="BITSTRING" bitLength="5"
+          defaultValue="000000"
+          uiShowName="Reserved" />
+          
+      <FIELD name="sBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address S-bit" />
+          
+      <FIELD name="wBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address W-bit" />
+          
+      <FIELD name="rBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address R-bit" />
+          
+      <FIELD name="maskLen" type="INTEGER" bitLength="8"
+          defaultValue="24"
+          uiShowName="Mask Length" />
+          
+      <FIELD name="address" type="IPV4ADDR"
+          defaultValue="192.0.0.1"
+          uiShowName="Source IP Address" />
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EncodedSourceIpv6Address" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Encoded Source IPv6 Address" >
+		    
+      <FIELD name="addrFamily" type="types:AddressFamilies8Bit"
+          defaultValue="2"
+          uiShowName="Encoded Source Address Family" />
+          
+      <FIELD name="encoding-type" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Encoded Group Address Encoding Type" />
+          
+      <FIELD name="reserved" type="BITSTRING" bitLength="5"
+          defaultValue="000000"
+          uiShowName="Reserved" />
+          
+      <FIELD name="sBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address S-bit" />
+          
+      <FIELD name="wBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address W-bit" />
+          
+      <FIELD name="rBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Encoded Group Address R-bit" />
+          
+      <FIELD name="maskLen" type="INTEGER" bitLength="8"
+          defaultValue="24"
+          uiShowName="Mask Length" />
+          
+      <FIELD name="address" type="IPV6ADDR"
+          defaultValue="2000:0000:0000:0000:0000:0000:0000:0001"
+          uiShowName="Source IP Address" />
+
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="PimHelloHoldTime" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIM Hello Hold Time" >
+      <FIELD name="type" type="INTEGER" bitLength="16"
+          defaultValue="1"
+          uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16"
+          defaultValue="2"
+          uiShowName="Option Length" />
+      <FIELD name="value" type="INTEGER" bitLength="16"
+          defaultValue="105"
+          uiShowName="Holdtime" />
+		  
+	  <NEXT_HEADERS>
+		<NXT_HDR id="pim:PimHelloLanPruneDelay" name="Lan Prune Delay"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloDRPriority" name="PIM Hello DR Priority"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloGenerationID" name="PIM Hello Generation ID"></NXT_HDR>
+		<NXT_HDR id="pim:Pimv4HelloAddressList" name="PIMv4 Hello Address List"></NXT_HDR>
+	  </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="PimHelloLanPruneDelay" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIM Hello Lan Prune Delay" >
+       <FIELD name="type" type="INTEGER" bitLength="16"
+           defaultValue="2"
+           uiShowName="Option Type" />
+       <FIELD name="length" type="INTEGER" bitLength="16"
+           defaultValue="4"
+           uiShowName="Option Length" />
+       <FIELD name="tBit" type="BITSTRING" bitLength="1"
+           defaultValue="0"
+           uiShowName="T-Bit" />
+       <FIELD name="pruneDelayValue" type="INTEGER" bitLength="15"
+           defaultValue="0"
+           uiShowName="LAN Prune Delay" />
+       <FIELD name="overrideIntervalValue" type="INTEGER" bitLength="16"
+           defaultValue="0"
+           uiShowName="Override Interval" />
+
+	  <NEXT_HEADERS>
+		<NXT_HDR id="pim:PimHelloHoldTime" name="PIM Hello Hold Time"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloDRPriority" name="PIM Hello DR Priority"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloGenerationID" name="PIM Hello Generation ID"></NXT_HDR>
+		<NXT_HDR id="pim:Pimv4HelloAddressList" name="PIMv4 Hello Address List"></NXT_HDR>
+	  </NEXT_HEADERS>
+		   
+    </TYPE_DEF>
+
+    <TYPE_DEF name="PimHelloDRPriority" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIM Hello DR Priority" >
+      <FIELD name="type" type="INTEGER" bitLength="16"
+           defaultValue="19"
+           uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16"
+           defaultValue="4"
+           uiShowName="Option Length" />
+      <FIELD name="value" type="INTEGER" bitLength="32"
+           defaultValue="1"
+           uiShowName="DR Priority" />
+		   
+	  <NEXT_HEADERS>
+		<NXT_HDR id="pim:PimHelloHoldTime" name="PIM Hello Hold Time"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloLanPruneDelay" name="PIM Hello Lan Prune Delay"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloGenerationID" name="PIM Hello Generation ID"></NXT_HDR>
+		<NXT_HDR id="pim:Pimv4HelloAddressList" name="PIMv4 Hello Address List"></NXT_HDR>
+	  </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="PimHelloGenerationID" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIM Hello Generation ID" >
+      <FIELD name="type" type="INTEGER" bitLength="16"
+          defaultValue="20"
+          uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16"
+          defaultValue="4"
+          uiShowName="Option Length" />
+      <FIELD name="value" type="INTEGER" bitLength="32"
+          defaultValue="1"
+          uiShowName="Generation ID" />
+
+	  <NEXT_HEADERS>
+		<NXT_HDR id="pim:PimHelloHoldTime" name="PIM Hello Hold Time"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloLanPruneDelay" name="PIM Hello Lan Prune Delay"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloDRPriority" name="PIM Hello DR Priority"></NXT_HDR>
+		<NXT_HDR id="pim:Pimv4HelloAddressList" name="PIMv4 Hello Address List"></NXT_HDR>
+	  </NEXT_HEADERS>
+	  
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Ipv4Addr" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv4 Address" >
+        <FIELD name="value" type="IPV4ADDR"
+            defaultValue="192.0.0.1"
+            uiShowName="Ipv4 Address" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Pimv4SecondaryAddressList" type="SET_OF"
+        elementType="Ipv4Addr" unitType="ELEMENT" />
+    
+    <TYPE_DEF name="Ipv6Addr" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Address" >
+        <FIELD name="value" type="IPV6ADDR"
+            defaultValue="2000:0000:0000:0000:0000:0000:0000:0001"
+            uiShowName="Ipv6 Address" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Pimv6SecondaryAddressList" type="SET_OF"
+        elementType="Ipv6Addr" unitType="ELEMENT" />
+
+    <TYPE_DEF name="Pimv4HelloAddressList" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIMv4 Hello Address List" >
+			
+      <FIELD name="type" type="INTEGER" bitLength="16"
+          defaultValue="24"
+          uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16"
+          defaultValue="4"
+          uiShowName="Option Length" />
+      <FIELD name="addrList" type="Pimv4SecondaryAddressList"
+          uiShowName="Secondary Address List"/>
+
+	  <NEXT_HEADERS>
+		<NXT_HDR id="pim:PimHelloHoldTime" name="PIM Hello Hold Time"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloLanPruneDelay" name="PIM Hello Lan Prune Delay"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloDRPriority" name="PIM Hello DR Priority"></NXT_HDR>
+		<NXT_HDR id="pim:PimHelloGenerationID" name="PIM Hello Generation ID"></NXT_HDR>
+	  </NEXT_HEADERS>
+	  
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Pimv6HelloAddressList" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PIMv6 Hello Address List" >
+			
+      <FIELD name="type" type="INTEGER" bitLength="16"
+          defaultValue="24"
+          uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16"
+          defaultValue="16"
+          uiShowName="Option Length" />
+      <FIELD name="addrList" type="Pimv6SecondaryAddressList"
+          uiShowName="Secondary Address List"/>
+
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="Pimv4HelloOption" type="CHOICE"
+        unitType="ELEMENT" uiShowName="PIMv4 Hello Option" >
+
+      <FIELD name="holdTime" type="PimHelloHoldTime"
+          uiShowName="Hold Time" />
+      <FIELD name="lanPruneDelay" type="PimHelloLanPruneDelay"
+          uiShowName="Lan Prune Delay" />
+      <FIELD name="drPriority" type="PimHelloDRPriority"
+          uiShowName="DR Priority" />
+      <FIELD name="generationID" type="PimHelloGenerationID"
+          uiShowName="Generation ID" />
+      <FIELD name="addressList" type="Pimv4HelloAddressList"
+          uiShowName="Address List" />
+
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Pimv6HelloOption" type="CHOICE"
+        unitType="ELEMENT" uiShowName="PIMv6 Hello Option" >
+
+      <FIELD name="holdTime" type="PimHelloHoldTime"
+          uiShowName="Hold Time" />
+      <FIELD name="lanPruneDelay" type="PimHelloLanPruneDelay"
+          uiShowName="Lan Prune Delay" />
+      <FIELD name="drPriority" type="PimHelloDRPriority"
+          uiShowName="DR Priority" />
+      <FIELD name="generationID" type="PimHelloGenerationID"
+          uiShowName="Generation ID" />
+      <FIELD name="addressList" type="Pimv6HelloAddressList"
+          uiShowName="Address List" />
+
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Pimv4HelloOptionsList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="250"
+        elementType="Pimv4HelloOption" unitType="ELEMENT" />
+
+    <TYPE_DEF name="Pimv6HelloOptionsList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="250"
+        elementType="Pimv6HelloOption" unitType="ELEMENT" />
+
+
+    <TYPE_DEF name="Pimv4Hello" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv4 Hello" >
+      <FIELD name="header" type="Pimv4Header"
+          uiShowName="Header"/>
+      <FIELD name="options" type="Pimv4HelloOptionsList"
+          uiShowName="Hello Options"/>
+
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="Pimv6Hello" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv6 Hello" >
+      <FIELD name="header" type="Pimv6Header"
+          uiShowName="Header"/>
+      <FIELD name="options" type="Pimv6HelloOptionsList"
+          uiShowName="Hello Options"/>
+
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="Pimv4Register" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv4 Register" >
+      <FIELD name="header" type="Pimv4Header"
+          uiShowName="Header"/>
+          
+      <FIELD name="borderBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Border Bit" />
+          
+      <FIELD name="nullBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Null-Register Bit" />
+      <FIELD name="reserved" type="INTEGER" bitLength="30"
+          defaultValue="0"
+          uiShowName="Reserved field" />
+          
+      <FIELD name="multicastPacket" type="OCTETSTRING" minByteLength="20"
+          maxByteLength="1500" uiShowName="Encapsulated Multicast Packet" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Pimv6Register" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv6 Register" >
+      <FIELD name="header" type="Pimv6Header"
+          uiShowName="Header"/>
+          
+      <FIELD name="borderBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Border Bit" />
+          
+      <FIELD name="nullBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Null-Register Bit" />
+          
+      <FIELD name="reserved" type="INTEGER" bitLength="30"
+          defaultValue="0"
+          uiShowName="Reserved field" />
+          
+      <FIELD name="multicastPacket" type="OCTETSTRING" minByteLength="20"
+          maxByteLength="1500" uiShowName="Encapsulated Multicast Packet" />
+    </TYPE_DEF>
+        
+    <TYPE_DEF name="Pimv4RegisterStop" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv4 Register Stop" >
+      <FIELD name="header" type="Pimv4Header"
+          uiShowName="Header"/>
+
+      <FIELD name="groupAddr" type="EncodedGroupIpv4Address"
+          uiShowName="Group Ip Address"/>
+
+      <FIELD name="sourceAddr" type="EncodedUnicastIpv4Address"
+          uiShowName="Source Address"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Pimv6RegisterStop" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv6 Register Stop" >
+      <FIELD name="header" type="Pimv6Header"
+          uiShowName="Header"/>
+          
+      <FIELD name="groupAddr" type="EncodedGroupIpv6Address"
+          uiShowName="Group Ip Address"/>
+          
+      <FIELD name="sourceAddr" type="EncodedUnicastIpv6Address"
+          uiShowName="Source Address"/>    
+    </TYPE_DEF>
+    
+
+    <TYPE_DEF name="SourceIpv4Addresses" type="SET_OF"
+        elementType="EncodedSourceIpv4Address" unitType="ELEMENT" />
+    
+    <TYPE_DEF name="JoinPrunev4GroupRecord" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Join Prune v4 Group Record" >
+			
+      <FIELD name="groupAddr" type="EncodedGroupIpv4Address"
+          uiShowName="Multicast Group Address"/>
+          
+      <FIELD name="numJoin" type="INTEGER" bitLength="16"
+          defaultValue="1"
+          uiShowName="Number of Joined Sources" />
+          
+      <FIELD name="numPrune" type="INTEGER" bitLength="16"
+          defaultValue="1"
+          uiShowName="Number of Pruned Sources" />
+          
+      <FIELD name="joinedSources" type="SourceIpv4Addresses"
+          uiShowName="Joined Sources" />
+          
+      <FIELD name="prunedSources" type="SourceIpv4Addresses"
+          uiShowName="Pruned Sources" />
+          
+    </TYPE_DEF>
+
+    <TYPE_DEF name="SourceIpv6Addresses" type="SET_OF"
+        elementType="EncodedSourceIpv6Address" unitType="ELEMENT" />
+    
+    <TYPE_DEF name="JoinPrunev6GroupRecord" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Join Prune v6 Group Record" >
+			
+      <FIELD name="groupAddr" type="EncodedGroupIpv6Address"
+          uiShowName="Multicast Group Address"/>
+          
+      <FIELD name="numJoin" type="INTEGER" bitLength="16"
+          defaultValue="1"
+          uiShowName="Number of Joined Sources" />
+          
+      <FIELD name="numPrune" type="INTEGER" bitLength="16"
+          defaultValue="1"
+          uiShowName="Number of Pruned Sources" />
+          
+      <FIELD name="joinedSources" type="SourceIpv6Addresses"
+          uiShowName="Joined Sources" />
+          
+      <FIELD name="prunedSources" type="SourceIpv6Addresses"
+          uiShowName="Pruned Sources" />
+    </TYPE_DEF>
+
+    
+    <TYPE_DEF name="JoinPrunev4GroupRecords" type="SET_OF"
+        elementType="JoinPrunev4GroupRecord" unitType="ELEMENT" />
+    
+    <TYPE_DEF name="JoinPrunev6GroupRecords" type="SET_OF"
+        elementType="JoinPrunev6GroupRecord" unitType="ELEMENT" />
+    
+    <TYPE_DEF name="Pimv4JoinPrune" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv4 Join Prune" >
+
+      <FIELD name="header" type="Pimv4Header"
+          uiShowName="PIM Header"/>
+      <FIELD name="upstreamNbr" type="EncodedUnicastIpv4Address"
+          uiShowName="Upstream Neighbor Address"/>
+
+      <FIELD name="reserved" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Reserved"/>
+
+      <FIELD name="numGroups" type="INTEGER" bitLength="8"
+          defaultValue="1"
+          uiShowName="Number of Groups" />
+
+      <FIELD name="holdTime" type="INTEGER" bitLength="16"
+          defaultValue="105"
+          uiShowName="Join/Prune Hold Time"/>
+
+      <FIELD name="groupRecords" type="JoinPrunev4GroupRecords"
+          uiShowName="Group Records"/>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Pimv6JoinPrune" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv6 Join Prune" >
+			
+      <FIELD name="header" type="Pimv6Header"
+          uiShowName="Header"/>
+          
+      <FIELD name="upstreamNbr" type="EncodedUnicastIpv6Address"
+          uiShowName="Upstream Neighbor Address"/>
+          
+      <FIELD name="reserved" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Reserved"/>
+          
+      <FIELD name="numGroups" type="INTEGER" bitLength="8"
+          defaultValue="1"
+          uiShowName="Number of Groups" />
+          
+      <FIELD name="holdTime" type="INTEGER" bitLength="16"
+          defaultValue="105"
+          uiShowName="Join/Prune Hold Time"/>
+          
+      <FIELD name="groupRecords" type="JoinPrunev6GroupRecords"
+          uiShowName="Group Records"/>
+          
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="Pimv4Assert" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv4 Assert" >
+      <FIELD name="header" type="Pimv4Header"
+          uiShowName="Header"/>
+
+      <FIELD name="groupAddr" type="EncodedGroupIpv4Address"
+          uiShowName="Group Address" />
+
+      <FIELD name="sourceAddr" type="EncodedSourceIpv4Address"
+          uiShowName="Source Address" />
+
+      <FIELD name="rBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="RPT Bit" />
+
+      <FIELD name="metricPref" type="INTEGER" bitLength="31"
+          defaultValue="0"
+          uiShowName="Metric Preference"/>
+
+      <FIELD name="metric" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Metric"/>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Pimv6Assert" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv6 Assert" >
+      <FIELD name="header" type="Pimv6Header"
+          uiShowName="Header"/>
+          
+      <FIELD name="groupAddr" type="EncodedGroupIpv6Address"
+          uiShowName="Group Address" />
+          
+      <FIELD name="sourceAddr" type="EncodedSourceIpv6Address"
+          uiShowName="Source Address" />
+          
+      <FIELD name="rBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="RPT Bit" />
+          
+      <FIELD name="metricPref" type="INTEGER" bitLength="31"
+          defaultValue="0"
+          uiShowName="Metric Preference"/>
+          
+      <FIELD name="metric" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Metric"/>
+          
+    </TYPE_DEF>
+	
+	<TYPE_DEF name="Pimv4NullRegister" type="SEQUENCE" unitType="MESSAGE"
+        level="4" category="mcast" uiShowName="PIMv4 NULL Register" >
+      <FIELD name="header" type="Pimv4Header"
+          uiShowName="Header"/>
+          
+      <FIELD name="borderBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Border Bit" />
+          
+      <FIELD name="nullBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Null-Register Bit" />
+      <FIELD name="reserved" type="INTEGER" bitLength="30"
+          defaultValue="0"
+          uiShowName="Reserved field" />
+		  
+		<NEXT_HEADERS>
+			<NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="4" />
+		</NEXT_HEADERS>
+		  
+    </TYPE_DEF>
+ 
+  </TYPE_DEFS>
+
+</PDU_LIBRARY>

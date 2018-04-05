@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<FrameLengthDistribution id="5269" serializationBase="true" 
+ Seed="10900842"
+ Active="TRUE"
+ Name="X_IMIX">
+  <FrameLengthDistributionSlot id="5270" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="40"
+   MinFrameLength="39"
+   MaxFrameLength="41"
+   Weight="7"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 35">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5271" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="552"
+   MinFrameLength="551"
+   MaxFrameLength="553"
+   Weight="4"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 36">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5272" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="1500"
+   MinFrameLength="1499"
+   MaxFrameLength="1500"
+   Weight="1"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 37">
+  </FrameLengthDistributionSlot>
+</FrameLengthDistribution>

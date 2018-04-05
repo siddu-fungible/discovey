@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<default_counter_set 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:noNamespaceSchemaLocation="DefaultCounterSet.xsd">
+	<mode name="Basic Mode">
+		<counter>Rx Count (frames)</counter>
+		<counter>Rx Count (bytes)</counter>
+		<counter>Rx Rate (fps)</counter>
+		<counter>Rx Rate (Bps)</counter>
+		<counter>Rx Rate (bps)</counter>
+		<counter>Rx Sig Count (frames)</counter>
+		<counter>Rx Sig Rate (fps)</counter>
+		<counter>Rx L1 Count (bits)</counter>
+		<counter>Rx L1 Rate (bps)</counter>
+		<counter>Rx Count (bits)</counter>
+		<counter>Rx Count (cells)</counter>
+		<counter>Rx Rate (cps)</counter>
+		<counter>Rx IPv4 Checksum Error Count</counter>
+		<counter>Rx TCP/UDP Checksum Error Count</counter>
+		<counter>PRBS Error Count (bits)</counter>
+		<counter>PRBS Fill Count (bytes)</counter>
+		<counter>PRBS Error Ratio</counter>
+		<counter>Rx FCS Error Count (frames)</counter>
+		<counter>Rx IPv4 Checksum Error Rate</counter>
+		<counter>Rx TCP/UDP Checksum Error Rate</counter>
+		<counter>Rx PRBS Error Rate (bps)</counter>
+		<counter>PRBS Fill Rate (Bps)</counter>
+		<counter>Rx FCS Error Rate (fps)</counter>
+		<counter>PRBS Error Frame Count (frames)</counter>
+		<counter>PRBS Error Frame Rate (fps)</counter>
+		<counter>Min Frame Length</counter>
+		<counter>Max Frame Length</counter>
+		<counter>Short Term Avg Latency (us)</counter>
+		<counter>Avg Latency (us)</counter>
+		<counter>Min Latency (us)</counter>
+		<counter>Max Latency (us)</counter>
+		<counter>Sequence Run Length</counter>
+		<counter>Expected Sequence Number</counter>
+		<counter>Dropped Count (frames)</counter>
+		<counter>Dropped Frame Percent</counter>
+		<counter>In-Order Count (frames)</counter>
+		<counter>Reordered Count (frames)</counter>
+		<counter>Duplicate Count (frames)</counter>
+		<counter>Late Count (frames)</counter>
+		<counter>Dropped Rate (fps)</counter>
+		<counter>Dropped Frame Percent Rate</counter>
+		<counter>In-Order Rate (fps)</counter>
+		<counter>Reordered Rate (fps)</counter>
+		<counter>Duplicate Rate (fps)</counter>
+		<counter>Late Rate (fps)</counter>
+	</mode>
+	<mode name="Histogram Mode">
+		<counter>Rx Count (frames)</counter>
+		<counter>Rx Count (bytes)</counter>
+		<counter>Rx Rate (fps)</counter>
+		<counter>Rx Rate (Bps)</counter>
+		<counter>Rx Rate (bps)</counter>
+		<counter>Rx Sig Count (frames)</counter>
+		<counter>Rx Sig Rate (fps)</counter>
+		<counter>Rx L1 Count (bits)</counter>
+		<counter>Rx L1 Rate (bps)</counter>
+		<counter>Rx Count (bits)</counter>
+		<counter>Rx Count (cells)</counter>
+		<counter>Rx Rate (cps)</counter>
+		<counter>Rx IPv4 Checksum Error Count</counter>
+		<counter>Rx TCP/UDP Checksum Error Count</counter>
+		<counter>PRBS Error Count (bits)</counter>
+		<counter>PRBS Fill Count (bytes)</counter>
+		<counter>PRBS Error Ratio</counter>
+		<counter>Rx FCS Error Count (frames)</counter>
+		<counter>Rx IPv4 Checksum Error Rate</counter>
+		<counter>Rx TCP/UDP Checksum Error Rate</counter>
+		<counter>Rx PRBS Error Rate (bps)</counter>
+		<counter>PRBS Fill Rate (Bps)</counter>
+		<counter>Rx FCS Error Rate (fps)</counter>
+		<counter>PRBS Error Frame Count (frames)</counter>
+		<counter>PRBS Error Frame Rate (fps)</counter>
+		<counter>Min Frame Length</counter>
+		<counter>Max Frame Length</counter>
+		<counter>Short Term Avg Latency (us)</counter>
+		<counter>Avg Latency (us)</counter>
+		<counter>Min Latency (us)</counter>
+		<counter>Max Latency (us)</counter>
+		<counter>In Sequence Count (frames)</counter>
+		<counter>Out of Sequence Count (frames)</counter>
+		<counter>In Sequence Rate (fps)</counter>
+		<counter>Out of Sequence Rate (fps)</counter>
+		<counter>Sequence Run Length</counter>
+		<counter>Last Sequence Number</counter>
+		<counter>Bucket 1</counter>
+		<counter>Bucket 2</counter>
+		<counter>Bucket 3</counter>
+		<counter>Bucket 4</counter>
+		<counter>Bucket 5</counter>
+		<counter>Bucket 6</counter>
+		<counter>Bucket 7</counter>
+		<counter>Bucket 8</counter>
+		<counter>Bucket 9</counter>
+		<counter>Bucket 10</counter>
+		<counter>Bucket 11</counter>
+		<counter>Bucket 12</counter>
+		<counter>Bucket 13</counter>
+		<counter>Bucket 14</counter>
+		<counter>Bucket 15</counter>
+		<counter>Bucket 16</counter>
+	</mode>
+	<mode name="Jitter Mode">
+		<counter>Rx Count (frames)</counter>
+		<counter>Rx Rate (fps)</counter>
+		<counter>Rx Sig Count (frames)</counter>
+		<counter>Rx Sig Rate (fps)</counter>
+		<counter>Rx Count (cells)</counter>
+		<counter>Rx Rate (cps)</counter>
+		<counter>First Arrival Time (us)</counter>
+		<counter>Last Arrival Time (us)</counter>
+		<counter>Min Jitter (us)</counter>
+		<counter>Max Jitter (us)</counter>
+		<counter>Avg Jitter (us)</counter>
+		<counter>Short Term Avg Jitter (us)</counter>
+		<counter>RFC4689 Absolute Avg Jitter (us)</counter>
+		<counter>Short Term Avg Latency (us)</counter>
+		<counter>Avg Latency (us)</counter>
+		<counter>Min Latency (us)</counter>
+		<counter>Max Latency (us)</counter>
+		<counter>In Sequence Count (frames)</counter>
+		<counter>Out of Sequence Count (frames)</counter>
+		<counter>In Sequence Rate (fps)</counter>
+		<counter>Out of Sequence Rate (fps)</counter>
+		<counter>Sequence Run Length</counter>
+		<counter>Last Sequence Number</counter>
+		<counter>Bucket 1</counter>
+		<counter>Bucket 2</counter>
+		<counter>Bucket 3</counter>
+		<counter>Bucket 4</counter>
+		<counter>Bucket 5</counter>
+		<counter>Bucket 6</counter>
+		<counter>Bucket 7</counter>
+		<counter>Bucket 8</counter>
+		<counter>Bucket 9</counter>
+		<counter>Bucket 10</counter>
+		<counter>Bucket 11</counter>
+		<counter>Bucket 12</counter>
+		<counter>Bucket 13</counter>
+		<counter>Bucket 14</counter>
+		<counter>Bucket 15</counter>
+		<counter>Bucket 16</counter>
+	</mode>
+	<mode name="Inter-arrival Time Mode">
+		<counter>Rx Count (frames)</counter>
+		<counter>Rx Rate (fps)</counter>
+		<counter>Rx Sig Count (frames)</counter>
+		<counter>Rx Sig Rate (fps)</counter>
+		<counter>Rx IPv4 Checksum Error Count</counter>
+		<counter>Rx IPv4 Checksum Error Rate</counter>
+		<counter>Avg Inter-arrival Time (us)</counter>
+		<counter>Short Term Avg Inter-arrival Time (us)</counter>
+		<counter>Min Inter-arrival Time (us)</counter>
+		<counter>Max Inter-arrival Time (us)</counter>
+		<counter>First Arrival Time (us)</counter>
+		<counter>Last Arrival Time (us)</counter>
+		<counter>Short Term Avg Latency (us)</counter>
+		<counter>Avg Latency (us)</counter>
+		<counter>Min Latency (us)</counter>
+		<counter>Max Latency (us)</counter>
+		<counter>In Sequence Count (frames)</counter>
+		<counter>Out of Sequence Count (frames)</counter>
+		<counter>In Sequence Rate (fps)</counter>
+		<counter>Out of Sequence Rate (fps)</counter>
+		<counter>Sequence Run Length</counter>
+		<counter>Last Sequence Number </counter>
+		<counter>Bucket 1</counter>
+		<counter>Bucket 2</counter>
+		<counter>Bucket 3</counter>
+		<counter>Bucket 4</counter>
+		<counter>Bucket 5</counter>
+		<counter>Bucket 6</counter>
+		<counter>Bucket 7</counter>
+		<counter>Bucket 8</counter>
+		<counter>Bucket 9</counter>
+		<counter>Bucket 10</counter>
+		<counter>Bucket 11</counter>
+		<counter>Bucket 12</counter>
+		<counter>Bucket 13</counter>
+		<counter>Bucket 14</counter>
+		<counter>Bucket 15</counter>
+		<counter>Bucket 16</counter>
+	</mode>
+	<mode name="Forwarding Performance Mode">
+		<counter>Rx Count (frames)</counter>
+		<counter>Rx Count (bytes)	</counter>
+		<counter>Rx Rate (fps)</counter>
+		<counter>Rx Rate (Bps)</counter>
+		<counter>Rx Rate (bps)</counter>
+		<counter>Rx Sig Count (frames)</counter>
+		<counter>Rx Sig Rate (fps)</counter>
+		<counter>Rx L1 Count (bits)</counter>
+		<counter>Rx L1 Rate (bps)</counter>
+		<counter>Rx Count (bits)</counter>
+		<counter>Rx Count (cells)</counter>
+		<counter>Rx Rate (cps)</counter>
+		<counter>Rx IPv4 Checksum Error Count</counter>
+		<counter>PRBS Error Count (bits)</counter>
+		<counter>PRBS Fill Count (bytes)</counter>
+		<counter>PRBS Error Ratio</counter>
+		<counter>Rx IPv4 Checksum Error Rate</counter>
+		<counter>Rx PRBS Error Rate (bps)</counter>
+		<counter>PRBS Fill Rate (Bps)</counter>
+		<counter>PRBS Error Frame Count (frames)</counter>
+		<counter>PRBS Error Frame Rate (fps)</counter>
+		<counter>Avg Inter-arrival Time (us)</counter>
+		<counter>Short Term Avg Inter-arrival Time (us)</counter>
+		<counter>Min Inter-arrival Time (us)</counter>
+		<counter>Max Inter-arrival Time (us)</counter>
+		<counter>First Arrival Time (us)</counter>
+		<counter>Last Arrival Time (us)</counter>
+		<counter>Min Frame Length</counter>
+		<counter>Max Frame Length</counter>
+		<counter>Sequence Run Length</counter>
+		<counter>Expected Sequence Number</counter>
+		<counter>Dropped Count (frames)</counter>
+		<counter>Dropped Frame Percent</counter>
+		<counter>In-Order Count (frames)</counter>
+		<counter>Reordered Count (frames)</counter>
+		<counter>Duplicate Count (frames)</counter>
+		<counter>Late Count (frames)</counter>
+		<counter>Dropped Rate (fps)</counter>
+		<counter>Dropped Frame Percent Rate</counter>
+		<counter>In-Order Rate (fps)</counter>
+		<counter>Reordered Rate (fps)</counter>
+		<counter>Duplicate Rate (fps)</counter>
+		<counter>Late Rate (fps)</counter>
+	</mode>
+	<mode name="Latency Jitter Mode">
+		<counter>Rx Count (frames)</counter>
+		<counter>Rx Count (bytes)</counter>
+		<counter>Rx Rate (fps)</counter>
+		<counter>Rx Rate (Bps)</counter>
+		<counter>Rx Rate (bps)</counter>
+		<counter>Rx Sig Count (frames)</counter>
+		<counter>Rx Sig Rate (fps)</counter>
+		<counter>Rx L1 Count (bits)</counter>
+		<counter>Rx L1 Rate (bps)</counter>
+		<counter>Rx Count (bits)</counter>
+		<counter>First Arrival Time (us)</counter>
+		<counter>Last Arrival Time (us)</counter>
+		<counter>Avg Jitter (us)</counter>
+		<counter>Max Jitter (us)</counter>
+		<counter>RFC4689 Absolute Avg Jitter (us)</counter>
+		<counter>Short Term Avg Latency (us)</counter>
+		<counter>Avg Latency (us)</counter>
+		<counter>Min Latency (us)</counter>
+		<counter>Max Latency (us)</counter>
+		<counter>Sequence Run Length</counter>
+		<counter>Expected Sequence Number</counter>
+		<counter>Dropped Count (frames)</counter>
+		<counter>Dropped Frame Percent</counter>
+		<counter>In-Order Count (frames)</counter>
+		<counter>Reordered Count (frames)</counter>
+		<counter>Duplicate Count (frames)</counter>
+		<counter>Late Count (frames)</counter>
+		<counter>Dropped Rate (fps)</counter>
+		<counter>Dropped Frame Percent Rate	</counter>
+		<counter>In-Order Rate (fps)</counter>
+		<counter>Reordered Rate (fps)</counter>
+		<counter>Duplicate Rate (fps)</counter>
+		<counter>Late Rate (fps)</counter>
+	</mode>
+  <mode name="Latency with RFC 5481 Jitter Mode">
+    <counter>Rx Count (frames)</counter>
+    <counter>Rx Count (bytes)</counter>
+    <counter>Rx Rate (fps)</counter>
+    <counter>Rx Rate (Bps)</counter>
+    <counter>Rx Rate (bps)</counter>
+    <counter>Rx Sig Count (frames)</counter>
+    <counter>Rx Sig Rate (fps)</counter>
+    <counter>Rx L1 Count (bits)</counter>
+    <counter>Rx L1 Rate (bps)</counter>
+    <counter>Rx Count (bits)</counter>
+    <counter>First Arrival Time (us)</counter>
+    <counter>Last Arrival Time (us)</counter>
+    <counter>Avg Jitter (us)</counter>
+    <counter>Max Jitter (us)</counter>
+    <counter>RFC4689 Absolute Avg Jitter (us)</counter>
+    <counter>Short Term Avg Latency (us)</counter>
+    <counter>Avg Latency (us)</counter>
+    <counter>Min Latency (us)</counter>
+    <counter>Max Latency (us)</counter>
+    <counter>Sequence Run Length</counter>
+    <counter>Expected Sequence Number</counter>
+    <counter>Dropped Count (frames)</counter>
+    <counter>Dropped Frame Percent</counter>
+    <counter>In-Order Count (frames)</counter>
+    <counter>Reordered Count (frames)</counter>
+    <counter>Duplicate Count (frames)</counter>
+    <counter>Late Count (frames)</counter>
+    <counter>Dropped Rate (fps)</counter>
+    <counter>Dropped Frame Percent Rate	</counter>
+    <counter>In-Order Rate (fps)</counter>
+    <counter>Reordered Rate (fps)</counter>
+    <counter>Duplicate Rate (fps)</counter>
+    <counter>Late Rate (fps)</counter>
+  </mode>
+</default_counter_set>

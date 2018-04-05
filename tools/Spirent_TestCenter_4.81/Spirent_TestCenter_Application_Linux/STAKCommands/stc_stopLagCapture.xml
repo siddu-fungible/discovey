@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<!-- Just copy this line exactly as it is. -->
+<stc:meta package="spirent.LagCapture" plugin="stakcommands" version="0.0.0-0" xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">  
+  <stc:class name="StopLagCaptureCommand" displayName="Stop Lag Capture" bllDirectInterface="true">
+    <!-- The following 3 attributes register this command to be runnable by the Sequencer. -->
+    <stc:attribute type="core.Sequenceable" value="true"/>
+    <stc:attribute type="framework.CommandDescription" value="Stop Lag Capture"/>
+    <stc:attribute type="framework.CommandCategory" value="Basic"/>
+    <stc:property category="input" name="portSetHandle" displayName="Capture Port" type="handle" default="">
+        <stc:attribute type="framework.PropertyDescription" value="Aggregate capture port"/>
+        <stc:attribute type="core.ValidHandleTypes" value="Port" internalType="string" />
+        <stc:attribute type="core.ValidAggregatedPortType" value="AGGREGATOR_PORT" internalType="u8" internalIsEnum="true"/>
+    </stc:property>
+  </stc:class>
+</stc:meta>

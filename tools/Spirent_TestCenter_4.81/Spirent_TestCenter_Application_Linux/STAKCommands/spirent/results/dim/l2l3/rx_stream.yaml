@@ -1,0 +1,32 @@
+dimension_set:
+  name: rx_stream
+  description: Attributes of a Rx stream 
+  bll:
+    plugin: l2l3
+    group: stream
+  attributes:
+  - name: comp_32
+    display_name: Comparator 32 Bit
+    description: Comparator 32 bit
+    base_unit: none
+    data_type: integer
+  - name: comp_16_1
+    display_name: Comparator 16 Bit-1
+    description: Comparator 16 bit-1
+    base_unit: none
+    data_type: integer
+  - name: comp_16_2
+    display_name: Comparator 16 Bit-2
+    description: Comparator 16 bit-2
+    base_unit: none
+    data_type: integer
+  - name: comp_16_3
+    display_name: Comparator 16 Bit-3
+    description: Comparator 16 bit-3
+    base_unit: none
+    data_type: integer
+  - name: comp_16_4
+    display_name: Comparator 16 Bit-4
+    description: Comparator 16 bit-4
+    base_unit: none
+    data_type: integer

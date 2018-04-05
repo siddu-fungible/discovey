@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="mpls" showName="Mpls" version="1.00"
+    description="This is a sample PDU library for Mpls as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="MplsLabel" type="INTEGER" bitLength="20" unitType="ELEMENT"
+        uiShowName="MPLS Label" >
+        <!-- Reference: http://www.iana.org/assignments/mpls-label-values -->
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="IPv4 Explicit NULL Label" value="0" />
+        <VAL_ENUM uiShowName="Router Alert Label" value="1" />
+        <VAL_ENUM uiShowName="IPv6 Explicit NULL Label" value="2" />
+        <VAL_ENUM uiShowName="Implicit NULL Label" value="3" />
+        <VAL_ENUM uiShowName="Generic Associated Channel Label (GAL)" value="13" />
+        <VAL_ENUM uiShowName="OAM Alert Label" value="14" />
+        <VAL_ENUM uiShowName="Reserved" value="15" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+      
+    <TYPE_DEF name="Mpls" type="SEQUENCE" unitType="HEADER"
+        level="2" uiShowName="MPLS Header" niMapped="true">
+
+      <FIELD name="label" type="MplsLabel"
+          defaultValue="1"
+          uiShowName="Label" 
+          isNiMapped="true"
+          isNiPrimaryKey="true"/>
+
+      <FIELD name="exp" type="BITSTRING" bitLength="3"
+          defaultValue="000"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="MPLSEXP"
+		      uiNoShowModifier="Filter"
+          uiShowName="Experimental Bits" />
+
+      <FIELD name="sBit" type="BITSTRING" bitLength="1"
+          defaultValue="0" 
+		      uiNoShowModifier="Filter"
+          uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Bottom of stack" 
+          isNiMapped="true"/>
+
+      <FIELD name="ttl" type="INTEGER" bitLength="8"
+          defaultValue="64"
+          uiNoShow="Filter"
+		      uiNoShowModifier="Filter"
+          uiShowName="Time to live" 
+          isNiMapped="true"/>
+
+      <FIELD name="dstMac" type="MACADDR"
+          defaultValue="00:00:01:00:00:01"
+	  doNotBuild="true"
+	  uiNoShow="Filter,Frame,Interface"
+	  uiShowName="Next Hop MAC" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet" value="0" />
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="0" />
+        <NXT_HDR id="mpls:Mpls" name="MPLS Header" value="0" />		
+        <NXT_HDR id="mpls:EntropyLabel" name="MPLS Header" value="0" />
+        <NXT_HDR id="mpls:ControlWord" name="MPLS Header" value="0" />
+		<NXT_HDR id="gach:GACH" name="G-ACH" value="0" />
+		<NXT_HDR id="faultOAM:FaultMgmtMsg" name="MPLS-TP Fault OAM Message" value="0" />
+		<NXT_HDR id="pwOAM:PseudowireStatusMsg" name="Pseudowire Status Message" value="0" />
+		<NXT_HDR id="lspping:LspRequest" name="LSP Ping Echo Request" value="0" />
+		<NXT_HDR id="lspping:LspReply" name="LSP Ping Echo Reply" value="0" />
+		<NXT_HDR id="bfdcc:BFDCC" name="BFD CC Message" value="0" />
+		<NXT_HDR id="bfdcv:BFDCV" name="BFD CV Message" value="0" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EntropyLabel" type="SEQUENCE" unitType="HEADER"
+        level="2" uiShowName="Mpls Entropy Label" niMapped="true">
+
+      <FIELD name="hash" type="INTEGER" bitLength="20"
+          defaultValue="00000"
+          uiShowName="Hash Value" 
+          isNiPrimaryKey="false"/>
+
+      <FIELD name="exp" type="BITSTRING" bitLength="3"
+          defaultValue="000" 
+		  uiNoShowModifier="Filter"
+          uiShowName="Experimental Bits" />
+
+      <FIELD name="sBit" type="BITSTRING" bitLength="1"
+          defaultValue="1" 
+		  uiNoShowModifier="Filter"
+          uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Bottom of stack"/>
+
+      <FIELD name="ttl" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiNoShow="Filter"
+		  uiNoShowModifier="Filter"
+          uiShowName="Time to live"/>
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet" value="0" />
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="0" />
+        <NXT_HDR id="mpls:ControlWord" name="MPLS Header" value="0" />
+		<NXT_HDR id="gach:GACH" name="G-ACH" value="0" />
+		<NXT_HDR id="gach:StaticPwStatus" name="Static PW Status" value="0" />
+		<NXT_HDR id="faultOAM:FaultMgmtMsg" name="MPLS-TP Fault OAM Message" value="0" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="ControlWord" type="SEQUENCE" unitType="HEADER"
+        level="2" uiShowName="Pseudowire(PW) Control Word" niMapped="true">
+
+      <FIELD name="type" type="BITSTRING" bitLength="4"
+          defaultValue="0000"
+          uiShowName="Type" 
+          isNiPrimaryKey="false"/>
+
+      <FIELD name="reserved" type="INTEGER" bitLength="12"
+          defaultValue="0" 
+		  uiNoShowModifier="Filter"
+          uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Reserved" />
+
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0" 
+		  uiNoShowModifier="Filter"
+          uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Sequence number"/>
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet" value="0" />
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="0" />
+		<NXT_HDR id="gach:GACH" name="G-ACH" value="0" />
+		<NXT_HDR id="faultOAM:FaultMgmtMsg" name="MPLS-TP Fault OAM Message" value="0" />
+		<NXT_HDR id="pwOAM:PseudowireStatusMsg" name="Pseudowire Status Message" value="0" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

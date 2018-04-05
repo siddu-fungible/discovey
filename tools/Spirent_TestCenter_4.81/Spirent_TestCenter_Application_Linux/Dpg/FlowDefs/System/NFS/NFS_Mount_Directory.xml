@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="NFS_Mount_Directory" type="stream" layer="udp">
+  <MetaData description="NFS_Mount_Directory" protocol="NFS_V2_UDP" application="NFS" createDate="">
+    <Sapee version="16" clientIp="139.25.22.2" clientPort="671" serverIp="139.25.22.102" serverPort="1048" startTime="0" dataStartTime="20"/>
+  </MetaData>
+  <Packets>
+    <Packet name="packet_1" pktDelay="20" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>029F0418007C1A153841169F0000000000000002000186A500000001000000010000000100000034384775D000000009776572726D7363686500000000000000000000010000000500000001000000000000000200000003000000110000000000000000000000142F686F6D652F6769726C6963682F6578706F7274</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_2" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>0418029F0044ED9B3841169F00000001000000000000000000000000000000000000000000101085000003E7000A00000000B25A00000029000A00000000B25A00000029</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables/>
+  <Modifiers/>
+</Flow>

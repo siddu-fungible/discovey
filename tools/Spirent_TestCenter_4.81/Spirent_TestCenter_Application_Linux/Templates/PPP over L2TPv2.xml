@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="PPPoverL2TP"
+    showName="PPP for L2TPv2"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="ppp:PPP"
+    description="PPP for L2TPv2" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ppp:PPP">
+         <addresses><Address><value></value></Address></addresses>
+         <controls><Control><value></value></Control></controls>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

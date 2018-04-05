@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PROTO name="fc" pduDef="fc" pduType="FC">
+   
+  <FIELD name="fc.r_ctl" convertToInt="false">
+	<PDU_FIELD name="rCtl"/>
+  </FIELD>
+  
+  <FIELD name="fc.d_id" convertToInt="false">
+	<PDU_FIELD name="dId"/>
+  </FIELD>
+  
+  <FIELD name="fc.cs_ctl">
+	<PDU_FIELD name="csCtl"/>
+  </FIELD>
+  
+  <FIELD name="fc.s_id" convertToInt="false">
+	<PDU_FIELD name="sId"/>
+  </FIELD>
+  
+  <FIELD name="fc.type" convertToInt="false">
+	<PDU_FIELD name="type"/>
+  </FIELD>
+  
+  <FIELD name="fc.f_ctl">
+	<PDU_FIELD name="frameControl"/>
+  </FIELD>
+ 
+  <FIELD name="fc.seq_id">
+	<PDU_FIELD name="seqId"/>
+  </FIELD>
+ 
+  <FIELD name="fc.df_ctl">
+	<PDU_FIELD name="dfCtl"/>
+  </FIELD>
+ 
+  <FIELD name="fc.seq_cnt">
+	<PDU_FIELD name="seqCnt"/>
+  </FIELD>
+  
+  <FIELD name="fc.ox_id">
+	<PDU_FIELD name="origExchangeID"/>
+  </FIELD>
+ 
+  <FIELD name="fc.rx_id">
+	<PDU_FIELD name="responseExchangeId"/>
+  </FIELD>
+ 
+  <FIELD name="fc.parameter">
+	<PDU_FIELD name="parameter"/>
+  </FIELD>
+  
+</PROTO>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="MSN_Command_only" type="stream">
+  <MetaData description="MSN_Command_only" protocol="MSN_Command" application="MSN" createDate=""/>
+  <Streams>
+    <Stream file="System/MSN/MSN_Command.xml" name="Command" description="Command" startTime="319" dataDelay="98" serverPort="1863" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="0"/>
+  </Streams>
+</Playlist>

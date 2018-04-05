@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PROTO name="udp" pduDef="udp" pduType="Udp">
+
+  <FIELD name="udp.srcport">
+    <PDU_FIELD name="sourcePort"/>
+  </FIELD>
+  <FIELD name="udp.dstport">
+    <PDU_FIELD name="destPort"/>
+  </FIELD>
+  <FIELD name="udp.length">
+    <PDU_FIELD name="length"/>
+  </FIELD>
+  <FIELD name="udp.checksum">
+    <PDU_FIELD name="checksum"/>
+  </FIELD>
+</PROTO>

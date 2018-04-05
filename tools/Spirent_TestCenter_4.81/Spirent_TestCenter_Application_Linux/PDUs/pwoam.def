@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="pwOAM" showName="PW MANAGEMENT MESSAGE" version="1.00"
+    description="This is a PDU library for PW Management Message as defined in XML Stream Editor." userdefined="false">
+
+  <TYPE_DEFS>
+	<TYPE_DEF name="PWTlvList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="250" 
+											elementType="PWOAMTlvs" unitType="ELEMENT"/>
+
+    <TYPE_DEF name="PWOAMTlvs" type="CHOICE" unitType="ELEMENT" uiShowName="PW OAM TLVs">
+	  <FIELD name="pwStatusTlv" type="PwStatusTlvType" uiShowName="PW Status TLV" />
+	</TYPE_DEF>
+
+	<TYPE_DEF name="PwStatusTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="PW Status TLV">
+      <FIELD name="pwStatus" type="OCTETSTRING" byteLength="2" defaultValue="096A" uiShowName="PW Status Type"  />
+      <FIELD name="length" type="OCTETSTRING" byteLength="2" defaultValue="0004" uiShowName="Length"  />
+      <FIELD name="pwStatusCode" type="PwStatusCode" defaultValue="00000000" uiShowName="PW Status Code" />
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="PwStatusCode" type="OCTETSTRING" byteLength="4" unitType="ELEMENT" uiShowName="PW Status Code" >
+      <VALUE_ENUMERATION>
+		<VAL_ENUM uiShowName="1-PW forwarding (clear all failures) - 0x00" value="00000000" />
+		<VAL_ENUM uiShowName="2-PW Not Forwarding - 0x01" value="00000001" />
+		<VAL_ENUM uiShowName="3-Local AC (ingress) Receive Fault - 0x02" value="00000002" />
+		<VAL_ENUM uiShowName="4-Local AC (egress) Transmit Fault - 0x04" value="00000004" />
+		<VAL_ENUM uiShowName="5-Local PSN-facing PW (ingress) Receive Fault - 0x08" value="00000008" />
+		<VAL_ENUM uiShowName="6-Local PSN-facing PW (egress) Transmit Fault - 0x10" value="00000010" />
+		<VAL_ENUM uiShowName="7-PW forwarding standby - 0x20" value="00000020" />
+		<VAL_ENUM uiShowName="8-Request switchover to this PW - 0x40" value="00000040" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="PwOamMessageType" type="SEQUENCE" unitType="ELEMENT" uiShowName="PW OAM Message">
+      <FIELD name="refreshTimer" type="INTEGER" bitLength="16" defaultValue="20" uiShowName="Refresh Timer in seconds" />
+      <FIELD name="tlvLength" type="OCTETSTRING" byteLength="1" defaultValue="08" uiShowName="TLV Length" uiNoShowModifier="Filter" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="flags" type="OCTETSTRING" byteLength="1" defaultValue="80" uiShowName="Flags"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="PseudowireStatusMsg" type="SEQUENCE" unitType="HEADER" uiShowName="PW OAM Message">
+	  <FIELD name="pseudowireOAMHeader" type="PwOamMessageType" uiShowName="Pseudowire OAM Message"/>
+	  <FIELD name="tlvs" type="PWTlvList" uiShowName="TLVs"/>
+    </TYPE_DEF>
+	
+  </TYPE_DEFS>
+  
+</PDU_LIBRARY>

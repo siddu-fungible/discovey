@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Aal5LlcBridgedEthernet"
+    showName="AAL5 LLC Bridged Ethernet"
+    version="1.00"
+    category="ATM"
+    readonly="true"
+    validate="true"
+    firstPdu="aal5:LlcBridgedEth8023"
+    description="AAL5 LLC Bridged Ethernet" >
+
+    <pdus>
+      <pdu name="proto1" pdu="aal5:LlcBridgedEth8023" />
+      <pdu name="proto2" pdu="ethernet:EthernetII" />
+    </pdus>
+  </template>
+</frame>

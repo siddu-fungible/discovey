@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResultViewCatalog>
+ <ResultViewEntry type="Grid" name="All Port Protocol Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\All Port Protocol Results" />
+  <ResultViewEntry type="Grid" name="Basic Traffic Results" objectUri="object://core/Port" profile="l2l3" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Basic Traffic Results" />
+  <ResultViewEntry type="Speedometer" name="Aggregate Port L1 Tx Rate" objectUri="object://core/DynamicResultView" profile="core" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Aggregate Port L1 Tx Rate" />
+  <ResultViewEntry type="Speedometer" name="Aggregate Port L1 Rx Rate" objectUri="object://core/DynamicResultView" profile="core" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Aggregate Port L1 Rx Rate" />
+  <ResultViewEntry type="Grid" name="Summarized Basic Traffic Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Summarized Basic Traffic Results" />
+  <ResultViewEntry type="Grid" name="Diffserv Results" objectUri="object://l2l3/DiffServResults" profile="l2l3" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Diffserv Results" />
+  <ResultViewEntry type="Grid" name="Port Average Latency Results" objectUri="object://l2l3/PortAvgLatencyResults" profile="l2l3" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Port Average Latency Results" />
+  <ResultViewEntry type="Grid" name="Overflow Results" objectUri="object://core/Port" profile="l2l3" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Overflow Results" />
+  <ResultViewEntry type="Grid" name="Port Pair Results" objectUri="object://l2l3/TxPortPairResults" profile="l2l3" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Port Pair Results" />
+  <ResultViewEntry type="Grid" name="CPU Port Results" objectUri="object://core/Port" profile="l2l3" menuPath="Port Traffic" owner="System" identifier="Port Traffic\CPU Port Results" />
+  <ResultViewEntry type="Grid" name="ARPND Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\ARPND Results" />
+  <ResultViewEntry type="Grid" name="SONET Interface Results" objectUri="object://core/SonetResults" profile="l2l3" menuPath="Port Protocols" owner="System" identifier="Port Protocols\SONET Interface Results" />
+  <ResultViewEntry type="Grid" name="POS Interface Results" objectUri="object://core/Port" profile="l2l3" menuPath="Port Protocols" owner="System" identifier="Port Protocols\POS Interface Results" />
+  <ResultViewEntry type="Grid" name="GRE Interface Results" objectUri="object://core/GreIfResults" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\GRE Interface Results" />
+  <ResultViewEntry type="Grid" name="GRE Interface Port Results" objectUri="object://core/GreIfPortResults" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\GRE Interface Port Results" />
+  <ResultViewEntry type="Grid" name="PFC Control Plane Results" objectUri="object://core/PfcResults" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\PFC Control Plane Results" />
+  <ResultViewEntry type="Grid" name="Port PCS Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Port PCS Results" />
+  <ResultViewEntry type="Grid" name="Port Lane PCS Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Port Lane PCS Results" />
+  <ResultViewEntry type="Grid" name="Port Lane PMA Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Port Lane PMA Results" />
+  <ResultViewEntry type="Grid" name="Port FEC Counter Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Port FEC Counter Results" />
+
+  <ResultViewEntry type="Grid" name="Traffic Group Results" objectUri="object://l2l3/TxTrafficGroupResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Traffic Group Results" />
+  <ResultViewEntry type="Grid" name="Filtered Stream Results" objectUri="object://l2l3/FilteredStreamResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Filtered Stream Results" />
+  <ResultViewEntry type="Grid" name="Interesting Stream Results" objectUri="object://l2l3/InterestingStreamsResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Interesting Stream Results" />
+  <ResultViewEntry type="Grid" name="Stream Threshold Results" objectUri="object://l2l3/StreamThresholdResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Stream Threshold Results" />
+  <ResultViewEntry type="Grid" name="Detailed Stream Results" objectUri="object://l2l3/TxStreamResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Detailed Stream Results" />
+  <ResultViewEntry type="Grid" name="Stream Block Results" objectUri="object://l2l3/TxStreamBlockResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Stream Block Results" />
+  <ResultViewEntry type="Grid" name="Dropped Stream Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Stream Results" owner="System" identifier="Stream Results\Dropped Stream Results" />
+  <ResultViewEntry type="Grid" name="Dead Stream Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Stream Results" owner="System" identifier="Stream Results\Dead Stream Results" />
+  <ResultViewEntry type="Grid" name="Flooded Stream Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Stream Results" owner="System" identifier="Stream Results\Flooded Stream Results" />
+
+  <ResultViewEntry type="Grid" name="All Routing Protocol Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\All Routing Protocol Results" />
+  <ResultViewEntry type="Grid" name="BGP Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP Results" />
+  <ResultViewEntry type="Grid" name="RIP Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\RIP Results" />
+  <ResultViewEntry type="Grid" name="OSPFv2 Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\OSPFv2 Results" />
+  <ResultViewEntry type="Grid" name="OSPFv3 Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\OSPFv3 Results" />
+  <ResultViewEntry type="Grid" name="ISIS Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\ISIS Results" />
+  <ResultViewEntry type="Grid" name="PIM Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\PIM Results" />
+  <ResultViewEntry type="Grid" name="LDP Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\LDP Results" />
+  <ResultViewEntry type="Grid" name="RSVP Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\RSVP Results" />
+  <ResultViewEntry type="Grid" name="LDP LSP Results" objectUri="object://ldp/LdpLspResults" profile="ldp" menuPath="Routing Protocols\LDP-RSVP LSP Results" owner="System" identifier="Router Protocols\LDP-RSVP LSP Results\LDP LSP Results" />
+  <ResultViewEntry type="Grid" name="RSVP LSP Results" objectUri="object://rsvp/RsvpLspResults" profile="rsvp" menuPath="Routing Protocols\LDP-RSVP LSP Results" owner="System" identifier="Router Protocols\LDP-RSVP LSP Results\RSVP LSP Results" />
+  <ResultViewEntry type="Grid" name="LISP Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\LISP Results" />
+  <ResultViewEntry type="Grid" name="LISP Aggregated Results" objectUri="object://core/Port" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\LISP Aggregated Results"/>
+  <ResultViewEntry type="Grid" name="BFD Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BFD Results" />
+  <ResultViewEntry type="Grid" name="IPv4 Sessions" objectUri="object://bfd/BfdIpv4SessionResults" profile="bfd" menuPath="Routing Protocols\BFD Session Results" owner="System" identifier="Router Protocols\BFD Session Results\IPv4 Sessions" />
+  <ResultViewEntry type="Grid" name="IPv6 Sessions" objectUri="object://bfd/BfdIpv6SessionResults" profile="bfd" menuPath="Routing Protocols\BFD Session Results" owner="System" identifier="Router Protocols\BFD Session Results\IPv6 Sessions" />
+  <ResultViewEntry type="Grid" name="Mpls Sessions" objectUri="object://bfd/BfdMplsSessionResults" profile="core" menuPath="Routing Protocols\BFD Session Results" owner="System" identifier="Router Protocols\BFD Session Results\Mpls Sessions"/>
+  <ResultViewEntry type="Grid" name="BFD Session Detail Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols\BFD Session Results" owner="System" identifier="Router Protocols\BFD Session Results\BFD Session Detail Results"/>
+  <ResultViewEntry type="Grid" name="LSP-Ping Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\LSP-Ping Results"/>
+  <ResultViewEntry type="Grid" name="Echo Request Results" objectUri="object://lspping/LspPingPingResults" profile="lspping" menuPath="Routing Protocols\Echo Request - Trace Route Results" owner="System" identifier="Router Protocols\Echo Request - Trace Route Results\Echo Request Results"/>
+  <ResultViewEntry type="Grid" name="Trace Route Results" objectUri="object://lspping/LspPingTraceRouteResults" profile="lspping" menuPath="Routing Protocols\Echo Request - Trace Route Results" owner="System" identifier="Router Protocols\Echo Request - Trace Route Results\LSP-Ping Trace Route Results"/>
+  <ResultViewEntry type="Grid" name="State Summary Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="7fcf1341-be28-4a46-9e8e-e27dc7cf4316" />
+  <ResultViewEntry type="Grid" name="MPLS TP Linear Protection Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Routing Protocols\MPLS TP Linear Protection Results" />
+  <ResultViewEntry type="Grid" name="IEEE 1588v2 Clock Results" objectUri="object://core/EmulatedDevice" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifier="Carrier Ethernet\IEEE 1588v2 Results\IEEE 1588v2 Clock Results" />
+  <ResultViewEntry type="Grid" name="Time Properties Results" objectUri="object://core/EmulatedDevice" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifer="Carrier Ethernet\IEEE 1588v2 Results\Time Properties Results" />
+  <ResultViewEntry type="Grid" name="Clock Sync Results" objectUri="object://core/EmulatedDevice" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifier="Carrier Ethernet\IEEE 1588v2 Results\Clock Sync Results" />
+  <ResultViewEntry type="Grid" name="Foreign Master Clock Results" objectUri="object://core/EmulatedDevice" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifier="Carrier Ethernet\IEEE 1588v2 Results\Foreign Master Clock Results" />
+  <ResultViewEntry type="Grid" name="Unicast Negotiation Results" objectUri="object://core/EmulatedDevice" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifier="Carrier Ethernet\IEEE 1588v2 Results\Unicast Negotiation Results" />
+  <ResultViewEntry type="Grid" name="Parent Clock Info Results" objectUri="object://core/EmulatedDevice" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifier="Carrier Ethernet\IEEE 1588v2 Results\Parent Clock Info Results" />
+  <ResultViewEntry type="Grid" name="IEEE 1588v2 State Summary" objectUri="object://core/Port" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifier="Carrier Ethernet\IEEE 1588v2 State Summary" />
+  <ResultViewEntry type="Grid" name="IEEE 1588v2 Message Rate Results" objectUri="object://core/EmulatedDevice" profile="ieee1588v2" menuPath="Carrier Ethernet\IEEE 1588v2 Results" owner="System" identifier="Carrier Ethernet\IEEE 1588v2 Results\IEEE 1588v2 Message Rate Results" />
+  <ResultViewEntry type="Grid" name="Micro-BFD Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\Micro-BFD Results" />
+  <ResultViewEntry type="Grid" name="Micro-BFD IPv4 Session Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\Micro-BFD IPv4 Session Results" />
+  <ResultViewEntry type="Grid" name="IEEE 8021AS Clock Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\IEEE 8021AS Results" owner="System" identifier="Carrier Ethernet\IEEE 8021AS Results\IEEE 8021AS Clock Results" />
+  <ResultViewEntry type="Grid" name="IEEE 8021AS Time Properties Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\IEEE 8021AS Results" owner="System" identifier="Carrier Ethernet\IEEE 8021AS Results\IEEE 8021AS Time Properties Results" />
+  <ResultViewEntry type="Grid" name="IEEE 8021AS Clock Sync Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\IEEE 8021AS Results" owner="System" identifier="Carrier Ethernet\IEEE 8021AS Results\IEEE 8021AS Clock Sync Results" />
+  <ResultViewEntry type="Grid" name="IEEE 8021AS Parent Clock Info Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\IEEE 8021AS Results" owner="System" identifier="Carrier Ethernet\IEEE 8021AS Results\IEEE 8021AS Parent Clock Info Results" />
+  <ResultViewEntry type="Grid" name="IEEE 8021AS Message Rate Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\IEEE 8021AS Results" owner="System" identifier="Carrier Ethernet\IEEE 8021AS Results\IEEE 8021AS Message Rate Results" />
+  <ResultViewEntry type="Grid" name="IEEE 8021AS State Summary Results" objectUri="object://core/Port" profile="core" menuPath="Carrier Ethernet\IEEE 8021AS Results" owner="System" identifier="Carrier Ethernet\IEEE 8021AS Results\IEEE 8021AS State Summary Results" />
+  <ResultViewEntry type="Grid" name="SRP Basic Result" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\SRP Results" owner="System" identifier="Carrier Ethernet\SRP Results\SRP Basic Result" />
+  <ResultViewEntry type="Grid" name="SRP State Summary Results" objectUri="object://core/Port" profile="core" menuPath="Carrier Ethernet\SRP Results" owner="System" identifier="Carrier Ethernet\SRP Results\SRP State Summary Results" />
+  
+  <ResultViewEntry type="Grid" name="SyncE Port Results" objectUri="object://core/Port" profile="none" menuPath="Carrier Ethernet\SyncE Results" owner="System" identifier="Carrier Ethernet\SyncE Results\SyncE Port Results"/>
+  <ResultViewEntry type="Grid" name="SyncE Device Results" objectUri="object://core/EmulatedDevice" profile="none" menuPath="Carrier Ethernet\SyncE Results" owner="System"  identifier="Carrier Ethernet\SyncE Results\SyncE Device Results"/>
+  <ResultViewEntry type="Grid" name="Carrier Ethernet State Summary" objectUri="object://core/Port" profile="core" menuPath="Carrier Ethernet" owner="System" />
+
+  <ResultViewEntry type="Grid" name="All Access Protocol Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\All Access Protocol Results" />
+  <ResultViewEntry type="Grid" name="ANCP Router Results" objectUri="object://core/Router" profile="core" menuPath="Access Protocols" owner="System" identifier="Access Protocols\ANCP Router Results" />
+  <ResultViewEntry type="Grid" name="ANCP Port Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\ANCP Port Results" />
+  <ResultViewEntry type="Grid" name="DHCP Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\DHCP Results" />
+  <ResultViewEntry type="Grid" name="DHCP Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\DHCP Results" />
+  <ResultViewEntry type="Grid" name="DHCP Server Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\DHCP Server Results" />
+  <ResultViewEntry type="Grid" name="DHCPv6PD Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\DHCPv6PD Results" />
+  <ResultViewEntry type="Grid" name="DHCPv6PD Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\DHCPv6PD Results" />
+  <ResultViewEntry type="Grid" name="DHCPv6PD Server Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\DHCPv6PD Server Results" />
+  <ResultViewEntry type="Grid" name="PPPoX Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\PPPoX Results" />
+  <ResultViewEntry type="Grid" name="PPPoX Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\PPPoX Results" />
+  <ResultViewEntry type="Grid" name="L2TP Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\L2TP Results" />
+  <ResultViewEntry type="Grid" name="L2TP Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\L2TPv3 Results" />
+  <ResultViewEntry type="Grid" name="L2TP Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\L2TP Results" />
+  <ResultViewEntry type="Grid" name="IPv6 Autoconfiguration Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Access Protocols\IPv6 Autoconfiguration Results" />
+  <ResultViewEntry type="Grid" name="IPv6 Autoconfiguration Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\IPv6 Autoconfiguration Results" />
+
+  <ResultViewEntry type="Grid" name="IGMP Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\IGMP Results" />
+  <ResultViewEntry type="Grid" name="IGMP Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\IGMP Results" />
+  <ResultViewEntry type="Grid" name="MLD Results" objectUri="object://core/Host" profile="core" menuPath="Access Protocols" owner="System" identifier="Host Protocols\MLD Results" />
+  <ResultViewEntry type="Grid" name="MLD Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\MLD Results" />
+  <ResultViewEntry type="Grid" name="IGMP Querier Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\IGMP Querier Results" />
+  <ResultViewEntry type="Grid" name="MLD Querier Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\MLD Querier Results" />
+  <ResultViewEntry type="Grid" name="IGMP Host-Group Results" objectUri="object://igmpmld/IgmpGroupMembershipResults" profile="igmpmld" menuPath="Access Protocols\IGMP-MLD Group Results" owner="System" identifier="Host Protocols\IGMP-MLD Group Results\IGMP Host-Group Results" />
+  <ResultViewEntry type="Grid" name="MLD Host-Group Results" objectUri="object://igmpmld/MldGroupMembershipResults" profile="igmpmld" menuPath="Access Protocols\IGMP-MLD Group Results" owner="System" identifier="Host Protocols\IGMP-MLD Group Results\MLD Host-Group Results" />
+
+  <ResultViewEntry type="Grid" name="Link-OAM Results" objectUri="object://linkoam/LinkOamRouterConfig" profile="linkoam" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\Link-OAM Results" />
+  <ResultViewEntry type="Grid" name="EOAM Results" objectUri="object://core/Port" profile="eoam" menuPath="Port Protocols" owner="System" identifier="Port Protocols\EOAM Results" />
+  <ResultViewEntry type="Grid" name="Port Results" objectUri="object://core/Port" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\Port Results" />
+  <ResultViewEntry type="Grid" name="MA-MEG Results" objectUri="object://eoam/EoamMegResults" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\MA-MEG Results" />
+  <ResultViewEntry type="Grid" name="CC Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\CC Results" />
+  <ResultViewEntry type="Grid" name="AIS Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\AIS Results" />
+  <ResultViewEntry type="Grid" name="LCK Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\LCK Results" />
+  <ResultViewEntry type="Grid" name="LB Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\LB Results" />
+  <ResultViewEntry type="Grid" name="LT Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\LT Results" />
+  <ResultViewEntry type="Grid" name="DM Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\DM Results" />
+  <ResultViewEntry type="Grid" name="LM Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\LM Results" />
+
+  <ResultViewEntry type="Grid" name="SLM Results" objectUri="object://eoam/EoamMaintenancePointConfig" profile="eoam" menuPath="Carrier Ethernet\EOAM Results" owner="System" identifier="Carrier Ethernet\EOAM Results\SLM Results" />
+
+  <ResultViewEntry type="Grid" name="LACP Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\LACP Results" />
+  <ResultViewEntry type="Grid" name="STP Results" objectUri="object://core/Router" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\STP Results" />
+  <ResultViewEntry type="Grid" name="FCoE Results" objectUri="object://core/Host" profile="core" menuPath="Switching Protocols" owner="System" identifier="Switching Protocols\FCoE Results" />
+  <ResultViewEntry type="Grid" name="FCoE VN_Port Results" objectUri="object://fc/FcoeVnPortResults" profile="fc" menuPath="Switching Protocols\FCoE VN_Port Results" owner="System" identifier="Switching Protocols\FCoE VN_Port Results\FCoE VN_Port Results" />
+  <ResultViewEntry type="Grid" name="FCoE VN_Port Error Results" objectUri="object://core/DynamicResultView" profile="fcoe" menuPath="Switching Protocols" owner="System" identifier="Switching\FCoE VN_Port Error Results"/>
+  <ResultViewEntry type="Grid" name="MSTI Results" objectUri="object://stp/BridgePortResults" profile="stp" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\MSTI Results" />
+  <ResultViewEntry type="Grid" name="LLDP Results" objectUri="object://core/EmulatedDevice" profile="none" menuPath="Switching Protocols" owner="System" identifier="Switching Protocols\LLDP Results"/>
+  <ResultViewEntry type="Grid" name="LLDP Neighbor Results" objectUri="object://core/EmulatedDevice" profile="none" menuPath="Switching Protocols" owner="System" identifier="Switching Protocols\LLDP Neighbor Results"/>
+  <ResultViewEntry type="Grid" name="LLDP Preemption Results" objectUri="object://core/EmulatedDevice" profile="none" menuPath="Switching Protocols" owner="System" identifier="Switching Protocols\LLDP Preemption Results"/>
+  <ResultViewEntry type="Grid" name="LLDP Congestion Notification Results" objectUri="object://lldp/LldpCongestionNotificationResult" profile="none" menuPath="Switching Protocols" owner="System" identifier="Switching Protocols\LLDP Congestion Notification Results"/>
+  <ResultViewEntry type="Grid" name="FC Results" objectUri="object://core/EmulatedDevice" profile="none" menuPath="Switching Protocols" owner="System" identifier="Switching\FC Results"/>
+  <ResultViewEntry type="Grid" name="FC N_Port Results" objectUri="object://fc/FcNPortResults" profile="fc" menuPath="Switching Protocols" owner="System" identifier="Switching\FC N_Port Results"/>
+  <ResultViewEntry type="Grid" name="FC N_Port Error Results" objectUri="object://core/DynamicResultView" profile="fc" menuPath="Switching Protocols" owner="System" identifier="Switching\FC N_Port Error Results"/>
+  <ResultViewEntry type="Grid" name="FCoE VF_Port Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Switching Protocols" owner="System" />
+  <ResultViewEntry type="Grid" name="FCoE VF_Port Neighbor Results" objectUri="object://fc/FcoeVfPortNeighborResults" profile="fcoe" menuPath="Switching Protocols" owner="System" />
+  <ResultViewEntry type="Grid" name="FCoE Remote Discovery Results" objectUri="object://fc/FcoeRemoteDiscoveryResults" profile="fcoe" menuPath="Switching Protocols" owner="System" />
+  <ResultViewEntry type="Grid" name="FC F_Port Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Switching Protocols" owner="System" />
+  <ResultViewEntry type="Grid" name="FC F_Port Neighbor Results" objectUri="object://fc/FcFPortNeighborResults" profile="fc" menuPath="Switching Protocols" owner="System" />
+  <ResultViewEntry type="Grid" name="FC Remote Discovery Results" objectUri="object://fc/FcRemoteDiscoveryResults" profile="fc" menuPath="Switching Protocols" owner="System" />
+  
+  <ResultViewEntry type="Grid" name="OSE Switch Results Not Started" objectUri="object://core/DynamicResultView" profile="ose" menuPath="Switching Protocols\OSE" owner="System"/>
+  <ResultViewEntry type="Grid" name="OSE Switch Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\OSE" owner="System"/>
+  <ResultViewEntry type="Grid" name="OSE Controller Results Not Connected" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\OSE" owner="System"/>
+  <ResultViewEntry type="Grid" name="OSE Controller Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\OSE" owner="System"/>
+  <ResultViewEntry type="Grid" name="OSE Controller Aggregate Results" objectUri="object://core/Port" profile="ose" menuPath="Switching Protocols\OSE" owner="System" identifier="Switching Protocols\OSE\OSE Controller Aggregate Results"/>
+
+  <ResultViewEntry type="Grid" name="DCBX Results" objectUri="object://lldp/LldpDcbxResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX Feature Results" objectUri="object://lldp/LldpDcbxFeatureResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX Feature Results (IEEE P802.1Qaz D2.4)" objectUri="object://lldp/LldpIeeeDcbxFeatureResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX Bandwidth Allocation Results" objectUri="object://lldp/DcbxBandwidthAllocationResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX BCN Mode Results" objectUri="object://lldp/DcbxBcnModeResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX BCN Parameter Results" objectUri="object://lldp/DcbxBcnParameterResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX Application Priority Results" objectUri="object://lldp/DcbxFcoePriorityResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX Logical Link Results" objectUri="object://lldp/DcbxLogicalLinkResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX Priority Allocation Results + TSA" objectUri="object://lldp/DcbxPriorityAllocationResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX Priority Flow Control Results" objectUri="object://lldp/DcbxPriorityFlowControlResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="DCBX NIV Results" objectUri="object://lldp/DcbxNivResult" profile="none" menuPath="Switching Protocols\DCBX" owner="System" />
+  <ResultViewEntry type="Grid" name="VXLAN L3 Stream Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\VXLAN" owner="System" />
+  <ResultViewEntry type="Grid" name="VXLAN L3 Flooded Stream Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\VXLAN" owner="System" />
+  <ResultViewEntry type="Grid" name="VXLAN L3 Dropped Stream Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\VXLAN" owner="System"/>
+  <ResultViewEntry type="Grid" name="VXLAN L2 Stream Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\VXLAN" owner="System"/>
+  <ResultViewEntry type="Grid" name="VXLAN L2 Flooded Stream Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\VXLAN" owner="System"/>
+  <ResultViewEntry type="Grid" name="VXLAN L2 Dropped Stream Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\VXLAN" owner="System"/>
+  <ResultViewEntry type="Grid" name="VXLAN Binding Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\VXLAN" owner="System"/>
+
+  <ResultViewEntry type="Grid" name="EVB Results" objectUri="object://lldp/LldpEvbResult" profile="none" menuPath="Switching Protocols\EVB" owner="System" identifier="Switching\EVB\EVB Results"/>
+  <ResultViewEntry type="Grid" name="CDCP Results" objectUri="object://lldp/LldpCdcpResult" profile="none" menuPath="Switching Protocols\CDCP" owner="System" identifier="Switching\CDCP\CDCP Results"/>
+  <ResultViewEntry type="Grid" name="CDCP SVID Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Switching Protocols\CDCP" owner="System" identifier="Switching\CDCP\CDCP SVID Results"/>
+  <ResultViewEntry type="Grid" name="VDP Station Results" objectUri="object://core/EmulatedDevice" profile="vepa" menuPath="Switching Protocols\VDP" owner="System" identifier="Switching\VDP Station Results"/>
+  
+  <ResultViewEntry type="Grid" name="VIC Adapter Results" objectUri="object://core/EmulatedDevice" profile="vic" menuPath="Switching Protocols\VIC" owner="System" identifier="Switching\VIC Adapter Results"/>
+  <ResultViewEntry type="Grid" name="VIF Results" objectUri="object://vic/VifResults" profile="vic" menuPath="Switching Protocols\VIC" owner="System" identifier="Switching\VIF Results"/>
+
+  <ResultViewEntry type="Grid" name="TRILL Results" objectUri="object://core/EmulatedDevice" profile="trill" menuPath="Switching Protocols\TRILL" owner="System" identifier="Switching Protocols\TRILL\Trill Results"/>
+  <ResultViewEntry type="Grid" name="TRILL Neighbor Results" objectUri="object://core/EmulatedDevice" profile="trill" menuPath="Switching Protocols\TRILL" owner="System" identifier="Switching Protocols\TRILL\Trill Neighbor Results"/>
+  <ResultViewEntry type="Grid" name="Openflow Controller Results" objectUri="object://core/EmulatedDevice" profile="openflow" menuPath="Switching Protocols\Openflow" owner="System" identifier="Switching\Openflow\Openflow Controller Results"/>
+  <ResultViewEntry type="Grid" name="Openflow Controller Switch Results" objectUri="object://core/EmulatedDevice" profile="openflow" menuPath="Switching Protocols\Openflow" owner="System" identifier="Switching\Openflow\Openflow Controller Switch Results"/>
+  <ResultViewEntry type="Grid" name="Openflow Controller Switch Port Results" objectUri="object://core/EmulatedDevice" profile="openflow" menuPath="Switching Protocols\Openflow" owner="System" identifier="Switching\Openflow\Openflow Controller Switch Port Results"/>
+  <ResultViewEntry type="Grid" name="Openflow Reactive Mode Aggregate Results" objectUri="object://core/EmulatedDevice" profile="openflow" menuPath="Switching Protocols\Openflow" owner="System" identifier="Switching\Openflow\Openflow Reactive Mode Aggregate Results"/>
+  <ResultViewEntry type="Grid" name="Openflow Async Results" objectUri="object://core/EmulatedDevice" profile="openflow" menuPath="Switching Protocols\Openflow" owner="System" identifier="Switching\Openflow\Openflow Async Results"/>
+  <ResultViewEntry type="Grid" name="OVSDB Server Results" objectUri="object://core/EmulatedDevice" profile="OVSDB" menuPath="Switching Protocols\OVSDB" owner="System" identifier="Switching\OVSDB\OVSDB Server Results"/>
+  <ResultViewEntry type="Grid" name="OTV Edge Device Results" objectUri="object://core/EmulatedDevice" profile="otv" menuPath="Switching Protocols\OTV" owner="System" identifier="Switching\OTV\OTV Edge Device Results"/>
+  <ResultViewEntry type="Grid" name="OTV Neighbor Results" objectUri="object://core/EmulatedDevice" profile="otv" menuPath="Switching Protocols\OTV" owner="System" identifier="Switching\OTV\OTV Neighbor Results"/>
+  <ResultViewEntry type="Grid" name="OTV Edge Device Overlay Results" objectUri="object://core/EmulatedDevice" profile="otv" menuPath="Switching Protocols\OTV" owner="System" identifier="Switching\OTV\OTV Edge Device Overlay Results"/>
+
+  <ResultViewEntry type="Grid" name="Test Results" objectUri="object://iptv/IptvTestResults" profile="iptv" menuPath="IPTV" owner="System" identifier="IPTV\Test Results" />
+  <ResultViewEntry type="Grid" name="Port Results" objectUri="object://core/Port" profile="iptv" menuPath="IPTV" owner="System" identifier="IPTV\Port Results" />
+  <ResultViewEntry type="Grid" name="STB Block Results" objectUri="object://core/Host" profile="iptv" menuPath="IPTV" owner="System" identifier="IPTV\STB Block Results" />
+  <ResultViewEntry type="Grid" name="Viewing Profile Results" objectUri="object://iptv/IptvViewingProfileConfig" profile="iptv" menuPath="IPTV" owner="System" identifier="IPTV\Viewing Profile Results" />
+  <ResultViewEntry type="Grid" name="Channel Results" objectUri="object://iptv/IptvViewedChannels" profile="iptv" menuPath="IPTV" owner="System" identifier="IPTV\Channel Results" />
+  <ResultViewEntry type="Grid" name="Video Program Information" objectUri="object://vqana/VqVideoStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\Video Program Information Results" />
+  <ResultViewEntry type="Grid" name="Video Interval Metrics" objectUri="object://vqana/VqVideoStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\Video Interval Metrics Results" />
+  <ResultViewEntry type="Grid" name="Video Continuous Metrics" objectUri="object://vqana/VqVideoStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\Video Continuous Metrics Results" />
+  <ResultViewEntry type="Grid" name="Audio Program Information" objectUri="object://vqana/VqAudioStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\Audio Program Information Results" />
+  <ResultViewEntry type="Grid" name="Audio Interval Metrics" objectUri="object://vqana/VqAudioStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\Audio Interval Metrics Results" />
+  <ResultViewEntry type="Grid" name="Audio Continuous Metrics" objectUri="object://vqana/VqAudioStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\Audio Continuous Metrics Results" />
+  <ResultViewEntry type="Grid" name="ETSI TR101-290" objectUri="object://vqana/VqVideoStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\ETSI TR101-290 Results" />
+  <ResultViewEntry type="Grid" name="RTP Packet Transport Metrics" objectUri="object://vqana/VqVideoStreamResults" profile="vqana" menuPath="Video Quality" owner="System" identifier="Video Quality\RTP Packet Transport Metrics Results" />
+
+  <ResultViewEntry type="Grid" name="HTTP Client Results" objectUri="object://l4l7/HttpClientResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\HTTP Client Results" />
+  <ResultViewEntry type="Grid" name="HTTP Server Results" objectUri="object://l4l7/HttpServerResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\HTTP Server Results" />
+  <ResultViewEntry type="Grid" name="HTTP Video Client Results" objectUri="object://l4l7/HttpVideoClientResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\HTTP Video Client Results" />
+  <ResultViewEntry type="Grid" name="HTTP Video Server Results" objectUri="object://l4l7/HttpVideoServerResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\HTTP Video Server Results" />
+  <ResultViewEntry type="Grid" name="FTP Client Results" objectUri="object://l4l7/FtpClientResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\FTP Client Results" />
+  <ResultViewEntry type="Grid" name="FTP Server Results" objectUri="object://l4l7/FtpServerResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\FTP Server Results" />
+  <ResultViewEntry type="Grid" name="SIP Ua Results" objectUri="object://l4l7/SipUaResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\SIP Ua Results" />
+  <ResultViewEntry type="Grid" name="SIP Port Results" objectUri="object://l4l7/SipPortResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\SIP Port Results" />
+  <ResultViewEntry type="Grid" name="Video Client Results" objectUri="object://l4l7/VideoClientResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Video Client Results" />
+  <ResultViewEntry type="Grid" name="Video Server Results" objectUri="object://l4l7/VideoServerResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Video Server Results" />
+  <ResultViewEntry type="Grid" name="Video Server Sessions" objectUri="object://l4l7/VideoServerSessions" profile="core" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Video Server Sessions"/>
+  <ResultViewEntry type="Grid" name="Storage IO Project Aggreated Results" objectUri="object://storageio/StorageProjectResults" profile="core" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Storage IO Project Aggreated Results"/>
+  <ResultViewEntry type="Grid" name="Storage IO Discovered Target Results" objectUri="object://storageio/StorageDiscoveredTargetResults" profile="core" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Storage IO Discovered Target Results"/>
+  <ResultViewEntry type="Grid" name="Storage IO Profile Results" objectUri="object://storageio/StorageProfileResults" profile="core" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Storage IO Profile Results"/>
+  <ResultViewEntry type="Grid" name="Storage IO Worker Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Storage IO Worker Results"/>
+  <ResultViewEntry type="Grid" name="Storage IO Port Aggregated Results" objectUri="object://core/Port" profile="core" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Storage IO Port Aggregated Results"/>
+  <ResultViewEntry type="Grid" name="Raw TCP Client Results" objectUri="object://l4l7/RawTcpClientResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Raw TCP Client Results" />
+  <ResultViewEntry type="Grid" name="Raw TCP Server Results" objectUri="object://l4l7/RawTcpServerResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\Raw TCP Server Results" />
+  <ResultViewEntry type="Grid" name="NTP Clock Results" objectUri="object://l4l7/NtpClientResults" profile="l4l7" menuPath="Application Layer Protocols" owner="System"  identifier="Application Layer Protocols\NTP Clock Results"/>
+  <!-- Disable until NMS release
+  <ResultViewEntry type="Grid" name="CSMP Agent Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\CSMP Agent Results"/>
+  -->
+  <ResultViewEntry type="Grid" name="DPG Client Results" objectUri="object://l4l7/DpgClientProtocolConfig" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\DPG Client Results" />
+  <ResultViewEntry type="Grid" name="DPG Server Results" objectUri="object://l4l7/DpgServerProtocolConfig" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\DPG Server Results" />
+  <ResultViewEntry type="Grid" name="CIFS Client Results" objectUri="object://l4l7/CifsClientProtocolConfig" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\CIFS Client Results" />
+  <ResultViewEntry type="Grid" name="CIFS Server Results" objectUri="object://l4l7/CifsServerProtocolConfig" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\CIFS Server Results" />
+  <ResultViewEntry type="Grid" name="XMPPvJ Client Results" objectUri="object://l4l7/XmppvJClientResult" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\XMPPvJ Client Results" />
+  <ResultViewEntry type="Grid" name="XMPPvJ Port Results" objectUri="object://l4l7/XmppvJPortResult" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\XMPPvJ Port Results" />
+  <ResultViewEntry type="Grid" name="App Perf Port Results" objectUri="object://core/DynamicResultView" profile="l4l7" menuPath="Application Layer Protocols" owner="System" identifier="Application Layer Protocols\App Perf Port Results"/>
+
+  <ResultViewEntry type="Grid" name="VMware NIC Results" objectUri="object://configurator/ExternalDeviceVmwareNicResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\VMware NIC Results"/>
+  <ResultViewEntry type="Grid" name="VMware CPU Results" objectUri="object://configurator/ExternalDeviceVmwareCpuResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\VMware CPU Results"/>
+  <ResultViewEntry type="Grid" name="VMware Results" objectUri="object://core/ExternalDevicePort" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\VMware Results"/>
+
+  <ResultViewEntry type="Grid" name="Custom1 Command Results" objectUri="object://configurator/ExternalDeviceCustom1CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom1 Command Results"/>
+  <ResultViewEntry type="Grid" name="Custom2 Command Results" objectUri="object://configurator/ExternalDeviceCustom2CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom2 Command Results"/>
+  <ResultViewEntry type="Grid" name="Custom3 Command Results" objectUri="object://configurator/ExternalDeviceCustom3CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom3 Command Results"/>
+  <ResultViewEntry type="Grid" name="Custom4 Command Results" objectUri="object://configurator/ExternalDeviceCustom4CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom4 Command Results" />
+  <ResultViewEntry type="Grid" name="Custom5 Command Results" objectUri="object://configurator/ExternalDeviceCustom5CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom5 Command Results" />
+  <ResultViewEntry type="Grid" name="Custom6 Command Results" objectUri="object://configurator/ExternalDeviceCustom6CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom6 Command Results" />
+  <ResultViewEntry type="Grid" name="Custom7 Command Results" objectUri="object://configurator/ExternalDeviceCustom7CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom7 Command Results" />
+  <ResultViewEntry type="Grid" name="Custom8 Command Results" objectUri="object://configurator/ExternalDeviceCustom8CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom8 Command Results" />
+  <ResultViewEntry type="Grid" name="Custom9 Command Results" objectUri="object://configurator/ExternalDeviceCustom9CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom9 Command Results" />
+  <ResultViewEntry type="Grid" name="Custom10 Command Results" objectUri="object://configurator/ExternalDeviceCustom10CommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom10 Command Results" />
+  <ResultViewEntry type="Grid" name="Custom Polling Command Results" objectUri="object://configurator/ExternalDeviceCustomPollingCommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Custom Polling Command Results" />
+  <ResultViewEntry type="Grid" name="Run Recorded File Results" objectUri="object://configurator/ExternalDeviceRunConfigCommandResults" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Run Recorded File Results"/>
+  <ResultViewEntry type="Grid" name="Port Statistics Results" objectUri="object://core/ExternalDevicePort" profile="configurator" menuPath="External Device" owner="System" identifier="External Device\Port Statistics Results"/>
+
+  <ResultViewEntry type="Grid" name="TWAMP Client Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\TWAMP Results" owner="System" identifier="Carrier Ethernet\TWAMP Results\TWAMP Client Results"/>
+  <ResultViewEntry type="Grid" name="TWAMP Server Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\TWAMP Results" owner="System" identifier="Carrier Ethernet\TWAMP Results\TWAMP Server Results"/>
+  <ResultViewEntry type="Grid" name="TWAMP Test Session Results" objectUri="object://core/EmulatedDevice" profile="core" menuPath="Carrier Ethernet\TWAMP Results" owner="System" identifier="Carrier Ethernet\TWAMP Results\TWAMP Test Session Results"/>
+
+  <ResultViewEntry type="Grid" name="TWAMP State Summary" objectUri="object://core/Port" profile="core" menuPath="Carrier Ethernet\TWAMP Results" owner="System" identifier="Carrier Ethernet\TWAMP Results\TWAMP State Summary" />
+  <ResultViewEntry type="Grid" name="TWAMP Client Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\TWAMP Client Results" />
+  <ResultViewEntry type="Grid" name="TWAMP Server Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\TWAMP Server Results" />
+  <ResultViewEntry type="Grid" name="TWAMP Test Session Results" objectUri="object://core/Port" profile="core" menuPath="Port Protocols" owner="System" identifier="Port Protocols\TWAMP Test Session Results"/>
+
+  <ResultViewEntry type="Grid" name="MEG Results" objectUri="object://mplstpoam/MplsTpOamMegResults" profile="core" menuPath="Routing Protocols\MPLS-TP Y1731 OAM Results" owner="System" identifier="Routing Protocols\MPLS-TP OAM Results\MEG Results"/>
+  <ResultViewEntry type="Grid" name="CC Results" objectUri="object://mplstpoam/MplsTpOamCcLocalResults" profile="core" menuPath="Routing Protocols\MPLS-TP Y1731 OAM Results" owner="System" identifier="Routing Protocols\MPLS-TP OAM Results\CC Results"/>
+  <ResultViewEntry type="Grid" name="LB Results" objectUri="object://mplstpoam/MplsTpOamLbResults" profile="core" menuPath="Routing Protocols\MPLS-TP Y1731 OAM Results" owner="System" identifier="Routing Protocols\MPLS-TP OAM Results\LB Results"/>
+  <ResultViewEntry type="Grid" name="LCK Results" objectUri="object://mplstpoam/MplsTpOamLckResults" profile="core" menuPath="Routing Protocols\MPLS-TP Y1731 OAM Results" owner="System" identifier="Routing Protocols\MPLS-TP OAM Results\LCK Results"/>
+  <ResultViewEntry type="Grid" name="AIS Results" objectUri="object://mplstpoam/MplsTpOamAisResults" profile="core" menuPath="Routing Protocols\MPLS-TP Y1731 OAM Results" owner="System" identifier="Routing Protocols\MPLS-TP OAM Results\AIS Results"/>
+  <ResultViewEntry type="Grid" name="TST Results" objectUri="object://mplstpoam/MplsTpOamTstResults" profile="core" menuPath="Routing Protocols\MPLS-TP Y1731 OAM Results" owner="System" identifier="Routing Protocols\MPLS-TP OAM Results\TST Results"/>
+  <ResultViewEntry type="Grid" name="MPLS-TP LSP Results" objectUri="object://rtgcore/MplsTpLspResults" profile="core" menuPath="Routing Protocols\MPLS-TP Results" owner="System" identifier="Routing Protocols\MPLS-TP Results\MPLS-TP LSP Results"/>  
+  <ResultViewEntry type="Grid" name="BGP EVPN Results" objectUri="object://core/DynamicResultView" profile="none" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP EVPN Results"/>
+  <ResultViewEntry type="Grid" name="MAC Stream Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols\EVPN Stream Results" owner="System" identifier="Router Protocols\EVPN Stream Results\MAC Stream Results"/>
+  <ResultViewEntry type="Grid" name="IPv4 Stream Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols\EVPN Stream Results" owner="System" identifier="Router Protocols\EVPN Stream Results\IPv4 Stream Results"/>
+  <ResultViewEntry type="Grid" name="IPv6 Stream Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols\EVPN Stream Results" owner="System" identifier="Router Protocols\EVPN Stream Results\IPv6 Stream Results"/>
+  
+  <ResultViewEntry type="Grid" name="BGP Learned RT-Import Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP Learned RT-Import Results"/>
+  <ResultViewEntry type="Grid" name="BGP MVPN Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP MVPN Results"/>
+  <ResultViewEntry type="Grid" name="BGP Link-State Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP Link-State Results"/>
+  <ResultViewEntry type="Grid" name="BGP Link-State Scale Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP Link-State Scale Results"/>
+  <ResultViewEntry type="Grid" name="BGP Route Results Per Afi Safi" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP Route Results Per Afi Safi"/>
+  <ResultViewEntry type="Grid" name="BGP Session Detail Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\BGP Session Detail Results"/>
+  <ResultViewEntry type="Grid" name="OSPFV2 Session Detail Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\OSPFV2 Session Detail Results"/>
+  <ResultViewEntry type="Grid" name="ISIS TLV Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Routing Protocols" owner="System" identifier="Router Protocols\ISIS TLV Results"/>
+  
+  <ResultViewEntry type="Grid" name="Convergence Summary Results" objectUri="object://core/ConvergenceConfig" profile="core" menuPath="Event Manager\Control-Plane Convergence" owner="System" identifier="Event Manager\Control-Plane Convergence\Convergence Summary Results" />
+  <ResultViewEntry type="Grid" name="Convergence Stream Results" objectUri="object://core/DynamicResultView" profile="core" menuPath="Event Manager\Control-Plane Convergence" owner="System" identifier="Event Manager\Control-Plane Convergence\Convergence Stream Results" />
+
+  <ResultViewEntry type="Grid" name="Auto Frame Response Results" objectUri="object://responder/FrameResponseResults" profile="responder" menuPath="Frame Response" owner="System" identifier="Frame Response\Auto Frame Response Results" />
+
+  <ResultViewEntry type="Grid" name="IEEE 802.11 Client Results" objectUri="object://core/DynamicResultView" profile="ieee80211" menuPath="Wireless LAN" owner="System" identifier="Wireless LAN\IEEE 802.11 Client Results" />
+  <ResultViewEntry type="Grid" name="IEEE 802.11 Device Results" objectUri="object://core/DynamicResultView" profile="ieee80211" menuPath="Wireless LAN" owner="System" identifier="Wireless LAN\IEEE 802.11 Device Results" />
+  <ResultViewEntry type="Grid" name="IEEE 802.11 Port Results" objectUri="object://core/DynamicResultView" profile="ieee80211" menuPath="Wireless LAN" owner="System" identifier="Wireless LAN\IEEE 802.11 Port Results" />
+  
+  <ResultViewEntry type="Grid" name="Radar Emulation Trial Results" objectUri="object://core/DynamicResultView" profile="radaremulation" menuPath="Wireless LAN" owner="System" identifier="Wireless LAN\Radar Emulation Trial Results" />
+  
+
+	
+</ResultViewCatalog>

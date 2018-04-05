@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCRFT_ID" 
+    showName="FC RFT_ID"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:RftId"
+    description="FC RFT_ID">
+    <pdus>
+      <pdu name="rftId1" pdu="fcgs:RftId" >
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

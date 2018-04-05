@@ -1,0 +1,101 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/4.10/Routing%20and%20MPLS/MPLS/Linear%20Protection"  xml:lang="en">
+<label>Linear Protection</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    <actionDecl name="TriggerLinearProtectionSwitchOver">
+    <label>Trigger Linear Protection Switch-over</label>
+    <tooltip>Trigger Linear Protection Switch-over for the selected Protection Domains</tooltip>
+    <description>Trigger Linear Protection Switch-over for the selected Protection Domains</description>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProtectionDomainList">
+            <label>ProtectionDomainList</label>
+            <tooltip>Protection Domain Handle List</tooltip>
+            <description>Protection Domain Handle List</description>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+</query-harness>

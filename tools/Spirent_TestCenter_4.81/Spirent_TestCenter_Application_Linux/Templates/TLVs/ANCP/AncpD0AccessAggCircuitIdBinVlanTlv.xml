@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ANCP Access Aggregation Circuit ID Binary TLV (VLAN)"
+    showName="Access Aggregation Circuit ID Binary TLV (VLAN)"
+    version="1.00"
+    category="ANCP TLV (draft-wadhwa-gsmp-l2control-configuration-00)"
+    readonly="true"
+    validate="true"
+    firstPdu="ancp_draft0:AccessAggregationCircuitIdBinaryVlanTlv"
+    description="ANCP Access Aggregation Circuit ID Binary TLV format for Ethernet VLAN." >
+
+    <pdus>
+      <pdu name="proto1" pdu="ancp_draft0:AccessAggregationCircuitIdBinaryVlanTlv" />
+    </pdus>
+  </template>
+</frame>

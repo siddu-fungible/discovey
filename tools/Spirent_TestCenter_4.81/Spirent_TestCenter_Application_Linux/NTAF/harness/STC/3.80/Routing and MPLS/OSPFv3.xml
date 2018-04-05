@@ -1,0 +1,1836 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/OSPFv3"  xml:lang="en">
+<label>OSPFv3</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    <actionDecl name="Ospfv3StopHellos">
+    <label>Stop Hellos</label>
+    <tooltip>Stop sending hellos for the selected OSPFv3 routers.</tooltip>
+    <description>Stop sending hellos for the selected OSPFv3 routers.</description>
+        <parameter  name="RouterList">
+            <label>RouterList</label>
+            <tooltip>Ospfv3 Router Handle List</tooltip>
+            <description>Ospfv3 Router Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3ResumeHellos">
+    <label>Resume Hellos</label>
+    <tooltip>Resume sending hellos for the selected OSPFv3 routers.</tooltip>
+    <description>Resume sending hellos for the selected OSPFv3 routers.</description>
+        <parameter  name="RouterList">
+            <label>RouterList</label>
+            <tooltip>Ospfv3 Router Handle List</tooltip>
+            <description>Ospfv3 Router Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3ShutdownRouters">
+    <label>Shutdown Routers</label>
+    <tooltip>Shutdown the Router for the selected OSPFv3 routers.</tooltip>
+    <description>Shutdown the Router for the selected OSPFv3 routers.</description>
+        <parameter  name="RouterList">
+            <label>RouterList</label>
+            <tooltip>Ospfv3 Router Handle List</tooltip>
+            <description>Ospfv3 Router Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3RestoreRouters">
+    <label>Restore Routers</label>
+    <tooltip>Restore the Router for the selected OSPFv3 routers.</tooltip>
+    <description>Restore the Router for the selected OSPFv3 routers.</description>
+        <parameter  name="RouterList">
+            <label>RouterList</label>
+            <tooltip>Ospfv3 Router Handle List</tooltip>
+            <description>Ospfv3 Router Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3RemoveRouterId">
+    <label>Remove Router ID</label>
+    <tooltip>Remove Router ID for the selected OSPFv3 Network LSA Links.</tooltip>
+    <description>Remove Router ID for the selected OSPFv3 Network LSA Links.</description>
+        <parameter  name="LsaLinkList">
+            <label>LsaLinkList</label>
+            <tooltip>OSPFv3 Link Handle List</tooltip>
+            <description>OSPFv3 Link Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3RemoveIf">
+    <label>Remove Interface</label>
+    <tooltip>Remove Interface for the selected OSPFv3 Router LSA Links.</tooltip>
+    <description>Remove Interface for the selected OSPFv3 Router LSA Links.</description>
+        <parameter  name="LsaLinkList">
+            <label>LsaLinkList</label>
+            <tooltip>OSPFv3 Link Handle List</tooltip>
+            <description>OSPFv3 Link Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3ReadvertiseLsa">
+    <label>Re-Advertise LSAs</label>
+    <tooltip>Readvertise LSAs for the selected OSPFv3 routers.</tooltip>
+    <description>Readvertise LSAs for the selected OSPFv3 routers.</description>
+        <parameter  name="RouterList">
+            <label>RouterList</label>
+            <tooltip>Ospfv3 Router Handle List</tooltip>
+            <description>Ospfv3 Router Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeExternalLsa">
+    <label>Age External LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 External LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 External LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="RouteCategory">
+            <label>RouteCategory</label>
+            <tooltip>Route Category</tooltip>
+            <description>Route Category</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeNssaLsa">
+    <label>Age NSSA LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 NSSA LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 NSSA LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="RouteCategory">
+            <label>RouteCategory</label>
+            <tooltip>Route Category</tooltip>
+            <description>Route Category</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeNetworkLsa">
+    <label>Age Network LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 Network LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 Network LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeRouterLsa">
+    <label>Age Router LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 Router LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 Router LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeLinkLsa">
+    <label>Age Link LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 Link LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 Link LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="RouteCategory">
+            <label>RouteCategory</label>
+            <tooltip>Route Category</tooltip>
+            <description>Route Category</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeIntraAreaPrefixLsa">
+    <label>Age Intra-Area Prefix LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 Intra Area Prefix LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 Intra Area Prefix LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="RouteCategory">
+            <label>RouteCategory</label>
+            <tooltip>Route Category</tooltip>
+            <description>Route Category</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeInterAreaRouterLsa">
+    <label>Age Inter-Area Router LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 Inter Area Router LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 Inter Area Router LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="RouteCategory">
+            <label>RouteCategory</label>
+            <tooltip>Route Category</tooltip>
+            <description>Route Category</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="Ospfv3AgeInterAreaPrefixLsa">
+    <label>Age Inter-Area Prefix LSAs</label>
+    <tooltip>Age LSA for the selected OSPFv3 Inter Area Prefix LSAs.</tooltip>
+    <description>Age LSA for the selected OSPFv3 Inter Area Prefix LSAs.</description>
+        <parameter  name="LsaList">
+            <label>LsaList</label>
+            <tooltip>OSPFv3 LSA Handle List</tooltip>
+            <description>OSPFv3 LSA Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PrefixFilter">
+            <label>PrefixFilter</label>
+            <tooltip>Route Prefix Filter</tooltip>
+            <description>Route Prefix Filter</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="CategoryFilter">
+            <label>CategoryFilter</label>
+            <tooltip>Route Category Filter</tooltip>
+            <description>Route Category Filter</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PercentFilter">
+            <label>PercentFilter</label>
+            <tooltip>Percent Routes in Routeblock Filter</tooltip>
+            <description>Percent Routes in Routeblock Filter</description>
+            <datatype>decimal</datatype>
+            <default>100.0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>1</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="RouteCategory">
+            <label>RouteCategory</label>
+            <tooltip>Route Category</tooltip>
+            <description>Route Category</description>
+            <datatype>string</datatype>
+            <default>ANY</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="PRIMARY">PRIMARY</allowedValue>
+            <allowedValue label="SECONDARY">SECONDARY</allowedValue>
+            <allowedValue label="UNIQUE">UNIQUE</allowedValue>
+            <allowedValue label="ANY">ANY</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+</query-harness>

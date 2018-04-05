@@ -1,0 +1,541 @@
+<Template>
+<Description>
+Template used to create Prefix Length Distribution routes for Routing protocol ISIS SR
+</Description>
+<Image />
+<DataModelXml>
+<StcSystem id="1" serializationBase="true"
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName="Untitled.tcc"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="1168"/>
+    <Tags id="1208"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+     
+      <Relation type="UserTag" target="1700"/>
+      <Relation type="UserTag" target="1701"/>
+      <Relation type="UserTag" target="1702"/>
+      <Relation type="UserTag" target="1703"/>
+      <Relation type="UserTag" target="1710"/>
+      <Relation type="UserTag" target="1711"/>
+      <Relation type="UserTag" target="1712"/>
+      <Relation type="UserTag" target="1713"/>
+	  <Relation type="UserTag" target="1720"/>
+	  <Relation type="UserTag" target="1721"/>
+	  <Relation type="UserTag" target="1722"/>
+	  <Relation type="UserTag" target="1723"/>
+	  <Relation type="UserTag" target="1730"/>
+	  <Relation type="UserTag" target="1731"/>
+	  <Relation type="UserTag" target="1732"/>
+	  <Relation type="UserTag" target="1733"/>
+      
+      <Tag id="1700" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4Internal">
+      </Tag>
+      <Tag id="1710" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4Internal.Ipv4RouteGenParams">
+      </Tag>
+	   <Tag id="1720" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4Internal.TeParams">
+      </Tag>
+	  <Tag id="1730" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4Internal.IsisSegmentRoutingParams">
+      </Tag>
+      <Tag id="1701" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4External">
+      </Tag>
+      <Tag id="1711" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4External.Ipv4RouteGenParams">
+      </Tag>
+	  <Tag id="1721" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4External.TeParams">
+      </Tag>
+	  <Tag id="1731" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv4External.IsisSegmentRoutingParams">
+      </Tag>
+      <Tag id="1702" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6Internal">
+      </Tag>
+      <Tag id="1712" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6Internal.Ipv6RouteGenParams">
+      </Tag>
+	  <Tag id="1722" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6Internal.TeParams">
+      </Tag>
+	  <Tag id="1732" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6Internal.IsisSegmentRoutingParams">
+      </Tag>
+      <Tag id="1703" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6External">
+      </Tag>
+      <Tag id="1713" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6External.Ipv6RouteGenParams">
+      </Tag>
+	  <Tag id="1723" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6External.TeParams">
+      </Tag>
+	  <Tag id="1733" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIsisLspGenParamsIpv6External.IsisSegmentRoutingParams">
+      </Tag>
+    </Tags>
+    <IsisLspGenParams id="3617"
+     Level="LEVEL2"
+     CreateSRTlvOnly="FALSE"
+     UseSystemIdFromRouterId="FALSE"
+     Ipv4AddrStart="1.0.0.0"
+     Ipv4AddrEnd="223.255.255.255"
+     Ipv6AddrStart="2000::"
+     Ipv6AddrEnd="3ffe::"
+     SystemIdStart="10:00:00:00:00:01"
+     SystemIdStep="00:00:00:00:00:01"
+     RouterIdStart="1.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterIdStart="2000::1"
+     Ipv6RouterIdStep="::1"
+     TeEnabled="FALSE"
+     SREnabled="FALSE"
+     EnableLoopbackAdvertisement="FALSE"
+     EnableRouterCapabilityTlv="FALSE"
+     HostName="Spirent-1"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="IsisLspGenParams 1">
+      <Relation type="UserTag" target="1700"/>
+      <Ipv4RouteGenParams id="3619" 
+       IpAddrStart="1.0.0.0"
+       IpAddrEnd="223.255.255.255"
+       PrefixLengthStart="24"
+       PrefixLengthEnd="24"
+       PrefixLengthDist="0 0 0 0 0 0 0 1 0 1 1 1 1 1 1 2 3 2 6 3 1 6 8 55 1 1
+1 1 1 1 0 1"
+       EmulatedRouters="ALL"
+       SimulatedRouters="NONE"
+       Count="10000"
+       PrefixLengthDistType="CUSTOM"
+       DuplicationPercentage="0"
+       DisableRouteAggregation="FALSE"
+       WeightRouteAssignment="BYROUTERS"
+       EnableIpAddrOverride="FALSE"
+       CreateMultipleRouteBlocks="FALSE"
+       RoutesPerBlock="0"
+       UseIpAddrIncrement="FALSE"
+       IpAddrIncrement="1"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Ipv4RouteGenParams 5">
+        <Relation type="UserTag" target="1710"/>
+        <IsisLspGenRouteAttrParams id="3620" 
+         RouteType="INTERNAL"
+         PrimaryMetric="1"
+         SecondaryMetric="2"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="IsisLspGenRouteAttrParams 1">
+        </IsisLspGenRouteAttrParams>
+      </Ipv4RouteGenParams>
+	  <TeParams id="2001" 
+       SubTlv="MAX_BW|MAX_RSV_BW"
+       BandwidthUnit="MBYTES_PER_SEC"
+       TeLocalIpv4Addr="0.0.0.0"
+       TeRemoteIpv4Addr="0.0.0.0"
+       TeLocalIpv6Addr="2000::"
+       TeRemoteIpv6Addr="2000::"
+       TeGroup="1"
+       TeMaxBandwidth="1000000"
+       TeRsvrBandwidth="1000000"
+       TeUnRsvrBandwidth0="100000"
+       TeUnRsvrBandwidth1="100000"
+       TeUnRsvrBandwidth2="100000"
+       TeUnRsvrBandwidth3="100000"
+       TeUnRsvrBandwidth4="100000"
+       TeUnRsvrBandwidth5="100000"
+       TeUnRsvrBandwidth6="100000"
+       TeUnRsvrBandwidth7="100000"
+       TeDefaultMetric="0"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="TeParams 1">
+	    <Relation type="UserTag" target="1720"/>
+      </TeParams>
+      <IsisSegmentRoutingParams id="3001" 
+       SrConfigPrefixSidRouteEnabled="TRUE"
+       SrConfigPrefixSid4IPv6RouteEnabled="FALSE"
+       SrMappingServerEnabled="FALSE"
+       SrAdjSidEnabled="TRUE"
+       Srv6ForRouteEnabled="FALSE"
+       SrCapValueType="LABEL"
+       SrCapValue="100"
+       SrCapRange="100"
+       SrCapFlags="IPV4"
+       SrAlgorithms="1"
+       SrSid="15"
+       SrSidStep="1"
+       SrAdjValue="9001"
+       SrAdjValueStep="1"
+       SrAdjFlags="LBIT|VBIT"
+       SrAdjWeight="100"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IsisSegmentRoutingParams 1">
+	    <Relation type="UserTag" target="1730"/>
+      </IsisSegmentRoutingParams>
+    </IsisLspGenParams>
+    <IsisLspGenParams id="3627"
+     Level="LEVEL2"
+     CreateSRTlvOnly="FALSE"
+     UseSystemIdFromRouterId="FALSE"
+     Ipv4AddrStart="1.0.0.0"
+     Ipv4AddrEnd="223.255.255.255"
+     Ipv6AddrStart="2000::"
+     Ipv6AddrEnd="3ffe::"
+     SystemIdStart="10:00:00:00:00:01"
+     SystemIdStep="00:00:00:00:00:01"
+     RouterIdStart="1.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterIdStart="2000::1"
+     Ipv6RouterIdStep="::1"
+     TeEnabled="FALSE"
+     SREnabled="FALSE"
+     EnableLoopbackAdvertisement="FALSE"
+     EnableRouterCapabilityTlv="FALSE"
+     HostName="Spirent-1"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="IsisLspGenParams 2">
+      <Relation type="UserTag" target="1701"/>
+      <Ipv4RouteGenParams id="3621" 
+       IpAddrStart="1.0.0.0"
+       IpAddrEnd="223.255.255.255"
+       PrefixLengthStart="24"
+       PrefixLengthEnd="24"
+       PrefixLengthDist="0 0 0 0 0 0 0 1 0 1 1 1 1 1 1 2 3 2 6 3 1 6 8 55 1 1
+1 1 1 1 0 1"
+       EmulatedRouters="ALL"
+       SimulatedRouters="NONE"
+       Count="10000"
+       PrefixLengthDistType="CUSTOM"
+       DuplicationPercentage="0"
+       DisableRouteAggregation="FALSE"
+       WeightRouteAssignment="BYROUTERS"
+       EnableIpAddrOverride="FALSE"
+       CreateMultipleRouteBlocks="FALSE"
+       RoutesPerBlock="0"
+       UseIpAddrIncrement="FALSE"
+       IpAddrIncrement="1"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Ipv4RouteGenParams 6">
+        <Relation type="UserTag" target="1711"/>
+        <IsisLspGenRouteAttrParams id="3622" 
+         RouteType="EXTERNAL"
+         PrimaryMetric="10"
+         SecondaryMetric="20"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="IsisLspGenRouteAttrParams 2">
+        </IsisLspGenRouteAttrParams>
+      </Ipv4RouteGenParams>
+	   <TeParams id="2002" 
+       SubTlv="MAX_BW|MAX_RSV_BW"
+       BandwidthUnit="MBYTES_PER_SEC"
+       TeLocalIpv4Addr="0.0.0.0"
+       TeRemoteIpv4Addr="0.0.0.0"
+       TeLocalIpv6Addr="2000::"
+       TeRemoteIpv6Addr="2000::"
+       TeGroup="1"
+       TeMaxBandwidth="1000000"
+       TeRsvrBandwidth="1000000"
+       TeUnRsvrBandwidth0="100000"
+       TeUnRsvrBandwidth1="100000"
+       TeUnRsvrBandwidth2="100000"
+       TeUnRsvrBandwidth3="100000"
+       TeUnRsvrBandwidth4="100000"
+       TeUnRsvrBandwidth5="100000"
+       TeUnRsvrBandwidth6="100000"
+       TeUnRsvrBandwidth7="100000"
+       TeDefaultMetric="0"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="TeParams 2">
+	    <Relation type="UserTag" target="1721"/>
+      </TeParams>
+      <IsisSegmentRoutingParams id="3002" 
+       SrConfigPrefixSidRouteEnabled="TRUE"
+       SrConfigPrefixSid4IPv6RouteEnabled="FALSE"
+       SrMappingServerEnabled="FALSE"
+       SrAdjSidEnabled="TRUE"
+       Srv6ForRouteEnabled="FALSE"
+       SrCapValueType="LABEL"
+       SrCapValue="16000"
+       SrCapRange="110000"
+       SrCapFlags="IPV4"
+       SrAlgorithms="1"
+       SrSid="15"
+       SrSidStep="1"
+       SrAdjValue="9001"
+       SrAdjValueStep="1"
+       SrAdjFlags="LBIT|VBIT"
+       SrAdjWeight="100"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IsisSegmentRoutingParams 2">
+	    <Relation type="UserTag" target="1731"/>
+      </IsisSegmentRoutingParams>
+    </IsisLspGenParams>
+    <IsisLspGenParams id="3637"
+     Level="LEVEL2"
+     CreateSRTlvOnly="FALSE"
+     UseSystemIdFromRouterId="FALSE"
+     Ipv4AddrStart="1.0.0.0"
+     Ipv4AddrEnd="223.255.255.255"
+     Ipv6AddrStart="2000::"
+     Ipv6AddrEnd="3ffe::"
+     SystemIdStart="10:00:00:00:00:01"
+     SystemIdStep="00:00:00:00:00:01"
+     RouterIdStart="1.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterIdStart="2000::1"
+     Ipv6RouterIdStep="::1"
+     TeEnabled="FALSE"
+     SREnabled="FALSE"
+     EnableLoopbackAdvertisement="FALSE"
+     EnableRouterCapabilityTlv="FALSE"
+     HostName="Spirent-1"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="IsisLspGenParams 3">
+      <Relation type="UserTag" target="1702"/>
+      <Ipv6RouteGenParams id="3623" 
+       IpAddrStart="2000::"
+       IpAddrEnd="3ffe::"
+       PrefixLengthStart="64"
+       PrefixLengthEnd="64"
+       PrefixLengthDist="0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1 1 0 0 0 0 0 0 0 0
+0 0 1 1 1 1 1 2 2 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 2 3 1 1 1 1
+1 2 6 50 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1"
+       EmulatedRouters="ALL"
+       SimulatedRouters="NONE"
+       Count="10000"
+       PrefixLengthDistType="FIXED"
+       DuplicationPercentage="0"
+       DisableRouteAggregation="FALSE"
+       WeightRouteAssignment="BYROUTERS"
+       EnableIpAddrOverride="FALSE"
+       CreateMultipleRouteBlocks="FALSE"
+       RoutesPerBlock="0"
+       UseIpAddrIncrement="FALSE"
+       IpAddrIncrement="1"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Ipv6RouteGenParams 5">
+        <Relation type="UserTag" target="1712"/>
+        <IsisLspGenRouteAttrParams id="3624" 
+         RouteType="INTERNAL"
+         PrimaryMetric="1"
+         SecondaryMetric="2"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="IsisLspGenRouteAttrParams 3">
+        </IsisLspGenRouteAttrParams>
+      </Ipv6RouteGenParams>
+	   <TeParams id="2003" 
+       SubTlv="MAX_BW|MAX_RSV_BW"
+       BandwidthUnit="MBYTES_PER_SEC"
+       TeLocalIpv4Addr="0.0.0.0"
+       TeRemoteIpv4Addr="0.0.0.0"
+       TeLocalIpv6Addr="2000::"
+       TeRemoteIpv6Addr="2000::"
+       TeGroup="1"
+       TeMaxBandwidth="1000000"
+       TeRsvrBandwidth="1000000"
+       TeUnRsvrBandwidth0="100000"
+       TeUnRsvrBandwidth1="100000"
+       TeUnRsvrBandwidth2="100000"
+       TeUnRsvrBandwidth3="100000"
+       TeUnRsvrBandwidth4="100000"
+       TeUnRsvrBandwidth5="100000"
+       TeUnRsvrBandwidth6="100000"
+       TeUnRsvrBandwidth7="100000"
+       TeDefaultMetric="0"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="TeParams 3">
+	    <Relation type="UserTag" target="1722"/>
+      </TeParams>
+      <IsisSegmentRoutingParams id="3003" 
+       SrConfigPrefixSidRouteEnabled="FALSE"
+       SrConfigPrefixSid4IPv6RouteEnabled="TRUE"
+       SrMappingServerEnabled="FALSE"
+       SrAdjSidEnabled="TRUE"
+       Srv6ForRouteEnabled="FALSE"
+       SrCapValueType="LABEL"
+       SrCapValue="100"
+       SrCapRange="100"
+       SrCapFlags="IPV6"
+       SrAlgorithms="1"
+       SrSid="15"
+       SrSidStep="1"
+       SrAdjValue="9001"
+       SrAdjValueStep="1"
+       SrAdjFlags="LBIT|VBIT"
+       SrAdjWeight="100"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IsisSegmentRoutingParams 3">
+	    <Relation type="UserTag" target="1732"/>
+      </IsisSegmentRoutingParams>
+    </IsisLspGenParams>
+    <IsisLspGenParams id="3647"
+     Level="LEVEL2"
+     CreateSRTlvOnly="FALSE"
+     UseSystemIdFromRouterId="FALSE"
+     Ipv4AddrStart="1.0.0.0"
+     Ipv4AddrEnd="223.255.255.255"
+     Ipv6AddrStart="2000::"
+     Ipv6AddrEnd="3ffe::"
+     SystemIdStart="10:00:00:00:00:01"
+     SystemIdStep="00:00:00:00:00:01"
+     RouterIdStart="1.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterIdStart="2000::1"
+     Ipv6RouterIdStep="::1"
+     TeEnabled="FALSE"
+     SREnabled="FALSE"
+     EnableLoopbackAdvertisement="FALSE"
+     EnableRouterCapabilityTlv="FALSE"
+     HostName="Spirent-1"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="IsisLspGenParams 4">
+      <Relation type="UserTag" target="1703"/>
+      <Ipv6RouteGenParams id="3625"
+       IpAddrStart="2000::"
+       IpAddrEnd="3ffe::"
+       PrefixLengthStart="64"
+       PrefixLengthEnd="64"      
+       PrefixLengthDist="0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1 1 0 0 0 0 0 0 0 0
+0 0 1 1 1 1 1 2 2 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 2 3 1 1 1 1
+1 2 6 50 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1"
+       EmulatedRouters="ALL"
+       SimulatedRouters="NONE"
+       Count="10000"
+       PrefixLengthDistType="FIXED"
+       DuplicationPercentage="0"
+       DisableRouteAggregation="FALSE"
+       WeightRouteAssignment="BYROUTERS"
+       EnableIpAddrOverride="FALSE"
+       CreateMultipleRouteBlocks="FALSE"
+       RoutesPerBlock="0"
+       UseIpAddrIncrement="FALSE"
+       IpAddrIncrement="1"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Ipv6RouteGenParams 6">
+        <Relation type="UserTag" target="1713"/>
+        <IsisLspGenRouteAttrParams id="3626" 
+         RouteType="EXTERNAL"
+         PrimaryMetric="10"
+         SecondaryMetric="20"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="IsisLspGenRouteAttrParams 4">
+        </IsisLspGenRouteAttrParams>
+      </Ipv6RouteGenParams>
+	  <TeParams id="2004" 
+       SubTlv="MAX_BW|MAX_RSV_BW"
+       BandwidthUnit="MBYTES_PER_SEC"
+       TeLocalIpv4Addr="0.0.0.0"
+       TeRemoteIpv4Addr="0.0.0.0"
+       TeLocalIpv6Addr="2000::"
+       TeRemoteIpv6Addr="2000::"
+       TeGroup="1"
+       TeMaxBandwidth="1000000"
+       TeRsvrBandwidth="1000000"
+       TeUnRsvrBandwidth0="100000"
+       TeUnRsvrBandwidth1="100000"
+       TeUnRsvrBandwidth2="100000"
+       TeUnRsvrBandwidth3="100000"
+       TeUnRsvrBandwidth4="100000"
+       TeUnRsvrBandwidth5="100000"
+       TeUnRsvrBandwidth6="100000"
+       TeUnRsvrBandwidth7="100000"
+       TeDefaultMetric="0"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="TeParams 4">
+	    <Relation type="UserTag" target="1723"/>
+      </TeParams>
+      <IsisSegmentRoutingParams id="3004" 
+       SrConfigPrefixSidRouteEnabled="FALSE"
+       SrConfigPrefixSid4IPv6RouteEnabled="TRUE"
+       SrMappingServerEnabled="FALSE"
+       SrAdjSidEnabled="TRUE"
+       Srv6ForRouteEnabled="FALSE"
+       SrCapValueType="LABEL"
+       SrCapValue="100"
+       SrCapRange="100"
+       SrCapFlags="IPV6"
+       SrAlgorithms="1"
+       SrSid="15"
+       SrSidStep="1"
+       SrAdjValue="9001"
+       SrAdjValueStep="1"
+       SrAdjFlags="LBIT|VBIT"
+       SrAdjWeight="100"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IsisSegmentRoutingParams 4">
+	  <Relation type="UserTag" target="1733"/>
+      </IsisSegmentRoutingParams>
+    </IsisLspGenParams>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

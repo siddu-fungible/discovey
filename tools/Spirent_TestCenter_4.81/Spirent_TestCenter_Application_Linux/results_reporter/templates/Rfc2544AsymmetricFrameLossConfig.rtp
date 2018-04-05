@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>ConfigDuration</name>
+      <persist>false</persist>
+      <path>SELECT CASE WHEN DurationMode == 'SECONDS' THEN DurationSeconds||' (seconds)' WHEN DurationMode == 'BURSTS' THEN DurationBursts||' (bursts)' END FROM Rfc2544FrameLossConfig LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') WHERE DataSetId==$@StartDataSetId$ AND Rfc2544ConfigHnd=Handle</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>NumOfTrials</name>
+      <persist>false</persist>
+      <path>SELECT NumOfTrials FROM Rfc2544FrameLossConfig LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') WHERE DataSetId==$@StartDataSetId$ AND Rfc2544ConfigHnd=Handle</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ProfileConfigCombined</name>
+      <persist>false</persist>
+      <path>SELECT Name||'^'||LoadSpecMode||'^'||LoadUnits||'^'||ST.StreamBlockCount FROM (SELECT P.* FROM Rfc2544FrameLossProfile AS P LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') WHERE Rfc2544ConfigHnd=P.ParentHnd) LEFT JOIN (SELECT SourceHnd, count(*) AS StreamBlockCount from RelationTable WHERE Type=='StreamBlockBinding' GROUP BY SourceHnd) AS ST WHERE ST.SourceHnd == Handle</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ConfigFrameSizes</name>
+      <persist>false</persist>
+      <path>SELECT CASE WHEN FrameSizeIterationMode=="CUSTOM" THEN 'Custom - '||CustomFrameSizeList WHEN FrameSizeIterationMode=="STEP" THEN 'Step - Start: '||FrameSizeStart||' End: '||FrameSizeEnd||' Step: '||FrameSizeStep WHEN FrameSizeIterationMode=="RANDOM" THEN 'Random - MIN: '||RandomMinFrameSize||' MAX: '||RandomMaxFrameSize WHEN FrameSizeIterationMode=="IMIX" THEN 'iMIX - '||ImixDistributionString END FROM Rfc2544FrameLossConfig LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') where DataSetId==$@StartDataSetId$ AND Rfc2544ConfigHnd=Handle</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Warning : Some modules do not support latency measurement</instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2544ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>sampleCompStat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>10</instance>
+        <instance>11</instance>
+        <instance>12</instance>
+        <instance>13</instance>
+      </value>
+      <script><![CDATA[# Sample calculation (script must set variable called "result"&#xa;&#xa;lappend x(3) 10 11 12 13&#xa;set result $x(3)&#xa;#set result $ProfileConfigCombined&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ProfileConfig-Name</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Get Profile Config&#xa;set result [list]&#xa;&#xa;catch {unset ProfileConfigData}&#xa;set TblDataCols [list]&#xa;lappend TblDataCols Name LoadSpecMode LoadUnits StreamBlockCount &#xa;&#xa;array set LoadSpecModeLut [list \&#xa;       PER_PROFILE "per Profile"\&#xa;       PER_PORT "per Port"\&#xa;       PER_STREAMBLOCK "per Stream Block"\&#xa;       PER_FLOW  "per Flow"\&#xa;]&#xa;&#xa;array set LoadUnitsLut [list \&#xa;       PERCENT_LINE_RATE "Percent (%)" \&#xa;       FRAMES_PER_SECOND "Frames/sec" \&#xa;       MEGABITS_PER_SECOND "Mbps" \&#xa;       KILOBITS_PER_SECOND "Kbps" \&#xa;       BITS_PER_SECOND "bps"\&#xa;]&#xa;&#xa;foreach row $ProfileConfigCombined {&#xa;    set rowList [split $row "^"]&#xa;    foreach name $TblDataCols value $rowList {&#xa;       switch -- $name {&#xa;             LoadSpecMode {&#xa;                   if {[info exists LoadSpecModeLut($value)]} {&#xa;                       set value $LoadSpecModeLut($value)&#xa;                   }&#xa;             }&#xa;             LoadUnits {&#xa;                   if {[info exists LoadUnitsLut($value)]} {&#xa;                       set value $LoadUnitsLut($value)&#xa;                   }&#xa;             }&#xa;       }&#xa;       lappend ProfileConfigData($name) $value&#xa;    }&#xa;}&#xa;set result $ProfileConfigData(Name)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ProfileConfig-LoadSpec</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ProfileConfig-Name&#xa;set result $ProfileConfigData(LoadSpecMode)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ProfileConfig-LoadUnits</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ProfileConfig-Name&#xa;set result $ProfileConfigData(LoadUnits)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ProfileConfig-StreamBlockCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ProfileConfig-Name&#xa;set result $ProfileConfigData(StreamBlockCount)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ComputedConfigDuration</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $ConfigDuration&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ComputedNumOfTrials</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $NumOfTrials&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ComputedConfigFrameSizes</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[if {[string first "Custom - " $ConfigFrameSizes] == 0} {&#xa;     set frameList [string range $ConfigFrameSizes 9 end]&#xa;     set result "Custom - [join $frameList ,]"&#xa;} else {&#xa;     set result $ConfigFrameSizes&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Fri Dec 17 19:12:35.724 PST 2010</value>
+      <script><![CDATA[set result "Fri Dec 17 19:21:38.853 PST 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Contact Details</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1292641955724</value>
+      <script><![CDATA[set result "1292642498853"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>ProfileTable</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Name</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Load Spec\nMode</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Load Units</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Stream Block \nCount</td>&#xa;     </tr>&#xa;  <tr iterate="=$ProfileConfig-Name$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ProfileConfig-Name$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ProfileConfig-LoadSpec$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ProfileConfig-LoadUnits$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ProfileConfig-StreamBlockCount$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Test Configuration" display="true">
+      <width>1080</width>
+      <height>600</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>ProfileTable</name>
+        <x>14</x>
+        <y>220</y>
+        <width>1104</width>
+        <height>47</height>
+        <value>ProfileTable</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>TitleLabel</name>
+        <x>300</x>
+        <y>33</y>
+        <width>375</width>
+        <height>22</height>
+        <size>18</size>
+        <value xml:space="preserve">Asymmetric&amp;nbsp;Frame&amp;nbsp;Loss&amp;nbsp;Test&amp;nbsp;Configuration</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>NumTrialsLabel</name>
+        <x>19</x>
+        <y>158</y>
+        <width>102</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Number&amp;nbsp;of&amp;nbsp;Trials:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>NumTrialsText</name>
+        <x>133</x>
+        <y>158</y>
+        <width>8</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ComputedNumOfTrials$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>DurationLabel</name>
+        <x>214</x>
+        <y>158</y>
+        <width>83</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Trial&amp;nbsp;Duration:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>DurationText</name>
+        <x>308</x>
+        <y>158</y>
+        <width>238</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ComputedConfigDuration$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Profiles</name>
+        <x>17</x>
+        <y>192</y>
+        <width>46</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Rate&amp;nbsp;Profiles:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>FrameSizes</name>
+        <x>20</x>
+        <y>130</y>
+        <width>73</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Frame&amp;nbsp;Sizes:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>ConfigFrameSizes</name>
+        <x>108</x>
+        <y>130</y>
+        <width>118</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ComputedConfigFrameSizes$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name></name>
+        <x>6</x>
+        <y>7</y>
+        <width>150</width>
+        <height>77</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>20</x>
+        <y>550</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Contact Details" display="true">
+      <width>1080</width>
+      <height>600</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>35</x>
+        <y>432</y>
+        <width>247</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>LastPgHdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>540</width>
+        <height>75</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>ContactDet</name>
+        <x>379</x>
+        <y>150</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

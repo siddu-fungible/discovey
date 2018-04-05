@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="ppp"
+  showName="PPP"
+  version="1.00"
+  description="This is a sample PDU library for Ethernet as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="Address" type="SEQUENCE" unitType="ELEMENT" uiShowName="Address">
+      <FIELD name="value" type="OCTETSTRING" byteLength="1" defaultValue="FF" uiShowName="Value" uiNoShowModifier="Interface,Frame,Filter" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Control" type="SEQUENCE" unitType="ELEMENT" uiShowName="Control">
+      <FIELD name="value" type="OCTETSTRING" byteLength="1" defaultValue="03" uiShowName="Value" uiNoShowModifier="Interface,Frame,Filter" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="AddressList" type="SET_OF" elementType="Address"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" />
+
+    <TYPE_DEF name="ControlList" type="SET_OF" elementType="Control"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" />
+    
+    <TYPE_DEF name="PPP" type="SEQUENCE" unitType="HEADER"
+        level="2" uiShowName="PPP" niMapped="true">
+
+      <FIELD name="addresses" type="AddressList"
+          uiShowName="Address" uiNoShowModifier="Interface" />
+
+      <FIELD name="controls" type="ControlList"
+          uiShowName="Control" uiNoShowModifier="Interface" />
+
+      <FIELD name="protocolType" type="types:PPPTypes"
+          defaultValue="0021"
+          uiControlState="ALLOW_OVERRIDE" 
+          procfnTarget="NEXTHDR"
+          uiShowName="Protocol"
+		  uiNoShowModifier="Interface"  
+          isNiMapped="true"/>
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0021" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="0057" />
+      	<NXT_HDR id="ip:IPv6LL" name="IPv6 Header" value="0057" /> 
+        <NXT_HDR id="mpls:Mpls" name="MPLS Header" value="0281" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+
+      </NEXT_HEADERS>	
+    </TYPE_DEF> 
+    
+ </TYPE_DEFS>
+</PDU_LIBRARY>

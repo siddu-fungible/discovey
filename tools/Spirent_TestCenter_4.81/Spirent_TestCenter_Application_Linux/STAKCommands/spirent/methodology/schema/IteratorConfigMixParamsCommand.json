@@ -1,0 +1,40 @@
+{
+  "IteratorConfigMixParamsCommand": {
+    "title": "Schema for the MixInfo of the spirent.methodology.IteratorConfigMixParamsCommand.",
+    "type": "object",
+    "properties": {
+      "table": {
+        "description": "A list of components that make up the mixture.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "weight": {
+              "description": "Percent weight of the total load to assign to this component.",
+              "type": "string"
+            },
+            "appliedValue": {
+              "description": "Load actually assigned to this component.  Autocalculated, do not set.",
+              "type": "number"
+            },
+            "tagPrefix": {
+              "description": "String that will be prefixed to all tags loaded and used in this template.",
+              "type": "string"
+            },
+            "baseTemplateFile": {
+              "description": "Base template file that will be loaded into the StmTemplateConfig.  All modifications in the modifyList will be applied to the contents loaded out of this file.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "weight",
+            "baseTemplateFile"
+          ]
+        }
+      }
+    },
+    "required": [
+      "table"
+    ]
+  }
+}

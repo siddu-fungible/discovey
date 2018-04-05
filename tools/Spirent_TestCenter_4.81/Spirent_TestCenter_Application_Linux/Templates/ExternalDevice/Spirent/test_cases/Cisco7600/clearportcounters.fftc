@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989" entryPoint="clearcounts">
+    <execution estimatedExecutionTime="4">
+        <parameters version="3.4.0.39989">
+            <parameters>
+                <parameters xmlns:pt="http://www.fnfr.com/schemas/parameterTree">
+                    <profile>file:///E:/new_session_profile.ffsp</profile>
+                </parameters>
+            </parameters>
+        </parameters>
+    </execution>
+    <procedures>
+        <item name="clearcounts">
+            <steps>
+                <item guid="bd64e5cf-8423-4f04-99d6-9749909a34ce" action="open" session="s2">
+                    <command>
+                        <body>project://Spirent/session_profiles/common_telnet_Cisco7600.ffsp</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.OpenStepPropertyGroup">
+                        <stepProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                        <sessionProperties type="com.fnfr.svt.applications.telnet.documents.TelnetSessionProperties"/>
+                    </applicationProperties>
+                </item>
+                <item guid="2b90ac76-aad6-42f9-9e7f-63640793f8f4" action="command" session="s2">
+                    <command>
+                        <body>spirent</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="5cf0c1bc-3699-4dad-aec1-056168fd13d9" action="command" session="s2">
+                    <command>
+                        <body>spirent</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="ce8f5e52-9543-494d-8e97-45353c5fff87" action="eval">
+                    <command>
+                        <body>puts $portlist</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="292782b2-4d32-4c08-bb4f-b5e68b121fc2" action="eval">
+                    <command>
+                        <body>set pl [ split $portlist | ]</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="d57e6b40-6dc4-4616-9885-0c89f9f73075" action="for">
+                    <command>
+                        <body>{set i 0} {$i &lt; [llength $pl] } {incr i}</body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="14f24fc9-e0d9-40a4-b031-6af7da2cbf50" action="command" session="s2" estimatedStepExecutionTime="10">
+                            <command>
+                                <body>clear counter [lindex $pl $i ]</body>
+                            </command>
+                            <postProcessing>
+                                <storeResponseAt>sum_stats</storeResponseAt>
+                            </postProcessing>
+                            <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                                <promptProperties>
+                                    <stepPrompts>
+                                        <item name="prompt1" MatchMethod="REGULAR_EXPRESSION">
+                                            <Content>(.*)</Content>
+                                        </item>
+                                    </stepPrompts>
+                                    <alsoUseSessionPrompts inherit="false">false</alsoUseSessionPrompts>
+                                </promptProperties>
+                            </applicationProperties>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="0a38a030-3ef8-4e92-8a16-1741017bed87" action="close" session="s2">
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+            </steps>
+            <arguments>
+                <item name="portlist">
+                    <defaultValue>lc-4/0/0|xe-4/0/0|xe-4/1/0|xe-4/2/0|lc-4/3/0|xe-4/3/0|ge-5/0/0|lc-5/0/0|ge-5/0/1|ge-5/0/2|ge-5/0/3|ge-5/0/4|ge-5/0/5|ge-5/0/7|ge-5/0/9|lc-5/1/0|ge-5/1/1|ge-5/1/3|ge-5/1/5|ge-5/1/7|ge-5/1/9|ge-5/2/0|lc-5/2/0|ge-5/2/1|ge-5/2/2|ge-5/2/3|ge-5/2/4|ge-5/2/5|ge-5/2/6|ge-5/2/7|ge-5/2/8|ge-5/3/0|ge-5/3/1|ge-5/3/3|ge-5/3/5|ge-5/3/7|ge-5/3/9</defaultValue>
+                </item>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

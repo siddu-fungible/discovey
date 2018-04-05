@@ -1,0 +1,23 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoE_VFT"
+    showName="FCoE VFT"
+    version="1.00"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE VFT" >
+
+    <pdus>
+      <pdu name="fcoe" pdu="fc:FCoEHeader" />
+      <pdu name="vft" pdu="fc:VFT" />
+      <pdu name="fc" pdu="fc:FC">
+        <rCtl>06</rCtl>
+        <type>08</type>
+      </pdu>
+
+    </pdus>
+  </template>
+</frame>

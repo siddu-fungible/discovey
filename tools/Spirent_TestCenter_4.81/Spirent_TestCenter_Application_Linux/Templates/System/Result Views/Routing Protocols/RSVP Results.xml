@@ -1,0 +1,357 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5018" serializationBase="true" 
+ Identifier="Router Protocols\RSVP Results"
+ PrimaryClass="Router"
+ Description="object://core/Router"
+ Path="Router Protocols"
+ CustomDisplayPath="Routing and MPLS"
+ CustomDisplayName="RSVP-TE Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="RSVP Results">
+  <RealTimeResultColumnDefinition id="5019" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 589">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5020" 
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 590">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5021" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port Router"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 38">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5022" 
+   GroupName="RSVP"
+   GroupId="object://customgroup/9c739bcc-4bdf-461f-a0e2-f06fdda8878d/Main"
+   ColumnClassName="RsvpRouterConfig RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults RsvpRouterResults"
+   ColumnPropertyName="RouterState LspUpCount LspDownCount LspConnectingCount EgressLspUpCount TxHello RxHello TxPath RxPath TxReservation RxReservation TxPathError RxPathError TxReservationError RxReservationError TxReservationConfirmation RxReservationConfirmation TxPathTeardown RxPathTeardown TxReservationTeardown RxReservationTeardown MinLspSetupTime MaxLspSetupTime AvgLspSetupTime LastTxReservationErrorCode LastRxReservationErrorCode LastTxPathErrorCode LastRxPathErrorCode TxPathRecovery RxPathRecovery TxNotify RxNotify"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, AllDevice.Name AS &apos;Device Name&apos;, RsvpRouterConfig.RouterState AS &apos;Router State&apos;, RsvpRouterResults.LspUpCount AS &apos;LSP Up&apos;, RsvpRouterResults.LspDownCount AS &apos;LSP Down&apos;, RsvpRouterResults.LspConnectingCount AS &apos;LSP Connecting&apos;, RsvpRouterResults.EgressLspUpCount AS &apos;Egress LSP Up&apos;, RsvpRouterResults.TxHello AS &apos;Tx Hello&apos;, RsvpRouterResults.RxHello AS &apos;Rx Hello&apos;, RsvpRouterResults.TxPath AS &apos;Tx PATH&apos;, RsvpRouterResults.RxPath AS &apos;Rx PATH&apos;, RsvpRouterResults.TxReservation AS &apos;Tx RESV &apos;, RsvpRouterResults.RxReservation AS &apos;Rx RESV&apos;, RsvpRouterResults.TxPathError AS &apos;Tx PATH Error&apos;, RsvpRouterResults.RxPathError AS &apos;Rx PATH Error&apos;, RsvpRouterResults.TxReservationError AS &apos;Tx RESV Error&apos;, RsvpRouterResults.RxReservationError AS &apos;Rx RESV Error&apos;, RsvpRouterResults.TxReservationConfirmation AS &apos;Tx RESV Confirm&apos;, RsvpRouterResults.RxReservationConfirmation AS &apos;Rx RESV Confirm&apos;, RsvpRouterResults.TxPathTeardown AS &apos;Tx PATH Tear&apos;, RsvpRouterResults.RxPathTeardown AS &apos;Rx PATH Tear&apos;, RsvpRouterResults.TxReservationTeardown AS &apos;Tx RESV Tear&apos;, RsvpRouterResults.RxReservationTeardown AS &apos;Rx RESV Tear&apos;, RsvpRouterResults.MinLspSetupTime AS &apos;Min LSP Setup Time (ms)&apos;, RsvpRouterResults.MaxLspSetupTime AS &apos;Max LSP Setup Time (ms)&apos;, RsvpRouterResults.AvgLspSetupTime AS &apos;Avg LSP Setup Time (ms)&apos;, RsvpRouterResults.LastTxReservationErrorCode AS &apos;Last Tx RESV Error Code&apos;, RsvpRouterResults.LastRxReservationErrorCode AS &apos;Last Rx RESV Error Code&apos;, RsvpRouterResults.LastTxPathErrorCode AS &apos;Last Tx PATH Error Code&apos;, RsvpRouterResults.LastRxPathErrorCode AS &apos;Last Rx PATH Error Code&apos;, RsvpRouterResults.TxPathRecovery AS &apos;Tx PATH Recovery&apos;, RsvpRouterResults.RxPathRecovery AS &apos;Rx PATH Recovery&apos;, RsvpRouterResults.TxNotify AS &apos;Tx Notify&apos;, RsvpRouterResults.RxNotify AS &apos;Rx Notify&apos; FROM AllDevice, Port, RsvpRouterConfig, RsvpRouterResults, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = AllDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND RsvpRouterConfig.ParentHnd = AllDevice.Handle AND RsvpRouterResults.ParentHnd = RsvpRouterConfig.Handle AND AllDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND RsvpRouterConfig.DataSetId = @DataSetId AND RsvpRouterResults.DataSetId = @DataSetId AND  RelationTable.DataSetId = @DataSetId  )"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 39">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5023" 
+   ConfigClassId="rsvprouterconfig"
+   ResultClassId="rsvprouterresults"
+   ResultRootList="8"
+   PropertyIdArray="rsvprouterresults.lspupcount rsvprouterresults.lspdowncount rsvprouterresults.lspconnectingcount rsvprouterresults.egresslspupcount rsvprouterresults.txhello rsvprouterresults.rxhello rsvprouterresults.txpath rsvprouterresults.rxpath rsvprouterresults.txreservation rsvprouterresults.rxreservation rsvprouterresults.txpatherror rsvprouterresults.rxpatherror rsvprouterresults.txreservationerror rsvprouterresults.rxreservationerror rsvprouterresults.txreservationconfirmation rsvprouterresults.rxreservationconfirmation rsvprouterresults.txpathteardown rsvprouterresults.rxpathteardown rsvprouterresults.txreservationteardown rsvprouterresults.rxreservationteardown rsvprouterresults.minlspsetuptime rsvprouterresults.maxlspsetuptime rsvprouterresults.avglspsetuptime rsvprouterresults.lasttxreservationerrorcode rsvprouterresults.lastrxreservationerrorcode rsvprouterresults.lasttxpatherrorcode rsvprouterresults.lastrxpatherrorcode rsvprouterresults.txpathrecovery rsvprouterresults.rxpathrecovery rsvprouterresults.txnotify rsvprouterresults.rxnotify"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   Name="ResultQuery 26">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5024" 
+   ColumnClassName="RsvpRouterConfig"
+   ColumnPropertyName="RouterState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 591">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5025" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="LspUpCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 592">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5026" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="LspDownCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 593">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5027" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="LspConnectingCount"
+   ColumnDescription=""
+   ColumnWidth="94"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 594">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5028" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="EgressLspUpCount"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 595">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5029" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxHello"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 596">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5030" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxHello"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 597">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5031" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxPath"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 598">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5032" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxPath"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 599">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5033" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxReservation"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 600">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5034" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxReservation"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 601">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5035" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxPathError"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 602">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5036" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxPathError"
+   ColumnDescription=""
+   ColumnWidth="89"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 603">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5037" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxReservationError"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 604">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5038" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxReservationError"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 605">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5039" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxReservationConfirmation"
+   ColumnDescription=""
+   ColumnWidth="102"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 606">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5040" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxReservationConfirmation"
+   ColumnDescription=""
+   ColumnWidth="102"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 607">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5041" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxPathTeardown"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 608">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5042" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxPathTeardown"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 609">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5043" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxReservationTeardown"
+   ColumnDescription=""
+   ColumnWidth="85"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 610">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5044" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxReservationTeardown"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 611">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5045" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="MinLspSetupTime"
+   ColumnDescription=""
+   ColumnWidth="143"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 612">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5046" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="MaxLspSetupTime"
+   ColumnDescription=""
+   ColumnWidth="146"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 613">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5047" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="AvgLspSetupTime"
+   ColumnDescription=""
+   ColumnWidth="144"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 614">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5048" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="LastTxReservationErrorCode"
+   ColumnDescription=""
+   ColumnWidth="140"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 615">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5049" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="LastRxReservationErrorCode"
+   ColumnDescription=""
+   ColumnWidth="140"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 616">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5050" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="LastTxPathErrorCode"
+   ColumnDescription=""
+   ColumnWidth="141"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 617">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5051" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="LastRxPathErrorCode"
+   ColumnDescription=""
+   ColumnWidth="141"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 618">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5052" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxPathRecovery"
+   ColumnDescription=""
+   ColumnWidth="109"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 619">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5053" 
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxPathRecovery"
+   ColumnDescription=""
+   ColumnWidth="109"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 63">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5054"
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="TxNotify"
+   ColumnDescription=""
+   ColumnWidth="109"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 620">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5055"
+   ColumnClassName="RsvpRouterResults"
+   ColumnPropertyName="RxNotify"
+   ColumnDescription=""
+   ColumnWidth="109"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 621">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

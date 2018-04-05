@@ -1,0 +1,974 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId' limit 1</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max,Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select '=$@EndDataSetId$' from sqlite_master limit 1</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max,Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select CreatedTime from DataSet where Id = =$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestType</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select TestType from CustomTestResults where DataSetId = =$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>A1AggLoad</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select Load from (select max(FrameRate),Load from CustomTestResults where DroppedFrameCount=0 and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize order by Handle);</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>A1FS</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select distinct FrameSize from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+	<instance>
+      <name>A1Duration</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select Duration from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+	<instance>
+      <name>DurationType</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select distinct DurationMode from CustomTestResults;</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions,Summary by Frame Size and Load,Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>A1AggTx</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select TxFrameCount from (select max(FrameRate),TxFrameCount,RxFrameCount from CustomTestResults where DroppedFrameCount=0 and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize order by Handle);</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>A1AggRx</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select RxFrameCount from (select max(FrameRate),TxFrameCount,RxFrameCount from CustomTestResults where DroppedFrameCount=0 and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize order by Handle);</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>A1AggRate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select max(FrameRate) from CustomTestResults where DroppedFrameCount=0 and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize order by Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>A2Tx</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select TxFrameCount from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2Rx</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select RxFrameCount from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2Drop</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select DroppedFrameCount from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>A2PL</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select CASE WHEN (RxExpectedFrameCount-(RxFrameCount-OutOfSeqCount))>=0 THEN Round(CAST(RxExpectedFrameCount-RxFrameCount+OutOfSeqCount AS FLOAT)/CAST(RxExpectedFrameCount AS FLOAT)*100,4) ELSE 'N/A' END from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+	<instance>
+      <name>A2FL</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select CASE WHEN (RxExpectedFrameCount-(RxFrameCount-OutOfSeqCount))>=0 THEN RxExpectedFrameCount-(RxFrameCount-OutOfSeqCount) ELSE 'N/A' END from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2InSeq</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select InSeqCount from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>A2TxRate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select FrameRate from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2AvgLat</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select AvgLatency from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2MinLat</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select MinLatency from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2MaxLat</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select MaxLatency from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2Load</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select Load from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2FS</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select (case FrameSizeType when "Random" then "N/A" else FrameSize end) AS FrameSizeForDisplay from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>InputStartDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select DataSetId from CustomTestResults where DataSetId ==$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ReportedAcceptableFrameLoss</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>Select AcceptableFrameLoss from CustomThroughputResultParams</path>
+      <multivalued>true</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>A2RxExpected</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select RxExpectedFrameCount from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+	 <instance>
+      <name>A2RxOutOfSeq</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select OutOfSeqCount from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeType</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select distinct FrameSizeType from CustomTestResults;</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions,Summary by Frame Size and Load,Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistName</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select fd.name AS 'iMIX Distribution' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from CustomTestResults) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSMode</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select fds.frameLengthMode AS 'Frame Length Mode' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from CustomTestResults) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLen</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select coalesce((case when fds.frameLengthMode = 'FIXED' then CAST(fds.fixedFrameLength AS varchar(10)) else CAST(fds.minFrameLength AS varchar(10)) || '-' || CAST(fds.maxFrameLength AS varchar(10)) end),'-') AS 'IP Frame Length' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from CustomTestResults) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeight</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select fds.weight AS 'Weight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from CustomTestResults) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWt</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select round((case when TotalWt.totalWeight=0 then 0 else ((fds.weight * 100.0) /totalWeight) end),2) AS 'Percentage(%)' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from CustomTestResults) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd left join (select fd.handle AS 'Handle', coalesce(sum(fds.weight),0) AS 'TotalWeight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from CustomTestResults) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fds.parenthnd = fd.handle group by fd.handle) AS TotalWt ON TotalWt.handle = fd.handle order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>A1FD</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select distinct FrameLengthDistribution from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>A2RxRate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select round(ForwardingRate,2) from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2MaxJitter</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select MaxJitter from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2MinJitter</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select MinJitter from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2AvgJitter</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select AvgJitter from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2FD</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select FrameLengthDistribution from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2PassThruColor</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select (case R1.Load when R2.Load then '#40ff40' else '#ffffff' end) as Result from CustomTestResults R1 left join (select FrameSize, max(FrameRate), Load from CustomTestResults where PercentLoss &lt;= '=$ReportedAcceptableFrameLoss$' and (txframecount &lt;&gt; 0 and rxframecount &lt;&gt; 0) and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by framesize) R2 on R1.FrameSize = R2.FrameSize where R1.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by R1.FrameSize,R1.Load;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>A2TxMbpsLineRate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select MbpsLineRate from CustomTestResults where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize, Load</path>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>DurationMode</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select distinct DurationMode from CustomTestResults limit 1;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+    <instance>
+      <name>TxDuration</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select distinct (case DurationMode when "BURSTS" then "N/A" else TxDuration end) from CustomTestResults limit 1;</path>
+      <multivalued>true</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check if Detailed Stas Flag was enabled&#xa;&#xa;#clear the return "result"  list in case it was used before&#xa;set  result {}&#xa;&#xa;if {$DetailStatus == 1} {&#xa;set result "Enabled"&#xa;} else {&#xa;set result "Disabled"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# generate the report start date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>GetTestType</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Determine test type&#xa;&#xa;# with new DB, assume that there is always a CustumTestResults table entry of 0&#xa;&#xa;# if test was entered via "pick list" then data set ID will be 1 and test type will likely be found at data set ID =3&#xa;#  - note that with the new multi DB schema that start dataset ID may now be 1&#xa;#  otherwise use the input data set ID&#xa;&#xa;set result {}&#xa;&#xa;if {$PickInputId == 1} {&#xa;  # TestTypeID3 may return 2 results, take first one&#xa;  # also note that the test types are two words&#xa;  #set result [concat [lindex $TestTypeID3 0] [lindex $TestTypeID3 1] ]&#xa;&#xa;  set result [concat [lindex $TestTypeID3 0] " Test"]&#xa;&#xa;} else {&#xa;  set result $TestType&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CompTestType</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Determine test type&#xa;&#xa;# there may be multiple entires in the custom results table for start data set ID - take the first one&#xa;&#xa;set str [lindex $TestType 0]&#xa;&#xa;set result $str]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>TputTxCntByFrameSize</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "-" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;set query "select \"/\" || FrameSize ||\"/\"|| TxFrameCount from (select FrameSize, max(FrameRate), TxFrameCount from CustomTestResults where PercentLoss <= $acceptableFrameLoss  and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSize order by FrameSize)"    &#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;set rowdata [list]&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend rowdata [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;&#xa;foreach fsize $A1FS {&#xa;&#xa;    set fsize [expr int($fsize)]&#xa;    set txcount "-"&#xa;&#xa;    set idx [lsearch  $rowdata  /$fsize/*]&#xa;&#xa;    if { $idx != -1} {&#xa;        #  list elements in the format of /framesize/framerate&#xa;        set txcount  [lindex [split [lindex $rowdata $idx] /] 2]      &#xa;    }&#xa;    lappend result $txcount&#xa;}&#xa;&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>	
+    <instance>
+      <name>TputRxCntByFrameSize</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "-" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;set query "select \"/\" || FrameSize ||\"/\"|| RxFrameCount from (select FrameSize, max(FrameRate), RxFrameCount from CustomTestResults where PercentLoss <= $acceptableFrameLoss  and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSize order by FrameSize)"    &#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;set rowdata [list]&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend rowdata [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;&#xa;foreach fsize $A1FS {&#xa;&#xa;    set fsize [expr int($fsize)]&#xa;    set txcount "-"&#xa;&#xa;    set idx [lsearch  $rowdata  /$fsize/*]&#xa;&#xa;    if { $idx != -1} {&#xa;        #  list elements in the format of /framesize/framerate&#xa;        set txcount  [lindex [split [lindex $rowdata $idx] /] 2]      &#xa;    }&#xa;    lappend result $txcount&#xa;}&#xa;&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>TputRateByFrameSize</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "-" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;set query "select \"/\" || FrameSize ||\"/\"|| FrameRate from (select FrameSize, max(FrameRate) as FrameRate from CustomTestResults where PercentLoss <= $acceptableFrameLoss  and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSize order by FrameSize)"    &#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;set rowdata [list]&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend rowdata [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;&#xa;foreach fsize $A1FS {&#xa;&#xa;    set fsize [expr int($fsize)]&#xa;    set txcount "-"&#xa;&#xa;    set idx [lsearch  $rowdata  /$fsize/*]&#xa;&#xa;    if { $idx != -1} {&#xa;        #  list elements in the format of /framesize/framerate&#xa;        set txcount  [lindex [split [lindex $rowdata $idx] /] 2]      &#xa;    }&#xa;    lappend result $txcount&#xa;}&#xa;&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>TputLoadByFrameSize</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "-" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;set query "select \"/\" || FrameSize ||\"/\"|| Load from (select FrameSize, max(FrameRate),Load from CustomTestResults where PercentLoss <= $acceptableFrameLoss  and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSize order by FrameSize)"    &#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;set rowdata [list]&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend rowdata [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;&#xa;foreach fsize $A1FS {&#xa;&#xa;    set fsize [expr int($fsize)]&#xa;    set txcount "-"&#xa;&#xa;    set idx [lsearch  $rowdata  /$fsize/*]&#xa;&#xa;    if { $idx != -1} {&#xa;        #  list elements in the format of /framesize/txcount&#xa;        set txcount  [lindex [split [lindex $rowdata $idx] /] 2]      &#xa;    }&#xa;    lappend result $txcount&#xa;}&#xa;&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>PassTputFrameSize</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "\"-\"" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;#set query  "select FrameSizeForDisplay from (select max(FrameRate), (case when FrameSizeType="iMIX" then FrameLengthDistribution else FrameSize end) AS FrameSizeForDisplay from CustomTestResults where PercentLoss <= $acceptableFrameLoss and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSizeForDisplay order by Handle);"&#xa;set query  "select  (case FrameSizeType when \"iMIX\" then FrameLengthDistribution when \"Random\" then \"Random\" else FrameSize end) AS FrameSizeForDisplay from (select max(FrameRate),  FrameSize, FrameSizeType, FrameLengthDistribution from CustomTestResults where PercentLoss <= $acceptableFrameLoss and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSizeType,FrameLengthDistribution,FrameSize order by FrameSize);"&#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend result [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;puts RESULT:$result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>PassTputLoad</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "\"-\"" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;set query "select FrameRate from (select max(FrameRate) as FrameRate from CustomTestResults where PercentLoss <= $acceptableFrameLoss and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by case when Framesizetype = 'iMIX' THEN FrameLengthDistribution else FrameSize end  order by case when Framesizetype = 'iMIX' THEN FrameLengthDistribution else FrameSize end)"&#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend result [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;&#xa;puts RESULT:$result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>TputRxExpectedCntByFrameSize</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "-" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;set query "select \"/\" || FrameSize ||\"/\"|| RxExpectedFrameCount from (select FrameSize, max(FrameRate), RxExpectedFrameCount from CustomTestResults where PercentLoss <= $acceptableFrameLoss  and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSize order by FrameSize)"    &#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;set rowdata [list]&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend rowdata [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;&#xa;foreach fsize $A1FS {&#xa;&#xa;    set fsize [expr int($fsize)]&#xa;    set rxExCount "-"&#xa;&#xa;    set idx [lsearch  $rowdata  /$fsize/*]&#xa;&#xa;    if { $idx != -1} {&#xa;        #  list elements in the format of /framesize/expectedRxCount&#xa;        set rxExCount  [lindex [split [lindex $rowdata $idx] /] 2]      &#xa;    }&#xa;    lappend result $rxExCount&#xa;}&#xa;&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeTitle</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[#Derive the Framesize title based on the frame size type&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result "iMIX \n Distribution"&#xa;} else {&#xa;set result "Frame Size\n(bytes)"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load,Throughput Summary</pageName>
+    </instance>
+	<instance>
+      <name>DurationTitle</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[#Derive the duration title based on the duration mode type&#xa;if {$DurationType == "SECONDS"} {&#xa;set result "Duration\n(Seconds)"&#xa;} else {&#xa;set result "Duration\n(Bursts)"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load,Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixNote</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[#Display Note when frame size type is not iMIX&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Imix Distributions are only available for the 'iMIX' Frame Size Type "&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixDefaultEthernet</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Calculate Default Ethernet frame length for frame sizes in iMIX Distributions&#xa;# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;&#xa;set etherlen "-"&#xa;if {$fmode != "RANDOM"}  {&#xa;   set fsize [expr int($fsize)]&#xa;   set etherlen [expr $fsize + 18]      &#xa;    if {$etherlen < 64} {&#xa;         set etherlen 64&#xa;     }&#xa;} else {&#xa;   set flist [split $fsize "-"]&#xa;   set minlen [expr [lindex $flist 0] + 18]&#xa;   set maxlen [expr [lindex $flist 1] + 18]&#xa;   if { $minlen < 64}  {&#xa;        set minlen 64&#xa;   }&#xa;   if { $maxlen < 64}  {&#xa;        set maxlen 64&#xa;   }&#xa;   set etherlen "$minlen-$maxlen"&#xa;}&#xa;lappend result $etherlen&#xa;}&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixPosLen</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Calculate P&#xa;# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;set poslen "-"&#xa;&#xa;if {$fmode != "RANDOM"}  {&#xa;    &#xa;    set fsize [expr int($fsize)]&#xa;    set poslen [expr $fsize + 8]      &#xa;&#xa;} else {&#xa;    set flist [split $fsize "-"]&#xa;    &#xa;    set minlen [expr [lindex $flist 0] + 8]&#xa;    set maxlen [expr [lindex $flist 1] + 8]&#xa;    &#xa;    set poslen "$minlen-$maxlen"&#xa;}&#xa;    lappend result $poslen&#xa;&#xa;}&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result "1318542408524"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result "Thu Oct 13 14:46:48.524 PDT 2011"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>A1FSToDisplay</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[if {$FrameSizeType =="iMIX"} {&#xa;set result $A1FD&#xa;} else {&#xa;set result $A1FS&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+	<instance>
+      <name>A1DurationToDisplay</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result $A1Duration]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistNameVal</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSDistName&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSModeVal</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSMode&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLenVal</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSIPLen&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeightVal</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSWeight&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWtVal</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSPercentWt&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>A2FSToDisplay</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[if {$FrameSizeType =="iMIX"} {&#xa;set result $A2FD&#xa;} else {&#xa;set result $A2FS&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>			
+    <instance>
+      <name>TputMbpsRateByFrameSize</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;set ::dbname $dataSource&#xa;&#xa;# open db&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;set acceptableFrameLoss 0&#xa;# If Sql query failed then ReportedAcceptableFrameLoss will equal '-'&#xa;if { $ReportedAcceptableFrameLoss  != "-" }  {&#xa;    set acceptableFrameLoss $ReportedAcceptableFrameLoss&#xa;}&#xa;&#xa;set query "select \"/\" || FrameSize ||\"/\"|| MbpsLineRate from (select FrameSize, max(MbpsLineRate) as MbpsLineRate from CustomTestResults where PercentLoss <= $acceptableFrameLoss  and (txframecount <> 0 and rxframecount <> 0) and DataSetId between $StartDataSetId and $EndDataSetId group by FrameSize order by FrameSize)"    &#xa;&#xa;# Run Query&#xa;set dbResult [$db query $query]&#xa;&#xa;# put query result in to result var&#xa;set count [java::field $dbResult nrows]&#xa;&#xa;set rowdata [list]&#xa;for {set i 0} {$i < $count} {incr i} {&#xa;    set row [[java::field $dbResult rows] get $i]&#xa;    set rowarray [java::cast {java.lang.Object[]} $row]&#xa;    lappend rowdata [[$rowarray get 0] toString]&#xa;}&#xa;&#xa;$db close&#xa;&#xa;foreach fsize $A1FS {&#xa;&#xa;    set fsize [expr int($fsize)]&#xa;    set txcount "-"&#xa;&#xa;    set idx [lsearch  $rowdata  /$fsize/*]&#xa;&#xa;    if { $idx != -1} {&#xa;        #  list elements in the format of /framesize/MbpsLineRate&#xa;        set txcount  [lindex [split [lindex $rowdata $idx] /] 2]      &#xa;    }&#xa;    lappend result $txcount&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Throughput Summary</pageName>
+    </instance>
+    <instance>
+      <name>A2TxFrameRate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result [list]&#xa;&#xa;foreach tx $A2Tx {&#xa;   if { [string is double $TxDuration] && $TxDuration > 0} {&#xa;   #Hack to handle overflow&#xa;   set txCnt "$tx.0"&#xa;   lappend result [expr $txCnt / $TxDuration]&#xa;&#xa;     } else {&#xa;&#xa;        lappend result "N/A"&#xa;&#xa;    }&#xa; }]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Summary by Frame Size and Load</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>A1AggThruFS</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;    <td bgcolor="#eeeeee">=$DurationTitle$</td>&#xa;	<td bgcolor="#eeeeee">Load\n(%)</td>&#xa;     <td bgcolor="#eeeeee">Tx Frames</td>&#xa;     <td bgcolor="#eeeeee">Rx Frames</td>&#xa;     <td bgcolor="#eeeeee">Rx Expected\nFrames</td>&#xa;     <td bgcolor="#eeeeee">Throughput\n(fps)</td>&#xa;  <td bgcolor="#eeeeee">Line Throughput\n(Mbps)</td>&#xa;  </tr>&#xa; <tr iterate="=$A1FSToDisplay$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$A1FSToDisplay$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$A1DurationToDisplay$</td>&#xa;		<td halign="right" bgcolor="#ffffff">=$TputLoadByFrameSize$</td>&#xa;		<td halign="right" bgcolor="#ffffff">=$TputTxCntByFrameSize$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TputRxCntByFrameSize$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TputRxExpectedCntByFrameSize$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TputRateByFrameSize$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$TputMbpsRateByFrameSize$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>A2AggThruDetail</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;    <td bgcolor="#eeeeee">=$DurationTitle$</td>&#xa;    <td bgcolor="#eeeeee">Load\n(%)</td>&#xa;    <td bgcolor="#eeeeee">Tx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx\nExpected\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx Out Of\nSequence Frames</td>&#xa;	<td bgcolor="#eeeeee">Tx Line\nRate (Mbps)</td>&#xa;    <td bgcolor="#eeeeee">Intended\nTx Frame\nRate (fps)</td>&#xa;    <td bgcolor="#eeeeee">Tx Frame\nRate (fps)</td>&#xa;    <td bgcolor="#eeeeee">Rx Frame\nRate (fps)</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLoss</td>&#xa;	<td bgcolor="#eeeeee">Frame\nLoss (%)</td>&#xa;    <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Min\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nJitter\n(uSec)</td>&#xa;  </tr>&#xa; <tr iterate="=$A2FSToDisplay$">&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2FSToDisplay$</td>&#xa;     
+	  <td halign="right" bgcolor="=$A2PassThruColor$">=$A1DurationToDisplay$</td>&#xa;	<td halign="right" bgcolor="=$A2PassThruColor$">=$A2Load$</td>&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2Tx$</td>&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2Rx$</td>&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2RxExpected$</td>&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2RxOutOfSeq$</td>&#xa;	<td halign="right" bgcolor="=$A2PassThruColor$">=$A2TxMbpsLineRate$</td>&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2TxRate$</td>&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2TxFrameRate$</td>&#xa;    <td halign="right" bgcolor="=$A2PassThruColor$">=$A2RxRate$</td>&#xa;     <td halign="right" bgcolor="=$A2PassThruColor$">=$A2FL$</td>&#xa;	<td halign="right" bgcolor="=$A2PassThruColor$">=$A2PL$</td>&#xa;     <td halign="right" bgcolor="=$A2PassThruColor$">=$A2MinLat$</td>&#xa;     <td halign="right" bgcolor="=$A2PassThruColor$">=$A2AvgLat$</td>&#xa;     <td halign="right" bgcolor="=$A2PassThruColor$">=$A2MaxLat$</td>&#xa;     <td halign="right" bgcolor="=$A2PassThruColor$">=$A2MinJitter$</td>&#xa;     <td halign="right" bgcolor="=$A2PassThruColor$">=$A2AvgJitter$</td>&#xa;     <td halign="right" bgcolor="=$A2PassThruColor$">=$A2MaxJitter$</td>&#xa;   </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>FrameSizeImixDistribution</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">iMIX\nDistribution</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLength Mode</td>&#xa;     <td bgcolor="#eeeeee">IP Total\nLength</td>&#xa;     <td bgcolor="#eeeeee">Default\nEthernet</td>&#xa;     <td bgcolor="#eeeeee">POS\nLength</td>&#xa;     <td bgcolor="#eeeeee">Weight</td>&#xa;     <td bgcolor="#eeeeee">Percentage\n(%)</td>&#xa;  </tr>&#xa; <tr iterate="=$ImixFSDistNameVal$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$ImixFSDistNameVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSModeVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSIPLenVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixDefaultEthernet$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixPosLen$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSWeightVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSPercentWtVal$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>AggThru</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>TputMbpsRateByFrameSize</name>
+        <title>Throughput Rate (Mbps)</title>
+        <color></color>
+        <valueAxis>Throughput Rate (Mbps)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>PassTputLoad</name>
+        <title>Throughput Rate (fps)</title>
+        <color></color>
+        <valueAxis>Throughput Rate (fps)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>PassTputFrameSize</xStatistic>
+      <xTitle>Frame Size</xTitle>
+      <yTitle>Throughput Rate(fps)</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TestStartStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>59</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>200</x>
+        <y>349</y>
+        <width>287</width>
+        <height>31</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>450</y>
+        <width>106</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Custom&amp;nbsp;Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>320</x>
+        <y>449</y>
+        <width>24</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CompTestType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>82</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>320</x>
+        <y>479</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartVar</name>
+        <x>320</x>
+        <y>509</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>upperLeftLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSideLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+    </page>
+    <page name="Throughput Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Graph">
+        <name>AggThruFS</name>
+        <x>105</x>
+        <y>134</y>
+        <width>500</width>
+        <height>250</height>
+        <value>AggThru</value>
+      </instance>
+      <instance type="Text">
+        <name>AggThruTitleStr</name>
+        <x>270</x>
+        <y>99</y>
+        <width>182</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Throughput&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;Size</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>AggThruFS</name>
+        <x>105</x>
+        <y>406</y>
+        <width>390</width>
+        <height>64</height>
+        <value>A1AggThruFS</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Summary by Frame Size and Load" display="true">
+      <width>800</width>
+      <height>620</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>AggThruByTrial</name>
+        <x>1</x>
+        <y>136</y>
+        <width>776</width>
+        <height>281</height>
+        <value>A2AggThruDetail</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>AggThruByTrialTitleStr</name>
+        <x>150</x>
+        <y>100</y>
+        <width>392</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;Loss&amp;nbsp;and&amp;nbsp;Latencies&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;Size&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>80</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="iMIX Distributions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>ImixDistTitle</name>
+        <x>259</x>
+        <y>106</y>
+        <width>234</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;sizes&amp;nbsp;for&amp;nbsp;iMIX&amp;nbsp;Distributions</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>ImixDistFSTbl</name>
+        <x>178</x>
+        <y>156</y>
+        <width>390</width>
+        <height>47</height>
+        <value>FrameSizeImixDistribution</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>ImixNoteTxt</name>
+        <x>202</x>
+        <y>132</y>
+        <width>0</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">=$ImixNote$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TitleStr</name>
+        <x>231</x>
+        <y>108</y>
+        <width>244</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>VerStr</name>
+        <x>35</x>
+        <y>459</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2A</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startIdStr</name>
+        <x>35</x>
+        <y>489</y>
+        <width>125</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>endIdStr</name>
+        <x>35</x>
+        <y>509</y>
+        <width>166</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>670</x>
+        <y>100</y>
+        <width>130</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>520</y>
+        <width>800</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>528</y>
+        <width>284</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>Theomax</name>
+        <x>17</x>
+        <y>140</y>
+        <width>656</width>
+        <height>256</height>
+        <src>theoMaxPosAtm.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

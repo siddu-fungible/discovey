@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_IcmpRouterAdvertise"
+    showName="ICMP Router Advertisement"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="icmp:IcmpRouterAdvertisement"
+    description="ICMP Router Advertisement" >
+
+    <pdus>
+      <pdu name="proto1" pdu="icmp:IcmpRouterAdvertisement" />
+    </pdus>
+  </template>
+</frame>

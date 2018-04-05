@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="lacp" showName="LACP" version="1.00"
+    description="This is a sample PDU library for LACP as defined in XML Stream Editor.">
+    
+  <TYPE_DEFS>
+        
+    <TYPE_DEF name="Subtype" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="LACP" value="01" />
+        <VAL_ENUM uiShowName="Marker" value="02" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TLVType" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Actor Information" value="01" />
+        <VAL_ENUM uiShowName="Partner Information" value="02" />
+        <VAL_ENUM uiShowName="Collector Information" value="03" />
+        <VAL_ENUM uiShowName="Terminator" value="00" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MarkerTLVType" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Marker Information" value="01" />
+        <VAL_ENUM uiShowName="Marker Response" value="02" />
+        <VAL_ENUM uiShowName="Terminator" value="00" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LACP" type="SEQUENCE"
+        unitType="HEADER" uiShowName="LACP" >
+
+	<FIELD name="subtype" type="Subtype"
+	    defaultValue="01"
+	    uiShowName="Subtype" />
+
+	<FIELD name="version" type="INTEGER" bitLength="8"
+	    defaultValue="01"
+	    uiShowName="Lacp Version" />
+
+	  <FIELD name="actorInformation" type="TLVType"
+	      defaultValue="01"
+	      uiShowCommon="false"
+	      uiShowName="Actor Information" />    
+
+	  <FIELD name="actorInformationLength" type="INTEGER" bitLength="8"
+	      defaultValue="20"
+	      uiShowCommon="false"
+	      uiShowName="Actor Information Length" />    
+
+	  <FIELD name="actorSystemPriority" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Actor System Priority" />    
+
+	  <FIELD name="actorSystemId" type="MACADDR"
+	      defaultValue="00:00:00:00:00:01"
+	      uiShowName="Actor System Id" />    
+
+	  <FIELD name="actorKey" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Actor Operational Key" />    
+
+	  <FIELD name="actorPortPriority" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Actor Port Priority" />    
+
+	  <FIELD name="actorPort" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Actor Port" />    
+
+	  <FIELD name="actorState" type="INTEGER" bitLength="8"
+	      defaultValue="00"
+	      uiShowName="Actor State" />    
+
+	  <FIELD name="actorReserved" type="INTEGER" bitLength="24"
+	      defaultValue="000000"
+	      uiShowCommon="false"
+	      uiShowName="Reserved" />    
+
+	  <FIELD name="partnerInformation" type="TLVType"
+	      defaultValue="02"
+	      uiShowCommon="false"
+	      uiShowName="Partner Information" />    
+
+	  <FIELD name="partnerInformationLength" type="INTEGER" bitLength="8"
+	      defaultValue="20"
+	      uiShowCommon="false"
+	      uiShowName="Partner Information Length" />    
+
+	  <FIELD name="partnerSystemPriority" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Partner System Priority" />    
+
+	  <FIELD name="partnerSystemId" type="MACADDR"
+	      defaultValue="00:00:00:00:00:01"
+	      uiShowName="Partner System Id" />    
+
+	  <FIELD name="partnerKey" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Partner Operational Key" />    
+
+	  <FIELD name="partnerPortPriority" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Partner Port Priority" />    
+
+	  <FIELD name="partnerPort" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Partner Port" />    
+
+	  <FIELD name="partnerState" type="INTEGER" bitLength="8"
+	      defaultValue="00"
+	      uiShowName="Partner State" />    
+
+	  <FIELD name="partnerReserved" type="INTEGER" bitLength="24"
+	      defaultValue="000000"
+	      uiShowCommon="false"
+	      uiShowName="Reserved" />    
+
+	  <FIELD name="collectorInformation" type="TLVType"
+	      defaultValue="03"
+	      uiShowCommon="false"
+	      uiShowName="Collector Information" />    
+
+	  <FIELD name="collectorInformationLength" type="INTEGER" bitLength="8"
+	      defaultValue="16"
+	      uiShowCommon="false"
+	      uiShowName="Collector Information Length" />    
+
+	  <FIELD name="collectorMaxDelay" type="INTEGER" bitLength="16"
+	      defaultValue="32768"
+	      uiShowName="Collector Max Delay" />    
+
+	  <FIELD name="collectorReserved" type="OCTETSTRING" byteLength="12"
+	      defaultValue="000000000000000000000000"
+	      uiShowCommon="false"
+	      uiShowName="Reserved" />    
+
+	  <FIELD name="terminatorInformation" type="TLVType"
+	      defaultValue="0"
+	      uiShowCommon="false"
+	      uiShowName="Terminator Information" />    
+
+	  <FIELD name="terminatorInformationLength" type="INTEGER" bitLength="8"
+	      defaultValue="00"
+	      uiShowCommon="false"
+	      uiShowName="Terminator Information Length" />    
+
+	  <FIELD name="terminatorReserved" type="OCTETSTRING" byteLength="50"
+	      defaultValue="0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	      uiShowCommon="false"
+	      uiShowName="Reserved" />    
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Marker" type="SEQUENCE"
+        unitType="HEADER" uiShowName="Marker" >
+
+	<FIELD name="subtype" type="Subtype"
+	    defaultValue="02"
+	    uiShowName="Subtype" />
+
+	<FIELD name="version" type="INTEGER" bitLength="8"
+	    defaultValue="01"
+	    uiShowName="Marker Version" />
+
+	<FIELD name="markerInformation" type="MarkerTLVType"
+	      defaultValue="01"
+	      uiShowName="Marker Information" />    
+
+	<FIELD name="markerInformationLength" type="INTEGER" bitLength="8"
+	      defaultValue="16"
+	      uiShowCommon="false"
+	      uiShowName="Marker Information Length" />    
+
+	  <FIELD name="requesterPort" type="INTEGER" bitLength="16"
+	      defaultValue="0001"
+	      uiShowName="Requester Port" />    
+
+	  <FIELD name="requesterSystemId" type="MACADDR"
+	      defaultValue="00:00:00:00:00:01"
+	      uiShowName="Requester System Id" />    
+
+	  <FIELD name="requesterTransactionId" type="INTEGER" bitLength="32"
+	      defaultValue="00000001"
+	      uiShowName="Requester Transaction Id" />    
+
+	  <FIELD name="markerPad" type="INTEGER" bitLength="16"
+	      defaultValue="0000"
+	      uiShowCommon="false"
+	      uiShowName="Marker Pad" />    
+
+	  <FIELD name="terminatorInformation" type="MarkerTLVType"
+	      defaultValue="00"
+	      uiShowCommon="false"
+	      uiShowName="Terminator Information" />    
+
+	  <FIELD name="terminatorInformationLength" type="INTEGER" bitLength="8"
+	      defaultValue="0"
+	      uiShowCommon="false"
+	      uiShowName="Terminator Information Length" />    
+
+	  <FIELD name="terminatorReserved" type="OCTETSTRING" byteLength="90"
+	      defaultValue="000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	      uiShowCommon="false"
+	      uiShowName="Reserved" />    
+
+    </TYPE_DEF>
+  </TYPE_DEFS>
+</PDU_LIBRARY>

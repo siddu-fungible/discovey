@@ -1,0 +1,512 @@
+result_set:
+  bll:
+    group: port
+    plugin: l2l3
+  derived_facts:
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+      query: total_octet_rate*8
+    description: Total Tx Rate(bits per sec)
+    display_name: Total Tx Rate
+    name: total_bit_rate
+    referred_facts:
+    - total_octet_rate
+  - db:
+      base_unit: bits
+      data_type: integer
+      query: total_octet_count*8
+    description: Total Tx Count(bits)
+    display_name: Total Tx Count
+    name: total_bit_count
+    referred_facts:
+    - total_octet_count
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+      query: generator_octet_rate*8
+    description: Generator Rate(bits per sec)
+    display_name: Generator Rate
+    name: generator_bit_rate
+    referred_facts:
+    - generator_octet_rate
+  description: Stats for TX port
+  dimension_sets:
+  - iteration
+  - port
+  facts:
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Total Tx Count(frames)
+    display_name: Total Tx Count
+    il:
+      column_def: TotalFrameCount
+      data_type: U64
+    name: total_frame_count
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Total Tx Count(bytes)
+    display_name: Total Tx Count
+    il:
+      column_def: TotalByteCount
+      data_type: U64
+    name: total_octet_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Total Tx IPv4
+    display_name: Total Tx IPv4
+    il:
+      column_def: TotalIPv4FrameCount
+      data_type: U64
+    name: total_ipv4_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Total Tx IPv6
+    display_name: Total Tx IPv6
+    il:
+      column_def: TotalIPv6FrameCount
+      data_type: U64
+    name: total_ipv6_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Total Tx MPLS
+    display_name: Total Tx MPLS
+    il:
+      column_def: TotalMplsFrameCount
+      data_type: U64
+    name: total_mpls_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator Count(frames)
+    display_name: Generator Count
+    il:
+      column_def: FpgaFrameCount
+      data_type: U64
+    name: generator_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator Sig Count
+    display_name: Generator Sig Count
+    il:
+      column_def: FpgaFrameSigCount
+      data_type: U64
+    name: generator_sig_frame_count
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Generator Count(bytes)
+    display_name: Generator Count
+    il:
+      column_def: FpgaByteCount
+      data_type: U64
+    name: generator_octet_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator IPv4 Count
+    display_name: Generator IPv4 Count
+    il:
+      column_def: FpgaIPv4FrameCount
+      data_type: U64
+    name: generator_ipv4_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator IPv6 Count
+    display_name: Generator IPv6 Count
+    il:
+      column_def: FpgaIPv6FrameCount
+      data_type: U64
+    name: generator_ipv6_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator VLAN Count
+    display_name: Generator VLAN Count
+    il:
+      column_def: FpgaVlanFrameCount
+      data_type: U64
+    name: generator_vlan_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator MPLS Count
+    display_name: Generator MPLS Count
+    il:
+      column_def: FpgaMplsFrameCount
+      data_type: U64
+    name: generator_mpls_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator CRC Error Count
+    display_name: Generator CRC Error Count
+    il:
+      column_def: FpgaCrcErrFrameCount
+      data_type: U64
+    name: generator_crc_error_frame_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Generator L3 Checksum Error Count
+    display_name: Generator L3 Checksum Error Count
+    il:
+      column_def: FpgaL3HdrChkErrFrameCount
+      data_type: U64
+    name: generator_l3_checksum_error_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Generator L4 Checksum Error Count
+    display_name: Generator L4 Checksum Error Count
+    il:
+      column_def: FpgaL4HdrChkErrFrameCount
+      data_type: U64
+    name: generator_l4_checksum_error_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator Undersize Count
+    display_name: Generator Undersize Count
+    il:
+      column_def: FpgaUndersizeFrameCount
+      data_type: U64
+    name: generator_undersize_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator Oversize Count
+    display_name: Generator Oversize Count
+    il:
+      column_def: FpgaOversizeFrameCount
+      data_type: U64
+    name: generator_oversize_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator Jumbo Count
+    display_name: Generator Jumbo Count
+    il:
+      column_def: FpgaJumboFrameCount
+      data_type: U64
+    name: generator_jumbo_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Generator Abort Count
+    display_name: Generator Abort Count
+    il:
+      column_def: FpgaAbortFrameCount
+      data_type: U64
+    name: generator_abort_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx Hardware Count Previous Second
+    display_name: Tx Hardware Count Previous Second
+    il:
+      column_def: HwFrameRate
+      data_type: U64
+    name: hw_frame_count
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Total Tx Rate(frames per sec)
+    display_name: Total Tx Rate
+    il:
+      column_def: TotalFrameCountRate
+      data_type: U64
+    name: total_frame_rate
+  - db:
+      base_unit: bytes_per_sec
+      data_type: integer
+    description: Total Tx Rate(bytes per sec)
+    display_name: Total Tx Rate
+    il:
+      column_def: TotalByteCountRate
+      data_type: U64
+    name: total_octet_rate
+  - db:
+      base_unit: bits
+      data_type: integer
+    description: Tx L1 Count
+    display_name: Tx L1 Count
+    il:
+      column_def: L1BitCount
+      data_type: U64
+    name: l1_bit_count
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+    description: Tx L1 Rate
+    display_name: Tx L1 Rate
+    il:
+      column_def: L1BitRate
+      data_type: U64
+    name: l1_bit_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Total Tx IPv4 Rate
+    display_name: Total Tx IPv4 Rate
+    il:
+      column_def: TotalIPv4FrameCountRate
+      data_type: U64
+    name: total_ipv4_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Total Tx IPv6 Rate
+    display_name: Total Tx IPv6 Rate
+    il:
+      column_def: TotalIPv6FrameCountRate
+      data_type: U64
+    name: total_ipv6_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Total MPLS Rate
+    display_name: Total MPLS Rate
+    il:
+      column_def: TotalMplsFrameCountRate
+      data_type: U64
+    name: total_mpls_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator Rate(frames per sec)
+    display_name: Generator Rate
+    il:
+      column_def: FpgaFrameCountRate
+      data_type: U64
+    name: generator_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator Sig Rate
+    display_name: Generator Sig Rate
+    il:
+      column_def: FpgaFrameSigCountRate
+      data_type: U64
+    name: generator_sig_frame_rate
+  - db:
+      base_unit: bytes_per_sec
+      data_type: integer
+    description: Generator Rate(bytes per sec)
+    display_name: Generator Rate
+    il:
+      column_def: FpgaByteCountRate
+      data_type: U64
+    name: generator_octet_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator IPv4 Rate
+    display_name: Generator IPv4 Rate
+    il:
+      column_def: FpgaIPv4FrameCountRate
+      data_type: U64
+    name: generator_ipv4_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator IPv6 Rate
+    display_name: Generator IPv6 Rate
+    il:
+      column_def: FpgaIPv6FrameCountRate
+      data_type: U64
+    name: generator_ipv6_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator VLAN Rate
+    display_name: Generator VLAN Rate
+    il:
+      column_def: FpgaVlanFrameCountRate
+      data_type: U64
+    name: generator_vlan_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator MPLS Rate
+    display_name: Generator MPLS Rate
+    il:
+      column_def: FpgaMplsFrameCountRate
+      data_type: U64
+    name: generator_mpls_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator CRC Error Rate
+    display_name: Generator CRC Error Rate
+    il:
+      column_def: FpgaCrcErrFrameCountRate
+      data_type: U64
+    name: generator_crc_error_frame_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Generator L3 Header Checksum Error Rate
+    display_name: Generator L3 Header Checksum Error Rate
+    il:
+      column_def: FpgaL3HdrChkErrFrameCountRate
+      data_type: U64
+    name: generator_l3_checksum_error_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Generator L4 Header Checksum Error Rate
+    display_name: Generator L4 Header Checksum Error Rate
+    il:
+      column_def: FpgaL4HdrChkErrFrameCountRate
+      data_type: U64
+    name: generator_l4_checksum_error_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator Undersize Rate
+    display_name: Generator Undersize Rate
+    il:
+      column_def: FpgaUndersizeFrameCountRate
+      data_type: U64
+    name: generator_undersize_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator Oversize Rate
+    display_name: Generator Oversize Rate
+    il:
+      column_def: FpgaOversizeFrameCountRate
+      data_type: U64
+    name: generator_oversize_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator Jumbo Frame Rate
+    display_name: Generator Jumbo Frame Rate
+    il:
+      column_def: FpgaJumboFrameCountRate
+      data_type: U64
+    name: generator_jumbo_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Generator Abort Rate
+    display_name: Generator Abort Rate
+    il:
+      column_def: FpgaAbortFrameCountRate
+      data_type: U64
+    name: generator_abort_frame_rate
+  - db:
+      base_unit: cells
+      data_type: integer
+    description: Total Tx Count(cells)
+    display_name: Total Tx Count
+    il:
+      column_def: CellCount
+      data_type: U64
+    name: total_cell_count
+  - db:
+      base_unit: cells_per_sec
+      data_type: integer
+    description: Total Tx Rate(cells per sec)
+    display_name: Total Tx Rate
+    il:
+      column_def: CellRate
+      data_type: U64
+    name: total_cell_rate
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Count
+    display_name: Tx PFC Count
+    il:
+      column_def: PrioPauseFrameCount
+      data_type: U64
+    name: pfc_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority0 Count
+    display_name: Tx PFC Priority0 Count
+    il:
+      column_def: Prio0PauseFrameCount
+      data_type: U64
+    name: pfc_pri0_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority1 Count
+    display_name: Tx PFC Priority1 Count
+    il:
+      column_def: Prio1PauseFrameCount
+      data_type: U64
+    name: pfc_pri1_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority2 Count
+    display_name: Tx PFC Priority2 Count
+    il:
+      column_def: Prio2PauseFrameCount
+      data_type: U64
+    name: pfc_pri2_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority3 Count
+    display_name: Tx PFC Priority3 Count
+    il:
+      column_def: Prio3PauseFrameCount
+      data_type: U64
+    name: pfc_pri3_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority4 Count
+    display_name: Tx PFC Priority4 Count
+    il:
+      column_def: Prio4PauseFrameCount
+      data_type: U64
+    name: pfc_pri4_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority5 Count
+    display_name: Tx PFC Priority5 Count
+    il:
+      column_def: Prio5PauseFrameCount
+      data_type: U64
+    name: pfc_pri5_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority6 Count
+    display_name: Tx PFC Priority6 Count
+    il:
+      column_def: Prio6PauseFrameCount
+      data_type: U64
+    name: pfc_pri6_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx PFC Priority7 Count
+    display_name: Tx PFC Priority7 Count
+    il:
+      column_def: Prio7PauseFrameCount
+      data_type: U64
+    name: pfc_pri7_frame_count
+  il:
+    default_subscription_facts: []
+    message_set: Generator_3
+    table_name: PortStats
+  name: tx_port_basic_stats
+  primary_dimension_set: port
+  test: false

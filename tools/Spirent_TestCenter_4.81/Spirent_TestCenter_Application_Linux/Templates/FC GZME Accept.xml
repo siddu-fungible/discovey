@@ -1,0 +1,27 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGZMEAccept" 
+    showName="FC GZME Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GzmeAccept"
+    description="FC GZME Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GzmeAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+								<zoneType>
+										<EnhancedZoneMemberIdentifierTypes name="EnhancedZoneMemberIdentifierTypes_0">
+												<zoneMemberNPortName />
+										</EnhancedZoneMemberIdentifierTypes>
+								</zoneType>
+						</pdu>
+    </pdus>
+  </template>
+</frame>

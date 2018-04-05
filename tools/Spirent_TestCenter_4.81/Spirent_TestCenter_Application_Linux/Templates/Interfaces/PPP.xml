@@ -1,0 +1,19 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="PPP"
+    showName="PPP"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="ppp:PPP"
+    description="PPP" >
+
+    <pdus>
+      <pdu name="ppp1" pdu="ppp:PPP">
+		<protocolType uiControlState="CALCULATED"></protocolType>
+	  </pdu>
+    </pdus>
+  </template>
+</frame>

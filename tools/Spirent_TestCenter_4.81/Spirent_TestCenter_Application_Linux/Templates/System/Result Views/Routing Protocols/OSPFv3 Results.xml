@@ -1,0 +1,478 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5729" serializationBase="true" 
+ Identifier="Router Protocols\OSPFv3 Results"
+ PrimaryClass="Router"
+ Description="object://core/Router"
+ Path="Router Protocols"
+ CustomDisplayPath="Routing and MPLS"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="OSPFv3 Results">
+  <RealTimeResultColumnDefinition id="5730" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 504">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5731" 
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 505">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5732" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port Router"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 30">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5733" 
+   GroupName="OSPFv3"
+   GroupId="object://customgroup/ea86d541-8ab2-4ef7-a17a-273d7cdbe41d/Main"
+   ColumnClassName="Ospfv3RouterConfig Ospfv3RouterConfig Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults Ospfv3RouterResults"
+   ColumnPropertyName="RouterState AdjacencyStatus RxHello TxHello RxDd TxDd RxRouterLsa TxRouterLsa RxNetworkLsa TxNetworkLsa RxIntraAreaPrefixLsa TxIntraAreaPrefixLsa RxInterAreaPrefixLsa TxInterAreaPrefixLsa RxInterAreaRouterLsa TxInterAreaRouterLsa RxAsExternalLsa TxAsExternalLsa RxLinkLsa TxLinkLsa RxNssaLsa TxNssaLsa RxRouterInformationLsa TxRouterInformationLsa RxERouterLsa TxERouterLsa RxENetworkLsa TxENetworkLsa RxEIntraAreaPrefixLsa TxEIntraAreaPrefixLsa RxEInterAreaPrefixLsa TxEInterAreaPrefixLsa RxEInterAreaRouterLsa TxEInterAreaRouterLsa RxEAsExternalLsa TxEAsExternalLsa RxELinkLsa TxELinkLsa RxENssaLsa TxENssaLsa RxAck TxAck RxRequest TxRequest RxUpdate TxUpdate"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, AllDevice.Name AS &apos;Device Name&apos;, Ospfv3RouterConfig.RouterState AS &apos;Router State&apos;, Ospfv3RouterConfig.AdjacencyStatus AS &apos;Adjacency Status&apos;, Ospfv3RouterResults.RxHello AS &apos;Rx Hello&apos;, Ospfv3RouterResults.TxHello AS &apos;Tx Hello&apos;, Ospfv3RouterResults.RxDd AS &apos;Rx DD&apos;, Ospfv3RouterResults.TxDd AS &apos;Tx DD&apos;, Ospfv3RouterResults.RxRouterLsa AS &apos;Rx Router LSA&apos;, Ospfv3RouterResults.TxRouterLsa AS &apos;Tx Router LSA&apos;, Ospfv3RouterResults.RxNetworkLsa AS &apos;Rx Network LSA&apos;, Ospfv3RouterResults.TxNetworkLsa AS &apos;Tx Network LSA&apos;, Ospfv3RouterResults.RxIntraAreaPrefixLsa AS &apos;Rx Intra-Area Prefix LSA&apos;, Ospfv3RouterResults.TxIntraAreaPrefixLsa AS &apos;Tx Intra-Area Prefix LSA&apos;, Ospfv3RouterResults.RxInterAreaPrefixLsa AS &apos;Rx Inter-Area Prefix LSA&apos;, Ospfv3RouterResults.TxInterAreaPrefixLsa AS &apos;Tx Inter-Area Prefix LSA&apos;, Ospfv3RouterResults.RxInterAreaRouterLsa AS &apos;Rx Inter-Area Router LSA&apos;, Ospfv3RouterResults.TxInterAreaRouterLsa AS &apos;Tx Inter-Area Router LSA&apos;, Ospfv3RouterResults.RxAsExternalLsa AS &apos;Rx AS External LSA&apos;, Ospfv3RouterResults.TxAsExternalLsa AS &apos;Tx AS External LSA&apos;, Ospfv3RouterResults.RxLinkLsa AS &apos;Rx Link LSA&apos;, Ospfv3RouterResults.TxLinkLsa AS &apos;Tx Link LSA&apos;, Ospfv3RouterResults.RxNssaLsa AS &apos;Rx NSSA LSA&apos;, Ospfv3RouterResults.TxNssaLsa AS &apos;Tx NSSA LSA&apos;, Ospfv3RouterResults.RxRouterInformationLsa AS &apos;Rx Router Info LSA&apos;, Ospfv3RouterResults.TxRouterInformationLsa AS &apos;Tx Router Info LSA&apos;, Ospfv3RouterResults.RxERouterLsa AS &apos;Rx E Router LSA&apos;, Ospfv3RouterResults.TxERouterLsa AS &apos;Tx E Router LSA&apos;, Ospfv3RouterResults.RxENetworkLsa AS &apos;Rx E Network LSA&apos;, Ospfv3RouterResults.TxENetworkLsa AS &apos;Tx E Network LSA&apos;, Ospfv3RouterResults.RxEIntraAreaPrefixLsa AS &apos;Rx E Intra-Area Prefix LSA&apos;, Ospfv3RouterResults.TxEIntraAreaPrefixLsa AS &apos;Tx E Intra-Area Prefix LSA&apos;, Ospfv3RouterResults.RxEInterAreaPrefixLsa AS &apos;Rx E Inter-Area Prefix LSA&apos;, Ospfv3RouterResults.TxEInterAreaPrefixLsa AS &apos;Tx E Inter-Area Prefix LSA&apos;, Ospfv3RouterResults.RxEInterAreaRouterLsa AS &apos;Rx Inter-Area E Router LSA&apos;, Ospfv3RouterResults.TxEInterAreaRouterLsa AS &apos;Tx E Inter-Area Router LSA&apos;, Ospfv3RouterResults.RxEAsExternalLsa AS &apos;Rx E AS External LSA&apos;, Ospfv3RouterResults.TxEAsExternalLsa AS &apos;Tx E AS External LSA&apos;, Ospfv3RouterResults.RxELinkLsa AS &apos;Rx E Link LSA&apos;, Ospfv3RouterResults.TxELinkLsa AS &apos;Tx E Link LSA&apos;, Ospfv3RouterResults.RxENssaLsa AS &apos;Rx E NSSA LSA&apos;, Ospfv3RouterResults.TxENssaLsa AS &apos;Tx E NSSA LSA&apos;, Ospfv3RouterResults.RxAck AS &apos;Rx Ack&apos;, Ospfv3RouterResults.TxAck AS &apos;Tx Ack&apos;, Ospfv3RouterResults.RxRequest AS &apos;Rx Request&apos;, Ospfv3RouterResults.TxRequest AS &apos;Tx Request&apos;, Ospfv3RouterResults.RxUpdate AS &apos;Rx Update&apos;, Ospfv3RouterResults.TxUpdate AS &apos;Tx Update&apos; FROM AllDevice, Port, Ospfv3RouterConfig, Ospfv3RouterResults, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = AllDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND Ospfv3RouterConfig.ParentHnd = AllDevice.Handle AND Ospfv3RouterResults.ParentHnd = Ospfv3RouterConfig.Handle AND AllDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND Ospfv3RouterConfig.DataSetId = @DataSetId AND Ospfv3RouterResults.DataSetId = @DataSetId AND  RelationTable.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 31">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5734" 
+   ConfigClassId="ospfv3routerconfig"
+   ResultClassId="ospfv3routerresults"
+   ResultRootList="17"
+   PropertyIdArray="ospfv3routerresults.rxhello ospfv3routerresults.txhello ospfv3routerresults.rxdd ospfv3routerresults.txdd ospfv3routerresults.rxrouterlsa ospfv3routerresults.txrouterlsa ospfv3routerresults.rxnetworklsa ospfv3routerresults.txnetworklsa ospfv3routerresults.rxintraareaprefixlsa ospfv3routerresults.txintraareaprefixlsa ospfv3routerresults.rxinterareaprefixlsa ospfv3routerresults.txinterareaprefixlsa ospfv3routerresults.rxinterarearouterlsa ospfv3routerresults.txinterarearouterlsa ospfv3routerresults.rxasexternallsa ospfv3routerresults.txasexternallsa ospfv3routerresults.rxlinklsa ospfv3routerresults.txlinklsa ospfv3routerresults.rxnssalsa ospfv3routerresults.txnssalsa ospfv3routerresults.rxerouterlsa ospfv3routerresults.txerouterlsa ospfv3routerresults.rxenetworklsa ospfv3routerresults.txnetworklsa ospfv3routerresults.rxeintraareaprefixlsa ospfv3routerresults.txeintraareaprefixlsa ospfv3routerresults.rxeinterareaprefixlsa ospfv3routerresults.txeinterareaprefixlsa ospfv3routerresults.rxeinterarearouterlsa ospfv3routerresults.txeinterarearouterlsa ospfv3routerresults.rxeasexternallsa ospfv3routerresults.txeasexternallsa ospfv3routerresults.rxelinklsa ospfv3routerresults.txelinklsa ospfv3routerresults.rxenssalsa ospfv3routerresults.txenssalsa ospfv3routerresults.rxack ospfv3routerresults.txack ospfv3routerresults.rxrequest ospfv3routerresults.txrequest ospfv3routerresults.rxupdate ospfv3routerresults.txupdate"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 22">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5735" 
+   ColumnClassName="Ospfv3RouterConfig"
+   ColumnPropertyName="RouterState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 506">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5736" 
+   ColumnClassName="Ospfv3RouterConfig"
+   ColumnPropertyName="AdjacencyStatus"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 507">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5737" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxHello"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 508">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5738" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxHello"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 509">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5739" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxDd"
+   ColumnDescription=""
+   ColumnWidth="47"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 510">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5740" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxDd"
+   ColumnDescription=""
+   ColumnWidth="43"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 511">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5741" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxRouterLsa"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 512">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5742" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxRouterLsa"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 513">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5743" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxNetworkLsa"
+   ColumnDescription=""
+   ColumnWidth="69"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 514">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5744" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxNetworkLsa"
+   ColumnDescription=""
+   ColumnWidth="67"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 515">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5745" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxIntraAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="84"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 516">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5746" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxIntraAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="79"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 517">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5747" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxInterAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="78"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 518">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5748" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxInterAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="78"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 519">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5749" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxInterAreaRouterLsa"
+   ColumnDescription=""
+   ColumnWidth="82"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 520">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5750" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxInterAreaRouterLsa"
+   ColumnDescription=""
+   ColumnWidth="82"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 521">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5751" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxAsExternalLsa"
+   ColumnDescription=""
+   ColumnWidth="76"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 522">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5752" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxAsExternalLsa"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 523">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5753" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxLinkLsa"
+   ColumnDescription=""
+   ColumnWidth="51"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 524">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5754" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxLinkLsa"
+   ColumnDescription=""
+   ColumnWidth="50"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 525">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5755" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxNssaLsa"
+   ColumnDescription=""
+   ColumnWidth="60"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 526">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5756" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxNssaLsa"
+   ColumnDescription=""
+   ColumnWidth="57"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 527">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5778" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxRouterInformationLsa"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 550">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5779" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxRouterInformationLsa"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 551">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5762" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxERouterLsa"
+   ColumnDescription=""
+   ColumnWidth="67"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 534">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5763" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxERouterLsa"
+   ColumnDescription=""
+   ColumnWidth="67"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 535">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5764" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxENetworkLsa"
+   ColumnDescription=""
+   ColumnWidth="73"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 536">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5765" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxENetworkLsa"
+   ColumnDescription=""
+   ColumnWidth="73"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 537">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5766" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxEIntraAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 538">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5767" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxEIntraAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 539">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5768" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxEInterAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 540">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5769" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxEInterAreaPrefixLsa"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 541">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5770" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxEInterAreaRouterLsa"
+   ColumnDescription=""
+   ColumnWidth="89"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 542">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5771" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxEInterAreaRouterLsa"
+   ColumnDescription=""
+   ColumnWidth="89"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 543">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5772" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxEAsExternalLsa"
+   ColumnDescription=""
+   ColumnWidth="78"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 544">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5773" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxEAsExternalLsa"
+   ColumnDescription=""
+   ColumnWidth="78"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 545">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5774" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxELinkLsa"
+   ColumnDescription=""
+   ColumnWidth="53"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 546">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5775" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxELinkLsa"
+   ColumnDescription=""
+   ColumnWidth="53"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 547">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5776" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxENssaLsa"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 548">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5777" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxENssaLsa"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 549">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5757" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxAck"
+   ColumnDescription=""
+   ColumnWidth="48"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 528">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5758" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxAck"
+   ColumnDescription=""
+   ColumnWidth="45"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 529">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5759" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxRequest"
+   ColumnDescription=""
+   ColumnWidth="69"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 530">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5760" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxRequest"
+   ColumnDescription=""
+   ColumnWidth="66"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 531">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5761" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="RxUpdate"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 532">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5780" 
+   ColumnClassName="Ospfv3RouterResults"
+   ColumnPropertyName="TxUpdate"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 533">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

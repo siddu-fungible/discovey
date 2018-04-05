@@ -1,0 +1,1439 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/3.80/Access/ANCP"  xml:lang="en">
+<label>ANCP</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    <actionDecl name="AncpAbort">
+    <label>Abort Emulation</label>
+    <tooltip>Abort ANCP</tooltip>
+    <description>Abort ANCP</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpInitiateAdjacency">
+    <label>Initiate Adjacency</label>
+    <tooltip>ANCP Initiate Adjacency</tooltip>
+    <description>ANCP Initiate Adjacency</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpInitiateAdjacencyWait">
+    <label>Wait for Adjacency to Establish</label>
+    <tooltip>Wait for Adjacency to Establish</tooltip>
+    <description>Wait for Adjacency to Establish</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+        </parameter>
+        <parameter  name="AdjacencyBlockState">
+            <label>AdjacencyBlockState</label>
+            <tooltip>Adjacency Block State</tooltip>
+            <description>Adjacency Block State</description>
+            <datatype>string</datatype>
+            <default>ESTABLISHED</default>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="IDLE">IDLE</allowedValue>
+            <allowedValue label="ESTABLISHING">ESTABLISHING</allowedValue>
+            <allowedValue label="TERMINATING">TERMINATING</allowedValue>
+            <allowedValue label="ESTABLISHED">ESTABLISHED</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpTerminateAdjacency">
+    <label>Terminate Adjacency</label>
+    <tooltip>ANCP Terminate Adjacency</tooltip>
+    <description>ANCP Terminate Adjacency</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpTerminateAdjacencyWait">
+    <label>Wait for Adjacency to Terminate</label>
+    <tooltip>Wait for Adjacency to Terminate</tooltip>
+    <description>Wait for Adjacency to Terminate</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+        </parameter>
+        <parameter  name="AdjacencyBlockState">
+            <label>AdjacencyBlockState</label>
+            <tooltip>Adjacency Block State</tooltip>
+            <description>Adjacency Block State</description>
+            <datatype>string</datatype>
+            <default>IDLE</default>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="IDLE">IDLE</allowedValue>
+            <allowedValue label="ESTABLISHING">ESTABLISHING</allowedValue>
+            <allowedValue label="TERMINATING">TERMINATING</allowedValue>
+            <allowedValue label="ESTABLISHED">ESTABLISHED</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpPortUp">
+    <label>Port Up</label>
+    <tooltip>ANCP Port Up</tooltip>
+    <description>ANCP Port Up</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpPortUpWait">
+    <label>Wait for All PortUps to be sent</label>
+    <tooltip>Wait for All PortUps to be sent</tooltip>
+    <description>Wait for All PortUps to be sent</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+        </parameter>
+        <parameter  name="SubscriberBlockState">
+            <label>SubscriberBlockState</label>
+            <tooltip>Subscriber Block State</tooltip>
+            <description>Subscriber Block State</description>
+            <datatype>string</datatype>
+            <default>ESTABLISHED</default>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="IDLE">IDLE</allowedValue>
+            <allowedValue label="ESTABLISHING">ESTABLISHING</allowedValue>
+            <allowedValue label="TERMINATING">TERMINATING</allowedValue>
+            <allowedValue label="ESTABLISHED">ESTABLISHED</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpPortDown">
+    <label>Port Down</label>
+    <tooltip>ANCP Port Down</tooltip>
+    <description>ANCP Port Down</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpPortDownWait">
+    <label>Wait for All PortDowns to be sent</label>
+    <tooltip>Wait for All PortDowns to be sent</tooltip>
+    <description>Wait for All PortDowns to be sent</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+        </parameter>
+        <parameter  name="SubscriberBlockState">
+            <label>SubscriberBlockState</label>
+            <tooltip>Subscriber Block State</tooltip>
+            <description>Subscriber Block State</description>
+            <datatype>string</datatype>
+            <default>IDLE</default>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="IDLE">IDLE</allowedValue>
+            <allowedValue label="ESTABLISHING">ESTABLISHING</allowedValue>
+            <allowedValue label="TERMINATING">TERMINATING</allowedValue>
+            <allowedValue label="ESTABLISHED">ESTABLISHED</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpClearStats">
+    <label>Clear Stats</label>
+    <tooltip>ANCP Clear Stats</tooltip>
+    <description>ANCP Clear Stats</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpStartKeepAlive">
+    <label>Start KeepAlive</label>
+    <tooltip>ANCP Start KeepAlive</tooltip>
+    <description>ANCP Start KeepAlive</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpStopKeepAlive">
+    <label>Stop KeepAlive</label>
+    <tooltip>ANCP Stop KeepAlive</tooltip>
+    <description>ANCP Stop KeepAlive</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>ABORT</default>
+            <allowedValue label="ABORT">ABORT</allowedValue>
+            <allowedValue label="INITIATEADJACENCY">INITIATEADJACENCY</allowedValue>
+            <allowedValue label="TERMINATEADJACENCY">TERMINATEADJACENCY</allowedValue>
+            <allowedValue label="PORTUP">PORTUP</allowedValue>
+            <allowedValue label="PORTDOWN">PORTDOWN</allowedValue>
+            <allowedValue label="STARTKEEPALIVE">STARTKEEPALIVE</allowedValue>
+            <allowedValue label="STOPKEEPALIVE">STOPKEEPALIVE</allowedValue>
+            <allowedValue label="CLEARSTATS">CLEARSTATS</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>Stc Block List</tooltip>
+            <description>Stc Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpMapSubscriber">
+    <label>Map Subscribers</label>
+    <tooltip>ANCP Map Subscribers</tooltip>
+    <description>ANCP Map Subscribers</description>
+        <parameter  name="AccessLoopBlockList">
+            <label>AccessLoopBlockList</label>
+            <tooltip>Access Loop Block List</tooltip>
+            <description>Access Loop Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="SubscriberStartEndList">
+            <label>SubscriberStartEndList</label>
+            <tooltip>Subscriber Range [Start-End]</tooltip>
+            <description>Subscriber Range [Start-End]</description>
+            <mandatory>false</mandatory>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="DslProfileList">
+            <label>DslProfileList</label>
+            <tooltip>Subscriber Profile</tooltip>
+            <description>Subscriber Profile</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="AncpUnMapSubscriber">
+    <label>UnMap Subscribers</label>
+    <tooltip>Ancp UnMap Subscribers</tooltip>
+    <description>Ancp UnMap Subscribers</description>
+        <parameter  name="AccessLoopBlockList">
+            <label>AccessLoopBlockList</label>
+            <tooltip>Access Loop Block List</tooltip>
+            <description>Access Loop Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="SubscriberStartEndList">
+            <label>SubscriberStartEndList</label>
+            <tooltip>Subscriber Range [Start-End]</tooltip>
+            <description>Subscriber Range [Start-End]</description>
+            <mandatory>false</mandatory>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="DslProfileList">
+            <label>DslProfileList</label>
+            <tooltip>Subscriber Profile</tooltip>
+            <description>Subscriber Profile</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+</query-harness>

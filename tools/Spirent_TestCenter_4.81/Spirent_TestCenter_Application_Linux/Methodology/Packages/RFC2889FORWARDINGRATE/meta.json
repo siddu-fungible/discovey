@@ -1,0 +1,378 @@
+{
+  "methodology_key": "RFC2889FORWARDINGRATE",
+  "display_name": "RFC 2889 Forwarding Rate",
+  "short_display_name": "RFC2889FORWARDINGRATE",
+  "description": "This methodology provides standardized benchmarking of throughput, frame loss, and forwarding rates for local area network (LAN) switches.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "EAST",
+        "port_group": "EastPortGroup"
+      },
+      {
+        "side": "WEST",
+        "port_group": "WestPortGroup"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "EastPortGroup",
+      "display_name": "East Port Group",
+      "description": "Group of ports on east side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "WestPortGroup",
+      "display_name": "West Port Group",
+      "description": "Group of ports on west side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "topology_side": "EAST",
+      "display_name": "East-side Configuration",
+      "description": "Configuration for the ports on the east side of the   topology",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "East MAC Start Address",
+          "display_name": "East MAC Address",
+          "property": "EastMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:05",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "East MAC Start Address Step",
+          "display_name": "East MAC Address Step",
+          "property": "EastMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01",
+          "endpoint_profile_property_name": "MacAddrStep"
+        },
+        {
+          "description": "East VLAN ID",
+          "display_name": "East VLAN ID",
+          "property": "EastVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "East VLAN ID Step",
+          "display_name": "East VLAN ID Step",
+          "property": "EastVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdStep"
+        },
+        {
+          "description": "East Inner VLAN ID",
+          "display_name": "East Inner VLAN ID",
+          "property": "EastInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "East Inner VLAN ID Step",
+          "display_name": "East Inner VLAN ID Step",
+          "property": "EastInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdStep"
+        },
+        {
+          "description": "East VLAN Type",
+          "display_name": "East VLAN Type",
+          "property": "EastVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "topology_side": "WEST",
+      "display_name": "West-side Configuration",
+      "description": "Configuration for the ports on the west side of the   topology",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "West Endpoint's MAC Start Address",
+          "display_name": "West MAC Address",
+          "property": "WestMACAdd",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:02",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "West MAC Address Step",
+          "display_name": "West MAC Address Step",
+          "property": "WestMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01",
+          "endpoint_profile_property_name": "MacAddrStep"
+        },
+        {
+          "description": "If VLAN is On,  West Endpoint's VLAN ID",
+          "display_name": "West VLAN ID",
+          "property": "WestVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "if VLAN is On, West Vlan ID Step",
+          "display_name": "West VLAN ID Step",
+          "property": "WestVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdStep"
+        },
+        {
+          "description": "West Inner VLAN ID",
+          "display_name": "West Inner VLAN ID",
+          "property": "WestInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "West Inner VLAN ID Step",
+          "display_name": "West Inner VLAN ID Step",
+          "property": "WestInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdStep"
+        },
+        {
+          "description": "West VLAN Type",
+          "display_name": "West VLAN Type",
+          "property": "WestVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "display_name": "Traffic Parameters",
+      "description": "",
+      "group_type": "TRAFFIC",
+      "test_properties": [
+        {
+          "description": "Traffic Pattern",
+          "display_name": "Traffic Pattern",
+          "property": "TrafficPattern",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "PAIR",
+          "acceptable_values": [
+            "PAIR",
+            "BACKBONE",
+            "MESH"
+          ]
+        },
+        {
+          "description": "Traffic Direction",
+          "display_name": "Traffic Direction",
+          "property": "TrafficDirection",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "Bidirectional",
+          "acceptable_values": [
+            "Bidirectional",
+            "West To East",
+            "East To West"
+          ]
+        },
+        {
+          "description": "Traffic Duration",
+          "display_name": "Traffic Duration",
+          "property": "TrafficDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "30.00",
+          "minimum": "10.00",
+          "maximum": "100.00",
+          "units": "seconds"
+        },
+        {
+          "description": "Wait after traffic stopped: Default is 5 seconds.",
+          "display_name": "Wait After Traffic Stop",
+          "property": "WaitAfterTrafficStop",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.00",
+          "minimum": "0.005",
+          "maximum": "2147483647.0",
+          "units": "seconds"
+        },
+        {
+          "description": "TrafficRate Upper Limit",
+          "display_name": "Traffic Rate Upper Limit",
+          "property": "TrafficUpperLimit",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "1.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Traffic Rate Lower Limit",
+          "display_name": "Traffic Rate Lower Limit",
+          "property": "TrafficLowerLimit",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.00",
+          "minimum": "1.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Traffic Rate Resolution",
+          "display_name": "Traffic Rate Resolution",
+          "property": "TrafficResolution",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.00",
+          "minimum": "1.00",
+          "maximum": "100.00",
+          "units": "%"
+        }
+      ]
+    },
+    {
+      "display_name": "Trial and Frame Size",
+      "description": "",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "description": "Number Of Trial",
+          "display_name": "Number Of Trial",
+          "property": "TrialNumber",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.00",
+          "minimum": "1.0",
+          "maximum": "10.00"
+        },
+        {
+          "description": "Frame Size Value List",
+          "display_name": "Frame Size Value List",
+          "property": "FrameSizeValueList",
+          "property_value_type": "STRING",
+          "is_collection": true,
+          "property_value": [
+            "64",
+            "128",
+            "256",
+            "512",
+            "1024",
+            "1280",
+            "1518"
+          ],
+          "units": "bytes"
+        }
+      ]
+    },
+    {
+      "display_name": "L2 Learning Configuration",
+      "description": "L2 Learning Configuration",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "description": "L2 Learning Mode",
+          "display_name": "L2 Learning Mode",
+          "property": "L2LearningMode",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        }
+      ]
+    },
+    {
+      "display_name": "Test Criteria",
+      "description": "Test Criteria",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "description": "Bandwidth Test Criteria",
+          "display_name": "Bandwidth Test Criteria",
+          "property": "BandwidthUpper",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "10.0",
+          "maximum": "100.0",
+          "units": "%"
+        }
+      ]
+    }
+  ]
+}

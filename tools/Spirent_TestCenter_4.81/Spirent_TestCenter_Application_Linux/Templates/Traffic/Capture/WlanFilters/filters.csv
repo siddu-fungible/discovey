@@ -1,0 +1,4 @@
+wlan addr1,Used in all frames as RA (Receiver Address)
+wlan addr2,Used in all frames as TA (Transmitter Address).
+wlan addr3,Used in management frames as BSSID, or data frames as BSSID or SA or DA.
+wlan addr4,Used in data frames only as BSSID or SA (Source Address).

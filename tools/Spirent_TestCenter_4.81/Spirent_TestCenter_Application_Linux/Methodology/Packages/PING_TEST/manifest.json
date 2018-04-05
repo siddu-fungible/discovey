@@ -1,0 +1,3436 @@
+{
+    "ConfigInfo": {
+        "Name": "StmExposedConfig 2",
+        "MethodologyKey": "PING_TEST",
+        "MethodologyDisplayName": "Ping Test",
+        "MethodologyDescription": "Sends ping requests from West to East ports and reports successful replies.",
+        "MethodologyInfo": {
+            "version": "1.0.0",
+            "dependencies": {},
+            "short_display_name": "PING_TEST"
+        }
+    },
+    "Sequencer": {
+        "CommandList": [
+            {
+                "Name": "Sequence: Init Group Command",
+                "Class": "spirent.methodology.initgroupcommand",
+                "Enabled": true,
+                "Properties": [
+                    {
+                        "Name": "Name",
+                        "Type": "string",
+                        "Value": "Sequence: Init Group Command"
+                    },
+                    {
+                        "Name": "DisplayName",
+                        "Type": "string",
+                        "Value": "Ping Iteration Settings"
+                    },
+                    {
+                        "Name": "Description",
+                        "Type": "string",
+                        "Value": "Properties to configure Ping Port settings"
+                    }
+                ],
+                "Children": [
+                    {
+                        "Name": "Delete Templates and Generated Objects Command",
+                        "Class": "spirent.methodology.deletetemplatesandgeneratedobjectscommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Delete Templates and Generated Objects Command"
+                            },
+                            {
+                                "Name": "DeleteStmTemplateConfigs",
+                                "Type": "bool",
+                                "Value": true
+                            },
+                            {
+                                "Name": "TagList",
+                                "Type": "string",
+                                "Value": [],
+                                "IsCollection": true
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Results: Start Of Test Command",
+                        "Class": "spirent.methodology.startoftestcommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Results: Start Of Test Command"
+                            },
+                            {
+                                "Name": "CreateDefaultNfviRealTimeResults",
+                                "Type": "bool",
+                                "Value": true
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Create Database (pingTest.db)",
+                        "Class": "saveresultscommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Create Database (pingTest.db)"
+                            },
+                            {
+                                "Name": "ResultFileName",
+                                "Type": "outputFilePath",
+                                "Value": "pingTest.db"
+                            },
+                            {
+                                "Name": "SaveDetailedResults",
+                                "Type": "bool",
+                                "Value": true
+                            },
+                            {
+                                "Name": "ClearChartResultAfterSave",
+                                "Type": "bool",
+                                "Value": true
+                            },
+                            {
+                                "Name": "CollectResult",
+                                "Type": "bool",
+                                "Value": true
+                            },
+                            {
+                                "Name": "LoopMode",
+                                "Type": "u8",
+                                "Value": "APPEND"
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Initialize Real Time Results Command (chart)",
+                        "Class": "spirent.methodology.initrealtimeresultscommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Initialize Real Time Results Command (chart)"
+                            },
+                            {
+                                "Name": "InputJson",
+                                "Type": "string",
+                                "Value": [
+                                    {
+                                        "enable": true,
+                                        "result_id": "TotalFrameCount",
+                                        "type": "chart",
+                                        "source_type": "RESULTS_SUBSCRIBE",
+                                        "subscribe": [
+                                            {
+                                                "config_type": "generator",
+                                                "result_type": "generatorportresults",
+                                                "view_attribute_list": [
+                                                    "totalframecount"
+                                                ],
+                                                "result_parent_tags": [
+                                                    "WestPorts",
+                                                    "EastPorts"
+                                                ]
+                                            },
+                                            {
+                                                "config_type": "analyzer",
+                                                "result_type": "analyzerportresults",
+                                                "view_attribute_list": [
+                                                    "totalframecount"
+                                                ],
+                                                "result_parent_tags": [
+                                                    "EastPorts",
+                                                    "WestPorts"
+                                                ]
+                                            }
+                                        ],
+                                        "definition": {
+                                            "chart": {
+                                                "type": "line"
+                                            },
+                                            "title": {
+                                                "text": "System Level Tx/Rx Frame Count"
+                                            },
+                                            "subtitle": {
+                                                "text": "Tx/Rx frame count over time."
+                                            },
+                                            "xAxis": {
+                                                "title": {
+                                                    "text": "Time (s)"
+                                                },
+                                                "gridLineWidth": 1,
+                                                "minPadding": 0.2,
+                                                "maxPadding": 0.2
+                                            },
+                                            "yAxis": {
+                                                "title": {
+                                                    "text": "Frame Count"
+                                                },
+                                                "minPadding": 0.2,
+                                                "maxPadding": 0.2
+                                            },
+                                            "legend": {
+                                                "enabled": true
+                                            },
+                                            "plotOptions": {
+                                                "series": {
+                                                    "lineWidth": 1
+                                                }
+                                            },
+                                            "tooltip": {
+                                                "headerFormat": "<span style=\"font-size: 10px\">{point.key}s</span><br/>"
+                                            },
+                                            "series": []
+                                        }
+                                    }
+                                ],
+                                "IsJson": true
+                            },
+                            {
+                                "Name": "InputJsonFileName",
+                                "Type": "string",
+                                "Value": ""
+                            },
+                            {
+                                "Name": "EnableLoadFromFileName",
+                                "Type": "bool",
+                                "Value": false
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Initialize Real Time Results Command (table)",
+                        "Class": "spirent.methodology.initrealtimeresultscommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Initialize Real Time Results Command (table)"
+                            },
+                            {
+                                "Name": "InputJson",
+                                "Type": "string",
+                                "Value": [
+                                    {
+                                        "enable": true,
+                                        "result_id": "PingReportTable",
+                                        "type": "table",
+                                        "source_type": "SUMMARY_DB",
+                                        "definition": {
+                                            "title": "Ping Results",
+                                            "headers": [
+                                                "Iteration",
+                                                "Port Group Tag Name",
+                                                "Frame Count",
+                                                "Attempted Ping Count",
+                                                "Successful Ping Count",
+                                                "Failed Ping Count"
+                                            ],
+                                            "rows": []
+                                        },
+                                        "query": {
+                                            "timestamp_column_name": "IterationNum",
+                                            "data_column_names": [
+                                                "IterationNum",
+                                                "PortGroupTagName",
+                                                "FrameCount",
+                                                "AttemptedPingCount",
+                                                "SuccessfulPingCount",
+                                                "FailedPingCount"
+                                            ],
+                                            "table": "TestPingReportSummaryRes"
+                                        }
+                                    }
+                                ],
+                                "IsJson": true
+                            },
+                            {
+                                "Name": "InputJsonFileName",
+                                "Type": "string",
+                                "Value": ""
+                            },
+                            {
+                                "Name": "EnableLoadFromFileName",
+                                "Type": "bool",
+                                "Value": false
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Add To DB Table (TestPingConfig)",
+                        "Class": "spirent.methodology.addtodbtablecommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Add To DB Table (TestPingConfig)"
+                            },
+                            {
+                                "Name": "DbJsonString",
+                                "Type": "string",
+                                "Value": {
+                                    "sql_operations": [
+                                        {
+                                            "sql_statement": [
+                                                {
+                                                    "static": "CREATE TABLE TestPingConfig (ID INTEGER PRIMARY KEY, SourceIpv4Address TEXT, DestIpv4Address TEXT, TimeInterval INT, FrameCount INT, WaitForPingToFinish BOOLEAN)"
+                                                }
+                                            ],
+                                            "db_information": {
+                                                "db_name": "SUMMARY"
+                                            }
+                                        },
+                                        {
+                                            "table": [
+                                                [
+                                                    "192.0.0.1",
+                                                    "192.0.0.3",
+                                                    "1",
+                                                    "1",
+                                                    "true"
+                                                ]
+                                            ],
+                                            "db_information": {
+                                                "db_name": "SUMMARY",
+                                                "table_name": "TestPingConfig",
+                                                "columns": [
+                                                    "SourceIpv4Address",
+                                                    "DestIpv4Address",
+                                                    "TimeInterval",
+                                                    "FrameCount",
+                                                    "WaitForPingToFinish"
+                                                ]
+                                            },
+                                            "sql_statement": []
+                                        }
+                                    ]
+                                },
+                                "IsJson": true
+                            },
+                            {
+                                "Name": "DbJsonFileName",
+                                "Type": "inputFilePath",
+                                "Value": ""
+                            },
+                            {
+                                "Name": "EnableLoadFromFileName",
+                                "Type": "bool",
+                                "Value": false
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ],
+                        "ExpProperties": [
+                            {
+                                "Name": "StmExposedProperty 431",
+                                "EpDescription": "Ping Source Address",
+                                "EpDisplayName": "Ping Source Address",
+                                "EpTargetClassId": "spirent.methodology.addtodbtablecommand",
+                                "EpTargetPropertyId": "spirent.methodology.addtodbtablecommand.dbjsonstring",
+                                "EpMetaPropertyName": "PingSrcAddrColumn",
+                                "EpPropertyJsonId": "sql_operations[1].table[0][0]",
+                                "EpPropertyType": "IPV4",
+                                "EpUnits": "",
+                                "EpIsCollection": false,
+                                "EpMinValue": "",
+                                "EpMaxValue": "",
+                                "EpEnumValueList": [],
+                                "EpPropertyValue": "192.0.0.1",
+                                "EpPropertyValueList": [],
+                                "EpFileExtensionList": []
+                            },
+                            {
+                                "Name": "StmExposedProperty 430",
+                                "EpDescription": "Ping Configuration Table",
+                                "EpDisplayName": "Ping Configuration",
+                                "EpTargetClassId": "spirent.methodology.addtodbtablecommand",
+                                "EpTargetPropertyId": "spirent.methodology.addtodbtablecommand.dbjsonstring",
+                                "EpMetaPropertyName": "PingConfigTable",
+                                "EpPropertyJsonId": "sql_operations[1].table[0]",
+                                "EpPropertyType": "JSON",
+                                "EpUnits": "",
+                                "EpIsCollection": false,
+                                "EpMinValue": "",
+                                "EpMaxValue": "",
+                                "EpEnumValueList": [],
+                                "EpPropertyValue": "[\"192.0.0.1\", \"192.0.0.3\", \"1\", \"1\", \"false\"]",
+                                "EpPropertyValueList": [],
+                                "EpFileExtensionList": []
+                            },
+                            {
+                                "Name": "StmExposedProperty 433",
+                                "EpDescription": "Interval (seconds) between Ping frames.",
+                                "EpDisplayName": "Ping Interval",
+                                "EpTargetClassId": "spirent.methodology.addtodbtablecommand",
+                                "EpTargetPropertyId": "spirent.methodology.addtodbtablecommand.dbjsonstring",
+                                "EpMetaPropertyName": "PingIntervalColumn",
+                                "EpPropertyJsonId": "sql_operations[1].table[0][2]",
+                                "EpPropertyType": "INTEGER",
+                                "EpUnits": "seconds",
+                                "EpIsCollection": false,
+                                "EpMinValue": "1",
+                                "EpMaxValue": "10",
+                                "EpEnumValueList": [],
+                                "EpPropertyValue": "1",
+                                "EpPropertyValueList": [],
+                                "EpFileExtensionList": []
+                            },
+                            {
+                                "Name": "StmExposedProperty 432",
+                                "EpDescription": "Ping Destination Address",
+                                "EpDisplayName": "Ping Destination Address",
+                                "EpTargetClassId": "spirent.methodology.addtodbtablecommand",
+                                "EpTargetPropertyId": "spirent.methodology.addtodbtablecommand.dbjsonstring",
+                                "EpMetaPropertyName": "PingDstAddrColumn",
+                                "EpPropertyJsonId": "sql_operations[1].table[0][1]",
+                                "EpPropertyType": "IPV4",
+                                "EpUnits": "",
+                                "EpIsCollection": false,
+                                "EpMinValue": "",
+                                "EpMaxValue": "",
+                                "EpEnumValueList": [],
+                                "EpPropertyValue": "192.0.0.3",
+                                "EpPropertyValueList": [],
+                                "EpFileExtensionList": []
+                            },
+                            {
+                                "Name": "StmExposedProperty 434",
+                                "EpDescription": "Number of Ping frames to be sent.",
+                                "EpDisplayName": "Ping Frame Count",
+                                "EpTargetClassId": "spirent.methodology.addtodbtablecommand",
+                                "EpTargetPropertyId": "spirent.methodology.addtodbtablecommand.dbjsonstring",
+                                "EpMetaPropertyName": "PingFrameCountColumn",
+                                "EpPropertyJsonId": "sql_operations[1].table[0][3]",
+                                "EpPropertyType": "INTEGER",
+                                "EpUnits": "",
+                                "EpIsCollection": false,
+                                "EpMinValue": "1",
+                                "EpMaxValue": "1000",
+                                "EpEnumValueList": [],
+                                "EpPropertyValue": "1",
+                                "EpPropertyValueList": [],
+                                "EpFileExtensionList": []
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Set Properties from query output: Find Table Row count",
+                        "Class": "spirent.methodology.setpropertyfromquerycommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Set Properties from query output: Find Table Row count"
+                            },
+                            {
+                                "Name": "DbJsonString",
+                                "Type": "string",
+                                "Value": {
+                                    "sql_operations": [
+                                        {
+                                            "db_information": {
+                                                "db_name": "SUMMARY"
+                                            },
+                                            "enable": true,
+                                            "set_property": [
+                                                {
+                                                    "class_name": "spirent.methodology.objectiteratorcommand",
+                                                    "conversion": "NORMAL",
+                                                    "property_name": "MaxVal",
+                                                    "tag_list": [
+                                                        "test_objectIterator"
+                                                    ]
+                                                }
+                                            ],
+                                            "sql_statement": [
+                                                {
+                                                    "static": "SELECT MAX(ID) FROM TestPingConfig"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "IsJson": true
+                            },
+                            {
+                                "Name": "DbJsonFileName",
+                                "Type": "inputFilePath",
+                                "Value": ""
+                            },
+                            {
+                                "Name": "EnableLoadFromFileName",
+                                "Type": "bool",
+                                "Value": false
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "Name": "Sequence: East-West Topology Command",
+                "Class": "spirent.methodology.westeasttopologycommand",
+                "Enabled": true,
+                "Properties": [
+                    {
+                        "Name": "Name",
+                        "Type": "string",
+                        "Value": "Sequence: East-West Topology Command"
+                    }
+                ],
+                "Children": [
+                    {
+                        "Name": "Topology Group Command (west)",
+                        "Class": "spirent.methodology.topologygroupcommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Topology Group Command (west)"
+                            },
+                            {
+                                "Name": "TopologySide",
+                                "Type": "u8",
+                                "Value": "WEST"
+                            },
+                            {
+                                "Name": "DisplayName",
+                                "Type": "string",
+                                "Value": "West Side configuration"
+                            },
+                            {
+                                "Name": "Description",
+                                "Type": "string",
+                                "Value": "West side device configurations"
+                            }
+                        ],
+                        "Children": [
+                            {
+                                "Name": "Create Template Config Command (west)",
+                                "Class": "spirent.methodology.createtemplateconfigcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Create Template Config Command (west)"
+                                    },
+                                    {
+                                        "Name": "AutoExpandTemplate",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "InputJson",
+                                        "Type": "string",
+                                        "Value": {
+                                            "tagPrefix": "West_",
+                                            "baseTemplateFile": "EmulatedDevice.xml",
+                                            "modifyList": [
+                                                {
+                                                    "operationList": [
+                                                        {
+                                                            "description": "Build the Network Interface Stack",
+                                                            "buildStack": {
+                                                                "deviceTagName": "ttEmulatedDevice",
+                                                                "stack": [
+                                                                    {
+                                                                        "useIf": true,
+                                                                        "className": "EthIIIf",
+                                                                        "tagName": "ttEthIIIf",
+                                                                        "isLowestLayer": true
+                                                                    },
+                                                                    {
+                                                                        "useIf": false,
+                                                                        "className": "VlanIf",
+                                                                        "tagName": "ttVlanIf"
+                                                                    },
+                                                                    {
+                                                                        "useIf": false,
+                                                                        "className": "VlanIf",
+                                                                        "tagName": "ttInnerVlanIf"
+                                                                    },
+                                                                    {
+                                                                        "className": "Ipv4If",
+                                                                        "isTopLevel": true,
+                                                                        "isPrimary": true,
+                                                                        "useIf": true,
+                                                                        "tagName": "ttIpv4If"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": true,
+                                                    "description": "Modify the IPv4If",
+                                                    "operationList": [
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "EmulatedDevice",
+                                                                "tagName": "ttEmulatedDevice",
+                                                                "propertyValueList": {
+                                                                    "EnablePingResponse": "True"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "EmulatedDevice",
+                                                                "propertyName": "RouterId",
+                                                                "parentTagName": "ttEmulatedDevice",
+                                                                "tagName": "ttEmulatedDevice.RouterId",
+                                                                "propertyValueList": {
+                                                                    "Start": "192.0.0.1",
+                                                                    "Step": "0.0.1.0"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "EmulatedDevice",
+                                                                "tagName": "ttEmulatedDevice",
+                                                                "propertyValueList": {
+                                                                    "RouterIdStep": "0.0.0.1"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "Ipv4If",
+                                                                "propertyName": "Gateway",
+                                                                "parentTagName": "ttIpv4If",
+                                                                "tagName": "ttIpv4If.Gateway",
+                                                                "propertyValueList": {
+                                                                    "Start": "1.1.1.2",
+                                                                    "Step": "0.0.1.0"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "Ipv4If",
+                                                                "propertyName": "Address",
+                                                                "parentTagName": "ttIpv4If",
+                                                                "tagName": "ttIpv4If.Address",
+                                                                "propertyValueList": {
+                                                                    "Start": "1.1.1.1",
+                                                                    "Step": "0.0.1.0"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "Ipv4If",
+                                                                "tagName": "ttIpv4If",
+                                                                "propertyValueList": {
+                                                                    "GatewayStep": "0.1.0.0",
+                                                                    "AddrStep": "0.1.0.0"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": true,
+                                                    "description": "Modify the EthIIIf",
+                                                    "operationList": [
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "EthIIIf",
+                                                                "propertyName": "SourceMac",
+                                                                "parentTagName": "ttEthIIIf",
+                                                                "tagName": "ttEthIIIf.SourceMac",
+                                                                "propertyValueList": {
+                                                                    "Start": "00:10:95:00:01:01",
+                                                                    "Step": "00:00:00:00:01:00"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "EthIIIf",
+                                                                "tagName": "ttEthIIIf",
+                                                                "propertyValueList": {
+                                                                    "SrcMacStep": "00:00:00:00:00:01"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": false,
+                                                    "description": "Modify the Outer VlanIf",
+                                                    "operationList": [
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "VlanIf",
+                                                                "propertyName": "VlanId",
+                                                                "parentTagName": "ttVlanIf",
+                                                                "tagName": "ttVlanIf.VlanId",
+                                                                "propertyValueList": {
+                                                                    "Start": "100",
+                                                                    "Step": "100"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "VlanIf",
+                                                                "tagName": "ttVlanIf",
+                                                                "propertyValueList": {
+                                                                    "IdStep": "1"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": false,
+                                                    "description": "ModifytheInnerVlanIf",
+                                                    "operationList": [
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "VlanIf",
+                                                                "propertyName": "VlanId",
+                                                                "parentTagName": "ttInnerVlanIf",
+                                                                "tagName": "ttInnerVlanIf.VlanId",
+                                                                "propertyValueList": {
+                                                                    "Start": "200",
+                                                                    "Step": "100"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "VlanIf",
+                                                                "tagName": "ttInnerVlanIf",
+                                                                "propertyValueList": {
+                                                                    "IdStep": "1"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "IsJson": true
+                                    },
+                                    {
+                                        "Name": "CopiesPerParent",
+                                        "Type": "u32",
+                                        "Value": 1
+                                    },
+                                    {
+                                        "Name": "SrcTagList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "TargetTagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "WestPorts"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "TemplateTagName",
+                                        "Type": "string",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ],
+                                "ExpProperties": [
+                                    {
+                                        "Name": "StmExposedProperty 458",
+                                        "EpDescription": "West Outer VLAN enable",
+                                        "EpDisplayName": "West Enable Outer VLAN",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "WestOuterVlanEnable",
+                                        "EpPropertyJsonId": "modifyList[0].operationList[0].buildStack.stack[1].useIf",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 459",
+                                        "EpDescription": "West Inner VLAN enable",
+                                        "EpDisplayName": "West Enable Inner VLAN",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "WestInnerVlanEnable",
+                                        "EpPropertyJsonId": "modifyList[0].operationList[0].buildStack.stack[2].useIf",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 478",
+                                        "EpDescription": "West Enable Outer VLAN Config",
+                                        "EpDisplayName": "West Enable Outer VLAN Config",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "WestEnableOuterVlanConfig",
+                                        "EpPropertyJsonId": "modifyList[3].enable",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 479",
+                                        "EpDescription": "VLAN ID for West devices.",
+                                        "EpDisplayName": "West VLAN ID",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "WestVlanId",
+                                        "EpPropertyJsonId": "modifyList[3].operationList[0].stmPropertyModifier.propertyValueList.Start",
+                                        "EpPropertyType": "INTEGER",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "0",
+                                        "EpMaxValue": "4095",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "100",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 482",
+                                        "EpDescription": "West Enable Inner VLAN Config",
+                                        "EpDisplayName": "West Enable Inner VLAN Config",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "WestEnableInnerVlanConfig",
+                                        "EpPropertyJsonId": "modifyList[4].enable",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 483",
+                                        "EpDescription": "Inner VLAN ID for West devices.",
+                                        "EpDisplayName": "West Inner VLAN ID",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "WestInnerVlanId",
+                                        "EpPropertyJsonId": "modifyList[4].operationList[0].stmPropertyModifier.propertyValueList.Start",
+                                        "EpPropertyType": "INTEGER",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "0",
+                                        "EpMaxValue": "4095",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "200",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 124",
+                                        "EpDescription": "Enable Ping Response on the West devices.",
+                                        "EpDisplayName": "West Enable Ping Response",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "WestEnablePingResponse",
+                                        "EpPropertyJsonId": "modifyList[1].operationList[0].propertyValue.propertyValueList.EnablePingResponse",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "True",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Topology Group Command (east)",
+                        "Class": "spirent.methodology.topologygroupcommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Topology Group Command (east)"
+                            },
+                            {
+                                "Name": "TopologySide",
+                                "Type": "u8",
+                                "Value": "EAST"
+                            },
+                            {
+                                "Name": "DisplayName",
+                                "Type": "string",
+                                "Value": "East Side configuration"
+                            },
+                            {
+                                "Name": "Description",
+                                "Type": "string",
+                                "Value": "East side device configurations"
+                            }
+                        ],
+                        "Children": [
+                            {
+                                "Name": "Create Template Config Command (east)",
+                                "Class": "spirent.methodology.createtemplateconfigcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Create Template Config Command (east)"
+                                    },
+                                    {
+                                        "Name": "AutoExpandTemplate",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "InputJson",
+                                        "Type": "string",
+                                        "Value": {
+                                            "tagPrefix": "East_",
+                                            "baseTemplateFile": "EmulatedDevice.xml",
+                                            "modifyList": [
+                                                {
+                                                    "operationList": [
+                                                        {
+                                                            "description": "Build the Network Interface Stack",
+                                                            "buildStack": {
+                                                                "deviceTagName": "ttEmulatedDevice",
+                                                                "stack": [
+                                                                    {
+                                                                        "useIf": true,
+                                                                        "className": "EthIIIf",
+                                                                        "tagName": "ttEthIIIf",
+                                                                        "isLowestLayer": true
+                                                                    },
+                                                                    {
+                                                                        "useIf": false,
+                                                                        "className": "VlanIf",
+                                                                        "tagName": "ttVlanIf"
+                                                                    },
+                                                                    {
+                                                                        "useIf": false,
+                                                                        "className": "VlanIf",
+                                                                        "tagName": "ttInnerVlanIf"
+                                                                    },
+                                                                    {
+                                                                        "className": "Ipv4If",
+                                                                        "isTopLevel": true,
+                                                                        "isPrimary": true,
+                                                                        "useIf": true,
+                                                                        "tagName": "ttIpv4If"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": true,
+                                                    "description": "Modify the IPv4If",
+                                                    "operationList": [
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "EmulatedDevice",
+                                                                "tagName": "ttEmulatedDevice",
+                                                                "propertyValueList": {
+                                                                    "EnablePingResponse": "True"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "EmulatedDevice",
+                                                                "propertyName": "RouterId",
+                                                                "parentTagName": "ttEmulatedDevice",
+                                                                "tagName": "ttEmulatedDevice.RouterId",
+                                                                "propertyValueList": {
+                                                                    "Start": "193.0.0.1",
+                                                                    "Step": "0.0.1.0"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "EmulatedDevice",
+                                                                "tagName": "ttEmulatedDevice",
+                                                                "propertyValueList": {
+                                                                    "RouterIdStep": "0.0.0.1"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "Ipv4If",
+                                                                "propertyName": "Gateway",
+                                                                "parentTagName": "ttIpv4If",
+                                                                "tagName": "ttIpv4If.Gateway",
+                                                                "propertyValueList": {
+                                                                    "Start": "1.1.1.1",
+                                                                    "Step": "0.0.1.0"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "Ipv4If",
+                                                                "propertyName": "Address",
+                                                                "parentTagName": "ttIpv4If",
+                                                                "tagName": "ttIpv4If.Address",
+                                                                "propertyValueList": {
+                                                                    "Start": "1.1.1.2",
+                                                                    "Step": "0.0.1.0"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "Ipv4If",
+                                                                "tagName": "ttIpv4If",
+                                                                "propertyValueList": {
+                                                                    "GatewayStep": "0.1.0.0",
+                                                                    "AddrStep": "0.1.0.0"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": true,
+                                                    "description": "Modify the EthIIIf",
+                                                    "operationList": [
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "EthIIIf",
+                                                                "propertyName": "SourceMac",
+                                                                "parentTagName": "ttEthIIIf",
+                                                                "tagName": "ttEthIIIf.SourceMac",
+                                                                "propertyValueList": {
+                                                                    "Start": "00:10:95:01:01:01",
+                                                                    "Step": "00:00:00:00:01:00"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "EthIIIf",
+                                                                "tagName": "ttEthIIIf",
+                                                                "propertyValueList": {
+                                                                    "SrcMacStep": "00:00:00:00:00:01"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": false,
+                                                    "description": "Modify the Outer VlanIf",
+                                                    "operationList": [
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "VlanIf",
+                                                                "propertyName": "VlanId",
+                                                                "parentTagName": "ttVlanIf",
+                                                                "tagName": "ttVlanIf.VlanId",
+                                                                "propertyValueList": {
+                                                                    "Start": "100",
+                                                                    "Step": "100"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "VlanIf",
+                                                                "tagName": "ttVlanIf",
+                                                                "propertyValueList": {
+                                                                    "IdStep": "1"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "enable": false,
+                                                    "description": "ModifytheInnerVlanIf",
+                                                    "operationList": [
+                                                        {
+                                                            "stmPropertyModifier": {
+                                                                "className": "VlanIf",
+                                                                "propertyName": "VlanId",
+                                                                "parentTagName": "ttInnerVlanIf",
+                                                                "tagName": "ttInnerVlanIf.VlanId",
+                                                                "propertyValueList": {
+                                                                    "Start": "200",
+                                                                    "Step": "100"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "propertyValue": {
+                                                                "className": "VlanIf",
+                                                                "tagName": "ttInnerVlanIf",
+                                                                "propertyValueList": {
+                                                                    "IdStep": "1"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "IsJson": true
+                                    },
+                                    {
+                                        "Name": "CopiesPerParent",
+                                        "Type": "u32",
+                                        "Value": 1
+                                    },
+                                    {
+                                        "Name": "SrcTagList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "TargetTagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "EastPorts"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "TemplateTagName",
+                                        "Type": "string",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ],
+                                "ExpProperties": [
+                                    {
+                                        "Name": "StmExposedProperty 497",
+                                        "EpDescription": "East Enable Outer VLAN",
+                                        "EpDisplayName": "East Enable Outer VLAN",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "EastEnableOuterVlan",
+                                        "EpPropertyJsonId": "modifyList[0].operationList[0].buildStack.stack[1].useIf",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 498",
+                                        "EpDescription": "East Enable Inner VLAN",
+                                        "EpDisplayName": "East Enable Inner VLAN",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "EastEnableInnerVlan",
+                                        "EpPropertyJsonId": "modifyList[0].operationList[0].buildStack.stack[2].useIf",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 517",
+                                        "EpDescription": "East Enable Outer VLAN Config",
+                                        "EpDisplayName": "East Enable Outer VLAN Config",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "EastEnableOuterVlanConfig",
+                                        "EpPropertyJsonId": "modifyList[3].enable",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 518",
+                                        "EpDescription": "VLAN ID for East devices.",
+                                        "EpDisplayName": "East VLAN ID",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "EastVlanId",
+                                        "EpPropertyJsonId": "modifyList[3].operationList[0].stmPropertyModifier.propertyValueList.Start",
+                                        "EpPropertyType": "INTEGER",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "0",
+                                        "EpMaxValue": "4095",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "100",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 521",
+                                        "EpDescription": "East Enable Inner VLAN Config",
+                                        "EpDisplayName": "East Enable Inner VLAN Config",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "EastEnableInnerVlanConfig",
+                                        "EpPropertyJsonId": "modifyList[4].enable",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "False",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 522",
+                                        "EpDescription": "Inner VLAN ID for East devices.",
+                                        "EpDisplayName": "East Inner VLAN ID",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "EastInnerVlanId",
+                                        "EpPropertyJsonId": "modifyList[4].operationList[0].stmPropertyModifier.propertyValueList.Start",
+                                        "EpPropertyType": "INTEGER",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "0",
+                                        "EpMaxValue": "4095",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "200",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    },
+                                    {
+                                        "Name": "StmExposedProperty 157",
+                                        "EpDescription": "Enable Ping Response on the East devices.",
+                                        "EpDisplayName": "East Enable Ping Response",
+                                        "EpTargetClassId": "spirent.methodology.createtemplateconfigcommand",
+                                        "EpTargetPropertyId": "spirent.methodology.createtemplateconfigcommand.inputjson",
+                                        "EpMetaPropertyName": "EastEnablePingResponse",
+                                        "EpPropertyJsonId": "modifyList[1].operationList[0].propertyValue.propertyValueList.EnablePingResponse",
+                                        "EpPropertyType": "BOOLEAN",
+                                        "EpUnits": "",
+                                        "EpIsCollection": false,
+                                        "EpMinValue": "",
+                                        "EpMaxValue": "",
+                                        "EpEnumValueList": [],
+                                        "EpPropertyValue": "True",
+                                        "EpPropertyValueList": [],
+                                        "EpFileExtensionList": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "Name": "Sequence: Test Group Command",
+                "Class": "spirent.methodology.testgroupcommand",
+                "Enabled": true,
+                "Properties": [
+                    {
+                        "Name": "Name",
+                        "Type": "string",
+                        "Value": "Sequence: Test Group Command"
+                    },
+                    {
+                        "Name": "DisplayName",
+                        "Type": "string",
+                        "Value": "Ping Test Configuration"
+                    },
+                    {
+                        "Name": "Description",
+                        "Type": "string",
+                        "Value": "Configure the Ping test with values from the configuration table"
+                    }
+                ],
+                "Children": [
+                    {
+                        "Name": "Iteration Framework: Iteration While Command 1",
+                        "Class": "spirent.methodology.iterationwhilecommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Iteration Framework: Iteration While Command 1"
+                            },
+                            {
+                                "Name": "EnableIterationTestReport",
+                                "Type": "bool",
+                                "Value": true
+                            },
+                            {
+                                "Name": "EnableApplyVerdict",
+                                "Type": "bool",
+                                "Value": true
+                            },
+                            {
+                                "Name": "IterationName",
+                                "Type": "string",
+                                "Value": "PingAddress"
+                            },
+                            {
+                                "Name": "IteratorDisplayName",
+                                "Type": "string",
+                                "Value": ""
+                            },
+                            {
+                                "Name": "Condition",
+                                "Type": "u8",
+                                "Value": "PASSED"
+                            }
+                        ],
+                        "ExpressionCommand": {
+                            "Name": "Iterators: Object Iterator Command",
+                            "Class": "spirent.methodology.objectiteratorcommand",
+                            "Enabled": true,
+                            "Tags": [
+                                "test_objectIterator"
+                            ],
+                            "Properties": [
+                                {
+                                    "Name": "Name",
+                                    "Type": "string",
+                                    "Value": "Iterators: Object Iterator Command"
+                                },
+                                {
+                                    "Name": "IterMode",
+                                    "Type": "u8",
+                                    "Value": "STEP"
+                                },
+                                {
+                                    "Name": "StepVal",
+                                    "Type": "double",
+                                    "Value": 1.0
+                                },
+                                {
+                                    "Name": "StepMode",
+                                    "Type": "u8",
+                                    "Value": "ABSOLUTE"
+                                },
+                                {
+                                    "Name": "EnableInitialVal",
+                                    "Type": "bool",
+                                    "Value": false
+                                },
+                                {
+                                    "Name": "InitialVal",
+                                    "Type": "double",
+                                    "Value": 0.0
+                                },
+                                {
+                                    "Name": "ValueType",
+                                    "Type": "u8",
+                                    "Value": "RANGE"
+                                },
+                                {
+                                    "Name": "ValueList",
+                                    "Type": "string",
+                                    "Value": [],
+                                    "IsCollection": true
+                                },
+                                {
+                                    "Name": "BreakOnFail",
+                                    "Type": "bool",
+                                    "Value": false
+                                },
+                                {
+                                    "Name": "MinVal",
+                                    "Type": "double",
+                                    "Value": 1.0
+                                },
+                                {
+                                    "Name": "MaxVal",
+                                    "Type": "double",
+                                    "Value": 1.0
+                                },
+                                {
+                                    "Name": "PrevIterVerdict",
+                                    "Type": "bool",
+                                    "Value": true
+                                },
+                                {
+                                    "Name": "ErrorOnFailure",
+                                    "Type": "bool",
+                                    "Value": false
+                                }
+                            ]
+                        },
+                        "Children": [
+                            {
+                                "Name": "Clear All Results",
+                                "Class": "resultsclearallcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Clear All Results"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Comment",
+                                "Class": "sequencercomment",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Comment"
+                                    },
+                                    {
+                                        "Name": "Text",
+                                        "Type": "string",
+                                        "Value": "< Set the source Address >"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Iterator Config From DB: Src Address",
+                                "Class": "spirent.methodology.iteratorconfigfromdbcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Iterator Config From DB: Src Address"
+                                    },
+                                    {
+                                        "Name": "DatabaseName",
+                                        "Type": "string",
+                                        "Value": "pingTest.db"
+                                    },
+                                    {
+                                        "Name": "TableName",
+                                        "Type": "string",
+                                        "Value": "TestPingConfig"
+                                    },
+                                    {
+                                        "Name": "ColumnName",
+                                        "Type": "string",
+                                        "Value": "SourceIpv4Address"
+                                    },
+                                    {
+                                        "Name": "KeyColumnName",
+                                        "Type": "string",
+                                        "Value": "ID"
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.SetPropertyCommand"
+                                    },
+                                    {
+                                        "Name": "EnableObjectRecursiveSearch",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Value"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_SetPropAddr",
+                                            "test_WestDeviceAddress",
+                                            "test_EastDeviceGW",
+                                            "test_SetPropDbSrcAddress"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "CurrVal",
+                                        "Type": "string",
+                                        "Value": "1"
+                                    },
+                                    {
+                                        "Name": "Iteration",
+                                        "Type": "u32",
+                                        "Value": 1
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: Src Address",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_SetPropAddr"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: Src Address"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_PingStartCommand"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.ExecuteWithTagsCommand"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "CmdJsonString"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": "command_list[0].property_value.PingIpv4SrcAddr"
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.1"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: West Address",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_WestDeviceAddress"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: West Address"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "West_ttIpv4If"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "Ipv4If"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Address"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.1"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: East GW",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_EastDeviceGW"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: East GW"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "East_ttIpv4If"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "Ipv4If"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Gateway"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.1"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: Update DB SrcAddress",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_SetPropDbSrcAddress"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: Update DB SrcAddress"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_UpdateDb"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.Methodology.RunSqlCommand"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "DbJsonString"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": "sql_operations[0].sql_statement[3].dynamic"
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.1"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Comment",
+                                "Class": "sequencercomment",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Comment"
+                                    },
+                                    {
+                                        "Name": "Text",
+                                        "Type": "string",
+                                        "Value": "< Set the dest (GW) Address >"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Iterator Config From DB: Dest Address",
+                                "Class": "spirent.methodology.iteratorconfigfromdbcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Iterator Config From DB: Dest Address"
+                                    },
+                                    {
+                                        "Name": "DatabaseName",
+                                        "Type": "string",
+                                        "Value": "pingTest.db"
+                                    },
+                                    {
+                                        "Name": "TableName",
+                                        "Type": "string",
+                                        "Value": "TestPingConfig"
+                                    },
+                                    {
+                                        "Name": "ColumnName",
+                                        "Type": "string",
+                                        "Value": "DestIpv4Address"
+                                    },
+                                    {
+                                        "Name": "KeyColumnName",
+                                        "Type": "string",
+                                        "Value": "ID"
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.SetPropertyCommand"
+                                    },
+                                    {
+                                        "Name": "EnableObjectRecursiveSearch",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Value"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_SetPropGW",
+                                            "test_WestDeviceGW",
+                                            "test_EastDeviceAddress",
+                                            "test_SetPropDbDstAddress"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "CurrVal",
+                                        "Type": "string",
+                                        "Value": "1"
+                                    },
+                                    {
+                                        "Name": "Iteration",
+                                        "Type": "u32",
+                                        "Value": 1
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: Dest Address",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_SetPropGW"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: Dest Address"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_PingStartCommand"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.ExecuteWithTagsCommand"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "CmdJsonString"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": "command_list[0].property_value.PingIpv4DstAddr"
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.3"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: West GW",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_WestDeviceGW"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: West GW"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "West_ttIpv4If"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "Ipv4If"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Gateway"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.3"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: East Address",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_EastDeviceAddress"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: East Address"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "East_ttIpv4If"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "Ipv4If"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Address"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.3"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: Update DB DstAddress",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_SetPropDbDstAddress"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: Update DB DstAddress"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_UpdateDb"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.Methodology.RunSqlCommand"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "DbJsonString"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": "sql_operations[0].sql_statement[5].dynamic"
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "192.0.0.3"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Comment",
+                                "Class": "sequencercomment",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Comment"
+                                    },
+                                    {
+                                        "Name": "Text",
+                                        "Type": "string",
+                                        "Value": "< Set the time interval >"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Iterator Config From DB: Time Interval",
+                                "Class": "spirent.methodology.iteratorconfigfromdbcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Iterator Config From DB: Time Interval"
+                                    },
+                                    {
+                                        "Name": "DatabaseName",
+                                        "Type": "string",
+                                        "Value": "pingTest.db"
+                                    },
+                                    {
+                                        "Name": "TableName",
+                                        "Type": "string",
+                                        "Value": "TestPingConfig"
+                                    },
+                                    {
+                                        "Name": "ColumnName",
+                                        "Type": "string",
+                                        "Value": "TimeInterval"
+                                    },
+                                    {
+                                        "Name": "KeyColumnName",
+                                        "Type": "string",
+                                        "Value": "ID"
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.SetPropertyCommand"
+                                    },
+                                    {
+                                        "Name": "EnableObjectRecursiveSearch",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Value"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_SetPropTimeInterval"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "CurrVal",
+                                        "Type": "string",
+                                        "Value": "1"
+                                    },
+                                    {
+                                        "Name": "Iteration",
+                                        "Type": "u32",
+                                        "Value": 1
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: Time Interval",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_SetPropTimeInterval"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: Time Interval"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_PingStartCommand"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.ExecuteWithTagsCommand"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "CmdJsonString"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": "command_list[0].property_value.TimeInterval"
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "1"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Comment",
+                                "Class": "sequencercomment",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Comment"
+                                    },
+                                    {
+                                        "Name": "Text",
+                                        "Type": "string",
+                                        "Value": "< Set the Frame Count >"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Iterator Config From DB: Frame Count",
+                                "Class": "spirent.methodology.iteratorconfigfromdbcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Iterator Config From DB: Frame Count"
+                                    },
+                                    {
+                                        "Name": "DatabaseName",
+                                        "Type": "string",
+                                        "Value": "pingTest.db"
+                                    },
+                                    {
+                                        "Name": "TableName",
+                                        "Type": "string",
+                                        "Value": "TestPingConfig"
+                                    },
+                                    {
+                                        "Name": "ColumnName",
+                                        "Type": "string",
+                                        "Value": "FrameCount"
+                                    },
+                                    {
+                                        "Name": "KeyColumnName",
+                                        "Type": "string",
+                                        "Value": "ID"
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.SetPropertyCommand"
+                                    },
+                                    {
+                                        "Name": "EnableObjectRecursiveSearch",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "Value"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_SetPropFrameCount",
+                                            "test_SetPropDbFrameCount"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "CurrVal",
+                                        "Type": "string",
+                                        "Value": "1"
+                                    },
+                                    {
+                                        "Name": "Iteration",
+                                        "Type": "u32",
+                                        "Value": 1
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: Frame Count",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_SetPropFrameCount"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: Frame Count"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_PingStartCommand"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.methodology.ExecuteWithTagsCommand"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "CmdJsonString"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": "command_list[0].property_value.FrameCount"
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "1"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Set Property Command: Update DB FrameCount",
+                                "Class": "spirent.methodology.setpropertycommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_SetPropDbFrameCount"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Set Property Command: Update DB FrameCount"
+                                    },
+                                    {
+                                        "Name": "TagList",
+                                        "Type": "string",
+                                        "Value": [
+                                            "test_UpdateDb"
+                                        ],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "ClassName",
+                                        "Type": "string",
+                                        "Value": "spirent.Methodology.RunSqlCommand"
+                                    },
+                                    {
+                                        "Name": "RelationList",
+                                        "Type": "string",
+                                        "Value": [],
+                                        "IsCollection": true
+                                    },
+                                    {
+                                        "Name": "PropertyName",
+                                        "Type": "string",
+                                        "Value": "DbJsonString"
+                                    },
+                                    {
+                                        "Name": "JsonKey",
+                                        "Type": "string",
+                                        "Value": "sql_operations[0].sql_statement[1].dynamic"
+                                    },
+                                    {
+                                        "Name": "Value",
+                                        "Type": "string",
+                                        "Value": "1"
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Comment",
+                                "Class": "sequencercomment",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Comment"
+                                    },
+                                    {
+                                        "Name": "Text",
+                                        "Type": "string",
+                                        "Value": "< PingStartCommand >"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Execute With Tags Command: Ping Start",
+                                "Class": "spirent.methodology.executewithtagscommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_PingStartCommand"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Execute With Tags Command: Ping Start"
+                                    },
+                                    {
+                                        "Name": "CmdJsonString",
+                                        "Type": "string",
+                                        "Value": {
+                                            "enable": true,
+                                            "description": "Execute Ping commands.",
+                                            "command_list": [
+                                                {
+                                                    "command_name": "PingStartCommand",
+                                                    "handle_property_list": [
+                                                        {
+                                                            "tag_name_list": [
+                                                                "West_ttEmulatedDevice"
+                                                            ],
+                                                            "property_name": "DeviceList",
+                                                            "class_name_list": [
+                                                                "EmulatedDevice"
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "enable": true,
+                                                    "property_value": {
+                                                        "TimeInterval": "1",
+                                                        "PingIpv4DstAddr": "192.0.0.3",
+                                                        "WaitForPingToFinish": "True",
+                                                        "FrameCount": "1",
+                                                        "PingIpv4SrcAddr": "192.0.0.1"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        "IsJson": true
+                                    },
+                                    {
+                                        "Name": "CmdJsonFileName",
+                                        "Type": "inputFilePath",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "EnableLoadFromFileName",
+                                        "Type": "bool",
+                                        "Value": false
+                                    },
+                                    {
+                                        "Name": "ApplyPassFailState",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Comment",
+                                "Class": "sequencercomment",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Comment"
+                                    },
+                                    {
+                                        "Name": "Text",
+                                        "Type": "string",
+                                        "Value": "< Results collection >"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Save Results",
+                                "Class": "saveresultscommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Save Results"
+                                    },
+                                    {
+                                        "Name": "ResultFileName",
+                                        "Type": "outputFilePath",
+                                        "Value": "pingTest.db"
+                                    },
+                                    {
+                                        "Name": "SaveDetailedResults",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "ClearChartResultAfterSave",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "CollectResult",
+                                        "Type": "bool",
+                                        "Value": true
+                                    },
+                                    {
+                                        "Name": "LoopMode",
+                                        "Type": "u8",
+                                        "Value": "APPEND"
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Run SQL Command: Create Tables",
+                                "Class": "spirent.methodology.runsqlcommand",
+                                "Enabled": true,
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Run SQL Command: Create Tables"
+                                    },
+                                    {
+                                        "Name": "DbJsonString",
+                                        "Type": "string",
+                                        "Value": {
+                                            "enable": true,
+                                            "sql_operations": [
+                                                {
+                                                    "db_information": {
+                                                        "db_name": "LAST_ITERATION"
+                                                    },
+                                                    "sql_statement": [
+                                                        {
+                                                            "static": "CREATE TABLE IF NOT EXISTS TestPingReportIterRes( ID INTEGER PRIMARY KEY, IterationNum INT, FrameCount INT, PortHandle INT, PortGroupTagName TEXT, "
+                                                        },
+                                                        {
+                                                            "static": "SrcAddress TEXT, DstAddress TEXT, SuccessfulPingCount INT, FailedPingCount INT, AttemptedPingCount INT, PingStringResult TEXT )"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "sql_statement": [
+                                                        {
+                                                            "static": "CREATE TABLE IF NOT EXISTS TestPingReportSummaryRes( ID INTEGER PRIMARY KEY, IterationNum INT, FrameCount INT, PortHandle INT, PortGroupTagName TEXT, "
+                                                        },
+                                                        {
+                                                            "static": "SrcAddress TEXT, DstAddress TEXT, SuccessfulPingCount INT, FailedPingCount INT, AttemptedPingCount INT, PingStringResult TEXT )"
+                                                        }
+                                                    ],
+                                                    "db_information": {
+                                                        "db_name": "SUMMARY"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        "IsJson": true
+                                    },
+                                    {
+                                        "Name": "DbJsonFileName",
+                                        "Type": "inputFilePath",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "EnableLoadFromFileName",
+                                        "Type": "bool",
+                                        "Value": false
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Run SQL Command: Add Iteration/Summary Ping Report",
+                                "Class": "spirent.methodology.runsqlcommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_UpdateDb"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Run SQL Command: Add Iteration/Summary Ping Report"
+                                    },
+                                    {
+                                        "Name": "DbJsonString",
+                                        "Type": "string",
+                                        "Value": {
+                                            "enable": true,
+                                            "sql_operations": [
+                                                {
+                                                    "sql_statement": [
+                                                        {
+                                                            "static": "SELECT spirent_methodology_ObjectIteratorCommand.Iteration as IterationNum,"
+                                                        },
+                                                        {
+                                                            "dynamic": "1"
+                                                        },
+                                                        {
+                                                            "static": "AS FrameCount, PgTag.PortHandle AS PortHandle, PgTag.TagName AS PortGroupTagName, '"
+                                                        },
+                                                        {
+                                                            "dynamic": "192.0.0.1"
+                                                        },
+                                                        {
+                                                            "static": "' AS SrcAddress, '"
+                                                        },
+                                                        {
+                                                            "dynamic": "192.0.0.3"
+                                                        },
+                                                        {
+                                                            "static": "' AS DstAddress, PingReport.SuccessfulPingCount AS SuccessfulPingCount, PingReport.FailedPingCount AS FailedPingCount,"
+                                                        },
+                                                        {
+                                                            "static": "PingReport.AttemptedPingCount AS AttemptedPingCount, PingReport.PingResult AS PingStringResult"
+                                                        },
+                                                        {
+                                                            "static": "FROM spirent_methodology_ObjectIteratorCommand, PingReport,"
+                                                        },
+                                                        {
+                                                            "static": "(SELECT Port.Handle AS PortHandle, Tag.Name AS TagName"
+                                                        },
+                                                        {
+                                                            "static": "FROM Port, Tag,"
+                                                        },
+                                                        {
+                                                            "static": "(SELECT SourceHnd, TargetHnd FROM RelationTable WHERE Type=='UserTag') AS UserTagTable"
+                                                        },
+                                                        {
+                                                            "static": "WHERE Port.Handle == UserTagTable.SourceHnd AND Tag.Handle == UserTagTable.TargetHnd)"
+                                                        },
+                                                        {
+                                                            "static": "AS PgTag WHERE PingReport.ParentHnd == PgTag.PortHandle GROUP BY PortHandle"
+                                                        }
+                                                    ],
+                                                    "db_information": {
+                                                        "dest_db": {
+                                                            "dest_table_name": "TestPingReportIterRes",
+                                                            "dest_db_name": "LAST_ITERATION"
+                                                        },
+                                                        "db_name": "LAST_ITERATION"
+                                                    }
+                                                },
+                                                {
+                                                    "sql_statement": [
+                                                        {
+                                                            "static": "SELECT IterationNum, FrameCount, PortHandle, PortGroupTagName, SrcAddress, DstAddress, SuccessfulPingCount, FailedPingCount, AttemptedPingCount, PingStringResult FROM TestPingReportIterRes GROUP BY IterationNum, PortHandle"
+                                                        }
+                                                    ],
+                                                    "db_information": {
+                                                        "dest_db": {
+                                                            "dest_table_name": "TestPingReportSummaryRes",
+                                                            "dest_db_name": "SUMMARY"
+                                                        },
+                                                        "db_name": "LAST_ITERATION"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        "IsJson": true
+                                    },
+                                    {
+                                        "Name": "DbJsonFileName",
+                                        "Type": "inputFilePath",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "EnableLoadFromFileName",
+                                        "Type": "bool",
+                                        "Value": false
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            },
+                            {
+                                "Name": "Run SQL Command: Validate Results",
+                                "Class": "spirent.methodology.runsqlcommand",
+                                "Enabled": true,
+                                "Tags": [
+                                    "test_ResultValidate"
+                                ],
+                                "Properties": [
+                                    {
+                                        "Name": "Name",
+                                        "Type": "string",
+                                        "Value": "Run SQL Command: Validate Results"
+                                    },
+                                    {
+                                        "Name": "DbJsonString",
+                                        "Type": "string",
+                                        "Value": {
+                                            "enable": true,
+                                            "sql_operations": [
+                                                {
+                                                    "enable": true,
+                                                    "sql_statement": [
+                                                        {
+                                                            "static": "DROP TABLE IF EXISTS TestFailedPingReportVerdictTable"
+                                                        }
+                                                    ],
+                                                    "db_information": {
+                                                        "db_name": "LAST_ITERATION"
+                                                    }
+                                                },
+                                                {
+                                                    "enable": true,
+                                                    "db_information": {
+                                                        "dest_db": {
+                                                            "dest_table_name": "TestFailedPingReportVerdictTable",
+                                                            "dest_db_name": "LAST_ITERATION"
+                                                        },
+                                                        "db_name": "LAST_ITERATION"
+                                                    },
+                                                    "report": {
+                                                        "display_name": "Iteration Ping Response Validation",
+                                                        "report_group": "GROUP_1",
+                                                        "report_verdict": {
+                                                            "apply_test_verdict": true,
+                                                            "passed_verdict_explanation": "All Attempted Pings were successful.",
+                                                            "failed_verdict_explanation": "Failed sending all configured Pings or at least one Ping didn't receive a response.",
+                                                            "db_name": "LAST_ITERATION",
+                                                            "sql_for_verdict": [
+                                                                {
+                                                                    "static": "SELECT CASE WHEN (SELECT COUNT(*) FROM (SELECT Verdict FROM TestFailedPingReportVerdictTable WHERE Verdict = 'FAIL')) > 0 THEN 0 ELSE 1 END"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "sql_statement": [
+                                                        {
+                                                            "static": "SELECT IterationNum AS 'Iteration',"
+                                                        },
+                                                        {
+                                                            "static": "CASE WHEN FailedPingCount > 0 THEN 'FAIL' WHEN AttemptedPingCount > 0 AND SuccessfulPingCount < FrameCount THEN 'FAIL' WHEN AttemptedPingCount == 0 AND FrameCount > 0 THEN 'FAIL' ELSE 'PASS' END AS 'Verdict',"
+                                                        },
+                                                        {
+                                                            "static": "PortGroupTagName AS 'Port Group Tag Name', FrameCount AS 'Frame Count', SrcAddress AS 'Source Address', DstAddress AS 'Destination Address',"
+                                                        },
+                                                        {
+                                                            "static": "AttemptedPingCount AS 'Attempted Ping Count', SuccessfulPingCount AS 'Successful Ping Count', FailedPingCount AS 'Failed Ping Count', PingStringResult AS 'Ping Result'"
+                                                        },
+                                                        {
+                                                            "static": "FROM TestPingReportIterRes"
+                                                        },
+                                                        {
+                                                            "static": "WHERE PortGroupTagName = 'WestPorts'"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "IsJson": true
+                                    },
+                                    {
+                                        "Name": "DbJsonFileName",
+                                        "Type": "inputFilePath",
+                                        "Value": ""
+                                    },
+                                    {
+                                        "Name": "EnableLoadFromFileName",
+                                        "Type": "bool",
+                                        "Value": false
+                                    },
+                                    {
+                                        "Name": "ErrorOnFailure",
+                                        "Type": "bool",
+                                        "Value": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Wait: Allow RT Table to Update",
+                        "Class": "waitcommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Wait: Allow RT Table to Update"
+                            },
+                            {
+                                "Name": "WaitTime",
+                                "Type": "double",
+                                "Value": 3.0
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "Name": "Sequence: Results Group Command",
+                "Class": "spirent.methodology.resultsgroupcommand",
+                "Enabled": true,
+                "Properties": [
+                    {
+                        "Name": "Name",
+                        "Type": "string",
+                        "Value": "Sequence: Results Group Command"
+                    },
+                    {
+                        "Name": "DisplayName",
+                        "Type": "string",
+                        "Value": "Test Results"
+                    },
+                    {
+                        "Name": "Description",
+                        "Type": "string",
+                        "Value": "Configure Ping Test Results"
+                    }
+                ],
+                "Children": [
+                    {
+                        "Name": "Results: Create Methodology Chart Command",
+                        "Class": "spirent.methodology.createmethodologychartcommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Results: Create Methodology Chart Command"
+                            },
+                            {
+                                "Name": "ChartTemplateJsonFileName",
+                                "Type": "inputFilePath",
+                                "Value": "Column_Template.json"
+                            },
+                            {
+                                "Name": "Title",
+                                "Type": "string",
+                                "Value": "Ping Results"
+                            },
+                            {
+                                "Name": "XAxisTitle",
+                                "Type": "string",
+                                "Value": "Iteration"
+                            },
+                            {
+                                "Name": "XAxisCategories",
+                                "Type": "string",
+                                "Value": [
+                                    "SELECT IterationNum from TestPingReportSummaryRes where PortGroupTagName = 'WestPorts'"
+                                ],
+                                "IsCollection": true
+                            },
+                            {
+                                "Name": "YAxisTitle",
+                                "Type": "string",
+                                "Value": "Ping Count"
+                            },
+                            {
+                                "Name": "YAxisCategories",
+                                "Type": "string",
+                                "Value": [],
+                                "IsCollection": true
+                            },
+                            {
+                                "Name": "Series",
+                                "Type": "string",
+                                "Value": [
+                                    "SELECT FrameCount AS 'Configured Frame Count' FROM TestPingReportSummaryRes where PortGroupTagName = 'WestPorts'",
+                                    "SELECT SuccessfulPingCount AS 'Successful Ping Count' from TestPingReportSummaryRes where PortGroupTagName = 'WestPorts'",
+                                    "SELECT FailedPingCount AS 'Failed Ping Count' from TestPingReportSummaryRes where PortGroupTagName = 'WestPorts'",
+                                    "SELECT AttemptedPingCount AS 'Attempted Ping Count' from TestPingReportSummaryRes where PortGroupTagName = 'WestPorts'"
+                                ],
+                                "IsCollection": true
+                            },
+                            {
+                                "Name": "TemplateModifier",
+                                "Type": "string",
+                                "Value": {
+                                    "series": [
+                                        {
+                                            "name": "Configured Frame Count"
+                                        },
+                                        {
+                                            "name": "Successful Ping Count"
+                                        },
+                                        {
+                                            "name": "Failed Ping Count"
+                                        },
+                                        {
+                                            "name": "Attempted Ping Count"
+                                        }
+                                    ]
+                                },
+                                "IsJson": true
+                            },
+                            {
+                                "Name": "SrcDatabase",
+                                "Type": "u8",
+                                "Value": "SUMMARY"
+                            },
+                            {
+                                "Name": "ReportGroup",
+                                "Type": "u8",
+                                "Value": "SUMMARY"
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    },
+                    {
+                        "Name": "Test Methodology: Validate Summary",
+                        "Class": "spirent.methodology.runsqlcommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Test Methodology: Validate Summary"
+                            },
+                            {
+                                "Name": "DbJsonString",
+                                "Type": "string",
+                                "Value": {
+                                    "enable": true,
+                                    "sql_operations": [
+                                        {
+                                            "enable": true,
+                                            "db_information": {
+                                                "dest_db": {
+                                                    "dest_table_name": "TestPingSummaryTable",
+                                                    "dest_db_name": "SUMMARY"
+                                                },
+                                                "db_name": "SUMMARY"
+                                            },
+                                            "report": {
+                                                "display_name": "Ping Summary Results",
+                                                "report_group": "SUMMARY",
+                                                "report_verdict": {
+                                                    "passed_verdict_explanation": "Summary results for all Ping iterations.",
+                                                    "failed_verdict_explanation": "Summary results for all Ping iterations.",
+                                                    "apply_test_verdict": false,
+                                                    "db_name": "SUMMARY",
+                                                    "sql_for_verdict": []
+                                                }
+                                            },
+                                            "sql_statement": [
+                                                {
+                                                    "static": "SELECT IterationNum AS 'Iteration',"
+                                                },
+                                                {
+                                                    "static": "CASE WHEN FailedPingCount > 0 THEN 'FAIL' WHEN AttemptedPingCount > 0 AND SuccessfulPingCount < FrameCount THEN 'FAIL' WHEN AttemptedPingCount == 0 AND FrameCount > 0 THEN 'FAIL' ELSE 'PASS' END AS 'Verdict',"
+                                                },
+                                                {
+                                                    "static": "PortGroupTagName AS 'Port Group Tag Name', FrameCount AS 'Frame Count', SrcAddress AS 'Source Address', DstAddress AS 'Destination Address',"
+                                                },
+                                                {
+                                                    "static": "AttemptedPingCount AS 'Attempted Ping Count', SuccessfulPingCount AS 'Successful Ping Count', FailedPingCount AS 'Failed Ping Count', PingStringResult AS 'Ping Result'"
+                                                },
+                                                {
+                                                    "static": "FROM TestPingReportSummaryRes"
+                                                },
+                                                {
+                                                    "static": "WHERE PortGroupTagName = 'WestPorts'"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "enable": true,
+                                            "db_information": {
+                                                "dest_db": {
+                                                    "dest_table_name": "TestFailedPingSummaryTable",
+                                                    "dest_db_name": "SUMMARY"
+                                                },
+                                                "db_name": "SUMMARY"
+                                            },
+                                            "report": {
+                                                "display_name": "Ping Summary Result - Failed Iterations",
+                                                "report_group": "SUMMARY",
+                                                "report_verdict": {
+                                                    "passed_verdict_explanation": "All Ping iterations passed.",
+                                                    "failed_verdict_explanation": "Not all Ping iterations passed.",
+                                                    "apply_test_verdict": true,
+                                                    "db_name": "SUMMARY",
+                                                    "sql_for_verdict": [
+                                                        {
+                                                            "static": "SELECT CASE WHEN (SELECT COUNT(*) FROM (SELECT name FROM sqlite_master WHERE name='TestFailedPingSummaryTable')) > 0 THEN 0 ELSE 1 END"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "sql_statement": [
+                                                {
+                                                    "static": "SELECT IterationNum AS 'Iteration',"
+                                                },
+                                                {
+                                                    "static": "PortGroupTagName AS 'Port Group Tag Name', FrameCount AS 'Frame Count', SrcAddress AS 'Source Address', DstAddress AS 'Destination Address',"
+                                                },
+                                                {
+                                                    "static": "AttemptedPingCount AS 'Attempted Ping Count', SuccessfulPingCount AS 'Successful Ping Count', FailedPingCount AS 'Failed Ping Count', PingStringResult AS 'Ping Result'"
+                                                },
+                                                {
+                                                    "static": "FROM TestPingReportSummaryRes"
+                                                },
+                                                {
+                                                    "static": "WHERE PortGroupTagName = 'WestPorts'"
+                                                },
+                                                {
+                                                    "static": "AND ((FailedPingCount > 0) OR (AttemptedPingCount > 0 AND SuccessfulPingCount < FrameCount) OR (AttemptedPingCount == 0 AND FrameCount > 0))"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "IsJson": true
+                            },
+                            {
+                                "Name": "DbJsonFileName",
+                                "Type": "inputFilePath",
+                                "Value": ""
+                            },
+                            {
+                                "Name": "EnableLoadFromFileName",
+                                "Type": "bool",
+                                "Value": false
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "FinalizeList": [
+            {
+                "Name": "Sequence: Clean Up Group Command 1",
+                "Class": "spirent.methodology.cleanupgroupcommand",
+                "Enabled": true,
+                "Properties": [
+                    {
+                        "Name": "Name",
+                        "Type": "string",
+                        "Value": "Sequence: Clean Up Group Command 1"
+                    },
+                    {
+                        "Name": "DisplayName",
+                        "Type": "string",
+                        "Value": "Clean Up Methodology"
+                    },
+                    {
+                        "Name": "Description",
+                        "Type": "string",
+                        "Value": "Configuration for Methodology Clean Up"
+                    }
+                ],
+                "Children": [
+                    {
+                        "Name": "Results: End Of Test Command",
+                        "Class": "spirent.methodology.endoftestcommand",
+                        "Enabled": true,
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "string",
+                                "Value": "Results: End Of Test Command"
+                            },
+                            {
+                                "Name": "SetUnknownVerdictToPass",
+                                "Type": "bool",
+                                "Value": false
+                            },
+                            {
+                                "Name": "ErrorOnFailure",
+                                "Type": "bool",
+                                "Value": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "Frontend": [
+        {
+            "Name": "StmExposedProperty 776",
+            "EpDescription": "VLAN Mode for West devices.",
+            "EpDisplayName": "West VLAN Mode",
+            "EpTargetClassId": "",
+            "EpTargetPropertyId": "",
+            "EpMetaPropertyName": "WestVlanMode",
+            "EpPropertyJsonId": "",
+            "EpPropertyType": "ENUM",
+            "EpUnits": "",
+            "EpIsCollection": false,
+            "EpMinValue": "",
+            "EpMaxValue": "",
+            "EpEnumValueList": [
+                "None",
+                "VLAN",
+                "QinQ"
+            ],
+            "EpPropertyValue": "None",
+            "EpPropertyValueList": [],
+            "EpFileExtensionList": []
+        },
+        {
+            "Name": "StmExposedProperty 979",
+            "EpDescription": "VLAN Mode for East devices.",
+            "EpDisplayName": "East VLAN Mode",
+            "EpTargetClassId": "",
+            "EpTargetPropertyId": "",
+            "EpMetaPropertyName": "EastVlanMode",
+            "EpPropertyJsonId": "",
+            "EpPropertyType": "ENUM",
+            "EpUnits": "",
+            "EpIsCollection": false,
+            "EpMinValue": "",
+            "EpMaxValue": "",
+            "EpEnumValueList": [
+                "None",
+                "VLAN",
+                "QinQ"
+            ],
+            "EpPropertyValue": "None",
+            "EpPropertyValueList": [],
+            "EpFileExtensionList": []
+        }
+    ],
+    "Mappers": [
+        {
+            "Name": "Enable West VLANs Mapper",
+            "Class": "stmexposedpropertymap",
+            "Properties": [
+                {
+                    "Name": "Name",
+                    "Type": "string",
+                    "Value": "Enable West VLANs Mapper"
+                },
+                {
+                    "Name": "MapType",
+                    "Type": "u8",
+                    "Value": "SWITCH"
+                },
+                {
+                    "Name": "MappingJson",
+                    "Type": "string",
+                    "Value": [
+                        {
+                            "src_case": "None",
+                            "property_value_dict": {
+                                "WestOuterVlanEnable": "False",
+                                "WestInnerVlanEnable": "False",
+                                "WestEnableOuterVlanConfig": "False",
+                                "WestEnableInnerVlanConfig": "False"
+                            }
+                        },
+                        {
+                            "src_case": "VLAN",
+                            "property_value_dict": {
+                                "WestOuterVlanEnable": "True",
+                                "WestInnerVlanEnable": "False",
+                                "WestEnableOuterVlanConfig": "True",
+                                "WestEnableInnerVlanConfig": "False"
+                            }
+                        },
+                        {
+                            "src_case": "QinQ",
+                            "property_value_dict": {
+                                "WestOuterVlanEnable": "True",
+                                "WestInnerVlanEnable": "True",
+                                "WestEnableOuterVlanConfig": "True",
+                                "WestEnableInnerVlanConfig": "True"
+                            }
+                        }
+                    ],
+                    "IsJson": true
+                }
+            ],
+            "Relations": [
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "WestOuterVlanEnable"
+                },
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "WestInnerVlanEnable"
+                },
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "WestEnableOuterVlanConfig"
+                },
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "WestEnableInnerVlanConfig"
+                },
+                {
+                    "RelationType": "StmExposedMapSrcProperty",
+                    "Target": "WestVlanMode"
+                }
+            ]
+        },
+        {
+            "Name": "Enable East VLANs Mapper",
+            "Class": "stmexposedpropertymap",
+            "Properties": [
+                {
+                    "Name": "Name",
+                    "Type": "string",
+                    "Value": "Enable East VLANs Mapper"
+                },
+                {
+                    "Name": "MapType",
+                    "Type": "u8",
+                    "Value": "SWITCH"
+                },
+                {
+                    "Name": "MappingJson",
+                    "Type": "string",
+                    "Value": [
+                        {
+                            "src_case": "None",
+                            "property_value_dict": {
+                                "EastEnableOuterVlan": "False",
+                                "EastEnableInnerVlan": "False",
+                                "EastEnableOuterVlanConfig": "False",
+                                "EastEnableInnerVlanConfig": "False"
+                            }
+                        },
+                        {
+                            "src_case": "VLAN",
+                            "property_value_dict": {
+                                "EastEnableOuterVlan": "True",
+                                "EastEnableInnerVlan": "False",
+                                "EastEnableOuterVlanConfig": "True",
+                                "EastEnableInnerVlanConfig": "False"
+                            }
+                        },
+                        {
+                            "src_case": "QinQ",
+                            "property_value_dict": {
+                                "EastEnableOuterVlan": "True",
+                                "EastEnableInnerVlan": "True",
+                                "EastEnableOuterVlanConfig": "True",
+                                "EastEnableInnerVlanConfig": "True"
+                            }
+                        }
+                    ],
+                    "IsJson": true
+                }
+            ],
+            "Relations": [
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "EastEnableOuterVlan"
+                },
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "EastEnableInnerVlan"
+                },
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "EastEnableOuterVlanConfig"
+                },
+                {
+                    "RelationType": "StmExposedMapDstProperty",
+                    "Target": "EastEnableInnerVlanConfig"
+                },
+                {
+                    "RelationType": "StmExposedMapSrcProperty",
+                    "Target": "EastVlanMode"
+                }
+            ]
+        },
+        {
+            "Name": "Ping Configuration Table Mapper",
+            "Class": "stmexposedtable",
+            "Properties": [
+                {
+                    "Name": "Name",
+                    "Type": "string",
+                    "Value": "Ping Configuration Table Mapper"
+                },
+                {
+                    "Name": "TableJson",
+                    "Type": "string",
+                    "Value": {
+                        "display_name": "Ping Configuration Settings",
+                        "description": "Ping Configuration",
+                        "column_order": [
+                            "PingSrcAddrColumn",
+                            "PingDstAddrColumn",
+                            "PingIntervalColumn",
+                            "PingFrameCountColumn"
+                        ]
+                    },
+                    "IsJson": true
+                },
+                {
+                    "Name": "MetaTableName",
+                    "Type": "string",
+                    "Value": "PingConfiguration"
+                },
+                {
+                    "Name": "IsStatic",
+                    "Type": "bool",
+                    "Value": false
+                }
+            ],
+            "Relations": [
+                {
+                    "RelationType": "StmExposedColumnProperty",
+                    "Target": "PingSrcAddrColumn"
+                },
+                {
+                    "RelationType": "StmExposedColumnProperty",
+                    "Target": "PingDstAddrColumn"
+                },
+                {
+                    "RelationType": "StmExposedColumnProperty",
+                    "Target": "PingIntervalColumn"
+                },
+                {
+                    "RelationType": "StmExposedColumnProperty",
+                    "Target": "PingFrameCountColumn"
+                },
+                {
+                    "RelationType": "StmExposedTableProperty",
+                    "Target": "PingConfigTable"
+                }
+            ]
+        }
+    ],
+    "ExpTagList": [
+        {
+            "Name": "WestPingPorts",
+            "TargetObjectType": "port",
+            "ExpProperties": [
+                {
+                    "Name": "StmExposedProperty 777",
+                    "EpDescription": "West Ports that send the ping",
+                    "EpDisplayName": "West Ports",
+                    "EpTargetClassId": "tag",
+                    "EpTargetPropertyId": "scriptable.name",
+                    "EpMetaPropertyName": "WestPingPorts",
+                    "EpPropertyJsonId": "",
+                    "EpPropertyType": "STRING",
+                    "EpUnits": "",
+                    "EpIsCollection": false,
+                    "EpMinValue": "1",
+                    "EpMaxValue": "unbounded",
+                    "EpEnumValueList": [],
+                    "EpPropertyValue": "WestPorts",
+                    "EpPropertyValueList": [],
+                    "EpFileExtensionList": []
+                }
+            ]
+        },
+        {
+            "Name": "EastPingPorts",
+            "TargetObjectType": "port",
+            "ExpProperties": [
+                {
+                    "Name": "StmExposedProperty 778",
+                    "EpDescription": "Ports that reply to the ping",
+                    "EpDisplayName": "East Ports",
+                    "EpTargetClassId": "tag",
+                    "EpTargetPropertyId": "scriptable.name",
+                    "EpMetaPropertyName": "EastPingPorts",
+                    "EpPropertyJsonId": "",
+                    "EpPropertyType": "STRING",
+                    "EpUnits": "",
+                    "EpIsCollection": false,
+                    "EpMinValue": "1",
+                    "EpMaxValue": "unbounded",
+                    "EpEnumValueList": [],
+                    "EpPropertyValue": "EastPorts",
+                    "EpPropertyValueList": [],
+                    "EpFileExtensionList": []
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" MadCap:tocPath="" MadCap:InPreviewMode="false" MadCap:PreloadImages="false" MadCap:RuntimeFileType="Topic" MadCap:TargetType="WebHelp" lang="en-us" xml:lang="en-us" MadCap:PathToHelpSystem="../" MadCap:HelpSystemFileName="stc_ra.xml" MadCap:SearchType="Stem">
+    <!-- saved from url=(0016)http://localhost -->
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Tree Node Views</title>
+        <link href="spirent_univ.css" rel="stylesheet" />
+        <script src="SkinSupport/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapAll.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapTopicAll.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <p><span style="font-family: sans-serif; font-size: 8pt;">Results Reporter Online Help <span style="color: #ffffff;">Results Reporter Help</span></span>
+        </p>
+        <h1 id="tree_node_views.htm" xmlns="http://www.w3.org/1999/xhtml">Tree Node Views </h1>
+        <p xmlns="http://www.w3.org/1999/xhtml">Each node in the results tree has a <b>view</b> associated with it. The typical
+ views are:</p>
+        <ul xmlns="http://www.w3.org/1999/xhtml">
+            <li value="1"><a href="#table">Table</a>
+            </li>
+            <li xmlns="" value="2"><a href="#graph">Graph</a>
+            </li>
+            <li xmlns="" value="3"><a href="#drv">Dynamic Results</a> <![CDATA[ ]]></li>
+            <li value="4"><a href="#template">Template</a>
+            </li>
+            <li value="5"><a href="#none">None</a>
+            </li>
+        </ul>
+        <h2 xmlns="http://www.w3.org/1999/xhtml"><a name="table" id="table"></a>           Table View </h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">Selecting a node which is associated with a table view will display a table
+ on the right side. This table may contain multiple
+ rows and columns. You can manipulate this view by resizing the columns and
+ reordering them. Double-click the divider to the right of a column to automatically resize the column to fit the heading or contents. Click on a column header to sort the table by the contents of the column. </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">Use the <a href="reporter_menus.htm#filter" xmlns="">Filter Toolbar</a> or right-click anywhere on the table to get the <a href="reporter_menus.htm#table" xmlns="">Table shortcut menu</a> to filter the table view or copy cells. </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">See also <a href="applying_templates.htm">Applying Templates</a>. </p>
+        <h2 xmlns=""><a name="graph" id="graph"></a>           Graph View</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml"><span xmlns="">Use the </span><a href="reporter_menus.htm#filter" xmlns="">Filter Toolbar</a><span xmlns=""> or right-click anywhere on the graph to get the </span><a href="reporter_menus.htm#graph" xmlns="">Graph shortcut menu</a> to filter the graph view.</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">View a graph created in Spirent TestCenter (including graphs with a logarithmic axis or multiple axes) by clicking on the graph node in the tree, or create a graph.</p>
+        <p class="tobegin" xmlns="http://www.w3.org/1999/xhtml">To create a graph:</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">Select a node in the results tree that displays a table view on the right
+ side.</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">The <b>Create Graph</b> icon will become accessible.</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">The data for the chart comes from the selected table view. You can use all the data from the table or a subset. The entire table is used if no selection is made. </p>
+        <p class="tobegin" xmlns="http://www.w3.org/1999/xhtml">To select a subset of the data in a table:</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">Define the area of the table that contains the data you want to graph, by
+ either one of these techniques:</p>
+        <ul xmlns="http://www.w3.org/1999/xhtml">
+            <li value="1">Press
+ and hold the left mouse button while dragging through an area of the table.</li>
+            <li value="2">Select a cell in the table, then hold down the SHIFT key while selecting
+ another cell.</li>
+        </ul>
+        <p xmlns="http://www.w3.org/1999/xhtml">After selecting the data to graph, click the <b>Create Graph</b> icon. </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">The <b>Configure Graph</b> window will open. Use this window
+ to select: </p>
+        <ul xmlns="http://www.w3.org/1999/xhtml">
+            <li value="1">The type of graph (bar, line, or pie) </li>
+            <li value="2">The perspective (2D, 2.5D, 3D)
+            
+            <ul><li value="1">2.5D uses three-dimensional elements. Values in different table rows are displayed in a single row on the graph. </li><li value="2">3D uses three-dimensional elements. Values in different table rows are displayed in different rows in the graph.  </li></ul></li>
+            <li value="3"> Whether to interpret the series from the table in rows or in columns </li>
+        </ul>
+        <p xmlns="http://www.w3.org/1999/xhtml">When you have finished configuring the graph, click <strong>OK</strong>. The graph will be added to the results tree with the name <strong>untitled</strong>, in
+ a folder named <strong>Graphs</strong>. (If not already present, the Graphs folder will be
+ added to the results tree under the current results database.)</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">To rename the graph, double-click on the name in the results tree,
+type a new name, and press <b>ENTER</b>.</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">A 3D graph can be manipulated by dragging the mouse while pressing a button:</p>
+        <table border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Button</th>
+                <th scope="col">Effect on the graph </th>
+            </tr>
+            <tr>
+                <td>Left</td>
+                <td>Rotate</td>
+            </tr>
+            <tr>
+                <td>Right</td>
+                <td>Move</td>
+            </tr>
+            <tr>
+                <td>Middle (or left+right)</td>
+                <td>Zoom</td>
+            </tr>
+        </table>
+        <p class="tobegin" xmlns="http://www.w3.org/1999/xhtml">To close a graph </p>
+        <p xmlns="">Highlight the graph in the Results Reporter tree and press <strong>DELETE</strong>. </p>
+        <h2 xmlns=""><a name="drv" id="graph"></a><span>Dynamic Results View</span>&#160;</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">View a dynamic results view created in Spirent TestCenter or create a new dynamic results view with the <a href="drv_wiz_oview.htm" xmlns="http://www.w3.org/1999/xhtml">Dynamic Results View</a> wizard.
+        </p>
+        <p xmlns="http://www.w3.org/1999/xhtml"><span xmlns="">Customize a dynamic results view with the </span><a href="drv_edit_oview.htm">Dynamic Results View</a>
+        </p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml"><a name="template" id="template"></a>           Template View </h2>
+        <p xmlns="">A template node in the results tree can contain any of the other node types. Toolbar buttons and menu items pertaining to
+ reporting are enabled when viewing a template view. Nodes subordinate to template view nodes use the default view of the node type, e.g., table nodes use table view and chart nodes use chart view. </p>
+        <p xmlns="">Drag and drop a column in a rendered table to change the table layout.</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">See also <a href="reporting.htm">Reporting</a>.</p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml"><a name="none" id="none"></a>           None</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">Selecting a node which is not associated with a view will clear the display
+ on the right side. Usually these nodes function to organize the results tree
+ and are only for navigational purposes. </p>
+        <hr width="100%" size="0" align="center" xmlns="http://www.w3.org/1999/xhtml" />
+        <p class="related_information" xmlns="http://www.w3.org/1999/xhtml">Related Topics:</p>
+        <p class="relatedtopic" xmlns="http://www.w3.org/1999/xhtml"><a href="applying_templates.htm">Applying Templates</a>
+        </p>
+        <p class="relatedtopic" xmlns="http://www.w3.org/1999/xhtml"><a href="reporting.htm">Reporting</a>
+        </p>
+        <p style="text-align: right;"><span style="font-family: sans-serif; font-size: 8pt;">© Spirent Communications</span>
+        </p>
+        <script type="text/javascript" src="SkinSupport/MadCapBodyEnd.js">
+        </script>
+    </body>
+</html>

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="gach" showName="Generic Associated Channel Header (G-ACH)" version="1.00"
+    description="This is a PDU library for Generic Associated Channel Header as defined in XML Stream Editor." userdefined="false">
+
+  <TYPE_DEFS>
+     <TYPE_DEF name="GachChannelType" type="OCTETSTRING" byteLength="2" unitType="ELEMENT" uiShowName="G-ACH Channel Type" >
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="01-Management Communication Channel (MCC) - 0x01" value="0001" />
+        <VAL_ENUM uiShowName="02-Signaling Communication Channel (SCC) - 0x02" value="0002" />
+		<VAL_ENUM uiShowName="03-BFD Control - 0x07" value="0007" />
+		<VAL_ENUM uiShowName="04-BFD CV Control - 0x08 (Deprecated)" value="0008" />
+		<VAL_ENUM uiShowName="05-BFD CC Control - 0x22" value="0022" />
+		<VAL_ENUM uiShowName="06-BFD CV Control - 0x23" value="0023" />
+		<VAL_ENUM uiShowName="07-IPv4 packet - 0x21" value="0021" />
+		<VAL_ENUM uiShowName="08-IPv6 packet - 0x57" value="0057" />
+		<VAL_ENUM uiShowName="09-PW OAM(Status) Msg - 0x27" value="0027" />
+		<VAL_ENUM uiShowName="10-Fault OAM - 0x58" value="0058" />
+	  </VALUE_ENUMERATION>
+     </TYPE_DEF>
+
+    <TYPE_DEF name="Ach" type="SEQUENCE" unitType="ELEMENT" uiShowName="ACH">
+      <FIELD name="type" type="BITSTRING" bitLength="4" defaultValue="0001" uiShowName="Type"  />
+      <FIELD name="version" type="BITSTRING" bitLength="4" defaultValue="0000" uiShowName="Version" />
+      <FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved" />
+      <FIELD name="gachChannelType" type="GachChannelType" defaultValue="0021" uiControlState="ALLOW_OVERRIDE" 
+			procfnTarget="NEXTHDR" uiShowName="G-ACH Channel Type" />
+    </TYPE_DEF>  
+	
+	<TYPE_DEF name="AchTlvHeader" type="SEQUENCE" unitType="ELEMENT" uiShowName="ACH TLV Header">
+      <FIELD name="length" type="INTEGER" bitLength="16" defaultValue="00" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="reserved" type="INTEGER" bitLength="16" defaultValue="00" uiShowName="Reserved" />
+	  <FIELD name="tlvs" type="GachTlvList" uiShowName="G-ACH TLVs"/>
+    </TYPE_DEF>  
+
+	<TYPE_DEF name="GachTlvList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="250" 
+											elementType="GachTlvs" unitType="ELEMENT"/>
+
+    <TYPE_DEF name="GachTlvs" type="CHOICE" unitType="ELEMENT" uiShowName="G-ACH TLVs">
+	  <FIELD name="authenticationTlv" type="AuthenticationTlvType" uiShowName="AUTHENTICATION TLV" />
+	  <FIELD name="customTlv" type="CustomTlvType" uiShowName="CUSTOM TLV" />
+	  <FIELD name="nullTlv" type="NullTlvType" uiShowName="NULL TLV" />
+	  <FIELD name="ipv4SrcAddrTlv" type="Ipv4SrcAddrTlvType" uiShowName="IPV4 SRC ADDRESS TLV" />
+	  <FIELD name="ipv6SrcAddrTlv" type="Ipv6SrcAddrTlvType" uiShowName="IPV6 SRC ADDRESS TLV" />
+	  <FIELD name="mepLspTlv" type="MepLspTlvType" uiShowName="MEP LSP TLV" />
+	  <FIELD name="mepPwTlv" type="MepPwTlvType" uiShowName="MEP PW TLV" />
+	</TYPE_DEF>
+	
+	<TYPE_DEF name="AchTlvHeaderList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1" 
+											elementType="AchTlvs" unitType="ELEMENT"/>
+
+    <TYPE_DEF name="AchTlvs" type="CHOICE" unitType="ELEMENT" uiShowName="ACH TLVs">
+	  <FIELD name="achTlvfirstheader" type="AchTlvHeader" uiShowName="ACH TLV" />	  
+	</TYPE_DEF>
+	
+	<TYPE_DEF name="CustomTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="Custom TLV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="9" uiShowName="Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="LSPPINGTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="65535" uiShowName="Value"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lspping:NullTlv" name="Null TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv4SrcAddrTlv" name="Ipv4SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv6SrcAddrTlv" name="Ipv6SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:AuthenticationTlv" name="Authentication TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepLspTlv" name="MepLsp TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepPwTlv" name="MepPw TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+	<TYPE_DEF name="NullTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="Null TLV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="0" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="LSPPINGTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="65535" defaultValue="00000000" uiShowName="Value"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lspping:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv4SrcAddrTlv" name="Ipv4SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:NullTlv" name="Null TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv6SrcAddrTlv" name="Ipv6SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:AuthenticationTlv" name="Authentication TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepLspTlv" name="MepLsp TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepPwTlv" name="MepPw TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="Ipv4SrcAddrTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="Ipv4 Src Address Tlv">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="1" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="LSPPINGTLVLENGTH" defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="ipv4Address" type="IPV4ADDR" defaultValue="192.168.1.1" uiShowName="Ipv4 Src Addr" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lspping:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:NullTlv" name="Null TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv4SrcAddrTlv" name="Ipv4SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv6SrcAddrTlv" name="Ipv6SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:AuthenticationTlv" name="Authentication TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepLspTlv" name="MepLsp TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepPwTlv" name="MepPw TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="Ipv6SrcAddrTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="Ipv6 Src Address Tlv">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="2" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="LSPPINGTLVLENGTH" defaultValue="16" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="ipv6Address" type="IPV6ADDR" defaultValue="2000::0" uiShowName="Ipv6 Src Addr" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lspping:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:NullTlv" name="Null TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv4SrcAddrTlv" name="Ipv4SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv6SrcAddrTlv" name="Ipv6SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:AuthenticationTlv" name="Authentication TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepLspTlv" name="MepLsp TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepPwTlv" name="MepPw TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="AuthenticationTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="Authentication Tlv">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="6" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="LSPPINGTLVLENGTH" defaultValue="16" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="65535" defaultValue="" uiShowName="Value"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lspping:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:NullTlv" name="Null TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv4SrcAddrTlv" name="Ipv4SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv6SrcAddrTlv" name="Ipv6SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepLspTlv" name="MepLsp TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepPwTlv" name="MepPw TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:AuthenticationTlv" name="Authentication TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="MepLspTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="MEP LSP TlV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="8" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="LSPPINGTLVLENGTH" defaultValue="12" uiShowName="Length" uiControlState="CALCULATED" />
+	  <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Global ID" />
+      <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Node ID" />
+      <FIELD name="tunnelId" type="INTEGER" bitLength="16"  defaultValue="0" uiShowName="Tunnel ID" />
+      <FIELD name="lspId" type="INTEGER" bitLength="16"  defaultValue="0" uiShowName="LSP ID" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lspping:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:NullTlv" name="Null TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv4SrcAddrTlv" name="Ipv4SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv6SrcAddrTlv" name="Ipv6SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:AuthenticationTlv" name="Authentication TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepPwTlv" name="MepPw TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepLspTlv" name="MepLsp TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="MepPwTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="MEP PW TlV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="9" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="LSPPINGTLVLENGTH" defaultValue="20" uiShowName="Length" uiControlState="CALCULATED" />
+	  <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Global ID" />
+	  <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Node ID" />
+      <FIELD name="acId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="AC ID" />
+	  <FIELD name="agiType" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="AGI Type" />
+	  <FIELD name="agiLength" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="AGI Length" />
+	  <FIELD name="agiValue" type="OCTETSTRING" byteLength="10"  defaultValue="00000000000000000000" uiShowName="AGI Value" />
+	  <NEXT_HEADERS>
+        <NXT_HDR id="lspping:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:NullTlv" name="Null TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv4SrcAddrTlv" name="Ipv4SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:Ipv6SrcAddrTlv" name="Ipv6SrcAddress TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:AuthenticationTlv" name="Authentication TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepLspTlv" name="MepLsp TLV"></NXT_HDR>
+        <NXT_HDR id="lspping:MepPwTlv" name="MepPw TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+	<TYPE_DEF name="GACH" type="SEQUENCE" unitType="HEADER" uiShowName="G-ACH" >
+      <FIELD name="achHeader" type="Ach" uiShowName="ACH"/>
+	  <FIELD name="achTlvHeader" type="AchTlvHeaderList" uiShowName="ACH TLVs"/>
+	  <NEXT_HEADERS>
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0021" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="0057" />
+		<NXT_HDR id="faultOAM:FaultMgmtMsg" name="MPLS-TP Fault OAM Message" value="0058" />
+		<NXT_HDR id="pwOAM:PseudowireStatusMsg" name="Pseudowire Status Message" value="0027" />
+		<NXT_HDR id="lspping:LspRequest" name="LSP Ping Echo Request" value="0003" />
+		<NXT_HDR id="lspping:LspReply" name="LSP Ping Echo Reply" value="0003" />
+		<NXT_HDR id="bfdcc:BFDCC" name="BFD CC Message" value="0022" />
+		<NXT_HDR id="bfdcv:BFDCV" name="BFD CV Message" value="0023" />
+		<NXT_HDR id="serviceoam:MplsTpOAMCCM" name="MPLS-TP OAM CCM" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMLBM" name="MPLS-TP OAM LBM" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMLBR" name="MPLS-TP OAM LBR" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMDMM" name="MPLS-TP OAM DMM" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMDMR" name="MPLS-TP OAM DMR" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMLMM" name="MPLS-TP OAM LMM" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMLMR" name="MPLS-TP OAM LMR" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMCSF" name="MPLS-TP OAM CSF" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMAIS" name="MPLS-TP OAM AIS" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMTST" name="MPLS-TP OAM TST" value="8902" />
+		<NXT_HDR id="serviceoam:MplsTpOAMLCK" name="MPLS-TP OAM LCK" value="8902" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+	
+  </TYPE_DEFS>
+  
+</PDU_LIBRARY>

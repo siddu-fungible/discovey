@@ -1,0 +1,434 @@
+{
+  "methodology_key": "CLOUDSTRESS_NETWORKBENCHMARK_FIXEDCOUNT",
+  "display_name": "Network I/O - Fixed Instance Count",
+  "short_display_name": "Network Fixed Count",
+  "description": "Identify a baseline network I/O performance metric of the system under test using a fixed number of deployed CloudStress Agents.",
+  "version": "1-0-0",
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "base_methodology": {
+    "methodology_key": "CLOUDSTRESS_BENCHMARK_FIXEDCOUNT",
+    "override_properties": {
+      "EnableCpuLoad": "False",
+      "EnableMemoryLoad": "False",
+      "EnableNetworkLoad": "True",
+      "EnableStorageLoad": "False",
+      "EnableCpuTestCriteria": "False",
+      "EnableMemoryTestCriteria": "False",
+      "EnableNetworkTestCriteria": "True",
+      "EnableStorageTestCriteria": "False"
+    }
+  },
+  "port_groups": [],
+  "machine_map": {
+    "sides": [
+      {
+        "side": "WEST",
+        "machine_group": "MachineGroupWestMachineGroup"
+      }
+    ]
+  },
+  "machine_groups": [
+    {
+      "property": "MachineGroupWestMachineGroup",
+      "display_name": "Machine Group MachineGroupWestMachineGroup",
+      "machines": [
+        {
+          "machine_ips": [
+            "10.1.1.1",
+            "10.1.1.2"
+          ]
+        }
+      ]
+    }
+  ],
+  "property_groups": [
+    {
+      "group_type": "TEST",
+      "group_key": "GlobalConfig",
+      "display_name": "Global Configuration",
+      "description": "Global Configuration",
+      "test_properties": [
+        {
+          "description": "The minimum time to generate load on the selected agents.",
+          "property_value_type": "FLOAT",
+          "display_name": "Iteration Duration",
+          "units": "sec",
+          "is_collection": false,
+          "property_value": "30.00",
+          "property": "IterationDuration"
+        },
+        {
+          "description": "Initial percent of the load search space to apply in the binary search algorithm.",
+          "property_value_type": "FLOAT",
+          "display_name": "Initial Search Space Value",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "50.00",
+          "property": "InitialSearchValue"
+        },
+        {
+          "description": "If the difference in search space percent between the highest passing iteration and lowest failing iteration is less than the resolution, the search algorithm will stop.",
+          "property_value_type": "FLOAT",
+          "minimum": "0.001",
+          "maximum": "100.0",
+          "display_name": "Search Resolution",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "1.00",
+          "property": "SearchResolution"
+        },
+        {
+          "description": "The amount of time to wait after stopping agents before collecting results and validating the iteration.",
+          "property_value_type": "FLOAT",
+          "minimum": "0.005",
+          "display_name": "Wait After Agent Stop",
+          "units": "sec",
+          "is_collection": false,
+          "property_value": "10.00",
+          "maximum": "2147483647.0",
+          "property": "WaitAfterStop"
+        }
+      ]
+    },
+    {
+      "display_name": "Auto-Deployment Configuration",
+      "description": "Auto-Deployment Configuration",
+      "group_type": "TEST",
+      "group_key": "AutoDeployConfig",
+      "test_properties": [
+        {
+          "display_name": "Provider Response Maximum Wait Time",
+          "description": "Maximum amount of time to wait for a response from the provider when a command is issued.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "60",
+          "units": "sec",
+          "property": "ProviderRespMaxWaitTime"
+        },
+        {
+          "display_name": "Provider Response Poll Time",
+          "description": "Amount of time to wait between polls to check for the provider's response to a command.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "ProviderRespPollTime"
+        },
+        {
+          "display_name": "Agent Deployment Maximum Wait Time",
+          "description": "Maximum amount of time to wait for auto-deployed agents to come up.  This maximum applies to agents of a specific Template or a specific batch of agents on a specific Template if BatchSize is non-zero.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "300",
+          "units": "sec",
+          "property": "DeployMaxWaitTime"
+        },
+        {
+          "display_name": "Agent Deployment Poll Time",
+          "description": "Amount of time to wait between polls to check for the number of agents have successfully been deployed for a specific Template or a specific batch of agents on a specific Template if BatchSize is non-zero.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "DeployPollTime"
+        },
+        {
+          "display_name": "Tear Down Maximum Wait Time",
+          "description": "Specifies the maximum time in seconds to wait to for all the deployed agents of the Template to be torn down.  When the BatchSize is non-zero, this parameter corresponds to the maximum wait time per batch of agents per Template.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "300",
+          "units": "sec",
+          "property": "TearDownMaxWaitTime"
+        },
+        {
+          "display_name": "Tear Down Poll Time",
+          "description": "Specifies the time in milliseconds to wait between polls while polling for number of agents that are still up.  Note that each poll for number of agents that are up involves issuing a command to the provider to get the current number of agents that are still up.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "TearDownPollTime"
+        },
+        {
+          "display_name": "Agent Deployment Batch Size",
+          "description": "Maximum number of agents to attempt at any one time.  Note that the Templates are deployed serially; the BatchSize further breaks up the agents in a Template to reduce the load on the server.  Set the BatchSize to zero to deploy all agents on a Template as fast as possible.",
+          "property_value_type": "INTEGER",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "0",
+          "units": "agents",
+          "property": "DeployBatchSize"
+        },
+        {
+          "display_name": "Agent Tear Down Batch Size",
+          "description": "Maximum number of agents to attempt at any one time.  Note that the Templates are deployed serially; the BatchSize further breaks up the agents in a Template to reduce the load on the server.  Set the BatchSize to zero to tear down all agents on a Template as fast as possible.",
+          "property_value_type": "INTEGER",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "0",
+          "units": "agents",
+          "property": "TearDownBatchSize"
+        },
+        {
+          "display_name": "Enable Delete Instances On End Of Test",
+          "description": "Enable deletion of all auto-deployed instances at the end of the test.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property": "EnableEotDeleteInstances",
+          "property_value": "True"
+        }
+      ]
+    },
+    {
+      "group_type": "VM",
+      "group_key": "NetworkLoadConfig",
+      "display_name": "Network Load Parameters",
+      "description": "Network load parameters for the methodology.",
+      "test_properties": [
+        {
+          "property": "MinMaxNetworkLoadParams",
+          "display_name": "Network Load Parameters",
+          "description": "The network load parameters for the test.",
+          "column_definitions": [
+            {
+              "description": "The lower bound of the network read rate search space in operations per second.",
+              "property_value_type": "INTEGER",
+              "minimum": "0",
+              "display_name": "Minimum Network Read Rate",
+              "units": "ops/sec",
+              "is_collection": false,
+              "maximum": "4294967295",
+              "property": "MinNetworkReadRate"
+            },
+            {
+              "description": "The upper bound of the network read rate search space in operations per second.",
+              "property_value_type": "INTEGER",
+              "minimum": "0",
+              "display_name": "Maximum Network Read Rate",
+              "units": "ops/sec",
+              "is_collection": false,
+              "maximum": "4294967295",
+              "property": "MaxNetworkReadRate"
+            },
+            {
+              "description": "The lower bound of the network write rate search space in operations per second.",
+              "property_value_type": "INTEGER",
+              "minimum": "0",
+              "display_name": "Minimum Network Write Rate",
+              "units": "ops/sec",
+              "is_collection": false,
+              "maximum": "4294967295",
+              "property": "MinNetworkWriteRate"
+            },
+            {
+              "description": "The upper bound of the network write rate search space in operations per second.",
+              "property_value_type": "INTEGER",
+              "minimum": "0",
+              "display_name": "Maximum Network Write Rate",
+              "units": "ops/sec",
+              "is_collection": false,
+              "maximum": "4294967295",
+              "property": "MaxNetworkWriteRate"
+            },
+            {
+              "description": "The number of bytes to read for network operations. Must be a power of 2.",
+              "display_name": "Network Read Size",
+              "property": "NetworkReadSize",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "1",
+              "units": "bytes"
+            },
+            {
+              "description": "The number of bytes to write for network operations. Must be a power of 2.",
+              "display_name": "Network Write Size",
+              "property": "NetworkWriteSize",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "1",
+              "units": "bytes"
+            },
+            {
+              "description": "The number of connections to establish to the destination.",
+              "property_value_type": "INTEGER",
+              "minimum": "1",
+              "display_name": "Connections",
+              "is_collection": false,
+              "maximum": "4294967295",
+              "property": "NetworkConnections"
+            },
+            {
+              "description": "The transport protocol to use for the network I/O.",
+              "property_value_type": "ENUM",
+              "display_name": "Transport Protocol",
+              "is_collection": false,
+              "property": "NetworkTransport",
+              "acceptable_values": [
+                "TCP",
+                "UDP"
+              ]
+            },
+            {
+              "acceptable_values": [
+                ""
+              ],
+              "display_name": "Template ID",
+              "description": "The resource ID of the template model these parameters are for. An empty string indicates to apply to all template models.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "NetworkTemplateId"
+            },
+            {
+              "acceptable_values": [
+                ""
+              ],
+              "display_name": "Node ID",
+              "description": "The resource ID of the node within the specified template model these parameters is for. An empty string indicates to apply to all nodes within the template model. If TemplateId is empty string, this is treated as an empty string.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "NetworkNodeId"
+            },
+            {
+              "acceptable_values": [
+                ""
+              ],
+              "display_name": "Node Name",
+              "description": "The name of the node within the specified template model that this load profile applies to.  When Node ID is an empty string, this field is ignored.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "NetworkNodeName"
+            },
+            {
+              "acceptable_values": [
+                ""
+              ],
+              "display_name": "Profile Name",
+              "description": "The name of this load profile.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "NetworkLoadProfileName"
+            }
+          ],
+          "table": [
+            [
+              "1000",
+              "10000",
+              "1000",
+              "10000",
+              "4096",
+              "4096",
+              "10",
+              "TCP",
+              "",
+              "",
+              "",
+              "Default"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "RESULTS",
+      "display_name": "Success Thresholds",
+      "description": "Success Thresholds",
+      "test_properties": [
+        {
+          "description": "The acceptable variance between the intended network read rate and actual network read rate.",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "display_name": "Acceptable Network Read Variance",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "20.00",
+          "maximum": "100",
+          "property": "AcceptableNetworkReadVariance"
+        },
+        {
+          "description": "The maximum acceptable latency, in nanoseconds, of network read operations.",
+          "property_value_type": "FLOAT",
+          "display_name": "Acceptable Network Read Latency",
+          "units": "ns",
+          "is_collection": false,
+          "property_value": "25000000.00",
+          "property": "AcceptableNetworkReadLatency"
+        },
+        {
+          "description": "The acceptable variance between the intended network write rate and actual network write rate.",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "display_name": "Acceptable Network Write Variance",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "20.00",
+          "maximum": "100",
+          "property": "AcceptableNetworkWriteVariance"
+        },
+        {
+          "description": "The maximum acceptable latency, in nanoseconds, of network write operations.",
+          "property_value_type": "FLOAT",
+          "display_name": "Acceptable Network Write Latency",
+          "units": "ns",
+          "is_collection": false,
+          "property_value": "25000000.00",
+          "property": "AcceptableNetworkWriteLatency"
+        },
+        {
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "display_name": "Network Read Variance Success Threshold",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "95.00",
+          "maximum": "100",
+          "property": "NetworkReadVarianceSuccessThreshold"
+        },
+        {
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "display_name": "Network Read Latency Success Threshold",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "95.00",
+          "maximum": "100",
+          "property": "NetworkReadLatencySuccessThreshold"
+        },
+        {
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "display_name": "Network Write Variance Success Threshold",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "95.00",
+          "maximum": "100",
+          "property": "NetworkWriteVarianceSuccessThreshold"
+        },
+        {
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "display_name": "Network Write Latency Success Threshold",
+          "units": "%",
+          "is_collection": false,
+          "property_value": "95.00",
+          "maximum": "100",
+          "property": "NetworkWriteLatencySuccessThreshold"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+<!-- This Document lists command alias information-->
+	<CustomizedCommand type="CUSTOM1" alias="sample" />
+	<CustomizedCommand type="CUSTOM2" alias="" />
+	<CustomizedCommand type="CUSTOM3" alias="" />
+	<CustomizedCommand type="CUSTOM4" alias="" />
+	<CustomizedCommand type="CUSTOM5" alias="" />
+	<CustomizedCommand type="CUSTOM6" alias="" />
+	<CustomizedCommand type="CUSTOM7" alias="" />
+	<CustomizedCommand type="CUSTOM8" alias="" />
+	<CustomizedCommand type="CUSTOM9" alias="" />
+	<CustomizedCommand type="CUSTOM10" alias="" />
+</Configuration>

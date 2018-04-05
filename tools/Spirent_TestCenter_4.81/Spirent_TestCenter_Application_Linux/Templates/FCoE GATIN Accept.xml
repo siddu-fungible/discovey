@@ -1,0 +1,28 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoEGATINAccept" 
+    showName="FCoE GATIN Accept"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE GATIN Accept">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>03</rCtl>
+        <sId>FFFFFA</sId>
+        <frameControl>980000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:GatinAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>01</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

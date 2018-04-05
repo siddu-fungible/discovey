@@ -1,0 +1,20 @@
+cffi==1.8.2; sys_platform=='win32'
+
+cryptography==1.5; sys_platform=='win32'
+
+enum34==1.1.6; sys_platform=='win32'
+
+idna==2.1; sys_platform=='win32'
+
+ipaddress==1.0.17; sys_platform=='win32'
+
+paramiko==2.0.2; sys_platform=='win32'
+
+pexpect==3.3; sys_platform=='linux2'
+
+pyasn1==0.1.9; sys_platform=='win32'
+
+six==1.10.0; sys_platform=='win32'
+
+setuptools==27.1.2; sys_platform=='win32'
+

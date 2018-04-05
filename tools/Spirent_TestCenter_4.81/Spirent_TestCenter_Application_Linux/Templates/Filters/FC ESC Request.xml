@@ -1,0 +1,21 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCESCRequest" 
+    showName="FC ESC Request"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcsw:EscReq"
+    description="FC ESC Request">
+    <pdus>
+      <pdu name="escReq1" pdu="fcsw:EscReq" >
+		<escProtocolDescriptors>
+		  <ProtocolDescriptor name="ProtocolDescriptor_0">
+		  </ProtocolDescriptor>
+		</escProtocolDescriptors>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

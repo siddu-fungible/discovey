@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ELSFLOGILSACC"
+    showName="ELS FLOGI LS_ACC"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:ELSFLOGILSACC" 
+    description="ELS FLOGI LS_ACC">
+
+    <pdus>
+      <pdu name="pdu1" pdu="fc:ELSFLOGILSACC"/>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="template_schema.xsd" name="RtcpIpv4Frame" showName="RtcpIpv4Frame" version="1.0" category="IP" readonly="false" validate="true" firstPdu="ethernet:EthernetII" description="Sample Frame for RTCP">
+   <modifiers>
+         <modifier name="Modifier1">
+            <mode>List</mode>
+            <count>2</count>
+            <data>80C8,80C9</data>
+            <datatype>Native</datatype>
+            <mask />
+            <step />
+            <offset>0</offset>
+            <stutterCount>0</stutterCount>
+            <forEachModifyList />
+            <useStream>false</useStream>
+         </modifier>
+	</modifiers>
+<pdus>
+<pdu name="eth1" pdu="ethernet:EthernetII">
+</pdu>
+<pdu name="ip_1" pdu="ipv4:IPv4">
+</pdu>
+<pdu name="Udp_1" pdu="udp:Udp">
+</pdu>
+<pdu name="Custom_1" pdu="custom:Custom">
+<pattern modifier="Modifier1">80C9</pattern>
+</pdu>
+<pdu name="Custom_2" pdu="custom:Custom">
+<pattern>00144A48DD38</pattern>
+</pdu>
+</pdus>
+</template>
+</frame>

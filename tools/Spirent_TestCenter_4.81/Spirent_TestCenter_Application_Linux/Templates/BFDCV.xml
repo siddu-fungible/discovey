@@ -1,0 +1,31 @@
+<frame>
+
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+
+    name="BFDCV" 
+
+    showName="BFD CV Message"
+
+    version="1.0"
+
+    category="MPLS"
+
+    readonly="true"
+
+    validate="true"
+
+    firstPdu="bfdcv:BFDCV"
+
+    description="BFD CV">
+
+    <pdus>
+
+      <pdu name="bcdcv1" pdu="bfdcv:BFDCV" />
+
+    </pdus>    
+
+  </template>
+
+</frame>

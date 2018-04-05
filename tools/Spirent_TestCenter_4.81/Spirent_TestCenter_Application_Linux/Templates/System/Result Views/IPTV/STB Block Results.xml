@@ -1,0 +1,429 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5046" serializationBase="true" 
+ Identifier="IPTV\STB Block Results"
+ PrimaryClass="Host"
+ Description="object://core/Host"
+ Path="IPTV"
+ CustomDisplayPath="Triple Play\IPTV"
+ CustomDisplayName="Set-Top-Box Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="STB Block Results">
+  <RealTimeResultGroupDefinition id="5047" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port Host"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 35">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5048" 
+   GroupName="IPTV STB Block Results"
+   GroupId="object://customgroup/162db960-10a0-4c3e-829d-1363b4fc5177/Main"
+   ColumnClassName="IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults IptvStbBlockResults"
+   ColumnPropertyName="ProfileName NumClients NumOfChannelChanges DuplicateJoins ErroredStreams FlaggedJoins FlaggedLeaves JoinFails JoinLatencyThreshold MinChangeLatency MaxChangeLatency AvgChangeLatency MinGapLatency MaxGapLatency AvgGapLatency MinOverlapLatency MaxOverlapLatency AvgOverlapLatency MinLeaveLatency MaxLeaveLatency AvgLeaveLatency MinJoinLatency MaxJoinLatency AvgJoinLatency MinLeaveJoinDelay MaxLeaveJoinDelay AvgLeaveJoinDelay MinLeaveToLeaveInterval MaxLeaveToLeaveInterval AvgLeaveToLeaveInterval MinMulticastPktToLeaveInterval MaxMulticastPktToLeaveInterval AvgMulticastPktToLeaveInterval TotalPkts TotalPktRate DroppedFrameCount ReorderedFrameCount DuplicateFrameCount LateFrameCount PrbsErrorCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, Host.Name AS &apos;Host Name&apos;, IptvStbBlockResults.ProfileName AS &apos;Profile Name&apos;, IptvStbBlockResults.NumClients AS &apos;Number Of Clients&apos;, IptvStbBlockResults.NumOfChannelChanges AS &apos;# Channel Changes&apos;, IptvStbBlockResults.DuplicateJoins AS &apos;# Duplicate Joins&apos;, IptvStbBlockResults.ErroredStreams AS &apos;# Errored Streams&apos;, IptvStbBlockResults.FlaggedJoins AS &apos;# Flagged Joins&apos;, IptvStbBlockResults.FlaggedLeaves AS &apos;# Flagged Leaves&apos;, IptvStbBlockResults.JoinFails AS &apos;# Join Failures&apos;, IptvStbBlockResults.JoinLatencyThreshold AS &apos;Join Latency Threshold&apos;, IptvStbBlockResults.MinChangeLatency AS &apos;Min Change Latency (msec)&apos;, IptvStbBlockResults.MaxChangeLatency AS &apos;Max Change Latency (msec)&apos;, IptvStbBlockResults.AvgChangeLatency AS &apos;Avg Change Latency (msec)&apos;, IptvStbBlockResults.MinGapLatency AS &apos;Min Gap Latency (msec)&apos;, IptvStbBlockResults.MaxGapLatency AS &apos;Max Gap Latency (msec)&apos;, IptvStbBlockResults.AvgGapLatency AS &apos;Avg Gap Latency (msec)&apos;, IptvStbBlockResults.MinOverlapLatency AS &apos;Min Overlap Latency (msec)&apos;, IptvStbBlockResults.MaxOverlapLatency AS &apos;Max Overlap Latency (msec)&apos;, IptvStbBlockResults.AvgOverlapLatency AS &apos;Avg Overlap Latency (msec)&apos;, IptvStbBlockResults.MinLeaveLatency AS &apos;Min Leave Latency (msec)&apos;, IptvStbBlockResults.MaxLeaveLatency AS &apos;Max Leave Latency (msec)&apos;, IptvStbBlockResults.AvgLeaveLatency AS &apos;Avg Leave Latency (msec)&apos;, IptvStbBlockResults.MinJoinLatency AS &apos;Min Join Latency (msec)&apos;, IptvStbBlockResults.MaxJoinLatency AS &apos;Max Join Latency (msec)&apos;, IptvStbBlockResults.AvgJoinLatency AS &apos;Avg Join Latency (msec)&apos;, IptvStbBlockResults.MinLeaveJoinDelay AS &apos;Min Leave Join Delay (msec)&apos;, IptvStbBlockResults.MaxLeaveJoinDelay AS &apos;Max Leave Join Delay (msec)&apos;, IptvStbBlockResults.AvgLeaveJoinDelay AS &apos;Avg Leave Join Delay (msec)&apos;, IptvStbBlockResults.MinLeaveToLeaveInterval AS &apos;Min Leave To Leave Interval (msec)&apos;, IptvStbBlockResults.MaxLeaveToLeaveInterval AS &apos;Max Leave To Leave Interval (msec)&apos;, IptvStbBlockResults.AvgLeaveToLeaveInterval AS &apos;Avg Leave To Leave Interval (msec)&apos;, IptvStbBlockResults.MinMulticastPktToLeaveInterval AS &apos;Min Multicast To Leave Interval (msec)&apos;, IptvStbBlockResults.MaxMulticastPktToLeaveInterval AS &apos;Max Multicast To Leave Interval (msec)&apos;, IptvStbBlockResults.AvgMulticastPktToLeaveInterval AS &apos;Avg Multicast To Leave Interval (msec)&apos;, IptvStbBlockResults.TotalPkts AS &apos;Total Packets Received&apos;, IptvStbBlockResults.TotalPktRate AS &apos;Total Packet Rate (Packets/sec)&apos;, IptvStbBlockResults.DroppedFrameCount AS &apos;Dropped Frame Count&apos;, IptvStbBlockResults.ReorderedFrameCount AS &apos;Reordered Frame Count&apos;, IptvStbBlockResults.DuplicateFrameCount AS &apos;Duplicate Frame Count&apos;, IptvStbBlockResults.LateFrameCount AS &apos;Late Frame Count&apos;, IptvStbBlockResults.PrbsErrorCount AS &apos;PRBS Bit Error Count&apos; FROM Host, Port, IptvStbBlockResults, IptvStbBlockConfig, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = Host.Handle AND  RelationTable.TargetHnd = Port.Handle AND IptvStbBlockConfig.ParentHnd = Host.Handle AND IptvStbBlockResults.ParentHnd = IptvStbBlockConfig.Handle AND Host.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND IptvStbBlockResults.DataSetId = @DataSetId AND IptvStbBlockConfig.DataSetId = @DataSetId AND  RelationTable.DataSetId = @DataSetId  )"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 36">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5049" 
+   ConfigClassId="iptvstbblockconfig"
+   ResultClassId="iptvstbblockresults"
+   ResultRootList="8"
+   PropertyIdArray="iptvtotalresults.profilename iptvtotalresults.numclients iptvjoinleaveresults.numofchannelchanges iptvjoinleaveresults.duplicatejoins iptvjoinleaveresults.erroredstreams iptvtotalresults.flaggedjoins iptvtotalresults.flaggedleaves iptvjoinleaveresults.joinfails iptvtotalresults.joinlatencythreshold iptvgapoverlapresults.minchangelatency iptvgapoverlapresults.maxchangelatency iptvgapoverlapresults.avgchangelatency iptvgapoverlapresults.mingaplatency iptvgapoverlapresults.maxgaplatency iptvgapoverlapresults.avggaplatency iptvgapoverlapresults.minoverlaplatency iptvgapoverlapresults.maxoverlaplatency iptvgapoverlapresults.avgoverlaplatency iptvjoinleaveresults.minleavelatency iptvjoinleaveresults.maxleavelatency iptvjoinleaveresults.avgleavelatency iptvjoinleaveresults.minjoinlatency iptvjoinleaveresults.maxjoinlatency iptvjoinleaveresults.avgjoinlatency iptvtotalresults.minleavejoindelay iptvtotalresults.maxleavejoindelay iptvtotalresults.avgleavejoindelay iptvtotalresults.minleavetoleaveinterval iptvtotalresults.maxleavetoleaveinterval iptvtotalresults.avgleavetoleaveinterval iptvjoinleaveresults.totalpkts iptvjoinleaveresults.totalpktrate iptvjoinleaveresults.droppedframecount iptvjoinleaveresults.reorderedframecount iptvjoinleaveresults.duplicateframecount iptvjoinleaveresults.lateframecount iptvjoinleaveresults.prbserrorcount"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   Name="ResultQuery 31">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5050" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 573">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5051" 
+   ColumnClassName="Host"
+   ColumnPropertyName="Name"
+   ColumnDescription=""
+   ColumnWidth="72"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 574">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5052" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="ProfileName"
+   ColumnDescription=""
+   ColumnWidth="81"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 575">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5053" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="NumClients"
+   ColumnDescription=""
+   ColumnWidth="108"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 576">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5054" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="NumOfChannelChanges"
+   ColumnDescription=""
+   ColumnWidth="115"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 577">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5055" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="DuplicateJoins"
+   ColumnDescription=""
+   ColumnWidth="103"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 578">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5056" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="ErroredStreams"
+   ColumnDescription=""
+   ColumnWidth="110"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 579">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5057" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="FlaggedJoins"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 580">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5058" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="FlaggedLeaves"
+   ColumnDescription=""
+   ColumnWidth="105"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 581">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5059" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="JoinFails"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 582">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5060" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="JoinLatencyThreshold"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 583">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5061" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinChangeLatency"
+   ColumnDescription=""
+   ColumnWidth="156"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 584">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5062" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxChangeLatency"
+   ColumnDescription=""
+   ColumnWidth="158"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 585">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5063" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgChangeLatency"
+   ColumnDescription=""
+   ColumnWidth="157"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 586">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5064" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinGapLatency"
+   ColumnDescription=""
+   ColumnWidth="138"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 587">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5065" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxGapLatency"
+   ColumnDescription=""
+   ColumnWidth="140"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 588">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5066" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgGapLatency"
+   ColumnDescription=""
+   ColumnWidth="139"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 589">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5067" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinOverlapLatency"
+   ColumnDescription=""
+   ColumnWidth="156"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 590">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5068" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxOverlapLatency"
+   ColumnDescription=""
+   ColumnWidth="159"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 591">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5069" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgOverlapLatency"
+   ColumnDescription=""
+   ColumnWidth="158"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 592">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5070" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinLeaveLatency"
+   ColumnDescription=""
+   ColumnWidth="147"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 593">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5071" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxLeaveLatency"
+   ColumnDescription=""
+   ColumnWidth="150"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 594">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5072" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgLeaveLatency"
+   ColumnDescription=""
+   ColumnWidth="148"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 595">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5073" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinJoinLatency"
+   ColumnDescription=""
+   ColumnWidth="138"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 596">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5074" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxJoinLatency"
+   ColumnDescription=""
+   ColumnWidth="140"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 597">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5075" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgJoinLatency"
+   ColumnDescription=""
+   ColumnWidth="139"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 598">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5076" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinLeaveJoinDelay"
+   ColumnDescription=""
+   ColumnWidth="160"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 599">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5077" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxLeaveJoinDelay"
+   ColumnDescription=""
+   ColumnWidth="162"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 600">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5078" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgLeaveJoinDelay"
+   ColumnDescription=""
+   ColumnWidth="161"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 601">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5079" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinLeaveToLeaveInterval"
+   ColumnDescription=""
+   ColumnWidth="196"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 602">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5080" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxLeaveToLeaveInterval"
+   ColumnDescription=""
+   ColumnWidth="199"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 603">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5081" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgLeaveToLeaveInterval"
+   ColumnDescription=""
+   ColumnWidth="197"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 604">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5082" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MinMulticastPktToLeaveInterval"
+   ColumnDescription=""
+   ColumnWidth="211"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 605">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5083" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="MaxMulticastPktToLeaveInterval"
+   ColumnDescription=""
+   ColumnWidth="214"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 164">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5084" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="AvgMulticastPktToLeaveInterval"
+   ColumnDescription=""
+   ColumnWidth="212"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 165">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5085" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="TotalPkts"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 166">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5086" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="TotalPktRate"
+   ColumnDescription=""
+   ColumnWidth="175"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 167">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5087" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="DroppedFrameCount"
+   ColumnDescription=""
+   ColumnWidth="127"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 168">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5092" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="ReorderedFrameCount"
+   ColumnDescription=""
+   ColumnWidth="136"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 58">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5093" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="DuplicateFrameCount"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 59">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5094" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="LateFrameCount"
+   ColumnDescription=""
+   ColumnWidth="106"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 60">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5095" 
+   ColumnClassName="IptvStbBlockResults"
+   ColumnPropertyName="PrbsErrorCount"
+   ColumnDescription=""
+   ColumnWidth="121"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 61">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

@@ -1,0 +1,1176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="ancp_rfc6320"
+  showName="ANCP (RFC 6320)"
+  version="1.00"
+  description="This is a PDU library for ANCP as defined in XML Stream Editor.  ANCP Protocol Version: RFC 6320.">
+
+<TYPE_DEFS>
+
+  <!-- ====================================================================== -->
+  <!--
+      NOTE: All ANCP TLVs must contain "Type" and "Length" fields.  Any TLVs
+      which require 4-byte alignment padding should include an alignment
+      field as the last field in the TLV.  TLVs may optionally include a
+      "MessageSelect" field which is used to determine which ANCP messages
+      the TLVs should be included in.
+    -->
+
+  <!-- Common Elements  ===================================================== -->
+    <TYPE_DEF name="MessageSelectValues" type="INTEGER" bitLength="2" minValue="1" maxValue="3" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Port Up" value="1" />
+        <VAL_ENUM uiShowName="Port Down" value="2" />
+        <VAL_ENUM uiShowName="Port Up, Port Down" value="3" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="DslTypeValues" type="OCTETSTRING" byteLength="4" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="01 - ADSL1" value="00000001" />
+        <VAL_ENUM uiShowName="02 - ADSL2" value="00000002" />
+        <VAL_ENUM uiShowName="03 - ADSL2+" value="00000003" />
+        <VAL_ENUM uiShowName="04 - VDSL1" value="00000004" />
+        <VAL_ENUM uiShowName="05 - VDSL2" value="00000005" />
+        <VAL_ENUM uiShowName="06 - SDSL" value="00000006" />
+        <VAL_ENUM uiShowName="07 - UNKNOWN" value="00000007" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="DataLinkValues" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="00 - AAL5" value="00" />
+        <VAL_ENUM uiShowName="01 - ETHERNET" value="01" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Encaps1Values" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="00 - NA" value="00" />
+        <VAL_ENUM uiShowName="01 - Untagged Ethernet" value="01" />
+        <VAL_ENUM uiShowName="02 - Single-tagged Ethernet" value="02" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Encaps2Values" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="00 - NA" value="00" />
+        <VAL_ENUM uiShowName="01 - PPPoA LLC" value="01" />
+        <VAL_ENUM uiShowName="02 - PPPoA NULL" value="02" />
+        <VAL_ENUM uiShowName="03 - IPoA LLC" value="03" />
+        <VAL_ENUM uiShowName="04 - IPoA NULL" value="04" />
+        <VAL_ENUM uiShowName="05 - Ethernet over AAL5 LLC with FCS" value="05" />
+        <VAL_ENUM uiShowName="06 - Ethernet over AAL5 LLC without FCS" value="06" />
+        <VAL_ENUM uiShowName="07 - Ethernet over AAL5 NULL with FCS" value="07" />
+        <VAL_ENUM uiShowName="08 - Ethernet over AAL5 NULL without FCS" value="08" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+  <!-- Custom TLV ===================================================== -->
+  <TYPE_DEF name="CustomTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Custom TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0001" uiShowCommon="true" uiShowName="Type" />
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Data" type="OCTETSTRING"  minByteLength="0" maxByteLength="65535"
+           uiNoShowModifier="Interface,Frame" uiShowName="Data" wildcardAllowed="true"/>
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+           padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+           uiShowName="4 Byte Alignment Padding"/>
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:CustomTlv" name="Custom TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopCircuitIdTlv" name="Access Loop Circuit ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopRemoteIdTlv" name="Access Loop Remote ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdAsciiTlv" name="Access Aggregation Circuit ID ASCII TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryVlanTlv" name="Access Aggregation Circuit ID Binary TLV (VLAN)" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryAtmTlv" name="Access Aggregation Circuit ID Binary TLV (ATM)" />
+    </NEXT_HEADERS>
+  </TYPE_DEF>
+
+  <!-- Access Loop Circuit ID TLV  ================================================ -->
+  <TYPE_DEF name="AccessLoopCircuitIdTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Access Loop Circuit ID TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0001" uiNoShow="Interface"
+           uiShowCommon="false" uiShowName="Type" />
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <!-- Access-Node-Identifier eth slot/port[:vlan-id] -->
+    <!-- Access-Node-Identifier atm slot/port:vpi.vci -->
+    <FIELD name="ID" type="ASCII" minByteLength="0" maxByteLength="63"
+           defaultValue="Access-Node-Identifier eth slot port:vlan-id" uiShowName="ID" wildcardAllowed="true"/>
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+            padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+            uiShowName="4 Byte Alignment Padding"/>
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:CustomTlv" name="Custom TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopCircuitIdTlv" name="Access Loop Circuit ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopRemoteIdTlv" name="Access Loop Remote ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdAsciiTlv" name="Access Aggregation Circuit ID ASCII TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryVlanTlv" name="Access Aggregation Circuit ID Binary TLV (VLAN)" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryAtmTlv" name="Access Aggregation Circuit ID Binary TLV (ATM)" />
+    </NEXT_HEADERS>
+  </TYPE_DEF>
+
+  <!-- Access Loop Remote ID TLV ================================================== -->
+  <TYPE_DEF name="AccessLoopRemoteIdTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Access Loop Remote ID TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0002" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+
+	<FIELD name="ID" type="ASCII" minByteLength="0" maxByteLength="63"
+           defaultValue="SPIRENT" uiShowName="ID" wildcardAllowed="true"/>
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+           padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+           uiShowName="4 Byte Alignment Padding"/>
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:CustomTlv" name="Custom TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopCircuitIdTlv" name="Access Loop Circuit ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopRemoteIdTlv" name="Access Loop Remote ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdAsciiTlv" name="Access Aggregation Circuit ID ASCII TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryVlanTlv" name="Access Aggregation Circuit ID Binary TLV (VLAN)" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryAtmTlv" name="Access Aggregation Circuit ID Binary TLV (ATM)" />
+    </NEXT_HEADERS>
+  </TYPE_DEF>
+
+  <!-- Access Aggregation Circuit ID Binary VLAN TLV =================================================== -->
+  <TYPE_DEF name="AccessAggregationCircuitIdBinaryVlanTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Access Aggregation Circuit ID Binary TLV (VLAN)">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0006" uiNoShow="Interface"
+           uiShowCommon="false" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="8" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Vlan1" type="INTEGER" bitLength="32"
+           defaultValue="0" uiShowName="Vlan1" wildcardAllowed="true"/>
+
+    <FIELD name="Vlan2" type="INTEGER" bitLength="32"
+           defaultValue="0" uiShowName="Vlan2" wildcardAllowed="true"/>
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:CustomTlv" name="Custom TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopCircuitIdTlv" name="Access Loop Circuit ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopRemoteIdTlv" name="Access Loop Remote ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdAsciiTlv" name="Access Aggregation Circuit ID ASCII TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryVlanTlv" name="Access Aggregation Circuit ID Binary TLV (VLAN)" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryAtmTlv" name="Access Aggregation Circuit ID Binary TLV (ATM)" />
+    </NEXT_HEADERS>
+  </TYPE_DEF>
+
+  <!-- Access Aggregation Circuit ID Binary ATM TLV =================================================== -->
+  <TYPE_DEF name="AccessAggregationCircuitIdBinaryAtmTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Access Aggregation Circuit ID Binary TLV (ATM)">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0006" uiNoShow="Interface"
+           uiShowCommon="false" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="8" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Vpi" type="INTEGER" bitLength="32"
+           defaultValue="0" uiShowName="VPI" wildcardAllowed="true"/>
+
+    <FIELD name="Vci" type="INTEGER" bitLength="32"
+           defaultValue="0" uiShowName="VCI" wildcardAllowed="true"/>
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:CustomTlv" name="Custom TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopCircuitIdTlv" name="Access Loop Circuit ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopRemoteIdTlv" name="Access Loop Remote ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdAsciiTlv" name="Access Aggregation Circuit ID ASCII TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryVlanTlv" name="Access Aggregation Circuit ID Binary TLV (VLAN)" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryAtmTlv" name="Access Aggregation Circuit ID Binary TLV (ATM)" />
+    </NEXT_HEADERS>
+  </TYPE_DEF>
+
+  <!-- Access Aggregation Circuit ID ASCII TLV ================================================== -->
+  <TYPE_DEF name="AccessAggregationCircuitIdAsciiTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Access Aggregation Circuit ID ASCII TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0003" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <!-- Access-Node-Identifier eth slot/port [:inner-vlan-id][:outer-vlan-id] -->
+    <!-- Access-Node-Identifier atm slot/port:vpi.vci -->
+    <FIELD name="ID" type="ASCII" minByteLength="0" maxByteLength="63"
+           defaultValue="Access-Node-Identifier eth slot/port :vlan1:vlan2" uiShowName="ID" wildcardAllowed="true" />
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+           padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+           uiShowName="4 Byte Alignment Padding"/>
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:CustomTlv" name="Custom TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopCircuitIdTlv" name="Access Loop Circuit ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopRemoteIdTlv" name="Access Loop Remote ID TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdAsciiTlv" name="Access Aggregation Circuit ID ASCII TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryVlanTlv" name="Access Aggregation Circuit ID Binary TLV (VLAN)" />
+      <NXT_HDR id="ancp_rfc6320:AccessAggregationCircuitIdBinaryAtmTlv" name="Access Aggregation Circuit ID Binary TLV (ATM)" />
+    </NEXT_HEADERS>
+  </TYPE_DEF>
+
+  <!-- DSL Line Attributes Custom TLV ===================================================== -->
+  <TYPE_DEF name="DslLineAttributesCustomTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Custom TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0001" uiShowCommon="true" uiShowName="Type" />
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Data" type="OCTETSTRING"  minByteLength="0" maxByteLength="65535"
+           uiNoShowModifier="Interface,Frame" uiShowName="Data" />
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+           padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+           uiShowName="4 Byte Alignment Padding"/>
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- DSL Type TLV ================================================== -->
+  <TYPE_DEF name="DslTypeTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="DSL Type TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0091" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="DslType" type="DslTypeValues" defaultValue="00000001" uiShowName="DslType" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Actual Net Data Rate Upstream TLV ================================================== -->
+  <TYPE_DEF name="ActualNetDataRateUpstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Actual Net Data Rate Upstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0081" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Actual Net Data Rate Downstream TLV ================================================== -->
+  <TYPE_DEF name="ActualNetDataRateDownstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Actual Net Data Rate Downstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0082" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Minimum Net Data Rate Upstream TLV ================================================== -->
+  <TYPE_DEF name="MinimumNetDataRateUpstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Minimum Net Data Rate Upstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0083" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Minimum Net Data Rate Downstream TLV ================================================== -->
+  <TYPE_DEF name="MinimumNetDataRateDownstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Minimum Net Data Rate Downstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0084" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Attainable Net Data Rate Upstream TLV ================================================== -->
+  <TYPE_DEF name="AttainableNetDataRateUpstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Attainable Net Data Rate Upstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0085" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+
+  <!-- Attainable Net Data Rate Downstream TLV ================================================== -->
+  <TYPE_DEF name="AttainableNetDataRateDownstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Attainable Net Data Rate Downstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0086" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Maximum Net Data Rate Upstream TLV ================================================== -->
+  <TYPE_DEF name="MaximumNetDataRateUpstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Maximum Net Data Rate Upstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0087" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+
+  <!-- Maximum Net Data Rate Downstream TLV ================================================== -->
+  <TYPE_DEF name="MaximumNetDataRateDownstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Maximum Net Data Rate Downstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0088" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Minimum Net Low Power Data Rate Upstream TLV ================================================== -->
+  <TYPE_DEF name="MinimumNetLowPowerDataRateUpstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Minimum Net Low Power Data Rate Upstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0089" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+
+  <!-- Minimum Net Low Power Data Rate Downstream TLV ================================================== -->
+  <TYPE_DEF name="MinimumNetLowPowerDataRateDownstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Minimum Net Low Power Data Rate Downstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="008A" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Rate" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Rate (Kb/sec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Maximum Interleaving Delay Upstream TLV ================================================== -->
+  <TYPE_DEF name="MaximumInterleavingDelayUpstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Maximum Interleaving Delay Upstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="008B" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Time" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Time (msec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Actual Interleaving Delay Upstream TLV ================================================== -->
+  <TYPE_DEF name="ActualInterleavingDelayUpstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Actual Interleaving Delay Upstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="008C" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Time" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Time (msec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Maximum Interleaving Delay Downstream TLV ================================================== -->
+  <TYPE_DEF name="MaximumInterleavingDelayDownstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Maximum Interleaving Delay Downstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="008D" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Time" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Time (msec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Actual Interleaving Delay Downstream TLV ================================================== -->
+  <TYPE_DEF name="ActualInterleavingDelayDownstreamTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Actual Interleaving Delay Downstream TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="008E" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Time" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Time (msec)" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <!-- Access Loop Encapsulation TLV ================================================== -->
+  <TYPE_DEF name="AccessLoopEncapsulationTlv" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Access Loop Encapsulation TLV">
+
+    <FIELD name="MessageSelect" type="MessageSelectValues" defaultValue="3" uiShowName="Message Selection"
+           doNotBuild="true"
+           />
+
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0090" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="3" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="DataLink" type="DataLinkValues" defaultValue="01" uiShowName="Data Link" />
+
+    <FIELD name="Encaps1" type="Encaps1Values" defaultValue="00" uiShowName="Encaps 1" />
+
+    <FIELD name="Encaps2" type="Encaps2Values" defaultValue="00" uiShowName="Encaps 2" />
+
+    <NEXT_HEADERS>
+      <NXT_HDR id="ancp_rfc6320:DslTypeTlv" name="DSL Type TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateUpstreamTlv" name="Actual Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualNetDataRateDownstreamTlv" name="Actual Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateUpstreamTlv" name="Minimum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetDataRateDownstreamTlv" name="Minimum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateUpstreamTlv" name="Attainable Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AttainableNetDataRateDownstreamTlv" name="Attainable Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateUpstreamTlv" name="Maximum Net Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumNetDataRateDownstreamTlv" name="Maximum Net Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateUpstreamTlv" name="Minimum Net Low Power Data Rate Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MinimumNetLowPowerDataRateDownstreamTlv" name="Minimum Net Low Power Data Rate Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayUpstreamTlv" name="Maximum Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayUpstreamTlv" name="Actual Interleaving Delay Upstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:MaximumInterleavingDelayDownstreamTlv" name="Maximum Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" name="Actual Interleaving Delay Downstream TLV" />
+      <NXT_HDR id="ancp_rfc6320:AccessLoopEncapsulationTlv" name="Access Loop Encapsulation TLV" />
+      <NXT_HDR id="ancp_rfc6320:DslLineAttributesCustomTlv" name="Custom TLV" />
+    </NEXT_HEADERS>
+
+  </TYPE_DEF>
+
+  <TYPE_DEF name="OAMLoopbackTestParametersTLV" type="SEQUENCE" unitType="ELEMENT" uiShowName="OAM-Loopback-Test-Parameters TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0007" uiShowName="Type"/>
+    <FIELD name="Length" type="INTEGER" bitLength="16" defaultValue="2" uiShowName="Length" uiShowCommon="false" />
+    <FIELD name="Count" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Count" />
+    <FIELD name="Timeout" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Timeout" />
+    <FIELD name="Padding" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowCommon="false" uiShowName="padding"/>
+  </TYPE_DEF>
+  
+  <TYPE_DEF name="OpaqueDataTLV" type="SEQUENCE" unitType="ELEMENT" uiShowName="Opaque-Data TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0008" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           uiShowName="Length" uiShowCommon="false" defaultValue="0008" uiControlState="CALCULATED" />
+    <FIELD name="Value1" type="INTEGER" bitLength="32" uiShowName="Value1" />
+    <FIELD name="Value2" type="INTEGER" bitLength="32" uiShowName="Value2" />
+  </TYPE_DEF>
+  
+  <TYPE_DEF name="OAMLoopbackTestResponseStringTLV" type="SEQUENCE" unitType="ELEMENT" uiShowName="OAM-Loopback-Test-Response-String TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0009" uiShowName="Type"/>
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPDATALENGTH"
+           defaultValue="8" uiShowName="Length" uiControlState="CALCULATED" />
+    <FIELD name="Data" type="ASCII"  minByteLength="0" maxByteLength="128"
+           uiNoShowModifier="Interface,Frame" uiShowName="Data" />
+    <FIELD name="pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0" defaultValue="0"
+           uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+  </TYPE_DEF>
+  
+  <TYPE_DEF name="StatusInfoSubCustomTlv" type="SEQUENCE" unitType="ELEMENT" level="2" uiShowName="Custom TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0001" uiShowCommon="true" uiShowName="Type" />
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPDATALENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+    <FIELD name="Data" type="OCTETSTRING"  minByteLength="0" maxByteLength="65535"
+           uiNoShowModifier="Interface,Frame" uiShowName="Data" />
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+           padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+           uiShowName="4 Byte Alignment Padding"/>
+  </TYPE_DEF>
+  
+  <TYPE_DEF name="StatusInfoSubTLVList" type="SET_OF" minOccurs="0" maxOccurs="100" elementType="StatusInfoSubCustomTlv" unitType="ELEMENT" />
+
+  <TYPE_DEF name="StatusInfoTLV" type="SEQUENCE" unitType="ELEMENT" uiShowName="Status-Info TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0106" uiShowName="Type"/>
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+    <FIELD name="Reserved" type="OCTETSTRING" byteLength="1" defaultValue="0" uiShowCommon="false" uiShowName="Reserved"/>
+    <FIELD name="messageType" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiNoShow="Interface"
+          uiShowName="Message Type" />
+    <FIELD name="ErrorMessageLength" type="INTEGER" bitLength="16" procfnTarget="ANCPDATALENGTH" uiNoShow="Interface" defaultValue="0" uiShowName="Error Message Length" uiControlState="CALCULATED" />
+    <FIELD name="Data" type="ASCII"  minByteLength="0" maxByteLength="65535" uiNoShow="Interface" defaultValue="0" uiShowName="Error Message" />
+    <FIELD name="pad" type="FIELDALIGNMENTPAD" field="Data" xAlignment="4" yAlignment="0" defaultValue="0"
+           uiNoShow="Filter,Frame,Interface" uiShowName="4 Byte Pad" />
+    <FIELD name="subTlvs" type="StatusInfoSubTLVList" uiShowName="Optional Sub TLVs" />
+  </TYPE_DEF>
+  
+  <TYPE_DEF name="StatusInfoTLVList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1" elementType="StatusInfoTLVs" unitType="ELEMENT" />
+    <TYPE_DEF name="StatusInfoTLVs" type="CHOICE" unitType="ELEMENT" uiShowName="Status-Info Tlv" >
+       <FIELD name="StatusInfoTLV" type="StatusInfoTLV" uiShowName="Status-Info TLV" />
+    </TYPE_DEF>
+    
+  <TYPE_DEF name="OAMLoopbackTestTlvList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1024" elementType="OAMLoopbackTestTlv" unitType="ELEMENT" />
+    <TYPE_DEF name="OAMLoopbackTestTlv" type="CHOICE" unitType="ELEMENT" uiShowName="OAM Loopback Test Tlv" >
+       <FIELD name="OAMLoopbackTestParameters" type="OAMLoopbackTestParametersTLV" uiShowName="OAM-Loopback-Test-Parameters TLV" />
+       <FIELD name="OpaqueData" type="OpaqueDataTLV" uiShowName="Opaque-Data TLV" />
+       <FIELD name="OAMLoopbackTestResponseString" type="OAMLoopbackTestResponseStringTLV" uiShowName="OAM-Loopback-Test-Response-String TLV" />
+    </TYPE_DEF>  
+  
+   <!-- Access Loop Circuit ID TLV for oam  ================================================ -->
+  <TYPE_DEF name="OamAccessLoopCircuitIdTlv" type="SEQUENCE" unitType="ELEMENT" uiShowName="Access Loop Circuit ID TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0001" uiNoShow="Interface"
+           uiShowCommon="false" uiShowName="Type" />
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPDATALENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+    <FIELD name="Data" type="ASCII" minByteLength="0" maxByteLength="63"
+           defaultValue="Access-Node-Identifier eth slot port:vlan-id" uiShowName="ID" wildcardAllowed="true"/>
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+            padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+            uiShowName="4 Byte Alignment Padding"/>
+  </TYPE_DEF>
+  
+  <!-- Oam Access Aggregation Circuit ID Ascii VLAN TLV =================================================== -->
+  <TYPE_DEF name="OamAccessAggregationCircuitIdAsciiTlv" type="SEQUENCE" unitType="ELEMENT" uiShowName="Access Aggregation Circuit ID ASCII TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0003" uiShowName="Type"/>
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPDATALENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <!-- Access-Node-Identifier eth slot/port [:inner-vlan-id][:outer-vlan-id] -->
+    <!-- Access-Node-Identifier atm slot/port:vpi.vci -->
+    <FIELD name="Data" type="ASCII" minByteLength="0" maxByteLength="63"
+           defaultValue="Access-Node-Identifier eth slot/port :vlan1:vlan2" uiShowName="ID" />
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+           padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+           uiShowName="4 Byte Alignment Padding"/>
+  </TYPE_DEF>
+  
+  <!-- Oam Access Aggregation Circuit ID Binary VLAN TLV =================================================== -->
+  <TYPE_DEF name="OamAccessAggregationCircuitIdBinaryVlan2" type="SEQUENCE" unitType="ELEMENT"
+            uiShowName="Vlan2">
+    <FIELD name="Vlan2" type="INTEGER" bitLength="32"
+           defaultValue="0" uiShowName="Value" wildcardAllowed="true"/>
+  </TYPE_DEF>        
+  <TYPE_DEF name="Vlan2Select" type="SET_OF" minOccurs="0" maxOccurs="1" elementType="OamAccessAggregationCircuitIdBinaryVlan2" unitType="ELEMENT" />
+  <TYPE_DEF name="OamAccessAggregationCircuitIdBinaryVlanTlv" type="SEQUENCE" unitType="ELEMENT" uiShowName="Access Aggregation Circuit ID Binary TLV (VLAN)">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           defaultValue="0006" uiNoShow="Interface"
+           uiShowCommon="false" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPTLVLENGTH"
+           defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Vlan1" type="INTEGER" bitLength="32"
+           defaultValue="0" uiShowName="Vlan1" wildcardAllowed="true"/>
+
+    <FIELD name="Vlan2" type="Vlan2Select" uiShowName="Other VLan" />
+  </TYPE_DEF>
+  
+  <!-- OAM Access Loop Remote ID TLV ================================================== -->
+  <TYPE_DEF name="OamAccessLoopRemoteIdTlv" type="SEQUENCE" unitType="ELEMENT" uiShowName="Access Loop Remote ID TLV">
+    <FIELD name="Type" type="OCTETSTRING" byteLength="2"
+           uiNoShow="Interface" uiShowCommon="false"
+           defaultValue="0002" uiShowName="Type"/>
+
+    <FIELD name="Length" type="INTEGER" bitLength="16" procfnTarget="ANCPDATALENGTH"
+           defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+
+    <FIELD name="Data" type="ASCII" minByteLength="0" maxByteLength="63"
+           defaultValue="SPIRENT" uiShowName="ID" />
+
+    <FIELD name="Pad" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+           padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+           uiShowName="4 Byte Alignment Padding"/>
+  </TYPE_DEF>
+  <TYPE_DEF name="AccessLineIdentifyingTlvList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1024" elementType="AccessLineIdentifyingTlv" unitType="ELEMENT" />
+    <TYPE_DEF name="AccessLineIdentifyingTlv" type="CHOICE" unitType="ELEMENT" uiShowName="Access Line Identifying TLV" >
+      <FIELD name="AccessLoopCircuitId" type="OamAccessLoopCircuitIdTlv" uiShowName="Access Loop Circuit ID TLV" />
+      <FIELD name="AccessAggregationCircuitIdAscii" type="OamAccessAggregationCircuitIdAsciiTlv" uiShowName="Access Aggregation Circuit ID ASCII TLV" />
+      <FIELD name="AccessAggregationCircuitIdBinary" type="OamAccessAggregationCircuitIdBinaryVlanTlv" uiShowName="Access Aggregation Circuit ID Binary TLV (VLAN)" />
+      <FIELD name="AccessLoopRemoteId" type="OamAccessLoopRemoteIdTlv" uiShowName="Access Loop Remote ID TLV" />    
+    </TYPE_DEF>
+  
+  <!-- Encapsulation HEADER ===================================================== -->
+  <TYPE_DEF name="EncapHeader" type="SEQUENCE" unitType="HEADER" uiShowName="TCP/IP Encapsulating Header">
+    <FIELD name="Identifier" type="OCTETSTRING" byteLength="2"
+          defaultValue="880C"
+          uiNoShow="Interface" uiShowCommon="false"
+          uiShowName="Identifier"/>
+    <FIELD name="length" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="CALCULATED"
+          procfnTarget="PAYLOADLENGTH" 
+          uiShowName="Length" uiShowCommon="false" />
+  </TYPE_DEF>
+  
+  <TYPE_DEF name="ANCPGeneralResult" type="INTEGER" bitLength="4" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="00 - Ignore" value="0" />
+        <VAL_ENUM uiShowName="01 - Nack" value="01" />
+        <VAL_ENUM uiShowName="02 - AckAll" value="02" />
+        <VAL_ENUM uiShowName="03 - Success" value="03" />
+        <VAL_ENUM uiShowName="04 - Failure" value="04" />
+      </VALUE_ENUMERATION>
+  </TYPE_DEF>
+  <TYPE_DEF name="ANCPGeneralResultCode" type="INTEGER" bitLength="12" unitType="ELEMENT">
+    <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="0x0 | No result"  value="0" />
+        <VAL_ENUM uiShowName="0x2 | Invalid request message" value="2" />
+        <VAL_ENUM uiShowName="0x6 | One or more of the specified ports are down" value="6" />
+        <VAL_ENUM uiShowName="0x13 | Out of resources" value="19" />
+        <VAL_ENUM uiShowName="0x51 | Request message type not implemented" value="81" />
+        <VAL_ENUM uiShowName="0x53 | Malformed message" value="83" />
+        <VAL_ENUM uiShowName="0x54 | Mandatory TLV missing" value="84" />
+        <VAL_ENUM uiShowName="0x55 | Invalid TLV contents" value="85" />
+        <VAL_ENUM uiShowName="0x500 | One or more of the specified ports do not exist" value="1280" />
+        <VAL_ENUM uiShowName="0x501 | Loopback test timed out"  value="1281" />
+        <VAL_ENUM uiShowName="0x502 | Reserved" value="1282" />
+        <VAL_ENUM uiShowName="0x503 | DSL access line status showtime" value="1283" />
+        <VAL_ENUM uiShowName="0x504 | DSL access line status idle" value="1284" />
+        <VAL_ENUM uiShowName="0x505 | DSL access line status silent" value="1285" />
+        <VAL_ENUM uiShowName="0x506 | DSL access line status training" value="1286" />
+        <VAL_ENUM uiShowName="0x507 | DSL access line integrity error" value="1287" />
+        <VAL_ENUM uiShowName="0x508 | DSLAM resource not available" value="1288" />
+        <VAL_ENUM uiShowName="0x509 | Invalid test parameter" value="1289" />
+    </VALUE_ENUMERATION>
+  </TYPE_DEF>
+  <!-- ANCP Port Management Message HEADER ===================================================== -->
+  <TYPE_DEF name="AncpPmMsgHeader" type="SEQUENCE" unitType="HEADER" uiShowName="ANCP Port Management Message Header" >
+    <FIELD name="version" type="INTEGER" bitLength="8"
+          defaultValue="50"
+          uiNoShow="Interface" 
+          uiShowName="Version" uiShowCommon="false" />
+    <FIELD name="generalMessageType" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiNoShow="Interface"
+          uiShowName="Message Type" uiShowCommon="false"/>
+    <FIELD name="result" type="ANCPGeneralResult" uiNoShow="Interface" defaultValue="0" 
+          uiShowName="Result Field" />
+    <FIELD name="resultCode" type="ANCPGeneralResultCode" bitLength="12"
+          defaultValue="0"
+          uiNoShow="Interface"
+          uiShowName="Result Code" />
+    <FIELD name="partitionId" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiNoShow="Interface"
+          uiShowName="Partition ID" />
+    <FIELD name="transactionId" type="INTEGER" bitLength="24"
+          defaultValue="0"
+          uiNoShow="Interface"
+          uiShowName="Transaction Identifier" />
+    <FIELD name="ignore" type="INTEGER" bitLength="1"
+          defaultValue="1" uiShowCommon="false"
+          uiNoShow="Interface"
+          uiShowName="Ignore" />
+    <FIELD name="submessage" type="INTEGER" bitLength="15"
+          defaultValue="1"
+          uiNoShow="Interface"
+          uiShowName="SubMessage Number" uiShowCommon="false"/>
+    <FIELD name="length" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="CALCULATED"
+          procfnTarget="ANCPOAMMSGLENGTH" 
+          uiShowName="Length" />
+    <FIELD name="unused1" type="OCTETSTRING" byteLength="14"  defaultValue="0000000000000000000000000000" uiShowCommon="false" uiShowName="Unused"/>
+    <FIELD name="function" type="OCTETSTRING" byteLength="1"  defaultValue="9" uiShowCommon="false" uiShowName="Function"/>
+    <FIELD name="xFunction" type="OCTETSTRING" byteLength="1"  defaultValue="0" uiShowCommon="false" uiShowName="X-Function"/>
+    <FIELD name="unused2" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowCommon="false" uiShowName="Unused2"/>    
+    <FIELD name="extensionFlag" type="OCTETSTRING" byteLength="1"  defaultValue="0" uiShowCommon="false" uiShowName="Extension Flag"/>
+    <FIELD name="messageType" type="INTEGER" bitLength="8"  defaultValue="0" uiNoShow="Interface" uiShowCommon="false" uiShowName="Port Management Message Type"/>
+    <FIELD name="reserved" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowCommon="false" uiShowName="Reserved"/>
+    <FIELD name="numberOfTlvs" type="INTEGER" bitLength="16"
+          defaultValue="0"  
+          uiShowName="Number of TLVs" />
+    <FIELD name="extBlockLength" type="INTEGER" bitLength="16" defaultValue="0" uiNoShow="Interface"
+           uiControlState="CALCULATED" procfnTarget="PAYLOADLENGTH" 
+           uiShowCommon="false" uiShowName="Extension Block Length"/>
+  </TYPE_DEF>
+  
+  
+  <!-- ANCP OAM Message ===================================================== -->
+  <TYPE_DEF name="AncpOamLoopback" type="SEQUENCE" unitType="MESSAGE" uiShowName="ANCP Port Management (OAM)" >
+    <FIELD name="EncapHeader" type="EncapHeader" uiShowName="TCP/IP Encapsulating Header" uiShowCommon="false" />
+    <FIELD name="AncpHeader" type="AncpPmMsgHeader" uiShowName="ANCP Port Management Message Header"/>
+    <FIELD name="AccessLineIdentifyingTlvs" type="AccessLineIdentifyingTlvList"  uiShowName="Access Line Identifying TLVs" />
+    <FIELD name="OAMLoopbackTestTlvs" type="OAMLoopbackTestTlvList"  uiShowName="Testing-related TLVs" />
+    <FIELD name="StatusInfoTLV" type="StatusInfoTLVList" uiShowName="Status-Info TLV" />
+  </TYPE_DEF>
+  
+</TYPE_DEFS>
+</PDU_LIBRARY>

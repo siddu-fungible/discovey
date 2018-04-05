@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="LLDP System Name TLV" showName="System Name TLV" version="1.00" category="LLDP TLV" readonly="true" validate="true" firstPdu="lldp:SystemNameTlv" description="LLDP System Name TLV">
+    <pdus>
+      <pdu name="proto1" pdu="lldp:SystemNameTlv" />
+    </pdus>
+  </template>
+</frame>

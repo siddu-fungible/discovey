@@ -1,0 +1,19 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCSOFEOFVFTFC"
+    showName="FC SOFEOF VFT FC"
+    version="1.00"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FcSofEof"
+    description="FC SOFEOF VFT FC" >
+
+    <pdus>
+      <pdu name="sofeof" pdu="fc:FcSofEof" />
+      <pdu name="vft" pdu="fc:VFT" />
+      <pdu name="fc" pdu="fc:FC" />
+    </pdus>
+  </template>
+</frame>

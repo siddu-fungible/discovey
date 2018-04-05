@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGSFZSAccept" 
+    showName="FC GS FZS Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GsAccept"
+    description="FC GS FZS Accept">
+    <pdus>
+      <pdu name="proto1" pdu="fcgs:GsAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

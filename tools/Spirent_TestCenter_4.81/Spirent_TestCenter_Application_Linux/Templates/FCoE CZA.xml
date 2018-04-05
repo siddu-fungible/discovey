@@ -1,0 +1,34 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoECZA" 
+    showName="FCoE CZA" 
+    version="1.0" 
+    category="Switching" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE CZA">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>02</rCtl>
+        <dId>FFFFFA</dId>
+        <frameControl>290000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:GsRequestZoneAttributeBlockForZoneAttributeObjectName">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>0226</commandRespondCode>
+        </ctIuPreamble>
+								<zoneAttributeBlock>
+										<zoneAttributeEntries>
+												<ZoneAttributeEntry name="ZoneAttributeEntry_0">
+												</ZoneAttributeEntry>
+										</zoneAttributeEntries>
+								</zoneAttributeBlock>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

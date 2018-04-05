@@ -1,0 +1,31 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoEGID_NNAccept" 
+    showName="FCoE GID_NN Accept"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE GID_NN Accept">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>03</rCtl>
+        <sId>FFFFFC</sId>
+        <frameControl>980000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:GidNnAccept">
+        <ctIuPreamble>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+        <portIdentifiers>
+          <PortIdentifier name="PortIdentifier">
+            <control>10000000</control>
+          </PortIdentifier>
+        </portIdentifiers>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

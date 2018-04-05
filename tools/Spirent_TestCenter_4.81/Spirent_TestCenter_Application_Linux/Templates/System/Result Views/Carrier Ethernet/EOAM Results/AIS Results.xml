@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="773" serializationBase="true" 
+ Identifier="Carrier Ethernet\EOAM Results\AIS Results"
+ PrimaryClass="EoamMaintenancePointConfig"
+ Description="object://eoam/EoamMaintenancePointConfig"
+ Path="Carrier Ethernet\EOAM Results"
+ CustomDisplayPath="Carrier Ethernet\EOAM" 
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ IsDeprecated="FALSE"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="AIS Results">
+  <RealTimeResultGroupDefinition id="774" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName=""
+   ColumnPropertyName=""
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 7">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="775" 
+   GroupName="EOAM AIS Results"
+   GroupId="object://customgroup/2db860ca-03e4-4b22-8c96-e23f39d3a5d0/Main"
+   ColumnClassName="EoamAisResults EoamAisResults EoamAisResults EoamAisResults EoamAisResults EoamAisResults"
+   ColumnPropertyName="MaintenancePointName AisTxCount AisTxState AisRxCount AisRxState AisRxPeriod"
+   SqlString="SELECT EoamAisResults.MaintenancePointName AS &apos;MP Name&apos;, EoamAisResults.AisTxCount AS &apos;AIS Tx Count&apos;, EoamAisResults.AisTxState AS &apos;AIS Tx State&apos;, EoamAisResults.AisRxCount AS &apos;AIS Rx Count&apos;, EoamAisResults.AisRxState AS &apos;AIS Rx State&apos;, EoamAisResults.AisRxPeriod AS &apos;AIS Rx Period&apos; FROM EoamMaintenancePointConfig, EoamAisResults WHERE ( EoamAisResults.ParentHnd = EoamMaintenancePointConfig.Handle AND EoamMaintenancePointConfig.DataSetId = @DataSetId AND EoamAisResults.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 8">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="776" 
+   ColumnClassName="EoamAisResults"
+   ColumnPropertyName="MaintenancePointName"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 20">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="777" 
+   ColumnClassName="EoamAisResults"
+   ColumnPropertyName="AisTxCount"
+   ColumnDescription=""
+   ColumnWidth="83"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 21">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="778" 
+   ColumnClassName="EoamAisResults"
+   ColumnPropertyName="AisTxState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 22">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="779" 
+   ColumnClassName="EoamAisResults"
+   ColumnPropertyName="AisRxCount"
+   ColumnDescription=""
+   ColumnWidth="83"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 23">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="780" 
+   ColumnClassName="EoamAisResults"
+   ColumnPropertyName="AisRxState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 24">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="781" 
+   ColumnClassName="EoamAisResults"
+   ColumnPropertyName="AisRxPeriod"
+   ColumnDescription=""
+   ColumnWidth="85"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 25">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="111" 
+   ConfigClassId="eoammaintenancepointconfig"
+   ResultClassId="eoamaisresults"
+   ResultRootList="2"
+   PropertyIdArray="eoamaisresults.aistxcount eoamaisresults.aisrxcount eoamaisresults.aisrxperiod"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 4">
+  </ResultQuery>
+</ResultDataSet>

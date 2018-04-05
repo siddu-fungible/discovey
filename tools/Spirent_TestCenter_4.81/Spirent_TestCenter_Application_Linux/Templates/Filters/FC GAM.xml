@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGAM" 
+    showName="FC GAM" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:GsRequestWithAliasName" 
+    description="FC GAM">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GsRequestWithAliasName">
+        <ctIuPreamble>
+          <commandRespondCode>0129</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989">
+    <execution estimatedExecutionTime="40">
+        <parameters version="3.4.0.39989">
+            <parameters>
+                <parameters xmlns:pt="http://www.fnfr.com/schemas/parameterTree">
+                    <p1/>
+                </parameters>
+            </parameters>
+        </parameters>
+    </execution>
+    <procedures>
+        <item name="main" defaultSessionType="com.fnfr.svt.applications.telnet">
+            <steps>
+                <item guid="36ad0cc8-0853-4b6a-8df0-dd3dc4d99a26" action="eval">
+                    <command>
+                        <body>puts $portlist</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="56e2426b-bf19-4ecc-bf6d-bc38f0540d42" action="eval">
+                    <command>
+                        <body>set list portstatuslist</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="8f92f9a1-8d99-4e88-b86e-fab0eb50a529" action="eval">
+                    <command>
+                        <body>set pl [ split $portlist | ]</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="64bde513-9457-443a-b7ea-896596581c3e" action="for">
+                    <command>
+                        <body>{set i 0} {$i &lt; [llength $pl] } {incr i}</body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="ce771972-e842-4d3e-b426-5af31501f737" action="eval" estimatedStepExecutionTime="10">
+                            <command>
+                                <body>lappend portstatuslist up</body>
+                            </command>
+                            <postProcessing>
+                                <storeResponseAt>sum_stats</storeResponseAt>
+                            </postProcessing>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="ba7f8166-dc17-4954-b7d5-5ea60d3a6d6c" action="eval">
+                    <command>
+                        <body>puts $portstatuslist</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="aa7c5504-5f3e-42c0-9e2c-a5eb6e699870" action="return">
+                    <command>
+                        <body>$portstatuslist</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session"/>
+                <item name="portlist">
+                    <defaultValue>GigabitEthernet0/1|GigabitEthernet0/2|FastEthernet1/0|Atm1/0</defaultValue>
+                </item>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

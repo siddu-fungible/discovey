@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="IPv4IPPrec" showName="IPv4 IP Prec" version="1.0" category="Favorites" readonly="false" validate="true" firstPdu="ethernet:EthernetII" description="IPv4 IP Precedence">
+      <pdus>
+<pdu name="eth1" pdu="ethernet:EthernetII">
+</pdu>
+<pdu name="ip_1" pdu="ipv4:IPv4">
+<tosDiffserv>
+<tos>
+<precedence filterMinValue="0" filterMaxValue="7">7</precedence>
+<dBit filterMinValue="0" filterMaxValue="0">0</dBit>
+<tBit filterMinValue="0" filterMaxValue="0">0</tBit>
+<rBit filterMinValue="0" filterMaxValue="0">0</rBit>
+<mBit filterMinValue="0" filterMaxValue="0">0</mBit>
+<reserved filterMinValue="0" filterMaxValue="0">0</reserved>
+</tos>
+</tosDiffserv>
+</pdu>
+</pdus>
+</template>
+</frame>

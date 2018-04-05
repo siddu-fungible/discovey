@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCRSPN_ID" 
+    showName="FC RSPN_ID"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:RspnId"
+    description="FC RSPN_ID">
+    <pdus>
+      <pdu name="rspnId1" pdu="fcgs:RspnId" >
+        <ctIuPreamble>
+          <commandRespondCode>0218</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCDHAT" 
+    showName="FC DHAT" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:GsRequestWithHbaIdentifier" 
+    description="FC DHAT">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GsRequestWithHbaIdentifier">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>10</gsSubType>
+          <commandRespondCode>0301</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

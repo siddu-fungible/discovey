@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_PPPoESession"
+    showName="PPPoE Session"
+    version="1.00"
+    category="Access"
+    readonly="true"
+    validate="true"
+    firstPdu="pppoe:PPPoESession"
+    description="PPPoE Session" >
+
+    <pdus>
+      <pdu name="pppoe1" pdu="pppoe:PPPoESession">
+	  		<version uiControlState="CALCULATED"></version>
+	  		<type uiControlState="CALCULATED"></type>
+	  		<code uiControlState="CALCULATED"></code>
+	  		<length uiControlState="CALCULATED"></length>
+	  </pdu> 
+    </pdus>
+  </template>
+</frame>

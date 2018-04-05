@@ -1,0 +1,75 @@
+{
+  "CreateImixDistributionCommand": {
+    "title": "Schema for the ImixInfo of the spirent.methodology.traffic.CreateImixDistributionCommand.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enable":{
+        "description":"A flag indicating if this command should run to create the IMIX distribution.",
+        "type":"boolean"
+      },
+      "imixes": {
+      "description": "List of IMIX distributions that can be used by Streamblocks (e.g. from CreateTrafficMixCommand, etc).",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "seed": {
+              "description": "Random number generator seed value.",
+              "type": "integer"
+            },
+            "name": {
+              "description": "Name of the FrameLengthDistribution to be created.",
+              "type": "string"
+            },
+            "tag": {
+              "description": "Name of tag to create and associate with the IMIX distribution.",
+              "type": "string"
+            },
+            "table": {
+              "description": "List of frame length slots in the IMIX distribution.",
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "enable":{
+                    "description":"A flag indicating if this slot should be used in the IMIX distribution.",
+                    "type":"boolean"
+                  },
+                  "weight": {
+                    "description": "List of weights for each slot in the IMIX distribution.",
+                    "type": "integer"
+                  },
+                  "frameLengthMode": {
+                    "description": "frame distribution mode for the slot in the IMIX distribution.",
+                    "type": "string"
+                  },
+                  "fixedFrameLength": {
+                    "description": "fixed frame sizes for the slot (used in fixed mode) in the IMIX distribution.",
+                    "type": "integer",
+                    "minimum": 64
+                  },
+                  "minFrameLength": {
+                    "description": "min frame sizes for the slot (used in random mode) in the IMIX distribution.",
+                    "type": "integer",
+                    "minimum": 64
+                  },
+                  "maxFrameLength": {
+                    "description": "max frame sizes for the slot (used in random mode) in the IMIX distribution.",
+                    "type": "integer",
+                    "minimum": 64
+                  }
+                }
+              }
+            }
+          },
+          "required": ["name", "table"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,911 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="openflow" showName="Openflow" version="1.00"
+    description="This a PDU library for Openflow TLVs.">
+    
+  <TYPE_DEFS>
+
+    
+    <TYPE_DEF name="bool_type" type="INTEGER" bitLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="False" value="0" />
+        <VAL_ENUM uiShowName="True" value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <!-- MATCH TLVs -->
+
+    <TYPE_DEF name="in_port" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Ingress Port (in_port)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="32" defaultValue="1" 
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="in_phy_port" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Physical Port (in_phy_port)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="32" defaultValue="1" 
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="dl_src" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Ethernet Source (dl_src)" >
+      <FIELD name="addr" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="MAC" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="MACADDR" defaultValue="FF:FF:FF:FF:FF:FF"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="dl_dst" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Ethernet Destination (dl_dst)" >
+      <FIELD name="addr" type="MACADDR" defaultValue="00:00:02:00:00:01"
+          uiShowName="MAC" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="MACADDR" defaultValue="FF:FF:FF:FF:FF:FF"
+          uiShowName="Mask" uiNoShow="Interface" />    
+          
+    </TYPE_DEF>
+    <TYPE_DEF name="dl_type" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Ethernet Type (dl_type)" >
+      <FIELD name="ethernet_type" type="types:EtherTypes" byteLength="2" defaultValue="800"
+          uiShowName="Ethernet Type" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="dl_vlan" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="VLAN ID (dl_vlan)" >
+      <FIELD name="id" type="INTEGER" bitLength="12" defaultValue="100"
+          uiShowName="VLAN ID" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />
+      <FIELD name="mask" type="OCTETSTRING" byteLength="2" defaultValue="FFFF"
+          uiShowName="Mask" uiNoShow="Interface" />      
+    </TYPE_DEF>
+    <TYPE_DEF name="dl_vlan_pcp" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="VLAN Priority (dl_vlan_pcp)" >
+      <FIELD name="priority" type="INTEGER" bitLength="3" defaultValue="1"
+          uiShowName="Priority" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="dl_vlan_cfi" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="VLAN CFI (dl_vlan_cfi)" >
+      <FIELD name="vlan_cfi" type="bool_type" defaultValue="1"
+          uiShowName="VLAN CFI" uiNoShow="Interface" /> 
+    </TYPE_DEF>    
+    <TYPE_DEF name="nw_src" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="IPv4 Source (nw_src)" >
+      <FIELD name="addr" type="IPV4ADDR" defaultValue="192.0.0.1"
+          uiShowName="IPv4" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />     
+      <FIELD name="mask" type="IPV4ADDR" defaultValue="255.255.255.255"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="nw_dst" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="IPv4 Destination (nw_dst)" >
+      <FIELD name="addr" type="IPV4ADDR" defaultValue="192.0.0.1"
+          uiShowName="IPv4" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />    
+      <FIELD name="mask" type="IPV4ADDR" defaultValue="255.255.255.255"
+          uiShowName="Mask" uiNoShow="Interface" />
+
+    </TYPE_DEF>
+    <TYPE_DEF name="nw_tos" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="IPv4/IPv6 ToS/DSCP (nw_tos)" >
+      <FIELD name="tos" type="INTEGER"  bitLength="6" defaultValue="0"
+          uiShowName="ToS" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="nw_proto" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="IPv4/IPv6 Protocol (nw_proto)" >
+      <FIELD name="protocol" type="types:IpProtocolNumbers" bitLength="8" defaultValue="4"
+          uiShowName="Protocol" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="tp_src" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="TCP/UDP Source (tp_src)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="tp_dst" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="TCP/UDP Destination Port (tp_dst)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="metadata" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Metadata" >
+      <FIELD name="id" type="INTEGER" bitLength="64" defaultValue="0"
+          uiShowName="Metadata" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="OCTETSTRING" byteLength="8" defaultValue="FFFFFFFFFFFFFFFF"
+          uiShowName="Mask" uiNoShow="Interface" />    
+    </TYPE_DEF>
+	<TYPE_DEF name="nw_ecn" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv4/IPv6 ToS/ECN (nw_ecn)" >
+      <FIELD name="tos" type="INTEGER"  bitLength="2" defaultValue="0"
+          uiShowName="ToS/ECN" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="icmpv4_type" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="ICMPv4 Type (icmpv4_type)" >
+      <FIELD name="type" type="icmp:IcmpType" defaultValue="15"
+          uiShowName="Type" uiNoShow="Interface" />
+	</TYPE_DEF>
+	<TYPE_DEF name="icmpv4_code" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="ICMPv4 Code (icmpV4_code)" >
+      <FIELD name="code" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Code" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="arp_op" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="ARP OpCode (arp_op)" >
+      <FIELD name="type" type="arp:ARPOperationByte" defaultValue="1"
+          uiShowName="Code" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="arp_spa" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="ARP Source (arp_spa)" >
+      <FIELD name="addr" type="IPV4ADDR" defaultValue="192.0.0.1"
+          uiShowName="IPv4" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="IPV4ADDR" defaultValue="255.255.255.255"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="arp_tpa" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="ARP Destination (arp_tpa)" >
+      <FIELD name="addr" type="IPV4ADDR" defaultValue="192.0.0.1"
+          uiShowName="IPv4" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="IPV4ADDR" defaultValue="255.255.255.255"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="arp_sha" type="SEQUENCE" 
+        unitType="ELEMENT" uiShowName="ARP Source Hardware (arp_sha)" >
+      <FIELD name="addr" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="MAC" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="MACADDR" defaultValue="FF:FF:FF:FF:FF:FF"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="arp_tha" type="SEQUENCE" 
+        unitType="ELEMENT" uiShowName="ARP Target Hardware (arp_tha)" >
+      <FIELD name="addr" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="MAC" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />     
+      <FIELD name="mask" type="MACADDR" defaultValue="FF:FF:FF:FF:FF:FF"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="tun_id" type="SEQUENCE" 
+        unitType="ELEMENT" uiShowName="Tunnel ID (tun_id)" >
+
+      <FIELD name="id" type="INTEGER" bitLength="64" defaultValue="0"
+          uiShowName="Tunnel ID" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />     
+      <FIELD name="mask" type="OCTETSTRING" byteLength="8" defaultValue="FFFFFFFFFFFFFFFF"
+          uiShowName="Mask" uiNoShow="Interface" />
+
+    </TYPE_DEF>
+	<TYPE_DEF name="sctp_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="SCTP Source (sctp_src)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="sctp_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="SCTP Destination (sctp_dst)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+	<TYPE_DEF name="ext_hdr" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Ext Header" >
+      <FIELD name="header" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="Header" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="OCTETSTRING" byteLength="2" defaultValue="FFFF"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>	
+	<TYPE_DEF name="pbb_isid" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="PBB-ISID" >
+      <FIELD name="id" type="INTEGER" bitLength="32" defaultValue="0"
+          uiShowName="id" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />
+      <FIELD name="mask" type="OCTETSTRING" byteLength="4" defaultValue="FFFFFFFF"
+          uiShowName="Mask" uiNoShow="Interface" />          
+    </TYPE_DEF>
+    <TYPE_DEF name="tcp_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="TCP Source (tcp_src)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="tcp_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="TCP Destination (tcp_dst)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="udp_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="UDP Source (udp_src)" >
+      <FIELD name="port_number" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="udp_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="UDP Destination (udp_dst)" >
+      <FIELD name="udp_dst" type="INTEGER" bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="mpls_label" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="MPLS Label (mpls_label)" >
+      <FIELD name="mpls_label" type="INTEGER" bitLength="32" defaultValue="10"
+          uiShowName="Label" uiNoShow="Interface" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="mpls_tc" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="MPLS Traffic Class (mpls_tc)" >
+      <FIELD name="traffic_class" type="INTEGER" bitLength="3" defaultValue="1"
+          uiShowName="Traffic Class" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="mpls_bos" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="MPLS Bottom Of Stack (mpls_bos)" >
+      <FIELD name="bos" type="INTEGER" bitLength="1" defaultValue="1"
+          uiShowName="Bottom Of Stack" uiNoShow="Interface" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="ipv6_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Source (ipv6_src)" >
+      <FIELD name="addr" type="IPV6ADDR" defaultValue="2000::2:1"
+          uiShowName="IPv6" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />
+      <FIELD name="mask" type="IPV6ADDR" defaultValue="FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF"
+          uiShowName="Mask" uiNoShow="Interface" />    
+    </TYPE_DEF>
+    <TYPE_DEF name="ipv6_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Destination (ipv6_dst)" >
+      <FIELD name="addr" type="IPV6ADDR" defaultValue="2000::1:1"
+          uiShowName="IPv6" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />
+      <FIELD name="mask" type="IPV6ADDR" defaultValue="FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="ipv6_label" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Flow Label (ipv6_label)" >
+      <FIELD name="label" type="INTEGER" bitLength="32" defaultValue="1"
+          uiShowName="Label" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+          uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" /> 
+      <FIELD name="mask" type="OCTETSTRING" byteLength="4" defaultValue="FFFFFFFF"
+          uiShowName="Mask" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="icmpv6_type" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="ICMPv6 Type (icmpv6_type)" >
+      <FIELD name="type" type="icmpv6:Icmpv6Type" defaultValue="135"
+          uiShowName="Type" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="icmpv6_code" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Code (icmpv6_code)" >
+      <FIELD name="code" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Code" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="nd_target" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Nbr Disc Target (nd_target)" >
+      <FIELD name="target" type="IPV6ADDR" defaultValue="2000::1:1"
+          uiShowName="Target" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="nd_sll" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Nbr Solicit Source (nd_sll)" >
+      <FIELD name="source" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="Source" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="nd_tll" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv6 Nbr Advertisement Source (nd_tll)" >
+      <FIELD name="source" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="Source" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="experimenter" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Experimenter (exp)" maxOccurs="6">
+      <FIELD name="experimenterField" type="INTEGER" bitLength="7" defaultValue="0"
+          uiShowName="Experimenter Field" uiNoShow="Interface" />        
+      <FIELD name="experimenterId" type="OCTETSTRING" byteLength="4" defaultValue="00000000"
+          uiShowName="Experimenter ID" uiNoShow="Interface" />            
+      <FIELD name="experimenterValue" type="OCTETSTRING" minByteLength="1" maxByteLength="251" defaultValue="0"
+         uiShowName="Experimenter Value" uiNoShow="Interface" />
+      <FIELD name="useMask" type="bool_type" defaultValue="0"
+        uiShowName="Use Mask" uiNoShow="Interface" doNotBuild="true" />
+      <FIELD name="mask" type="OCTETSTRING" minByteLength="1" maxByteLength="125" defaultValue="F"
+      uiShowName="Mask" />    
+    </TYPE_DEF>
+        <TYPE_DEF name="set_field_exp" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set Field Experimenter (set_field_exp)" maxOccurs="20" >
+      <FIELD name="experimenterField" type="INTEGER" bitLength="7" defaultValue="0"
+          uiShowName="Experimenter Field" uiNoShow="Interface" uiNoShowModifier="Tlv"/>        
+      <FIELD name="experimenterId" type="OCTETSTRING" byteLength="4" defaultValue="00000000"
+          uiShowName="Experimenter ID" uiNoShow="Interface" uiNoShowModifier="Tlv"/>            
+      <FIELD name="experimenterValue" type="OCTETSTRING" minByteLength="1" maxByteLength="251" defaultValue="0"
+         uiShowName="Experimenter Value" uiNoShow="Interface" uiNoShowModifier="Tlv"/>  
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="set_field_exp_ip" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set Field Experimenter IP (set_field_exp_ip)" maxOccurs="20">
+      <FIELD name="experimenterField" type="INTEGER" bitLength="7" defaultValue="0"
+          uiShowName="Experimenter Field" uiNoShow="Interface" uiNoShowModifier="Tlv"/>        
+      <FIELD name="experimenterId" type="OCTETSTRING" byteLength="4" defaultValue="00000000"
+          uiShowName="Experimenter ID" uiNoShow="Interface" uiNoShowModifier="Tlv"/>            
+      <FIELD name="ipAddr" type="IPV4ADDR" defaultValue="192.0.0.1" uiShowName="IPv4" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="set_field_exp_dec" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set Field Experimenter Decimal (set_field_exp_dec)" maxOccurs="20">
+      <FIELD name="experimenterField" type="INTEGER" bitLength="7" defaultValue="0"
+          uiShowName="Experimenter Field" uiNoShow="Interface" uiNoShowModifier="Tlv"/>        
+      <FIELD name="experimenterId" type="OCTETSTRING" byteLength="4" defaultValue="00000000"
+          uiShowName="Experimenter ID" uiNoShow="Interface" uiNoShowModifier="Tlv"/>            
+      <FIELD name="expValueDecimal" type="INTEGER" bitLength="64" defaultValue="0"
+      uiShowName="Value(Decimal)" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="OfMatch" type="CHOICE" unitType="ELEMENT" uiShowName="Match" >
+      <FIELD name="in_port" type="in_port" uiShowName="Ingress Port" uiShowType="OF10"/>
+      <FIELD name="dl_type" type="dl_type" uiShowName="Ethernet Type" uiShowType="OF10"/>
+      <FIELD name="dl_src" type="dl_src" uiShowName="Ethernet Source" uiShowType="OF10"/>
+      <FIELD name="dl_dst" type="dl_dst" uiShowName="Ethernet Destination" uiShowType="OF10"/>
+      <FIELD name="dl_vlan" type="dl_vlan" uiShowName="VLAN ID" uiShowType="OF10"/>
+      <FIELD name="dl_vlan_pcp" type="dl_vlan_pcp" uiShowName="VLAN Priority" uiShowType="OF10"/>
+      <FIELD name="dl_vlan_cfi" type="dl_vlan_cfi" uiShowName="VLAN CFI" />
+      <FIELD name="nw_proto" type="nw_proto" uiShowName="IPv4/IPv6 Protocol" uiShowType="OF10"/>
+      <FIELD name="nw_src" type="nw_src" uiShowName="IPv4 Source" uiShowType="OF10"/>
+      <FIELD name="nw_dst" type="nw_dst" uiShowName="IPv4 Destination" uiShowType="OF10"/>
+      <FIELD name="nw_tos" type="nw_tos" uiShowName="IPv4/IPv6 ToS/DSCP" uiShowType="OF10"/>
+      <FIELD name="tp_src" type="tp_src" uiShowName="TCP/UDP Source" uiShowType="OF10"/>
+      <FIELD name="tp_dst" type="tp_dst" uiShowName="TCP/UDP Destination" uiShowType="OF10"/>
+      <!-- OF 1.3 -->
+	  <FIELD name="metadata" type="metadata" uiShowName="Metadata" />
+	  <FIELD name="in_phy_port" type="in_phy_port" uiShowName="Physical Port" uiShowType="OF10"/>
+      <FIELD name="mpls_label" type="mpls_label" uiShowName="MPLS Label" />
+      <FIELD name="mpls_tc" type="mpls_tc" uiShowName="MPLS Traffic Class" />
+      <FIELD name="mpls_bos" type="mpls_bos" uiShowName="MPLS Bottom Of Stack" />
+	  <FIELD name="icmpv4_type" type="icmpv4_type" uiShowName="ICMPv4 Type" />
+	  <FIELD name="icmpv4_code" type="icmpv4_code" uiShowName="ICMPv4 Code" />
+	  <FIELD name="arp_op" type="arp_op" uiShowName="ARP OpCode" />
+	  <FIELD name="arp_spa" type="arp_spa" uiShowName="ARP Source" />
+	  <FIELD name="arp_tpa" type="arp_tpa" uiShowName="ARP Destination" />
+	  <FIELD name="arp_sha" type="arp_sha" uiShowName="ARP Source Hardware" />
+	  <FIELD name="arp_tha" type="arp_tha" uiShowName="ARP Target Hardware" />
+	  <FIELD name="tun_id" type="tun_id" uiShowName="Tunnel ID" />
+	  <FIELD name="sctp_src" type="sctp_src" uiShowName="SCTP Source" />
+	  <FIELD name="sctp_dst" type="sctp_dst" uiShowName="SCTP Destination" />
+	  <FIELD name="ext_hdr" type="ext_hdr" uiShowName=" IPv6 Ext Header " />
+	  <FIELD name="pbb_isid" type="pbb_isid" uiShowName="PBB-ISID " />
+	  <FIELD name="nw_ecn" type="nw_ecn" uiShowName="IPv4/IPv6 ToS/ECN" />
+      <FIELD name="ipv6_src" type="ipv6_src" uiShowName="IPv6 Source" />
+      <FIELD name="ipv6_dst" type="ipv6_dst" uiShowName="IPv6 Destination" />
+      <FIELD name="ipv6_label" type="ipv6_label" uiShowName="IPv6 Label" />
+      <FIELD name="icmpv6_type" type="icmpv6_type" uiShowName="ICMPv6 Type" />
+      <FIELD name="icmpv6_code" type="icmpv6_code" uiShowName="ICMPv6 Code" />
+      <FIELD name="nd_target" type="nd_target" uiShowName="Nbr Discovery Target IPv6" />
+      <FIELD name="nd_sll" type="nd_sll" uiShowName="Nbr Solicit Source MAC" />
+      <FIELD name="nd_tll" type="nd_tll" uiShowName="Nbr Advertisement Source MAC" />
+      <FIELD name="tcp_src" type="tcp_src" uiShowName="TCP Source" />
+      <FIELD name="tcp_dst" type="tcp_dst" uiShowName="TCP Destination" />
+      <FIELD name="udp_src" type="udp_src" uiShowName="UDP Source" />
+      <FIELD name="udp_dst" type="udp_dst" uiShowName="UDP Destination" />
+      <FIELD name="exp" type="experimenter" uiShowName="Experimenter"  />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="RmMatch" type="CHOICE" unitType="ELEMENT" uiShowName="Match" >
+        <FIELD name="in_port" type="in_port" uiShowName="Ingress Port"/>
+        <FIELD name="dl_type" type="dl_type" uiShowName="Ethernet Type"/>
+        <FIELD name="dl_src" type="dl_src" uiShowName="Ethernet Source"/>
+        <FIELD name="dl_dst" type="dl_dst" uiShowName="Ethernet Destination"/>
+        <FIELD name="dl_vlan" type="dl_vlan" uiShowName="VLAN ID"/>
+        <FIELD name="dl_vlan_pcp" type="dl_vlan_pcp" uiShowName="VLAN Priority"/>
+        <FIELD name="nw_proto" type="nw_proto" uiShowName="IPv4/IPv6 Protocol"/>
+        <FIELD name="nw_src" type="nw_src" uiShowName="IPv4 Source"/>
+        <FIELD name="nw_dst" type="nw_dst" uiShowName="IPv4 Destination"/>
+        <FIELD name="nw_tos" type="nw_tos" uiShowName="IPv4/IPv6 ToS/DSCP"/>
+        <FIELD name="nw_ecn" type="nw_ecn" uiShowName="IPv4/IPv6 ToS/ECN" />
+    </TYPE_DEF>
+    <TYPE_DEF name="OfMatchList" type="SET_OF"
+          minOccurs="0" maxOccurs ="40" 
+          elementType="OfMatch" unitType="ELEMENT" />
+    <TYPE_DEF name="RmMatchList" type="SET_OF"
+          minOccurs="0" maxOccurs ="40" 
+          elementType="RmMatch" unitType="ELEMENT" />   
+    <!-- ACTION TLVs -->
+
+
+    <TYPE_DEF name="output" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Output (output)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="32" defaultValue="1"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="enqueue" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Enqueue (enqueue)"  maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="32" defaultValue="1"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+      <FIELD name="queue" type="INTEGER"  bitLength="32" defaultValue="1"
+          uiShowName="Queue" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="controller" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Controller (controller)"  maxOccurs="20">
+      <FIELD name="max_length" type="INTEGER"  bitLength="16" defaultValue="0"
+          uiShowName="MaxLength" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="drop" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Drop (drop)" >
+      <FIELD name="name" type="ASCII"
+             defaultValue="drop" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="output_normal" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Output Normal (normal)"  maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="normal" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="output_flood" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Output Flood (flood)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="flood" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="output_all" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Output All (all)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="all" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="output_local" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Output Local (local)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="local" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="output_in_port" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Output In Port (in_port)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="in_port" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_vlan_vid" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify VLAN ID (mod_vlan_vid)" maxOccurs="20">
+      <FIELD name="id" type="INTEGER" bitLength="12" defaultValue="100"
+          uiShowName="VLAN ID" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_vlan_pcp" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify VLAN PCP (mod_vlan_pcp)" maxOccurs="20">
+      <FIELD name="pcp" type="INTEGER" bitLength="3" defaultValue="0"
+          uiShowName="VLAN PCP" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="pop_vlan" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Pop VLAN (pop_vlan)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="pop_vlan" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_dl_src" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify Ethernet Source (mod_dl_src)" maxOccurs="20">
+      <FIELD name="addr" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="MAC" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_dl_dst" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify Ethernet Destination (mod_dl_dst)" maxOccurs="20">
+      <FIELD name="addr" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="MAC" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_nw_src" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify IPv4 Source (mod_nw_src)" maxOccurs="20">
+      <FIELD name="addr" type="IPV4ADDR" defaultValue="192.0.0.1"
+          uiShowName="IPv4" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_nw_dst" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify IPv4 Destination (mod_nw_dst)" maxOccurs="20">
+      <FIELD name="addr" type="IPV4ADDR" defaultValue="192.0.0.1"
+          uiShowName="IPv4" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_tp_src" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify TCP/UDP Source (mod_tp_src)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_tp_dst" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify TCP/UDP Destination (mod_tp_dst)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_nw_tos" type="SEQUENCE" category="OF10"
+        unitType="ELEMENT" uiShowName="Modify IPv4/IPv6 TOS/DSCP (mod_nw_tos)" maxOccurs="20">
+      <FIELD name="tos" type="INTEGER"  bitLength="6" defaultValue="0"
+          uiShowName="TOS" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <!-- OF 1.3 -->
+    <TYPE_DEF name="push_vlan" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Push VLAN (push_vlan)" maxOccurs="20">
+        <FIELD name="ethernet_type" type="types:EtherTypes" byteLength="2"
+               defaultValue="8100"
+               uiShowName="EthernetType" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="push_mpls" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Push MPLS (push_mpls)" maxOccurs="20">
+        <FIELD name="ethernet_type" type="types:EtherTypes" byteLength="2"
+               defaultValue="8847"
+               uiShowName="Ethernet Type" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="pop_mpls" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Pop MPLS (pop_mpls)" maxOccurs="20">
+        <FIELD name="ethernet_type" type="types:EtherTypes" byteLength="2"
+               defaultValue="800"
+               uiShowName="Ethernet Type" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="set_mpls_label" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set MPLS Label (set_mpls_label)" maxOccurs="20">
+        <FIELD name="label" type="INTEGER" bitLength="32" byteLength="4"
+               defaultValue="10"
+               uiShowName="MPLS Label" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="set_mpls_tc" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set MPLS TC" maxOccurs="20">
+        <FIELD name="traffic_class" type="INTEGER" bitLength="3" byteLength="1"
+               defaultValue="1"
+               uiShowName="TrafficClass" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="set_mpls_bos" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set MPLS BOS" maxOccurs="20">
+        <FIELD name="bos" type="INTEGER" bitLength="1" byteLength="1"
+               defaultValue="1"
+               uiShowName="Bottom Of Stack" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="set_mpls_ttl" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set MPLS TTL (set_mpls_ttl)" maxOccurs="20" >
+        <FIELD name="ttl" type="INTEGER" bitLength="8" byteLength="1"
+               defaultValue="1"
+               uiShowName="TTL" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="dec_mpls_ttl" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Decrement MPLS TTL (dec_mpls_ttl)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="dec_mpls_ttl" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="mod_ipv6_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify IPv6 Source (mod_ipv6_src)" maxOccurs="20">
+      <FIELD name="addr" type="IPV6ADDR" defaultValue="2000::2:1"
+          uiShowName="IPv6" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_ipv6_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify IPv6 Destination (mod_ipv6_dst)" maxOccurs="20">
+      <FIELD name="addr" type="IPV6ADDR" defaultValue="2000::1:1"
+          uiShowName="IPv6" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_ipv6_label" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify IPv6 Flow Label (mod_ipv6_label)" maxOccurs="20">
+      <FIELD name="label" type="INTEGER" bitLength="32" defaultValue="1"
+          uiShowName="Label" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_icmpv6_type" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify ICMPv6 Type (mod_icmpv6_type)" maxOccurs="20">
+      <FIELD name="type" type="icmpv6:Icmpv6Type" defaultValue="135"
+          uiShowName="Type" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_icmpv6_code" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify ICMPv6 Code (mod_icmpv6_code)" maxOccurs="20">
+      <FIELD name="code" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Code" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_nd_target" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify IPv6 Nbr Disc Target (mod_nd_target)" maxOccurs="20">
+      <FIELD name="target" type="IPV6ADDR" defaultValue="2000::1:1"
+          uiShowName="Target" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_nd_sll" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify IPv6 Nbr Solicit Source (mod_nd_sll)" maxOccurs="20">
+      <FIELD name="source" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="Source" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_nd_tll" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify IPv6 Nbr Advertisement Source (mod_nd_tll)" maxOccurs="20">
+      <FIELD name="source" type="MACADDR" defaultValue="00:00:01:00:00:01"
+          uiShowName="Source" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="dec_ttl" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Decrement IPv4/IPv6 TTL (dec_ttl)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="dec_ttl" uiNoShow="Tlv" uiShowCommon="false"  doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_tcp_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify TCP Source (mod_tcp_src)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_tcp_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify TCP Destination Port (mod_tcp_dst)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_udp_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify UDP Source (mod_udp_src)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_udp_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify UDP Destination Port (mod_udp_dst)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_sctp_src" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify SCTP Source (mod_sctp_src)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="mod_sctp_dst" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify SCTP Destination Port (mod_sctp_dst)" maxOccurs="20">
+      <FIELD name="port_number" type="INTEGER"  bitLength="16" defaultValue="100"
+          uiShowName="Port Number" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+	  <TYPE_DEF name="mod_tun_id" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Modify Tunnel ID (mod_tun_id)" maxOccurs="20">
+		  <FIELD name="tunnel_id" type="INTEGER"  bitLength="64" defaultValue="0"
+			uiShowName="Tunnel ID" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+	  </TYPE_DEF>
+    <TYPE_DEF name="set_queue" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Set Queue (set_queue)" maxOccurs="20">
+      <FIELD name="queue" type="INTEGER"  bitLength="32" defaultValue="1"
+          uiShowName="Queue" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="copy_ttl_in" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Copy TTL In (copy_ttl_in)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="copy_ttl_in" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="copy_ttl_out" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Copy TTL Out (copy_ttl_out)" maxOccurs="20">
+      <FIELD name="name" type="ASCII"
+             defaultValue="copy_ttl_out" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="push_pbb" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Push PBB (push_pbb)" maxOccurs="20">
+        <FIELD name="ethernet_type" type="types:EtherTypes" byteLength="2"
+               defaultValue="88E7"
+               uiShowName="EthernetType" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="pop_pbb" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Pop PBB (pop_pbb)" maxOccurs="20">
+        <FIELD name="name" type="ASCII"
+             defaultValue="pop_pbb" uiNoShow="Tlv" uiShowCommon="false" doNotBuild="true"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="group" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Group (group)" maxOccurs="20">
+      <FIELD name="group_Id" type="INTEGER"  bitLength="32" defaultValue="1"
+          uiShowName="Group Identifier" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+     <TYPE_DEF name="experimenterAction" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Experimenter" maxOccurs="20">
+        <FIELD name="exp_id" type="OCTETSTRING" byteLength="4" defaultValue="00000000"
+          uiShowName="Experimenter ID" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+        <FIELD name="exp_data" type="OCTETSTRING"  minByteLength="1" maxByteLength="252" defaultValue="0" 
+          uiShowName="Experimenter Data" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+    </TYPE_DEF>
+    <TYPE_DEF name="OfAction" type="CHOICE" unitType="ELEMENT" uiShowName="Action" >
+    <!--These 2 are instructions. Do not show these. If a config has these as actions then we will be rebuilding the frame-->
+      <FIELD name="goto_table" type="goto_table" uiShowName="Goto Table" uiShowType="OF0"/>
+      <FIELD name="meter" type="meter" uiShowName="Meter" uiShowType="OF0"/>
+    <!--Action Set 1-->
+      <FIELD name="copy_ttl_in"  type="copy_ttl_in" uiShowName="Copy TTL In" />
+    <!--Action Set 2-->
+      <FIELD name="pop_mpls" type="pop_mpls" uiShowName="Pop MPLS" />
+      <FIELD name="pop_pbb" type="pop_pbb" uiShowName="Pop PBB" />
+      <FIELD name="pop_vlan" type="pop_vlan" uiShowName="Pop VLAN" uiShowType="OF10"/>
+    <!--Action Set 3-->
+      <FIELD name="push_mpls" type="push_mpls" uiShowName="Push MPLS" />
+    <!--Action Set 4-->
+      <FIELD name="push_pbb"  type="push_pbb" uiShowName="Push PBB" />
+    <!--Action Set 5-->
+      <FIELD name="push_vlan" type="push_vlan" uiShowName="Push VLAN" />
+    <!--Action Set 6-->
+      <FIELD name="copy_ttl_out" type="copy_ttl_out" uiShowName="Copy TTL Out" />
+    <!--Action Set 7-->
+      <FIELD name="dec_mpls_ttl" type="dec_mpls_ttl" uiShowName="Decrement MPLS TTL" />
+      <FIELD name="dec_ttl" type="dec_ttl" uiShowName="Decrement IPv4/IPv6 TTL" />
+    <!--Action Set 8-->
+      <FIELD name="mod_dl_src" type="mod_dl_src" uiShowName="Modify Ethernet Source" uiShowType="OF10"/>
+      <FIELD name="mod_dl_dst" type="mod_dl_dst" uiShowName="Modify Ethernet Destination" uiShowType="OF10"/>
+      <FIELD name="mod_vlan_vid" type="mod_vlan_vid" uiShowName="Modify VLAN ID" uiShowType="OF10"/>
+      <FIELD name="mod_vlan_pcp" type="mod_vlan_pcp" uiShowName="Modify VLAN PCP" uiShowType="OF10"/>
+      <FIELD name="mod_nw_src" type="mod_nw_src" uiShowName="Modify IPv4 Source" uiShowType="OF10"/>
+      <FIELD name="mod_nw_dst" type="mod_nw_dst" uiShowName="Modify IPv4 Destination" uiShowType="OF10"/>
+      <FIELD name="mod_nw_tos" type="mod_nw_tos" uiShowName="Modify IPv4/IPv6 ToS/DSCP" uiShowType="OF10"/>
+      <FIELD name="mod_tp_src" type="mod_tp_src" uiShowName="Modify TCP/UDP Source" uiShowType="OF10"/>
+      <FIELD name="mod_tp_dst" type="mod_tp_dst" uiShowName="Modify TCP/UDP Destination" uiShowType="OF10"/>
+      <FIELD name="set_mpls_label" type="set_mpls_label" uiShowName="Set MPLS Label" />
+      <FIELD name="set_mpls_tc" type="set_mpls_tc" uiShowName="Set MPLS TC" />
+      <FIELD name="set_mpls_bos" type="set_mpls_bos" uiShowName="Set MPLS BOS" />
+      <FIELD name="set_mpls_ttl" type="set_mpls_ttl" uiShowName="Set MPLS TTL" />
+      <FIELD name="mod_ipv6_src" type="mod_ipv6_src" uiShowName="Modify IPv6 Source" />
+      <FIELD name="mod_ipv6_dst" type="mod_ipv6_dst" uiShowName="Modify IPv6 Destination" />
+      <FIELD name="mod_ipv6_label" type="mod_ipv6_label" uiShowName="Modify IPv6 Label" />
+      <FIELD name="mod_icmpv6_type" type="mod_icmpv6_type" uiShowName="Modify ICMPv6 Type" />
+      <FIELD name="mod_icmpv6_code" type="mod_icmpv6_code" uiShowName="Modify ICMPv6 Code" />
+      <FIELD name="mod_nd_target" type="mod_nd_target" uiShowName="Modify Nbr Discovery Target IPv6" />
+      <FIELD name="mod_nd_sll" type="mod_nd_sll" uiShowName="Modify Nbr Solicit Source MAC" />
+      <FIELD name="mod_nd_tll" type="mod_nd_tll" uiShowName="Modify Nbr Advertisement Source MAC" />
+      <FIELD name="mod_tcp_src" type="mod_tcp_src" uiShowName="Modify TCP Source" />
+      <FIELD name="mod_tcp_dst" type="mod_tcp_dst" uiShowName="Modify TCP Destination" />
+      <FIELD name="mod_udp_src" type="mod_udp_src" uiShowName="Modify UDP Source" />
+      <FIELD name="mod_udp_dst" type="mod_udp_dst" uiShowName="Modify UDP Destination" />
+      <FIELD name="mod_sctp_src" type="mod_sctp_src" uiShowName="Modify SCTP Source" />
+      <FIELD name="mod_sctp_dst" type="mod_sctp_dst" uiShowName="Modify SCTP Destination" />
+      <FIELD name="mod_tun_id" type="mod_tun_id" uiShowName="Modify Tunnel ID" />
+    <!--Action Set 9-->
+      <FIELD name="enqueue" type="enqueue" uiShowName="Enqueue" uiShowType="OF10"/>
+      <FIELD name="set_queue" type="set_queue" uiShowName="Set Queue" />
+    <!--Action Set 10-->
+      <FIELD name="group" type="group" uiShowName="Group"/>
+    <!--Action Set 11-->
+      <FIELD name="output" type="output" uiShowName="Output" uiShowType="OF10"/>
+      <FIELD name="controller" type="controller" uiShowName="Controller" uiShowType="OF10"/>
+      <FIELD name="normal" type="output_normal" uiShowName="Output Normal" uiShowType="OF10"/>
+      <FIELD name="flood" type="output_flood" uiShowName="Output Flood" uiShowType="OF10"/>
+      <FIELD name="all" type="output_all" uiShowName="Output All" uiShowType="OF10"/>
+      <FIELD name="local" type="output_local" uiShowName="Output Local" uiShowType="OF10"/>
+      <FIELD name="in_port" type="output_in_port" uiShowName="Output In Port" uiShowType="OF10"/>
+        <!-- Need to add table -->
+    <!--Action Set Drop-->
+      <FIELD name="drop" type="drop" uiShowName="Drop" uiShowType="OF10"/>
+      <FIELD name="set_field_experimenter" type="set_field_exp" uiShowName="Set Field Experimenter" />
+      <FIELD name="set_field_experimenter_ip" type="set_field_exp_ip" uiShowName="Set Field Experimenter IP" />
+      <FIELD name="set_field_experimenter_dec" type="set_field_exp_dec" uiShowName="Set Field Experimenter Decimal" />
+      <FIELD name="exp_action" type="experimenterAction" uiShowName="Experimenter" />
+        </TYPE_DEF>
+    <!--Reactive Mode(aka Morpheus) Actions-->   
+    <TYPE_DEF name="RmAction" type="CHOICE" unitType="ELEMENT" uiShowName="Action" >  
+        <!--Action Set 1-->
+        <FIELD name="copy_ttl_in"  type="copy_ttl_in" uiShowName="Copy TTL In" />
+        <!--Action Set 2-->
+        <FIELD name="pop_mpls" type="pop_mpls" uiShowName="Pop MPLS" />
+        <FIELD name="pop_pbb" type="pop_pbb" uiShowName="Pop PBB" />
+        <FIELD name="pop_vlan" type="pop_vlan" uiShowName="Pop VLAN" />
+        <!--Action Set 3-->
+        <FIELD name="push_mpls" type="push_mpls" uiShowName="Push MPLS" />
+        <!--Action Set 4-->
+        <FIELD name="push_pbb"  type="push_pbb" uiShowName="Push PBB" />
+        <!--Action Set 5-->
+        <FIELD name="push_vlan" type="push_vlan" uiShowName="Push VLAN" />
+        <!--Action Set 6-->
+        <FIELD name="copy_ttl_out" type="copy_ttl_out" uiShowName="Copy TTL Out" />
+        <!--Action Set 7-->
+        <FIELD name="dec_mpls_ttl" type="dec_mpls_ttl" uiShowName="Decrement MPLS TTL" />
+        <FIELD name="dec_ttl" type="dec_ttl" uiShowName="Decrement IPv4/IPv6 TTL" />
+        <!--Action Set 8-->
+        <FIELD name="mod_dl_src" type="mod_dl_src" uiShowName="Modify Ethernet Source" />
+        <FIELD name="mod_dl_dst" type="mod_dl_dst" uiShowName="Modify Ethernet Destination" />
+        <FIELD name="mod_vlan_vid" type="mod_vlan_vid" uiShowName="Modify VLAN ID" />
+        <FIELD name="mod_vlan_pcp" type="mod_vlan_pcp" uiShowName="Modify VLAN PCP"/>
+        <FIELD name="mod_nw_src" type="mod_nw_src" uiShowName="Modify IPv4 Source" />
+        <FIELD name="mod_nw_dst" type="mod_nw_dst" uiShowName="Modify IPv4 Destination"/>
+        <FIELD name="mod_nw_tos" type="mod_nw_tos" uiShowName="Modify IPv4/IPv6 ToS/DSCP"/>
+        <FIELD name="set_mpls_label" type="set_mpls_label" uiShowName="Set MPLS Label" />
+        <FIELD name="set_mpls_tc" type="set_mpls_tc" uiShowName="Set MPLS TC" />
+        <FIELD name="set_mpls_bos" type="set_mpls_bos" uiShowName="Set MPLS BOS" />
+        <FIELD name="set_mpls_ttl" type="set_mpls_ttl" uiShowName="Set MPLS TTL" />
+        <FIELD name="mod_ipv6_src" type="mod_ipv6_src" uiShowName="Modify IPv6 Source" />
+        <FIELD name="mod_ipv6_dst" type="mod_ipv6_dst" uiShowName="Modify IPv6 Destination" />
+        <FIELD name="mod_ipv6_label" type="mod_ipv6_label" uiShowName="Modify IPv6 Label" />
+        <FIELD name="mod_icmpv6_type" type="mod_icmpv6_type" uiShowName="Modify ICMPv6 Type" />
+        <FIELD name="mod_icmpv6_code" type="mod_icmpv6_code" uiShowName="Modify ICMPv6 Code" />
+        <FIELD name="mod_nd_target" type="mod_nd_target" uiShowName="Modify Nbr Discovery Target IPv6" />
+        <FIELD name="mod_nd_sll" type="mod_nd_sll" uiShowName="Modify Nbr Solicit Source MAC" />
+        <FIELD name="mod_nd_tll" type="mod_nd_tll" uiShowName="Modify Nbr Advertisement Source MAC" />
+        <FIELD name="mod_tcp_src" type="mod_tcp_src" uiShowName="Modify TCP Source" />
+        <FIELD name="mod_tcp_dst" type="mod_tcp_dst" uiShowName="Modify TCP Destination" />
+        <FIELD name="mod_udp_src" type="mod_udp_src" uiShowName="Modify UDP Source" />
+        <FIELD name="mod_udp_dst" type="mod_udp_dst" uiShowName="Modify UDP Destination" />
+        <FIELD name="mod_sctp_src" type="mod_sctp_src" uiShowName="Modify SCTP Source" />
+        <FIELD name="mod_sctp_dst" type="mod_sctp_dst" uiShowName="Modify SCTP Destination" />
+        <FIELD name="mod_tun_id" type="mod_tun_id" uiShowName="Modify Tunnel ID" />
+        <!--Action Set 9-->
+        <FIELD name="set_queue" type="set_queue" uiShowName="Set Queue" />
+        <!--Action Set 10-->
+        <FIELD name="group" type="group" uiShowName="Group"/>
+        
+        <FIELD name="output" type="output" uiShowName="Output Port"/>
+        <FIELD name="controller" type="controller" uiShowName="Controller" />
+        <FIELD name="normal" type="output_normal" uiShowName="Output Normal"/>
+        <FIELD name="flood" type="output_flood" uiShowName="Output Flood" />
+        <FIELD name="all" type="output_all" uiShowName="Output All" />
+        <FIELD name="local" type="output_local" uiShowName="Output Local" />
+        <FIELD name="in_port" type="output_in_port" uiShowName="Output In Port" />
+    </TYPE_DEF>
+
+
+        <TYPE_DEF name="goto_table" type="SEQUENCE"
+                unitType="ELEMENT" uiShowName="Goto Table (goto_table)">
+            <FIELD name="table" type="INTEGER"  bitLength="8" defaultValue="1"
+                    uiShowName="Table" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+        </TYPE_DEF>
+        <TYPE_DEF name="meter" type="SEQUENCE"
+                unitType="ELEMENT" uiShowName="Meter (meter)">
+            <FIELD name="meter" type="INTEGER"  bitLength="32" defaultValue="1"
+                    minValue="1" uiShowName="Meter ID" uiNoShowModifier="Tlv" />
+        </TYPE_DEF>
+		<TYPE_DEF name="writeMetadata" type="SEQUENCE"
+                unitType="ELEMENT" uiShowName="Write-Metadata (write_metadata)">
+			<FIELD name="metadata" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000"
+                    uiShowName="Metadata" uiNoShowModifier="Tlv" />
+			<FIELD name="metadataMask" type="OCTETSTRING" byteLength="8"
+                    defaultValue="FFFFFFFFFFFFFFFF" uiShowName="Metadata Mask" uiNoShowModifier="Tlv" />
+		</TYPE_DEF>
+
+		<TYPE_DEF name="clearAction" type="SEQUENCE"
+                unitType="ELEMENT" uiShowName="Clear-Action (clear_action)">
+			<FIELD name="name" type="ASCII"
+                    defaultValue="clear" uiNoShow="Tlv" uiShowCommon="false" />
+		</TYPE_DEF>
+
+		<TYPE_DEF name="writeAction" type="SEQUENCE"
+                unitType="ELEMENT" uiShowName="Write-Action (write_action)">
+			<FIELD name="writeActions" type="OfActionList"
+                    uiShowName="Actions" uiNoShow="Interface" />
+		</TYPE_DEF>
+
+		<TYPE_DEF name="applyAction" type="SEQUENCE"
+                unitType="ELEMENT" uiShowName="Apply-Action (apply_action)">
+			<FIELD name="applyActions" type="OfActionList"
+                    uiShowName="Actions" uiNoShow="Interface" />
+		</TYPE_DEF>
+        <TYPE_DEF name="experimenterInstruction" type="SEQUENCE"
+                unitType="ELEMENT" uiShowName="Experimenter Instruction" maxOccurs ="20" >
+                <FIELD name="exp_id" type="OCTETSTRING" byteLength="4" defaultValue="00000000"
+                    uiShowName="Experimenter ID" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+                <FIELD name="exp_data" type="OCTETSTRING"  minByteLength="1" maxByteLength="252" defaultValue="0" 
+                    uiShowName="Experimenter Data" uiNoShow="Interface" uiNoShowModifier="Tlv"/>
+        </TYPE_DEF>
+		<TYPE_DEF name="OfActionList" type="SET_OF" minOccurs="0" maxOccurs ="100" elementType="OfAction" unitType="ELEMENT" />	
+        <TYPE_DEF name="RmActionList" type="SET_OF" minOccurs="0" maxOccurs ="40" elementType="RmAction" unitType="ELEMENT" />  
+        
+        <TYPE_DEF name="InstructionList"  type="CHOICE" unitType="ELEMENT" uiShowName="Instruction">
+            <FIELD name="gotoTable" type="goto_table" uiShowName="Goto Table"/>
+			<FIELD name="writeMetadata" type="writeMetadata" uiShowName="Write-Metadata"/>
+			<FIELD name="writeActions" type="writeAction" uiShowName="Write-Action"/>
+			<FIELD name="applyActions" type="applyAction" uiShowName="Apply-Action" uiShowType="OF10"/>
+			<FIELD name="clearActions" type="clearAction" uiShowName="Clear-Action"/>
+            <FIELD name="meters" type="meter" uiShowName="Meter"/>
+            <FIELD name="experimenterInstructions" type="experimenterInstruction" uiShowName="Experimenter"/>
+    </TYPE_DEF>
+
+		<TYPE_DEF name="OfInstructionList" type="SET_OF" minOccurs="0" maxOccurs ="100" elementType="InstructionList" unitType="ELEMENT" />
+
+    <TYPE_DEF name="Flow" type="SEQUENCE" unitType="HEADER"
+          level="3" uiShowName="Flow" niMapped="true">
+
+        <FIELD name="table" type="INTEGER" bitLength="8" defaultValue="0"
+               uiShowName="Table" uiNoShow="Interface"/>
+        <FIELD name="idle_timeout" type="INTEGER" bitLength="16" defaultValue="0"
+               uiNoShowModifier="Tlv" uiShowName="Idle Timeout" uiNoShow="Interface" />
+        <FIELD name="hard_timeout" type="INTEGER" bitLength="16" defaultValue="0"
+               uiNoShowModifier="Tlv" uiShowName="Hard Timeout" uiNoShow="Interface" />
+        <FIELD name="priority" type="INTEGER" bitLength="16" defaultValue="32768"
+               uiShowName="Priority" uiNoShow="Interface" />
+        <FIELD name="flags" type="OCTETSTRING" byteLength="2" defaultValue="0001"
+               uiNoShowModifier="Tlv" uiShowName="Flags" uiNoShow="Interface" uiOverrideEditor="OpenflowFlowFlagsEditor"/>
+        <FIELD name="cookie" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000"
+               uiShowName="Cookie" uiNoShow="Interface" />
+        <FIELD name="cookie_mask" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000"
+               uiNoShowModifier="Tlv" uiShowName="Cookie Mask" uiNoShow="Interface" />               
+
+        <FIELD name="Match" type="OfMatchList"
+               uiShowName="Match" uiNoShow="Interface" />
+
+		<!-- Do not show Actions. If a config has this then it will be converted to Instructions. -->
+        <FIELD name="Actions" type="OfActionList"
+               uiShowName="Actions" uiNoShow="Interface,Filter,Tlv" doNotBuild="true" uiShowCommon="false" />
+
+        <FIELD name="Instructions" type="OfInstructionList"
+               uiShowName="Instructions" uiNoShow="Interface" />
+
+        <NEXT_HEADERS>
+        </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="ReactiveModeMatch" type="CHOICE" unitType="ELEMENT"
+            uiShowName="Reactive Mode Match" niMapped="true">
+       <FIELD name="Match" type="RmMatchList"
+               uiShowName="Match" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="ReactiveModeAction" type="CHOICE" unitType="ELEMENT"
+            uiShowName="Reactive Mode Action" niMapped="true">
+       <FIELD name="Action" type="RmActionList"
+               uiShowName="Action" uiNoShow="Interface" />
+    </TYPE_DEF>
+  </TYPE_DEFS>
+</PDU_LIBRARY>

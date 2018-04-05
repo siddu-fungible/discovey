@@ -1,0 +1,25 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGPN_FFAccept" 
+    showName="FC GPN_FF Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GpnFfAccept"
+    description="FC GPN_FF Accept">
+    <pdus>
+      <pdu name="gffIdAccept1" pdu="fcgs:GpnFfAccept" >
+        <ctIuPreamble>
+        	<commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+        <portNames>
+          <PortName name="PortName">
+            <control>10000000</control>
+          </PortName>
+        </portNames>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

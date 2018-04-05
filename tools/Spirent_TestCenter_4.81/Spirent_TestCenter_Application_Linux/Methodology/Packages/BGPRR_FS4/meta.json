@@ -1,0 +1,1180 @@
+{
+  "methodology_key": "BGPRR_FS4",
+  "display_name": "BGP Route Reflector Flow Spec Scale IPv4",
+  "short_display_name": "BGP Route Reflector Flow Spec Scale IPv4",
+  "description": "Identify the highest number of Flow Specs that a BGP Route Reflector can advertise to a set number of client and non-client speakers.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "CUSTOM",
+    "sides": [
+      {
+        "side": "NORTH",
+        "port_group": "ControllerPort"
+      },
+      {
+        "side": "WEST",
+        "port_group": "ClientPort"
+      },
+      {
+        "side": "EAST",
+        "port_group": "NonClientPort"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "ControllerPort",
+      "display_name": "Controller Port",
+      "description": "Controller Port",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "ClientPort",
+      "display_name": "Client Port",
+      "description": "Client Port",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "NonClientPort",
+      "display_name": "Non-Client Port",
+      "description": "Non-Client Port",
+      "min_occurs": "0",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "Flow Spec Controller",
+      "description": "The BGP router for sending flow spec to the route reflector",
+      "topology_side": "NORTH",
+      "test_properties": [
+        {
+          "description": "The amount of time in seconds between keep alive packets",
+          "display_name": "Keep Alive Interval",
+          "property": "ControllerKeepAlive",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "60",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "The amount of time in seconds a keep alive packet must be received",
+          "display_name": "Hold Down Interval",
+          "property": "ControllerHoldTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "180",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "The IPv4 gateway address used by the controller device",
+          "display_name": "Controller IPv4 Gateway Address",
+          "property": "ControllerIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.84.1.1"
+        },
+        {
+          "description": "The IPv4 Gateway Address Step used by the controller device",
+          "display_name": "Controller IPv4 Gateway Address Step",
+          "property": "ControllerIpv4GwAddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The IPv4 Gateway Address Port Step used by the controller device",
+          "display_name": "Controller IPv4 Gateway Address Port Step",
+          "property": "ControllerIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "The IPv4 address used by the controller device",
+          "display_name": "Controller IPv4 Address",
+          "property": "ControllerIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.84.1.2"
+        },
+        {
+          "description": "The IPv4 Address Step used by the controller device",
+          "display_name": "Controller IPv4 Address Step",
+          "property": "ControllerIpv4AddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The IPv4 Address Port Step used by the controller device",
+          "display_name": "Controller IPv4 Address Port Step",
+          "property": "ControllerIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "The MAC address used by the controller device",
+          "display_name": "Controller MAC Address",
+          "property": "ControllerMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:84:00:00:01"
+        },
+        {
+          "description": "The MAC Address Step used by the controller device",
+          "display_name": "Controller MAC Address Step",
+          "property": "ControllerMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "The MAC Address Port Step used by the controller device",
+          "display_name": "Controller MAC Address Port Step",
+          "property": "ControllerMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:10:00:00"
+        },
+        {
+          "description": "The IPv4 router ID used by the controller device",
+          "display_name": "Controller IPv4 Router ID",
+          "property": "ControllerIpv4RouterId",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.84.1.2"
+        },
+        {
+          "description": "The IPv4 Router ID Step used by the controller device",
+          "display_name": "Controller IPv4 Router ID Step",
+          "property": "ControllerIpv4RouterIdStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The IPv4 Router ID Port Step used by the controller device",
+          "display_name": "Controller IPv4 Router ID Port Step",
+          "property": "ControllerIpv4RouterIdPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "The IPv4 prefix length used by the controller device",
+          "display_name": "Controller IPv4 Prefix Length",
+          "property": "ControllerIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits"
+        },
+        {
+          "description": "The VLAN ID used by the controller device",
+          "display_name": "Controller VLAN ID",
+          "property": "ControllerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "The VLAN ID Step used by the controller device",
+          "display_name": "Controller VLAN ID Step",
+          "property": "ControllerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "The VLAN ID Port Step used by the controller device",
+          "display_name": "Controller VLAN ID Port Step",
+          "property": "ControllerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Determines type of VLAN encapsulation for the controller device",
+          "display_name": "Controller VLAN Mode",
+          "property": "ControllerVlanEnable",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        },
+        {
+          "description": "The AS Number used by the controller device",
+          "display_name": "Controller AS Number",
+          "property": "BackendControllerAsNum",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "The AS Number Step used by the controller device",
+          "display_name": "Controller AS Number Step",
+          "property": "BackendControllerAsNumStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "The AS Number Port Step used by the controller device",
+          "display_name": "Controller AS Number Port Step",
+          "property": "BackendControllerAsNumPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Enable the OSPFv2 configuration for the controller device",
+          "display_name": "Controller OSPFv2 Enable",
+          "property": "OSPFv2ControllerEnable",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "The OSPFv2 Hello Interval used by the controller device",
+          "display_name": "Controller OSPFv2 Hello Interval",
+          "property": "OSPFv2ControllerHelloInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "99999",
+          "units": "seconds"
+        },
+        {
+          "description": "The OSPFv2 Router Dead Interval used by the controller device",
+          "display_name": "Controller OSPFv2 Router Dead Interval",
+          "property": "OSPFv2ControllerRouterDeadInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "40",
+          "minimum": "1",
+          "maximum": "99999",
+          "units": "seconds"
+        },
+        {
+          "description": "The OSPFv2 Area Id used by the controller device",
+          "display_name": "Controller OSPFv2 Area Id",
+          "property": "OSPFv2ControllerAreaId",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        },
+        {
+          "description": "The OSPFv2 Area Id Step used by the controller device",
+          "display_name": "Controller OSPFv2 Area Id Step",
+          "property": "OSPFv2ControllerAreaIdStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        },
+        {
+          "description": "The OSPFv2 Area Id Port Step used by the controller device",
+          "display_name": "Controller OSPFv2 Area Id Port Step",
+          "property": "OSPFv2ControllerAreaIdPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "Clients",
+      "description": "Client devices within the route reflector's cluster",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "The amount of time in seconds between keep alive packets",
+          "display_name": "Keep Alive Interval",
+          "property": "ClientKeepAlive",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "60",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "The amount of time in seconds a keep alive packet must be received",
+          "display_name": "Hold Down Interval",
+          "property": "ClientHoldTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "180",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Starting default IPv4 gateway address used by client devices",
+          "display_name": "Client IPv4 Gateway Address",
+          "property": "ClientIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.85.1.1"
+        },
+        {
+          "description": "The default gateway address step used by client devices",
+          "display_name": "Client IPv4 Gateway Address Step",
+          "property": "ClientIpv4GwAddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The default gateway address port step used by client devices",
+          "display_name": "Client IPv4 Gateway Address Port Step",
+          "property": "ClientIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "Starting IPv4 address used by the client devices",
+          "display_name": "Client IPv4 Address",
+          "property": "ClientIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.85.1.2"
+        },
+        {
+          "description": "The IPv4 address step used by client devices",
+          "display_name": "Client IPv4 Address Step",
+          "property": "ClientIpv4AddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The IPv4 address port step used by client devices",
+          "display_name": "Client IPv4 Address Port Step",
+          "property": "ClientIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "Starting MAC address used by the client devices",
+          "display_name": "Client MAC Address",
+          "property": "ClientMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:85:00:00:01"
+        },
+        {
+          "description": "The MAC address step used by the client devices",
+          "display_name": "Client MAC Address Step",
+          "property": "ClientMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "The MAC address port step used by the client devices",
+          "display_name": "Client MAC Address Port Step",
+          "property": "ClientMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:10:00:00"
+        },
+        {
+          "description": "Starting IPv4 router ID used by the client devices",
+          "display_name": "Client IPv4 Router ID",
+          "property": "ClientIpv4RouterId",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.85.1.2"
+        },
+        {
+          "description": "The IPv4 router ID step used by the client devices",
+          "display_name": "Client IPv4 Router ID Step",
+          "property": "ClientIpv4RouterIdStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The IPv4 router ID port step used by the client devices",
+          "display_name": "Client IPv4 Router ID Port Step",
+          "property": "ClientIpv4RouterIdPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "The IPv4 prefix length used by the client devices",
+          "display_name": "Client IPv4 Prefix Length",
+          "property": "ClientIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits"
+        },
+        {
+          "description": "Starting VLAN ID used by the client devices",
+          "display_name": "Client VLAN ID",
+          "property": "ClientVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "The VLAN ID step used by the client devices",
+          "display_name": "Client VLAN ID Step",
+          "property": "ClientVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "The VLAN ID port step used by the client devices",
+          "display_name": "Client VLAN ID Port Step",
+          "property": "ClientVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Determines type of VLAN encapsulation for the client devices",
+          "display_name": "Client VLAN Mode",
+          "property": "BackendClientVlanEnable",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        },
+        {
+          "description": "Number of Client Devices",
+          "display_name": "Client Device Count",
+          "property": "ClientDeviceCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "The Client AS Number used by the client devices",
+          "display_name": "Client AS Number",
+          "property": "BackendClientAsNum",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "The Client AS Number Step used by the client devices",
+          "display_name": "Client AS Number Step",
+          "property": "BackendClientAsNumStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "The Client AS Number Port Step used by the client devices",
+          "display_name": "Client AS Number Port Step",
+          "property": "BackendClientAsNumPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Enable the OSPFv2 configuration for the client devices",
+          "display_name": "Client OSPFv2 Enable",
+          "property": "OSPFv2ClientEnable",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "The OSPFv2 Hello Interval used by the client devices",
+          "display_name": "Client OSPFv2 Hello Interval",
+          "property": "OSPFv2ClientHelloInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "99999",
+          "units": "seconds"
+        },
+        {
+          "description": "The OSPFv2 Router Dead Interval used by the client devices",
+          "display_name": "Client OSPFv2 Router Dead Interval",
+          "property": "OSPFv2ClientRouterDeadInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "40",
+          "minimum": "1",
+          "maximum": "99999",
+          "units": "seconds"
+        },
+        {
+          "description": "The OSPFv2 Area Id used by the client devices",
+          "display_name": "Client OSPFv2 Area Id",
+          "property": "OSPFv2ClientAreaId",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        },
+        {
+          "description": "The OSPFv2 Area Id Step used by the client devices",
+          "display_name": "Client OSPFv2 Area Id Step",
+          "property": "OSPFv2ClientAreaIdStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        },
+        {
+          "description": "The OSPFv2 Area Id Port Step used by the client devices",
+          "display_name": "Client OSPFv2 Area Id Port Step",
+          "property": "OSPFv2ClientAreaIdPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "Non-Clients",
+      "description": "Non-client devices that are AS peers to the route reflector, but not in its cluster",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "The amount of time in seconds between keep alive packets",
+          "display_name": "Keep Alive Interval",
+          "property": "NonClientKeepAlive",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "60",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "The amount of time in seconds a keep alive packet must be received",
+          "display_name": "Hold Down Interval",
+          "property": "NonClientHoldTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "180",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Starting default IPv4 gateway address used by non-client devices",
+          "display_name": "Non-Client IPv4 Gateway Address",
+          "property": "NonClientIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.86.1.1"
+        },
+        {
+          "description": "The default gateway address step used by non-client devices",
+          "display_name": "Non-Client IPv4 Gateway Address Step",
+          "property": "NonClientIpv4GwAddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The default gateway address port step used by non-client devices",
+          "display_name": "Non-Client IPv4 Gateway Address Port Step",
+          "property": "NonClientIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "Starting IPv4 address used by the non-client devices",
+          "display_name": "Non-Client IPv4 Address",
+          "property": "NonClientIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.86.1.2"
+        },
+        {
+          "description": "The IPv4 address step used by non-client devices",
+          "display_name": "Non-Client IPv4 Address Step",
+          "property": "NonClientIpv4AddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The IPv4 address port step used by non-client devices",
+          "display_name": "Non-Client IPv4 Address Port Step",
+          "property": "NonClientIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "Starting MAC address used by the non-client devices",
+          "display_name": "Non-Client MAC Address",
+          "property": "NonClientMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:86:00:00:01"
+        },
+        {
+          "description": "The MAC address step used by the non-client devices",
+          "display_name": "Non-Client MAC Address Step",
+          "property": "NonClientMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "The MAC address port step used by the non-client devices",
+          "display_name": "Non-Client MAC Address Port Step",
+          "property": "NonClientMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:10:00:00"
+        },
+        {
+          "description": "Starting IPv4 router ID used by the non-client devices",
+          "display_name": "Non-Client IPv4 Router ID",
+          "property": "NonClientIpv4RouterId",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.86.1.2"
+        },
+        {
+          "description": "The IPv4 router ID step used by the non-client devices",
+          "display_name": "Non-Client IPv4 Router ID Step",
+          "property": "NonClientIpv4RouterIdStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "The IPv4 router ID port step used by the non-client devices",
+          "display_name": "Non-Client IPv4 Router ID Port Step",
+          "property": "NonClientIpv4RouterIdPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0"
+        },
+        {
+          "description": "The IPv4 prefix length used by the non-client devices",
+          "display_name": "Non-Client IPv4 Prefix Length",
+          "property": "NonClientIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits"
+        },
+        {
+          "description": "Starting VLAN ID used by the non-client devices",
+          "display_name": "Non-Client VLAN ID",
+          "property": "NonClientVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "The VLAN ID step used by the non-client devices",
+          "display_name": "Non-Client VLAN ID Step",
+          "property": "NonClientVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "The VLAN ID port step used by the non-client devices",
+          "display_name": "Non-Client VLAN ID Port Step",
+          "property": "NonClientVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Determines type of VLAN encapsulation for the non-client devices",
+          "display_name": "Non-Client VLAN Mode",
+          "property": "BackendNonClientVlanEnable",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        },
+        {
+          "description": "Number of Non-Client Devices",
+          "display_name": "Non-Client Device Count",
+          "property": "NonClientDeviceCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "First AS number used by the non-client devices",
+          "display_name": "Non-Client AS Number",
+          "property": "NonClientAsNum",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "AS number step used by the non-client devices",
+          "display_name": "Non-Client AS Number Step",
+          "property": "NonClientAsNumStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "AS number port step used by the non-client devices",
+          "display_name": "Non-Client AS Number Port Step",
+          "property": "NonClientAsNumPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Enable the OSPFv2 configuration for the non-client devices",
+          "display_name": "Non-Client OSPFv2 Enable",
+          "property": "OSPFv2NonClientEnable",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "The OSPFv2 Hello Interval used by the non-client devices",
+          "display_name": "Non-Client OSPFv2 Hello Interval",
+          "property": "OSPFv2NonClientHelloInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "99999",
+          "units": "seconds"
+        },
+        {
+          "description": "The OSPFv2 Router Dead Interval used by the non-client devices",
+          "display_name": "Non-Client OSPFv2 Router Dead Interval",
+          "property": "OSPFv2NonClientRouterDeadInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "40",
+          "minimum": "1",
+          "maximum": "99999",
+          "units": "seconds"
+        },
+        {
+          "description": "The OSPFv2 Area Id used by the non-client devices",
+          "display_name": "Non-Client OSPFv2 Area Id",
+          "property": "OSPFv2NonClientAreaId",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        },
+        {
+          "description": "The OSPFv2 Area Id Step used by the non-client devices",
+          "display_name": "Non-Client OSPFv2 Area Id Step",
+          "property": "OSPFv2NonClientAreaIdStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        },
+        {
+          "description": "The OSPFv2 Area Id Port Step used by the non-client devices",
+          "display_name": "Non-Client OSPFv2 Area Id Port Step",
+          "property": "OSPFv2NonClientAreaIdPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.10.0.0",
+          "minimum": "0.0.0.0",
+          "maximum": "255.255.255.255"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Flow Spec Distribution",
+      "description": "The distribution schedule for the flow specs, which must total 100%",
+      "test_properties": [
+        {
+          "description": "Distribution percentage for Type 1 Flow Spec",
+          "display_name": "Type 1 Flow Spec",
+          "property": "Type1FlowSpec",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "49.00",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Distribution percentage for Type 2 Flow Spec",
+          "display_name": "Type 2 Flow Spec",
+          "property": "Type2FlowSpec",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "49.00",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Distribution percentage for Type 4 Flow Spec",
+          "display_name": "Type 4 Flow Spec",
+          "property": "Type4FlowSpec",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "0.500",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Distribution percentage for Type 5 Flow Spec",
+          "display_name": "Type 5 Flow Spec",
+          "property": "Type5FlowSpec",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "0.500",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Distribution percentage for Type 6 Flow Spec",
+          "display_name": "Type 6 Flow Spec",
+          "property": "Type6FlowSpec",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "0.500",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Distribution percentage for Type 10 Flow Spec",
+          "display_name": "Type 10 Flow Spec",
+          "property": "Type10FlowSpec",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "0.500",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Test Configuration",
+      "description": "Test execution parameters, such as minimum, maximum, and step counts for flow specs, and test duration limits",
+      "test_properties": [
+        {
+          "description": "The AS number used by the DUT, the client devices, and the flow spec controller (non-client devices have a separate configuration)",
+          "display_name": "Route Reflector AS Number",
+          "property": "RouteReflectorAsNum",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "The Flow Spec Count for the first iteration of the test",
+          "display_name": "First Flow Spec Count",
+          "property": "FirstFlowSpecCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "5000",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "The Flow Spec Count for the last iteration of the test",
+          "display_name": "Last Flow Spec Count",
+          "property": "LastFlowSpecCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "25000",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "The Flow Spec Count step for each additional iteration of the test",
+          "display_name": "Flow Spec Step Count",
+          "property": "FlowSpecStepCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "5000",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "The maximum amount of time to wait for all BGP sessions to establish",
+          "display_name": "Session Establish Timeout",
+          "property": "SessionEstablishTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "120",
+          "minimum": "1",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "The period of time in seconds that each iteration may wait for all flow specs to advertise and reflect before terminating the test",
+          "display_name": "Advertise Timeout",
+          "property": "AdvertiseTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "600",
+          "minimum": "1",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Percentage of received routes greater than expected count to be considered a pass",
+          "display_name": "Re-Advertise Tolerance",
+          "property": "ReAdvertiseTolerance",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.0",
+          "minimum": "0.0",
+          "maximum": "100.0",
+          "units": "%"
+        },
+        {
+          "description": "The time in seconds that the flow specs must not change once they reach their full flow spec count to consider the iteration test complete",
+          "display_name": "Settle Time",
+          "property": "SettleTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "5",
+          "maximum": "4294967295",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "BGP Configuration",
+      "description": "Common BGP configuration that influence how the test ports perform with the DUT",
+      "test_properties": [
+        {
+          "description": "Maximum routes per BGP UPDATE message (useful when throttling route advertisements)",
+          "display_name": "Max Routes Per Update",
+          "property": "MaxRoutesPerUpdate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2000",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Delay between successive BGP UPDATE messages in milliseconds",
+          "display_name": "Inter-Update Delay",
+          "property": "InterUpdateDelay",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "ms"
+        },
+        {
+          "description": "Number of times to retry the connection if BGP OPEN fails",
+          "display_name": "Connection Retry Count",
+          "property": "ConnectionRetryCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "The wait-time/interval (in seconds) before retrying a failed BGP Open",
+          "display_name": "Connection Retry Interval",
+          "property": "ConnectionRetryInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "30",
+          "minimum": "10",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Number of milliseconds to wait before sending a session starting Open message to pace the DUT",
+          "display_name": "Session Open Delay",
+          "property": "SessionOpenDelay",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "ms"
+        },
+        {
+          "description": "Number of milliseconds to wait before closing a BGP session to pace the DUT",
+          "display_name": "Session Close Delay",
+          "property": "SessionCloseDelay",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "ms"
+        },
+        {
+          "description": "Enable/disable selected functions to manage performance (Normal - no performance improvements, No Traffic Binding - disables label processing)",
+          "display_name": "Scalability Mode",
+          "property": "ScalabilityModeEnum",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "No Traffic Binding",
+          "acceptable_values": [
+            "Normal",
+            "No Traffic Binding"
+          ]
+        },
+        {
+          "description": "Select to enable the TCP_NODELAY option to pack multiple updates per TCP packet per RFC 896",
+          "display_name": "Enable TCP No Delay",
+          "property": "EnableTcpNoDelay",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Option to improve BGP performance",
+          "display_name": "Pack Updates Up To MTU",
+          "property": "PackUpdatesUpToMTU",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Option to improve test performance",
+          "display_name": "Ignore Attribute Errors",
+          "property": "IgnoreAttributeErrors",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        },
+        {
+          "description": "Flag for the test system to send a route update instead of withdrawing the route (flow spec) when NLRI changes",
+          "display_name": "Send Update without withdraw",
+          "property": "SendUpdateWithoutWithdraw",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        }
+      ]
+    }
+  ]
+}

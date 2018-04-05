@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoEFLOGIRequest"
+    showName="FCoE FLOGI Request"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE FLOGI Request">
+    <pdus>
+      <pdu name="proto1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>22</rCtl>
+        <type>01</type>
+        <frameControl>290000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fc:ELSFLOGI">
+        <class3SvcParams>
+          <options>8800</options>
+        </class3SvcParams>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

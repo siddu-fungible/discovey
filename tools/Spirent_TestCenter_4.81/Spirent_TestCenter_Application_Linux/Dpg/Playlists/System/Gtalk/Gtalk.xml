@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="Gtalk" type="stream">
+  <MetaData description="Google talk" protocol="Google talk" application="Gtalk" createDate=""/>
+  <Streams>
+    <Stream file="System/Gtalk/Gtalk_HTTP_to_Google_Server.xml" name="HTTP_to_Google_Server" description="HTTP_to_Google_Server" startTime="0" dataDelay="16" serverPort="80" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/Gtalk/Gtalk_SSL_Handshake_with_google_Server.xml" name="SSL_Handshake_with_google_Server" description="SSL_Handshake_with_google_Server" startTime="2889" dataDelay="16" serverPort="443" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/Gtalk/Gtalk_XMPP_Conversation.xml" name="XMPP_Conversation" description="XMPP_Conversation" startTime="3067" dataDelay="58" serverPort="5222" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/Gtalk/Gtalk_Get_image_for_Gtalk_Client.xml" name="Get_image_for_Gtalk_Client" description="Get_image_for_Gtalk_Client" startTime="3922" dataDelay="14" serverPort="80" sapeeServerIp="192.168.1.2" minDelay="0" maxDelay="4294967295"/>
+  </Streams>
+</Playlist>

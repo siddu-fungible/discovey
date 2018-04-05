@@ -1,0 +1,678 @@
+{
+  "id": 9,
+  "title": "STC DRV Traffic Stats",
+  "originalTitle": "STC DRV Traffic Stats",
+  "tags": [],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "hideControls": false,
+  "sharedCrosshair": false,
+  "rows": [
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)",
+            "thresholdLine": false
+          },
+          "id": 1,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_Port_Name - TX Packet Rate",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "Port_Name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "hide": false,
+              "measurement": "stc_rt_drv_port_stats",
+              "policy": "default",
+              "query": "SELECT \"Data\" FROM \"stc_rt_traffic_rates\" WHERE $timeFilter GROUP BY \"Source\"",
+              "rawQuery": false,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "Aggregated Tx Rate (fps)"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "stc_session_token",
+                  "operator": "=~",
+                  "value": "/^$SessionId$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_Port_Name - RX Packet Rate",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "Port_Name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "hide": false,
+              "measurement": "stc_rt_drv_port_stats",
+              "policy": "default",
+              "query": "SELECT \"Data\" FROM \"stc_rt_traffic_rates\" WHERE $timeFilter GROUP BY \"Source\"",
+              "rawQuery": false,
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "Aggregated Rx Rate (fps)"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "stc_session_token",
+                  "operator": "=~",
+                  "value": "/^$SessionId$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Traffic Rate (packets/sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "transparent": false,
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "packets/sec",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "mbytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        }
+      ],
+      "title": "Traffic Rate"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)",
+            "thresholdLine": false
+          },
+          "id": 2,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_Port_Name - Dropped Count",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "Port_Name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "hide": false,
+              "measurement": "stc_rt_drv_port_stats",
+              "policy": "default",
+              "query": "SELECT \"Data\" FROM \"stc_rt_traffic_rates\" WHERE $timeFilter GROUP BY \"Source\"",
+              "rawQuery": false,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "Aggregated Dropped Count (Frames)"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "stc_session_token",
+                  "operator": "=~",
+                  "value": "/^$SessionId$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Drop Count",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "transparent": false,
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": "packets",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "mbytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        }
+      ],
+      "title": "Drop Count"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "decimals": 3,
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 3,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_Port_Name - Min Latency",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "Port_Name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "stc_rt_drv_port_stats",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "Aggregated Min Latency (us)"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "stc_session_token",
+                  "operator": "=~",
+                  "value": "/^$SessionId$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_Port_Name - Max Latency",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "Port_Name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "stc_rt_drv_port_stats",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "Aggregated Max Latency (us)"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "stc_session_token",
+                  "operator": "=~",
+                  "value": "/^$SessionId$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_Port_Name - Avg Latency",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "Port_Name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "stc_rt_drv_port_stats",
+              "policy": "default",
+              "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "Aggregated Avg Latency (us)"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "stc_session_token",
+                  "operator": "=~",
+                  "value": "/^$SessionId$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Latency",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": "microseconds",
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "Latency"
+    }
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "allFormat": "glob",
+        "current": {
+          "text": "metrics",
+          "value": "metrics"
+        },
+        "datasource": null,
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "DataSource",
+        "options": [
+          {
+            "text": "metrics",
+            "value": "metrics",
+            "selected": true
+          }
+        ],
+        "query": "influxdb",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "allFormat": "glob",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$DataSource",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SessionId",
+        "multi": false,
+        "name": "SessionId",
+        "options": [
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          }
+        ],
+        "query": "show tag values with key=\"stc_session_token\"",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(0, 255, 255)",
+        "name": "Start of Test",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^Start.*Test/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(255, 0, 255)",
+        "name": "End of Test",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^End.*Test/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(0, 255, 0)",
+        "name": "Start of Traffic",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^Start.*Traffic/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(255, 0, 0)",
+        "name": "End of Traffic",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^(End|Stop).*Traffic/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(0, 0, 205)",
+        "name": "Automatic Event",
+        "query": "select event_title,event_text,event_tag from stm_events where stc_session_token=~ /$SessionId$/ and event_tag=~ /AutoInfluxEvent/ and event_title!~ /^(Start|End|Stop).*(Test|Traffic)/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      }
+    ]
+  },
+  "refresh": "10s",
+  "schemaVersion": 12,
+  "version": 2,
+  "links": []
+}

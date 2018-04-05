@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+    name="gtpf"
+    showName="GTPf"
+    version="1.00"
+    description="This is a sample PDU library for GTPf as defined in XML Stream Editor.">
+
+    <TYPE_DEFS>
+        <TYPE_DEF name="GTPf" type="SEQUENCE" unitType="HEADER" portType="Ethernet" uiShowName="GTPf Header" >
+
+            <FIELD name="version"  type="INTEGER"  bitLength="3"  defaultValue="1" uiShowName="Version" />
+            <FIELD name="protocol" type="INTEGER"  bitLength="1"  defaultValue="1" uiShowName="Protocol Type" />
+            <FIELD name="reserved" type="INTEGER"  bitLength="1"  defaultValue="0" uiShowName="Reserved" />
+            <FIELD name="eFlg"     type="INTEGER"  bitLength="1"  defaultValue="0" uiShowName="Extended Header Flag" />
+            <FIELD name="sFlg"     type="INTEGER"  bitLength="1"  defaultValue="0" uiShowName="Sequence Number Flag" />
+            <FIELD name="pnFlg"    type="INTEGER"  bitLength="1"  defaultValue="0" uiShowName="N-PDU Number Flag" />
+            <FIELD name="msgType"  type="INTEGER"  bitLength="8"  defaultValue="1" uiShowName="Message Type" />
+            <FIELD name="mlength"  type="INTEGER"  bitLength="16" defaultValue="8" uiControlState="CALCULATED" binder="calculated" procfnTarget="PAYLOADLENGTH" uiShowName="Total Length" />
+            <FIELD name="teid"     type="INTEGER"  bitLength="32" defaultValue="0" uiShowName="Tunnel Endpoint ID" />
+
+            <NEXT_HEADERS>
+                <NXT_HDR id="gtpf_ext:GTPfOptExt" name="GTPf Optional Fields and Extension Header" value="139" />
+                <NXT_HDR id="gtpf_opt:GTPfOptOnly" name="GTPf Optional Fields" value="139" />
+                <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+                <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+                <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="4" />
+                <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="41" />
+            </NEXT_HEADERS>
+        </TYPE_DEF>
+    </TYPE_DEFS>
+</PDU_LIBRARY>
+

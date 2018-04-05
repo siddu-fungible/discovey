@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="L2TPv3oUDP"
+    showName="L2TPv3 over UDP"
+    version="1.00"
+    category="Access"
+    readonly="true"
+    validate="true"
+    firstPdu="udp:Udp"
+    description="UDP and L2TPv3" >
+
+    <pdus>
+      <pdu name="udp_1" pdu="udp:Udp"/>
+      <pdu name="l2tpv3oudp_1" pdu="l2tpv3oudp:L2TPv3"/>
+    </pdus>
+  </template>
+</frame>

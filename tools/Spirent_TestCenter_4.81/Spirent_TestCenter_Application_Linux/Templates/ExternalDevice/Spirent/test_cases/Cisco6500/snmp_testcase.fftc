@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<testCase version="3.4.1.41207">
+    <procedures>
+        <item name="main">
+            <steps>
+                <item guid="315986db-b137-4723-9dd4-010f07188c65" action="open" session="ss">
+                    <command>
+                        <body>project://Spirent/session_profiles/snmp_session_profile.ffsp</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.OpenStepPropertyGroup">
+                        <stepProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                        <sessionProperties type="com.fnfr.svt.applications.snmp.documents.DeviceProperties"/>
+                    </applicationProperties>
+                </item>
+                <item guid="8275d22b-099e-4445-8948-e58fbe50bc4a" action="get" session="ss" normalOffset="3.468" estimatedStepExecutionTime="0.016">
+                    <command>
+                        <body>MIB-2::system.sysName</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>sysName</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.applications.snmp.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="d2509a0b-a683-45a6-a96f-3cee5d2ecb4c" action="get" session="ss" normalOffset="19.922" estimatedStepExecutionTime="0.015">
+                    <command>
+                        <body>MIB-2::snmp.snmpInPkts</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>snmpInPkts</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.applications.snmp.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="edd4f0c5-0514-46e2-8878-18bb75c73fe1" action="get" session="ss" normalOffset="1.624" estimatedStepExecutionTime="0.016">
+                    <command>
+                        <body>MIB-2::snmp.snmpOutPkts</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>snmpOutOkts</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.applications.snmp.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="c9fab1fa-a932-4d2f-815a-8e265b69598e" action="get" session="ss">
+                    <command>
+                        <body>MIB-2::snmp.snmpInSetRequests</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>snmpInSetRequests</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.applications.snmp.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="5e5685e4-127b-4b5b-8230-37fbb4941e36" action="get" session="ss">
+                    <command>
+                        <body>MIB-2::snmp.snmpOutGetResponses</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>snmpOutResponses</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.applications.snmp.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="27873ce8-8846-421c-b5a7-1ec1f89827d3" action="return">
+                    <command>
+                        <body>[query snmpInPkts snmpInPkts()]\\t[query snmpOutOkts snmpOutPkts()]\\t[query snmpInSetRequests snmpInSetRequests()]\\t[query snmpOutResponses snmpOutGetResponses()]\\t\\t[query sysName sysName()]</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                </item>
+            </steps>
+        </item>
+    </procedures>
+</testCase>

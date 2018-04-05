@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="gtpv1_ext"
+  showName="GTPv1_ext"
+  version="1.00"
+  description="This is a sample PDU library for GTPv1 Ext Headers as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+    <TYPE_DEF name="GTPv1Ext"  type="SEQUENCE" unitType="HEADER" portType="Ethernet" uiShowName="GTPv1 Optional Fields and Extension Header" >
+        <FIELD name="seqno"    type="INTEGER"           bitLength="16"    defaultValue="0" uiShowName="Sequence Number" />
+        <FIELD name="Npdu"     type="INTEGER"           bitLength="8"     defaultValue="0" uiShowName="N-PDU Number" />
+        <FIELD name="nExtHdr"  type="INTEGER"           bitLength="8"     defaultValue="0" uiShowName="Next Extension Header Type" />
+
+        <FIELD name="mlength"  type="INTEGER"           bitLength="8"    defaultValue="1"  uiControlState="CALCULATED" binder="calculated" procfnTarget="HDRLENGTHBY4" uiShowName="Extension Header Total Length" />
+        <FIELD name="pattern"  type="OCTETSTRING"       defaultValue="0000"	uiShowName="Byte pattern" minByteLength="2" maxByteLength="1500" />
+        <FIELD name="nExtHdr"  type="INTEGER"           bitLength="8"     defaultValue="0" uiShowName="Next Extension Header Type" />
+
+        <NEXT_HEADERS>
+            <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+            <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+            <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="4" />
+            <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="41" />
+    	    <NXT_HDR id="gtpv1_ext:GTPv1ExtHdr" name="GTPv1 Extension Header" value="3387" />
+        </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="GTPv1ExtHdr"  type="SEQUENCE" unitType="HEADER" portType="Ethernet" uiShowName="GTPv1 Extension Header" >
+        <FIELD name="mlength"  type="INTEGER"           bitLength="8"    defaultValue="1"  uiControlState="CALCULATED" binder="calculated" procfnTarget="HDRLENGTHBY4" uiShowName="Extension Header Total Length" />
+        <FIELD name="pattern"  type="OCTETSTRING"       defaultValue="0000"	uiShowName="Byte pattern" minByteLength="2" maxByteLength="1500" />
+        <FIELD name="nExtHdr"  type="INTEGER"           bitLength="8"     defaultValue="0" uiShowName="Next Extension Header Type" />
+
+        <NEXT_HEADERS>
+            <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+            <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+            <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="4" />
+            <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="41" />
+    	    <NXT_HDR id="gtpv1_ext:GTPv1ExtHdr"        name="GTPv1 Extension Header" value="3387" />
+        </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<testCase version="3.4.1.41207">
+    <execution estimatedExecutionTime="4"/>
+    <procedures>
+        <item name="main" defaultSessionType="com.fnfr.svt.applications.ssh">
+            <steps>
+                <item guid="d24f00e0-5024-409d-9bff-274540352b31" action="open" session="$session">
+                    <command>
+                        <body>$session_profile</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.OpenStepPropertyGroup">
+                        <stepProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                            <promptProperties>
+                                <stepPrompts>
+                                    <item name="autoPrompt1">
+                                        <Content>[sherwin@forbiddencity sherwin]$ </Content>
+                                    </item>
+                                </stepPrompts>
+                            </promptProperties>
+                        </stepProperties>
+                        <sessionProperties type="com.fnfr.svt.applications.ssh.documents.SSHProperties">
+                            <ipAddress inherit="false">[param dut/ip_address]</ipAddress>
+                            <port inherit="false">[param dut/port ]</port>
+                            <user inherit="false">[param connect/username ]</user>
+                            <password inherit="false">TWRsFBSrcJWSBReSpgObXMBamp09nCvxCaK+mWSFs84=</password>
+                        </sessionProperties>
+                    </applicationProperties>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session"/>
+                <item name="session_profile"/>
+                <item name="privilegedpasswd"/>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

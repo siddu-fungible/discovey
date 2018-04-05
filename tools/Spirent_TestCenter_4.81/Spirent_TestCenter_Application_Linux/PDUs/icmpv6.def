@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="icmpv6" showName="Icmpv6" version="1.00"
+    description="This is a sample PDU library for Icmpv6 as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="Icmpv6Type" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Destination Unreachable" value="1" />
+        <VAL_ENUM uiShowName="Packet Too Big" value="2" />
+        <VAL_ENUM uiShowName="Time Exceeded" value="3" />
+        <VAL_ENUM uiShowName="Parameter Problem" value="4" />
+        <VAL_ENUM uiShowName="Echo Request" value="128" />
+        <VAL_ENUM uiShowName="Echo Reply" value="129" />
+        <VAL_ENUM uiShowName="MLDv1 Query" value="130"/>
+        <VAL_ENUM uiShowName="MLDv1 Listener Report" value="131"/>
+        <VAL_ENUM uiShowName="MLDv1 Listener Done" value="132"/>
+        <VAL_ENUM uiShowName="Router Solicitation" value="133"/>
+        <VAL_ENUM uiShowName="Router Advertisement" value="134"/>
+        <VAL_ENUM uiShowName="Neighbor Solicitation" value="135"/>
+        <VAL_ENUM uiShowName="Neighbor Advertisement" value="136"/>
+        <VAL_ENUM uiShowName="Redirect" value="137"/>
+        <VAL_ENUM uiShowName="MLDv2 Listener Report" value="143"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Icmpv6IpData" type="SEQUENCE" unitType="ELEMENT" uiShowName="ICMPv6 Ip Data" >
+      <FIELD name="ipHdr" type="ipv6:IPv6" uiShowName="IP Header" />
+      <FIELD name="data" type="OCTETSTRING"
+             minByteLength="2" maxByteLength="1000"
+             defaultValue="0000000000000000"
+             uiShowName="Data" />
+
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Icmpv6DestUnreachCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="No Route To Destination" value="0" />
+        <VAL_ENUM uiShowName="Communication with Destination Prohibited" value="1" />
+        <VAL_ENUM uiShowName="Address Unreachable" value="3" />
+        <VAL_ENUM uiShowName="Port Unreachable" value="4" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Icmpv6DestUnreach" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmpv6 Destination Unreachable" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="1"
+         uiShowName="Type" />
+      <FIELD name="code" type="Icmpv6DestUnreachCode"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="unused" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Unused" />
+      <FIELD name="ipData" type="Icmpv6IpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="Icmpv6PacketTooBig" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmpv6 Packet Too Big" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="2"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="mtu" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="MTU" />
+      <FIELD name="ipData" type="Icmpv6IpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Icmpv6TimeExceededCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Hop Limit Exceeded" value="0" />
+        <VAL_ENUM uiShowName="Fragment Reassembly Time Exceeded" value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Icmpv6TimeExceeded" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmpv6 Time Exceeded" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="3"
+         uiShowName="Type" />
+      <FIELD name="code" type="Icmpv6TimeExceededCode"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="unused" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Unused" />
+      <FIELD name="ipData" type="Icmpv6IpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Icmpv6ParameterProblemCode" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Erroneous Header Field" value="0" />
+        <VAL_ENUM uiShowName="Unrecognized Next Header Type" value="1" />
+        <VAL_ENUM uiShowName="Unrecognized IPv6 Option" value="2" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Icmpv6ParameterProblem" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmpv6 Parameter Problem" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="4"
+         uiShowName="Type" />
+      <FIELD name="code" type="Icmpv6ParameterProblemCode"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+         uiShowName="Checksum" />
+      <FIELD name="pointer" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Pointer" />
+      <FIELD name="ipData" type="Icmpv6IpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="Icmpv6EchoRequest" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmpv6 Echo Request" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="128"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+         uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+      <FIELD name="data" type="OCTETSTRING" minByteLength="0"
+          maxByteLength="10000" defaultValue="0000"
+          uiShowName="Echo Data" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Icmpv6EchoReply" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="Icmpv6 Echo Reply" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="129"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="identifier" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Identifier" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Sequence Number" />
+      <FIELD name="data" type="OCTETSTRING" minByteLength="0"
+          maxByteLength="10000" defaultValue="0000"
+          uiShowName="Echo Data" />
+    </TYPE_DEF>
+
+    <!-- MLD stuff -->
+    <TYPE_DEF name="MLDv1" type="SEQUENCE" unitType="MESSAGE"
+       level="3" uiShowName="MLDv1" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="130"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="maxRespDelay" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Maximum Response Delay" />
+      <FIELD name="reserved" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Reserved" />
+      <FIELD name="mcastAddr" type="IPV6ADDR"
+          defaultValue="FF1E::1"
+          uiShowName="Multicast Address" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Ipv6Addr" type="SEQUENCE" unitType="ELEMENT" uiShowName="IPv6 Address" >
+      <FIELD name="value" type="IPV6ADDR"
+          defaultValue="2000::1"
+          uiShowName="Ipv6 Address" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Ipv6SourceList" type="SET_OF" elementType="Ipv6Addr"
+        minOccurs="0" maxOccurs="1000" unitType="ELEMENT" />
+
+    <TYPE_DEF name="MLDv2Query" type="SEQUENCE" unitType="MESSAGE"
+      level="3" uiShowName="MLDv2 Query" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="130"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="maxRespCode" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Maximum Response Code" />
+      <FIELD name="reserved" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Reserved" />
+      <FIELD name="groupAddress" type="IPV6ADDR"
+         defaultValue="FF1E::1" 
+         uiShowName="Multicast Address" />
+      <FIELD name="resv" type="INTEGER" bitLength="4"
+         defaultValue="0"
+         uiShowName="Reserved" />
+      <!-- Suppress Router-side processing -->
+      <FIELD name="sFlag" type="BITSTRING" bitLength="1"
+         defaultValue="1"
+         uiShowName="Suppress Flag" />
+      <!-- Querier's Robustness Variable -->
+      <FIELD name="qrv" type="BITSTRING" bitLength="3"
+         defaultValue="0"
+         uiShowName="QRV" />
+      <!-- Querier's Query Interval Code -->
+      <FIELD name="qqic" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="QQIC" />
+      <FIELD name="numSource" type="INTEGER" bitLength="16"
+         defaultValue="0"
+         uiShowName="Number of Sources" />
+      <FIELD name="addrList" type="Ipv6SourceList"
+          uiShowName="Source Address List"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MLDv2RecordType" type="INTEGER" bitLength="8"  unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="MODE_IS_INCLUDE" value="1" />
+        <VAL_ENUM uiShowName="MODE_IS_EXCLUDE" value="2" />
+        <VAL_ENUM uiShowName="CHANGE_TO_INCLUDE_MODE" value="3" />
+        <VAL_ENUM uiShowName="CHANGE_TO_EXCLUDE_MODE" value="4" />
+        <VAL_ENUM uiShowName="ALLOW_NEW_SOURCES" value="5" />
+        <VAL_ENUM uiShowName="BLOCK_OLD_SOURCES" value="6" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="MLDv2GroupRecord" type="SEQUENCE" unitType="ELEMENT" uiShowName="MLDv2 Group Record" >
+      <FIELD name="recordType" type="MLDv2RecordType"
+             uiShowName="Record Type" />
+      <FIELD name="auxDataLen" type="INTEGER" bitLength="8"
+             defaultValue="0"
+             uiShowName="Auxiliary Data Length" />
+      <FIELD name="numSource" type="INTEGER" bitLength="16"
+             defaultValue="0"
+             uiShowName="Number of Sources" />
+      <FIELD name="mcastAddr" type="IPV6ADDR"
+             defaultValue="FF1E::1"
+             uiShowName="Multicast Address" />
+      <FIELD name="addrList" type="Ipv6SourceList"
+             uiShowName="Source Address List"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MLDv2GroupRecordList" type="SET_OF" elementType="MLDv2GroupRecord"
+        minOccurs="0" maxOccurs="1000" unitType="ELEMENT" />
+
+    <TYPE_DEF name="MLDv2Report" type="SEQUENCE" unitType="MESSAGE"
+        level="3" uiShowName="MLDv2 Report Message" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="143"
+         uiShowName="Type" />
+      <FIELD name="unused" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Unused" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="reserved2" type="INTEGER" bitLength="16"
+         defaultValue="0"
+         uiShowName="Reserved" />
+      <FIELD name="numGrpRecords" type="INTEGER" bitLength="16"
+         defaultValue="0"
+         uiShowName="Number of Group Records" />
+      <FIELD name="grpRecords" type="MLDv2GroupRecordList"
+         uiShowName="Group Records" />
+    </TYPE_DEF>
+
+    <!-- NDP stuff -->
+    <TYPE_DEF name="NdOptionType" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Source Link-Layer Address" value="1" />
+        <VAL_ENUM uiShowName="Target Link-Layer Address" value="2" />
+        <VAL_ENUM uiShowName="Prefix Information" value="3" />
+        <VAL_ENUM uiShowName="Redirected Header" value="4" />
+        <VAL_ENUM uiShowName="MTU" value="5" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LinkLayerAddress" type="SEQUENCE" unitType="ELEMENT" uiShowName="Link Layer Address" >
+      <FIELD name="type" type="NdOptionType"
+         defaultValue="1"
+         uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="8"
+         defaultValue="1"
+         uiShowName="Option Length" />
+      <FIELD name="value" type="OCTETSTRING"
+         minByteLength="6" maxByteLength="10000"
+         defaultValue="000000000000"
+         uiShowName="Source/Target Link Layer Address" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PrefixInformation" type="SEQUENCE" unitType="ELEMENT" uiShowName="Prefix Information" >
+      <FIELD name="type" type="NdOptionType"
+         defaultValue="3"
+         uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="8"
+         defaultValue="4"
+         uiShowName="Option Length" />
+      <FIELD name="prefixLen" type="INTEGER" bitLength="8"
+         defaultValue="64"
+         uiShowName="Prefix Length" />
+      <FIELD name="lBit" type="BITSTRING" bitLength="1"
+         defaultValue="1"
+         uiShowName="On-Link Flag" />
+      <FIELD name="aBit" type="BITSTRING" bitLength="1"
+         defaultValue="1"
+         uiShowName="Autonomous Flag" />
+      <FIELD name="reserved1" type="INTEGER" bitLength="6"
+         defaultValue="0"
+         uiShowName="Reserved" />
+      <FIELD name="validLifetime" type="INTEGER" bitLength="32"
+         defaultValue="1"
+         uiShowName="Valid Lifetime" />
+      <FIELD name="preferredLifetime" type="INTEGER" bitLength="32"
+         defaultValue="1"
+         uiShowName="Preferred Lifetime" />
+      <FIELD name="reserved2" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Reserved" />
+      <FIELD name="prefix" type="IPV6ADDR"
+         defaultValue="2000::0"
+         uiShowName="Prefix" />
+    </TYPE_DEF>
+    <TYPE_DEF name="RedirectedHeader" type="SEQUENCE" unitType="ELEMENT" uiShowName="Redirected Header">
+      <FIELD name="type" type="NdOptionType"
+         defaultValue="4"
+         uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="8"
+         defaultValue="4"
+         uiShowName="Option Length" />
+      <FIELD name="reserved1" type="INTEGER" bitLength="16"
+         defaultValue="0"
+         uiShowName="Reserved1" />
+      <FIELD name="reserved2" type="INTEGER" bitLength="32"
+         defaultValue="0"
+         uiShowName="Reserved2" />
+      <FIELD name="ipData" type="Icmpv6IpData"
+         uiShowName="IP + Data" />
+    </TYPE_DEF>
+    <TYPE_DEF name="MTU" type="SEQUENCE" unitType="ELEMENT" uiShowName="MTU">
+      <FIELD name="type" type="NdOptionType"
+         defaultValue="5"
+         uiShowName="Option Type" />
+      <FIELD name="length" type="INTEGER" bitLength="8"
+         defaultValue="1"
+         uiShowName="Option Length" />
+      <FIELD name="reserved" type="INTEGER" bitLength="16"
+         defaultValue="0"
+         uiShowName="Reserved" />
+      <FIELD name="mtu" type="INTEGER" bitLength="32"
+         defaultValue="1000"
+         uiShowName="MTU" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LinkLayerOption" type="SEQUENCE_OF" elementType="LinkLayerAddress"
+       unitType="ELEMENT" minOccurs="0" maxOccurs="1" />
+    <TYPE_DEF name="PrefixInfoOption" type="SEQUENCE_OF" elementType="PrefixInformation"
+       unitType="ELEMENT" minOccurs="0" maxOccurs="1" />
+    <TYPE_DEF name="RedirectedHdrOption" type="SEQUENCE_OF" elementType="RedirectedHeader"
+       unitType="ELEMENT" minOccurs="0" maxOccurs="1" />
+    <TYPE_DEF name="MTUOption" type="SEQUENCE_OF"  elementType="MTU"
+       unitType="ELEMENT" minOccurs="0" maxOccurs="1" />
+
+    <TYPE_DEF name="RouterSolicitation" type="SEQUENCE" unitType="MESSAGE"
+       level="3" uiShowName="Router Solicitation" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="133"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="reserved" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Reserved" />
+
+      <FIELD name="linkLayerOption" type="LinkLayerOption"
+          uiShowName="Source Link-Layer Address" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="RouterAdvertisement" type="SEQUENCE" unitType="MESSAGE"
+       level="3" uiShowName="Router Advertisement" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="134"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+
+      <FIELD name="curHopLimit" type="INTEGER" bitLength="8"
+          defaultValue="0"
+          uiShowName="Current Hop Limit" />
+      <FIELD name="mBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Managed Address Flag" />
+      <FIELD name="oBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Other Stateful Config Flag" />
+      <FIELD name="reserved2" type="INTEGER" bitLength="6"
+          defaultValue="0"
+          uiShowName="Reserved" />
+      <FIELD name="routerLifetime" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiShowName="Router Lifetime" />
+      <FIELD name="reachableTime" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Reachable Time" />
+      <FIELD name="retransTime" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Retrans Time" />
+
+      <FIELD name="linkLayerOption" type="LinkLayerOption"
+          uiShowName="Source Link-Layer Address" />
+      <FIELD name="prefixOption" type="PrefixInfoOption"
+          uiShowName="Prefix Information" />
+      <FIELD name="mtuOption" type="MTUOption"
+          uiShowName="MTU" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="NeighborSolicitation" type="SEQUENCE" unitType="MESSAGE"
+       level="3" uiShowName="Neighbor Solicitation" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="135"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+      <FIELD name="reserved" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Reserved" />
+
+      <FIELD name="targetAddress" type="IPV6ADDR"
+          defaultValue="2000::1"
+          uiShowName="Target Address" />
+
+      <FIELD name="linkLayerOption" type="LinkLayerOption"
+          uiShowName="Source Link-Layer Address" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="NeighborAdvertisement" type="SEQUENCE" unitType="MESSAGE"
+       level="3" uiShowName="Neighbor Advertisement" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="136"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+
+      <FIELD name="rFlag" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Router Flag" />
+      <FIELD name="sFlag" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Solicited Flag" />
+      <FIELD name="oFlag" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="Override Flag" />
+      <FIELD name="reserved" type="INTEGER" bitLength="29"
+          defaultValue="0"
+          uiShowName="Reserved" />
+
+      <FIELD name="targetAddress" type="IPV6ADDR"
+          defaultValue="2000::1"
+          uiShowName="Target Address" />
+
+      <FIELD name="linkLayerOption" type="LinkLayerOption"
+          uiShowName="Target Link-Layer Address" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Redirect" type="SEQUENCE" unitType="MESSAGE"
+       level="3" uiShowName="Redirect Message" >
+      <FIELD name="type" type="Icmpv6Type"
+         defaultValue="137"
+         uiShowName="Type" />
+      <FIELD name="code" type="INTEGER" bitLength="8"
+         defaultValue="0"
+         uiShowName="Code" />
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM"
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiShowName="Checksum" />
+
+      <FIELD name="reserved" type="INTEGER" bitLength="32"
+          defaultValue="0"
+          uiShowName="Reserved" />
+
+      <FIELD name="targetAddress" type="IPV6ADDR"
+          defaultValue="2000::1"
+          uiShowName="Target Address" />
+      <FIELD name="destAddress" type="IPV6ADDR"
+          defaultValue="2000::1"
+          uiShowName="Destination Address" />
+
+      <FIELD name="linkLayerOption" type="LinkLayerOption"
+          uiShowName="Target Link-Layer Address" />
+      <FIELD name="redirectedHdrOption" type="RedirectedHdrOption"
+          uiShowName="Redirected Header" />
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

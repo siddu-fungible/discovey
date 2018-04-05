@@ -1,0 +1,21 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="L2TPv3oUDP"
+    showName="L2TPv3"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="l2tpv3oudp:L2TPv3"
+    description="L2TPv3" >
+
+<!-- Note:  p2_dev_access/p2_dev_l2tp has a different l2tpv3.def file from p2_core -->
+    <pdus>
+      <pdu name="l2tpv3oudp_1" pdu="l2tpv3oudp:L2TPv3">
+	  		<version uiControlState="CALCULATED"></version>
+	  		<sessionId uiControlState="CALCULATED"></sessionId>
+	  </pdu> 
+    </pdus>
+  </template>
+</frame>

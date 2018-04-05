@@ -1,0 +1,371 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/3.80/Switching/FC"  xml:lang="en">
+<label>FC</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    <actionDecl name="FcLogin">
+    <label>Login</label>
+    <tooltip>Start Login for the selected FC hosts.</tooltip>
+    <description>Start Login for the selected FC hosts.</description>
+        <parameter  name="HostList">
+            <label>HostList</label>
+            <tooltip>FC(oE) Handle List</tooltip>
+            <description>FC(oE) Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="FcLogout">
+    <label>Logout</label>
+    <tooltip>Start Logout for the selected FC hosts.</tooltip>
+    <description>Start Logout for the selected FC hosts.</description>
+        <parameter  name="HostList">
+            <label>HostList</label>
+            <tooltip>FC(oE) Handle List</tooltip>
+            <description>FC(oE) Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="FcWaitForAggregateSubState">
+    <label>Wait For Aggregate Sub State</label>
+    <tooltip>Waits for specified sub state.</tooltip>
+    <description>Waits for specified sub state.</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+        </parameter>
+        <parameter  name="WaitAggregateSubState">
+            <label>WaitAggregateSubState</label>
+            <tooltip>Wait Aggregate Sub State</tooltip>
+            <description>Wait Aggregate Sub State</description>
+            <datatype>string</datatype>
+            <default>LOGGED_OUT</default>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="LOGGED_OUT">LOGGED_OUT</allowedValue>
+            <allowedValue label="FLOGI_SENT">FLOGI_SENT</allowedValue>
+            <allowedValue label="FLOGI_TIMED_OUT">FLOGI_TIMED_OUT</allowedValue>
+            <allowedValue label="FLOGI_REJECTED">FLOGI_REJECTED</allowedValue>
+            <allowedValue label="FLOGI_ACCEPTED">FLOGI_ACCEPTED</allowedValue>
+            <allowedValue label="FDISC_SENT">FDISC_SENT</allowedValue>
+            <allowedValue label="FDISC_TIMED_OUT">FDISC_TIMED_OUT</allowedValue>
+            <allowedValue label="FDISC_REJECTED">FDISC_REJECTED</allowedValue>
+            <allowedValue label="FDISC_ACCEPTED">FDISC_ACCEPTED</allowedValue>
+            <allowedValue label="PLOGI_SENT">PLOGI_SENT</allowedValue>
+            <allowedValue label="PLOGI_TIMED_OUT">PLOGI_TIMED_OUT</allowedValue>
+            <allowedValue label="PLOGI_REJECTED">PLOGI_REJECTED</allowedValue>
+            <allowedValue label="PLOGI_ACCEPTED">PLOGI_ACCEPTED</allowedValue>
+            <allowedValue label="SCR_SENT">SCR_SENT</allowedValue>
+            <allowedValue label="SCR_TIMED_OUT">SCR_TIMED_OUT</allowedValue>
+            <allowedValue label="SCR_REJECTED">SCR_REJECTED</allowedValue>
+            <allowedValue label="SCR_ACCEPTED">SCR_ACCEPTED</allowedValue>
+            <allowedValue label="MAX">MAX</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="FcWaitForFPortSubState">
+    <label>Wait For FPort Sub State</label>
+    <tooltip>Waits for specified sub state.</tooltip>
+    <description>Waits for specified sub state.</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+        </parameter>
+        <parameter  name="WaitSubState">
+            <label>WaitSubState</label>
+            <tooltip>Wait Sub State</tooltip>
+            <description>Wait Sub State</description>
+            <datatype>string</datatype>
+            <default>LOGGED_OUT</default>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="LOGGED_OUT">LOGGED_OUT</allowedValue>
+            <allowedValue label="FCF_FLOGI_RECEIVED">FCF_FLOGI_RECEIVED</allowedValue>
+            <allowedValue label="FCF_FLOGI_TIMED_OUT">FCF_FLOGI_TIMED_OUT</allowedValue>
+            <allowedValue label="FCF_FLOGI_REJECTED">FCF_FLOGI_REJECTED</allowedValue>
+            <allowedValue label="FCF_FLOGI_ACCEPTED">FCF_FLOGI_ACCEPTED</allowedValue>
+            <allowedValue label="FCF_FDISC_RECEIVED">FCF_FDISC_RECEIVED</allowedValue>
+            <allowedValue label="FCF_FDISC_TIMED_OUT">FCF_FDISC_TIMED_OUT</allowedValue>
+            <allowedValue label="FCF_FDISC_REJECTED">FCF_FDISC_REJECTED</allowedValue>
+            <allowedValue label="FCF_FDISC_ACCEPTED">FCF_FDISC_ACCEPTED</allowedValue>
+            <allowedValue label="FCF_PLOGI_RECEIVED">FCF_PLOGI_RECEIVED</allowedValue>
+            <allowedValue label="FCF_PLOGI_TIMED_OUT">FCF_PLOGI_TIMED_OUT</allowedValue>
+            <allowedValue label="FCF_PLOGI_REJECTED">FCF_PLOGI_REJECTED</allowedValue>
+            <allowedValue label="FCF_PLOGI_ACCEPTED">FCF_PLOGI_ACCEPTED</allowedValue>
+            <allowedValue label="MAX">MAX</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+</query-harness>

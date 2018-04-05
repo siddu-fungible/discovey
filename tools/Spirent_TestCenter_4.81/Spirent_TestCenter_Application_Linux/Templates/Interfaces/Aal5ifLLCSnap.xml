@@ -1,0 +1,50 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Aal5ifLLCSnap"
+    showName="Aal5if LLC Snap"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="aal5If:Aal5"
+    description="This is an AAL5 template file for use by UI's interface editor logic" >
+    <modifiers>
+      <modifier name="Mod1">
+        <mode>Increment</mode>
+        <count>1</count>
+        <data>0</data>
+        <datatype>Native</datatype>
+        <mask>255</mask>
+        <step>1</step>
+        <offset>0</offset>
+        <stutterCount>0</stutterCount>
+        <forEachModifyList />
+        <useStream>false</useStream>
+      </modifier>
+      <modifier name="Mod2">
+        <mode>Increment</mode>
+        <count>1</count>
+        <data>32</data>
+        <datatype>Native</datatype>
+        <mask>65535</mask>
+        <step>1</step>
+        <offset>0</offset>
+        <stutterCount>0</stutterCount>
+        <forEachModifyList />
+        <useStream>false</useStream>
+      </modifier>
+    </modifiers>
+    <pdus>
+      <pdu name="proto1" pdu="aal5If:Aal5">
+        <vpi uiControlState="CALCULATED">
+          <uni>
+            <vpi modifier="Mod1">0</vpi>
+          </uni>
+        </vpi>
+        <vci modifier="Mod2">32</vci>
+        <encapsulation>2</encapsulation>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

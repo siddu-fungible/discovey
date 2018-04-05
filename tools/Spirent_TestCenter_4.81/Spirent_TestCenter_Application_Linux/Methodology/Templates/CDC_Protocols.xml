@@ -1,0 +1,215 @@
+<Template>
+<Description>
+Template used to set up Cloud DataCenter protocols (Openflow, LLDP, OSE).
+</Description>
+<Image />
+<DataModelXml>
+<StcSystem id="1" serializationBase="true" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles="lldp openflow"
+   ConfigurationFileName="C:\CDC_Protocols.xml"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Tags id="1215" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation target="1301" type="UserTag" />
+      <Relation target="1302" type="UserTag" />
+	  <Relation target="1303" type="UserTag" />
+      <Tag id="1301" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttOpenflowControllerProtocolConfig">
+      </Tag>
+      <Tag id="1302" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttLldpNodeConfig">
+      </Tag>
+	  <Tag id="1303" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttOseSwitchConfig">
+      </Tag>
+    </Tags>
+    <EmulatedDevice id="2473" 
+     DeviceCount="1"
+     EnablePingResponse="FALSE"
+     RouterId="192.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterId="2000::1"
+     Ipv6RouterIdStep="::1"
+     ReadOnly="FALSE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Device 1">
+      <Relation type="TopLevelIf" target="2474"/>
+      <Relation type="PrimaryIf" target="2474"/>
+      <Ipv4If id="2474" 
+       Address="192.85.1.3"
+       AddrStep="0.0.0.1"
+       AddrStepMask="255.255.255.255"
+       SkipReserved="TRUE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       PrefixLength="24"
+       UsePortDefaultIpv4Gateway="FALSE"
+       Gateway="192.85.1.1"
+       GatewayStep="0.0.0.0"
+       GatewayRepeatCount="0"
+       GatewayRecycleCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       Ttl="255"
+       TosType="TOS"
+       Tos="192"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 2">
+        <Relation type="StackedOnEndpoint" target="2475"/>
+      </Ipv4If>
+      <EthIIIf id="2475" 
+       SourceMac="00:10:94:00:00:01"
+       SrcMacStep="00:00:00:00:00:01"
+       SrcMacList=""
+       SrcMacStepMask="00:00:ff:ff:ff:ff"
+       SrcMacRepeatCount="0"
+       Authenticator="default"
+       UseDefaultPhyMac="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="EthernetII 2">
+      </EthIIIf>
+      <OpenflowControllerProtocolConfig id="2476" 
+       OpenflowVersion="VERSION_1_0"
+       ConnectionType="PASSIVE_TCP"
+       TcpPort="6633"
+       DiscoveryMsgTxInterval="30"
+       DiscoveryDstMacAddr="01:80:c2:00:00:0e"
+       AddDefaultDiscoveryFlows="TRUE"
+       ControllerPrivateKey=""
+       ControllerCertificate=""
+       SwitchCaCertificates=""
+       AddFlowsOnConnect="TRUE"
+       ClearExistingFlowsOnConnect="TRUE"
+       AddMetersOnConnect="TRUE"
+       ClearExistingMetersOnConnect="TRUE"
+       AddGroupEntriesOnConnect="TRUE"
+       ClearExistingGroupEntriesOnConnect="TRUE"
+       BarrierRequestTimeout="10000"
+       EnableBarrierFlowUpdate="FALSE"
+       MaxFlowRate="0"
+       SendRoleRequestOnConnect="FALSE"
+       DesiredRole="EQUAL"
+       DesiredGenerationId="0"
+       EndpointConnectionPattern="PAIR"
+       DynamicLoad="30"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Openflow Controller 1">
+        <Relation type="UsesIf" target="2474"/>
+        <Relation target="1301" type="UserTag" />
+      </OpenflowControllerProtocolConfig>
+      <LldpNodeConfig id="2477" 
+       MsgTxInterval="30"
+       MsgTxHoldMultiplier="4"
+       ReinitializeDelay="2"
+       TxDelay="2"
+       DstMacAddr="01:80:c2:00:00:0e"
+       EnableEventLog="FALSE"
+       EnableVlanTag="FALSE"
+       IfHandleList=""
+       OldIfHandleList=""
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="LLDP 1">
+        <Relation type="UsesIf" target="2474"/>
+        <Relation target="1302" type="UserTag" />
+        <LldpTlvConfig id="2478" 
+         AllowInvalidHeaders="FALSE"
+           FrameConfig="&lt;frame&gt;&lt;config&gt;&lt;pdus&gt;&lt;pdu
+name=&quot;proto1&quot;
+pdu=&quot;lldp:ChassisIdTlv&quot;&gt;&lt;type&gt;1&lt;/type&gt;&lt;length&gt;0&lt;/length&gt;&lt;chassisid
+name=&quot;anon_2441&quot;&gt;&lt;interfaceAlias
+name=&quot;anon_2442&quot;&gt;&lt;subtype&gt;02&lt;/subtype&gt;&lt;/interfaceAlias&gt;&lt;/chassisid&gt;&lt;/pdu&gt;&lt;pdu
+name=&quot;PortIdTlv_1&quot;
+pdu=&quot;lldp:PortIdTlv&quot;&gt;&lt;type&gt;2&lt;/type&gt;&lt;length&gt;0&lt;/length&gt;&lt;portid
+name=&quot;anon_2444&quot;&gt;&lt;pidMacAddress
+name=&quot;anon_2445&quot;&gt;&lt;subtype&gt;03&lt;/subtype&gt;&lt;/pidMacAddress&gt;&lt;/portid&gt;&lt;/pdu&gt;&lt;pdu
+name=&quot;TimeToLiveTlv_1&quot;
+pdu=&quot;lldp:TimeToLiveTlv&quot;&gt;&lt;type&gt;3&lt;/type&gt;&lt;length&gt;2&lt;/length&gt;&lt;/pdu&gt;&lt;/pdus&gt;&lt;/config&gt;&lt;/frame&gt;"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="LldpTlvConfig 1">
+        </LldpTlvConfig>
+      </LldpNodeConfig>
+	  <OseSwitchConfig id="2603" 
+       OpenflowVersion="VERSION_1_3"
+       ConnectionType="TCP"
+       Dpid="1"
+       DpidIncrement="1"
+       ControllerIpAddrList=""
+       ControllerIpv6AddrList=""
+       TcpPort="6633"
+       SendPortStatusOnConnect="FALSE"
+       OseTopology="LINEAR"
+       RowCount="2"
+       TopologyPortName="topo_@b-@s-@x"
+       SwitchName="br_@b-@s-@x"
+       SwitchPortMacAddrStart="00:00:00:00:00:01"
+       SwitchPortMacAddrStep="00:00:00:00:00:01"
+       ConfigureHosts="FALSE"
+       HostCount="1"
+       HostPortName="host_@b-@s-@x"
+       UsePortMacAddr="FALSE"
+       HostMacAddrStart="00:10:00:00:00:01"
+       HostIpv4AddrStart="0.0.0.1"
+       HostIpv4AddrIncr="0.0.0.1"
+       ConfigureAdditionalSwitchPorts="FALSE"
+       AdditionalSwitchPortNames=""
+       OpenflowDefaultTableMissEntry="SEND_TO_CONTROLLER"
+       TrafficEnable="FALSE"
+       TrafficTestType="PACKET_IN"
+       EndpointConnectionPattern="PAIR"
+       DynamicLoad="30"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="OseSwitchConfig 1">
+		<Relation type="UsesIf" target="2474"/>
+        <Relation target="1303" type="UserTag" />
+		</OseSwitchConfig>
+    </EmulatedDevice>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

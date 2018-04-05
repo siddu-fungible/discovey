@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCRZS" 
+    showName="FC RZS" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:GsRequestWithZoneSetName" 
+    description="FC RZS">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GsRequestWithZoneSetName">
+        <ctIuPreamble>
+          <commandRespondCode>0302</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

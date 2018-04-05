@@ -1,0 +1,352 @@
+[
+    {
+        "display_name": "General",
+        "values": [
+            {
+                "display_name": "Device Count",
+                "property": "DeviceCount",
+                "default_value": 1
+            },
+            {
+                "display_name": "Device Count Per Port",
+                "property": "DeviceCountPerPort",
+                "default_value": 1
+            },
+            {
+                "display_name": "IP Version",
+                "property": "IpVersion",
+                "default_value": "IPv4"
+            }
+        ]
+    },
+    {
+        "display_name": "IPv4",
+        "values": [
+            {
+                "display_name": "IPv4 Prefix Length",
+                "property": "Ipv4PrefixLength",
+                "default_value": 24
+            },
+            {
+                "display_name": "IPv4 Address",
+                "property": "Ipv4Addr",
+                "default_value": "192.85.1.2"
+            },
+            {
+                "display_name": "IPv4 Address Step",
+                "property": "Ipv4AddrStep",
+                "default_value": "0.0.0.1"
+            },
+            {
+                "display_name": "IPv4 Address Block Step",
+                "property": "Ipv4AddrBlockStep",
+                "default_value": "0.1.0.0"
+            },
+            {
+                "display_name": "IPv4 Address Port Step",
+                "property": "Ipv4AddrPortStep",
+                "default_value": "1.0.0.0"
+            },
+            {
+                "display_name": "IPv4 Gateway Address",
+                "property": "Ipv4GwAddr",
+                "default_value": "192.85.1.1"
+            },
+            {
+                "display_name": "IPv4 Gateway Address Step",
+                "property": "Ipv4GwAddrStep",
+                "default_value": "0.0.0.0"
+            },
+            {
+                "display_name": "IPv4 Gateway Address Block Step",
+                "property": "Ipv4GwAddrBlockStep",
+                "default_value": "0.1.0.0"
+            },
+            {
+                "display_name": "IPv4 Gateway Address Port Step",
+                "property": "Ipv4GwAddrPortStep",
+                "default_value": "1.0.0.0"
+            }
+        ]
+    },
+    {
+        "display_name": "IPv6",
+        "values": [
+            {
+                "display_name": "IPv6 Prefix Length",
+                "property": "Ipv6PrefixLength",
+                "default_value": 64
+            },
+            {
+                "display_name": "IPv6 Address",
+                "property": "Ipv6Addr",
+                "default_value": "2000::2"
+            },
+            {
+                "display_name": "IPv6 Address Step",
+                "property": "Ipv6AddrStep",
+                "default_value": "0::1"
+            },
+            {
+                "display_name": "IPv6 Address Block Step",
+                "property": "Ipv6AddrBlockStep",
+                "default_value": "0:1::0"
+            },
+            {
+                "display_name": "IPv6 Address Port Step",
+                "property": "Ipv6AddrPortStep",
+                "default_value": "1::0"
+            },
+            {
+                "display_name": "Link-Local Address",
+                "property": "LinkLocalAddr",
+                "default_value": "fe80::1"
+            },
+            {
+                "display_name": "Link-Local Address Step",
+                "property": "LinkLocalAddrStep",
+                "default_value": "0::1"
+            },
+            {
+                "display_name": "Link-Local Address Block Step",
+                "property": "LinkLocalAddrBlockStep",
+                "default_value": "0:1::0"
+            },
+            {
+                "display_name": "Link-Local Address Port Step",
+                "property": "LinkLocalAddrPortStep",
+                "default_value": "1::0"
+            },
+            {
+                "display_name": "IPv6 Gateway Address",
+                "property": "Ipv6GwAddr",
+                "default_value": "2000::1"
+            },
+            {
+                "display_name": "IPv6 Gateway Address Step",
+                "property": "Ipv6GwAddrStep",
+                "default_value": "0::1"
+            },
+            {
+                "display_name": "IPv6 Gateway Address Block Step",
+                "property": "Ipv6GwAddrBlockStep",
+                "default_value": "0:1::0"
+            },
+            {
+                "display_name": "IPv6 Gateway Address Port Step",
+                "property": "Ipv6GwAddrPortStep",
+                "default_value": "1::0"
+            }
+        ]
+    },
+    {
+        "display_name": "Ethernet",
+        "values": [
+            {
+                "display_name": "MAC Address",
+                "property": "MacAddr",
+                "default_value": "00:10:95:00:00:01"
+            },
+            {
+                "display_name": "MAC Address Step",
+                "property": "MacAddrStep",
+                "default_value": "00:00:00:00:00:01"
+            },
+            {
+                "display_name": "MAC Address Block Step",
+                "property": "MacAddrBlockStep",
+                "default_value": "00:00:00:00:01:00"
+            },
+            {
+                "display_name": "MAC Address Port Step",
+                "property": "MacAddrPortStep",
+                "default_value": "00:00:00:01:00:00"
+            },
+            {
+                "display_name": "Destination MAC Address",
+                "property": "DstMacAddr",
+                "default_value": "00:10:94:00:00:01"
+            },
+            {
+                "display_name": "Destination MAC Address Step",
+                "property": "DstMacAddrStep",
+                "default_value": "00:00:00:00:00:01"
+            },
+            {
+                "display_name": "Destination MAC Address Block Step",
+                "property": "DstMacAddrBlockStep",
+                "default_value": "00:00:00:00:01:00"
+            },
+            {
+                "display_name": "Destination MAC Address Port Step",
+                "property": "DstMacAddrPortStep",
+                "default_value": "00:00:00:01:00:00"
+            }
+        ]
+    },
+    {
+        "display_name": "VLAN",
+        "values": [
+            {
+                "display_name": "VLAN Mode",
+                "property": "VlanMode",
+                "default_value": "None"
+            },
+            {
+                "display_name": "VLAN Priority",
+                "property": "VlanPri",
+                "default_value": 1
+            },
+            {
+                "display_name": "VLAN ID",
+                "property": "VlanId",
+                "default_value": 100
+            },
+            {
+                "display_name": "VLAN ID Step",
+                "property": "VlanIdStep",
+                "default_value": 1
+            },
+            {
+                "display_name": "VLAN ID Port Step",
+                "property": "VlanIdPortStep",
+                "default_value": 0
+            },
+            {
+                "display_name": "Inner VLAN Priority",
+                "property": "InnerVlanPri",
+                "default_value": 1
+            },
+            {
+                "display_name": "Inner VLAN ID",
+                "property": "InnerVlanId",
+                "default_value": 200
+            },
+            {
+                "display_name": "Inner VLAN ID Step",
+                "property": "InnerVlanIdStep",
+                "default_value": 1
+            },
+            {
+                "display_name": "Inner VLAN ID Port Step",
+                "property": "InnerVlanIdPortStep",
+                "default_value": 0
+            }
+        ]
+    },
+    {
+        "display_name": "Router ID",
+        "values": [
+            {
+                "display_name": "IPv4 Router ID",
+                "property": "Ipv4RouterId",
+                "default_value": "192.85.1.2"
+            },
+            {
+                "display_name": "IPv4 Router ID Step",
+                "property": "Ipv4RouterIdStep",
+                "default_value": "0.0.0.1"
+            },
+            {
+                "display_name": "IPv4 Router ID Block Step",
+                "property": "Ipv4RouterIdBlockStep",
+                "default_value": "0.1.0.0"
+            },
+            {
+                "display_name": "IPv4 Router ID Port Step",
+                "property": "Ipv4RouterIdPortStep",
+                "default_value": "1.0.0.0"
+            },
+            {
+                "display_name": "IPv6 Router ID",
+                "property": "Ipv6RouterId",
+                "default_value": "2000::2"
+            },
+            {
+                "display_name": "IPv6 Router ID Step",
+                "property": "Ipv6RouterIdStep",
+                "default_value": "0::1"
+            },
+            {
+                "display_name": "IPv6 Router ID Block Step",
+                "property": "Ipv6RouterIdBlockStep",
+                "default_value": "0:1::0"
+            },
+            {
+                "display_name": "IPv6 Router ID Port Step",
+                "property": "Ipv6RouterIdPortStep",
+                "default_value": "1::0"
+            }
+        ]
+    },
+    {
+        "display_name": "Ping",
+        "values": [
+            {
+                "display_name": "Enable Ping Response",
+                "property": "EnablePingResponse",
+                "default_value": "True"
+            },
+            {
+                "display_name": "Keep Alive",
+                "property": "KeepAlive",
+                "default_value": 60
+            }
+        ]
+    },
+    {
+        "display_name": "BGP",
+        "values": [
+            {
+                "display_name": "AS Number",
+                "property": "AsNum",
+                "default_value": 100
+            },
+            {
+                "display_name": "AS Number Step",
+                "property": "AsNumStep",
+                "default_value": 0
+            },
+            {
+                "display_name": "AS Number Port Step",
+                "property": "AsNumPortStep",
+                "default_value": 100
+            },
+            {
+                "display_name": "DUT AS Number",
+                "property": "DutAsNum",
+                "default_value": 100
+            },
+            {
+                "display_name": "DUT AS Number Step",
+                "property": "DutAsNumStep",
+                "default_value": 0
+            },
+            {
+                "display_name": "DUT AS Number Port Step",
+                "property": "DutAsNumPortStep",
+                "default_value": 100
+            }
+        ]
+    },
+    {
+        "display_name": "Access Protocols",
+        "values": [
+            {
+                "display_name": "PPP Authentication",
+                "property": "PppAuthentication",
+                "default_value": "No Authentication"
+            },
+            {
+                "display_name": "PPP Username",
+                "property": "PppUsername",
+                "default_value": ""
+            },
+            {
+                "display_name": "PPP Password",
+                "property": "PppPassword",
+                "default_value": ""
+            }
+        ]
+    }
+]

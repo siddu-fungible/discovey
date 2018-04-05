@@ -1,0 +1,34 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FIPELPRJT" 
+    showName="FIP ELP RJT"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FIP"
+    description="FIP ELP RJT">
+     
+    <pdus>
+      <pdu name="proto1" pdu="fc:FIP">
+        <fipOperationCode>0002</fipOperationCode>
+        <fipSubCode>02</fipSubCode>
+        <DL>
+          <DL-Choice name="DL-Choice_0">
+            <elpReject>
+              <elp>
+			  <code>01000000</code>
+				<fc>
+                  <rCtl>03</rCtl>
+				</fc>
+			  </elp>
+				
+			  
+            </elpReject>
+          </DL-Choice>
+        </DL>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

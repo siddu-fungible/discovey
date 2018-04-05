@@ -1,0 +1,28 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCLSUREQ" 
+    showName="FC LSU REQ"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcsw:LsuReq"
+    description="FC LSU REQ">
+    <pdus>
+      <pdu name="lsuReq1" pdu="fcsw:LsuReq" >
+      	<fspfHeader>
+		  <command>15000000</command>
+		</fspfHeader>
+		<lsrs>
+		  <LinkStateRecord name="LinkStateRecord_0">
+		    <linkDescriptors> 
+			  <LinkDescriptor name="LinkDescriptor_0">
+			 </LinkDescriptor>
+		  	</linkDescriptors>
+		 </LinkStateRecord>
+		</lsrs>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

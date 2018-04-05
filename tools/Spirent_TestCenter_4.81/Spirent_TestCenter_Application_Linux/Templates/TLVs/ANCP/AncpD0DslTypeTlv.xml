@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ANCP DSL Type TLV"
+    showName="DSL Type TLV"
+    version="1.00"
+    category="ANCP DSL Line Attributes (draft-wadhwa-gsmp-l2control-configuration-00)"
+    readonly="true"
+    validate="true"
+    firstPdu="ancp_draft0:DslTypeTlv"
+    description="ANCP DSL Line Attributes DSL Type TLV" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ancp_draft0:DslTypeTlv" />
+    </pdus>
+  </template>
+</frame>

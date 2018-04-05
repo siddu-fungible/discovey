@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="bfdcv"
+             showName="BFD CV" version="1.00"
+  description="This is a sample PDU library for BFD CV as defined in XML Stream Editor." userdefined="false">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="DiagnosticType" type="INTEGER" bitLength="5" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="0-No diagnostic" value="0" />
+        <VAL_ENUM uiShowName="1-Control Detection Time Expired" value="1" />
+        <VAL_ENUM uiShowName="2-Echo Function Failed" value="2" />
+        <VAL_ENUM uiShowName="3-Neighbor Signalled Session Down" value="3" />
+        <VAL_ENUM uiShowName="4-Forwarding Plane Reset" value="4" />
+        <VAL_ENUM uiShowName="5-Path Down" value="5" />
+        <VAL_ENUM uiShowName="6-Concatenated Path Down" value="6" />
+        <VAL_ENUM uiShowName="7-Administratively Down" value="7" />
+        <VAL_ENUM uiShowName="8-Reverse Concatenated Path Down" value="8" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="StateType" type="INTEGER" bitLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="0-AdminDown" value="0"/>
+        <VAL_ENUM uiShowName="1-Down" value="1"/>
+        <VAL_ENUM uiShowName="2-Init" value="2"/>
+        <VAL_ENUM uiShowName="3-Up" value="3"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="DistinguisherType" type="INTEGER" bitLength="16"
+              unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="0-ASN Format" value="0"/>
+        <VAL_ENUM uiShowName="1-IPv4 Format" value="1"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="BfdTlvList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="250"
+              elementType="BfdTlvs" unitType="ELEMENT"/>
+
+    <TYPE_DEF name="BfdTlvs" type="CHOICE" unitType="ELEMENT" uiShowName="BFD CV TLVs">
+      <FIELD name="mepLspTlv" type="MepLspTlvType" uiShowName="MEP LSP TLV" />
+      <FIELD name="mepPwTlv" type="MepPwTlvType" uiShowName="MEP PW TLV" />
+      <FIELD name="mepSectionTlv" type="MepSectionTlvType" uiShowName="MEP Section TLV" />
+      <FIELD name="customTlv" type="CustomTlvType" uiShowName="BFD CV Custom Tlv" />
+    </TYPE_DEF>
+
+    <!-- See section below for identical TLV definitions used specifically by the TLV editor -->
+    <TYPE_DEF name="MepSectionTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="MEP Section TlV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="0" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="GEN2T2LTLVLENGTH" defaultValue="12" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Global ID" />
+      <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Node ID" />
+      <FIELD name="interfaceNumber" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Interface Number" />
+      <!--
+      <FIELD name="lspId" type="INTEGER" bitLength="16"  defaultValue="0" uiShowName="LSP ID" />
+      -->
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MepLspTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="MEP LSP TlV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="1" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="GEN2T2LTLVLENGTH" defaultValue="12" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Global ID" />
+      <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Node ID" />
+      <FIELD name="tunnelId" type="INTEGER" bitLength="16"  defaultValue="0" uiShowName="Tunnel ID" />
+      <FIELD name="lspId" type="INTEGER" bitLength="16"  defaultValue="0" uiShowName="LSP ID" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="AgiAsnType" type="SEQUENCE" unitType="ELEMENT"
+              uiShowName="ASN Route Distinguisher">
+      <FIELD name="type" type="DistinguisherType" defaultValue="0"
+             uiShowName="Distinguisher Type" uiControlState="CALCULATED" />
+      <FIELD name="admin" type="INTEGER" defaultValue="0" bitLength="16"
+             uiShowName="Administrator AS number"
+             uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="assign" type="INTEGER" defaultValue="0" bitLength="32"
+             uiShowName="Assigned Number" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="AgiIpv4Type" type="SEQUENCE" unitType="ELEMENT"
+              uiShowName="IPv4 Route Distinguisher">
+      <FIELD name="type" type="DistinguisherType" defaultValue="1"
+             uiShowName="Distinguisher Type" uiControlState="CALCULATED" />
+      <FIELD name="admin" type="IPV4ADDR" defaultValue="192.168.1.1"
+             uiShowName="Administrator address"
+             uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="assign" type="INTEGER" defaultValue="0" bitLength="16"
+             uiShowName="Assigned Number" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="AgiRteDistType" type="CHOICE" unitType="ELEMENT"
+              uiShowName="AGI Route Distinguisher Type">
+      <FIELD name="asnType" type="AgiAsnType"
+             uiShowName="ASN Route Distinguisher"/>
+      <FIELD name="ipv4Type" type="AgiIpv4Type"
+             uiShowName="IPv4 Route Distinguisher"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MepPwTlvAgiSectionType" type="SEQUENCE" unitType="ELEMENT"
+              uiShowName="MEP PW TLV AGI Section">
+      <FIELD name="agiType" type="INTEGER" bitLength="8" defaultValue="1"
+             uiShowName="AGI Type" uiControlState="CALCULATED" />
+      <FIELD name="agiLength" type="INTEGER" bitLength="8" defaultValue="8"
+             uiShowName="AGI Length" uiControlState="CALCULATED" />
+      <FIELD name="agiValue" type="AgiRteDistType"
+             defaultValue="asnType"
+             uiShowName="AGI encoded as Route Distinguisher" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MepPwTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="MEP PW TlV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="2" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="GEN2T2LTLVLENGTH" defaultValue="22" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Global ID" />
+      <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Node ID" />
+      <FIELD name="acId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="AC ID" />
+      <FIELD name="agi" type="MepPwTlvAgiSectionType"
+             uiShowName="PW TLV AGI Section" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CustomTlvType" type="SEQUENCE" unitType="ELEMENT" uiShowName="Custom BFD CV Tlv">
+      <!-- Could not turn it into a generic string, as the parser requires at
+           least the type and length fields -->
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface"
+             defaultValue="0" uiShowName="Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16"
+             procfnTarget="GEN2T2LTLVLENGTH" defaultValue="0"
+             uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="content" type="OCTETSTRING" minByteLength="1"
+             maxByteLength="256" defaultValue="0" uiShowName="Content"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MD5AuthenticationType"  type ="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="2-Keyed MD5" value="2"/>
+        <VAL_ENUM uiShowName="3-Meticulous Keyed MD5" value="3"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Password" type="SEQUENCE" unitType="ELEMENT"
+              uiShowName="Password" >
+      <FIELD name="password" type="ASCII" minByteLength="1" maxByteLength="4" defaultValue ="0" uiShowName="Password"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="SimplePasswordList" type="SEQUENCE_OF" elementType="Password"
+              minOccurs="1" maxOccurs="4" unitType="ELEMENT" />
+
+    <TYPE_DEF name="HdrAuthPassword" type="SEQUENCE"
+              unitType="ELEMENT" uiShowName="Simple Password" >
+      <FIELD name="authType" type="INTEGER" bitLength="8"
+             defaultValue="1" uiControlState="CALCULATED"
+             uiShowName="Authentication Type" />
+      <FIELD name="authLength" type="INTEGER" bitLength="8"
+             defaultValue="3" uiControlState="CALCULATED"
+             uiShowName="Authentication Length"
+             uiShowCommon="false" procfnTarget="BFDSIMPLEAUTHLENGTH" />
+      <FIELD name="authKeyId" type="INTEGER" bitLength="8" defaultValue="0"
+             uiShowName="Auth Key ID" uiShowCommon="false" />
+      <FIELD name="simplePassword" type="SimplePasswordList"
+             uiShowName="Simple Password" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="HdrAuthCrypto" type="SEQUENCE"
+              unitType="ELEMENT" uiShowName="MD5" >
+      <FIELD name="authType" type="MD5AuthenticationType" bitLength="8"
+             defaultValue="2" uiShowName="Authentication Type" />
+      <FIELD name="authLength" type="INTEGER" bitLength="8"
+             defaultValue="24" uiControlState="CALCULATED" uiShowName="Authentication Length" uiShowCommon="false" />
+      <FIELD name="authKeyId" type="INTEGER" bitLength="8" defaultValue="0"
+             uiShowName="Authentication Key ID" uiShowCommon="false" />
+      <FIELD name="res" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="CALCULATED"
+             uiShowCommon="false" uiShowName="Reserved" />
+      <FIELD name="seqNum" type="INTEGER" bitLength="32"
+             defaultValue="0"
+             uiShowName="Sequence Number" />
+      <FIELD name="authKey1" type="INTEGER" bitLength="32"
+             defaultValue="0"
+             uiShowName="Authentication Key" />
+      <FIELD name="authKey2" type="INTEGER" bitLength="32"
+             defaultValue="0"
+             uiShowName="Authentication Key" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="BfdHeader" type="SEQUENCE"
+              unitType="HEADER" uiShowName="BFD CV Header" >
+
+      <FIELD name="version" type="INTEGER" bitLength="3"
+             defaultValue="1"
+             uiShowName="Bfd Version" />
+
+      <FIELD name="diagnostic" type="DiagnosticType"
+             defaultValue="0"
+             uiShowName="Diagnostic" />
+
+      <FIELD name ="state" type ="StateType"
+             defaultValue="3"
+             uiShowName="State" />
+
+      <FIELD name="P" type="BITSTRING" bitLength="1" defaultValue ="0" uiShowName="Poll" />
+
+      <FIELD name="F" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Final" />
+
+      <FIELD name="C" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Control Plane Independent" />
+
+      <FIELD name="A" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Authentication Present" />
+
+      <FIELD name="D" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Demand" />
+
+      <FIELD name="M" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Multipoint" />
+
+      <FIELD name ="DTM" type="INTEGER" bitLength="8" defaultValue ="0" uiShowName="Detect Time Multipler" />
+
+      <!-- Length needs to be auto calculated-->
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="0"
+             uiShowName="Length" uiControlState="CALCULATED"
+             procfnTarget="HDRLENGTH" />
+
+      <FIELD name="myDiscriminator" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="My Discriminator"/>
+
+      <FIELD name="yourDiscriminator" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Your Discriminator"/>
+
+      <FIELD name="desiredMinTxInterval" type="INTEGER" bitLength="32" uiShowName="Desired Min TX Interval" />
+
+      <FIELD name="reqMinRxInterval" type="INTEGER" bitLength="32" uiShowName="Required Min RX Interval" />
+
+      <FIELD name="reqMinEchoRxInterval" type="INTEGER" bitLength="32" uiShowName="Required Min Echo RX Interval" />
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="BFDCV" type="SEQUENCE"
+              unitType="HEADER" uiShowName="BFD CV Header" >
+      <FIELD name="bfdHeader" type="BfdHeader" uiNoShowModifier="Interface,Frame" uiShowName="Packet Header"/>
+      <FIELD name="tlvs" type="BfdTlvList" uiShowName="TLVs"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="BFDSimpleAuth" type="SEQUENCE"
+              unitType="HEADER" uiShowName="BFD CV With Authentication" >
+
+      <FIELD name="header" type="BFDCV" uiNoShowModifier="Interface,Frame" uiShowName="BFD CV Packet Header"/>
+
+      <FIELD name="auth" type="HdrAuthPassword" uiNoShowModifier="Interface,Frame"
+             uiShowName="Authentication" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="BFDCryptoAuth" type="SEQUENCE"
+              unitType="HEADER" uiShowName="BFD CV With Authentication" >
+
+      <FIELD name="header" type="BFDCV" uiNoShowModifier="Interface,Frame" uiShowName="BFD CV Packet Header"/>
+
+      <FIELD name="auth" type="HdrAuthCrypto" uiNoShowModifier="Interface,Frame"
+             uiShowName="Authentication" />
+    </TYPE_DEF>
+
+    <!-- Added headers separately as header types -->
+    <!-- These 4 following headers are used by the TLV editor -->
+    <TYPE_DEF name="MepLspTlv" type="SEQUENCE" unitType="HEADER"
+              uiShowName="BFD CV MEP LSP TLV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="1" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="GEN2T2LTLVLENGTH" defaultValue="12" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="4294967295" uiShowName="Global ID" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="4294967295" uiShowName="Node ID" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="tunnelId" type="INTEGER" bitLength="16"  defaultValue="0" uiShowName="Tunnel ID" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="lspId" type="INTEGER" bitLength="16"  defaultValue="0" uiShowName="LSP ID" uiControlState="ALLOW_OVERRIDE" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="bfdcv:CustomTlv" name="Custom TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MepPwTlv" type="SEQUENCE" unitType="HEADER"
+              uiShowName="BFD CV MEP PW TLV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="2" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="GEN2T2LTLVLENGTH" defaultValue="22" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="4294967295" uiShowName="Global ID" uiControlState="ALLOW_OVERRIDE"/>
+      <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="4294967295" uiShowName="Node ID" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="acId" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="AC ID" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="agi" type="MepPwTlvAgiSectionType"
+             uiShowName="PW TLV AGI Section" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="bfdcv:CustomTlv" name="Custom TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="MepSectionTlv" type="SEQUENCE" unitType="HEADER"
+              uiShowName="BFD CV MEP Section TLV">
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface" defaultValue="0" uiShowName="Type" uiControlState="CALCULATED"/>
+      <FIELD name="length" type="INTEGER" bitLength="16" procfnTarget="GEN2T2LTLVLENGTH" defaultValue="12" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="globalId" type="INTEGER" bitLength="32"  defaultValue="4294967295" uiShowName="Global ID" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="nodeId" type="INTEGER" bitLength="32"  defaultValue="4294967295" uiShowName="Node ID" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="interfaceNumber" type="INTEGER" bitLength="32"  defaultValue="0" uiShowName="Interface Number" uiControlState="ALLOW_OVERRIDE" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="bfdcv:CustomTlv" name="Custom TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="CustomTlv" type="SEQUENCE" unitType="HEADER"
+              uiShowName="BFD CV Custom TLV">
+      <!-- Could not turn it into a generic string, as the parser requires at
+           least the type and length fields -->
+      <FIELD name="type" type="INTEGER" bitLength="16" uiNoShow="Interface"
+             defaultValue="0" uiShowName="Type" />
+      <FIELD name="length" type="INTEGER" bitLength="16"
+             procfnTarget="GEN2T2LTLVLENGTH" defaultValue="0"
+             uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="content" type="OCTETSTRING" minByteLength="1"
+             maxByteLength="256" defaultValue="0" uiShowName="Content"/>
+      <NEXT_HEADERS>
+        <NXT_HDR id="bfdcv:CustomTlv" name="Custom TLV"></NXT_HDR>
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+  </TYPE_DEFS>
+</PDU_LIBRARY>

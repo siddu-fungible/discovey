@@ -1,0 +1,30 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Dhcpnak"
+    showName="DHCP Nak"
+    version="1.00"
+    category="Access"
+    readonly="true"
+    validate="true"
+    firstPdu="dhcp:Dhcpservermsg"
+    description="DHCP Nak" >
+
+    <pdus>
+      <pdu name="proto1" pdu="dhcp:Dhcpservermsg">
+        <options>
+          <DHCPOption name="DHCPOption1">
+            <messageType /></DHCPOption>
+          <DHCPOption name="DHCPOption2">
+            <clientIdHW /></DHCPOption>
+          <DHCPOption name="DHCPOption3">
+            <serverId /></DHCPOption>
+          <DHCPOption name="DHCPOption4">
+            <message /></DHCPOption>
+          <DHCPOption name="DHCPOption5">
+            <endOfOptions /></DHCPOption>
+        </options>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

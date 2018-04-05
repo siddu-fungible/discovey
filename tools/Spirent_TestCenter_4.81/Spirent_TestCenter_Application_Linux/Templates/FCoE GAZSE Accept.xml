@@ -1,0 +1,41 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoEGAZSEAccept" 
+    showName="FCoE GAZSE Accept"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE GAZSE Accept">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+						<pdu name="proto2" pdu="fc:FC">
+								<rCtl>03</rCtl>
+								<sId>FFFFFA</sId>
+								<frameControl>980000</frameControl>
+						</pdu>
+      <pdu name="proto3" pdu="fcgs:GazseAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+								<enhancedZones>
+										<EnhancedZone name="EnhancedZone_0">
+												<zoneAttributeEntries>
+														<ZoneAttributeEntry name="ZoneAttributeEntry_0">
+														</ZoneAttributeEntry>
+												</zoneAttributeEntries>
+												<zoneType>
+														<EnhancedZoneMemberIdentifierTypes name="EnhancedZoneMemberIdentifierTypes_0">
+																<zoneMemberNPortName />
+														</EnhancedZoneMemberIdentifierTypes>
+												</zoneType>
+										</EnhancedZone>
+								</enhancedZones>
+						</pdu>
+    </pdus>
+  </template>
+</frame>

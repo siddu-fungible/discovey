@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="NFS_V2_UDP" type="stream">
+  <MetaData description="NFS_V2_UDP" protocol="NFS_V2_UDP" application="NFS" createDate=""/>
+  <Streams>
+    <Stream file="System/NFS/NFS_Mount_Directory.xml" name="Mount_Directory" description="Mount_Directory" startTime="0" dataDelay="20" serverPort="1048" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/NFS/NFS_Portmap_Sunrpc.xml" name="Portmap_Sunrpc" description="Portmap_Sunrpc" startTime="0" dataDelay="30" serverPort="111" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/NFS/NFS_Queries.xml" name="Queries" description="Queries" startTime="0" dataDelay="80" serverPort="2049" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+  </Streams>
+</Playlist>

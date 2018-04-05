@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<Playlist type="attack" name="BusMail">
+  <MetaData description="BusinessMail Buffer Overflow"/>
+  <Attacks>
+    <Attack file="System/base_threats/BusMail.xml"
+            name="BusMai"
+            description="BusinessMail Buffer Overflow"
+            serverPort="25"
+            pktDelay="200"
+            inactivityTimeout="100000" />
+  </Attacks>
+</Playlist>

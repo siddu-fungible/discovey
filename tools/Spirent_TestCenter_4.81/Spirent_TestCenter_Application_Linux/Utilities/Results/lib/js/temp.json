@@ -1,0 +1,185 @@
+{
+    "testInfo": { "name" : "Test 1"},
+    "testStatus": {
+        "status": "COMPLETE",
+        "verdictExplanation": "Frame Loss",
+        "verdict": "FAILED",
+		"verdictProvider": "testResults"
+    },
+    "testResults": {
+	    "summarizedResultVerdict": "FAILED",
+        "summarizedResultVerdictExplanation": "Dead Stream Detected",
+        "resultViews": [
+            {
+			    "resultViewVerdict": "FAILED",
+				"applyVerdictToSummarizedResultVerdict":true,
+                "resultViewVerdictExplanation": "Add comment",
+                "viewData": {
+					"name": "MethExportPortDrv",
+                    "viewType": "DynamicResultView",
+                    "drilldownResults": {
+					    "summarizationObject": "Project.Name",
+                        "resultCount": 1,
+                        "columnNames": [
+                            "Project.Name",
+                            "Port.Name",
+                            "Port.GeneratorSigFrameCount",
+                            "Port.RxSigFrameCount",
+                            "Port.AvgLatency",
+                            "Port.MaxLatency",
+                            "Port.MinLatency"
+                        ],
+                        "columnDisplayNames": [
+                            "Project.Name",
+                            "Port.Name",
+                            "Port.GeneratorSigFrameCount",
+                            "Port.RxSigFrameCount",
+                            "Port.AvgLatency",
+                            "Port.MaxLatency",
+                            "Port.MinLatency"
+                        ],
+						"data": [
+                            [
+                                "Project 1",
+                                "",
+                                "5916248",
+                                "5916248",
+                                "0.11088217628789",
+                                "0.12",
+                                "0.1"
+                            ]
+                        ],
+                        "drilldownResults": {
+						    "summarizationObject": "Port.Name",
+                            "resultCount": 2,
+                            "columnNames": [
+                                "Project.Name",
+                                "Port.Name",
+                                "Port.GeneratorSigFrameCount",
+                                "Port.RxSigFrameCount",
+                                "Port.AvgLatency",
+                                "Port.MaxLatency",
+                                "Port.MinLatency"
+                            ],
+                            "columnDisplayNames": [
+                                "Project.Name",
+                                "Port.Name",
+                                "Port.GeneratorSigFrameCount",
+                                "Port.RxSigFrameCount",
+                                "Port.AvgLatency",
+                                "Port.MaxLatency",
+                                "Port.MinLatency"
+                            ],                            
+                            "data": [
+                                [
+                                    "Project 1",
+                                    "Port //5/1",
+                                    "3024527",
+                                    "2891721",
+                                    "0.104609445378721",
+                                    "0.11",
+                                    "0.1"
+                                ],
+                                [
+                                    "Project 1",
+                                    "Port //5/2",
+                                    "2891721",
+                                    "3024527",
+                                    "0.117154907197059",
+                                    "0.12",
+                                    "0.11"
+                                ]
+                            ],
+							"drilldownResults": {}
+                        }                        
+                    }
+                }
+            },
+            {
+			    "resultViewVerdict": "FAILED",
+				"applyVerdictToSummarizedResultVerdict":true,
+                "resultViewVerdictExplanation": "Add comment",
+                "viewData": {
+					"name": "MethExportPortDrv-2",
+                    "viewType": "DynamicResultView",
+                    "drilldownResults": {
+					    "summarizationObject": "Project.Name",
+                        "resultCount": 1,
+                        "columnNames": [
+                            "Project.Name",
+                            "Port.Name",
+                            "Port.GeneratorSigFrameCount",
+                            "Port.RxSigFrameCount",
+                            "Port.AvgLatency",
+                            "Port.MaxLatency",
+                            "Port.MinLatency"
+                        ],
+                        "columnDisplayNames": [
+                            "Project.Name",
+                            "Port.Name",
+                            "Port.GeneratorSigFrameCount",
+                            "Port.RxSigFrameCount",
+                            "Port.AvgLatency",
+                            "Port.MaxLatency",
+                            "Port.MinLatency"
+                        ],
+						"data": [
+                            [
+                                "Project 1",
+                                "",
+                                "5916248",
+                                "5916248",
+                                "0.11088217628789",
+                                "0.12",
+                                "0.1"
+                            ]
+                        ],
+                        "drilldownResults": {
+						    "summarizationObject": "Port.Name",
+                            "resultCount": 2,
+                            "columnNames": [
+                                "Project.Name",
+                                "Port.Name",
+                                "Port.GeneratorSigFrameCount",
+                                "Port.RxSigFrameCount",
+                                "Port.AvgLatency",
+                                "Port.MaxLatency",
+                                "Port.MinLatency"
+                            ],
+                            "columnDisplayNames": [
+                                "Project.Name",
+                                "Port.Name",
+                                "Port.GeneratorSigFrameCount",
+                                "Port.RxSigFrameCount",
+                                "Port.AvgLatency",
+                                "Port.MaxLatency",
+                                "Port.MinLatency"
+                            ],                            
+                            "data": [
+                                [
+                                    "Project 1",
+                                    "Port //5/1",
+                                    "3024527",
+                                    "2891721",
+                                    "0.104609445378721",
+                                    "0.11",
+                                    "0.1"
+                                ],
+                                [
+                                    "Project 1",
+                                    "Port //5/2",
+                                    "2891721",
+                                    "3024527",
+                                    "0.117154907197059",
+                                    "0.12",
+                                    "0.11"
+                                ]
+                            ],
+							"drilldownResults": {}
+                        }                        
+                    }
+                }
+            }
+        ]
+    }
+}

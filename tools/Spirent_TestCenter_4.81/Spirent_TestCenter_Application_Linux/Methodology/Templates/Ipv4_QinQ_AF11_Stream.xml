@@ -1,0 +1,91 @@
+<Template>
+<Description />
+<Image />
+<DataModelXml>
+<StcSystem id="1" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName="Untitled.tcc"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="1168"/>
+    <Tags id="1208" serializationBase="true" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1400"/>
+      <Relation type="UserTag" target="1401"/>
+      <Tag id="1400" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamBlock">
+      </Tag>
+      <Tag id="1401" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamBlockLoadProfile">
+      </Tag>
+    </Tags>
+    <StreamBlock id="2111" serializationBase="true" 
+     IsControlledByGenerator="TRUE"
+     ControlledBy="generator"
+     TrafficPattern="PAIR"
+     EndpointMapping="ONE_TO_ONE"
+     EnableStreamOnlyGeneration="TRUE"
+     EnableBidirectionalTraffic="FALSE"
+     EqualRxPortDistribution="TRUE"
+     EnableTxPortSendingTrafficToSelf="FALSE"
+     EnableControlPlane="FALSE"
+     InsertSig="TRUE"
+     FrameLengthMode="FIXED"
+     FixedFrameLength="128"
+     MinFrameLength="128"
+     MaxFrameLength="256"
+     StepFrameLength="1"
+     FillType="CONSTANT"
+     ConstantFillPattern="0"
+     EnableFcsErrorInsertion="FALSE"
+     Filter=""
+     ShowAllHeaders="FALSE"
+     AllowInvalidHeaders="FALSE"
+     AutoSelectTunnel="FALSE"
+     ByPassSimpleIpSubnetChecking="FALSE"
+     EnableHighSpeedResultAnalysis="TRUE"
+     EnableBackBoneTrafficSendToSelf="TRUE"
+     EnableResolveDestMacAddress="TRUE"
+     AdvancedInterleavingGroup="0"
+     DisableTunnelBinding="FALSE"
+     FrameConfig="&lt;frame&gt;&lt;config&gt;&lt;pdus&gt;&lt;pdu name=&quot;eth1&quot; pdu=&quot;ethernet:EthernetII&quot;&gt;&lt;vlans name=&quot;anon_3911&quot;&gt;&lt;Vlan name=&quot;Vlan&quot;&gt;&lt;pri&gt;000&lt;/pri&gt;&lt;/Vlan&gt;&lt;Vlan name=&quot;Vlan_1&quot;&gt;&lt;pri&gt;000&lt;/pri&gt;&lt;/Vlan&gt;&lt;/vlans&gt;&lt;/pdu&gt;&lt;pdu name=&quot;ip_1&quot; pdu=&quot;ipv4:IPv4&quot;&gt;&lt;totalLength&gt;20&lt;/totalLength&gt;&lt;checksum&gt;14936&lt;/checksum&gt;&lt;tosDiffserv name=&quot;anon_3915&quot;&gt;&lt;diffServ name=&quot;anon_3916&quot;&gt;&lt;dscpHigh&gt;1&lt;/dscpHigh&gt;&lt;dscpLow&gt;2&lt;/dscpLow&gt;&lt;reserved&gt;00&lt;/reserved&gt;&lt;/diffServ&gt;&lt;/tosDiffserv&gt;&lt;/pdu&gt;&lt;pdu name=&quot;proto1&quot; pdu=&quot;udp:Udp&quot;&gt;&lt;length&gt;0&lt;/length&gt;&lt;/pdu&gt;&lt;/pdus&gt;&lt;/config&gt;&lt;/frame&gt;"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="AF11">
+      <Relation type="UserTag" target="1400"/>
+      <Relation type="AffiliationStreamBlockLoadProfile" target="2112"/>
+    </StreamBlock>
+    <StreamBlockLoadProfile id="2112" serializationBase="true" 
+     Load="10"
+     LoadUnit="PERCENT_LINE_RATE"
+     BurstSize="1"
+     InterFrameGap="12"
+     InterFrameGapUnit="BYTES"
+     StartDelay="0"
+     Priority="0"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="StreamBlockLoadProfile 1">
+      <Relation type="UserTag" target="1401"/>
+    </StreamBlockLoadProfile>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>
+

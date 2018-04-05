@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="PTP Sync"
+    showName="PTP Sync"
+    version="1.00"
+    category="PTP"
+    readonly="true"
+    validate="true"
+    firstPdu="ptp:Sync"
+    description="PTP Sync" >
+
+    <pdus>
+      <pdu name="Sync_1" pdu="ptp:Sync">
+        <ptpHeader>
+            <MessageType uiControlState="CALCULATED">0</MessageType>
+            <ControlField uiControlState="CALCULATED">00</ControlField>
+        </ptpHeader>       
+      </pdu>
+    </pdus>
+  </template>
+</frame>

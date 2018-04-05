@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCAZD" 
+    showName="FC AZD" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:GsRequestWithZoneAndZoneSet" 
+    description="FC AZD">
+    <pdus>
+     <pdu name="proto1" pdu="fcgs:GsRequestWithZoneAndZoneSet">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>0205</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

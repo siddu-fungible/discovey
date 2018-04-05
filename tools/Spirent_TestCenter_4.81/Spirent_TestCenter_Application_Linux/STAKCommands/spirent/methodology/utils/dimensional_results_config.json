@@ -1,0 +1,157 @@
+{
+    "predefined_fact_tables": [
+        {
+            "fact_table_name" : "Fact_GenAnaPort",
+            "src_db": "LAST_ITERATION",
+            "dst_db": "LAST_ITERATION",
+            "src_dimension_tables" : ["Port"],
+            "src_fact_tables" : ["GeneratorPortResults", "AnalyzerPortResults"],
+            "dimension_columns_in_fact_table": "ID_AND_TAG"
+        },
+        {
+            "fact_table_name": "Fact_Rx_Tx_TxSb",
+            "src_dimension_tables": ["StreamBlock", "Port"],
+            "src_fact_tables": ["RxEotStreamResults", "TxEotStreamResults", "TxEotStreamBlockResults"]
+        },
+        {
+            "fact_table_name": "Fact_Rx_Tx",
+            "src_dimension_tables": ["StreamBlock", "Port"],
+            "src_fact_tables": ["RxEotStreamResults", "TxEotStreamResults"]
+        },
+        {
+            "fact_table_name": "Fact_Tx_TxSb",
+            "src_dimension_tables": ["StreamBlock", "Port"],
+            "src_fact_tables": ["TxEotStreamResults", "TxEotStreamBlockResults"]
+        },
+        {
+            "fact_table_name" : "Fact_DevAddrv4",
+            "src_dimension_tables" : ["Port"],
+            "src_fact_tables" : ["EmulatedDevice", "Ipv4If", "EthIIIf"]
+        },
+        {
+            "fact_table_name" : "Fact_DevAddrv6",
+            "src_dimension_tables" : ["Port"],
+            "src_fact_tables" : ["EmulatedDevice", "Ipv6If", "EthIIIf"]
+        },
+        {
+            "fact_table_name" : "Fact_PppoePort",
+            "src_dimension_tables" : ["Port"],
+            "src_fact_tables" : ["PppoxPortConfig", "PppoePortResults"]
+        },
+        {
+            "fact_table_name" : "Fact_Dhcpv4Block",
+            "src_dimension_tables" : ["Port"],
+            "src_fact_tables" : ["EmulatedDevice", "Dhcpv4BlockConfig", "Dhcpv4BlockResults"]
+        },
+        {
+            "fact_table_name" : "Fact_Dhcpv4Port",
+            "src_dimension_tables" : ["Port"],
+            "src_fact_tables" : ["Dhcpv4PortConfig", "Dhcpv4PortResults"]
+        },
+        {
+            "fact_table_name" : "Fact_SaaDevice",
+            "src_dimension_tables" : ["Port"],
+            "src_fact_tables" : ["EmulatedDevice", "SaaDeviceConfig", "SaaDeviceResults"]
+        },
+        {
+            "fact_table_name": "Fact_Handle_Table_Map",
+            "src_dimension_tables": [],
+            "src_fact_tables": [],
+            "description": "Special fact table that associates every handle in the src db to its corresponding table name. Can be used to determine the TestCenter object type for a given handle. Source dimensions and facts are ignored."
+        }
+    ],
+    "src_facts": [
+        {
+            "table": "Ipv4If",
+            "dimension_mappings": [
+                {
+                    "dimension": "EmulatedDevice",
+                    "dimension_column": "Handle",
+                    "fact_column": "Handle",
+                    "relation_type": "ParentChild",
+                    "relation_source": "DIMENSION"
+                }
+            ]
+        },
+        {
+            "table": "RxEotStreamResults",
+            "short_name": "Rx",
+            "dimension_mappings": [
+                {
+                    "dimension": "Port",
+                    "fact_column": "ParentHnd"
+                },
+                {
+                    "dimension": "StreamBlock",
+                    "fact_column": "ParentStreamBlock"
+                }
+            ]
+        },
+        {
+            "table": "TxEotStreamResults",
+            "short_name": "Tx",
+            "dimension_mappings": [
+                {
+                    "dimension": "Port",
+                    "fact_column": "ParentHnd"
+                },
+                {
+                    "dimension": "StreamBlock",
+                    "fact_column": "ParentStreamBlock"
+                }
+            ],
+            "fact_mappings": [
+                {
+                    "fact": "RxEotStreamResults",
+                    "common_dimensions": ["StreamBlock"]
+                }
+            ]
+        },
+        {
+            "table": "TxEotStreamBlockResults",
+            "short_name": "TxSb",
+            "dimension_mappings": [
+                {
+                    "dimension": "Port",
+                    "fact_column": "ParentHnd"
+                },
+                {
+                    "dimension": "StreamBlock",
+                    "fact_column": "ParentStreamBlock"
+                }
+            ],
+            "fact_mappings": [
+                {
+                    "fact": "TxEotStreamResults",
+                    "common_dimensions": ["Port", "StreamBlock"]
+                }
+            ]
+        },
+        {
+            "table": "GeneratorPortResults",
+            "short_name": "GenPortRes",
+            "dimension_mappings": [
+                {
+                    "dimension": "Port",
+                    "fact_column": "ParentPort"
+                }
+            ]
+        },
+        {
+            "table": "AnalyzerPortResults",
+            "short_name": "AnaPortRes",
+            "dimension_mappings": [
+                {
+                    "dimension": "Port",
+                    "fact_column": "ParentPort"
+                }
+            ],
+            "fact_mappings": [
+                {
+                    "fact": "GeneratorPortResults",
+                    "common_dimensions": ["Port"]
+                }
+            ]
+        }
+    ]
+}

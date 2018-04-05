@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="EthernetII"
+    showName="EthernetII"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="ethernet:EthernetII"
+    description="EthernetII" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ethernet:EthernetII" />
+    </pdus>
+  </template>
+</frame>

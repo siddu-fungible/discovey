@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="862" serializationBase="true" 
+ Identifier="Switching Protocols\DCBX\DCBX Logical Link Results"
+ PrimaryClass="DcbxLogicalLinkResult"
+ Description="object://lldp/DcbxLogicalLinkResult"
+ Path="Switching Protocols\DCBX"
+ CustomDisplayPath="Switching\DCBX"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ IsDeprecated="FALSE"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="DCBX Logical Link Results">
+  <RealTimeResultColumnDefinition id="863" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 68">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="864" 
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="82"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 69">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="865" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port EmulatedDevice"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 11">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="866" 
+   GroupName="Main"
+   GroupId="object://customgroup/c550daa2-2440-4407-b44a-da213a688049/Main"
+   ColumnClassName="DcbxLogicalLinkResult DcbxLogicalLinkResult DcbxLogicalLinkResult"
+   ColumnPropertyName="Type Status PeerStatus"
+   SqlString="SELECT Port.Name AS &apos;Port Name&apos;, EmulatedDevice.Name AS &apos;Device Name&apos;, DcbxLogicalLinkResult.Type AS &apos;Type&apos;, DcbxLogicalLinkResult.Status AS &apos;Status&apos;, DcbxLogicalLinkResult.PeerStatus AS &apos;Peer Status&apos; FROM AllDevice AS EmulatedDevice, Port, DcbxLogicalLinkResult, LldpNodeConfig, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = EmulatedDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND LldpNodeConfig.ParentHnd = EmulatedDevice.Handle AND DcbxLogicalLinkResult.ParentHnd = LldpNodeConfig.Handle AND EmulatedDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND DcbxLogicalLinkResult.DataSetId = @DataSetId AND LldpNodeConfig.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) UNION SELECT ExternalDevicePort.Name AS &apos;Port Name&apos;, EmulatedDevice.Name AS &apos;Device Name&apos;, DcbxLogicalLinkResult.Type AS &apos;Type&apos;, DcbxLogicalLinkResult.Status AS &apos;Status&apos;, DcbxLogicalLinkResult.PeerStatus AS &apos;Peer Status&apos; FROM AllDevice AS EmulatedDevice, ExternalDevicePort, DcbxLogicalLinkResult, Port, LldpNodeConfig, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = EmulatedDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND LldpNodeConfig.ParentHnd = EmulatedDevice.Handle AND DcbxLogicalLinkResult.ParentHnd = LldpNodeConfig.Handle AND EmulatedDevice.DataSetId = @DataSetId AND ExternalDevicePort.DataSetId = @DataSetId AND DcbxLogicalLinkResult.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND LldpNodeConfig.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 12">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="867" 
+   ColumnClassName="DcbxLogicalLinkResult"
+   ColumnPropertyName="Type"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 70">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="868" 
+   ColumnClassName="DcbxLogicalLinkResult"
+   ColumnPropertyName="Status"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 71">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="869" 
+   ColumnClassName="DcbxLogicalLinkResult"
+   ColumnPropertyName="PeerStatus"
+   ColumnDescription=""
+   ColumnWidth="74"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 72">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="132" 
+   ConfigClassId="lldpnodeconfig"
+   ResultClassId="dcbxlogicallinkresult"
+   ResultRootList="2"
+   PropertyIdArray="dcbxlogicallinkresult.type dcbxlogicallinkresult.status dcbxlogicallinkresult.peerstatus"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 7">
+  </ResultQuery>
+</ResultDataSet>

@@ -1,0 +1,59 @@
+{
+    "methodology_key": "CLOUDSTRESS_STORAGEBENCHMARK_FIXEDCOUNT",
+    "state_modifiers": [
+        {
+            "property": "MinMaxStorageLoadParams.StorageFileSize",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%MinMaxStorageLoadParams.StorageEnableFileSize% == false)",
+            "message": "Disabled when Enable File Size is disabled."
+        },
+
+
+        {
+            "property_group": "AutoDeployConfig",
+            "state_type": "hidden",
+            "type": "expression",
+            "value": "has_deployment_config() == false",
+            "message": "Auto-Deployment Configuration is not used when there aren't any templates that need auto-deploying."
+        }
+    ],
+    "validations": [
+        {
+            "property": "MinMaxStorageLoadParams.MinStorageReadRate",
+            "type": "expression",
+            "value": "%MinMaxStorageLoadParams.MinStorageReadRate% > %MinMaxStorageLoadParams.MaxStorageReadRate%",
+            "message": "The Minimum Storage Read Rate must be less than or equal to the Maximum Storage Read Rate."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.MinStorageWriteRate",
+            "type": "expression",
+            "value": "%MinMaxStorageLoadParams.MinStorageWriteRate% > %MinMaxStorageLoadParams.MaxStorageWriteRate%",
+            "message": "The Minimum Storage Write Rate must be less than or equal to the Maximum Storage Write Rate."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageReadSize",
+            "type": "expression",
+            "value": "(%MinMaxStorageLoadParams.StorageReadSize% & (%MinMaxStorageLoadParams.StorageReadSize% - 1)) != 0",
+            "message": "The storage read block size must be a power of 2."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageWriteSize",
+            "type": "expression",
+            "value": "(%MinMaxStorageLoadParams.StorageWriteSize% & (%MinMaxStorageLoadParams.StorageWriteSize% - 1)) != 0",
+            "message": "The storage write block size must be a power of 2."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageEnableFileSize",
+            "type": "expression",
+            "value": "!%MinMaxStorageLoadParams.StorageEnableFileSize% && %MinMaxStorageLoadParams.StorageTargetDevice%.starts_with('/')",
+            "message": "Storage file size must be enabled when a file path is specified."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageFileSize",
+            "type": "expression",
+            "value": "%MinMaxStorageLoadParams.StorageEnableFileSize% && ((%MinMaxStorageLoadParams.StorageReadSize% >= %MinMaxStorageLoadParams.StorageFileSize%) || (%MinMaxStorageLoadParams.StorageWriteSize% >= %MinMaxStorageLoadParams.StorageFileSize%))",
+            "message": "Storage file size must be greater than both the storage read size and storage write size when enable storage file size is enabled."
+        }
+    ]
+}

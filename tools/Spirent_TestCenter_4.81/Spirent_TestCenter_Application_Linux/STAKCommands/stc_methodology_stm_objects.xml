@@ -1,0 +1,263 @@
+<?xml version="1.0" ?>
+<stc:meta xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" package="spirent.methodology.stm" plugin="core" version="0.0.0-0">
+
+<!-- Dynamic Scriptable objects -->
+
+<stc:class name="RuntimeDataStore" baseClass="DynamicScriptable"
+           displayName="STM Runtime Data Store"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true">
+    <stc:relation name="ParentProject"
+                  type="ParentChild"
+                  srcClassRef="Project"
+                  dstClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  minOccurs="0"
+                  maxOccurs="1" />
+</stc:class>
+
+<stc:class name="Interactive"
+           baseClass="DynamicScriptable"
+           displayName="Interactive"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true">
+    <stc:relation name="ParentStore"
+                  type="ParentChild"
+                  srcClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  dstClassRef="spirent.methodology.stm.Interactive"
+                  minOccurs="0"
+                  maxOccurs="1"/>
+
+    <stc:property category="config" name="Toolbar" displayName="Toolbar Configuration JSON" type="string" default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Configuration for Methodology Center's toolbar framework. To be subscribed by the Web UI." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+        <!-- schema: Interactive.json -->
+    </stc:property>
+
+    <stc:property category="config" name="FullToolbarDefinition" displayName="Full Toolbar JSON" type="string" default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Full toolbar configuration. Used internally by the back end." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+        <!-- schema: Interactive.json -->
+    </stc:property>
+</stc:class>
+
+<stc:class name="Variables"
+           baseClass="DynamicScriptable"
+           displayName="Variables"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true">
+    <stc:relation name="ParentStore"
+                  type="ParentChild"
+                  srcClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  dstClassRef="spirent.methodology.stm.Variables"/>
+
+    <stc:property category="config" name="VariableDict"
+                  displayName="Python Variable Dict" type="string"
+                  default="{}">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Variable dict to store values using variable name as key. Used by ProcessDataCommand." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+</stc:class>
+
+<stc:class name="SessionToken" baseClass="DynamicScriptable"
+           displayName="STM Result Token Object"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true">
+    <stc:relation name="ParentStore"
+                  type="ParentChild"
+                  srcClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  dstClassRef="spirent.methodology.stm.SessionToken"
+                  minOccurs="0"
+                  maxOccurs="1" />
+    <stc:property name="Value" type="string" default="" category="config"
+                  displayName="Session Token Value">
+    </stc:property>
+</stc:class>
+
+<stc:class name="MetricsService" baseClass="DynamicScriptable"
+           displayName="STM Metrics Service Object"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true">
+    <stc:relation name="ParentStore"
+                  type="ParentChild"
+                  srcClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  dstClassRef="spirent.methodology.stm.MetricsService"
+                  minOccurs="0"
+                  maxOccurs="1" />
+    <stc:property name="InfluxDbHost" type="string" default="localhost" category="config"
+                  displayName="Influx DB Host Address">
+    </stc:property>
+    <stc:property name="InfluxDbPort" type="u32" default="80" category="config"
+                  displayName="Influx DB Port">
+    </stc:property>
+    <stc:property name="GrafanaUrl" type="string" default="http://localhost/grafana" category="config"
+                  displayName="Grafana URL">
+    </stc:property>
+    <stc:property name="MetricsProxyInfo" type="string" default=""
+                  category="config" displayName="Metrics Proxy Info Json Dict">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="JSON dict to retain Proxy subscription information." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+    <stc:property name="ServiceEnabled" type="bool" default="true" category="state" isInternal="true"
+                  displayName="Metrics Service Enabled" noSave="true">
+    </stc:property>
+    <stc:property name="ServiceChecked" type="bool" default="false" category="state" isInternal="true"
+                  displayName="Metrics Service Checked" noSave="true">
+    </stc:property>
+    <stc:property name="NfviEnabled" type="bool" default="false" category="state" isInternal="true"
+                  displayName="NFVi Enabled" noSave="true">
+    </stc:property>
+    <stc:property name="CloudName" type="string" default="" category="state" isInternal="true"
+                  displayName="Cloud Name" noSave="true">
+    </stc:property>
+    <stc:property name="NfviAbstractTopology" type="string" default=""
+                  category="config" displayName="NFVi Abstract Topology Info Json">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="NFVI abstract topology information JSON." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+    <stc:property name="NfviTopology" type="string" default=""
+                  category="config" displayName="NFVi Topology Info Json">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="NFVI topology information JSON." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+</stc:class>
+
+
+<stc:class name="RtStatus"
+           baseClass="DynamicScriptable"
+           displayName="Methodology Run Time Status"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true"
+           isInternal="true"
+           noSave="true">
+    <stc:relation name="ParentStore"
+                  type="ParentChild"
+                  srcClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  dstClassRef="spirent.methodology.stm.RtStatus"
+                  minOccurs="0"
+                  maxOccurs="1" />
+
+    <stc:property category="config" name="DataJson"
+                  displayName="Data JSON" type="string"
+                  default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Run Time Status JSON" />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+</stc:class>
+
+
+<stc:class name="ConfigResult"
+           baseClass="DynamicScriptable"
+           displayName="Configuration Result"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true">
+
+    <stc:relation name="ParentStmTestResult"
+                  type="ParentChild"
+                  srcClassRef="StmTestResult"
+                  dstClassRef="spirent.methodology.stm.ConfigResult"
+                  minOccurs="0"
+                  maxOccurs="1" />
+
+    <stc:property category="config" name="JsonResults" displayName="Json Results" type="string" default=""
+                  minOccurs="0" maxOccurs="unbounded">
+    </stc:property>
+    <stc:property category="config" name="Info" displayName="Info" type="string" default="" />
+    <stc:property category="config" name="Status" displayName="Status" type="string" default="" />
+
+</stc:class>
+
+
+<stc:class name="InfluxResultStorage"
+           baseClass="DynamicScriptable"
+           displayName="Influx result storage config object"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true"
+           isInternal="true"
+           noSave="true">
+
+    <stc:relation name="ParentStmTestResult"
+                  type="ParentChild"
+                  srcClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  dstClassRef="spirent.methodology.stm.InfluxResultStorage"
+                  minOccurs="0"
+                  maxOccurs="1" />
+
+    <stc:property name="MaxDuration" type="u32" default="1800" category="config"
+                  displayName="Maximum storage duration in seconds">
+    </stc:property>
+    <stc:property name="SamplingInterval" type="u32" default="2" category="config"
+                  displayName="Sampling interval in seconds">
+    </stc:property>
+    <stc:property category="input" name="DataSpecifierFileNameList" displayName="" type="inputFilePath" default=""
+                  minOccurs="0" maxOccurs="unbounded" >
+    </stc:property>
+    
+    <stc:property name="StateInfo" type="string" default="{}" isInternal="true"
+                  category="config" displayName="State Info Json Dict">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="JSON dict to retain measurement state information." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+</stc:class>
+
+<stc:class name="MachineSetDeploymentParams"
+           baseClass="DynamicScriptable"
+           displayName="Machine Set Deployment Params"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true"
+           isInternal="false"
+           noSave="false">
+    <stc:relation name="ParentMachineSet"
+                  type="ParentChild"
+                  srcClassRef="MachineSet"
+                  dstClassRef="spirent.methodology.stm.MachineSetDeploymentParams"
+                  minOccurs="0"
+                  maxOccurs="1" />
+
+    <stc:property category="config" name="ParamsJson"
+                  displayName="Deployment Parameters JSON" type="string"
+                  default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="The contents of the deployment_params section of the machine_group in the meta.json." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+    <stc:property category="state" name="DeployedInstanceMetaDataJson"
+                  displayName="Deployed Instance Meta Data JSON" type="string"
+                  default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Meta data used to identify instances deployed from this MachineSet." />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+    <stc:property category="state" name="DeployedMachineSetResId"
+                  displayName="Deployed Machine ID" type="string"
+                  default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="MachineSet Resource ID assigned by glimpse.  For agents that were auto-deployed, this ID should be used instead of the MachineSet's ResourceId as the latter is generated by the webapp (or automation user)." />
+    </stc:property>
+    <stc:property category="state" name="DeployedInstanceResIdList"
+                  displayName="Deployed Instance Resource ID List" type="string"
+                  default="" minOccurs="0" maxOccurs="unbounded">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Instance Resource IDs assigned by glimpse." />
+    </stc:property>
+</stc:class>
+
+
+<stc:class name="NfviTopologyLinkStats"
+           baseClass="DynamicScriptable"
+           displayName="Methodology NFVi Topology Link Statistics"
+           packageName="spirent.methodology.stm"
+           bllDirectInterface="true"
+           isInternal="true"
+           noSave="true">
+    <stc:relation name="ParentStore"
+                  type="ParentChild"
+                  srcClassRef="spirent.methodology.stm.RuntimeDataStore"
+                  dstClassRef="spirent.methodology.stm.NfviTopologyLinkStats"
+                  minOccurs="0"
+                  maxOccurs="1" />
+
+    <stc:property category="config" name="DataJson"
+                  displayName="Data JSON" type="string"
+                  default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="NFVi Topology Link Statistics JSON" />
+        <stc:attribute type="framework.StringPropertyFormat" internalIsEnum="true" internalType="u8" value="JSON" />
+    </stc:property>
+</stc:class>
+
+</stc:meta>

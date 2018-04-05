@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGSPN_IDAccept" 
+    showName="FC GSPN_ID Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GspnIdAccept"
+    description="FC GSPN_ID Accept">
+    <pdus>
+      <pdu name="gspnIdAccept1" pdu="fcgs:GspnIdAccept" >
+        <ctIuPreamble>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

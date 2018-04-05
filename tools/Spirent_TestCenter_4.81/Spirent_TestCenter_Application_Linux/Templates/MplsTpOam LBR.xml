@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="LBR MPLSTPOAM"
+    showName="Loopback Response (LBR)"
+    version="1.00"
+    category="MPLS"
+    readonly="true"
+    validate="true"
+    firstPdu="serviceoam:MplsTpOAMLBR"
+    description="MPLS-TP OAM LBR" >
+
+    <pdus>
+      <pdu name="proto1" pdu="serviceoam:MplsTpOAMLBR" />
+    </pdus>
+  </template>
+</frame>

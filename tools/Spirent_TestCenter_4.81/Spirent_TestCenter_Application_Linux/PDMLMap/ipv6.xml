@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PROTO name="ipv6" pduDef="ipv6" pduType="IPv6">
+  
+  <FIELD name="ipv6.version">
+    <PDU_FIELD name="version"/>
+  </FIELD>
+  <FIELD name="ipv6.class">
+    <PDU_FIELD name="trafficClass"/>
+  </FIELD>
+  <FIELD name="ipv6.flow">
+    <PDU_FIELD name="flowLabel"/>
+  </FIELD>
+  <FIELD name="ipv6.plen">
+    <PDU_FIELD name="payloadLength"/>
+  </FIELD>
+  <FIELD name="ipv6.nxt">
+    <PDU_FIELD name="nextHeader"/>
+  </FIELD>
+  <FIELD name="ipv6.hlim">
+    <PDU_FIELD name="hopLimit"/>
+  </FIELD> 
+  <FIELD name="ipv6.src" useShowNameAsValue="true">
+    <PDU_FIELD name="sourceAddr"/>
+  </FIELD>
+  <FIELD name="ipv6.dst" useShowNameAsValue="true">
+    <PDU_FIELD name="destAddr"/>
+  </FIELD>  
+  
+</PROTO>

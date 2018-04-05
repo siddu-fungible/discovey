@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ScsiReadLong10"
+    showName="SCSI READ LONG (10)"
+    version="1.00"
+    category="SCSI"
+    readonly="true"
+    validate="true"
+    firstPdu="scsi:ReadLong10"
+    description="SCSI READ LONG (10)">
+
+    <pdus>
+      <pdu name="readlong10" pdu="scsi:ReadLong10"/>
+    </pdus>
+
+  </template>
+</frame>

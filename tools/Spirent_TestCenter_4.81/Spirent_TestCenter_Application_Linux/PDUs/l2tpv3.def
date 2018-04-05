@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" 
+    name="l2tpv3" 
+    showName="L2TPv3 Data Message Header" 
+    version="1.00"
+    description="This is a sample PDU library for L2TPv3 as defined in XML Stream Editor.">
+    
+  <TYPE_DEFS>
+  
+    <TYPE_DEF name="HeaderBits" type="SEQUENCE" unitType="ELEMENT"
+        minOccurs="0" maxOccurs="1" uiShowName="HeaderBits" >
+      <FIELD name="tBit" type="BITSTRING" bitLength="1"
+        defaultValue="0" uiShowName="T Bit" />
+      <FIELD name="xBits" type="BITSTRING" bitLength="11"
+        defaultValue="00000000000" uiShowName="X Bits" />
+      <FIELD name="version" type="INTEGER" bitLength="4"
+        defaultValue="3" uiShowName="Version" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="16" 
+        defaultValue="0000000000000000" uiShowName="Reserved" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Cookie" type="SEQUENCE" unitType="ELEMENT"
+        minOccurs="0" maxOccurs="1" uiShowName="Cookie" >
+      <FIELD name="MBit" type="BITSTRING" bitLength="1"
+        defaultValue="0" uiShowName="M Bit" />
+      <FIELD name="HBit" type="BITSTRING" bitLength="1"
+        defaultValue="0" uiShowName="H Bit" />
+      <FIELD name="rsvdBits" type="BITSTRING" bitLength="4"
+        defaultValue="0000" uiShowName="Reserved Bits" />
+      <FIELD name="length" type="INTEGER" bitLength="10" 
+        defaultValue="0" uiShowName="Length" />
+      <FIELD name="vendorId" type="INTEGER" bitLength="32" 
+        defaultValue="0" uiShowName="Vendor ID" />
+      <FIELD name="attributeType" type="INTEGER" bitLength="32" 
+        defaultValue="65" uiShowName="Attribute Type" />
+      <FIELD name="attributeValue" type="OCTETSTRING" 
+        minByteLength="4" maxByteLength="8" 
+        uiShowName="Attribute Value" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="L2-SpecificSublayer" type="SEQUENCE" unitType="ELEMENT"
+        minOccurs="0" maxOccurs="1" uiShowName="L2-Specific Sublayer" >
+      <FIELD name="xBit" type="BITSTRING" bitLength="1"
+        defaultValue="0" uiShowName="X Bit" />
+      <FIELD name="sBit" type="BITSTRING" bitLength="1"
+        defaultValue="1" uiShowName="S Bit" />
+      <FIELD name="xBits" type="BITSTRING" bitLength="6"
+        defaultValue="000000" uiShowName="X Bits" />
+      <FIELD name="sequence" type="INTEGER" bitLength="24"
+        defaultValue="0" uiShowName="Sequence Number" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="L2TPv3HeaderOption" type="CHOICE" unitType="ELEMENT"
+        uiShowName="L2TPv3 Header Option" >
+      <FIELD name="HeaderBits" type="HeaderBits"
+          uiShowName="HeaderBits" />
+      <FIELD name="Cookie" type="Cookie"
+          uiShowName="Cookie" />
+      <FIELD name="L2-SpecificSublayer" type="L2-SpecificSublayer"
+          uiShowName="L2-Specific Sublayer" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="L2TPv3HeaderOptionList" type="SET_OF" unitType="ELEMENT"
+        elementType="L2TPv3HeaderOption" minOccurs="0" maxOccurs="2"/>
+
+    <TYPE_DEF name="Dataplane" type="SEQUENCE" unitType="ELEMENT"
+        uiShowName="Data Message Option" >
+      <FIELD name="L2TPv3HeaderOptionList1" type="L2TPv3HeaderOptionList" uiShowName="L2TPv3 Header Option" />
+      
+      <FIELD name="sessionId" type="INTEGER" bitLength="32"
+        defaultValue="0"
+        uiShowName="Session ID"
+        isNiMapped="true"
+        isNiPrimaryKey="true" />
+        
+      <FIELD name="L2TPv3HeaderOptionList2" type="L2TPv3HeaderOptionList" uiShowName="L2TPv3 Header Option" />
+    </TYPE_DEF>
+        
+    <TYPE_DEF name="L2TPv3ControlData" type="CHOICE" unitType="ELEMENT"
+        uiShowName="Control/Data Message Header" >
+      <FIELD name="Dataplane" type="Dataplane"
+          uiShowName="Data Message" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="L2TPv3" type="SEQUENCE" unitType="HEADER" level="4" uiShowName="L2TPv3 Data Message" niMapped="true" >
+      <FIELD name="L2TPv3HeaderOptionList1" type="L2TPv3HeaderOptionList" uiShowName="L2TPv3 Header Option" />
+      <FIELD name="sessionId" type="INTEGER" bitLength="32"
+        defaultValue="0"
+        uiShowName="Session ID"
+        isNiMapped="true"
+        isNiPrimaryKey="true" 
+        uiNoShowModifier="Interface" />
+      <FIELD name="L2TPv3HeaderOptionList2" type="L2TPv3HeaderOptionList" uiShowName="L2TPv3 Header Option" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet II Header" />
+        <NXT_HDR id="ppp:PPP" name="PPP Header" value="880B" />  
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+        <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    
+  </TYPE_DEFS>
+</PDU_LIBRARY>

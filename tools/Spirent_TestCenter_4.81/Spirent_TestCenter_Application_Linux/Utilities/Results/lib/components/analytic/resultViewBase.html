@@ -1,0 +1,29 @@
+<div ng-controller="resultCtrl">
+<div class="test-info-cont">
+    <h1 class="report-title" ng-if="data.class != 'iterationReport'">Report for {{data.info.name}}</h1>
+    <h1 class="report-title" ng-if="data.class == 'iterationReport'">{{data.info.resultFile}}</h1>
+    <!--<h2 class="heavy">{{data.info.name}}</h2>
+    <p>My description of what this test is for and what not goes here.</p>-->
+    <img src="images/tested-by-spirent-logo.png" class="tested-by-logo">
+
+    <div class="test-grade-cont">
+        <div ng-class="grade(data.status.verdict)['grade-desc']">
+            <div ng-class="grade(data.status.verdict)['grade-bg']"><p class="grade">{{grade(data.status.verdict)['grade']}}</p></div>
+            <div class="grade-desc-text-cont">
+            <p class="grade-explanation-text">
+                <b><a href="" ng-click="scrollTo(data.status.verdict)">Verdict:</a></b> {{capFirstLetter(data.status.verdict)}}</br>
+                <b>Explanation:</b> {{data.status.verdictExplanation}}<br>
+                <b>Execution Status:</b> {{capFirstLetter(data.status.execStatus)}}</p>
+                <p>
+                <b>Execution Start:</b> {{data.info.startTime}}<br>
+                <b>Execution Stop:</b> {{data.info.endTime}}</p>
+          </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Data -->
+<div ng-repeat="data in data.data.children" ng-include="'lib/components/analytic/groupBase.html'">
+</div>
+
+</div>

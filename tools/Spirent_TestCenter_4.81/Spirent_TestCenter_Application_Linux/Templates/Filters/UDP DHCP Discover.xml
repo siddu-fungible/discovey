@@ -1,0 +1,39 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Udp_DHCPDiscover"
+    showName="UDP/DHCP Discover"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="udp:Udp"
+    description="UDP/DHCP Discover" >
+
+    <pdus>
+      <pdu name="proto1" pdu="udp:Udp" />
+      <pdu name="dhcpDiscover" pdu="dhcp:Dhcpclientmsg"> 
+        <options>
+          <DHCPOption name="DHCPOption1">
+            <messageType />
+          </DHCPOption>
+          <DHCPOption name="DHCPOption2">
+            <messageSize />
+          </DHCPOption>
+          <DHCPOption name="DHCPOption3">
+            <clientIdHW />
+          </DHCPOption>
+          <DHCPOption name="DHCPOption4">
+            <hostName />
+          </DHCPOption>
+          <DHCPOption name="DHCPOption5">
+            <paramReqList />
+          </DHCPOption>
+          <DHCPOption name="DHCPOption6">
+            <endOfOptions />
+          </DHCPOption>
+        </options>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

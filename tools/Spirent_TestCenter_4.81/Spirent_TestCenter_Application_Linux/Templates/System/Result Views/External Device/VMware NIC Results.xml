@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="1097" serializationBase="true" 
+ PrimaryClass="ExternalDeviceVmwareNicResults"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ ResultViewDataOutput="FALSE"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Identifier="External Device\VMware NIC Results"
+ Persistent="TRUE"
+ CreatorId=""
+ IsDeprecated="FALSE"
+ Path="External Device"
+ ResultViewOwner="SYSTEM"
+ Description="object://configurator/ExternalDeviceVmwareNicResults"
+ CustomDisplayName=""
+ CustomDisplayPath="External Virtual Machine\VMware"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="VMware NIC Results">
+  <RealTimeResultGroupDefinition id="1098" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName=""
+   ColumnPropertyName=""
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 16">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="1099" 
+   GroupName="Main"
+   GroupId="object://customgroup/634036a7-5454-4215-bae4-e269e7786053/Main"
+   ColumnClassName="ExternalDevicePort ExternalDeviceVmwareNicResults ExternalDeviceVmwareNicResults ExternalDeviceVmwareNicResults ExternalDeviceVmwareNicResults ExternalDeviceVmwareNicResults"
+   ColumnPropertyName="Name NicId TotalRxPackets TotalTxPackets AvgRxRate AvgTxRate"
+   SqlString="SELECT ExternalDevicePort.Name AS &apos;Name&apos;, ExternalDeviceVmwareNicResults.NicId AS &apos;NIC&apos;, ExternalDeviceVmwareNicResults.TotalRxPackets AS &apos;Total Received Packets&apos;, ExternalDeviceVmwareNicResults.TotalTxPackets AS &apos;Total Transmitted Packets&apos;, ExternalDeviceVmwareNicResults.AvgRxRate AS &apos;Average Receive Rate (kB/s)&apos;, ExternalDeviceVmwareNicResults.AvgTxRate AS &apos;Average Transmit Rate (kB/s)&apos; FROM ExternalDeviceVmwareNicResults, ExternalDevicePort WHERE ( ExternalDeviceVmwareNicResults.ParentHnd = ExternalDevicePort.Handle AND ExternalDeviceVmwareNicResults.DataSetId = @DataSetId AND ExternalDevicePort.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 17">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="1100" 
+   ColumnClassName="ExternalDevicePort"
+   ColumnPropertyName="Name"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 205">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="1101" 
+   ColumnClassName="ExternalDeviceVmwareNicResults"
+   ColumnPropertyName="NicId"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 206">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="1102" 
+   ColumnClassName="ExternalDeviceVmwareNicResults"
+   ColumnPropertyName="TotalRxPackets"
+   ColumnDescription=""
+   ColumnWidth="102"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 207">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="1103" 
+   ColumnClassName="ExternalDeviceVmwareNicResults"
+   ColumnPropertyName="TotalTxPackets"
+   ColumnDescription=""
+   ColumnWidth="117"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 208">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="1104" 
+   ColumnClassName="ExternalDeviceVmwareNicResults"
+   ColumnPropertyName="AvgRxRate"
+   ColumnDescription=""
+   ColumnWidth="112"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 209">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="1105" 
+   ColumnClassName="ExternalDeviceVmwareNicResults"
+   ColumnPropertyName="AvgTxRate"
+   ColumnDescription=""
+   ColumnWidth="117"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 210">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="376" 
+   ConfigClassId="externaldeviceport"
+   ResultClassId="externaldevicevmwarenicresults"
+   ResultRootList="2"
+   PropertyIdArray="externaldevicevmwarenicresults.nicid externaldevicevmwarenicresults.totalrxpackets externaldevicevmwarenicresults.totaltxpackets externaldevicevmwarenicresults.avgrxrate externaldevicevmwarenicresults.avgtxrate"
+   PropertyHandleArray=""
+   ResultOptions=""
+   ArchivingOption="NONE"
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 6">
+  </ResultQuery>
+</ResultDataSet>

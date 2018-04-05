@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="l2tpv3oudp" showName="L2TPv3" version="1.00"
+    description="This is a sample PDU library for L2TPv3 as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+    <TYPE_DEF name="L2TPv3" type="SEQUENCE" unitType="HEADER"
+        level="5" uiShowName="L2TPv3 Header" niMapped="true">
+      <FIELD name="type" type="BITSTRING" bitLength="1"
+          defaultValue="0" uiShowName="Type" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" />
+
+      <FIELD name="reserved1" type="BITSTRING" bitLength="11"
+          defaultValue="00000000000"
+          uiShowName="reserved" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" />
+
+      <FIELD name="version" type="INTEGER" bitLength="4"
+          defaultValue="3"
+          uiShowName="version" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+
+      <FIELD name="reserved2" type="BITSTRING" bitLength="16"
+          defaultValue="0000000000000000"
+          uiShowName="reserved" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" />
+
+      <FIELD name="sessionId" type="INTEGER" bitLength="32"
+          defaultValue="0" uiShowName="Session ID" isNiMapped="true" uiNoShowModifier="Interface"  />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ppp:PPP" name="PPP Header" value="880B" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+        <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+
+</PDU_LIBRARY>

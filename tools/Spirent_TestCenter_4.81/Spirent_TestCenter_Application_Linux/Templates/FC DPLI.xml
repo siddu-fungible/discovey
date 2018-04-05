@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCDPLI" 
+    showName="FC DPLI" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:GsDeregisterWithPlatformName" 
+    description="FC DPLI">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GsDeregisterWithPlatformName">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>01</gsSubType>
+          <commandRespondCode>0394</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

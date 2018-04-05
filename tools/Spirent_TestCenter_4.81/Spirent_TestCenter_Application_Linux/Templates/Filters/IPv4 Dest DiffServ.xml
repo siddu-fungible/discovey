@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="IPv4DestDiffServ" showName="IPv4 Dest DiffServ" version="1.0" category="Favorites" readonly="false" validate="true" firstPdu="ethernet:EthernetII" description="IPv4 Destination Address and DiffServ">
+      <pdus>
+<pdu name="proto1" pdu="ethernet:EthernetII">
+</pdu>
+<pdu name="IPv4_1" pdu="ipv4:IPv4">
+<tosDiffserv>
+<diffServ>
+<dscpHigh filterMinValue="0" filterMaxValue="7">7</dscpHigh>
+<dscpLow filterMinValue="0" filterMaxValue="7">7</dscpLow>
+<reserved filterMinValue="0" filterMaxValue="11">11</reserved>
+</diffServ>
+</tosDiffserv>
+<destAddr filterMinValue="000.000.000.000" filterMaxValue="255.255.255.255">255.255.255.255</destAddr>
+</pdu>
+</pdus>
+</template>
+</frame>

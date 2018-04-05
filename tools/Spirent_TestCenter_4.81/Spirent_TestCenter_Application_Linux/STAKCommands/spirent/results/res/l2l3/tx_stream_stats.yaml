@@ -1,0 +1,156 @@
+result_set:
+  bll:
+    group: stream
+    plugin: l2l3
+  derived_facts:
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+      query: octet_rate*8
+    description: Tx Rate(bits per sec)
+    display_name: Tx Rate
+    name: bit_rate
+    referred_facts:
+    - octet_rate
+  - db:
+      base_unit: bits
+      data_type: integer
+      query: octet_count*8
+    description: Tx Count(bits)
+    display_name: Tx Count
+    name: bit_count
+    referred_facts:
+    - octet_count
+  description: Basic stats for TX stream
+  dimension_sets:
+  - iteration
+  - port
+  - stream_block
+  - tx_stream
+  - tx_port
+  facts:
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Tx Stream Index
+    display_name: Tx Stream Index
+    il:
+      column_def: StreamIndex
+      data_type: U64
+    name: stream_index
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Stream ID
+    display_name: Stream ID
+    il:
+      column_def: StreamId
+      data_type: U64
+    name: stream_id
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Tx Count(frames)
+    display_name: Tx Count
+    il:
+      column_def: FrameCount
+      data_type: U64
+    name: frame_count
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Tx Count(bytes)
+    display_name: Tx Count
+    il:
+      column_def: ByteCount
+      data_type: U64
+    name: octet_count
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Tx Rate(frames per sec)
+    display_name: Tx Rate
+    il:
+      column_def: FrameRate
+      data_type: U64
+    name: frame_rate
+  - db:
+      base_unit: bytes_per_sec
+      data_type: integer
+    description: Tx Rate(bytes per sec)
+    display_name: Tx Rate
+    il:
+      column_def: ByteRate
+      data_type: U64
+    name: octet_rate
+  - db:
+      base_unit: bits
+      data_type: integer
+    description: Tx L1 Count
+    display_name: Tx L1 Count
+    il:
+      column_def: L1BitCount
+      data_type: U64
+    name: l1_bit_count
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+    description: Tx L1 Rate
+    display_name: Tx L1 Rate
+    il:
+      column_def: L1BitRate
+      data_type: U64
+    name: l1_bit_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Tx Counter Timestamp
+    display_name: Tx Counter Timestamp
+    il:
+      column_def: CounterTimestamp
+      data_type: U64
+    name: counter_timestamp
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Tx Rate Timestamp
+    display_name: Tx Rate Timestamp
+    il:
+      column_def: RateTimestamp
+      data_type: U64
+    name: rate_timestamp
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Tx Last Modified
+    display_name: Tx Last Modified
+    il:
+      column_def: LastModified
+      data_type: U64
+    name: last_modified
+  - db:
+      base_unit: cells
+      data_type: integer
+    description: Tx Count(cells)
+    display_name: Tx Count
+    il:
+      column_def: CellCount
+      data_type: U64
+    name: cell_count
+  - db:
+      base_unit: cells_per_sec
+      data_type: integer
+    description: Tx Rate(cells per sec)
+    display_name: Tx Rate
+    il:
+      column_def: CellRate
+      data_type: U64
+    name: cell_rate
+  il:
+    default_subscription_facts:
+    - stream_id
+    message_set: Generator_3
+    table_name: StreamStats
+  name: tx_stream_stats
+  primary_dimension_set: tx_stream
+  test: false

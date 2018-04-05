@@ -1,0 +1,1171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>SELECT ParamValue FROM EotResultNodeParam WHERE Name='@StartDataSetId';</path>
+      <multivalued>true</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <path>SELECT ParamValue FROM EotResultNodeParam WHERE Name='@EndDataSetId';</path>
+      <multivalued>true</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2011-09-01 04:04:00</instance>
+      </value>
+      <path>SELECT CreatedTime FROM DataSet WHERE Id = =$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstEndDate</name>
+      <persist>false</persist>
+      <path>SELECT CreatedTime FROM DataSet WHERE Id = =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>MbpsLineRate</name>
+      <persist>false</persist>
+      <path>SELECT MbpsLineRate FROM TheoreticalMaxLineRate ;</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>MediaType</name>
+      <persist>false</persist>
+      <path>SELECT MediaType FROM TheoreticalMaxLineRate;</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.80.3990.0002</instance>
+      </value>
+      <path>SELECT Version FROM StcSystem WHERE Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialNum</name>
+      <persist>false</persist>
+      <path>SELECT TrialNum FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialMulticastAvgFrameSize</name>
+      <persist>false</persist>
+      <path>SELECT case MulticastIMixDistribution when 'N/A' then CAST(MulticastAvgFrameSize AS varchar(50)) else CAST(MulticastImixDistribution AS varchar(50)) end FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialMulticastGroupCount</name>
+      <persist>false</persist>
+      <path>SELECT MulticastGroupCount FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialTxFrameCount</name>
+      <persist>false</persist>
+      <path>SELECT TxFrameCount FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialForwardingRate</name>
+      <persist>false</persist>
+      <path>SELECT ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialOfferedLoad</name>
+      <persist>false</persist>
+      <path>SELECT MulticastOfferedLoad FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>jitter</instance>
+      </value>
+      <path>SELECT DISTINCT lower(ResultViewMode) FROM ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Imix_FSDistName</name>
+      <persist>false</persist>
+      <path>SELECT fd.name AS 'iMIX Distribution' FROM FrameLengthDistribution fd inner join (SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult) test ON fd.name=test.MulticastImixDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd ORDER BY fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>Imix_FSMode</name>
+      <persist>false</persist>
+      <path>SELECT fds.frameLengthMode AS 'Frame Length Mode' FROM FrameLengthDistribution fd inner join (SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult) test ON fd.name=test.MulticastImixDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd ORDER BY fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>Imix_FSIPLen</name>
+      <persist>false</persist>
+      <path>SELECT coalesce((case when fds.frameLengthMode = 'FIXED' then CAST(fds.fixedFrameLength AS varchar(10)) else CAST(fds.minFrameLength AS varchar(10)) || '-' || CAST(fds.maxFrameLength AS varchar(10)) end),'-') AS 'IP Frame Length' FROM FrameLengthDistribution fd inner join (SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult) test ON fd.name=test.MulticastImixDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd ORDER BY fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>Imix_FSWeight</name>
+      <persist>false</persist>
+      <path>SELECT fds.weight AS 'Weight' FROM FrameLengthDistribution fd inner join (SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult) test ON fd.name=test.MulticastImixDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd ORDER BY fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>Imix_FSPercentWt</name>
+      <persist>false</persist>
+      <path>SELECT round((case when TotalWt.totalWeight=0 then 0 else ((fds.weight * 100.0) /totalWeight) end),2) AS 'Percentage(%)' FROM FrameLengthDistribution fd inner join (SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult) test ON fd.name=test.MulticastImixDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd left join (SELECT fd.handle AS 'handle', coalesce(sum(fds.weight),0) AS 'TotalWeight' FROM FrameLengthDistribution fd inner join (SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult) test ON fd.name=test.MulticastImixDistribution left join FrameLengthDistributionSlot fds ON fds.parenthnd = fd.handle GROUP BY fd.handle) AS TotalWt ON TotalWt.handle = fd.hANDle ORDER BY fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>MulticastClientVersion</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>IGMP_V2</instance>
+      </value>
+      <path>SELECT DISTINCT MulticastClientversion FROM Rfc3918config WHERE DataSetId BETWEEN =$@StartDataSetId$ AND =$@EndDataSetId$ AND Id=(select count(*) from Rfc3918Config)</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>AggFrameSizeFS</name>
+      <persist>false</persist>
+      <path>SELECT DISTINCT case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end FROM Rfc3918ScaledGroupForwardingPerIterationResult</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixVal</name>
+      <persist>false</persist>
+      <path>SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialDroppedFrameCount</name>
+      <persist>false</persist>
+      <path>SELECT CASE WHEN DroppedFrameCount = 18446744073709551615 THEN '' ELSE DroppedFrameCount END FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialMaxLatency</name>
+      <persist>false</persist>
+      <path>SELECT MaxLatency FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialAvgLatency</name>
+      <persist>false</persist>
+      <path>SELECT AvgLatency FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialMulticastRxGroupCount</name>
+      <persist>false</persist>
+      <path>SELECT MulticastRxGroupCount FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialRxFrameCount</name>
+      <persist>false</persist>
+      <path>SELECT RxFrameCount FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>AggMinJitter</name>
+      <persist>false</persist>
+      <path>SELECT round(min(MinJitter)*1000)/1000 FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgJitter</name>
+      <persist>false</persist>
+      <path>SELECT round(avg(AvgJitter)*1000)/1000 FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxJitter</name>
+      <persist>false</persist>
+      <path>SELECT round(max(MaxJitter)*1000)/1000 FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMinLatency</name>
+      <persist>false</persist>
+      <path>SELECT round(min(MinLatency)*1000)/1000 FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgLatency</name>
+      <persist>false</persist>
+      <path>SELECT round(avg(AvgLatency)*1000)/1000 FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxLatency</name>
+      <persist>false</persist>
+      <path>SELECT round(max(MaxLatency)*1000)/1000 FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggLoad</name>
+      <persist>false</persist>
+      <path>SELECT MulticastIntendedLoad FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TotalTxFrames</name>
+      <persist>false</persist>
+      <path>SELECT round(sum(TxFrameCount)) FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TotalRxFrames</name>
+      <persist>false</persist>
+      <path>SELECT round(sum(RxFrameCount)) FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TotalDroppedFrames</name>
+      <persist>false</persist>
+      <path>SELECT CASE WHEN DroppedFrameCount = 18446744073709551615 THEN '' ELSE sum(DroppedFrameCount) END FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TotalImixVal</name>
+      <persist>false</persist>
+      <path>SELECT DISTINCT MulticastImixDistribution FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary,Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>ResultViewMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>JITTER</instance>
+      </value>
+      <path>SELECT DISTINCT upper(ResultViewMode) FROM ResultOptions;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialExpectedRxFrameCount</name>
+      <persist>true</persist>
+      <path>SELECT ExpectedRxFrameCount FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialFloodedFrameCount</name>
+      <persist>true</persist>
+      <path>SELECT CASE WHEN FloodedFrameCount = 18446744073709551615 THEN '' ELSE FloodedFrameCount END FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialOtherFrameCount</name>
+      <persist>true</persist>
+      <path>SELECT OtherFrameCount FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialDroppedFramePct</name>
+      <persist>true</persist>
+      <path>SELECT Coalesce(DroppedFramePct, '') FROM Rfc3918ScaledGroupForwardingPerIterationResult</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TrialIntendedLoad</name>
+      <persist>false</persist>
+      <path>SELECT MulticastIntendedLoad FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>TheoFrameSize</name>
+      <persist>false</persist>
+      <path>SELECT Framesize FROM TheoreticalMaxLineRate;</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>MaxGroupCount</name>
+      <persist>false</persist>
+      <path>select Max(MulticastRxGroupCount) FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TheoFrameRate</name>
+      <persist>false</persist>
+      <path>SELECT FrameRate FROM TheoreticalMaxLineRate;</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>TheoImix</name>
+      <persist>false</persist>
+      <path>select FrameLengthDistribution FROM TheoreticalMaxLineRate;</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>AggFrameSize</name>
+      <persist>false</persist>
+      <path>select case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>MaxForwardingRate</name>
+      <persist>false</persist>
+      <path>SELECT max(ForwardingRate) FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>Rfc3918ConfigDuration</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>5 SECONDS</instance>
+      </value>
+      <path>SELECT Duration || " " || DurationMode FROM Rfc3918Config WHERE DataSetId BETWEEN =$@StartDataSetId$ AND =$@EndDataSetId$ AND Id=(select count(*) from Rfc3918Config)</path>
+      <multivalued>true</multivalued>
+      <pageName>Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>AggLoss</name>
+      <persist>false</persist>
+      <path>SELECT Coalesce(min(DroppedFramePct), '') FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggGroup</name>
+      <persist>false</persist>
+      <path>SELECT MulticastGroupCount FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>MaxForwardingRateFS</name>
+      <persist>false</persist>
+      <path>SELECT ROUND(max(ForwardingRate)) FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMinJitterFS</name>
+      <persist>false</persist>
+      <path>SELECT round(min(MinJitter),3) FROM Rfc3918ScaledGroupForwardingPerIterationResult R1, (SELECT MulticastAvgFrameSize,MulticastImixDistribution,max(ForwardingRate) ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end) R2 WHERE R1.MulticastAvgFrameSize=R2.MulticastAvgFrameSize AND R1.MulticastImixDistribution=R2.MulticastImixDistribution AND R1.ForwardingRate=R2.ForwardingRate GROUP BY case when R1.MulticastImixDistribution='N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgJitterFS</name>
+      <persist>false</persist>
+      <path>SELECT round(avg(AvgJitter),3) FROM Rfc3918ScaledGroupForwardingPerIterationResult R1, (SELECT MulticastAvgFrameSize,MulticastImixDistribution,max(ForwardingRate) ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end) R2 WHERE R1.MulticastAvgFrameSize=R2.MulticastAvgFrameSize AND R1.MulticastImixDistribution=R2.MulticastImixDistribution AND R1.ForwardingRate=R2.ForwardingRate GROUP BY case when R1.MulticastImixDistribution='N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxJitterFS</name>
+      <persist>false</persist>
+      <path>SELECT round(max(MaxJitter),3) FROM Rfc3918ScaledGroupForwardingPerIterationResult R1, (SELECT MulticastAvgFrameSize,MulticastImixDistribution,max(ForwardingRate) ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end) R2 WHERE R1.MulticastAvgFrameSize=R2.MulticastAvgFrameSize AND R1.MulticastImixDistribution=R2.MulticastImixDistribution AND R1.ForwardingRate=R2.ForwardingRate GROUP BY case when R1.MulticastImixDistribution='N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMinLatencyFS</name>
+      <persist>false</persist>
+      <path>SELECT round(min(MinLatency),3) FROM Rfc3918ScaledGroupForwardingPerIterationResult R1, (SELECT MulticastAvgFrameSize,MulticastImixDistribution,max(ForwardingRate) ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end) R2 WHERE R1.MulticastAvgFrameSize=R2.MulticastAvgFrameSize AND R1.MulticastImixDistribution=R2.MulticastImixDistribution AND R1.ForwardingRate=R2.ForwardingRate GROUP BY case when R1.MulticastImixDistribution='N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgLatencyFS</name>
+      <persist>false</persist>
+      <path>SELECT round(avg(AvgLatency),3) FROM Rfc3918ScaledGroupForwardingPerIterationResult R1, (SELECT MulticastAvgFrameSize,MulticastImixDistribution,max(ForwardingRate) ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end) R2 WHERE R1.MulticastAvgFrameSize=R2.MulticastAvgFrameSize AND R1.MulticastImixDistribution=R2.MulticastImixDistribution AND R1.ForwardingRate=R2.ForwardingRate GROUP BY case when R1.MulticastImixDistribution='N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxLatencyFS</name>
+      <persist>false</persist>
+      <path>SELECT round(max(MaxLatency),3) FROM Rfc3918ScaledGroupForwardingPerIterationResult R1, (SELECT MulticastAvgFrameSize,MulticastImixDistribution,max(ForwardingRate) ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end) R2 WHERE R1.MulticastAvgFrameSize=R2.MulticastAvgFrameSize AND R1.MulticastImixDistribution=R2.MulticastImixDistribution AND R1.ForwardingRate=R2.ForwardingRate GROUP BY case when R1.MulticastImixDistribution='N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ColorGroups</name>
+      <persist>false</persist>
+      <path>SELECT case max(R1.ForwardingRate) when R2.maxForwardingRate THEN "#40ff40" else "#ffffff" END FROM Rfc3918ScaledGroupForwardingPerIterationResult R1 LEFT JOIN (SELECT MulticastImixDistribution,MulticastAvgFrameSize,MulticastGroupCount,max(ForwardingRate) maxForwardingRate from ( SELECT MulticastGroupCount, MulticastImixDistribution,MulticastAvgFrameSize, multicastIntendedload, sum(DroppedFrameCount) , max(ForwardingRate) as ForwardingRate FROM Rfc3918ScaledGroupForwardingPerIterationResult where DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ GROUP BY MulticastGroupCount, case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end, multicastIntendedload having sum(droppedFrameCount) = 0 order by MulticastImixDistribution,MulticastAvgFrameSize,MulticastGroupCount ) GROUP BY MulticastGroupCount, case when MulticastImixDistribution='N/A' then MulticastAvgFrameSize else MulticastImixDistribution end) R2 ON R1.DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ AND R1.MulticastImixDistribution=R2.MulticastImixDistribution AND R1.MulticastAvgFrameSize=R2.MulticastAvgFrameSize AND R1.MulticastGroupCount = R2.MulticastGroupCount GROUP BY R1.MulticastGroupCount,case when R1.MulticastImixDistribution='N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end, R1.MulticastIntendedLoad order by R1.MulticastGroupCount,case R1.MulticastIMixDistribution when 'N/A' then R1.MulticastAvgFrameSize else R1.MulticastImixDistribution end,R1.MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc3918ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnitString</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>%</instance>
+      </value>
+      <path>select (case DisplayLoadUnit when "PERCENT_LINE_RATE" then "%" when "FRAMES_PER_SECOND" then "fps" when "INTER_BURST_GAP" then "Inter-burst Gap" when "MEGABITS_PER_SECOND" then "Mbps" when "KILOBITS_PER_SECOND" then "Kbps" when "BITS_PER_SECOND" then "bps" end ) from BenchmarkRfc3918ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+	<instance>
+      <name>UnexpectedRxSignFrames</name>
+      <persist>false</persist>
+      <path>SELECT CASE WHEN FloodedFrameCount &gt;0 THEN 'Yes' ELSE 'No' END AS 'Unexpected Rx Signature Frames' FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$ group by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad order by MulticastGroupCount,case MulticastIMixDistribution when 'N/A' then MulticastAvgFrameSize else MulticastImixDistribution end,MulticastIntendedLoad</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+	</instance>
+    <instance>
+      <name>TrialFrameLossCount</name>
+      <persist>false</persist>
+      <path>SELECT (ExpectedRxFrameCount - RxFrameCount) FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialFrameLossPct</name>
+      <persist>false</persist>
+      <path>SELECT (ExpectedRxFrameCount - RxFrameCount)* 100.0/ExpectedRxFrameCount as FrameLossRate FROM Rfc3918ScaledGroupForwardingPerIterationResult WHERE DataSetId between =$@StartDataSetId$ AND =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2011-08-31 21:07:52 PDT</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String">2011-08-31 21:04:00 PDT</value>
+      <script><![CDATA[# generate the report start time - must convert FROM GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;#clear the return "result"  list in case it was used before&#xa;set  result {}&#xa;&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>DetailStatsEnabled</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check if Detailed Stas Flag was enabled&#xa;&#xa;#clear the return "result"  list in case it was used before&#xa;set  result {}&#xa;&#xa;if {$DetailStatus == 1} {&#xa;set result "Enabled"&#xa;} else {&#xa;set result "Disabled"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestEndDate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# generate the report end time - must convert FROM GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;#clear the return "result"  list in case it was used before&#xa;set  result {}&#xa;&#xa;set  dateSplit [split $tstEndDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Jitter</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>TestDuration</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Calculate the test duration&#xa;set result [expr $tstEndDate - $tstStartDate]&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeTitle</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#Derive the Framesize title based on the frame size type&#xa;if {$TotalImixVal != "N/A"} {&#xa;set result "iMIX \nDistribution"&#xa;} else {&#xa;set result "Frame Size\n(bytes)"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,Test Summary,Scaled Group Forwarding Matrix</pageName>
+    </instance>
+    <instance>
+      <name>ImixNote</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#Display Note when frame size type is not iMIX&#xa;if {$TotalImixVal != "N/A"} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Imix Distributions are only available for the 'iMIX' Frame Size Type "&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>Imix_DefaultEthernet</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Calculate Default Ethernet frame length for frame sizes in iMIX Distributions&#xa;&#xa;foreach fsize $Imix_FSIPLen fmode $Imix_FSMode {&#xa;&#xa;set etherlen "-"&#xa;if {$fmode != "RANDOM"}  {&#xa;   set fsize [expr int($fsize)]&#xa;   set etherlen [expr $fsize + 18]      &#xa;    if {$etherlen < 64} {&#xa;         set etherlen 64&#xa;     }&#xa;} else {&#xa;   set flist [split $fsize "-"]&#xa;   set minlen [expr [lindex $flist 0] + 18]&#xa;   set maxlen [expr [lindex $flist 1] + 18]&#xa;   if { $minlen < 64}  {&#xa;        set minlen 64&#xa;   }&#xa;   if { $maxlen < 64}  {&#xa;        set maxlen 64&#xa;   }&#xa;   set etherlen "$minlen-$maxlen"&#xa;}&#xa;lappend result $etherlen&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>Imix_PosLen</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Calculate P&#xa;foreach fsize $Imix_FSIPLen fmode $Imix_FSMode {&#xa;&#xa;set poslen "-"&#xa;&#xa;if {$fmode != "RANDOM"}  {&#xa;    &#xa;    set fsize [expr int($fsize)]&#xa;    set poslen [expr $fsize + 8]      &#xa;&#xa;} else {&#xa;    set flist [split $fsize "-"]&#xa;    &#xa;    set minlen [expr [lindex $flist 0] + 8]&#xa;    set maxlen [expr [lindex $flist 1] + 8]&#xa;    &#xa;    set poslen "$minlen-$maxlen"&#xa;}&#xa;    lappend result $poslen&#xa;&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1314850065484</value>
+      <script><![CDATA[set result "1314850129466"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Wed Aug 31 21:07:45.484 PDT 2011</value>
+      <script><![CDATA[set result "Wed Aug 31 21:08:49.466 PDT 2011"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>NoteResultViewMode</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Sets the 'Note' variable  to be displayed on the template page layout&#xa;&#xa;if {($ResultViewMode == "JITTER")} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Jitter measurments are only available when the test is run in the 'Jitter' mode."&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnit</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>%</instance>
+      </value>
+      <script><![CDATA[if {[info exist DisplayLoadUnitString]} {&#xa;    set result $DisplayLoadUnitString&#xa;} else {&#xa;    set result "%"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>TheoMax</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;    <td bgcolor="#eeeeee">Media Type</td>&#xa;    <td bgcolor="#eeeeee">Line Speed\n(Mbps)</td>&#xa;    <td bgcolor="#eeeeee">Frame Size\n(bytes)</td>&#xa;    <td bgcolor="#eeeeee">IMIX\nDistribution</td>&#xa;    <td bgcolor="#eeeeee">Max Frame\nRate (fps) </td>&#xa;    </tr>&#xa; <tr iterate="=$MbpsLineRate$">   <!--  MbpsLineRate  -->&#xa;    <td halign="right" bgcolor="#ffffff">=$MediaType$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$MbpsLineRate$</td>&#xa;    <td halign="right"  bgcolor="#ffffff">=$TheoFrameSize$</td>&#xa;   <td halign="right"  bgcolor="#ffffff">=$TheoImix$</td>&#xa;    <td halign="right"  bgcolor="#ffffff">=$TheoFrameRate$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>TrialSummary</name>
+      <script><![CDATA[<table>&#xa;   <tr iterate="=$FrameSizeTitle$">&#xa;     <td bgcolor="#eeeeee">Trial\n#</td>&#xa;     <td bgcolor="#eeeeee">Multicast\nGroups</td>&#xa;     <td bgcolor="#eeeeee">Multicast\nRx Streams</td>&#xa;     <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;   <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;     <td bgcolor="#eeeeee">Offered\nLoad (=$DisplayLoadUnit$)</td>&#xa;     <td bgcolor="#eeeeee">Transmitted\nFrames </td> &#xa;    <td  bgcolor="#eeeeee">Expected\nFrame Count</td>&#xa;   <td bgcolor="#eeeeee">Received\nFrames </td> &#xa;    <td bgcolor="#eeeeee">Frames\nLost</td>&#xa;   <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa; <td bgcolor="#eeeeee">Flooded\nFrames</td>&#xa; <td bgcolor="#eeeeee">Other\nFrames</td>&#xa;   <td bgcolor="#eeeeee">Dropped\nFrames</td>&#xa;   <td bgcolor="#eeeeee">Dropped\nFrame\n(%)</td>&#xa;    <td bgcolor="#eeeeee">Forwarding\nRate (fps)</td>&#xa;      &#xa; </tr>&#xa; <tr iterate="=$TrialNum$">&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialNum$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialMulticastGroupCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialMulticastRxGroupCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialMulticastAvgFrameSize$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$TrialIntendedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialOfferedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialTxFrameCount$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$TrialExpectedRxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialRxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialFrameLossCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialFrameLossPct$</td>&#xa;  <td halign="right" bgcolor="#ffffff">=$TrialFloodedFrameCount$</td>&#xa;  <td halign="right" bgcolor="#ffffff">=$TrialOtherFrameCount$</td>&#xa;  <td  halign="right" bgcolor="#ffffff">=$TrialDroppedFrameCount$</td>&#xa;  <td  halign="right" bgcolor="#ffffff">=$TrialDroppedFramePct$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialForwardingRate$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>FrameSizeImixDistribution</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">iMIX\nDistribution</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLength Mode</td>&#xa;     <td bgcolor="#eeeeee">IP Total\nLength</td>&#xa;     <td bgcolor="#eeeeee">Default\nEthernet</td>&#xa;     <td bgcolor="#eeeeee">POS\nLength</td>&#xa;     <td bgcolor="#eeeeee">Weight</td>&#xa;     <td bgcolor="#eeeeee">Percentage\n(%)</td>&#xa;  </tr>&#xa; <tr iterate="=$Imix_FSDistName$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$Imix_FSDistName$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$Imix_FSMode$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$Imix_FSIPLen$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$Imix_DefaultEthernet$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$Imix_PosLen$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$Imix_FSWeight$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$Imix_FSPercentWt$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>AggLatencyJitter</name>
+      <script><![CDATA[<table>&#xa;   <tr iterate="=$FrameSizeTitle$">&#xa;    <td bgcolor="#eeeeee">Multicast\nGroups</td>&#xa;     <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;     <td bgcolor="#eeeeee">Load\n(=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa;     <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Min\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nJitter\n(uSec)</td>&#xa;  </tr>&#xa; <tr iterate="=$AggFrameSize$">&#xa;<td halign="right" bgcolor="=$ColorGroups$">=$AggGroup$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggFrameSize$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggLoad$</td>&#xa;  <td halign="right" bgcolor="=$ColorGroups$">=$AggLoss$</td>&#xa;   <td halign="right" bgcolor="=$ColorGroups$">=$AggMinLatency$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggAvgLatency$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggMaxLatency$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggMinJitter$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggAvgJitter$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggMaxJitter$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>TestSummary</name>
+      <script><![CDATA[<table>&#xa;   <tr iterate="=$FrameSizeTitle$">&#xa;  <td bgcolor="#eeeeee">Multicast\nGroups</td>&#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;     <td bgcolor="#eeeeee">Load (=$DisplayLoadUnit$)</td>&#xa;     <td bgcolor="#eeeeee">Total Tx \nFrames </td>&#xa;     <td bgcolor="#eeeeee">Total Rx \nFrames </td>&#xa;     <td bgcolor="#eeeeee">Total\nFrames\nLost </td>&#xa;     <td bgcolor="#eeeeee"> Forwarding\nRate (fps)</td>&#xa;     <td bgcolor="#eeeeee"> Unexpected Rx\nSignature Frames</td>&#xa;    </tr>&#xa; <tr iterate="=$AggFrameSize$">&#xa;   <td halign="right" bgcolor="=$ColorGroups$">=$AggGroup$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggFrameSize$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$AggLoad$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$TotalTxFrames$</td>&#xa;   <td halign="right" bgcolor="=$ColorGroups$">=$TotalRxFrames$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$TotalDroppedFrames$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$MaxForwardingRate$</td>&#xa;    <td halign="right" bgcolor="=$ColorGroups$">=$UnexpectedRxSignFrames$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>ScaledGroupForwarding</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>MaxForwardingRateFS</name>
+        <title>Forwarding Rate (fps)</title>
+        <color>#4f40ff</color>
+        <valueAxis>Forwarding Rate (fps)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>AggFrameSizeFS</xStatistic>
+      <xTitle>Frame Size</xTitle>
+      <yTitle>Forwarding Rate (fps)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>LatencyBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AggMinLatencyFS</name>
+        <title>Min Latency</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggAvgLatencyFS</name>
+        <title>Avg Latency</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggMaxLatencyFS</name>
+        <title>Max Latency</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>AggFrameSizeFS</xStatistic>
+      <xTitle>Frame Size</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>JitterBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AggMinJitterFS</name>
+        <title>Min Jitter</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggAvgJitterFS</name>
+        <title>Avg Jitter</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggMaxJitterFS</name>
+        <title>Max Jitter</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>AggFrameSizeFS</xStatistic>
+      <xTitle>Frame Size</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>startDateStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>200</x>
+        <y>342</y>
+        <width>292</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>449</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>449</y>
+        <width>189</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC3918&amp;nbsp;Scaled&amp;nbsp;Group&amp;nbsp;Forwarding&amp;nbsp;Statistics</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>80</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>31</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>142</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>nameLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>hdrLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>720</width>
+      <height>620</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Graph">
+        <name>TestSummaryChart</name>
+        <x>122</x>
+        <y>144</y>
+        <width>500</width>
+        <height>240</height>
+        <value>ScaledGroupForwarding</value>
+      </instance>
+      <instance type="Text">
+        <name>TestSummaryTitle</name>
+        <x>266</x>
+        <y>106</y>
+        <width>205</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Test&amp;nbsp;Summary&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;Size</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>TestSummary</name>
+        <x>324</x>
+        <y>400</y>
+        <width>100</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Test&amp;nbsp;Summary</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>TestSummaryTbl</name>
+        <x>151</x>
+        <y>432</y>
+        <width>418</width>
+        <height>64</height>
+        <value>TestSummary</value>
+        <size>10</size>
+      </instance>
+    </page>
+    <page name="Advanced Test Summary" display="true">
+      <width>800</width>
+      <height>680</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>LatencyTitle</name>
+        <x>174</x>
+        <y>132</y>
+        <width>101</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Latency&amp;nbsp;Graph</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>JitterTitle</name>
+        <x>540</x>
+        <y>133</y>
+        <width>83</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Jitter&amp;nbsp;Graph</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Graph">
+        <name>LatvsFSGr</name>
+        <x>35</x>
+        <y>172</y>
+        <width>316</width>
+        <height>238</height>
+        <value>LatencyBar</value>
+      </instance>
+      <instance type="Graph">
+        <name>JittervsFSGr</name>
+        <x>394</x>
+        <y>173</y>
+        <width>340</width>
+        <height>240</height>
+        <value>JitterBar</value>
+      </instance>
+      <instance type="Table">
+        <name>LatJitterSummTbl</name>
+        <x>78</x>
+        <y>444</y>
+        <width>575</width>
+        <height>53</height>
+        <value>AggLatencyJitter</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>NoteTxt</name>
+        <x>155</x>
+        <y>105</y>
+        <width>50</width>
+        <height>16</height>
+        <size>10</size>
+        <value xml:space="preserve">=$NoteResultViewMode$</value>
+        <color>#FF0000</color>
+      </instance>
+    </page>
+    <page name="Scaled Group Forwarding Matrix" display="true">
+      <width>850</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>PortStatsTitleStr</name>
+        <x>245</x>
+        <y>107</y>
+        <width>227</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Scaled&amp;nbsp;Group&amp;nbsp;Forwarding&amp;nbsp;Matrix</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>TrialSumTbl</name>
+        <x>5</x>
+        <y>202</y>
+        <width>739</width>
+        <height>132</height>
+        <value>TrialSummary</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>133</x>
+        <y>-3</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>IGMPVersion</name>
+        <x>5</x>
+        <y>147</y>
+        <width>132</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">Multicast&amp;nbsp;Client&amp;nbsp;Version&amp;nbsp;:&amp;nbsp;=$MulticastClientVersion$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Trial Duration</name>
+        <x>5</x>
+        <y>169</y>
+        <width>145</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">Traffic&amp;nbsp;Duration&amp;nbsp;:&amp;nbsp;=$Rfc3918ConfigDuration$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="iMIX Distributions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>ImixDistTitle</name>
+        <x>259</x>
+        <y>107</y>
+        <width>237</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;sizes&amp;nbsp;for&amp;nbsp;iMIX&amp;nbsp;Distributions</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>ImixDistFSTbl</name>
+        <x>178</x>
+        <y>156</y>
+        <width>390</width>
+        <height>47</height>
+        <value>FrameSizeImixDistribution</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>ImixNoteTxt</name>
+        <x>202</x>
+        <y>132</y>
+        <width>0</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">=$ImixNote$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titleStr</name>
+        <x>200</x>
+        <y>104</y>
+        <width>243</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>theoMaxTbl</name>
+        <x>160</x>
+        <y>140</y>
+        <width>300</width>
+        <height>166</height>
+        <value>TheoMax</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Version" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>VersionStr</name>
+        <x>35</x>
+        <y>580</y>
+        <width>103</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2C</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>InputStartIdStr</name>
+        <x>35</x>
+        <y>600</y>
+        <width>127</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>620</y>
+        <width>136</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>670</x>
+        <y>100</y>
+        <width>130</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>1</x>
+        <y>649</y>
+        <width>800</width>
+        <height>50</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>35</x>
+        <y>640</y>
+        <width>60</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Timestamp&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

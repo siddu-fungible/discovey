@@ -1,0 +1,2070 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="fcgs"
+  showName="Fibre Channel - Generic Services"
+  version="1.00"
+  description="This is a sample PDU library for Fibre Channel - Generic Services as defined in XML Stream Editor.">
+
+		<TYPE_DEFS>
+
+				<!--Begin Generic Services-->
+				<TYPE_DEF name="BasicCtIuPreamble" type="SEQUENCE" unitType="ELEMENT" uiShowName="Basic CT_IU Preamble Accept/Request">
+						<FIELD name="revision" type="OCTETSTRING" byteLength="1" defaultValue="03" uiShowName="Revision"/>
+						<FIELD name="inId" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="IN_ID"/>
+						<FIELD name="gsType" type="OCTETSTRING" byteLength="1" defaultValue="FC" uiShowName="GS_TYPE"/>
+						<FIELD name="gsSubType" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="GS_SubType"/>
+						<FIELD name="options" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Options"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="commandRespondCode" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Command/Response Code"/>
+						<FIELD name="maximumResidualSize" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Maximum/Residual Size"/>
+						<FIELD name="fragmentId" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Fragment ID"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="BasicCtIuPreambleReject" type="SEQUENCE" unitType="ELEMENT" uiShowName="Basic CT_IU Preamble Reject">
+						<FIELD name="revision" type="OCTETSTRING" byteLength="1" defaultValue="03" uiShowName="Revision"/>
+						<FIELD name="inId" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="IN_ID"/>
+						<FIELD name="gsType" type="OCTETSTRING" byteLength="1" defaultValue="FC" uiShowName="GS_TYPE"/>
+						<FIELD name="gsSubType" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="GS_SubType"/>
+						<FIELD name="options" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Options"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="commandRespondCode" type="OCTETSTRING" byteLength="2" defaultValue="8001" uiShowName="Command/Response Code"/>
+						<FIELD name="maximumResidualSize" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Maximum/Residual Size"/>
+						<FIELD name="fragmentId" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Fragment ID"/>
+						<FIELD name="reasonCode" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reason Code"/>
+						<FIELD name="reasonCodeExplanation" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reason Code Explanation"/>
+						<FIELD name="vendorSpecific" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Vendor Specific"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsAccept" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsReject" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Reject">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreambleReject" uiShowName="CT_IU Preamble"/>
+				</TYPE_DEF>
+
+				<!--Name Server Begin-->
+				<TYPE_DEF name="PortType" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Unidentified" value="00" />
+								<VAL_ENUM uiShowName="N_Port" value="01" />
+								<VAL_ENUM uiShowName="NL_Port" value="02" />
+								<VAL_ENUM uiShowName="F/NL_Port" value="03" />
+								<VAL_ENUM uiShowName="Nx_Port" value="7F" />
+								<VAL_ENUM uiShowName="F_Port" value="81" />
+								<VAL_ENUM uiShowName="FL_Port" value="82" />
+								<VAL_ENUM uiShowName="E_Port" value="84" />
+								<VAL_ENUM uiShowName="B_Port" value="85" />
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortIdentifierList" type="SEQUENCE_OF" minOccurs="1" maxOccurs="2147483647" elementType="PortIdentifier" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PortIdentifier" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Identifier" >
+						<FIELD name="control" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Control"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortNameList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PortName" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PortName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Name" >
+						<FIELD name="control" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Control"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Reserved"/>
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NodeNameList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="NodeName" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="NodeName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Node Name" >
+						<FIELD name="control" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Control"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Reserved"/>
+						<FIELD name="nodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="FcpList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="Fcp" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="Fcp" type="SEQUENCE" unitType="ELEMENT" uiShowName="FCP" >
+						<FIELD name="control" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Control"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+						<FIELD name="fcpFeatureBits" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="FCP Feature Bits"/>
+						<FIELD name="additionalFcpFeatureBits" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Additional FCP Feature Bits"/>
+						<FIELD name="genericFibreChannelFeatureBits" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Generic Fibre Channel Feature Bits"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithPortIdentifier" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Request with Port Identifier">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GaNxtAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GA_NXT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portType" type="PortType" defaultValue="00" byteLength="1" uiShowName="Port Type"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="portName" type="WWN"  byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+						<FIELD name="lengthOfSymbolicPortName" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="FCGSSYMBOLICPORTNAMELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Length of Symbolic Port Name"/>
+						<FIELD name="symbolicPortName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Symbolic Port Name"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="symbolicPortName" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Reserved" />
+						<FIELD name="nodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node Name"/>
+						<FIELD name="lengthOfSymbolicNodeName" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="FCGSSYMBOLICNODENAMELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Length of Symbolic Node Name"/>
+						<FIELD name="symbolicNodeName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Symbolic Node Name"/>
+						<FIELD name="reserved2" type="FIELDALIGNMENTPAD" field="symbolicNodeName" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Reserved" />
+						<FIELD name="initialProcessAssociator" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Initial Process Associator"/>
+						<FIELD name="ipAddressNode" type="OCTETSTRING" byteLength="16" defaultValue="00000000000000000000000000000000" uiShowName="IP Address (Node)"/>
+						<FIELD name="classOfService" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Class of Service"/>
+						<FIELD name="fc4Types" type="OCTETSTRING" byteLength="32" defaultValue="0000010000000000000000000000000000000000000000000000000000000000" uiShowName="FC-4 TYPEs"/>
+						<FIELD name="ipAddressPort" type="OCTETSTRING" byteLength="16" defaultValue="00000000000000000000000000000000" uiShowName="IP Address (Port)"/>
+						<FIELD name="fabricPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Fabric Port Name"/>
+						<FIELD name="reserved3" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved" />
+						<FIELD name="hardAddress" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Hard Address" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpnIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPN_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portName" type="WWN"  byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GnnIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GNN_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="nodeName" type="WWN"  byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GcsIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GCS_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="classOfService" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Class of Service"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GftIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GFT_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="fc4Types" type="OCTETSTRING" byteLength="32" defaultValue="0000010000000000000000000000000000000000000000000000000000000000" uiShowName="FC-4 TYPEs"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GspnIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GSPN_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="nameLength" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="FCGSSYMBOLICPORTNAMELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Name Length"/>
+						<FIELD name="symbolicPortName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Symbolic Port Name"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="symbolicPortName" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GptIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPT_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portType" type="PortType" defaultValue="00" byteLength="1" uiShowName="Port Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GfpnIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GFPN_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="fabricPortName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Fabric Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GffIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GFF_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="fc4Features" type="OCTETSTRING" byteLength="128"
+             defaultValue="0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             uiShowName="FC-4 Features"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithPortName" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Request with Port Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portName" type="WWN"  byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GidPnAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GID_PN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithNodeName" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Request with Node Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="nodeName" type="WWN"  byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GidNnAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GID_NN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portIdentifiers" type="PortIdentifierList" uiShowName="Port Identifiers"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsnnNnAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GSNN_NN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="nameLength" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="FCGSSYMBOLICNODENAMELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Name Length"/>
+						<FIELD name="symbolicNodeName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Symbolic Node Name"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="symbolicNodeName" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithFc4Type" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Request with FC-4 TYPE">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="domainIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Domain ID Scope"/>
+						<FIELD name="areaIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Area ID Scope"/>
+						<FIELD name="fc4TypeCode" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="FC-4 TYPE Code"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GidFtAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GID_FT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portIdentifiers" type="PortIdentifierList" uiShowName="Port Identifiers"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpnFtAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPN_FT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portNames" type="PortNameList" uiShowName="Port Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GnnFtAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GNN_FT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="nodeNames" type="NodeNameList" uiShowName="Node Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithFc4FeaturesAndFc4Type" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Request with FC-4 Features and FC-4 Type">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="flags" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Flags"/>
+						<FIELD name="domainIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Domain ID Scope"/>
+						<FIELD name="areaIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Area ID Scope"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Reserved"/>
+						<FIELD name="fc4FeatureBits" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="FC-4 Feature bits"/>
+						<FIELD name="fc4TypeCode" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="FC-4 TYPE Code"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GnnFfAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GNN_FF Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="nodeNames" type="NodeNameList" uiShowName="Node Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpnFfAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPN_FF Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portNames" type="PortNameList" uiShowName="Port Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpnSdfcpRequest" type="SEQUENCE" unitType="HEADER" uiShowName="GPN_SDFCP Request">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="flags" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Flags"/>
+						<FIELD name="domainIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Domain ID Scope"/>
+						<FIELD name="areaIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Area ID Scope"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Reserved"/>
+						<FIELD name="fc4FeatureBits" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="FC-4 Feature bits"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpnSdfcpAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPN_SDFCP Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="fcps" type="FcpList" uiShowName="FCP"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithPortType" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Request with Port Type">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portType" type="PortType" defaultValue="00" byteLength="1" uiShowName="Port Type"/>
+						<FIELD name="domainIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Domain ID Scope"/>
+						<FIELD name="areaIdScope" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Area ID Scope"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GidPtAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GID_PT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portIdentifiers" type="PortIdentifierList" uiShowName="Port Identifiers"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GidFpnRequest" type="SEQUENCE" unitType="HEADER" uiShowName="GID_FPN Request">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="fabricPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Fabric Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GidFpnAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GID_FPN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portIdentifiers" type="PortIdentifierList" uiShowName="Port Identifiers"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GppnIdAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPPN_ID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="permanentPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Permanent Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GidFfAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GID_FF Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portIdentifiers" type="PortIdentifierList" uiShowName="Port Identifiers"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RpnId" type="SEQUENCE" unitType="HEADER" uiShowName="RPN_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RnnId" type="SEQUENCE" unitType="HEADER" uiShowName="RNN_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="nodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RcsId" type="SEQUENCE" unitType="HEADER" uiShowName="RCS_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="classOfService" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Class Of Service"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RftId" type="SEQUENCE" unitType="HEADER" uiShowName="RFT_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="fc4Types" type="OCTETSTRING" byteLength="32" defaultValue="0000010000000000000000000000000000000000000000000000000000000000" uiShowName="FC-4 TYPEs"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RptId" type="SEQUENCE" unitType="HEADER" uiShowName="RPT_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="portType" type="PortType" byteLength="1" defaultValue="00" uiShowName="Port Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RspnId" type="SEQUENCE" unitType="HEADER" uiShowName="RSPN_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="NameLength" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="FCGSSYMBOLICPORTNAMELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Name Length"/>
+						<FIELD name="symbolicPortName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Symbolic Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RffId" type="SEQUENCE" unitType="HEADER" uiShowName="RFF_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Reserved"/>
+						<FIELD name="fc4FeatureBits" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="FC-4 Feature bits"/>
+						<FIELD name="typeCode" type="OCTETSTRING" byteLength="1" defaultValue="08" uiShowName="TYPE Code"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RsnnNn" type="SEQUENCE" unitType="HEADER" uiShowName="RSNN_NN">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="nodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node Name"/>
+						<FIELD name="NameLength" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="FCGSSYMBOLICNODENAMELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Name Length"/>
+						<FIELD name="symbolicNodeName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Symbolic Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="DaId" type="SEQUENCE" unitType="HEADER" uiShowName="DA_ID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Port Identifier"/>
+				</TYPE_DEF>
+
+				<!--Name Server End-->
+
+				<!--Fabric Configuration Server Begin-->
+
+				<TYPE_DEF name="PortModuleType" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Unknown" value="01" />
+								<VAL_ENUM uiShowName="Other" value="02" />
+								<VAL_ENUM uiShowName="Embedded" value="04" />
+								<VAL_ENUM uiShowName="GLM" value="05" />
+								<VAL_ENUM uiShowName="GBIC with serial ID" value="06" />
+								<VAL_ENUM uiShowName="GBIC without serial ID" value="07" />
+								<VAL_ENUM uiShowName="SFP with serial ID" value="08" />
+								<VAL_ENUM uiShowName="SFP without serial ID" value="09" />
+								<VAL_ENUM uiShowName="XFP" value="0A" />
+								<VAL_ENUM uiShowName="X2 Short" value="0B" />
+								<VAL_ENUM uiShowName="X2 Medium" value="0C" />
+								<VAL_ENUM uiShowName="X2 Tall" value="0D" />
+								<VAL_ENUM uiShowName="XPAK Short" value="0E" />
+								<VAL_ENUM uiShowName="XPAK Medium" value="0F" />
+								<VAL_ENUM uiShowName="XPAK Tall" value="10" />
+								<VAL_ENUM uiShowName="XENPAK" value="11" />
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortTxType" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Unknown" value="01" />
+								<VAL_ENUM uiShowName="Long wave laser - LL" value="02" />
+								<VAL_ENUM uiShowName="Short wave laser - SN" value="03" />
+								<VAL_ENUM uiShowName="Long wave laser cost reduced - LC" value="04" />
+								<VAL_ENUM uiShowName="Electrical - EL" value="05" />
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortState" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Unknown" value="00" />
+								<VAL_ENUM uiShowName="Online" value="01" />
+								<VAL_ENUM uiShowName="Offline" value="02" />
+								<VAL_ENUM uiShowName="Testing" value="03" />
+								<VAL_ENUM uiShowName="Fault" value="04" />
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="InterconnectElementType" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Unknown" value="00" />
+								<VAL_ENUM uiShowName="Switch" value="01" />
+								<VAL_ENUM uiShowName="Hub" value="02" />
+								<VAL_ENUM uiShowName="Bridge" value="03" />
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="AttributeEntryType" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Vendor ID" value="0001"/>
+								<VAL_ENUM uiShowName="Product ID" value="0002"/>
+								<VAL_ENUM uiShowName="Product Revision Level" value="0003"/>
+								<VAL_ENUM uiShowName="Description" value="0004"/>
+								<VAL_ENUM uiShowName="Label" value="0005"/>
+								<VAL_ENUM uiShowName="Location" value="0006"/>
+								<VAL_ENUM uiShowName="System ID" value="0007"/>
+								<VAL_ENUM uiShowName="System Management Address" value="0008"/>
+								<VAL_ENUM uiShowName="Cluster ID" value="0009"/>
+								<VAL_ENUM uiShowName="Cluster Management Address" value="000A"/>
+								<VAL_ENUM uiShowName="Supported FC-4 Types" value="000B"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="SourceDestinationPortTags" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="N_PORT_ID" value="01"/>
+								<VAL_ENUM uiShowName="Nx_Port Port_Name" value="02"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="IpVersion" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="None" value="00"/>
+								<VAL_ENUM uiShowName="IPv4" value="01"/>
+								<VAL_ENUM uiShowName="IPv6" value="02"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NodeManagement" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="IP/UDP/SNMP" value="00"/>
+								<VAL_ENUM uiShowName="IP/TCP/Telnet" value="01"/>
+								<VAL_ENUM uiShowName="IP/TCP/HTTP" value="02"/>
+								<VAL_ENUM uiShowName="IP/TCP/HTTPS" value="03"/>
+								<VAL_ENUM uiShowName="P/TCP/HTTP/XML" value="04"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="InterConnectElementDomainIdList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="InterConnectElementDomainId" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="InterConnectElementDomainId" type="SEQUENCE" unitType="ELEMENT" uiShowName="Interconnect Element Domain ID">
+						<FIELD name="interconnectElementDomainId" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Domain ID"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="AttachedPortDescriptorList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="AttachedPortDescriptor" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="AttachedPortDescriptor" type="SEQUENCE" unitType="ELEMENT" uiShowName="Attached Port Descriptor">
+						<FIELD name="vendorSpecific1" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Vendor Specific"/>
+						<FIELD name="attachedPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Attached Port Name"/>
+						<FIELD name="attachedNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Attached Node Name"/>
+						<FIELD name="vendorSpecific2" type="OCTETSTRING" byteLength="16" defaultValue="00000000000000000000000000000000" uiShowName="Vendor Specific"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="attachedPortType" type="PortType" byteLength="1" defaultValue="00" uiShowName="Attached Port Type"/>
+						<FIELD name="attachedPhysicalPortNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Attached Port Type"/>
+						<FIELD name="vendorSpecific3" type="OCTETSTRING" byteLength="28" defaultValue="00000000000000000000000000000000000000000000000000000000" uiShowName="Vendor Specific"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="TopologyInformationDescriptorList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="TopologyInformationDescriptor" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="TopologyInformationDescriptor" type="SEQUENCE" unitType="ELEMENT" uiShowName="Topology Information Descriptor">
+						<FIELD name="interconnectElementPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Interconnect Element Port Name"/>
+						<FIELD name="vendorSpecific1" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="Vendor Specific"/>
+						<FIELD name="vendorSpecific2" type="OCTETSTRING" byteLength="16" defaultValue="00000000000000000000000000000000" uiShowName="Vendor Specific"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved" />
+						<FIELD name="interconnectElementPortType" type="PortType" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Port Type"/>
+						<FIELD name="interconnectElememtnPhysicalPortNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Interconnect Element Physical Port Number"/>
+						<FIELD name="numberOfAttachedPorts" type="OCTETSTRING" byteLength="4" defaultValue="00000000" procfnTarget="FCGSNUMATTACHEDPORTS" uiShowName="Number of Attached Ports"/>
+						<FIELD name="vendorSpecific3" type="OCTETSTRING" byteLength="24" defaultValue="000000000000000000000000000000000000000000000000" uiShowName="Vendor Specific"/>
+						<FIELD name="attachedPortDescriptors" type="AttachedPortDescriptorList" uiShowName="Attached Port Descriptors"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="InterconnectElementEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="InterconnectElementEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="InterconnectElementEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Interconnect Element Entry">
+						<FIELD name="interconnectElementName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Interconnect Element Port Name"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementType" type="InterconnectElementType" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ManagementAddressEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ManagementAddressEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ManagementAddressEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Management Address Entry">
+						<FIELD name="managementAddressLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSMANAGEMENTADDRESSLENGTH" uiShowName="Management Address Length"/>
+						<FIELD name="managementAddressValue" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Management Address Name"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="managementAddressValue" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortEntriesList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PortEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PortEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Entry">
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="portModuleType" type="PortModuleType" defaultValue="01" byteLength="1" uiShowName="Port Module Type"/>
+						<FIELD name="portTxType" type="PortTxType" defaultValue="01" byteLength="1" uiShowName="Port Tx Type"/>
+						<FIELD name="portType"  type="PortType" defaultValue="00" byteLength="1" uiShowName="Port Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="AttachedPortEntriesList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="AttachedPortEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="AttachedPortEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Attached Port Entry">
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port Name"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Reserved"/>
+						<FIELD name="portFlags" type="OCTETSTRING" defaultValue="00" byteLength="1" uiShowName="Port Flags"/>
+						<FIELD name="portType"  type="PortType" defaultValue="00" byteLength="1" uiShowName="Port Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoningEnforcementStatusObjectList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ZoningEnforcementStatusObject" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ZoningEnforcementStatusObject" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zoning Enforcement Status Object">
+						<FIELD name="fPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="F_Port Name"/>
+						<FIELD name="portEnforcementStatus" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Port Enforcement Status"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PlatformNodeNameEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PlatformNodeNameEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PlatformNodeNameEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Platform Node Name Entry">
+						<FIELD name="platformNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Platform Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PlatformAttributeEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PlatformAttributeEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PlatformAttributeEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Platform Attribute Entry">
+						<FIELD name="attributeEntryType" type="AttributeEntryType" byteLength="2" defaultValue="0001" uiShowName="Attribute Entry Type"/>
+						<FIELD name="attributeEntryLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSATTRIBUTEENTRYLENGTH" uiShowName="Attribute Entry Length"/>
+						<FIELD name="attributeEntryValue" type="ASCII" defaultValue="000000000000000000000000" minByteLength="4" maxByteLength="128" uiShowName="Attribute Entry Value"/>
+						<FIELD name="pad" type="FIELDALIGNMENTPAD" field="attributeEntryValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PlatformNameEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PlatformNameEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PlatformNameEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Platform Name Entry">
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="OsLunMapEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="OsLunMapEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="OsLunMapEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="OS LUN Map Entry">
+						<FIELD name="fcpBindingType" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="FCP Binding Type"/>
+						<FIELD name="fcpLun" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="FCP LUN"/>
+						<FIELD name="fcpLuidLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSFCPLUIDLENGTH" uiShowName="FCP LUID Length"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Reserved"/>
+						<FIELD name="fcpLuid" type="OCTETSTRING" minByteLength="8" maxByteLength="256" defaultValue="0000000000000000" uiShowName="FCP LUID"/>
+						<FIELD name="reserved2" type="FIELDALIGNMENTPAD" field="fcpLuid" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Reserved" />
+						<FIELD name="fcpNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="FCP Node Name"/>
+						<FIELD name="fcpPortName" type="WWN"  byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="FCP Port Name"/>
+						<FIELD name="reserved3" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="fcpPortIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="FCP Port Identifier"/>
+						<FIELD name="osDeviceNameLength" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSOSDEVICENAMELENGTH" uiShowName="OS Device Name Length"/>
+						<FIELD name="osDeviceName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="OS Device Name"/>
+						<FIELD name="osScsiBusNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="OS SCSI Bus Number"/>
+						<FIELD name="osScsiTargetNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="OS SCSI Target Number"/>
+						<FIELD name="osScsiLun" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="OS SCSI LUN"/>
+						<FIELD name="hbaPortName" type="WWN"  byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="HBA Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PathInformationList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PathInformation" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PathInformation" type="SEQUENCE" unitType="ELEMENT" uiShowName="Path Information">
+						<FIELD name="switchName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Swicth Name"/>
+						<FIELD name="domainId" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Domman_ID"/>
+						<FIELD name="ingressPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Ingress Port_Name"/>
+						<FIELD name="ingressPhysicalPortNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Ingress Physical Port Number"/>
+						<FIELD name="egressPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Egress Port Name"/>
+						<FIELD name="egressPhysicalPortNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Egress Physical Port Number"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="CommonIdentificationDataList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1" elementType="CommonIdentificationData" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="CommonIdentificationData" type="SEQUENCE" unitType="ELEMENT" uiShowName="Common Identification Data">
+						<FIELD name="nPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="N_Port_Name"/>
+						<FIELD name="nodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node_Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="SpecificIdentificationDataList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1" elementType="SpecificIdentificationData" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="SpecificIdentificationData" type="SEQUENCE" unitType="ELEMENT" uiShowName="Specific Identification Data">
+						<FIELD name="vendorUnique" type="OCTETSTRING" byteLength="16" defaultValue="00000000000000000000000000000000" uiShowName="Vendor Unique"/>
+						<FIELD name="associatedType" type="OCTETSTRING" byteLength="4" defaultValue="00000001" uiShowName="Associated Type"/>
+						<FIELD name="physicalPortNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Physical Port Number"/>
+						<FIELD name="numberOfAttachedDevices" type="OCTETSTRING" byteLength="4" defaultValue="00000001" uiShowName="Number of Attached Ports"/>
+						<FIELD name="nodeManagement" type="NodeManagement" byteLength="1" defaultValue="00" uiShowName="Node Management"/>
+						<FIELD name="ipVersion" type="IpVersion" byteLength="1" defaultValue="00" uiShowName="IP Version"/>
+						<FIELD name="udpTcpPortNumber" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="UDP/TCP Port Numbers"/>
+						<FIELD name="ipAddress" type="OCTETSTRING" byteLength="16" defaultValue="00000000000000000000000000000000" uiShowName="IP Address"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Reserved"/>
+						<FIELD name="vendorSpecific" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Vendor Specific"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Gtin" type="SEQUENCE" unitType="HEADER" uiShowName="GTIN">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="5" defaultValue="0000000000" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementDomainId" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Domain ID"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="6" defaultValue="000000000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GtinAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GTIN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Interconnect Element Name"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementDomainId" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Domain ID"/>
+						<FIELD name="reserved3" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Reserved"/>
+						<FIELD name="numberOfInterconnectElements" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMINTERCONNECTELEMENTS" uiShowName="Number of Interconnect Elements"/>
+						<FIELD name="numberOfPorts" type="INTEGER" bitLength="16" defaultValue="0" uiShowName="Number of Ports on the Interconnection Element"/>
+						<FIELD name="interconnectElementDomainIds" type="InterConnectElementDomainIdList" uiShowName="Interconnect Element Domain IDs"/>
+						<FIELD name="pad" type="FIELDALIGNMENTPAD" field="interconnectElementDomainIds" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Pad" />
+						<FIELD name="topologyInformationDescriptors" type="TopologyInformationDescriptorList" uiShowName="Topology Information Descriptors"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Giel" type="SEQUENCE" unitType="HEADER" uiShowName="GIEL">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GielAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GIEL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfInterconnectElementEntries" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMINTERCONNECTELEMENTENTRIES"  uiShowName="Number of Interconnect Element Entries"/>
+						<FIELD name="interconnectElementEntries" type="InterconnectElementEntryList" uiShowName="Interconnect Element Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithInterconnectElementName" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services with Interconnect Element Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="interconnectElementName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Interconnect Element Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GietAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GIET Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementType" type="InterconnectElementType" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GdidAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GDID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementDomainIdentifier" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Domain Identifier"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GmidAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GMID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementManagementIdentifier" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Interconnect Element Management Identifier"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GfnAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GFN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="interconnectElementFabricName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Interconnect Element Fabric Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GielnAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GIELN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="logicalNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSLOGICALNAMELENGTH" uiShowName="Logical Name Length"/>
+						<FIELD name="logicalName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Logical Name"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="logicalName" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GmalAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GMAL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfManagementAddressEntries" type="INTEGER" bitLength="32" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMMANAGEMENTADDRESSENTRIES" uiShowName="Number of Management Address Entries"/>
+						<FIELD name="managementAddressEntries" type="ManagementAddressEntryList" uiShowName="Management Address Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GieilAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GIEIL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="listLength" type="INTEGER" bitLength="8" minValue="0" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSLISTLENGTH" uiShowName="List Length"/>
+						<FIELD name="vendorName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="252" uiShowName="Vendor Name"/>
+						<FIELD name="modelNameNumber" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="252" uiShowName="Model Name/Number"/>
+						<FIELD name="releaseCode" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="252" uiShowName="Release Code"/>
+						<FIELD name="vendorSpecificInformation" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="252" uiShowName="Vendor-specific Information"/>
+						<FIELD name="reserved2" type="ALIGNMENTPAD" xAlignment="272" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GplAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPortEntires" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMPORTENTRIES" uiShowName="Number of Port Entries"/>
+						<FIELD name="portEntries" type="PortEntriesList" uiShowName="Port Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GptAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="portType" type="PortType" byteLength="1" defaultValue="00" uiShowName="Port Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GppnAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPPN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="physicalPortNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Physical Port Number"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GapnlAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GAPNL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfAttachedPortEntires" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMATTACHEDPORTENTRIES" uiShowName="Number of Attached Port Entries"/>
+						<FIELD name="attachedPortEntries" type="AttachedPortEntriesList" uiShowName="Attached Port Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpsAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPS Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="portType" type="PortType" byteLength="1" defaultValue="00" uiShowName="Port Type"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="portState" type="PortState" byteLength="1" defaultValue="00" uiShowName="Port State"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpscAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPSC Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portSpeedCapabilities" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Port Speed Capabilities"/>
+						<FIELD name="portOperatingSpeed" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Port Operating Speed"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Gatin" type="SEQUENCE" unitType="HEADER" uiShowName="GATIN">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="interconnectElementPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Interconnect Element Port Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GatinAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GATIN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="topologyInformationDescriptor" type="TopologyInformationDescriptor" uiShowName="Topology Information Descriptor"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsesAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GSES Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoningEnforcementStatusObjects" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE"
+             procfnTarget="FCGSNUMZONINGENFORCEMENTSTATUSOBJECTS" uiShowName="Number of Zoning Enforcement Status Objects"/>
+						<FIELD name="zoningEnforcementStatusObjects" type="ZoningEnforcementStatusObjectList" uiShowName="Zoning Enforcement Status Objects"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithPlatformName" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services with Platform Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GplnlAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPLNL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPlatformNodeNameEntries" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE"
+             procfnTarget="FCGSNUMPLATFORMNODENAMEENTRIES" uiShowName="Number of Platform Node Name Entries"/>
+						<FIELD name="platformNodeNameEntries" type="PlatformNodeNameEntryList" uiShowName="Platform Node Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpltAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPLT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformType" type="OCTETSTRING" byteLength="4" defaultValue="00000002" uiShowName="Platform Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GplmlAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPLML Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfManagementAddressEntries" type="INTEGER" bitLength="32" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMMANAGEMENTADDRESSENTRIES" uiShowName="Number of Management Address Entries"/>
+						<FIELD name="managementAddressEntries" type="ManagementAddressEntryList" uiShowName="Management Address Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpabAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPAB Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPlatformAttributeEntries" type="INTEGER" bitLength="32" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMPLATFORMATTRIBUTEENTRIES" uiShowName="Number of Platform Attribute Entries"/>
+						<FIELD name="platformAttributeEntries" type="PlatformAttributeEntryList" uiShowName="Platform Attribute Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Gnpl" type="SEQUENCE" unitType="HEADER" uiShowName="GNPL">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Platform Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GnplAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GNPL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Gpnl" type="SEQUENCE" unitType="HEADER" uiShowName="GPNL">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpnlAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPNL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPlatformNameEntries" type="INTEGER" bitLength="32" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMPLATFORMNAMEENTRIES" uiShowName="Number of Platform Name Entries"/>
+						<FIELD name="platformNameEntries" type="PlatformNameEntryList" uiShowName="Platform Name Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpfcpAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPFCP Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="fcp2FeaturesBitMask" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="FCP-2 Featrues Bit Mask"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpliAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GPLI Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfLunMapEntries" type="INTEGER" bitLength="32" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMLUNMAPENTRIES" uiShowName="Number of LUN Map Entries"/>
+						<FIELD name="osLunMapEntries" type="OsLunMapEntryList" uiShowName="OS LUN Map Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Gnid" type="SEQUENCE" unitType="HEADER" uiShowName="GNID">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Platform Node Name"/>
+						<FIELD name="nodeIdentificationDataFormat" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Node Identification Data Format"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GnidAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GNID Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="command" type="OCTETSTRING" byteLength="4" defaultValue="02000000" uiShowName="ELS_Command Code"/>
+						<FIELD name="nodeIdentificationDataFormat" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Node Identification Data Format"/>
+						<FIELD name="commonIdentificationDataLength" type="OCTETSTRING" byteLength="1" defaultValue="00" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSCOMMONIDDATALENGTH" uiShowName="Common Identification Data Length"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="specificIdentificationDataLength" type="OCTETSTRING" byteLength="1" defaultValue="00" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSSPECIFICIDDATALENGTH" uiShowName="Specific Identification Data Length"/>
+						<FIELD name="commonIdentificationData" type="CommonIdentificationDataList" uiShowName="Common Identification Data"/>
+						<FIELD name="specificIdentificationData" type="SpecificIdentificationDataList" uiShowName="Specific Identification Data"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rieln" type="SEQUENCE" unitType="HEADER" uiShowName="RIELN">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="interconnectElementName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Interconnect Element Port Name"/>
+						<FIELD name="logicalNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSLOGICALNAMELENGTH" uiShowName="Logical Name Length"/>
+						<FIELD name="logicalName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Logical Node Name"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="logicalName" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rpl" type="SEQUENCE" unitType="HEADER" uiShowName="RPL">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+						<FIELD name="platformType" type="OCTETSTRING" byteLength="4" defaultValue="00000002" uiShowName="Platform Type"/>
+						<FIELD name="numberOfManagementAddressEntries" type="INTEGER" bitLength="32" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMMANAGEMENTADDRESSENTRIES" uiShowName="Number of Management Address Entries"/>
+						<FIELD name="managementAddressEntries" type="ManagementAddressEntryList" uiShowName="Management Address Entries"/>
+						<FIELD name="numberOfPlatformNodeNameEntries" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE"
+             procfnTarget="FCGSNUMPLATFORMNODENAMEENTRIES" uiShowName="Number of Platform Node Name Entries"/>
+						<FIELD name="platformNodeNameEntries" type="PlatformNodeNameEntryList" uiShowName="Platform Node Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rpln" type="SEQUENCE" unitType="HEADER" uiShowName="RPLN">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+						<FIELD name="platformNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Platform Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rplt" type="SEQUENCE" unitType="HEADER" uiShowName="RPLT">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+						<FIELD name="platformType" type="OCTETSTRING" byteLength="4" defaultValue="00000002" uiShowName="Platform Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rplm" type="SEQUENCE" unitType="HEADER" uiShowName="RPLM">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+						<FIELD name="platformManagementAddressLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFROMMANAGEMENTADDRESSLENGTH" uiShowName="Platform Management Address Length"/>
+						<FIELD name="platformManagementAddressValue" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Platform Management Address Name"/>
+						<FIELD name="reserved2" type="FIELDALIGNMENTPAD" field="platformManagementAddressValue" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rpab" type="SEQUENCE" unitType="HEADER" uiShowName="RPAB">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+						<FIELD name="attributeEntryType" type="AttributeEntryType" byteLength="8" defaultValue="01" uiShowName="Platform Node Name Entry"/>
+						<FIELD name="attributeEntryLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSATTRIBUTEENTRYLENGTH" uiShowName="Attribute Entry Length"/>
+						<FIELD name="attributeEntryValue" type="ASCII" defaultValue="000000000000000000000000" minByteLength="4" maxByteLength="128" uiShowName="Attribute Entry Value"/>
+						<FIELD name="pad" type="FIELDALIGNMENTPAD" field="attributeEntryValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rpfcp" type="SEQUENCE" unitType="HEADER" uiShowName="RPFCP">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+						<FIELD name="platformFcpType" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Platform FCP Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rpli" type="SEQUENCE" unitType="HEADER" uiShowName="RPLI">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfLunMapEntries" type="INTEGER" bitLength="32" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMLUNMAPENTRIES" uiShowName="Number of LUN Map Entries"/>
+						<FIELD name="osLunMapEntries" type="OsLunMapEntryList" uiShowName="OS LUN Map Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Dpl" type="SEQUENCE" unitType="HEADER" uiShowName="DPL">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Dpln" type="SEQUENCE" unitType="HEADER" uiShowName="DPLN">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Platform Node Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Dplm" type="SEQUENCE" unitType="HEADER" uiShowName="DPLM">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+						<FIELD name="platformManagementAddressLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFROMMANAGEMENTADDRESSLENGTH" uiShowName="Platform Management Address Length"/>
+						<FIELD name="platformManagementAddressValue" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Platform Management Address Name"/>
+						<FIELD name="reserved2" type="FIELDALIGNMENTPAD" field="platformManagementAddressValue" xAlignment="255" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsDeregisterWithPlatformName" type="SEQUENCE" unitType="HEADER" uiShowName="Generic Services Deregister with Platform Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="platformNameLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSPLATFORMNAMELENGTH" uiShowName="Platform Name Length"/>
+						<FIELD name="platformName" type="ASCII" defaultValue="" minByteLength="0" maxByteLength="254" uiShowName="Platform Name"/>
+						<FIELD name="platformNameFormat" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Platform Name Format"/>
+						<FIELD name="reserved1" type="FIELDALIGNMENTPAD" field="platformName" xAlignment="254" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Interface,Filter,Frame" uiShowName="Reserved" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Dpall" type="SEQUENCE" unitType="HEADER" uiShowName="DPALL">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Ftr" type="SEQUENCE" unitType="HEADER" uiShowName="FTR">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="revision" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Revision"/>
+						<FIELD name="sourcePortTag" type="SourceDestinationPortTags" byteLength="1" defaultValue="01" uiShowName="Source Port Tag"/>
+						<FIELD name="sourcePortLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSSOURCEPORTLENGTH" uiShowName="Source Port Length"/>
+						<FIELD name="sourcePortValue" type="OCTETSTRING" defaultValue="00000000" minByteLength="4" maxByteLength="255" uiShowName="Source Port Value"/>
+						<FIELD name="pad1" type="FIELDALIGNMENTPAD" field="sourcePortValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+						<FIELD name="destinationPortTag" type="SourceDestinationPortTags" byteLength="1" defaultValue="01" uiShowName="Source Port Tag"/>
+						<FIELD name="destinationPortLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSDESTPORTLENGTH" uiShowName="Destination Port Length"/>
+						<FIELD name="destinationPortValue" type="OCTETSTRING" defaultValue="00000000" minByteLength="4" maxByteLength="255" uiShowName="Destination Port Value"/>
+						<FIELD name="pad2" type="FIELDALIGNMENTPAD" field="destinationPortValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+						<FIELD name="Token" type="OCTETSTRING" byteLength="4" defaultValue="00000000"  uiShowName="Token"/>
+						<FIELD name="t10VendorIdentifier" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000"  uiShowName="T10 Vendor Identifier"/>
+						<FIELD name="vendorSpecificInformation" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000"  uiShowName="Vendor Specific Information"/>
+						<FIELD name="maximumHopCount" type="INTEGER" bitLength="32" defaultValue="20"  uiShowName="Maximum Hop Count"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="FtrAccept" type="SEQUENCE" unitType="HEADER" uiShowName="FTR Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="revision" type="OCTETSTRING" byteLength="4" defaultValue="00000001" uiShowName="Revision"/>
+						<FIELD name="Token" type="OCTETSTRING" byteLength="4" defaultValue="00000000"  uiShowName="Token"/>
+						<FIELD name="t10VendorIdentifier" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000"  uiShowName="T10 Vendor Identifier"/>
+						<FIELD name="vendorSpecificInformation" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000"  uiShowName="Vendor Specific Information"/>
+						<FIELD name="strRejectReasonCode" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="STR Reject Reason Code"/>
+						<FIELD name="numberOfPathInformationEntries" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMPATHINFORMATIONENTRIES" uiShowName="Number of Path Information Entries"/>
+						<FIELD name="sourcePortsFabricIngressPathInformation" type="PathInformation" uiShowName="Source Port's Fabric Ingress Path Information"/>
+						<FIELD name="intermediateSwitchsPathInformation" type="PathInformationList" uiShowName="Intermediate Switch's Path Information"/>
+						<FIELD name="destinationPortsFabricIngressPathInformation" type="PathInformation" uiShowName="Destination Port's Fabric Ingress Path Information"/>
+						<FIELD name="destinationPortsFabricEgressPathInformation" type="PathInformationList" uiShowName="Destination Port's Fabric Egress Path Information"/>
+						<FIELD name="sourcePortsFabricEgressPathInformation" type="PathInformation" uiShowName="Source Port's Fabric Egress Path Information"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Fpng" type="SEQUENCE" unitType="HEADER" uiShowName="FPNG">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="revision" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Revision"/>
+						<FIELD name="sourcePortTag" type="SourceDestinationPortTags" byteLength="1" defaultValue="01" uiShowName="Source Port Tag"/>
+						<FIELD name="sourcePortLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSSOURCEPORTLENGTH" uiShowName="Source Port Length"/>
+						<FIELD name="sourcePortValue" type="OCTETSTRING" defaultValue="00000000" minByteLength="4" maxByteLength="255" uiShowName="Source Port Value"/>
+						<FIELD name="pad1" type="FIELDALIGNMENTPAD" field="sourcePortValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+						<FIELD name="destinationPortTag" type="SourceDestinationPortTags" byteLength="1" defaultValue="01" uiShowName="Source Port Tag"/>
+						<FIELD name="destinationPortLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSDESTPORTLENGTH" uiShowName="Destination Port Length"/>
+						<FIELD name="destinationPortValue" type="OCTETSTRING" defaultValue="00000000" minByteLength="4" maxByteLength="255" uiShowName="Destination Port Value"/>
+						<FIELD name="pad2" type="FIELDALIGNMENTPAD" field="destinationPortValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+						<FIELD name="Token" type="OCTETSTRING" byteLength="4" defaultValue="00000000"  uiShowName="Token"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="FpngAccept" type="SEQUENCE" unitType="HEADER" uiShowName="FPNG Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="Token" type="OCTETSTRING" byteLength="4" defaultValue="00000000"  uiShowName="Token"/>
+				</TYPE_DEF>
+				<!--Fabric Configuration Server End-->
+
+				<!--Fabric Zone Server Start -->
+				<!--Basic Zoning Request Commands-->
+				<TYPE_DEF name="ZoneMemberIdentifierType" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="N_Port_Name" value="01"/>
+								<VAL_ENUM uiShowName="Domain_ID and physical port" value="02"/>
+								<VAL_ENUM uiShowName="N_Port_ID" value="03"/>
+								<VAL_ENUM uiShowName="Node_Name" value="04"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GeneralNameFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="General Name Format">
+						<FIELD name="nameLength" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="FCGSGENERALNAMELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Name Length" />
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="nameValue" type="ASCII" defaultValue="A" minByteLength="1" maxByteLength="64" uiShowName="Name Value" />
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="nameValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneSetAttributeEntriesByZonesList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ZoneSetAttributeEntriesByZonesEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ZoneSetAttributeEntriesByZonesEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Set Attribute Entries By Zones">
+						<FIELD name="zoneSetName" type="GeneralNameFormat" uiShowName="Zone Set Name"/>
+						<FIELD name="numberOfZones" type="OCTETSTRING" defaultValue="00000000" byteLength="4" uiShowName="Number of Zones"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneSetAttributeEntriesByZoneMembersList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ZoneSetAttributeEntriesByZoneMembersEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ZoneSetAttributeEntriesByZoneMembersEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Set Attribute Entries By Zone Members">
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+						<FIELD name="numberOfZoneMembers" type="OCTETSTRING" defaultValue="00000000" byteLength="4" uiShowName="Number of Zone Members"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberIdentifierTypes" type="CHOICE"
+        unitType="ELEMENT" uiShowName="Zone Types" >
+						<FIELD name="zoneMemberNPortName" type="ZoneMemberNPortName"
+          uiShowName="Zone Member N_Port_Name" />
+						<FIELD name="zoneMemberDomainIdAndPort" type="ZoneMemberDomainIdAndPort"
+          uiShowName="Zone Member Domain_ID and Port" />
+						<FIELD name="zoneMemberNPortId" type="ZoneMemberNPortId"
+          uiShowName="Zone Member N_Port_ID" />
+						<FIELD name="zoneMemberNodeName" type="ZoneMemberNodeName"
+          uiShowName="Zone Member Node_Name" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberIdentifierTypesList" type="SEQUENCE_OF" maxOccurs ="2147483647"
+        elementType="ZoneMemberIdentifierTypes" unitType="ELEMENT" />
+
+
+				<TYPE_DEF name="ZoneMemberNPortName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member N_Port_Name" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="ZoneMemberIdentifierType" byteLength="1" defaultValue="01" uiControlState="CALCULATED"
+				    uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="nPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="N_Port_Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberDomainIdAndPort" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member Domain_ID and Port" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="ZoneMemberIdentifierType" byteLength="1" defaultValue="02" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="domainId" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Domman_ID"/>
+						<FIELD name="physicalPortNumber" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Physical Port Number"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="5" defaultValue="0000000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberNPortId" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member N_Port_Id" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="ZoneMemberIdentifierType" byteLength="1" defaultValue="03" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="nPortId" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="N_Port_ID"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberNodeName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member Node_Name" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="ZoneMemberIdentifierType" byteLength="1" defaultValue="04" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="NodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node_Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="Zone" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="Zone" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone">
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+						<FIELD name="numberOfZoneMembers" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEMEMBERS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Zone Members" />
+						<FIELD name="zoneType" type="ZoneMemberIdentifierTypesList" uiShowName="Zone By Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GarInterconnectElementEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="GarInterconnectElementEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="GarInterconnectElementEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Interconnect Element Entry">
+						<FIELD name="interconnectElementName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Interconnect Element Name"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementType" type="InterconnectElementType" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Type"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="interconnectElementReasonCode" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Interconnect Element Reason Code"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithBasicCtIuPreamble" type="SEQUENCE" unitType="HEADER" uiShowName="GS Request With Basic CT_IU Preamble">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzcAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GZC Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="capabilityFlags" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Capability Flags"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="vendorSpecificCapabilities" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Vendor Specific Capabilities"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GestAccept" type="SEQUENCE" unitType="HEADER" uiShowName="GEST Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneState" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Zone State"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="vendorSpecificState" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Vendor Specific State"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzsnAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZSN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoneSetAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSZONESETATTRIBUTEENTRIESBYZONES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Set Attribute Entries" />
+						<FIELD name="zoneSetAttributeEntriesByZones" type="ZoneSetAttributeEntriesByZonesList" uiShowName="Zone Set Attribute Entries By Zones"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Gzd" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZD">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+                        <FIELD name="zoneSetName" type="GeneralNameFormat" uiShowName="Zone Set Name" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzdAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZD Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoneSetAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSZONESETATTRIBUTEENTRIESBYZONEMEMBERS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Set Attribute Entries" />
+						<FIELD name="zoneSetAttributeEntriesByZoneMembers" type="ZoneSetAttributeEntriesByZoneMembersList" uiShowName="Zone Set Attribute Entries By Zone Members"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzmAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZM Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoneSetAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEMEMBERS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Set Attribute Entries" />
+						<FIELD name="zoneType" type="ZoneMemberIdentifierTypesList" uiShowName="Zone Set Attribute Entries By Type"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GazsAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GAZS Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneSetNameOfActiveZoneSet" type="GeneralNameFormat" uiShowName="Zone Set Name of Active Zone Set"/>
+						<FIELD name="numberOfZones" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zones" />
+						<FIELD name="zones" type="ZoneList" uiShowName="Zones"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneSetName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone Set Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneSetName" type="GeneralNameFormat" uiShowName="Zone Set Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzsAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZS Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneSetNameOfZoneSet" type="GeneralNameFormat" uiShowName="Zone Set Name of Zone Set"/>
+						<FIELD name="numberOfZones" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zones" />
+						<FIELD name="zones" type="ZoneList" uiShowName="Zones"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GarAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GAR Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfInterconnectElementEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSGARNUMBEROFINTERCONNECTELEMENTENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Interconnect Element Entries"/>
+						<FIELD name="interconnectElementEntries" type="GarInterconnectElementEntryList" uiShowName="Interconnect Element Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneSetNameAndZones" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone Set Name and Zones">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneSetName" type="GeneralNameFormat" uiShowName="Zone Set Name"/>
+						<FIELD name="numberOfZones" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zones" />
+						<FIELD name="zones" type="ZoneList" uiShowName="Zones"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneSetNameToActivate" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone Set Name to Activate">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneSetNameToActivate" type="GeneralNameFormat" uiShowName="Zone Set Name to Activate"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneMembers" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone Members">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+						<FIELD name="zoneType" type="ZoneMemberIdentifierTypesList" uiShowName="Zone Members"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneAndZoneSet" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone and Zone Set">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneSetName" type="GeneralNameFormat" uiShowName="Zone Set Name"/>
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+				</TYPE_DEF>
+
+
+				<!--Enhanced Zoning Request Commands-->
+				<TYPE_DEF name="EnhancedZoneMemberIdentifierType" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="N_Port_Name" value="01"/>
+								<VAL_ENUM uiShowName="Domain_ID and physical port" value="02"/>
+								<VAL_ENUM uiShowName="N_Port_ID" value="03"/>
+								<VAL_ENUM uiShowName="Node_Name" value="04"/>
+								<VAL_ENUM uiShowName="Alias Name" value="05"/>
+								<VAL_ENUM uiShowName="F_Port_Name" value="06"/>
+								<VAL_ENUM uiShowName="Wildcard" value="07"/>
+								<VAL_ENUM uiShowName="Vendor Specific" value="E0"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneAttributeBlock" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone AttributeBlock">
+						<FIELD name="numberOfZoneAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Attribute Entries" />
+						<FIELD name="zoneAttributeEntries" type="ZoneAttributeEntryList" uiShowName="Zone Attribute Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneAttributeType" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Protocol" value="0001"/>
+								<VAL_ENUM uiShowName="Hard Zone" value="0002"/>
+								<VAL_ENUM uiShowName="Broadcast Zone" value="0003"/>
+								<VAL_ENUM uiShowName="IFR Zone" value="0004"/>
+								<VAL_ENUM uiShowName="Vendor Specific" value="00E0"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+				<TYPE_DEF name="ZoneAttributeEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ZoneAttributeEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ZoneAttributeEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Attribute Entry">
+						<FIELD name="zoneAttributeType" type="ZoneAttributeType" uiShowName="Zone Attribute Type" defaultValue="0002"/>
+						<FIELD name="zoneAttributeLength" type="INTEGER" bitLength="16" defaultValue="0" procfnTarget="FCGSZONEATTRIBUTELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Zone Attribute Length" />
+						<FIELD name="zoneAttributeValue" type="OCTETSTRING" minByteLength="0" maxByteLength="255" defaultValue="" uiShowName="Zone Attribute Value" />
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="zoneAttributeValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneSetNameList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ZoneSetName" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ZoneSetName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Set Name">
+						<FIELD name="zoneSetName" type="GeneralNameFormat" uiShowName="Zone Set Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneNameList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ZoneName" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ZoneName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Name">
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EnhancedZoneMemberIdentifierTypes" type="CHOICE"
+        unitType="ELEMENT" uiShowName="Zone Types" >
+						<FIELD name="zoneMemberNPortName" type="EnhancedZoneMemberNPortName"
+          uiShowName="Zone Member N_Port_Name" />
+						<FIELD name="zoneMemberDomainIdAndPort" type="EnhancedZoneMemberDomainIdAndPort"
+          uiShowName="Zone Member Domain_ID and Port" />
+						<FIELD name="zoneMemberNPortId" type="EnhancedZoneMemberNPortId"
+          uiShowName="Zone Member N_Port_ID" />
+						<FIELD name="zoneMemberNodeName" type="EnhancedZoneMemberNodeName"
+          uiShowName="Zone Member Node_Name" />
+						<FIELD name="zoneMemberAliasName" type="ZoneMemberAliasName"
+													uiShowName="Zone Member Alias Name" />
+						<FIELD name="zoneMemberFPortName" type="ZoneMemberFPortName"
+													uiShowName="Zone Member F_Port_Name" />
+						<FIELD name="zoneMemberWildcard" type="ZoneMemberWildcard"
+													uiShowName="Zone Member Wildcard" />
+						<FIELD name="zoneMemberVendorSpecific" type="ZoneMemberVendorSpecific"
+													uiShowName="Zone Member Vendor Specific" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EnhancedZoneMemberIdentifierTypesList" type="SEQUENCE_OF" maxOccurs ="2147483647"
+        elementType="EnhancedZoneMemberIdentifierTypes" unitType="ELEMENT" />
+
+				<TYPE_DEF name="EnhancedZoneMemberNPortName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member N_Port_Name" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="01" uiControlState="CALCULATED"
+				    uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="nPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="N_Port_Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EnhancedZoneMemberDomainIdAndPort" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member Domain_ID and Port" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="02" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="domainId" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Domman_ID"/>
+						<FIELD name="physicalPortNumber" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Physical Port Number"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="5" defaultValue="0000000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EnhancedZoneMemberNPortId" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member N_Port_Id" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="03" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="nPortId" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="N_Port_ID"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EnhancedZoneMemberNodeName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member Node_Name" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="04" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="NodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Node_Name"/>
+				</TYPE_DEF>
+
+
+				<TYPE_DEF name="ZoneMemberAliasName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member Alias Name" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="05" uiControlState="CALCULATED"
+				    uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="aliasName" type="GeneralNameFormat" uiShowName="Alias Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberFPortName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member F_Port_Name" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="06" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="fPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="F_Port_Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberWildcard" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member Wildcard" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="07" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="subType" type="OCTETSTRING" byteLength="2" defaultValue="0001" uiShowName="Subtype"/>
+						<FIELD name="flags" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Flags"/>
+						<FIELD name="parameter" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Parameter"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneMemberVendorSpecific" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Member Vendor Specific" maxOccurs ="2147483647">
+						<FIELD name="zoneMemberIdentifierType" type="EnhancedZoneMemberIdentifierType" byteLength="1" defaultValue="E0" uiControlState="CALCULATED"
+              uiNoShow="Interface" uiNoShowModifier="Interface,Filter" uiShowName="Zone Member Identifier Type"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="vendorIdentifier" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="Vendor Identifier"/>
+						<FIELD name="vendorSpecificValueLength" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSVENDORSPECIFICVALUELENGTH" uiControlState="ALLOW_OVERRIDE" uiShowName="Vendor Specific Value Length" />
+						<FIELD name="vendorSpecificValue" type="OCTETSTRING" minByteLength="0" maxByteLength="255" defaultValue="" uiShowName="Vendor Specific Value" />
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="vendorSpecificValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ZoneAttributeObjectNameList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="ZoneAttributeObjectName" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="ZoneAttributeObjectName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone Attribute Object Name">
+						<FIELD name="zoneAttributeObjectName" type="GeneralNameFormat" uiShowName="Zone Attribute Object Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="AliasNameList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="AliasName" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="AliasName" type="SEQUENCE" unitType="ELEMENT" uiShowName="Alias Name">
+						<FIELD name="aliasName" type="GeneralNameFormat" uiShowName="Alias Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EnhancedZoneList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="EnhancedZone" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="EnhancedZone" type="SEQUENCE" unitType="ELEMENT" uiShowName="Zone">
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+						<FIELD name="numberOfZoneAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Attribute Entries" />
+						<FIELD name="zoneAttributeEntries" type="ZoneAttributeEntryList" uiShowName="Zone Attribute Entries"/>
+						<FIELD name="numberOfZoneMembers" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEMEMBERS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Members" />
+						<FIELD name="zoneType" type="EnhancedZoneMemberIdentifierTypesList" uiShowName="Zone Members"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="AliasMemberEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="AliasMemberEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="AliasMemberEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Alias Member Entry">
+						<FIELD name="objectIdentifier" type="OCTETSTRING" byteLength="1" defaultValue="03" uiShowName="Object Identifier"/>
+						<FIELD name="reserved" type="OCTETSTRING" defaultValue="000000" byteLength="3" uiShowName="Reserved"/>
+						<FIELD name="zoneAliasName" type="GeneralNameFormat" uiShowName="Zone Alias Name"/>
+						<FIELD name="numberOfZoneAliasMembers" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEMEMBERS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Alias Members" />
+						<FIELD name="zoneType" type="EnhancedZoneMemberIdentifierTypesList" uiShowName="Zone Alias Members"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzaAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZA Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneAttributeObjectName" type="GeneralNameFormat" uiShowName="Zone Attribute Object Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneAttributeObjectName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone Attribute Object Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneAttributeObjectName" type="GeneralNameFormat" uiShowName="Zone Attribute Object Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzabAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZAB Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneAttributeBlock" type="ZoneAttributeBlock" uiShowName="Zone Attribute Block"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzseAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZSE Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoneSetNames" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFNAMES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Set Names" />
+						<FIELD name="zoneNames" type="ZoneSetNameList" uiShowName="Zone Set Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzdeAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZDE Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoneNames" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFNAMES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Names" />
+						<FIELD name="zoneNames" type="ZoneNameList" uiShowName="Zone Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzmeAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZME Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoneMemberEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEMEMBERS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Member Entries" />
+						<FIELD name="zoneType" type="EnhancedZoneMemberIdentifierTypesList" uiShowName="Zone Member Entry"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GzalAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GZAL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZoneAttributeObjectNames" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFNAMES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Attribute Object Names" />
+						<FIELD name="zoneNames" type="ZoneAttributeObjectNameList" uiShowName="Zone Attribute Object Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GalAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GAL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfAliasNames" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFNAMES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Alias Names" />
+						<FIELD name="zoneNames" type="AliasNameList" uiShowName="Alias Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithAliasName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Alias Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="aliasName" type="GeneralNameFormat" uiShowName="Alias Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GamAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GAM Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfAliasMemberEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFALIASENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Alias Member Entries" />
+						<FIELD name="aliasMemberEntries" type="AliasMemberEntryList" uiShowName="Alias Member Entry"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Sza" type="SEQUENCE" unitType="ELEMENT" uiShowName="SZA">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+						<FIELD name="zoneAttributeObjectName" type="GeneralNameFormat" uiShowName="Zone Attribute Object Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestZoneAttributeBlockForZoneAttributeObjectName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request Zone Attribute Block for Zone Attribute Object Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneAttributeObjectName" type="GeneralNameFormat" uiShowName="Zone Attribute Object Name"/>
+						<FIELD name="zoneAttributeBlock" type="ZoneAttributeBlock" uiShowName="Zone Attribute Block"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithZoneNamesForZoneSetName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Zone Names for Zone Set Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneSetName" type="GeneralNameFormat" uiShowName="Zone Set Name"/>
+						<FIELD name="numberOfZoneNames" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFNAMES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Names" />
+						<FIELD name="zoneNames" type="ZoneNameList" uiShowName="Zone Names"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestZoneMemberEntryForZoneName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request Zone Member Entry for Zone Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="zoneName" type="GeneralNameFormat" uiShowName="Zone Name"/>
+						<FIELD name="numberOfZoneMemberEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFZONEMEMBERS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zone Member Entries" />
+						<FIELD name="zoneType" type="EnhancedZoneMemberIdentifierTypesList" uiShowName="Zone Member Entry"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestAliasMemberEntryForAliasName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request Alias Member Entry for Alias Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="aliasName" type="GeneralNameFormat" uiShowName="Alias Name"/>
+						<FIELD name="numberOfAliasMemberEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFALIASENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Alias Member Entries" />
+						<FIELD name="aliasMemberEntries" type="AliasMemberEntryList" uiShowName="Alias Member Entry"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GazseAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GAZSE Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZones" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFENHANCEDZONES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zones" />
+						<FIELD name="enhancedZones" type="EnhancedZoneList" uiShowName="Zones"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Azsde" type="SEQUENCE" unitType="ELEMENT" uiShowName="AZSDE">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfZones" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFENHANCEDZONES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number Of Zones" />
+						<FIELD name="enhancedZones" type="EnhancedZoneList" uiShowName="Zones"/>
+				</TYPE_DEF>
+
+				<!--Fabric Zone Server End -->
+				
+				<!--FDMI Begin-->
+				<TYPE_DEF name="FdmiAttributeEntryTypes" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Node_Name" value="0001"/>
+								<VAL_ENUM uiShowName="Manufacturer" value="0002"/>
+								<VAL_ENUM uiShowName="Serial Number" value="0003"/>
+								<VAL_ENUM uiShowName="Model" value="0004"/>
+								<VAL_ENUM uiShowName="Model Description" value="0005"/>
+								<VAL_ENUM uiShowName="Hardware Version" value="0006"/>
+								<VAL_ENUM uiShowName="Driver Version" value="0007"/>
+								<VAL_ENUM uiShowName="Option ROM Version" value="0008"/>
+								<VAL_ENUM uiShowName="Firmware Version" value="0009"/>
+								<VAL_ENUM uiShowName="OS Name and Version" value="000A"/>
+								<VAL_ENUM uiShowName="Maximum CT Payload Length" value="000B"/>
+								<VAL_ENUM uiShowName="Node Symbolic Name" value="000C"/>
+								<VAL_ENUM uiShowName="Vendor Specifc Information" value="000D"/>
+								<VAL_ENUM uiShowName="Number of Ports" value="000E"/>
+								<VAL_ENUM uiShowName="Fabric Name" value="000F"/>
+								<VAL_ENUM uiShowName="Boot BIOS Version" value="0010"/>
+								<VAL_ENUM uiShowName="Boot BIOS State" value="0011"/>
+								<VAL_ENUM uiShowName="Vendor Identifier" value="00E0"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortAttributeTypes" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Supported FC-4 Types" value="0001"/>
+								<VAL_ENUM uiShowName="Supported Speed" value="0002"/>
+								<VAL_ENUM uiShowName="Current Port Speed" value="0003"/>
+								<VAL_ENUM uiShowName="Maximum Frame Size" value="0004"/>
+								<VAL_ENUM uiShowName="OS Device Name" value="0005"/>
+								<VAL_ENUM uiShowName="Host Name" value="0006"/>
+								<VAL_ENUM uiShowName="Node_Name" value="0007"/>
+								<VAL_ENUM uiShowName="Port_Name" value="0008"/>
+								<VAL_ENUM uiShowName="Port Symbolic Name" value="0009"/>
+								<VAL_ENUM uiShowName="Port Type" value="000A"/>
+								<VAL_ENUM uiShowName="Supported Classes Of Service" value="000B"/>
+								<VAL_ENUM uiShowName="Port Fabric Name" value="000C"/>
+								<VAL_ENUM uiShowName="Port Active FC-4 Types" value="000D"/>
+								<VAL_ENUM uiShowName="Port State" value="0101"/>
+								<VAL_ENUM uiShowName="Number of Discovered Ports" value="0102"/>
+								<VAL_ENUM uiShowName="Port Identifier" value="0103"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortStatisticTypes" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Seconds Since Last Reset" value="0001"/>
+								<VAL_ENUM uiShowName="Exchange Count (Originator)" value="0002"/>
+								<VAL_ENUM uiShowName="Exchange Count (Responder)" value="0003"/>
+								<VAL_ENUM uiShowName="TxSequence Count" value="0004"/>
+								<VAL_ENUM uiShowName="RxSequence Count" value="0005"/>
+								<VAL_ENUM uiShowName="TxFrames Count" value="0006"/>
+								<VAL_ENUM uiShowName="RxFrames Count" value="0007"/>
+								<VAL_ENUM uiShowName="TxWords Count" value="0008"/>
+								<VAL_ENUM uiShowName="RxWords Count" value="0009"/>
+								<VAL_ENUM uiShowName="TxKB Count" value="000A"/>
+								<VAL_ENUM uiShowName="RxKB Count" value="000B"/>
+								<VAL_ENUM uiShowName="LIPCount" value="000C"/>
+								<VAL_ENUM uiShowName="NOSCount" value="000D"/>
+								<VAL_ENUM uiShowName="Error Frame Count" value="000E"/>
+								<VAL_ENUM uiShowName="Dumped Frame Count" value="000F"/>
+								<VAL_ENUM uiShowName="Link Failure Count" value="0010"/>
+								<VAL_ENUM uiShowName="Loss of Synchronization Count" value="0011"/>
+								<VAL_ENUM uiShowName="Loss of Signal Count" value="0012"/>
+								<VAL_ENUM uiShowName="Primitive Sequence-Protocol Error Count" value="0013"/>
+								<VAL_ENUM uiShowName="Invalid TxWord Count" value="0014"/>
+								<VAL_ENUM uiShowName="Invalid RxFrame CRC Count" value="0015"/>
+								<VAL_ENUM uiShowName="RxPBSY Count" value="0019"/>
+								<VAL_ENUM uiShowName="RxFBSY Count" value="001A"/>
+								<VAL_ENUM uiShowName="Primitive Sequence Time-out" value="001B"/>
+								<VAL_ENUM uiShowName="Loop Elastic Buffer Overrun Count" value="001C"/>
+								<VAL_ENUM uiShowName="Loop Arbitration Time-out Count" value="001D"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+				
+				<TYPE_DEF name="HbaIdList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="HbaId" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="HbaId" type="SEQUENCE" unitType="ELEMENT" uiShowName="HBA Identifier">
+						<FIELD name="nameIdentifier" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Name_Identifier"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="HbaAttributeEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="HbaAttributeEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="HbaAttributeEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="HBA Attribute Entry">
+						<FIELD name="attributeEntryType" type="FdmiAttributeEntryTypes" byteLength="2" defaultValue="0001" uiShowName="Attribute Entry Type"/>
+						<FIELD name="attributeEntryLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSHBAATTRIBUTEENTRYLENGTH" uiShowName="Attribute Entry Length"/>
+                        <FIELD name="attributeEntryValue" type="OCTETSTRING" defaultValue="1000109400000000" minByteLength="4" maxByteLength="256" uiShowName="Attribute Entry Value"/>
+						<FIELD name="pad" type="FIELDALIGNMENTPAD" field="attributeEntryValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortAttributeEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PortAttributeEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PortAttributeEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Attribute Entry">
+						<FIELD name="attributeEntryType" type="PortAttributeTypes" byteLength="2" defaultValue="0007" uiShowName="Attribute Entry Type"/>
+						<FIELD name="attributeEntryLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSHBAATTRIBUTEENTRYLENGTH" uiShowName="Attribute Entry Length"/>
+                        <FIELD name="attributeEntryValue" type="OCTETSTRING" defaultValue="1000109400000000" minByteLength="1" maxByteLength="256" uiShowName="Attribute Entry Value"/>
+						<FIELD name="pad" type="FIELDALIGNMENTPAD" field="attributeEntryValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="PortStatisticEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="PortStatisticEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="PortStatisticEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Statistic Entry">
+						<FIELD name="attributeEntryType" type="PortAttributeTypes" byteLength="2" defaultValue="0001" uiShowName="Attribute Entry Type"/>
+						<FIELD name="attributeEntryLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSHBAATTRIBUTEENTRYLENGTH" uiShowName="Attribute Entry Length"/>
+						<FIELD name="attributeEntryValue" type="ASCII" defaultValue="00000000" byteLength="8"  uiShowName="Attribute Entry Value"/>
+						<FIELD name="pad" type="FIELDALIGNMENTPAD" field="attributeEntryValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="4 Byte Pad" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="FdmiPortEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="FdmiPortEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="FdmiPortEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Entry">
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port_Name"/>
+				</TYPE_DEF>
+				
+				<TYPE_DEF name="GrhlAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GRHL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfHbaIdsInList" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFHBAIDSINLIST" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of HBA Identifiers in List"/>
+						<FIELD name="hbaIds" type="HbaIdList" uiShowName="HBA Identifiers"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestWithHbaIdentifier" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with HBA Identifier">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="hbaIdentifier" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="HBA Identifier"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GhatAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GHAT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPortEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFPORTENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Port Entries"/>
+						<FIELD name="portEntries" type="FdmiPortEntryList" uiShowName="Port Entries"/>
+						<FIELD name="numberOfHbaAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFHBAATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of HBA Attribute Entries"/>
+						<FIELD name="hbaAttributeEntries" type="HbaAttributeEntryList" uiShowName="HBA Attribute Entries"/>
+				</TYPE_DEF>
+
+		 	<TYPE_DEF name="GrplAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GRPL Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPortEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFPORTENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Port Entries"/>
+						<FIELD name="portEntries" type="FdmiPortEntryList" uiShowName="Port Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GsRequestFdmiWithPortName" type="SEQUENCE" unitType="ELEMENT" uiShowName="GS Request with Port_Name">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port_Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpatAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GPAT Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPortAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFPORTATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Port Attribute Entries"/>
+						<FIELD name="portAttributeEntries" type="PortAttributeEntryList" uiShowName="Port Attribute Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GpasAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="GPAS Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfPortStatisticEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFPORTSTATISTICENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Port Statistic Entries"/>
+						<FIELD name="portStatisticEntries" type="PortStatisticEntryList" uiShowName="Port Statistic Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rhba" type="SEQUENCE" unitType="ELEMENT" uiShowName="RHBA">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="hbaIdentifier" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="HBA Identifier"/>
+						<FIELD name="numberOfPortEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFPORTENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Port Entries"/>
+						<FIELD name="portEntries" type="FdmiPortEntryList" uiShowName="Port Entries"/>
+						<FIELD name="numberOfHbaAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFHBAATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of HBA Attribute Entries"/>
+						<FIELD name="hbaAttributeEntries" type="HbaAttributeEntryList" uiShowName="HBA Attribute Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rhat" type="SEQUENCE" unitType="ELEMENT" uiShowName="RHAT">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="hbaIdentifier" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="HBA Identifier"/>
+						<FIELD name="numberOfHbaAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFHBAATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of HBA Attribute Entries"/>
+						<FIELD name="hbaAttributeEntries" type="HbaAttributeEntryList" uiShowName="HBA Attribute Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Rprt" type="SEQUENCE" unitType="ELEMENT" uiShowName="RPRT">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="hbaIdentifier" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="HBA Identifier"/>
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port_Name"/>
+						<FIELD name="numberOfPortAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFPORTATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Port Attribute Entries"/>
+						<FIELD name="portAttributeEntries" type="PortAttributeEntryList" uiShowName="Port Attribute Entries"/>
+				</TYPE_DEF>
+				
+				<TYPE_DEF name="Rpa" type="SEQUENCE" unitType="ELEMENT" uiShowName="RPA">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="portName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Port_Name"/>
+						<FIELD name="numberOfPortAttributeEntries" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFPORTATTRIBUTEENTRIES" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Port Attribute Entries"/>
+						<FIELD name="portAttributeEntries" type="PortAttributeEntryList" uiShowName="Port Attribute Entries"/>
+				</TYPE_DEF>
+				<!--FDMI End-->
+				
+				<!--Event Server Begin-->
+				<!--ER-->
+				<TYPE_DEF name="ErReasonsForRejectedRegistration" type="OCTETSTRING" byteLength="4" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Registration Tag Not Supported" value="00000001"/>
+								<VAL_ENUM uiShowName="Invalid Registration Value" value="00000002"/>
+								<VAL_ENUM uiShowName="Registration Full" value="00000003"/>
+								<VAL_ENUM uiShowName="Duplicate Registration" value="00000004"/>
+								<VAL_ENUM uiShowName="Invalid Object Length" value="00000005"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NameServerRegistrationTags" type="OCTETSTRING" byteLength="4" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Register for Nx_Port Events" value="FC020001"/>
+								<VAL_ENUM uiShowName="Deregister for Nx_Port Events" value="FC020002"/>
+								<VAL_ENUM uiShowName="Register for Name Server Updates" value="FC020003"/>
+								<VAL_ENUM uiShowName="Deregister for Name Server Updates" value="FC020004"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RegistrationFunctions" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Set registration - conditionally receive" value="01"/>
+								<VAL_ENUM uiShowName="Set registration - always receive" value="02"/>
+								<VAL_ENUM uiShowName="Clear registration" value="FF"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="LIRR" type="SEQUENCE" unitType="ELEMENT" uiShowName="Embedded LIRR Payload">
+						<FIELD name="commandCode" type="OCTETSTRING" byteLength="1" defaultValue="7A" uiShowName="Command Code"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="registrationFunction" type="RegistrationFunctions" byteLength="1" defaultValue="01" uiShowName="Registration Function"/>
+						<FIELD name="linkIncidentRecordRegistrationFormat" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Link Incident Record-Registration Format"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RegistrationList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="Registration" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="Registration" type="CHOICE" unitType="ELEMENT" uiShowName="Registration">
+						<FIELD name="generalEvents" type="GeneralEvents" uiShowName="General Events"/>
+						<FIELD name="directoryServerEvents" type="DirectoryServerEvents" uiShowName="Directory Server Events"/>
+						<FIELD name="nameServerEvents" type="NameServerEvents" uiShowName="Name Server Events"/>
+						<FIELD name="managementServerEvents" type="ManagementServerEvents" uiShowName="Management Server Events"/>
+						<FIELD name="fabricConfigurationServerEvents" type="FabricConfigurationServerEvents" uiShowName="Fabric Configuration Server Events"/>
+						<FIELD name="reserved" type="Other" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="GeneralEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (General Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="DirectoryServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Directory Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FC000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NameServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Name Server Events)">
+						<FIELD name="registrationTag" type="NameServerRegistrationTags" byteLength="4" defaultValue="FC020001" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ManagementServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Management Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FA000001" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="LIRR" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="FabricConfigurationServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Fabric Configuration Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FA010000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="VendorSpecificEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Vendor Specific Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FF000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="Other" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Other)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="10000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedRegistrationList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="RejectedRegistration" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="RejectedRegistration" type="CHOICE" unitType="ELEMENT" uiShowName="Registration">
+						<FIELD name="generalEvents" type="RejectedGeneralEvents" uiShowName="General Events"/>
+						<FIELD name="directoryServerEvents" type="RejectedDirectoryServerEvents" uiShowName="Directory Server Events"/>
+						<FIELD name="nameServerEvents" type="RejectedNameServerEvents" uiShowName="Name Server Events"/>
+						<FIELD name="managementServerEvents" type="RejectedManagementServerEvents" uiShowName="Management Server Events"/>
+						<FIELD name="fabricConfigurationServerEvents" type="RejectedFabricConfigurationServerEvents" uiShowName="Fabric Configuration Server Events"/>
+						<FIELD name="reserved" type="RejectedOther" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedGeneralEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (General Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="ErReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedDirectoryServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Directory Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FC000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="ErReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedNameServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Name Server Events)">
+						<FIELD name="registrationTag" type="NameServerRegistrationTags" byteLength="4" defaultValue="FC020001" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="ErReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedManagementServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Management Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FA000001" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="LIRR" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="ErReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedFabricConfigurationServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Fabric Configuration Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FA010000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="ErReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedVendorSpecificEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Vendor Specific Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FF000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="ErReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedOther" type="SEQUENCE" unitType="ELEMENT" uiShowName="Registration (Other)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="10000000" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="registrationValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="ErReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+
+				<TYPE_DEF name="Er" type="SEQUENCE" unitType="ELEMENT" uiShowName="ER">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Reserved"/>
+						<FIELD name="numberOfRegistrations" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFREGISTRATIONS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Registrations"/>
+						<FIELD name="registrations" type="RegistrationList" uiShowName="Registrations"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="ErAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="ER Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfAcceptedRegistrations" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Number of Accepted Registrations"/>
+						<FIELD name="numberOfRejectedRegistrations" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFREJECTEDREGISTRATIONS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Registrations"/>
+						<FIELD name="rejectedRegistrations" type="RejectedRegistrationList" uiShowName="Rejected Registrations"/>
+				</TYPE_DEF>
+
+				<!--EN-->
+				<TYPE_DEF name="EnReasonsForRejectedRegistration" type="OCTETSTRING" byteLength="4" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Notification Tag Not Supported" value="00000001"/>
+								<VAL_ENUM uiShowName="Invalid Notification Value" value="00000002"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NameServerEventTags" type="OCTETSTRING" byteLength="4" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Nx_Port Available" value="FC020001"/>
+								<VAL_ENUM uiShowName="Nx_Port Unavailable" value="FC020002"/>
+								<VAL_ENUM uiShowName="Name Server Updated" value="FC020003"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NameServerObjectTags" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+						<VALUE_ENUMERATION>
+								<VAL_ENUM uiShowName="Port Type" value="0001"/>
+								<VAL_ENUM uiShowName="N_Port_Name" value="0002"/>
+								<VAL_ENUM uiShowName="Port Symbolic Name" value="0003"/>
+								<VAL_ENUM uiShowName="Node Name" value="0004"/>
+								<VAL_ENUM uiShowName="Node Symbolic Name" value="0005"/>
+								<VAL_ENUM uiShowName="Initial Process Associator" value="0006"/>
+								<VAL_ENUM uiShowName="Class of Service" value="0008"/>
+								<VAL_ENUM uiShowName="FC-4 Types" value="0009"/>
+								<VAL_ENUM uiShowName="F_Port_Name" value="000B"/>
+								<VAL_ENUM uiShowName="Hard Address" value="000C"/>
+								<VAL_ENUM uiShowName="FC-4 Features" value="000D"/>
+								<VAL_ENUM uiShowName="Permananent Port Name" value="000F"/>
+								<VAL_ENUM uiShowName="Core Port Name" value="0010"/>
+								<VAL_ENUM uiShowName="Small Name Server Entry Object" value="0011"/>
+								<VAL_ENUM uiShowName="Vendor Specific" value="00F0"/>
+						</VALUE_ENUMERATION>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="CommonLinkIncidentRecordChoice" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1" elementType="Record" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="Record" type="CHOICE" unitType="ELEMENT" uiShowName="Record">
+						<FIELD name="commonLinkIncidentRecord16Bytes" type="CommonLinkIncidentRecord16Bytes" uiShowName="Common Link Incident Record Choice (16 bytes)"/>
+						<FIELD name="commonLinkIncidentRecord64Bytes" type="CommonLinkIncidentRecord64Bytes" uiShowName="Common Link Incident Record Choice (64 bytes)"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="CommonLinkIncidentRecord16Bytes" type="SEQUENCE" unitType="ELEMENT" uiShowName="Common Link Incident Record Choice (16 bytes)">
+						<FIELD name="incidentPortNPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Incident Port N_Port_Name"/>
+						<FIELD name="incidentPortNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Incident Port Node_Name"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="CommonLinkIncidentRecord64Bytes" type="SEQUENCE" unitType="ELEMENT" uiShowName="Common Link Incident Record Choice (64 bytes)">
+						<FIELD name="incidentPortNPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Incident Port N_Port_Name"/>
+						<FIELD name="incidentPortNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Incident Port Node_Name"/>
+						<FIELD name="incidentPortType" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Incident Port Type"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="connectedPortNPortName" type="WWN" byteLength="8" defaultValue="20:00:10:94:00:00:00:00" uiShowName="Connected Port N_Port_Name"/>
+						<FIELD name="connectedPortNodeName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Connected Port Node_Name"/>
+						<FIELD name="fabricName" type="WWN" byteLength="8" defaultValue="10:00:10:94:00:00:00:00" uiShowName="Fabric_Name"/>
+						<FIELD name="incidentPortNumber" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Incident Port Number"/>
+						<FIELD name="transactionId" type="INTEGER" bitLength="32" defaultValue="1" uiShowName="Transaction ID"/>
+						<FIELD name="reserved2" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="timeStampFormat" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Time Stamp Format"/>
+						<FIELD name="timeStamp" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="Time Stamp"/>
+						
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RLIR" type="SEQUENCE" unitType="ELEMENT" uiShowName="Embedded RLIR Payload">
+						<FIELD name="commandCode" type="OCTETSTRING" byteLength="1" defaultValue="79" uiShowName="Command Code"/>
+						<FIELD name="reserved1" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="Reserved"/>
+						<FIELD name="linkIncidentRecordFormat" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Link Incident Record Format"/>
+						<FIELD name="commonLinkIncidentRecordLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSCOMMONLINKINCIDENTRECORDLENGTH" uiShowName="Common Link Incident Record Length"/>
+						<FIELD name="commonLinkIncidentDescriptorLength" type="INTEGER" bitLength="8" defaultValue="4" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSCOMMONLINKINCIDENTDESCRIPTORLENGTH" uiShowName="Common Link Incident-Descriptor Length"/>
+						<FIELD name="specificLinkIncidentRecordLength" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSSPECIFICLINKINCIDENTRECORDLENGTH" uiShowName="Specific Link Incident Record Length"/>
+						<FIELD name="commonLinkIncidentRecord" type="CommonLinkIncidentRecordChoice" uiShowName="Common Link Incident Record"/>
+						<FIELD name="commonLinkIncidentDescriptor" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Common Link Incident Descriptor"/>
+						<FIELD name="specificLinkIncidentRecord" type="OCTETSTRING" minByteLength="0" maxByteLength="252" defaultValue="" uiShowName="Specific Link Incident Record"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="specificLinkIncidentRecord" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NameServerObjectList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="NameServerObject" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="NameServerObject" type="SEQUENCE" unitType="ELEMENT" uiShowName="Name Server Object">
+						<FIELD name="nameServerObjectTag" type="NameServerObjectTags" byteLength="2" defaultValue="000000" uiShowName="N_Port_ID"/>
+						<FIELD name="nameServerObjectLength" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNAMESERVEROBJECTLENGTH" uiShowName="Record Length"/>
+						<FIELD name="nameServerObjectValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="255" uiShowName="Name Server Object Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="nameServerObjectValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+				
+				<TYPE_DEF name="nameServerPortEntryList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="NameServerPortEntry" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="NameServerPortEntry" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Entry">
+						<FIELD name="nPortId" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="N_Port_ID"/>
+						<FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Reserved"/>
+						<FIELD name="recordLength" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSRECORDLENGTH" uiShowName="Record Length"/>
+						<FIELD name="nameServerObjects" type="NameServerObjectList" uiShowName="Name Server Objects"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="NameServerEventFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Name Server Event Format">
+						<FIELD name="numberOfPortEntries" type="INTEGER" bitLength="32" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSNUMPORTENTRIES" uiShowName="Number of Port Entries"/>
+						<FIELD name="portEntries" type="nameServerPortEntryList" uiShowName="Port Entries"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="Event" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="Event" type="CHOICE" unitType="ELEMENT" uiShowName="Event">
+						<FIELD name="generalEvents" type="EventGeneralEvents" uiShowName="General Events"/>
+						<FIELD name="directoryServerEvents" type="EventDirectoryServerEvents" uiShowName="Directory Server Events"/>
+						<FIELD name="nameServerEvents" type="EventNameServerEvents" uiShowName="Name Server Events"/>
+						<FIELD name="managementServerEvents" type="EventManagementServerEvents" uiShowName="Management Server Events"/>
+						<FIELD name="fabricConfigurationServerEvents" type="EventFabricConfigurationServerEvents" uiShowName="Fabric Configuration Server Events"/>
+						<FIELD name="reserved" type="EventOther" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventGeneralEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (General Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventDirectoryServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Directory Server Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="FC000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventNameServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Name Server Events)">
+						<FIELD name="eventTag" type="NameServerEventTags" byteLength="4" defaultValue="FC020001" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="NameServerEventFormat" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventManagementServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Management Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FA000001" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="RLIR" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventFabricConfigurationServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Fabric Configuration Server Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="FA010000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventVendorSpecificEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Vendor Specific Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="FF000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EventOther" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Other)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="10000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2147483647" elementType="RejectedEvent" unitType="ELEMENT"/>
+
+				<TYPE_DEF name="RejectedEvent" type="CHOICE" unitType="ELEMENT" uiShowName="Event">
+						<FIELD name="generalEvents" type="RejectedEventGeneralEvents" uiShowName="General Events"/>
+						<FIELD name="directoryServerEvents" type="RejectedEventDirectoryServerEvents" uiShowName="Directory Server Events"/>
+						<FIELD name="nameServerEvents" type="RejectedEventNameServerEvents" uiShowName="Name Server Events"/>
+						<FIELD name="managementServerEvents" type="RejectedEventManagementServerEvents" uiShowName="Management Server Events"/>
+						<FIELD name="fabricConfigurationServerEvents" type="RejectedEventFabricConfigurationServerEvents" uiShowName="Fabric Configuration Server Events"/>
+						<FIELD name="reserved" type="RejectedEventOther" uiShowName="Reserved"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventGeneralEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (General Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="EnReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventDirectoryServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Directory Server Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="FC000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="EnReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventNameServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Name Server Events)">
+						<FIELD name="eventTag" type="NameServerEventTags" byteLength="4" defaultValue="FC020001" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="NameServerEventFormat" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="EnReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventManagementServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Management Server Events)">
+						<FIELD name="registrationTag" type="OCTETSTRING" byteLength="4" defaultValue="FA000001" uiShowName="Registration Tag"/>
+						<FIELD name="registrationLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSREGISTRATIONLENGTH" uiShowName="Registration Length"/>
+						<FIELD name="registrationValue" type="RLIR" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Registration Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="EnReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventFabricConfigurationServerEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Fabric Configuration Server Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="FA010000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="EnReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventVendorSpecificEvents" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Vendor Specific Events)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="FF000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="EnReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="RejectedEventOther" type="SEQUENCE" unitType="ELEMENT" uiShowName="Event (Other)">
+						<FIELD name="eventTag" type="OCTETSTRING" byteLength="4" defaultValue="10000000" uiShowName="Event Tag"/>
+						<FIELD name="eventLength" type="INTEGER" bitLength="16" defaultValue="0" uiControlState="ALLOW_OVERRIDE" procfnTarget="FCGSEVENTLENGTH" uiShowName="Event Length"/>
+						<FIELD name="eventValue" type="OCTETSTRING" defaultValue="" minByteLength="0" maxByteLength="0" uiShowName="Event Value"/>
+						<FIELD name="fillBytes" type="FIELDALIGNMENTPAD" field="eventValue" xAlignment="4" yAlignment="0" uiNoShow="Filter,Frame,Interface" uiNoShowModifier="Frame,Interface,Filter" uiShowName="Fill Bytes" />
+						<FIELD name="reasonForRejectedRegistration" type="EnReasonsForRejectedRegistration" byteLength="4" defaultValue="00000001" uiShowName="Reason for Rejected Registration"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="En" type="SEQUENCE" unitType="ELEMENT" uiShowName="EN">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfEvents" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFEVENTS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Registrations"/>
+						<FIELD name="events" type="EventList" uiShowName="Events"/>
+				</TYPE_DEF>
+
+				<TYPE_DEF name="EnAccept" type="SEQUENCE" unitType="ELEMENT" uiShowName="EN Accept">
+						<FIELD name="ctIuPreamble" type="BasicCtIuPreamble" uiShowName="CT_IU Preamble"/>
+						<FIELD name="numberOfAcceptedNotifications" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Number of Accepted Notifications"/>
+						<FIELD name="numberOfRejectedNotifications" type="INTEGER" bitLength="32" defaultValue="0" procfnTarget="FCGSNUMBEROFREJECTEDNOTIFICATIONS" uiControlState="ALLOW_OVERRIDE" uiShowName="Number of Registrations"/>
+						<FIELD name="rejectedEvents" type="RejectedEventList" uiShowName="Rejected Event"/>
+				</TYPE_DEF>
+				<!--Event Server End-->
+		</TYPE_DEFS>
+</PDU_LIBRARY>

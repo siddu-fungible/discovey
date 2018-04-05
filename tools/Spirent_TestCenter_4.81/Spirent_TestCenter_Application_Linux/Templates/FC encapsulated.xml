@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCencaped"
+    showName="FC encapsulated"
+    version="1.00"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FC"
+    description="FC encapsulated" >
+
+    <pdus>
+      <pdu name="fc" pdu="fc:FC" />
+    </pdus>
+  </template>
+</frame>

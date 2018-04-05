@@ -1,0 +1,21 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCRDIRequest" 
+    showName="FC RDI Request"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcsw:Rdi"
+    description="FC RDI Request">
+    <pdus>
+      <pdu name="rdiRequest1" pdu="fcsw:Rdi" >
+		<domainID>
+		  <RdiDomainId name="RdiDomainId_0">
+		  </RdiDomainId>
+		</domainID>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

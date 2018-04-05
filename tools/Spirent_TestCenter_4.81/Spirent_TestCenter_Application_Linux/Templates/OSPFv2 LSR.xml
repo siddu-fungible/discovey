@@ -1,0 +1,21 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Ospfv2LSR"
+    showName="OSPFv2 Link State Request"
+    version="1.00"
+    category="Routing"
+    readonly="true"
+    validate="true"
+    firstPdu="ospfv2:Ospfv2LinkStateRequest"
+    description="OSPFV2 Link State Request" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ospfv2:Ospfv2LinkStateRequest">
+        <header>
+          <type>3</type>
+        </header>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

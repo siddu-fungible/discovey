@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="SQL_Redirect_and_Queries" type="stream">
+  <MetaData description="SQL_Redirect_and_Queries" protocol="SQL_Redirect_and_Queries" application="SQL" createDate=""/>
+  <Streams>
+    <Stream file="System/SQL/SQL_Redirect.xml" name="Redirect" description="Redirect" startTime="0" dataDelay="0" serverPort="1521" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/SQL/SQL_Queries.xml" name="Queries" description="Queries" startTime="11" dataDelay="0" serverPort="3811" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+  </Streams>
+</Playlist>

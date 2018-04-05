@@ -1,0 +1,551 @@
+{
+  "methodology_key": "DSCPQOSV4",
+  "display_name": "L3 QoS DSCP IPv4 Validation",
+  "short_display_name": "DSCPQOSV4",
+  "description": "Tests the ability of a SUT to satisfy its QoS operation using DSCP prioritization.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "CUSTOM",
+    "sides": [
+      {
+        "side": "NW",
+        "port_group": "DscpQosTxLoadPortGroup"
+      },
+      {
+        "side": "SW",
+        "port_group": "DscpQosTxTestPortGroup"
+      },
+      {
+        "side": "EAST",
+        "port_group": "DscpQosRxPortGroup"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "DscpQosRxPortGroup",
+      "display_name": "Rx Port Group",
+      "description": "Egress port group for all streams",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        },
+        {
+          "location": "//(Offline)/1/2"
+        }
+      ]
+    },
+    {
+      "property": "DscpQosTxLoadPortGroup",
+      "display_name": "Tx Load Port Group",
+      "description": "Ingress port group for fixed rate non-EF streams",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        },
+        {
+          "location": "//(Offline)/1/2"
+        }
+      ]
+    },
+    {
+      "property": "DscpQosTxTestPortGroup",
+      "display_name": "Tx Test Port Group",
+      "description": "Ingress port group for variable rate EF streams",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        },
+        {
+          "location": "//(Offline)/1/2"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "topology_side": "NW",
+      "display_name": "Tx Load",
+      "description": "Fixed rate non-EF traffic",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "IPv4 Prefix Length for Tx Load Port Group",
+          "display_name": "Prefix Length",
+          "property": "TxLoadIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "1",
+          "maximum": "32",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv4PrefixLength"
+        },
+        {
+          "description": "Gateway IP Address for Tx Load Port Group",
+          "display_name": "Gateway IP Address",
+          "property": "TxLoadIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.18.1.1",
+          "endpoint_profile_property_name": "Ipv4GwAddr"
+        },
+        {
+          "description": "Gateway IP Address Step for Tx Load Port Group",
+          "display_name": "Gateway IP Port Step",
+          "property": "TxLoadIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0",
+          "endpoint_profile_property_name": "Ipv4GwAddrPortStep"
+        },
+        {
+          "description": "IP Address Start for Tx Load Port Group",
+          "display_name": "IP Address",
+          "property": "TxLoadIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.18.1.2",
+          "endpoint_profile_property_name": "Ipv4Addr"
+        },
+        {
+          "description": "IP Address Step for Tx Load Port Group",
+          "display_name": "IP Address Port Step",
+          "property": "TxLoadIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1",
+          "endpoint_profile_property_name": "Ipv4AddrPortStep"
+        },
+        {
+          "description": "MAC Address Start for Tx Load Port Group",
+          "display_name": "MAC Address",
+          "property": "TxLoadMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:02",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "MAC Address Step for Tx Load Port Group",
+          "display_name": "MAC Address Port Step",
+          "property": "TxLoadMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        }
+      ]
+    },
+    {
+      "topology_side": "SW",
+      "display_name": "Tx Test",
+      "description": "Variable rate EF Traffic",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "IPv4 Prefix Length for Tx Test Port Group",
+          "display_name": "Prefix Length",
+          "property": "TxTestIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv4PrefixLength"
+        },
+        {
+          "description": "Gateway IP Address for Tx Test Port Group",
+          "display_name": "Gateway IP Address",
+          "property": "TxTestIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.19.1.1",
+          "endpoint_profile_property_name": "Ipv4GwAddr"
+        },
+        {
+          "description": "Gateway IP Step for Tx Test Port Group",
+          "display_name": "Gateway IP Port Step",
+          "property": "TxTestIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0",
+          "endpoint_profile_property_name": "Ipv4GwAddrPortStep"
+        },
+        {
+          "description": "IP Address Start for Tx Test Port Group",
+          "display_name": "IP Address",
+          "property": "TxTestIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.19.1.2",
+          "endpoint_profile_property_name": "Ipv4Addr"
+        },
+        {
+          "description": "IP Address Step for Tx Test Port Group",
+          "display_name": "IP Address Port Step",
+          "property": "TxTestIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1",
+          "endpoint_profile_property_name": "Ipv4AddrPortStep"
+        },
+        {
+          "description": "MAC Address Start for Tx Test Port Group",
+          "display_name": "MAC Address",
+          "property": "TxTestMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:11:00:02",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "MAC Address Step for Tx Test Port Group",
+          "display_name": "MAC Address Port Step",
+          "property": "TxTestMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        }
+      ]
+    },
+    {
+      "topology_side": "EAST",
+      "display_name": "Rx",
+      "description": "Rx side",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "IPv4 Prefix Length for Rx Port Group",
+          "display_name": "Prefix Length",
+          "property": "RxIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv4PrefixLength"
+        },
+        {
+          "description": "Gateway IP Address for Rx Port Group",
+          "display_name": "Gateway IP Address",
+          "property": "RxIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.20.1.1",
+          "endpoint_profile_property_name": "Ipv4GwAddr"
+        },
+        {
+          "description": "Gateway IP Step for Rx Port Group",
+          "display_name": "Gateway IP Port Step",
+          "property": "RxIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0",
+          "endpoint_profile_property_name": "Ipv4GwAddrPortStep"
+        },
+        {
+          "description": "IP Address Start for Rx Port Group",
+          "display_name": "IP Address",
+          "property": "RxIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.20.1.2",
+          "endpoint_profile_property_name": "Ipv4Addr"
+        },
+        {
+          "description": "IP Address Step for Rx Port Group",
+          "display_name": "IP Address Port Step",
+          "property": "RxIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1",
+          "endpoint_profile_property_name": "Ipv4AddrPortStep"
+        },
+        {
+          "description": "MAC Address Start for Rx Port Group",
+          "display_name": "MAC Address",
+          "property": "RxMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:22:00:02",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "MAC Address Step for Rx Port Group",
+          "display_name": "MAC Address Port Step",
+          "property": "RxMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        }
+      ]
+    },
+    {
+      "display_name": "Test Parameters",
+      "description": "All parameters used in the test iterations",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "description": "Tx Test Bandwidth Iteration Duration in seconds",
+          "display_name": "Iteration Duration",
+          "property": "IterationDuration",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "2147483647",
+          "units": "seconds"
+        },
+        {
+          "description": "Run the test for all Frame Sizes in this list",
+          "display_name": "Frame Size List",
+          "property": "FrameSizeList",
+          "property_value_type": "INTEGER",
+          "is_collection": true,
+          "property_value": [
+            "128",
+            "256",
+            "384",
+            "512"
+          ],
+          "minimum": "20",
+          "maximum": "16383",
+          "units": "bytes"
+        },
+        {
+          "description": "Enable Learning Step",
+          "display_name": "Learning",
+          "property": "EnableL2L3Learning",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        }
+      ]
+    },
+    {
+      "display_name": "Test Parameters",
+      "description": "All parameters used in the test iterations",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "property": "DscpNWStreamsTableMetaName",
+          "display_name": "DSCP values to use in test (ordered by lowest priority first, highest priority last)",
+          "description": "The DSCP values should be configured in the order that they will be dropped as EF bandwidth increases.",
+          "column_definitions": [
+            {
+              "description": "Name of the DSCP value",
+              "display_name": "DSCP Name",
+              "property": "DscpNameEnumList",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "BE",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43"
+              ]
+            },
+            {
+              "description": "Maximum allowed jitter (us)",
+              "display_name": "Max Jitter",
+              "property": "DscpNWStreamsMaxJitterColumn",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.0",
+              "maximum": "4294967295.00",
+              "units": "us"
+            },
+            {
+              "description": "Maximum allowed latency (us)",
+              "display_name": "Max Latency",
+              "property": "DscpNWStreamsMaxLatencyColumn",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.0",
+              "maximum": "4294967295.00",
+              "units": "us"
+            },
+            {
+              "description": "Maximum allowed frame loss for this DSCP value",
+              "display_name": "Max Loss",
+              "property": "DscpNWStreamsMaxLossColumn",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4294967295",
+              "units": "frames"
+            },
+            {
+              "description": "Maximum allowed duplicate frames for this DSCP value",
+              "display_name": "Max Duplicates",
+              "property": "DscpNWStreamsMaxDuplicatesColumn",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4294967295",
+              "units": "frames"
+            },
+            {
+              "description": "Maximum allowed reordered frames for this DSCP value",
+              "display_name": "Max Reordered",
+              "property": "DscpNWStreamsMaxReordered",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4294967295",
+              "units": "frames"
+            },
+            {
+              "description": "Maximum allowed late frames for this DSCP value",
+              "display_name": "Max Late",
+              "property": "DscpNWStreamsMaxLateColumn",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4294967295",
+              "units": "frames"
+            }
+          ],
+          "table": [
+            [
+              "BE", 
+              "1000000000.0", 
+              "1000000000.0", 
+              "1000000000", 
+              "1000000000", 
+              "1000000000", 
+              "1000000000"
+            ],
+            [
+              "AF11", 
+              "3.0", 
+              "5.0", 
+              "1", 
+              "1", 
+              "1", 
+              "1"
+            ],
+            [
+              "AF21", 
+              "2.0", 
+              "5.0", 
+              "0", 
+              "1", 
+              "1", 
+              "1"
+            ],
+            [
+              "AF31", 
+              "1.0", 
+              "2.0", 
+              "0", 
+              "0", 
+              "0", 
+              "0"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "display_name": "EF Traffic Thresholds",
+      "description": "",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "description": "Maximum allowed jitter (us) for EF traffic",
+          "display_name": "Max Jitter",
+          "property": "EfMaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.0",
+          "minimum": "0.0",
+          "maximum": "4294967295.00",
+          "units": "us"
+        },
+        {
+          "description": "Maximum allowed latency (us) for EF traffic",
+          "display_name": "Max Latency",
+          "property": "EfMaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2.0",
+          "minimum": "0.0",
+          "maximum": "4294967295.00",
+          "units": "us"
+        },
+        {
+          "description": "Maximum allowed frame loss for EF traffic",
+          "display_name": "Max Loss",
+          "property": "EfMaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum allowed duplicate frames for EF traffic",
+          "display_name": "Max Duplicates",
+          "property": "EfMaxDuplicates",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum allowed reordered frames for EF traffic",
+          "display_name": "Max Reordered",
+          "property": "EfMaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum allowed late frames for EF traffic",
+          "display_name": "Max Late",
+          "property": "EfMaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "frames"
+        }
+      ]
+    }
+  ]
+}

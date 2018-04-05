@@ -1,0 +1,15 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="tcpoveripv4"
+    showName="Tcp over IPv4" version="1.00"
+    category="Basic" readonly="true" validate="true"
+    firstPdu="ethernet:EthernetII"
+    description="Tcp over IPv4">
+    
+	<pdus>
+		<pdu name="eth" pdu="ethernet:EthernetII" />
+		<pdu name="ip" pdu="ipv4:IPv4" />
+		<pdu name="tcp" pdu="tcp:Tcp" />
+	</pdus>
+  </template>
+</frame>

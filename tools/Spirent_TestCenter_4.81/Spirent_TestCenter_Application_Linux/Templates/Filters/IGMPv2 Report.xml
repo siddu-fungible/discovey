@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Igmpv2Report"
+    showName="IGMPv2 Report"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="igmp:Igmpv2Report"
+    description="IGMPv2 Report" >
+
+    <pdus>
+      <pdu name="proto1" pdu="igmp:Igmpv2Report" />
+    </pdus>
+  </template>
+</frame>

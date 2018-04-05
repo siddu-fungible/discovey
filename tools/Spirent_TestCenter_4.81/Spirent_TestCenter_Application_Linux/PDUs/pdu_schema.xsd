@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <!-- PDU_LIBRARY is the root of the document -->
+  <xs:element name="PDU_LIBRARY">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TYPE_DEFS" minOccurs="0" maxOccurs="1" />
+      </xs:sequence>
+      <xs:attribute name="name" use="required" type="xs:NCName" />
+      <xs:attribute name="version" use="required" type="VERSION" />
+      <xs:attribute name="showName" use="optional" type="xs:token" default="" />
+      <xs:attribute name="description" use="required" />
+      <xs:attribute name="userdefined" use="optional" type="xs:boolean" />
+    </xs:complexType>
+  </xs:element>
+  <!-- Type definitions -->
+  <!-- VERSION -->
+  <xs:simpleType name="VERSION">
+    <xs:restriction base="xs:decimal">
+      <xs:fractionDigits value="2" />
+      <xs:minExclusive value="0.01" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- UNBOUNDED -->
+  <xs:simpleType name="UNBOUNDED">
+    <xs:restriction base="xs:NCName">
+      <xs:enumeration value="unbounded" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- MIN_OCCURS -->
+  <xs:simpleType name="MIN_OCCURS">
+    <xs:restriction base="xs:nonNegativeInteger" />
+  </xs:simpleType>
+  <!-- MAX_OCCURS -->
+  <xs:simpleType name="MAX_OCCURS">
+    <xs:union memberTypes="UNBOUNDED xs:nonNegativeInteger " />
+  </xs:simpleType>
+  <!-- ELEMENT_TYP -->
+  <xs:simpleType name="ELEMENT_TYP">
+    <xs:restriction base="xs:NCName">
+      <xs:enumeration value="HEADER" />
+      <xs:enumeration value="STRUCTURE" />
+      <xs:enumeration value="ELEMENT" />
+      <xs:enumeration value="MESSAGE" />
+      <xs:enumeration value="TRAILER" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- PORT_TYP -->
+  <xs:simpleType name="PORT_TYP">
+    <xs:restriction base="xs:NCName">
+      <!-- port type name -->
+      <xs:enumeration value="Ethernet" />
+      <xs:enumeration value="Atm" />
+      <xs:enumeration value="Pos" />
+      <xs:enumeration value="Fc" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!--UI_CONTROL_STATE -->
+  <xs:simpleType name="UI_CONTROL_STATE">
+    <xs:restriction base="xs:NCName">
+      <xs:enumeration value="EDITABLE" />
+      <xs:enumeration value="CALCULATED" />
+      <xs:enumeration value="ALLOW_OVERRIDE" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- PROCFN_TARGET -->
+  <xs:simpleType name="PROCFN_TARGET">
+    <xs:restriction base="xs:NCName">
+      <xs:enumeration value="NONE" />
+      <xs:enumeration value="NEXTHDR" />
+      <xs:enumeration value="HDRCHECKSUM" />
+      <xs:enumeration value="SCTPCHECKSUM" />
+      <xs:enumeration value="PSEUDOCHECKSUM" />
+      <xs:enumeration value="HDRLENGTH" />
+      <xs:enumeration value="PAYLOADLENGTH" />
+      <xs:enumeration value="TOTALLENGTH" />
+      <xs:enumeration value="TOTALLENGTHWITHPDU" />
+      <xs:enumeration value="PARENTPDULENGTH" />
+      <xs:enumeration value="SCTPCHUNKLENGTH" />
+      <xs:enumeration value="OSPFCHECKSUM" />
+      <xs:enumeration value="HDRLENGTH8NMINUS1" />
+      <xs:enumeration value="HDRLENGTH4NMINUS2" />
+      <xs:enumeration value="HDRLENGTHBY4" />
+      <xs:enumeration value="INTERNETHDRLENGTH" />
+      <xs:enumeration value="LSACHECKSUM" />
+      <xs:enumeration value="GEN1T1LTLVLENGTH" />
+      <xs:enumeration value="GEN2T2LTLVLENGTH" />
+      <xs:enumeration value="VMWAREPROVLENGTH" />
+      <xs:enumeration value="VICPROVTLVCOUNT" />
+      <xs:enumeration value="EOAMTLVLENGTH" />
+      <xs:enumeration value="EOAMMADLENGTH" />
+      <xs:enumeration value="EOAMMANADDLENGTH" />
+      <xs:enumeration value="EOAMCHASSISIDLENGTH" />
+      <xs:enumeration value="EOAMPORTIDLENGTH" />
+      <xs:enumeration value="BFDSIMPLEAUTHLENGTH" />
+      <xs:enumeration value="ANCPTLVLENGTH" />            <xs:enumeration value="ANCPDATALENGTH" />            <xs:enumeration value="ANCPOAMMSGLENGTH" />
+      <xs:enumeration value="EOAMMAIDLENGTH" />
+      <xs:enumeration value="EOAMSHORTMAIDLENGTH" />
+	  <xs:enumeration value="MPLSTPOAMTLVLENGTH" />
+      <xs:enumeration value="PIMCHECKSUM" />
+      <xs:enumeration value="PIMPSEUDOCHECKSUM" />
+      <xs:enumeration value="FIPDESCLENGTH" />
+      <xs:enumeration value="FIPPAYLOADLENGTH" />
+      <xs:enumeration value="FCLSRCHECKSUM" />
+      <xs:enumeration value="FCLSRNUMLSRS" />
+      <xs:enumeration value="FCLSRNUMLINKS" />
+      <xs:enumeration value="FCGSSYMBOLICPORTNAMELENGTH" />
+      <xs:enumeration value="FCGSSYMBOLICNODENAMELENGTH" />
+      <xs:enumeration value="FCGSNUMATTACHEDPORTS"/>
+      <xs:enumeration value="FCGSMANAGEMENTADDRESSLENGTH"/>
+      <xs:enumeration value="FCGSATTRIBUTEENTRYLENGTH"/>
+      <xs:enumeration value="FCGSPLATFORMNAMELENGTH"/>
+      <xs:enumeration value="FCGSFCPLUIDLENGTH"/>
+      <xs:enumeration value="FCGSOSDEVICENAMELENGTH"/>
+      <xs:enumeration value="FCGSNUMINTERCONNECTELEMENTS"/>
+      <xs:enumeration value="FCGSNUMINTERCONNECTELEMENTENTRIES"/>
+      <xs:enumeration value="FCGSLOGICALNAMELENGTH"/>
+      <xs:enumeration value="FCGSNUMMANAGEMENTADDRESSENTRIES"/>
+      <xs:enumeration value="FCGSLISTLENGTH"/>
+      <xs:enumeration value="FCGSNUMPORTENTRIES"/>
+      <xs:enumeration value="FCGSNUMATTACHEDPORTENTRIES"/>
+      <xs:enumeration value="FCGSNUMZONINGENFORCEMENTSTATUSOBJECTS"/>
+      <xs:enumeration value="FCGSNUMPLATFORMNODENAMEENTRIES"/>
+      <xs:enumeration value="FCGSNUMPLATFORMNAMEENTRIES"/>
+      <xs:enumeration value="FCGSNUMLUNMAPENTRIES"/>
+      <xs:enumeration value="FCGSNUMPLATFORMATTRIBUTEENTRIES"/>
+      <xs:enumeration value="FCGSPLATFROMMANAGEMENTADDRESSLENGTH"/>
+      <xs:enumeration value="FCGSSOURCEPORTLENGTH"/>
+      <xs:enumeration value="FCGSDESTPORTLENGTH"/>
+      <xs:enumeration value="FCGSNUMPATHINFORMATIONENTRIES"/>
+      <xs:enumeration value="FCGSCOMMONIDDATALENGTH"/>
+      <xs:enumeration value="FCGSSPECIFICIDDATALENGTH"/>
+						<xs:enumeration value="FCGSGENERALNAMELENGTH"/>
+      <xs:enumeration value="FCGSZONESETATTRIBUTEENTRIESBYZONES"/>
+      <xs:enumeration value="FCGSZONESETATTRIBUTEENTRIESBYZONEMEMBERS"/>
+      <xs:enumeration value="FCGSNUMBEROFZONEMEMBERS"/>
+						<xs:enumeration value="FCGSNUMBEROFZONES"/>
+						<xs:enumeration value="FCGSGARNUMBEROFINTERCONNECTELEMENTENTRIES"/>
+						<xs:enumeration value="FCGSNUMBEROFZONEATTRIBUTEENTRIES"/>
+						<xs:enumeration value="FCGSZONEATTRIBUTELENGTH"/>
+						<xs:enumeration value="FCGSNUMBEROFNAMES"/>
+						<xs:enumeration value="FCGSVENDORSPECIFICVALUELENGTH"/>
+						<xs:enumeration value="FCGSNUMBEROFENHANCEDZONES"/>
+						<xs:enumeration value="FCGSNUMBEROFALIASENTRIES"/>
+						<xs:enumeration value="FCGSNUMBEROFHBAIDSINLIST"/>
+						<xs:enumeration value="FCGSNUMBEROFPORTENTRIES"/>
+						<xs:enumeration value="FCGSNUMBEROFHBAATTRIBUTEENTRIES"/>
+						<xs:enumeration value="FCGSHBAATTRIBUTEENTRYLENGTH"/>
+						<xs:enumeration value="FCGSNUMBEROFPORTATTRIBUTEENTRIES"/>
+						<xs:enumeration value="FCGSNUMBEROFPORTSTATISTICENTRIES"/>
+						
+						<xs:enumeration value="FCGSNUMBEROFREGISTRATIONS"/>
+						<xs:enumeration value="FCGSREGISTRATIONLENGTH"/>
+						<xs:enumeration value="FCGSNUMBEROFREJECTEDREGISTRATIONS"/>
+						<xs:enumeration value="FCGSNUMBEROFEVENTS"/>
+						<xs:enumeration value="FCGSNUMBEROFREJECTEDNOTIFICATIONS"/>
+						<xs:enumeration value="FCGSEVENTLENGTH"/>
+						<xs:enumeration value="FCGSRECORDLENGTH"/>
+						<xs:enumeration value="FCGSNAMESERVEROBJECTLENGTH"/>
+						<xs:enumeration value="FCGSCOMMONLINKINCIDENTRECORDLENGTH"/>
+						<xs:enumeration value="FCGSCOMMONLINKINCIDENTDESCRIPTORLENGTH"/>
+						<xs:enumeration value="FCGSSPECIFICLINKINCIDENTRECORDLENGTH"/>
+
+						<xs:enumeration value="LLDPTLVLENGTH" />
+      <xs:enumeration value="LLDPMANADDRLENGTH" />
+      <xs:enumeration value="LLDPVLANLENGTH" />
+      <xs:enumeration value="LLDPPIDLENGTH" />
+      <xs:enumeration value="LLDPOIDLENGTH" />
+      <xs:enumeration value="LLDPTLVDELEGATE" />
+      <xs:enumeration value="LSPPINGTLVLENGTH" />
+      <xs:enumeration value="LSPPINGFIELDLENGTH" />
+      <xs:enumeration value="FAULTOAMTLVLENGTH" />
+      <xs:enumeration value="ICMPCHECKSUM" />
+      <xs:enumeration value="VDPFILTERINFOCOUNT" />
+	  <xs:enumeration value="LISPRECORDCOUNT" />
+	  <xs:enumeration value="LISPSHA1" />
+      <xs:enumeration value="CSMPHDRENCODE" />
+      <xs:enumeration value="GOOGLEPROTOBUFENCODE" />
+      <xs:enumeration value="COAPOPTIONCOUNT" />
+      <xs:enumeration value="COAPOPTIONDELTA" />
+      <xs:enumeration value="COAP4BITLENGTH" />
+      <xs:enumeration value="CSMP1BYTELENGTH" />
+      <xs:enumeration value="RECORDROUTELENGTH" />
+      <xs:enumeration value="RECORDROUTEPOINTER" />
+      <xs:enumeration value="MPLSEXP" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- PAD_TYPE -->
+  <xs:simpleType name="PAD_TYPE">
+    <xs:restriction base="xs:NCName">
+      <xs:enumeration value="NONE" />
+      <xs:enumeration value="IPV6EXT" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- SIMPLE Type -->
+  <xs:simpleType name="SIMPLE_TYP">
+    <xs:restriction base="xs:NCName">
+      <!-- Simple Type Name -->
+      <xs:enumeration value="INTEGER" />
+      <xs:enumeration value="BITSTRING" />
+      <xs:enumeration value="OCTETSTRING" />	  
+      <xs:enumeration value="IA5STRING" />
+      <xs:enumeration value="BOOLEAN" />
+      <xs:enumeration value="FILENAME" />
+      <xs:enumeration value="MACADDR" />
+      <xs:enumeration value="IPV4ADDR" />
+      <xs:enumeration value="IPV6ADDR" />
+      <xs:enumeration value="ALIGNMENTPAD" />
+      <xs:enumeration value="ASCII" />
+      <xs:enumeration value="WWN" />
+      <xs:enumeration value="DOUBLE" />
+      <xs:enumeration value="FIELDALIGNMENTPAD" />
+      <xs:enumeration value="REPEATOCTETSTRING" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- Complex Type -->
+  <xs:simpleType name="COMPLEX_TYP">
+    <xs:restriction base="xs:NCName">
+      <!-- Constrcutor type name -->
+      <xs:enumeration value="SEQUENCE" />
+      <xs:enumeration value="SET" />
+      <xs:enumeration value="CHOICE" />
+      <xs:enumeration value="SEQUENCE_OF" />
+      <xs:enumeration value="SET_OF" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- BASE_TYP -->
+  <xs:simpleType name="BASE_TYP">
+    <xs:union memberTypes="SIMPLE_TYP COMPLEX_TYP " />
+  </xs:simpleType>
+  <!-- INTEGER_VALUE -->
+  <xs:simpleType name="INTEGER_VALUE">
+    <xs:restriction base="xs:integer" />
+  </xs:simpleType>
+  <!-- BITSTRING_VALUE -->
+  <xs:simpleType name="BITSTRING_VALUE">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="([01])" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- OCTETSTRING_VALUE -->
+  <xs:simpleType name="OCTETSTRING_VALUE">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9a-fA-F]+" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- IA5STRING_VALUE -->
+  <xs:simpleType name="IA5STRING_VALUE">
+    <xs:restriction base="xs:NCName" />
+  </xs:simpleType>
+  <!-- MACADDR_VALUE -->
+  <xs:simpleType name="MACADDR_VALUE">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-fA-F]{12}" />
+      <xs:pattern value="([0-9a-fA-F]{2}[.]){5}[0-9a-fA-F]{2}" />
+      <xs:pattern value="([0-9a-fA-F]{4}[.]){2}[0-9a-fA-F]{4}" />
+      <xs:pattern value="([0-9a-fA-F]{2}[:]){5}[0-9a-fA-F]{2}" />
+      <xs:pattern value="([0-9a-fA-F]{4}[:]){2}[0-9a-fA-F]{4}" />
+      <xs:pattern value="([0-9a-fA-F]{2}[\-]){5}[0-9a-fA-F]{2}" />
+      <xs:pattern value="([0-9a-fA-F]{4}[\-]){2}[0-9a-fA-F]{4}" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- IPV4ADDR_VALUE -->
+  <xs:simpleType name="IPV4ADDR_VALUE">
+    <xs:restriction base="xs:string">
+      <!-- More content checking is required -->
+      <xs:pattern value="([0-9]|[1-9][0-9]|[0-1][0-9][0-9]|[0-2][0-4][0-9]|[0-2]5[0-5])\.([0-9]|[1-9][0-9]|[0-1][0-9][0-9]|[0-2][0-4][0-9]|[0-2]5[0-5])\.([0-9]|[1-9][0-9]|[0-1][0-9][0-9]|[0-2][0-4][0-9]|[0-2]5[0-5])\.([0-9]|[1-9][0-9]|[0-1][0-9][0-9]|[0-2][0-4][0-9]|[0-2]5[0-5])" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- IPV6ADDR_VALUE -->
+  <xs:simpleType name="IPV6ADDR_VALUE">
+    <xs:restriction base="xs:string">
+      <!-- More content checking is required -->
+      <xs:pattern value="[0-9a-fA-F]{0,4}:([0-9a-fA-F]{1,4}:){0,6}:{0,1}([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{0,4}" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- ALIGNMENTPAD_VALUE -->
+  <xs:simpleType name="ALIGNMENTPAD_VALUE">
+    <xs:restriction base="xs:unsignedByte" />
+  </xs:simpleType>
+  <!-- ASCII_VALUE -->
+  <xs:simpleType name="ASCII_VALUE">
+    <xs:restriction base="xs:string">
+      <!-- Note: For some reason schema validator doesn't allow SPACE even though it should. -->
+      <!-- <xs:pattern value="[\x20-\x7E]*"/> -->
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="WWN_VALUE">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-fA-F]{16}" />
+      <xs:pattern value="([0-9a-fA-F]{2}[.]){7}[0-9a-fA-F]{2}" />
+      <xs:pattern value="([0-9a-fA-F]{2}[:]){7}[0-9a-fA-F]{2}" />
+      <xs:pattern value="([0-9a-fA-F]{2}[\-]){7}[0-9a-fA-F]{2}" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DOUBLE_VALUE">
+    <xs:restriction base="xs:double">
+   </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="FIELDALIGNMENTPAD_VALUE">
+    <xs:restriction base="xs:unsignedByte" />
+  </xs:simpleType>
+    <!-- REPEATOCTETSTRING_VALUE -->
+  <xs:simpleType name="REPEATOCTETSTRING_VALUE">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-fA-F]+" />
+	  <xs:pattern value="[0-9a-fA-F]+[:][0-9Cc]" />
+    </xs:restriction>
+  </xs:simpleType>  
+  <!-- SIMPLE_VALUE   -->
+  <xs:simpleType name="SIMPLE_VALUE">
+    <xs:union memberTypes="    INTEGER_VALUE    BITSTRING_VALUE    OCTETSTRING_VALUE    REPEATOCTETSTRING_VALUE    IA5STRING_VALUE    MACADDR_VALUE    IPV4ADDR_VALUE    IPV6ADDR_VALUE    ALIGNMENTPAD_VALUE    ASCII_VALUE    WWN_VALUE  DOUBLE_VALUE FIELDALIGNMENTPAD_VALUE" />
+  </xs:simpleType>
+  <!-- PDU_TYPE_VALUE   -->
+  <xs:simpleType name="PDU_TYPE_VALUE">
+    <xs:restriction base="xs:NCName">
+      <xs:enumeration value="NONE" />
+      <xs:enumeration value="AGGREGATE" />
+    </xs:restriction>
+  </xs:simpleType>
+  <!-- Attribute Group definitions -->
+  <!-- COMMON_ATTR_GRP -->
+  <xs:attributeGroup name="COMMON_ATTR_GRP">
+    <xs:attribute name="name" use="required" type="xs:NCName" />
+    <xs:attribute name="type" use="required" type="BASE_TYP" />
+  </xs:attributeGroup>
+  <!-- SIMPLE_ATTR_GRP -->
+  <xs:attributeGroup name="SIMPLE_ATTR_GRP">
+    <!--These attributes are only applicable if base is one of the simple types -->
+    <xs:attribute name="defaultValue" use="optional" type="SIMPLE_VALUE" />
+    <xs:attribute name="length" use="optional" type="xs:unsignedLong" default="1" />
+    <xs:attribute name="bitLength" use="optional" type="xs:unsignedLong" default="1" />
+    <xs:attribute name="byteLength" use="optional" type="xs:unsignedLong" default="0" />
+    <xs:attribute name="minLength" use="optional" type="xs:unsignedLong" default="1" />
+    <xs:attribute name="maxLength" use="optional" type="xs:unsignedLong" default="1" />
+    <xs:attribute name="minByteLength" use="optional" type="xs:unsignedLong" default="0" />
+    <xs:attribute name="maxByteLength" use="optional" type="xs:unsignedLong" default="0" />
+    <!--Only valid if base type is INTEGER	-->
+    <xs:attribute name="minValue" use="optional" type="INTEGER_VALUE" default="0" />
+    <xs:attribute name="maxValue" use="optional" type="INTEGER_VALUE" default="0" />
+    <!--Only valid if base type is ASCII-->
+    <xs:attribute name="nullTerminated" use="optional" type="xs:boolean" default="false" />
+  </xs:attributeGroup>
+  <!-- COMPLEX_ATTR_GRP -->
+  <xs:attributeGroup name="COMPLEX_ATTR_GRP">
+    <!--Only valid if base type is SEQUENCE_OF | SET_OF	-->
+    <xs:attribute name="elementType" type="xs:NCName" use="optional" />
+    <xs:attribute name="minOccurs" use="optional" type="MIN_OCCURS" default="1" />
+    <xs:attribute name="maxOccurs" use="optional" type="MAX_OCCURS" default="1" />
+  </xs:attributeGroup>
+  <!-- FIELD_ATTR_GRP -->
+  <xs:attributeGroup name="FIELD_ATTR_GRP">
+    <xs:attribute name="name" use="required" type="xs:NCName" />
+    <!-- type should be one of the user-defined types -->
+    <xs:attribute name="type" use="required" type="xs:token" />
+    <xs:attribute name="pduModifierType" use="optional" type="PDU_TYPE_VALUE" default="NONE" />
+    <xs:attribute name="defaultOverride" use="optional" type="xs:boolean" default="false" />
+    <xs:attribute name="binder" use="optional" type="xs:string" default="" />
+    <xs:attribute name="procfnTarget" use="optional" type="PROCFN_TARGET" default="NONE" />
+    <xs:attribute name="doNotBuild" use="optional" type="xs:boolean" default="false" />
+    <!-- Wildcards can only be used with protocols that support them.
+         They are not supported in StreamBlocks. -->
+    <xs:attribute name="wildcardAllowed" use="optional" type="xs:boolean" default="false" />
+  </xs:attributeGroup>
+  <!-- ALIGN_ATTR_GRP -->
+  <xs:attributeGroup name="ALIGN_ATTR_GRP">
+    <!--These attributes are only applicable if base is ALIGNMENTPAD or FIELDALIGNMENTPAD simple type -->
+    <xs:attribute name="xAlignment" use="optional" type="xs:unsignedLong" default="1" />
+    <xs:attribute name="yAlignment" use="optional" type="xs:unsignedLong" default="0" />
+    <xs:attribute name="padType" use="optional" type="PAD_TYPE" default="NONE" />
+    <!--This attributes is only applicable if base is FIELDALIGNMENTPAD simple type -->
+    <xs:attribute name="field" use="optional" type="xs:string" default="" />
+  </xs:attributeGroup>
+  <!-- RENDER_ATTR_GRP -->
+  <xs:attributeGroup name="RENDER_ATTR_GRP">
+    <xs:attribute name="uiNoShow" use="optional" type="xs:token" />
+    <xs:attribute name="uiNoShowModifier" use="optional" type="xs:token" />
+    <xs:attribute name="uiShowCommon" type="xs:boolean" default="true" />
+    <xs:attribute name="uiShowType" use="optional" type="xs:token" />
+    <xs:attribute name="uiShowName" use="optional" type="xs:token" default="" />
+    <xs:attribute name="uiShowFormat" use="optional" type="xs:token" default="" />
+    <xs:attribute name="uiShowDesc" use="optional" type="xs:token" default="" />
+    <xs:attribute name="uiOverrideEditor" use="optional" type="xs:token" default="" />
+    <xs:attribute name="uiShowOnGrid" use="optional" type="xs:boolean" default="false" />
+    <xs:attribute name="uiEditOnGrid" use="optional" type="xs:boolean" default="false" />
+    <xs:attribute name="uiControlState" use="optional" type="UI_CONTROL_STATE" default="EDITABLE" />
+    <xs:attribute name="uiDefaultOnTab" use="optional" type="xs:boolean" default="false" />
+    <xs:attribute name="uiTabName" use="optional" type="xs:token" default="" />
+    <xs:attribute name="uiGenerateError" use="optional" type="xs:token" default="false" />
+    <xs:attribute name="uiErrorValue" use="optional" type="xs:token" default="FFFF" />
+  </xs:attributeGroup>
+  <!-- Network Interface Mapping Group -->
+  <xs:attributeGroup name="NI_MAP_GRP">
+    <xs:attribute name="isNiMapped" use="optional" type="xs:boolean" default="false" />
+    <xs:attribute name="isNiPrimaryKey" use="optional" type="xs:boolean" default="false" />
+  </xs:attributeGroup>
+  <!-- Element Group definitions -->
+  <!-- SIMPLE_GRP -->
+  <xs:group name="SIMPLE_GRP">
+    <xs:sequence>
+      <!-- VALUE_OPTIONS is optional for specifiying value options for simple type -->
+      <xs:element minOccurs="0" maxOccurs="1" ref="VALUE_ENUMERATION" />
+    </xs:sequence>
+  </xs:group>
+  <!-- COMPLEX_GRP -->
+  <xs:group name="COMPLEX_GRP">
+    <xs:sequence>
+      <!--FIELD is mandatory for SEQUENCE, SET, CHOICE, SEQUENC_OF_CHOICE and SET_OF_CHOICE -->
+      <xs:element minOccurs="0" maxOccurs="unbounded" ref="FIELD" />
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="COMPLEX_GRP_HDR">
+    <xs:sequence>
+      <xs:group ref="COMPLEX_GRP" />
+      <xs:element minOccurs="0" maxOccurs="1" ref="NEXT_HEADERS" />
+    </xs:sequence>
+  </xs:group>
+  <!-- Element definitions -->
+  <!-- NXT_HDR -->
+  <xs:element name="NXT_HDR">
+    <xs:complexType>
+      <xs:attribute name="id" use="required" type="xs:token" />
+      <xs:attribute name="name" use="required" type="xs:token" />
+      <xs:attribute name="value" use="optional" type="xs:token" />
+    </xs:complexType>
+  </xs:element>
+  <!-- NEXT_HEADERS -->
+  <xs:element name="NEXT_HEADERS">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="NXT_HDR" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <!-- FIELD -->
+  <xs:element name="FIELD">
+    <xs:complexType>
+      <xs:sequence>
+        <!-- VALUE_OPTIONS is optional for specifiying value options for simple type -->
+        <xs:element minOccurs="0" maxOccurs="1" ref="VALUE_ENUMERATION" />
+      </xs:sequence>
+      <!-- mandatory attributes -->
+      <xs:attributeGroup ref="FIELD_ATTR_GRP" />
+      <xs:attributeGroup ref="SIMPLE_ATTR_GRP" />
+      <!--Rendering attributes -->
+      <xs:attributeGroup ref="RENDER_ATTR_GRP" />
+      <!-- Network Interface Mapping Group -->
+      <xs:attributeGroup ref="NI_MAP_GRP" />
+      <!-- Alignment Attributes Group -->
+      <xs:attributeGroup ref="ALIGN_ATTR_GRP" />
+    </xs:complexType>
+  </xs:element>
+  <!-- VALUE_ENUMERATION -->
+  <xs:element name="VALUE_ENUMERATION">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="VAL_ENUM" />
+      </xs:sequence>
+      <xs:attribute name="uiShowFormat" use="optional" type="xs:token" />
+      <xs:attribute name="uiShowDesc" use="optional" type="xs:token" />
+    </xs:complexType>
+  </xs:element>
+  <!-- VAL_ENUM_ENTRY -->
+  <xs:element name="VAL_ENUM">
+    <xs:complexType>
+      <xs:attribute name="uiShowName" use="required" type="xs:token" />
+      <xs:attribute name="value" use="required" type="SIMPLE_VALUE" />
+    </xs:complexType>
+  </xs:element>
+  <!-- TYPE_DEF -->
+  <xs:element name="TYPE_DEFS">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TYPE_DEF" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <!-- TYPE_DEF -->
+  <xs:element name="TYPE_DEF">
+    <xs:complexType>
+      <xs:choice>
+        <xs:group ref="SIMPLE_GRP" minOccurs="0" maxOccurs="1" />
+        <xs:group ref="COMPLEX_GRP_HDR" minOccurs="0" maxOccurs="1" />
+      </xs:choice>
+      <!--Common Attributes -->
+      <xs:attributeGroup ref="COMMON_ATTR_GRP" />
+      <!-- Simple Type Attributes -->
+      <xs:attributeGroup ref="SIMPLE_ATTR_GRP" />
+      <!-- Complex Type Attributes -->
+      <xs:attributeGroup ref="COMPLEX_ATTR_GRP" />
+      <xs:attribute name="processingFn" use="optional" type="xs:Name" />
+      <xs:attribute name="processingFnDesc" use="optional" type="xs:token" />
+      <xs:attribute name="unitType" use="required" type="ELEMENT_TYP" />
+      <xs:attribute name="portType" use="optional" type="PORT_TYP" />
+      <xs:attribute name="level" use="optional" type="xs:integer" default="0" />
+      <xs:attribute name="category" use="optional" type="xs:string" default="basic" />
+      <xs:attribute name="uiShowName" use="optional" type="xs:token" />
+      <xs:attribute name="niMapped" use="optional" type="xs:boolean" default="false" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

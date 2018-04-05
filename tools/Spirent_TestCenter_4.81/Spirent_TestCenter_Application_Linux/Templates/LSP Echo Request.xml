@@ -1,0 +1,31 @@
+<frame>
+
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+
+    name="LSPPingEchoRequest" 
+
+    showName="LSP Ping Echo Request"
+
+    version="1.0"
+
+    category="MPLS"
+
+    readonly="true"
+
+    validate="true"
+
+    firstPdu="lspping:LspRequest"
+
+    description="LSP Ping Echo Request">
+
+    <pdus>
+
+      <pdu name="lsppingRequest1" pdu="lspping:LspRequest" />
+
+    </pdus>    
+
+  </template>
+
+</frame>

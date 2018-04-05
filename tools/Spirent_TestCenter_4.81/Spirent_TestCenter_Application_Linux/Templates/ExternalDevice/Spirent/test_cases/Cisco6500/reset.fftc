@@ -1,0 +1,397 @@
+<?xml version="1.0"?>
+<testCase version="3.4.1.41207">
+    <execution estimatedExecutionTime="2"/>
+    <procedures>
+        <item name="main" defaultSessionType="com.fnfr.svt.applications.telnet">
+            <steps>
+                <item guid="9f9df907-9c86-47af-a609-736f6bf22244" action="open" session="s2">
+                    <command>
+                        <body>project://Spirent/session_profiles/common_telnet_Cisco6500.ffsp</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.OpenStepPropertyGroup">
+                        <stepProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                        <sessionProperties type="com.fnfr.svt.applications.telnet.documents.TelnetSessionProperties"/>
+                    </applicationProperties>
+                </item>
+                <item guid="eb939046-5e81-45d3-b100-35457c1ba759" action="command" session="s2">
+                    <command>
+                        <body>Executer</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="9437da7e-f985-4d0b-9876-7d1e30005996" action="command" session="s2">
+                    <command>
+                        <body>Spirent00</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="8f686977-e22f-496d-a08c-9764b01f4342" action="if">
+                    <command>
+                        <body>[string length $privilegedpasswd] &gt; 0</body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="c2065d3a-98fc-44c2-ae86-6aabbbcc0d36" action="then">
+                            <nestedSteps>
+                                <item guid="87b92f0f-bdce-4fbd-8d4b-9a06a2a14189" action="command" session="s2">
+                                    <command>
+                                        <body>en</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                                </item>
+                                <item guid="e2f23611-8f2a-4ce5-98e3-8da634943aa8" action="command" session="s2">
+                                    <command>
+                                        <body>$privilegedpasswd</body>
+                                    </command>
+                                    <postProcessing>
+                                        <storeResponseAt>privilpaswd_result</storeResponseAt>
+                                    </postProcessing>
+                                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                                </item>
+                                <item guid="54e611ed-3ae4-48d3-81c1-2bb903def7e2" action="if">
+                                    <command>
+                                        <body>[regexp {(password|denied)} $$privilegedpasswd dummary p1] == 1</body>
+                                    </command>
+                                    <nestedSteps>
+                                        <item guid="2ffc9e33-06c5-4b40-b368-41015da22f88" action="then">
+                                            <nestedSteps>
+                                                <item guid="ac8c180c-7311-4e4f-b2b2-395833665c8f" action="comment">
+                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                </item>
+                                                <item guid="56d58142-2555-4e71-8765-6ecd31d27545" action="if">
+                                                    <command>
+                                                        <body>[regexp {(unprivileged)} $privilpaswd_result dummary p1] == 1</body>
+                                                    </command>
+                                                    <nestedSteps>
+                                                        <item guid="7565c38b-8c4c-4f5b-89d9-0faeca490859" action="then">
+                                                            <nestedSteps>
+                                                                <item guid="240d7f65-e5e4-460a-9e6a-ef7f257cc81e" action="eval">
+                                                                    <command>
+                                                                        <body>puts &quot;False&quot;</body>
+                                                                    </command>
+                                                                    <postProcessing>
+                                                                        <analysisRules>
+                                                                            <item>
+                                                                                <extractorInfo extractorType="contains">
+                                                                                    <extractorProperties type="com.fnfr.svt.mapping.execution.extractors.ExtractorContainsPropertyGroup">
+                                                                                        <searchString>False</searchString>
+                                                                                    </extractorProperties>
+                                                                                </extractorInfo>
+                                                                                <processorInfo ruleType="message">
+                                                                                    <ruleProperties type="com.fnfr.svt.testcase.documents.MessageProcessorPropertyGroup">
+                                                                                        <message>{auto_message}</message>
+                                                                                    </ruleProperties>
+                                                                                </processorInfo>
+                                                                            </item>
+                                                                        </analysisRules>
+                                                                    </postProcessing>
+                                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                                </item>
+                                                                <item guid="736f4bfd-f83a-4988-83a7-d4d3b5f56521" action="return">
+                                                                    <command>
+                                                                        <body>&quot; Invalid privileged password&quot;</body>
+                                                                    </command>
+                                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                                </item>
+                                                            </nestedSteps>
+                                                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                            <useFieldsInCommand>false</useFieldsInCommand>
+                                                        </item>
+                                                        <item guid="071e21ac-d6fc-43e4-9071-b44c10312f99" action="else">
+                                                            <nestedSteps>
+                                                                <item guid="72e21bf3-d991-47a2-8ec5-32a3569ff443" action="comment">
+                                                                    <command>
+                                                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                                                    </command>
+                                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                                </item>
+                                                            </nestedSteps>
+                                                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                            <useFieldsInCommand>false</useFieldsInCommand>
+                                                        </item>
+                                                    </nestedSteps>
+                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                </item>
+                                            </nestedSteps>
+                                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                            <useFieldsInCommand>false</useFieldsInCommand>
+                                        </item>
+                                        <item guid="cd539035-b6d8-4112-89c3-5bfb9697cabe" action="else">
+                                            <nestedSteps>
+                                                <item guid="0d839d94-a312-487d-ba1d-a1c0ef063bc3" action="comment">
+                                                    <command>
+                                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                                    </command>
+                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                </item>
+                                                <item guid="8d509d3e-53cf-4d44-b492-3f64f9fc1ca9" action="if">
+                                                    <command>
+                                                        <body>[regexp {(password|denied)} $privilpaswd_result dummary p1] == 1</body>
+                                                    </command>
+                                                    <nestedSteps>
+                                                        <item guid="0ecd2d2a-3e18-4fae-ae23-15826f1aeb64" action="then">
+                                                            <nestedSteps>
+                                                                <item guid="00c6e923-b336-4021-8e04-1414c8db8bfa" action="eval">
+                                                                    <command>
+                                                                        <body>puts &quot;False&quot;</body>
+                                                                    </command>
+                                                                    <postProcessing>
+                                                                        <analysisRules>
+                                                                            <item>
+                                                                                <extractorInfo extractorType="contains">
+                                                                                    <extractorProperties type="com.fnfr.svt.mapping.execution.extractors.ExtractorContainsPropertyGroup">
+                                                                                        <searchString>False</searchString>
+                                                                                    </extractorProperties>
+                                                                                </extractorInfo>
+                                                                                <processorInfo ruleType="message">
+                                                                                    <ruleProperties type="com.fnfr.svt.testcase.documents.MessageProcessorPropertyGroup">
+                                                                                        <message>{auto_message}</message>
+                                                                                    </ruleProperties>
+                                                                                </processorInfo>
+                                                                            </item>
+                                                                        </analysisRules>
+                                                                    </postProcessing>
+                                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                                </item>
+                                                                <item guid="2745f099-69b4-4514-9d9d-2ef740e68409" action="return">
+                                                                    <command>
+                                                                        <body>&quot; Invalid privileged password&quot;</body>
+                                                                    </command>
+                                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                                </item>
+                                                            </nestedSteps>
+                                                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                            <useFieldsInCommand>false</useFieldsInCommand>
+                                                        </item>
+                                                        <item guid="3f08b6e3-884c-48e7-9a24-66ae3a0b43fd" action="else">
+                                                            <nestedSteps>
+                                                                <item guid="a718d1cc-e227-4d32-b4cb-86dd813895af" action="comment">
+                                                                    <command>
+                                                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                                                    </command>
+                                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                                </item>
+                                                            </nestedSteps>
+                                                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                            <useFieldsInCommand>false</useFieldsInCommand>
+                                                        </item>
+                                                    </nestedSteps>
+                                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                                </item>
+                                            </nestedSteps>
+                                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                            <useFieldsInCommand>false</useFieldsInCommand>
+                                        </item>
+                                    </nestedSteps>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="f446c7f0-d66a-4a2b-a3db-3802f74a3eac" action="else">
+                            <nestedSteps>
+                                <item guid="d969cc11-544f-4b57-ab5d-863dc595a8ea" action="comment">
+                                    <command>
+                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="3ccf1dac-3a7d-41ce-81c6-05d04f65a35a" action="command" session="s2">
+                    <command>
+                        <body>reload</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>reset_result</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                        <promptProperties>
+                            <stepPrompts>
+                                <item name="prompt1" MatchMethod="REGULAR_EXPRESSION">
+                                    <Content>System configuration has been modified.*</Content>
+                                </item>
+                                <item name="prompt2" MatchMethod="REGULAR_EXPRESSION">
+                                    <Content>Proceed with reload.*</Content>
+                                </item>
+                            </stepPrompts>
+                            <alsoUseSessionPrompts inherit="false" defaultValue=""/>
+                        </promptProperties>
+                    </applicationProperties>
+                </item>
+                <item guid="463315b8-09b3-4911-aa5b-d6d165b22480" action="if">
+                    <command>
+                        <body>[regexp {been modified} $reset_result dummary d1 ] == 1</body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="2970efb2-4c22-4547-9178-36ffa0053665" action="then">
+                            <nestedSteps>
+                                <item guid="487a557f-f98e-4491-961f-81e14ae89a8e" action="command" session="s2" normalOffset="2.562">
+                                    <command>
+                                        <body>yes</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                                        <promptProperties>
+                                            <stepPrompts>
+                                                <item name="prompt1" MatchMethod="REGULAR_EXPRESSION">
+                                                    <Content>.*</Content>
+                                                </item>
+                                            </stepPrompts>
+                                            <alsoUseSessionPrompts inherit="false">false</alsoUseSessionPrompts>
+                                        </promptProperties>
+                                    </applicationProperties>
+                                </item>
+                                <item guid="bd6b2d12-f103-4cb0-b6bf-114171220e75" action="eval">
+                                    <command>
+                                        <body>set result  [response reset_result {been modified.*} ]</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                                <item guid="b5d70bcb-16a5-4e6d-96e0-58e86c23b43d" action="eval">
+                                    <command>
+                                        <body>set result &quot;$result, Proceed with reload successfully.&quot;</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="1fe88f83-a1b3-4e3c-95c9-7da152312c8e" action="elseif">
+                            <command>
+                                <body>[regexp {Unknown command} $reset_result dummary d1 ] == 1</body>
+                            </command>
+                            <nestedSteps>
+                                <item guid="a77e70d1-b47a-4786-85c6-4592791de32d" action="eval">
+                                    <command>
+                                        <body>set result &quot;Unknown command or computer name, or unable to find computer address&quot;</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="15d093dd-9fd1-455f-9042-e44e47a7f014" action="else">
+                            <nestedSteps>
+                                <item guid="1bbcf088-af6f-449e-b8aa-9bdb928a45fa" action="eval">
+                                    <command>
+                                        <body>set result &quot;&quot;</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                                <item guid="9a2904e1-aba6-4759-84b0-9f1e4f6b76c1" action="eval">
+                                    <command>
+                                        <body>set result &quot;$result  Proceed with reload?&quot;</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="e4afc7df-9341-4963-b4e3-d36068dcf718" action="command" session="s2" normalOffset="1.766" estimatedStepExecutionTime="1.047">
+                    <postProcessing>
+                        <storeResponseAt>confirm_result</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                        <completionProperties expectedIdleTime="0.485" expectedIdleTime.inherit="false"/>
+                    </applicationProperties>
+                </item>
+                <item guid="b50d40c5-f2da-4fad-a228-8be02ef87d6d" action="eval">
+                    <command>
+                        <body>set result &quot;$result [response confirm_result {reload(.*)} ]&quot;</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="81e17c29-47eb-45a7-b02c-867f5a20480a" action="if">
+                    <command>
+                        <body>[regexp {reload} $result dummary d1 ] == 0 </body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="70c74ebe-8173-4d77-818f-b261b0c1526d" action="then">
+                            <nestedSteps>
+                                <item guid="2ac3d275-aee4-4a9d-be95-54d58e288e70" action="eval">
+                                    <command>
+                                        <body>puts &quot;False&quot;</body>
+                                    </command>
+                                    <postProcessing>
+                                        <analysisRules>
+                                            <item>
+                                                <extractorInfo extractorType="contains">
+                                                    <extractorProperties type="com.fnfr.svt.mapping.execution.extractors.ExtractorContainsPropertyGroup">
+                                                        <searchString>False</searchString>
+                                                    </extractorProperties>
+                                                </extractorInfo>
+                                                <processorInfo ruleType="message">
+                                                    <ruleProperties type="com.fnfr.svt.testcase.documents.MessageProcessorPropertyGroup">
+                                                        <message>{auto_message}</message>
+                                                    </ruleProperties>
+                                                </processorInfo>
+                                            </item>
+                                        </analysisRules>
+                                    </postProcessing>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="88fdd4a3-6b22-408a-8c1a-454e5c43e1f7" action="else">
+                            <nestedSteps>
+                                <item guid="2c63bb38-66f2-459e-9129-2b666c1a2f76" action="comment">
+                                    <command>
+                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="7c247615-136f-4938-9f36-3e5b462bec64" action="return">
+                    <command>
+                        <body>$result</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session"/>
+                <item name="privilegedpasswd"/>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

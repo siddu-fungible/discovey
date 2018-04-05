@@ -1,0 +1,24 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCLSAREQ" 
+    showName="FC LSA REQ"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcsw:LsaReq"
+    description="FC LSA REQ">
+    <pdus>
+      <pdu name="lsaReq1" pdu="fcsw:LsaReq" >
+      	<fspfHeader>
+		  <command>16000000</command>
+		</fspfHeader>
+		<lsrs>
+		  <LinkStateHeader name="LinkStateHeader_0">				    
+		  </LinkStateHeader>
+		</lsrs>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

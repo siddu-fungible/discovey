@@ -1,0 +1,223 @@
+<Template>
+<Description />
+<Image />
+<DataModelXml>
+<StcSystem id="1" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName="Untitled.tcc"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="1168"/>
+    <Tags id="1208" serializationBase="true" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1400"/>
+      <Relation type="UserTag" target="1401"/>
+      <Relation type="UserTag" target="9401"/>
+      <Relation type="UserTag" target="9402"/>
+      <Relation type="UserTag" target="9404"/>
+      <Relation type="UserTag" target="9405"/>
+      <Relation type="UserTag" target="9406"/>
+      <Relation type="UserTag" target="9407"/>
+      <Tag id="1400" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamBlock">
+      </Tag>
+      <Tag id="1401" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamBlockLoadProfile">
+      </Tag>
+      <Tag id="9401" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamModSrcIp">
+      </Tag>
+      <Tag id="9402" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamModDstIp">
+      </Tag>
+      <Tag id="9404" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamModDstMac">
+      </Tag>
+      <Tag id="9405" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamModGateway">
+      </Tag>
+      <Tag id="9406" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamFragFlag">
+      </Tag>
+      <Tag id="9407" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamFragOffset">
+      </Tag>
+    </Tags>
+    <StreamBlock id="2458" serializationBase="true" 
+     IsControlledByGenerator="TRUE"
+     ControlledBy="generator"
+     TrafficPattern="PAIR"
+     EndpointMapping="ONE_TO_ONE"
+     EnableStreamOnlyGeneration="TRUE"
+     EnableBidirectionalTraffic="FALSE"
+     EqualRxPortDistribution="FALSE"
+     EnableTxPortSendingTrafficToSelf="FALSE"
+     EnableControlPlane="FALSE"
+     InsertSig="TRUE"
+     FrameLengthMode="FIXED"
+     FixedFrameLength="128"
+     MinFrameLength="128"
+     MaxFrameLength="256"
+     StepFrameLength="1"
+     FillType="CONSTANT"
+     ConstantFillPattern="0"
+     EnableFcsErrorInsertion="FALSE"
+     Filter=""
+     ShowAllHeaders="FALSE"
+     AllowInvalidHeaders="FALSE"
+     AutoSelectTunnel="FALSE"
+     ByPassSimpleIpSubnetChecking="FALSE"
+     EnableHighSpeedResultAnalysis="TRUE"
+     EnableBackBoneTrafficSendToSelf="TRUE"
+     EnableResolveDestMacAddress="TRUE"
+     AdvancedInterleavingGroup="0"
+     DisableTunnelBinding="FALSE"
+     FrameConfig="&lt;frame&gt;&lt;config&gt;&lt;pdus&gt;&lt;pdu name=&quot;eth1&quot; pdu=&quot;ethernet:EthernetII&quot;&gt;&lt;dstMac&gt;00:00:01:00:00:01&lt;/dstMac&gt;&lt;/pdu&gt;&lt;pdu name=&quot;ip_1&quot; pdu=&quot;ipv4:IPv4&quot;&gt;&lt;totalLength&gt;20&lt;/totalLength&gt;&lt;fragOffset&gt;0&lt;/fragOffset&gt;&lt;checksum&gt;14740&lt;/checksum&gt;&lt;sourceAddr&gt;192.85.1.2&lt;/sourceAddr&gt;&lt;destAddr&gt;192.0.0.1&lt;/destAddr&gt;&lt;gateway&gt;192.85.1.1&lt;/gateway&gt;&lt;tosDiffserv name=&quot;anon_2738&quot;&gt;&lt;tos name=&quot;anon_2739&quot;&gt;&lt;/tos&gt;&lt;/tosDiffserv&gt;&lt;flags name=&quot;anon_2740&quot;&gt;&lt;mfBit&gt;0&lt;/mfBit&gt;&lt;/flags&gt;&lt;/pdu&gt;&lt;/pdus&gt;&lt;/config&gt;&lt;/frame&gt;"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="StreamBlock 2">
+      <Relation type="UserTag" target="1400"/>
+      <Relation type="AffiliationFrameLengthDistribution" target="15"/>
+      <Relation type="AffiliationStreamBlockLoadProfile" target="2459"/>
+      <RangeModifier id="1407" 
+       ModifierMode="INCR"
+       Mask="00:00:FF:FF:FF:FF"
+       StepValue="00:00:00:00:00:01"
+       RecycleCount="1"
+       RepeatCount="0"
+       Data="00:00:01:00:00:01"
+       DataType="NATIVE"
+       EnableStream="FALSE"
+       Offset="0"
+       OffsetReference="eth1.dstMac"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="MAC Modifier">
+        <Relation type="UserTag" target="9404"/>
+      </RangeModifier>
+      <RangeModifier id="1408" 
+       ModifierMode="INCR"
+       Mask="1"
+       StepValue="1"
+       RecycleCount="1"
+       RepeatCount="0"
+       Data="0"
+       DataType="NATIVE"
+       EnableStream="FALSE"
+       Offset="0"
+       OffsetReference="ip_1.flags.mfBit"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Modifier">
+        <Relation type="UserTag" target="9406"/>
+      </RangeModifier>
+      <RangeModifier id="1409" 
+       ModifierMode="INCR"
+       Mask="8191"
+       StepValue="1"
+       RecycleCount="1"
+       RepeatCount="0"
+       Data="0"
+       DataType="NATIVE"
+       EnableStream="FALSE"
+       Offset="0"
+       OffsetReference="ip_1.fragOffset"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Modifier">
+        <Relation type="UserTag" target="9407"/>
+      </RangeModifier>
+      <RangeModifier id="1410" 
+       ModifierMode="INCR"
+       Mask="255.255.255.255"
+       StepValue="0.0.0.1"
+       RecycleCount="1"
+       RepeatCount="0"
+       Data="192.85.1.1"
+       DataType="NATIVE"
+       EnableStream="FALSE"
+       Offset="0"
+       OffsetReference="ip_1.gateway"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 Modifier">
+        <Relation type="UserTag" target="9405"/>
+      </RangeModifier>
+      <RangeModifier id="1411" 
+       ModifierMode="INCR"
+       Mask="255.255.255.255"
+       StepValue="0.0.0.1"
+       RecycleCount="1"
+       RepeatCount="0"
+       Data="192.0.0.1"
+       DataType="NATIVE"
+       EnableStream="FALSE"
+       Offset="0"
+       OffsetReference="ip_1.destAddr"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 Modifier">
+        <Relation type="UserTag" target="9402"/>
+      </RangeModifier>
+      <RangeModifier id="1412" 
+       ModifierMode="INCR"
+       Mask="255.255.255.255"
+       StepValue="0.0.0.1"
+       RecycleCount="1"
+       RepeatCount="0"
+       Data="192.85.1.2"
+       DataType="NATIVE"
+       EnableStream="FALSE"
+       Offset="0"
+       OffsetReference="ip_1.sourceAddr"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 Modifier">
+        <Relation type="UserTag" target="9401"/>
+      </RangeModifier>
+    </StreamBlock>
+    <StreamBlockLoadProfile id="2112" serializationBase="true" 
+     Load="10"
+     LoadUnit="PERCENT_LINE_RATE"
+     BurstSize="1"
+     InterFrameGap="12"
+     InterFrameGapUnit="BYTES"
+     StartDelay="0"
+     Priority="0"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="StreamBlockLoadProfile 1">
+      <Relation type="UserTag" target="1401"/>
+    </StreamBlockLoadProfile>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

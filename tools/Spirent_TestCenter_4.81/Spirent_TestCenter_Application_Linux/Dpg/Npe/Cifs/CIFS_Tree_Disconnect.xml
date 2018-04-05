@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="CIFS_Tree_Disconnect" type="stream" layer="tcp" closeType="client_fin">
+  <MetaData description="CIFS_Tree_Disconnect" protocol="CIFS" application="CIFS" createDate=""/>
+  <Packets>
+    <Packet name="Tree_Disconnect_Request" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>00000023ff534d4271000000000803c8000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Tree_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>4379</pattern>
+            </pdu>
+            <pdu name="User_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>1300000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="Tree_Disconnect_Response" pktDelay="1" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>00000023ff534d4271000000008803c8000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Tree_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>4379</pattern>
+            </pdu>
+            <pdu name="User_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>1300000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables>
+    <Variable name="tree_id"
+              targets="Tree_Disconnect_Request/Tree_Id/pattern Tree_Disconnect_Response/Tree_Id/pattern"
+              value="0008" endian="little"
+              description="Tree ID"/>
+    <Variable name="process_id"
+              targets="Tree_Disconnect_Request/Process_Id/pattern Tree_Disconnect_Response/Process_Id/pattern"
+              value="4379" endian="little"
+              description="Process ID"/>
+    <Variable name="user_id"
+              targets="Tree_Disconnect_Request/User_Id/pattern Tree_Disconnect_Response/User_Id/pattern"
+              value="0008" endian="little"
+              description="User ID"/>
+  </Variables>
+  <Modifiers/>
+</Flow>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="rtcp"
+  showName="RTCP"
+  version="1.00"
+  description="This is a sample PDU library for 1733 RTCP as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="rtcpBoolean" type="INTEGER" bitLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="False" value="0" />
+        <VAL_ENUM uiShowName="True"  value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+
+
+    <TYPE_DEF name="RtcpHeader" type="SEQUENCE" unitType="HEADER" portType="Ethernet" uiShowName="RTCP Header" >
+	  <FIELD name="version"  type="INTEGER"           bitLength="2"  defaultValue="2" uiShowName="Version" />
+	  <FIELD name="padding"  type="rtcpBoolean"  bitLength="1"  defaultValue="0" uiShowName="Padding" />
+	  <FIELD name="SubtypeField"  type="INTEGER"           bitLength="5"  defaultValue="0" uiShowName="Subtype" />
+	  <FIELD name="PackettypeField"  type="INTEGER"           bitLength="8"  defaultValue="208" uiShowName="PacketType" />
+	  <FIELD name="Length"  type="INTEGER"           bitLength="16"  defaultValue="9" uiShowName="PacketLength" />
+  	  <FIELD name="ssrc"  type="INTEGER"           bitLength="32"  defaultValue="0" uiShowName="SSRC" />
+  	  <FIELD name="Name"  type="ASCII"           minByteLength="4" maxByteLength="4"  defaultValue="ABCD" uiShowName="Name" />
+  	  <FIELD name="GMTimeBaseIndicator"  type="INTEGER"           bitLength="16"  defaultValue="0" uiShowName="Grand Master Time Base Indicator" />
+	  <FIELD name="GMIdentity" type="OCTETSTRING" byteLength="10" defaultValue="00000000000000000000" uiShowName="Grand Master Identiy " />
+	  <FIELD name="streamIdField" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="Stream ID" />
+	  <FIELD name="ASTimestamp" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="AS Timestamp " />
+	  <FIELD name="RTPTimestamp" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="RTP Timestamp " /> 	  
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="SCSICDB10"
+    showName="SCSI 10-byte CDB"
+    version="1.00"
+    category="SCSI"
+    readonly="true"
+    validate="true"
+    firstPdu="scsi:CDB10"
+    description="SCSI 10-byte CDB" >
+
+    <pdus>
+      <pdu name="cdb6" pdu="scsi:CDB10" />
+    </pdus>
+
+  </template>
+</frame>

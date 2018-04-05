@@ -1,0 +1,16 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Ieee80211iStatus"
+    showName="Ieee80211iStatus TLV"
+    version="1.00"
+    category="CSMP Monitoring TLV"
+    readonly="true"
+    validate="true"
+    firstPdu="csmptlv:Ieee80211iStatus"
+    description="Ieee80211iStatus TLV">
+    <pdus>
+       <pdu name="proto1" pdu="csmptlv:Ieee80211iStatus"/>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,469 @@
+{
+  "methodology_key": "RFC6349",
+  "display_name": "RFC 6349 TCP Throughput Methodology",
+  "short_display_name": "RFC 6349 TCP Throughput Methodology",
+  "description": "Measure the TCP Throughput of a network for analysis for TCP tuning.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "port_groups": [
+    {
+      "property": "PortPool",
+      "display_name": "Ports",
+      "description": "The pool of ports to choose from for connection end points",
+      "enable_unique_tags": true,
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "Client"
+        },
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "Server"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "TEST",
+      "display_name": "RFC 6349 Configuration",
+      "description": "",
+      "test_properties": [
+        {
+          "description": "The time to wait while frames are traveling across the network during the MTU search test",
+          "display_name": "MTU Wait Time",
+          "property": "MtuWaitTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "9999",
+          "units": "seconds"
+        },
+        {
+          "description": "The time to wait while frames are traveling across the network during the bandwidth bottleneck test",
+          "display_name": "Bandwidth Bottleneck Wait Time",
+          "property": "BbWaitTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2",
+          "minimum": "1",
+          "maximum": "9999",
+          "units": "seconds"
+        },
+        {
+          "description": "The time to wait while frames are traveling across the network during the round trip time test",
+          "display_name": "RTT Wait Time",
+          "property": "RttWaitTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "9999",
+          "units": "seconds"
+        },
+        {
+          "description": "The time to wait to detect any activity in the round trip time test before failing",
+          "display_name": "RTT Timeout",
+          "property": "RttTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "60",
+          "minimum": "1",
+          "maximum": "9999",
+          "units": "seconds"
+        },
+        {
+          "description": "The time to wait while data travels across connections for the TCP throughput test",
+          "display_name": "Throughput Wait Time",
+          "property": "TputWaitTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "15",
+          "minimum": "15",
+          "maximum": "9999",
+          "units": "seconds"
+        },
+        {
+          "description": "Specify the acceptable percent of lost bytes before the throughput test fails",
+          "display_name": "Throughput Byte Loss Threshold",
+          "property": "TputLossThreshold",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "100",
+          "units": "%"
+        },
+        {
+          "description": "Stop the test if a learning failure is detected",
+          "display_name": "Stop On Learning Failure",
+          "property": "StopOnLearningFailure",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        },
+        {
+          "description": "Use the lowest rate even if there are dropped frames detected in the bandwidth bottleneck test",
+          "display_name": "Use Lowest Rate",
+          "property": "UseMinRateForRateFloor",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        },
+        {
+          "description": "Specify maximum number of sessions per client/server pair",
+          "display_name": "Max TCP Session Count",
+          "property": "MaxTcpSessions",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295"
+        }
+      ]
+    },
+    {
+      "group_type": "USER",
+      "display_name": "Connection Configuration",
+      "description": "Configure the endpoints of the connections",
+      "test_properties": [
+        {
+          "property": "ConnectionConfigurationTable",
+          "display_name": "RFC 6349 Connection Configuration",
+          "description": "The connections to be used in the RFC 6349 Methodology",
+          "column_definitions": [
+            {
+              "description": "Name of the connection",
+              "display_name": "Connection Name",
+              "property": "ConnectionName",
+              "property_value_type": "STRING",
+              "is_collection": false
+            },
+            {
+              "description": "The connection status (set to Enabled to use the connection within a test)",
+              "display_name": "Status",
+              "property": "Status",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "Enabled",
+                "Disabled"
+              ]
+            },
+            {
+              "description": "Client port for the connection",
+              "display_name": "Client Port",
+              "property": "ClientPortTag",
+              "property_value_type": "PORT_GROUP",
+              "is_collection": false
+            },
+            {
+              "description": "The IPv4 address prefix length for the client end point",
+              "display_name": "Client IPv4 Prefix Length",
+              "property": "ClientIpv4PrefixLength",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "32"
+            },
+            {
+              "description": "The IPv4 address for the client end point",
+              "display_name": "Client IPv4 Address",
+              "property": "ClientIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The IPv4 address for the client end point's gateway",
+              "display_name": "Client IPv4 Gateway Address",
+              "property": "ClientIpv4GwAddr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The MAC address for the client end point",
+              "display_name": "Client MAC Address",
+              "property": "ClientMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "The VLAN mode for the client end of the connection",
+              "display_name": "Client VLAN Mode",
+              "property": "ClientVlanMode",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "None",
+                "VLAN",
+                "QinQ"
+              ]
+            },
+            {
+              "description": "The VLAN ID for the client end point",
+              "display_name": "Client VLAN ID",
+              "property": "ClientVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The VLAN priority for the client end point",
+              "display_name": "Client VLAN Priority",
+              "property": "ClientVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The inner VLAN ID for the client end point",
+              "display_name": "Client Inner VLAN ID",
+              "property": "ClientInnerVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The inner VLAN priority for the client end point",
+              "display_name": "Client Inner VLAN Priority",
+              "property": "ClientInnerVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The Client Traffic Generated DSCP value of the connection",
+              "display_name": "Client DSCP Value",
+              "property": "ClientDscpValue",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "High Priority",
+                "Best Effort",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43",
+                "CS1",
+                "CS2",
+                "CS3",
+                "CS4",
+                "CS5",
+                "CS6",
+                "CS7"
+              ]
+            },
+            {
+              "description": "Server port for the connection",
+              "display_name": "Server Port",
+              "property": "ServerPortTag",
+              "property_value_type": "PORT_GROUP",
+              "is_collection": false
+            },
+            {
+              "description": "The TCP port number for the server to listen with",
+              "display_name": "Server TCP Port Number",
+              "property": "ServerTcpPortNum",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "65535"
+            },
+            {
+              "description": "The IPv4 address prefix length for the server end point",
+              "display_name": "Server IPv4 Prefix Length",
+              "property": "ServerIpv4PrefixLength",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "32"
+            },
+            {
+              "description": "The IPv4 address for the server end point",
+              "display_name": "Server IPv4 Address",
+              "property": "ServerIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The IPv4 address for the server end point's gateway",
+              "display_name": "Server IPv4 Gateway Address",
+              "property": "ServerIpv4GwAddr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The MAC address for the server end point",
+              "display_name": "Server MAC Address",
+              "property": "ServerMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "The VLAN mode for the server end of the connection",
+              "display_name": "Server VLAN Mode",
+              "property": "ServerVlanMode",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "None",
+                "VLAN",
+                "QinQ"
+              ]
+            },
+            {
+              "description": "The VLAN ID for the server end point",
+              "display_name": "Server VLAN ID",
+              "property": "ServerVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The VLAN priority for the server end point",
+              "display_name": "Server VLAN Priority",
+              "property": "ServerVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The inner VLAN ID for the server end point",
+              "display_name": "Server Inner VLAN ID",
+              "property": "ServerInnerVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The inner VLAN priority for the server end point",
+              "display_name": "Server Inner VLAN Priority",
+              "property": "ServerInnerVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The Server Traffic Generated DSCP value of the connection",
+              "display_name": "Server DSCP Value",
+              "property": "ServerDscpValue",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "High Priority",
+                "Best Effort",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43",
+                "CS1",
+                "CS2",
+                "CS3",
+                "CS4",
+                "CS5",
+                "CS6",
+                "CS7"
+              ]
+            },
+            {
+              "description": "The UDP port number used for RTT measurements (TWAMP)",
+              "display_name": "UDP Port Number",
+              "property": "UdpPort",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "65535"
+            },
+            {
+              "description": "The minimum TCP Threshold required to pass the test",
+              "display_name": "TCP Throughput Threshold",
+              "property": "TcpThroughputThreshold",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4294967295",
+              "units": "megabits/s"
+            },
+            {
+              "description": "TCP Throughput Direction",
+              "display_name": "TCP Throughput Direction",
+              "property": "TCPThroughputDirection",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "Upstream",
+                "Downstream",
+                "Bidirectional"
+              ]
+            }
+          ],
+          "table": [
+            [
+              "Basic",
+              "Enabled",
+              "Client",
+              "24",
+              "192.168.0.2",
+              "192.168.0.1",
+              "00:10:94:00:00:01",
+              "None",
+              "100",
+              "1",
+              "100",
+              "1",
+              "Best Effort",
+              "Server",
+              "3357",
+              "24",
+              "192.168.0.1",
+              "192.168.0.2",
+              "00:10:95:00:00:01",
+              "None",
+              "100",
+              "1",
+              "100",
+              "1",
+              "Best Effort",
+              "5001",
+              "0",
+              "Downstream"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

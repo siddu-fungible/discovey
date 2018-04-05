@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<SessionTemplate version="3.4.1.41207">
+    <baseApplication>com.fnfr.svt.applications.telnet</baseApplication>
+    <sessionProperties type="com.fnfr.svt.applications.telnet.documents.TelnetSessionProperties">
+        <ipAddress inherit="false">10.99.0.191</ipAddress>
+        <port inherit="false" defaultValue=""/>
+        <TerminalProperties>
+            <captureProperties>
+                <commandBreakChars inherit="false">
+                    <item>[char CTRL-c]</item>
+                </commandBreakChars>
+                <commandCompletionchars inherit="false">
+                    <item>[char TAB]</item>
+                    <item>?</item>
+                </commandCompletionchars>
+            </captureProperties>
+            <prompts inherit="false">
+                <item name="unprivileged" MatchMethod="WILDCARD">
+                    <Content>*&gt;</Content>
+                </item>
+                <item name="privileged" MatchMethod="WILDCARD">
+                    <Content>*#</Content>
+                </item>
+                <item name="config" MatchMethod="WILDCARD">
+                    <Content>*(config*)#</Content>
+                </item>
+                <item name="confirm" MatchMethod="WILDCARD">
+                    <Content>*[confirm]</Content>
+                </item>
+                <item name="login">
+                    <Content>Login:</Content>
+                </item>
+                <item name="username">
+                    <Content>Username:</Content>
+                </item>
+                <item name="password">
+                    <Content>Password:</Content>
+                </item>
+            </prompts>
+        </TerminalProperties>
+    </sessionProperties>
+</SessionTemplate>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+   name="MPLS_GAL" 
+   showName="MPLS GAL" 
+   version="1.0" 
+   category="Layer2" 
+   readonly="false" 
+   validate="true" 
+   firstPdu="mpls:Mpls" 
+   description="MPLS GAL">
+      
+   <pdus>
+	  <pdu name="proto1" pdu="mpls:Mpls">
+		<label>13</label>
+		<exp>110</exp>
+		<ttl>1</ttl>
+	  </pdu>
+   </pdus>
+  </template>
+</frame>

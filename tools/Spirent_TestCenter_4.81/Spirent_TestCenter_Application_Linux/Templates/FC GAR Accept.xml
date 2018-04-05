@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGARAccept" 
+    showName="FC GAR Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GarAccept"
+    description="FC GAR Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GarAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+								<interconnectElementEntries>
+										<GarInterconnectElementEntry name="GarInterconnectElementEntry_0">
+										</GarInterconnectElementEntry>
+								</interconnectElementEntries>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,431 @@
+{
+    "methodology_key": "CLOUDSTRESS_BENCHMARK_FIXEDCOUNT",
+    "state_modifiers": [
+        {
+            "property": "EnableCpuTestCriteria",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false)",
+            "message": "Disabled when the CPU Dimension is disabled."
+        },
+        {
+            "property": "AcceptableCpuLoadVariance",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false) || (%EnableCpuTestCriteria% == false)",
+            "message": "Disabled when the CPU Dimension or the CPU Test Criteria is disabled."
+        },
+        {
+            "property": "CpuLoadVarianceSuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false) || (%EnableCpuTestCriteria% == false)",
+            "message": "Disabled when the CPU Dimension or the CPU Test Criteria is disabled."
+        },
+        {
+            "property": "MinMaxCpuLoadParam",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false)",
+            "message": "Disabled when the CPU Dimension is disabled."
+        },
+
+
+        {
+            "property": "EnableMemoryTestCriteria",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false)",
+            "message": "Disabled when the Memory Dimension is disabled."
+        },
+        {
+            "property": "AcceptableMemoryReadVariance",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableMemoryReadLatency",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableMemoryWriteVariance",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableMemoryWriteLatency",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "MemoryReadVarianceSuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "MemoryReadLatencySuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "MemoryWriteVarianceSuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "MemoryWriteLatencySuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)",
+            "message": "Disabled when the Memory Dimension or the Memory Test Criteria is disabled."
+        },
+        {
+            "property": "MinMaxMemoryLoadParams",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "%EnableMemoryLoad% == false",
+            "message": "Disabled when the Memory Dimension is disabled."
+        },
+
+
+        {
+            "property": "EnableNetworkTestCriteria",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false)",
+            "message": "Disabled when the Network Dimension is disabled."
+        },
+        {
+            "property": "AcceptableNetworkReadVariance",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when Network Load or Network Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableNetworkReadLatency",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when Network Load or Network Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableNetworkWriteVariance",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when the Network Dimension or the Network Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableNetworkWriteLatency",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when the Network Dimension or the Network Test Criteria is disabled."
+        },
+        {
+            "property": "NetworkReadVarianceSuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when the Network Dimension or the Network Test Criteria is disabled."
+        },
+        {
+            "property": "NetworkReadLatencySuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when the Network Dimension or the Network Test Criteria is disabled."
+        },
+        {
+            "property": "NetworkWriteVarianceSuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when the Network Dimension or the Network Test Criteria is disabled."
+        },
+        {
+            "property": "NetworkWriteLatencySuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)",
+            "message": "Disabled when the Network Dimension or the Network Test Criteria is disabled."
+        },
+        {
+            "property": "MinMaxNetworkLoadParams",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "%EnableNetworkLoad% == false",
+            "message": "Disabled when the Network Dimension is disabled."
+        },
+
+
+        {
+            "property": "EnableStorageTestCriteria",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false)",
+            "message": "Disabled when the Storage Dimension is disabled."
+        },
+        {
+            "property": "AcceptableStorageReadVariance",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when Storage Load or Storage Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableStorageReadLatency",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when Storage Load or Storage Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableStorageWriteVariance",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when the Storage Dimension or the Storage Test Criteria is disabled."
+        },
+        {
+            "property": "AcceptableStorageWriteLatency",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when the Storage Dimension or the Storage Test Criteria is disabled."
+        },
+        {
+            "property": "StorageReadVarianceSuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when the Storage Dimension or the Storage Test Criteria is disabled."
+        },
+        {
+            "property": "StorageReadLatencySuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when the Storage Dimension or the Storage Test Criteria is disabled."
+        },
+        {
+            "property": "StorageWriteVarianceSuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when the Storage Dimension or the Storage Test Criteria is disabled."
+        },
+        {
+            "property": "StorageWriteLatencySuccessThreshold",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false)",
+            "message": "Disabled when the Storage Dimension or the Storage Test Criteria is disabled."
+        },
+        {
+            "property": "MinMaxStorageLoadParams",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "%EnableStorageLoad% == false",
+            "message": "Disabled when the Storage Dimension is disabled."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageFileSize",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "%MinMaxStorageLoadParams.StorageEnableFileSize% == false",
+            "message": "Disabled when Enable File Size is disabled."
+        },
+
+
+        {
+            "property_group": "AutoDeployConfig",
+            "state_type": "hidden",
+            "type": "expression",
+            "value": "has_deployment_config() == false",
+            "message": "Auto-Deployment Configuration is not used when there aren't any templates that need auto-deploying."
+        }
+    ],
+    "validations": [
+        {
+            "property": "EnableCpuLoad",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false) && (%EnableMemoryLoad% == false) && (%EnableNetworkLoad% == false) && (%EnableStorageLoad% == false)",
+            "message": "One of the dimensions must be enabled to run the test."
+        },
+        {
+            "property": "EnableMemoryLoad",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false) && (%EnableMemoryLoad% == false) && (%EnableNetworkLoad% == false) && (%EnableStorageLoad% == false)",
+            "message": "One of the dimensions must be enabled to run the test."
+        },
+        {
+            "property": "EnableNetworkLoad",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false) && (%EnableMemoryLoad% == false) && (%EnableNetworkLoad% == false) && (%EnableStorageLoad% == false)",
+            "message": "One of the dimensions must be enabled to run the test."
+        },
+        {
+            "property": "EnableStorageLoad",
+            "type": "expression",
+            "value": "(%EnableCpuLoad% == false) && (%EnableMemoryLoad% == false) && (%EnableNetworkLoad% == false) && (%EnableStorageLoad% == false)",
+            "message": "One of the dimensions must be enabled to run the test."
+        },
+        {
+            "property": "EnableCpuTestCriteria",
+            "type": "expression",
+            "value": "((%EnableCpuLoad% == false) || (%EnableCpuTestCriteria% == false)) && ((%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)) && ((%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)) && ((%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false))",
+            "message": "Test criteria for at least one enabled dimension must be enabled to run the test."
+        },
+        {
+            "property": "EnableMemoryTestCriteria",
+            "type": "expression",
+            "value": "((%EnableCpuLoad% == false) || (%EnableCpuTestCriteria% == false)) && ((%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)) && ((%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)) && ((%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false))",
+            "message": "Test criteria for at least one enabled dimension must be enabled to run the test."
+        },
+        {
+            "property": "EnableNetworkTestCriteria",
+            "type": "expression",
+            "value": "((%EnableCpuLoad% == false) || (%EnableCpuTestCriteria% == false)) && ((%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)) && ((%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)) && ((%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false))",
+            "message": "Test criteria for at least one enabled dimension must be enabled to run the test."
+        },
+        {
+            "property": "EnableStorageTestCriteria",
+            "type": "expression",
+            "value": "((%EnableCpuLoad% == false) || (%EnableCpuTestCriteria% == false)) && ((%EnableMemoryLoad% == false) || (%EnableMemoryTestCriteria% == false)) && ((%EnableNetworkLoad% == false) || (%EnableNetworkTestCriteria% == false)) && ((%EnableStorageLoad% == false) || (%EnableStorageTestCriteria% == false))",
+            "message": "Test criteria for at least one enabled dimension must be enabled to run the test."
+        },
+
+
+        {
+            "property": "MinMaxCpuLoadParam.MinCpuLoad",
+            "type": "expression",
+            "value": "%MinMaxCpuLoadParam.MinCpuLoad% > %MinMaxCpuLoadParam.MaxCpuLoad%",
+            "message": "The Minimum CPU Load must be less than or equal to the Maximum CPU Load."
+        },
+
+
+        {
+            "property": "MinMaxMemoryLoadParams.MinMemoryReadRate",
+            "type": "expression",
+            "value": "%MinMaxMemoryLoadParams.MinMemoryReadRate% > %MinMaxMemoryLoadParams.MaxMemoryReadRate%",
+            "message": "The Minimum Memory Read Rate must be less than or equal to the Maximum Memory Read Rate."
+        },
+        {
+            "property": "MinMaxMemoryLoadParams.MinMemoryWriteRate",
+            "type": "expression",
+            "value": "%MinMaxMemoryLoadParams.MinMemoryWriteRate% > %MinMaxMemoryLoadParams.MaxMemoryWriteRate%",
+            "message": "The Minimum Memory Write Rate must be less than or equal to the Maximum Memory Write Rate."
+        },
+        {
+            "property": "MinMaxMemoryLoadParams.MemoryReadSize",
+            "type": "expression",
+            "value": "(%MinMaxMemoryLoadParams.MemoryReadSize% & (%MinMaxMemoryLoadParams.MemoryReadSize% - 1)) != 0",
+            "message": "The memory read block size must be a power of 2."
+        },
+        {
+            "property": "MinMaxMemoryLoadParams.MemoryWriteSize",
+            "type": "expression",
+            "value": "(%MinMaxMemoryLoadParams.MemoryWriteSize% & (%MinMaxMemoryLoadParams.MemoryWriteSize% - 1)) != 0",
+            "message": "The memory write block size must be a power of 2."
+        },
+        {
+            "property": "MinMaxMemoryLoadParams.MemoryBufferSize",
+            "type": "expression",
+            "value": "(%MinMaxMemoryLoadParams.MemoryBufferSize% % %MinMaxMemoryLoadParams.MemoryReadSize%) != 0",
+            "message": "The memory buffer size must be a multiple of the memory read block size."
+        },
+        {
+            "property": "MinMaxMemoryLoadParams.MemoryBufferSize",
+            "type": "expression",
+            "value": "(%MinMaxMemoryLoadParams.MemoryBufferSize% % %MinMaxMemoryLoadParams.MemoryWriteSize%) != 0",
+            "message": "The memory buffer size must be a multiple of the memory write block size."
+        },
+
+
+        {
+            "property": "MinMaxNetworkLoadParams.MinNetworkReadRate",
+            "type": "expression",
+            "value": "%MinMaxNetworkLoadParams.MinNetworkReadRate% > %MinMaxNetworkLoadParams.MaxNetworkReadRate%",
+            "message": "The Minimum Network Read Rate must be less than or equal to the Maximum Network Read Rate."
+        },
+        {
+            "property": "MinMaxNetworkLoadParams.MinNetworkWriteRate",
+            "type": "expression",
+            "value": "%MinMaxNetworkLoadParams.MinNetworkWriteRate% > %MinMaxNetworkLoadParams.MaxNetworkWriteRate%",
+            "message": "The Minimum Network Write Rate must be less than or equal to the Maximum Network Write Rate."
+        },
+        {
+            "property": "MinMaxNetworkLoadParams.NetworkReadSize",
+            "type": "expression",
+            "value": "(%MinMaxNetworkLoadParams.NetworkReadSize% & (%MinMaxNetworkLoadParams.NetworkReadSize% - 1)) != 0",
+            "message": "The network read block size must be a power of 2."
+        },
+        {
+            "property": "MinMaxNetworkLoadParams.NetworkWriteSize",
+            "type": "expression",
+            "value": "(%MinMaxNetworkLoadParams.NetworkWriteSize% & (%MinMaxNetworkLoadParams.NetworkWriteSize% - 1)) != 0",
+            "message": "The network write block size must be a power of 2."
+        },
+
+
+        {
+            "property": "EnableNetworkLoad",
+            "type": "expression",
+            "value": "(%EnableNetworkLoad% == true) && (get_machine_count('MachineGroupWestMachineGroup') < 2)",
+            "message": "The network dimension requires at least two agents."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.MinStorageReadRate",
+            "type": "expression",
+            "value": "%MinMaxStorageLoadParams.MinStorageReadRate% > %MinMaxStorageLoadParams.MaxStorageReadRate%",
+            "message": "The Minimum Storage Read Rate must be less than or equal to the Maximum Storage Read Rate."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.MinStorageWriteRate",
+            "type": "expression",
+            "value": "%MinMaxStorageLoadParams.MinStorageWriteRate% > %MinMaxStorageLoadParams.MaxStorageWriteRate%",
+            "message": "The Minimum Storage Write Rate must be less than or equal to the Maximum Storage Write Rate."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageReadSize",
+            "type": "expression",
+            "value": "(%MinMaxStorageLoadParams.StorageReadSize% & (%MinMaxStorageLoadParams.StorageReadSize% - 1)) != 0",
+            "message": "The storage read block size must be a power of 2."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageWriteSize",
+            "type": "expression",
+            "value": "(%MinMaxStorageLoadParams.StorageWriteSize% & (%MinMaxStorageLoadParams.StorageWriteSize% - 1)) != 0",
+            "message": "The storage write block size must be a power of 2."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageEnableFileSize",
+            "type": "expression",
+            "value": "!%MinMaxStorageLoadParams.StorageEnableFileSize% && %MinMaxStorageLoadParams.StorageTargetDevice%.starts_with('/')",
+            "message": "Storage file size must be enabled when a file path is specified."
+        },
+        {
+            "property": "MinMaxStorageLoadParams.StorageFileSize",
+            "type": "expression",
+            "value": "%MinMaxStorageLoadParams.StorageEnableFileSize% && ((%MinMaxStorageLoadParams.StorageReadSize% >= %MinMaxStorageLoadParams.StorageFileSize%) || (%MinMaxStorageLoadParams.StorageWriteSize% >= %MinMaxStorageLoadParams.StorageFileSize%))",
+            "message": "Storage file size must be greater than both the storage read size and storage write size when enable storage file size is enabled."
+        }
+    ]
+}

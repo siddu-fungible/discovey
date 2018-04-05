@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGRHLAccept" 
+    showName="FC GRHL Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GrhlAccept"
+    description="FC GRHL Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GrhlAccept">
+        <ctIuPreamble>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,410 @@
+<L2l3query>
+	<CustomCounterDefinition>
+		<Counter
+            CounterName="StreamBlock.PortStrayFrames"
+            SqlString="(case when MIN(coalesce(IsExpectedPort,1)) = 0 then 'YES' else 'NO' end)"
+			Type="BOTH">
+		</Counter>
+		<Counter
+			CounterName="StreamBlock.TxBitCount"
+			DependedCounters="StreamBlock.TxOctetCount"
+			SqlString="(%StreamBlock.TxOctetCount% * 8)"
+			Type="TX">
+		</Counter>
+		<Counter
+			CounterName="StreamBlock.RxBitCount"
+			DependedCounters="StreamBlock.RxOctetCount"
+			SqlString="coalesce(%StreamBlock.RxOctetCount% * 8, 0)"
+			Type="RX">
+		</Counter>
+		<Counter
+			CounterName="StreamBlock.AvgLatency"
+			DependedCounters="StreamBlock.TotalLatency StreamBlock.RxSigFrameCount"
+			SqlString="coalesce(round(%StreamBlock.TotalLatency% / 100.0 / %StreamBlock.RxSigFrameCount%, 3), '')"
+			Type="RX">
+		</Counter>
+		<Counter
+			CounterName="StreamBlock.AvgJitter"
+			DependedCounters="ModInSeqFrameCount ModSigFrameCount StreamBlock.TotalJitter StreamBlock.InJitterModeRfc3393"
+			SqlString="(case when ((%StreamBlock.InJitterModeRfc3393% and %ModInSeqFrameCount% &lt; 1) or (not %StreamBlock.InJitterModeRfc3393% and %ModSigFrameCount% &lt; 1)) then '' when (%StreamBlock.InJitterModeRfc3393%) then coalesce(round(%StreamBlock.TotalJitter% / 100.0 / %ModInSeqFrameCount%, 3), '') else coalesce(round(%StreamBlock.TotalJitter% / 100.0 / %ModSigFrameCount%, 3), '') end)"
+			Type="RX">
+		</Counter>
+		<Counter
+			CounterName="ModFrameCount"
+			DependedCounters="StreamBlock.RxFrameCount"
+			SqlString="(%StreamBlock.RxFrameCount% - 1)"
+			Type="RX"
+			Agg="SUM">
+		</Counter>
+		<Counter
+			CounterName="ModInSeqFrameCount"
+			DependedCounters="StreamBlock.InSeqFrameCount"
+			SqlString="(%StreamBlock.InSeqFrameCount% - 1)"
+			Type="RX"
+			Agg="SUM">   
+		</Counter>
+		<Counter
+			CounterName="ModSigFrameCount"
+			DependedCounters="StreamBlock.RxSigFrameCount"
+			SqlString="(%StreamBlock.RxSigFrameCount% - 1)"
+			Type="RX"
+			Agg="SUM">   
+		</Counter>
+		<Counter
+			CounterName="StreamBlock.AvgInterarrivalTime"
+			DependedCounters="ModFrameCount StreamBlock.TotalInterarrivalTime"
+			SqlString="coalesce(round(%StreamBlock.TotalInterarrivalTime% / 100.0 / %ModFrameCount%, 3), '')"
+			Type="RX">
+		</Counter>
+		<Counter
+			CounterName="StreamBlock.PrbsBitErrorRatio"
+			DependedCounters="StreamBlock.PrbsBitErrorCount StreamBlock.PrbsFillOctetCount"
+			SqlString="coalesce(round(cast(sum(%StreamBlock.PrbsBitErrorCount%) as double) / (sum(%StreamBlock.PrbsFillOctetCount%) * 8), 3), 0.0)"
+			Type="RX">
+		</Counter>
+		<Counter
+			CounterName="StreamBlock.DroppedFramePercent"
+			DependedCounters="StreamBlock.ExpectedRxFrameCount StreamBlock.DroppedFrameCount"
+			SqlString="round(cast(coalesce(%StreamBlock.DroppedFrameCount%, 0) as double) * 100.0 / %StreamBlock.ExpectedRxFrameCount%, 5)"
+			Type="BOTH">
+		</Counter>
+    </CustomCounterDefinition>
+    <EotPropertyDefinitions>
+         <EotPropertyDefinition
+            CounterName="StreamBlock.ExpectedRxFrameCount"
+            EotPropertyEquation="ExpectedRxFrameCount">
+         </EotPropertyDefinition>
+         <EotPropertyDefinition
+            CounterName="StreamBlock.TotalLatency"
+            EotPropertyEquation="TotalLatency">
+         </EotPropertyDefinition>
+         <EotPropertyDefinition
+            CounterName="StreamBlock.TotalJitter"
+            EotPropertyEquation="TotalJitter">
+         </EotPropertyDefinition>
+         <EotPropertyDefinition
+            CounterName="StreamBlock.TotalInterarrivalTime"
+            EotPropertyEquation="TotalInterarrivalTime">
+         </EotPropertyDefinition>
+    </EotPropertyDefinitions>
+    <CounterGroupDefinition>
+		<Group
+			GroupName="Basic Counters"
+			Counters="StreamBlock.TxFrameCount StreamBlock.RxSigFrameCount StreamBlock.TxBitCount StreamBlock.RxBitCount StreamBlock.TxL1BitCount StreamBlock.RxL1BitCount StreamBlock.AvgLatency StreamBlock.MinLatency StreamBlock.MaxLatency StreamBlock.AvgJitter StreamBlock.MinJitter StreamBlock.MaxJitter StreamBlock.AvgInterarrivalTime StreamBlock.MinInterarrivalTime StreamBlock.MaxInterarrivalTime StreamBlock.TxCellCount StreamBlock.RxCellCount"
+		>
+		</Group>
+		<Group
+			GroupName="Errors"
+			Counters="StreamBlock.TxFrameCount StreamBlock.RxSigFrameCount StreamBlock.Ipv4ChecksumErrorCount StreamBlock.TcpUdpChecksumErrorCount StreamBlock.PrbsBitErrorCount StreamBlock.PrbsFillOctetCount StreamBlock.FcsErrorFrameCount"
+		>
+		</Group>
+		<Group
+			GroupName="Basic Sequencing"
+			Counters="StreamBlock.TxFrameCount StreamBlock.RxSigFrameCount StreamBlock.SeqRunLength StreamBlock.InSeqFrameCount StreamBlock.OutSeqFrameCount"
+		>
+		</Group>
+		<Group
+			GroupName="Advanced Sequencing"
+			Counters="StreamBlock.TxFrameCount StreamBlock.RxSigFrameCount StreamBlock.DroppedFrameCount StreamBlock.DroppedFramePercent StreamBlock.InOrderFrameCount StreamBlock.ReorderedFrameCount StreamBlock.DuplicateFrameCount StreamBlock.LateFrameCount"
+		>
+		</Group>
+		<Group
+			GroupName="Histograms"
+			Counters="StreamBlock.TxFrameCount StreamBlock.RxSigFrameCount StreamBlock.HistBin1Count StreamBlock.HistBin2Count StreamBlock.HistBin3Count StreamBlock.HistBin4Count StreamBlock.HistBin5Count StreamBlock.HistBin6Count StreamBlock.HistBin7Count StreamBlock.HistBin8Count StreamBlock.HistBin9Count StreamBlock.HistBin10Count StreamBlock.HistBin11Count StreamBlock.HistBin12Count StreamBlock.HistBin13Count StreamBlock.HistBin14Count StreamBlock.HistBin15Count StreamBlock.HistBin16Count"
+		>
+        </Group>    
+        <Group
+			GroupName="Traffic Group Results"
+			Counters="StreamBlock.TxFrameCount StreamBlock.RxSigFrameCount StreamBlock.TxBitCount StreamBlock.RxBitCount StreamBlock.TxL1BitCount StreamBlock.RxL1BitCount StreamBlock.DroppedFrameCount StreamBlock.DroppedFramePercent StreamBlock.AvgLatency StreamBlock.MinLatency StreamBlock.MaxLatency StreamBlock.InSeqFrameCount StreamBlock.OutSeqFrameCount StreamBlock.TxCellCount StreamBlock.RxCellCount"
+            >
+        </Group>
+    </CounterGroupDefinition>
+	<QueryDefinition>
+		<Query
+			Identifier="Stream Results\Detailed Stream Results"
+			PrimaryClass="TxStreamResults"  
+			SqlString="select TxPortName as 'Tx Port', group_concat(distinct ActualRxPortName) as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index' %SubQuery1% from TxRxEotStreamResults where 1 group by DataSetId, TxStreamId" 
+		>
+			<SubQuery
+				Name="SubQuery1"       
+				Definition="TXCOUNTER::Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+					GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Stream Block Results"
+			PrimaryClass="TxStreamBlockResults"  
+			SqlString="select TxPortName as 'TxPort', ActualRxPortList as 'Rx Port', TxStreamBlockName as 'Stream Block' %SubQuery1% from (select TxPortName, TxStreamBlockName, TxParentStreamBlock as TxSumTxParentSBHnd, DataSetId %TxSumTableQuery% from (select * from TxRxEotStreamResults group by DataSetId, TxStreamId) group by DataSetId, TxParentStreamBlock limit @_offset,@_limit) as TxSumTable left join (select TxParentStreamBlock as RxSumTxParentSBHnd, group_concat(distinct ActualRxPortName) as ActualRxPortList %RxSumTableQuery% from TxRxEotStreamResults where IsExpectedPort = 1 group by DataSetId, TxParentStreamBlock) as RxSumTable on TxSumTxParentSBHnd = RxSumTxParentSBHnd where DataSetId = @DataSetId" 
+			>
+			<SubQuery
+				Name="SubQuery1"       
+				Definition="TXCOUNTER::TxSum: RXCOUNTER::RxSum:">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+			<SubQuery
+				Name="TxSumTableQuery"       
+				Definition="TXCOUNTER:AGG:Tx:TxSum">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+			</SubQuery>
+				<SubQuery
+				Name="RxSumTableQuery"       
+				Definition="RXCOUNTER:AGG::RxSum">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Traffic Group Results"
+			PrimaryClass="TxTrafficGroupResults"  
+			SqlString="select GcGroupName as 'Traffic Group', TgGroupName as 'Traffic Subgroup', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index' %SubQuery1% from (select Tx.*, gc.Handle as GcHandle, gc.GroupName as GcGroupName, tg.Handle as TgHandle, tg.GroupName as TgGroupName from GroupCollection as gc, TrafficGroup as tg, RelationTable as r, TxRxEotStreamResults as Tx where Tx.DataSetId = @DataSetId and tg.DataSetId = @DataSetId and gc.DataSetId = @DataSetId and r.DataSetId = @DataSetId and r.Type = 'AffiliationTrafficGroup' and r.SourceHnd = tg.Handle and r.TargetHnd = TxParentStreamBlock and tg.ParentHnd = gc.Handle limit @_offset,@_limit) group by TgHandle, DataSetId, TxStreamId" 
+			>
+			<SubQuery
+				Name="SubQuery1"       
+				Definition="TXCOUNTER::Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+                    GroupName="Traffic Group Results">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Filtered Stream Results"
+			PrimaryClass="FilteredStreamResults"  
+			SqlString="select PortName as 'Rx Port Name', Comp32, Comp16_1, Comp16_2, Comp16_3, Comp16_4, StreamIndex as 'Stream Index' %SubQuery1% from RxEotStreamResults where DataSetId = @DataSetId order by DataSetId, ParentHnd" 
+			>
+			<SubQuery
+				Name="SubQuery1"       
+				Definition="RXCOUNTER:::">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Interesting Stream Results"
+			PrimaryClass="InterestingStreamResults"  
+			SqlString="select PortName as 'Rx Port Name', Comp32, Comp16_1, Comp16_2, Comp16_3, Comp16_4, StreamIndex as 'Stream Index' %SubQuery1% from RxEotStreamResults where DataSetId = @DataSetId order by DataSetId, ParentHnd" 
+			>
+			<SubQuery
+				Name="SubQuery1"       
+				Definition="RXCOUNTER:::">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Port Traffic\Port Pair Results"
+			PrimaryClass="TxPortPairResults"  
+			SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port' %SubQuery1% from TxRxEotStreamResults where DataSetId = @DataSetId and IsExpectedPort = 1 group by DataSetId, TxParentHnd, ParentHnd" 
+			>
+			<SubQuery
+				Name="SubQuery1"       
+				Definition="TXCOUNTER:AGG:Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Port Traffic\Port Pair Results By Actual Rx Ports"
+			SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port' %SubQuery1% from TxRxEotStreamResults where DataSetId = @DataSetId group by DataSetId, TxParentHnd, ParentHnd" 
+			>
+			<SubQuery
+				Name="SubQuery1"       
+				Definition="TXCOUNTER:AGG:Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Stream Block Results By Actual Rx Ports"
+			SqlString="select TxPortName as 'Tx Port', TxStreamBlockName as 'Stream Block', ActualRxPortName as 'Rx Port' %SubQuery1% from TxRxEotStreamResults where ParentStreamBlock  &gt; 0 and ParentHnd  &gt; 0 group by ParentStreamBlock, ParentHnd"
+			>
+			<SubQuery
+				Name="SubQuery1"
+				Definition="TXCOUNTER:AGG:Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Stream Results By Actual Rx Ports"
+			SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index ' %SubQuery1% from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd"
+			>
+			<SubQuery
+				Name="SubQuery1"
+				Definition="TXCOUNTER::Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Stream Results By Expected Rx Ports"
+			SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index' %SubQuery1% from TxRxEotStreamResults where IsExpectedPort = 1 group by Comp32, ParentHnd"
+			>
+			<SubQuery
+				Name="SubQuery1"
+				Definition="TXCOUNTER::Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+                    GroupName="Basic Counters">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Errors">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Basic Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Advanced Sequencing">
+				</DefaultDefinition>
+				<DefaultDefinition
+                    GroupName="Histogram">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Traffic Group Results By Actual Rx Ports"
+			SqlString="select gc.GroupName as 'Traffic Group', tg.GroupName as 'Traffic Subgroup', eot.TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index' %SubQuery1% from GroupCollection as gc, TrafficGroup as tg, RelationTable as r, TxRxEotStreamResults as eot where eot.DataSetId = @DataSetId and tg.DataSetId = @DataSetId and gc.DataSetId = @DataSetId and r.DataSetId = @DataSetId and r.Type = 'AffiliationTrafficGroup' and r.SourceHnd = tg.Handle and r.TargetHnd = eot.TxParentStreamBlock and tg.ParentHnd = gc.Handle and eot.Comp32 > 0 and eot.ParentHnd > 0 group by tg.Handle, eot.Comp32, eot.ParentHnd"
+			>
+			<SubQuery
+				Name="SubQuery1"
+				Definition="TXCOUNTER::Tx: RXCOUNTER:AGG::">
+				<DefaultDefinition
+                    GroupName="Traffic Group Results">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+		<Query
+			Identifier="Stream Results\Summarized Traffic Group Results"
+			SqlString="select gc.GroupName as 'Traffic Group', tg.GroupName as 'Traffic Subgroup' %SubQuery1% from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select TxParentStreamBlock, sum(ExpectedRxFrameCount) as TxExpectedRxFrameCount, DataSetId %TxSumTableQuery% from (select * from TxRxEotStreamResults group by DataSetId, TxStreamId) group by DataSetId, TxParentStreamBlock) as TxSumTable left join (select TxParentStreamBlock as RxTxParentSBHnd %RxSumTableQuery% from TxRxEotStreamResults where IsExpectedPort = 1 group by DataSetId, TxParentStreamBlock) as RxSumTable on TxParentStreamBlock = RxTxParentSBHnd where rt.DataSetId = @DataSetId and rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = TxParentStreamBlock and tg.ParentHnd = gc.Handle and tg.DataSetId = @DataSetId and gc.DataSetId = @DataSetId group by gc.Handle, tg.Handle"
+			>
+			<SubQuery
+				Name="SubQuery1"
+				Definition="TXCOUNTER:AGG:TxSum: RXCOUNTER:AGG:RxSum:">
+				<DefaultDefinition
+                    GroupName="Traffic Group Results">
+				</DefaultDefinition>
+			</SubQuery>
+			<SubQuery
+				Name="TxSumTableQuery"
+				Definition="TXCOUNTER:AGG:Tx:TxSum">
+				<DefaultDefinition
+                    GroupName="Traffic Group Results">
+				</DefaultDefinition>
+			</SubQuery>
+			<SubQuery
+				Name="RxSumTableQuery"
+				Definition="RXCOUNTER:AGG::RxSum">
+				<DefaultDefinition
+                    GroupName="Traffic Group Results">
+				</DefaultDefinition>
+			</SubQuery>
+		</Query>
+ 	</QueryDefinition>
+</L2l3query>

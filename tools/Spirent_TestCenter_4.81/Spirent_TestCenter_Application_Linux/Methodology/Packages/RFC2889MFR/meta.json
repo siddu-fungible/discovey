@@ -1,0 +1,385 @@
+{
+  "methodology_key": "RFC2889MFR",
+  "display_name": "RFC 2889 Maximum Forwarding Rate",
+  "short_display_name": "RFC2889MFR",
+  "description": "This methodology provides standardized way to determine the Maximum Forwarding Rate (MFR).",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "PortGroupWestPortGroup"
+      },
+      {
+        "side": "EAST",
+        "port_group": "PortGroupEastPortGroup"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "PortGroupEastPortGroup",
+      "display_name": "East Port Group",
+      "description": "Ports on the east side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "PortGroupWestPortGroup",
+      "display_name": "West Port Group",
+      "description": "Ports on the west side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "GLOBAL",
+      "display_name": "Global Parameters",
+      "description": "Global configuration parameters.",
+      "test_properties": [
+        {
+          "description": "The traffic direction between the defined endpoint sets in the test.",
+          "display_name": "Traffic Direction",
+          "property": "TrafficDirection",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "Bidirectional",
+          "acceptable_values": [
+            "Bidirectional",
+            "West To East",
+            "East To West"
+          ]
+        },
+        {
+          "description": "Enable L2 Learning or disable it for the test",
+          "display_name": "Enable L2 Learning",
+          "property": "EnableL2Learning",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "West-side Configuration",
+      "description": "Configuration for the ports on the west side of the topology",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "MAC address for west endpoints",
+          "display_name": "MAC Address",
+          "property": "WestMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:01",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "MAC address port step for west endpoints",
+          "display_name": "MAC Address Port Step",
+          "property": "WestMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        },
+        {
+          "description": "VLAN ID for west endpoints",
+          "display_name": "VLAN ID",
+          "property": "BackendWestVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "VLAN ID port step for west endpoints",
+          "display_name": "VLAN ID Port Step",
+          "property": "WestVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdPortStep"
+        },
+        {
+          "description": "Inner VLAN ID for west endpoints",
+          "display_name": "Inner VLAN ID",
+          "property": "BackendWestInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Inner VLAN ID Port Step for west endpoints",
+          "display_name": "Inner VLAN ID Port Step",
+          "property": "WestInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdPortStep"
+        },
+        {
+          "description": "Determines the type of VLAN used (West)",
+          "display_name": "VLAN Mode",
+          "property": "WestVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "East-side Configuration",
+      "description": "Configuration for the ports on the east side of the topology",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "MAC address for east endpoints",
+          "display_name": "MAC Address",
+          "property": "EastMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:96:00:00:01",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "MAC address port step for east endpoints",
+          "display_name": "MAC Address Port Step",
+          "property": "EastMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        },
+        {
+          "description": "VLAN ID for east endpoints",
+          "display_name": "VLAN ID",
+          "property": "BackendEastVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "VLAN ID port step for east endpoints",
+          "display_name": "VLAN ID Port Step",
+          "property": "EastVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdPortStep"
+        },
+        {
+          "description": "Inner VLAN ID for east endpoints",
+          "display_name": "Inner VLAN ID",
+          "property": "BackendEastInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Inner VLAN ID Port Step for east endpoints",
+          "display_name": "Inner VLAN ID Port Step",
+          "property": "EastInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdPortStep"
+        },
+        {
+          "description": "Determines the type of VLAN used (East)",
+          "display_name": "VLAN Mode",
+          "property": "EastVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "group_type": "TRAFFIC",
+      "display_name": "Topology Settings",
+      "description": "Parameters for traffic distribution",
+      "test_properties": [
+        {
+          "description": "The traffic pattern between the defined endpoint sets in the test.",
+          "display_name": "Traffic Pattern",
+          "property": "TrafficPattern",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "PAIR",
+          "acceptable_values": [
+            "PAIR",
+            "BACKBONE",
+            "MESH"
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Test Settings",
+      "description": "To configure number of trials, trial duration, start traffic delay, wait after traffic stopped",
+      "test_properties": [
+        {
+          "description": "A list of frame sizes used in the test",
+          "display_name": "Frame Size List",
+          "property": "FrameSizesInternal",
+          "property_value_type": "INTEGER",
+          "is_collection": true,
+          "property_value": [
+            "64",
+            "128",
+            "256",
+            "512",
+            "1024",
+            "1280",
+            "1518"
+          ],
+          "minimum": "64",
+          "maximum": "1518",
+          "units": "bytes"
+        },
+        {
+          "description": "Number of times the test repeats with its initial configuration",
+          "display_name": "Number of trials",
+          "property": "NumTrials",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "500"
+        },
+        {
+          "description": "Duration of time to run traffic",
+          "display_name": "Trial Duration",
+          "property": "TrialDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "30.00",
+          "minimum": "1.0",
+          "maximum": "600.0",
+          "units": "seconds"
+        },
+        {
+          "description": "Load unit applied to the stream block",
+          "display_name": "Load Level Units",
+          "property": "LoadLevelUnits",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "PERCENT_LINE_RATE",
+          "acceptable_values": [
+            "PERCENT_LINE_RATE",
+            "FRAMES_PER_SECOND",
+            "MEGABITS_PER_SECOND",
+            "KILOBITS_PER_SECOND",
+            "BITS_PER_SECOND"
+          ]
+        },
+        {
+          "description": "The starting load for each port",
+          "display_name": "Starting Offered Load",
+          "property": "StartLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.001",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Step value for incrementing the load from StartLoad to StopLoad",
+          "display_name": "Offered Load Step Size",
+          "property": "StepLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.001",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "The maximum load for each port",
+          "display_name": "Final Offered Load",
+          "property": "StopLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.001",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Time in seconds prior to start traffic",
+          "display_name": "Start traffic delay",
+          "property": "StartTrafficDelay",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2.00",
+          "minimum": "1",
+          "maximum": "600",
+          "units": "seconds"
+        },
+        {
+          "description": "Time in seconds to wait after traffic stopped",
+          "display_name": "Wait after traffic stopped",
+          "property": "WaitAfterTrafficStopped",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.00",
+          "minimum": "1",
+          "maximum": "600",
+          "units": "seconds"
+        }
+      ]
+    }
+  ]
+}

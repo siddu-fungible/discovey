@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="twamp" showName="TWAMP" version="1.00"
+    description="This is a sample PDU library for TWAMP as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+  
+    <TYPE_DEF name="TwampCommandNumbers" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Start Session" value="02" />
+        <VAL_ENUM uiShowName="Stop Session" value="03" />
+        <VAL_ENUM uiShowName="Request Session" value="05" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="TwampModes" type="INTEGER" bitLength="32" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Unauthenticated" value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+        
+    <TYPE_DEF name="TwampErrorEstimate" type="SEQUENCE" unitType="ELEMENT" uiShowName="Error Estimate" >
+      <FIELD name="sbit" type="BITSTRING" 
+                         bitLength="1"
+                         defaultValue="0" 
+                         uiShowName="S Bit" />
+                         
+      <FIELD name="zbit" type="BITSTRING" 
+                         bitLength="1"
+                         defaultValue="0" 
+                         uiShowName="Z Bit" />
+                         
+      <FIELD name="scale" type="INTEGER" 
+                         bitLength="6"
+                         defaultValue="3" 
+                         uiShowName="Scale" />
+                         
+      <FIELD name="multiplier" type="INTEGER" 
+                         bitLength="8"
+                         defaultValue="255" 
+                         uiShowName="Multiplier" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampServerGreeting" type="SEQUENCE" unitType="HEADER" uiShowName="Twamp Server Greeting" >
+        
+      <FIELD name="unused" type="OCTETSTRING" 
+                           byteLength="12" 
+                           defaultValue="000000000000000000000000" 
+                           uiShowName="Unused"/>
+                           
+      <FIELD name="mode" type="TwampModes" 
+                          bitLength="32" 
+                          defaultValue="1" 
+                          uiShowName="Mode"
+                          uiControlState="CALCULATED"/>
+                                  
+      <FIELD name="challenge" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="Challenge"/>
+                                 
+      <FIELD name="salt" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="Salt"/>
+                           
+      <FIELD name="count" type="INTEGER" 
+                          bitLength="32"  
+                          defaultValue="0" 
+                          uiShowName="Count"/>
+        
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="12" 
+                           defaultValue="000000000000000000000000" 
+                           uiShowName="MBZ"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampSetupResponse" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Setup Response" >
+                            
+      <FIELD name="mode" type="TwampModes" 
+                          bitLength="32" 
+                          defaultValue="1" 
+                          uiShowName="Mode"
+                          uiControlState="CALCULATED"/>
+                                  
+      <FIELD name="keyid" type="OCTETSTRING" 
+                           byteLength="80" 
+                           defaultValue="0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" 
+                           uiShowName="KeyID"/>
+                                  
+      <FIELD name="token" type="OCTETSTRING" 
+                           byteLength="64" 
+                           defaultValue="00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" 
+                           uiShowName="Token"/>                                 
+                                    
+      <FIELD name="clientiv" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="Client-IV"/>
+                                    
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampServerStart" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Server Start" >                       
+        
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="15" 
+                           defaultValue="000000000000000000000000000000" 
+                           uiShowName="MBZ"/>                                  
+                             
+      <FIELD name="accept" type="INTEGER" 
+                          bitLength="8" 
+                          defaultValue="0" 
+                          uiShowName="Accept"/>
+                                    
+      <FIELD name="serveriv" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="Server-IV"/>
+                                    
+      <FIELD name="starttime" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="Start-Time"/>
+        
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="MBZ"/>
+                                    
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampRequestSession" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Request Session" >                       
+        
+      <FIELD name="commandnumber" type="TwampCommandNumbers" 
+                           byteLength="1" 
+                           defaultValue="05" 
+                           uiShowName="Command Number"
+                           uiControlState="CALCULATED"/>
+                           
+      <FIELD name="mbz" type="INTEGER" 
+                        bitLength="4" 
+                        defaultValue="0" 
+                        uiShowName="MBZ"/>                                  
+                           
+      <FIELD name="ipversion" type="INTEGER" 
+                        bitLength="4" 
+                        defaultValue="4" 
+                        uiShowName="IP Version"/>                                  
+                                    
+      <FIELD name="mbz" type="OCTETSTRING" 
+                          byteLength="10" 
+                          defaultValue="00000000000000000000" 
+                          uiShowName="MBZ"/>
+                            
+      <FIELD name="senderport" type="INTEGER" 
+                          bitLength="16"  
+                          defaultValue="123" 
+                          uiShowName="Sender Port"/>                                  
+                            
+      <FIELD name="receiverport" type="INTEGER" 
+                          bitLength="16"  
+                          defaultValue="123" 
+                          uiShowName="Receiver Port"/>
+
+      <FIELD name="senderaddress" type="IPV4ADDR" 
+                          defaultValue="192.85.1.1" 
+                          uiShowName="Sender Address" />
+        
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="12" 
+                           defaultValue="000000000000000000000000" 
+                           uiShowName="MBZ"/>
+
+      <FIELD name="receiveraddress" type="IPV4ADDR" 
+                          defaultValue="192.85.1.2" 
+                          uiShowName="Receiver Address" />
+                
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="12" 
+                           defaultValue="000000000000000000000000" 
+                           uiShowName="MBZ"/>
+                                    
+      <FIELD name="sid" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="SID"/>
+                            
+      <FIELD name="paddinglength" type="OCTETSTRING" 
+                          byteLength="4" 
+                          defaultValue="00000080" 
+                          uiShowName="Padding Length"/>
+                                    
+      <FIELD name="startdelaytime" type="OCTETSTRING" 
+                          byteLength="8" 
+                          defaultValue="0000000000000005" 
+                          uiShowName="Start Delay Time (sec)"/>
+                                    
+      <FIELD name="timeout" type="OCTETSTRING" 
+                          byteLength="8" 
+                          defaultValue="000000000000001e" 
+                          uiShowName="Timeout (sec)"/>
+                            
+      <FIELD name="typepdescriptor" type="OCTETSTRING" 
+                          byteLength="4" 
+                          defaultValue="00000000" 
+                          uiShowName="Type-P Descriptor"/>
+                
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="MBZ"/>
+                                    
+      <FIELD name="hmac" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="HMAC"/>
+                           
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampAcceptSession" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Accept Session" >                       
+        
+      <FIELD name="accept" type="INTEGER" 
+                          bitLength="8" 
+                          defaultValue="0" 
+                          uiShowName="Accept"/>
+        
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="1" 
+                           defaultValue="00" 
+                           uiShowName="MBZ"/>
+                            
+      <FIELD name="port" type="INTEGER" 
+                          bitLength="16"  
+                          defaultValue="0" 
+                          uiShowName="Port"/>                                  
+                                    
+      <FIELD name="sid" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="SID"/>
+                
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="12" 
+                           defaultValue="000000000000000000000000" 
+                           uiShowName="MBZ"/>
+                                    
+      <FIELD name="hmac" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="HMAC"/>
+                           
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampStartSession" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Start Session" >                       
+        
+      <FIELD name="commandnumber" type="TwampCommandNumbers" 
+                           byteLength="1" 
+                           defaultValue="02" 
+                           uiShowName="Command Number"
+                           uiControlState="CALCULATED"/>
+                
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="15" 
+                           defaultValue="000000000000000000000000000000" 
+                           uiShowName="MBZ"/>
+                                    
+      <FIELD name="hmac" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="HMAC"/>
+                           
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampStartSessionAcknowledge" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Start Session Acknowledge" >                       
+        
+      <FIELD name="accept" type="INTEGER" 
+                          bitLength="8" 
+                          defaultValue="0" 
+                          uiShowName="Accept"/>
+                
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="15" 
+                           defaultValue="000000000000000000000000000000" 
+                           uiShowName="MBZ"/>
+                                    
+      <FIELD name="hmac" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="HMAC"/>
+                           
+    </TYPE_DEF>
+
+    <TYPE_DEF name="TwampStopSession" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Stop Session" >                       
+        
+      <FIELD name="commandnumber" type="TwampCommandNumbers" 
+                           byteLength="1" 
+                           defaultValue="03" 
+                           uiShowName="Command Number"
+                           uiControlState="CALCULATED"/>
+        
+      <FIELD name="accept" type="INTEGER" 
+                          bitLength="8" 
+                          defaultValue="0" 
+                          uiShowName="Accept"/>
+                
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="2" 
+                           defaultValue="0000" 
+                           uiShowName="MBZ"/>
+                            
+      <FIELD name="numbersessions" type="INTEGER" 
+                          bitLength="32" 
+                          defaultValue="0" 
+                          uiShowName="Number of Sessions"/>
+                
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="MBZ"/>
+                                    
+      <FIELD name="hmac" type="OCTETSTRING" 
+                           byteLength="16" 
+                           defaultValue="00000000000000000000000000000000" 
+                           uiShowName="HMAC"/>
+                           
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="TwampSenderPackets" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Sender Packets" >                       
+        
+      <FIELD name="sequencenumber" type="INTEGER" 
+                           bitLength="32" 
+                           defaultValue="0" 
+                           uiShowName="Sequence Number"/>
+                
+      <FIELD name="timestamp" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="Timestamp"/>
+                           
+      <FIELD name="errorestimate" type="TwampErrorEstimate"
+                           uiShowName="Error Estimate" />
+                          
+      <FIELD name="padding" type="OCTETSTRING" 
+                            minByteLength="27" 
+                            maxByteLength="9000" 
+                            uiShowName="Padding" />
+
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="TwampReflectorPackets" type="SEQUENCE" unitType="ELEMENT" uiShowName="Twamp Reflector Packets" >                       
+        
+      <FIELD name="sequencenumber" type="INTEGER" 
+                           bitLength="32" 
+                           defaultValue="0" 
+                           uiShowName="Sequence Number"/>
+                
+      <FIELD name="timestamp" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="Timestamp"/>
+                           
+      <FIELD name="errorestimate" type="TwampErrorEstimate"
+                           uiShowName="Error Estimate" />
+                           
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="2" 
+                           defaultValue="0000" 
+                           uiShowName="MBZ"/>
+                
+      <FIELD name="rxtimestamp" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="Receive Timestamp"/>
+                           
+      <FIELD name="sendersequencenumber" type="INTEGER" 
+                           bitLength="32" 
+                           defaultValue="0" 
+                           uiShowName="Sender Sequence Number"/>
+                
+      <FIELD name="txtimestamp" type="OCTETSTRING" 
+                           byteLength="8" 
+                           defaultValue="0000000000000000" 
+                           uiShowName="Sender Timestamp"/>
+                           
+      <FIELD name="txerrorestimate" type="TwampErrorEstimate"
+                           uiShowName="Sender Error Estimate" />
+                           
+      <FIELD name="mbz" type="OCTETSTRING" 
+                           byteLength="2" 
+                           defaultValue="0000" 
+                           uiShowName="MBZ"/>
+                           
+      <FIELD name="senderttl" type="INTEGER" 
+                           bitLength="8" 
+                           defaultValue="255" 
+                           uiShowName="Sender TTL"/>
+                                                 
+      <FIELD name="padding" type="OCTETSTRING" 
+                            minByteLength="27" 
+                            maxByteLength="9000" 
+                            uiShowName="Padding" />
+                            
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

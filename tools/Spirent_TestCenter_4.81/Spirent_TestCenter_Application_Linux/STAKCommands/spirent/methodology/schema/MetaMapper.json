@@ -1,0 +1,66 @@
+{
+  "MetaMapperSchema": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "oneOf": [
+      {
+        "$ref": "#/MetaMapperSchema/definitions/switch_map"
+      },
+      {
+        "$ref": "#/MetaMapperSchema/definitions/table_map"
+      }
+    ],
+    "definitions": {
+      "switch_map": {
+        "description": "A switch map json input definition.",
+        "type": "array",
+        "additionalProperties": false,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "src_case": {
+              "description": "The case value that will enable the case statement.",
+              "type": "string"
+            },
+            "property_value_dict": {
+              "description": "A property:value dictionary that defines the operation of the case statement.",
+              "type": "object"
+            }
+          }
+        }
+      },
+      "table_map": {
+        "description": "A table map json input definition.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "property": {
+            "description": "The unique identifier or tag for this property.",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "The friendly name for this property.",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description for this property.",
+            "type": "string"
+          },
+          "column_order": {
+            "description": "A list of property names that define the order of the table columns.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "property",
+          "display_name",
+          "description",
+          "column_order"
+        ]
+      }
+    }
+  }
+}

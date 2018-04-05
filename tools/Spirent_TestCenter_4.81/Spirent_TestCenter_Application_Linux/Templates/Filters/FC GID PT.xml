@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGID_PT" 
+    showName="FC GID_PT"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GsRequestWithPortType"
+    description="FC GID_PT">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GsRequestWithPortType">
+        <ctIuPreamble>
+          <commandRespondCode>01A1</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

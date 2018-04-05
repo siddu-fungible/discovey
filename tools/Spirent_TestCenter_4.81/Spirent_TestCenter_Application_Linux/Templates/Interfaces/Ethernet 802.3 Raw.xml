@@ -1,0 +1,24 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Ethernet8023RawQinQ"
+    showName="Ethernet 802.3 Raw"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="ethernet:Ethernet8023Raw"
+    description="Ethernet 802.3 Raw" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ethernet:Ethernet8023Raw" >
+	  		<vlans>
+				<Vlan name="Vlan1">
+				</Vlan>
+				<Vlan name="Vlan2">
+				</Vlan> 
+			</vlans>
+		</pdu>
+    </pdus>
+  </template>
+</frame>

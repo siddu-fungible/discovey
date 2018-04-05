@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989">
+    <procedures>
+        <item name="main" defaultSessionType="com.fnfr.svt.applications.telnet">
+            <description>The entry point to the test case</description>
+            <steps>
+                <item guid="13fe83f5-7e74-4fc5-8a42-f5f9f9755473" action="comment">
+                    <command>
+                        <body>&quot;This demo purpose to run loadconfig command&quot;</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="08739544-aece-469c-9f43-b35fba0dc195" action="comment" normalOffset="14.609" estimatedStepExecutionTime="0.016">
+                    <command>
+                        <body>copy tftp $backupcfg</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="80750e47-c59e-487f-b8d7-adec12629c14" action="eval">
+                    <command>
+                        <body>set result  &quot;3642 bytes copied in 0.472 secs (7716 bytes/sec)&quot;</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="f70d3108-3b2e-4ed8-b2f3-6c21b0da9049" action="if">
+                    <command>
+                        <body>[regexp {bytes copied} $result dummary d1 ] == 0 </body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="668bf4af-51d4-4fcb-960d-0416778d2f92" action="then">
+                            <nestedSteps>
+                                <item guid="cae3c94d-1af3-4045-8491-97f8fd51a120" action="eval">
+                                    <command>
+                                        <body>puts &quot;False&quot;</body>
+                                    </command>
+                                    <postProcessing>
+                                        <analysisRules>
+                                            <item>
+                                                <extractorInfo extractorType="contains">
+                                                    <extractorProperties type="com.fnfr.svt.mapping.execution.extractors.ExtractorContainsPropertyGroup">
+                                                        <searchString>False</searchString>
+                                                    </extractorProperties>
+                                                </extractorInfo>
+                                                <processorInfo ruleType="message">
+                                                    <ruleProperties type="com.fnfr.svt.testcase.documents.MessageProcessorPropertyGroup">
+                                                        <message>{auto_message}</message>
+                                                    </ruleProperties>
+                                                </processorInfo>
+                                            </item>
+                                        </analysisRules>
+                                    </postProcessing>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="7d676a6f-d7f8-4238-bf95-7eaa8c0ce011" action="else">
+                            <nestedSteps>
+                                <item guid="97bb0233-df18-4793-a75a-41acebae68a9" action="comment">
+                                    <command>
+                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session"/>
+                <item name="host">
+                    <defaultValue>10.61.18.105</defaultValue>
+                </item>
+                <item name="file">
+                    <defaultValue>cisco7200-confg</defaultValue>
+                </item>
+                <item name="backupcfg">
+                    <defaultValue>startup-config</defaultValue>
+                </item>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

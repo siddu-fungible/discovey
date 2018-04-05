@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" MadCap:tocPath="Template Editor" MadCap:InPreviewMode="false" MadCap:PreloadImages="false" MadCap:RuntimeFileType="Topic" MadCap:TargetType="WebHelp" lang="en-us" xml:lang="en-us" MadCap:PathToHelpSystem="../" MadCap:HelpSystemFileName="stc_ra.xml" MadCap:SearchType="Stem">
+    <!-- saved from url=(0016)http://localhost -->
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Template Editor Tables Tab</title>
+        <link href="spirent_univ.css" rel="stylesheet" />
+        <script src="SkinSupport/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapAll.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapTopicAll.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <p><span style="font-family: sans-serif; font-size: 8pt;">Results Reporter Online Help <span style="color: #ffffff;">Results Reporter Help</span></span>
+        </p>
+        <h1 id="rr_te_tables.htm" xmlns="http://www.w3.org/1999/xhtml">Template Editor Tables Tab </h1>
+        <p xmlns="http://www.w3.org/1999/xhtml">Use the <strong>Tables</strong> tab to create a table to be displayed on a page. The Template Editor uses a variation of HTML table syntax to define tables. </p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">Tables</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">Double-click a cell in the <strong>Name</strong> column to change the name of a table. The read-only <strong>Definition</strong> column displays part of the code. Edit the full code for the table in the <strong>XML</strong> field. </p>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Button</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Add  </td>
+                <td>
+                    <p>Add a table to the bottom of the list</p>
+                    <p>Sample code is displayed in the <strong>XML</strong> field  </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Make Table from Query </td>
+                <td>
+                    <p>Automatically generate code to create a table based on an SQL Query </p>
+                    <table width="90%" border="0" class="interior">
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Description</th>
+                        </tr>
+                        <tr>
+                            <td>Enter an SQL Query </td>
+                            <td>Enter an <a href="custom_queries.htm">SQL SELECT statement</a></td>
+                        </tr>
+                        <tr>
+                            <td>Enter a name for this query to be used in reports </td>
+                            <td>Text to appear in the column heading </td>
+                        </tr>
+                        <tr>
+                            <td>Enter an internal name for the new statistic </td>
+                            <td>Statistic is added to the table and to the <strong>Reported Stats</strong> tab </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>Remove</td>
+                <td>
+                    <p>Remove the highlighted table </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Render</td>
+                <td>Display the table in the right pane</td>
+            </tr>
+            <tr>
+                <td><a href="#addcolumn" xmlns="">Add A Column</a>
+                </td>
+                <td>Add a column to the table</td>
+            </tr>
+            <tr>
+                <td>Delete a column</td>
+                <td>Delete a column from the table</td>
+            </tr>
+            <tr>
+                <td>Add A Summary For A Column</td>
+                <td>Create a summary row for a numeric column</td>
+            </tr>
+        </table>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">XML</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">When you make changes to the code, use the <strong>Render</strong> button to display the table. </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">Template Editor tables are defined with a subset of standard HTML elements plus a new attribute in the <strong>tr</strong> element, <strong>iterate</strong>. Table definitions also use a form of variable substitution to specify where data from a table, a reported statistic or a computed statistic is to be displayed. </p>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">Supported HTML Elements and Attributes</h3>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Element</th>
+                <th scope="col">Attributes</th>
+            </tr>
+            <tr>
+                <td>table</td>
+                <td>&#160;</td>
+            </tr>
+            <tr>
+                <td>tr</td>
+                <td>bgcolor</td>
+            </tr>
+            <tr>
+                <td>td</td>
+                <td>colspan, rowspan, bgcolor </td>
+            </tr>
+        </table>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">Variable Substitution</h3>
+        <p xmlns="http://www.w3.org/1999/xhtml">In a table definition, a variable name is indicated with a leading equal sign followed by the variable name delimited by dollar signs. For example, if the text =$DroppedFrameCount$ appears in a table cell definition, the value of the table column called DroppedFrameCount is displayed. </p>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Cell Definition </th>
+                <th scope="col">What is displayed in the table </th>
+            </tr>
+            <tr>
+                <td>&lt;td&gt;DroppedFrameCount&lt;/td&gt;</td>
+                <td>DroppedFrameCount</td>
+            </tr>
+            <tr>
+                <td>&lt;td&gt;=$DroppedFrameCount$&lt;/td&gt;</td>
+                <td>The value of the field DroppedFrameCount </td>
+            </tr>
+        </table>
+        <p xmlns="http://www.w3.org/1999/xhtml">If the variable doesn't exist, the variable name is displayed instead of a value. The Template Editor supports use of variable substitution in table cells, the bgcolor attribute, and the iterate attribute. </p>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">The iterate Attribute of the tr Element </h3>
+        <p xmlns="http://www.w3.org/1999/xhtml">The Template Editor introduces a new attribute. The iterate attribute is used in a table row definition to specify that multiple rows are to be generated, one for each item in a list. For example, the code </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">&lt;tr iterate="=$PortName$"&gt;<br />         &lt;td&gt; =$PortName$ &lt;/td&gt;<br />&lt;td&gt; =$TxPkts$ &lt;/td&gt;<br />          &lt;td&gt; =$RxPkts$ &lt;/td&gt;<br />&lt;/tr&gt;</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">          will generate one table row for each item in the PortName list. Each row will display a port name and the corresponding number of transmitted and received packets for the port. Variables in other columns (such as =$TxPkts$ and =$RxPkts$) should also be list items.</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">The iterate attribute can be used in combination with the bgcolor attribute and variable substitution to dynamically control the background color of a cell.</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">&lt;tr&gt;<br />&lt;td bgcolor="ffffff"&gt;Traffic Group&lt;/td&gt;<br />&lt;td bgcolor="ffffff"&gt;Traffic Class&lt;/td&gt; <br />&lt;td bgcolor="ffffff"&gt; Pass/Fail &lt;/td&gt; <br />&lt;/tr&gt;</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">&lt;tr iterate="=$TrafficClass$"&gt;<br />  &lt;td bgcolor="ffffff"&gt; =$TrafficGroup$ &lt;/td&gt;<br />  &lt;td bgcolor="ffffff"&gt; =$TrafficClass$ &lt;/td&gt; <br />  &lt;td bgcolor="=$StatusColor$"&gt; =$PassFail$ &lt;/td&gt; <br />  &lt;/tr&gt;</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">This table will display the traffic group and test result (pass/fail) for each traffic class. The first two columns have a white background. The background color of the third column is determined by the computed statistic StatusColor, which is a list with a green color code (#0000ff) if the value of PassFail is "Pass" and a red color code (#ff0000) if the value of PassFail is "Fail". A sample rendering of the table could look like this:</p>
+        <table width="90%" border="1" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <td>Traffic Group </td>
+                <td>Traffic Class </td>
+                <td>Pass/Fail</td>
+            </tr>
+            <tr>
+                <td>TCP</td>
+                <td>Class 1 </td>
+                <td bgcolor="#00ff00">Pass</td>
+            </tr>
+            <tr>
+                <td>UDP</td>
+                <td>Class 2 </td>
+                <td bgcolor="#ff0000">Fail</td>
+            </tr>
+            <tr>
+                <td>None</td>
+                <td>Class 3 </td>
+                <td bgcolor="#00ff00">Pass</td>
+            </tr>
+        </table>
+        <h2 xmlns="http://www.w3.org/1999/xhtml"><a name="addcolumn" id="addcolumn"></a>Add a Column</h2>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Option</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Pick from a list of tables and columns </td>
+                <td>Automatically create code to add one or more fields from the database to the table
+ by selecting them from a list 
+              <table width="90%" border="0" class="interior"><tr><th scope="col">Option</th><th scope="col">Description</th></tr><tr><td>Choose a table </td><td>The list is populated from the tables in the open database, as shown on the <strong>DB Explorer</strong> tab </td></tr><tr><td>Choose a column </td><td><p>Select one or more columns from the table</p><p>Use SHIFT click and CTRL click to select multiple columns </p></td></tr></table></td>
+            </tr>
+            <tr>
+                <td>Use an Existing Statistic </td>
+                <td>Automatically create code to add a reported or computed statistic to the table
+ by selecting it from a list 
+              <table width="90%" border="0" class="interior"><tr><th scope="col">Option</th><th scope="col">Description</th></tr><tr><td>Choose a statistic </td><td><p>The list is populated from statistics defined on the <strong>Reported Stats</strong> and <strong>Computed Stats</strong> tabs </p></td></tr><tr><td>Enter a name for this query to be used in reports </td><td>Text to appear in the column heading </td></tr></table></td>
+            </tr>
+            <tr>
+                <td>Enter an SQL Query </td>
+                <td>
+                    <p>Automatically create code to add one or more fields from the database to the table based on an SQL Query            </p>
+                    <table width="90%" border="0" class="interior">
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Description</th>
+                        </tr>
+                        <tr>
+                            <td>Enter an SQL Query </td>
+                            <td>Enter an <a href="custom_queries.htm">SQL SELECT statement</a></td>
+                        </tr>
+                        <tr>
+                            <td>Enter a name for this query to be used in reports </td>
+                            <td>Text to appear in the column heading </td>
+                        </tr>
+                        <tr>
+                            <td>Enter an internal name for the new statistic </td>
+                            <td>Statistic is added to the table and to the <strong>Reported Stats</strong> tab </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <hr width="100%" size="0" align="center" xmlns="http://www.w3.org/1999/xhtml" />
+        <p class="related_information" xmlns="http://www.w3.org/1999/xhtml">Related Topics:</p>
+        <p class="relatedtopic" xmlns="http://www.w3.org/1999/xhtml"><a href="rr_te_oview.htm">Results Reporter Template Editor Overview </a>
+        </p>
+        <p style="text-align: right;"><span style="font-family: sans-serif; font-size: 8pt;">© Spirent Communications</span>
+        </p>
+        <script type="text/javascript" src="SkinSupport/MadCapBodyEnd.js">
+        </script>
+    </body>
+</html>

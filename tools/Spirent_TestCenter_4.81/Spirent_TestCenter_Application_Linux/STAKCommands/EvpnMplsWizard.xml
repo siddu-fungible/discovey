@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<!-- Just copy this line exactly as it is. -->
+<stc:meta package="spirent.routing.evpnmpls" plugin="stakcommands" version="0.0.0-0" xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">  
+  <stc:class name="ExpandEvpnMplsWizardConfigCommand" displayName="Expand the Evpn Mpls Wizard Config" packageName="spirent.routing.evpnmpls" bllDirectInterface="true" isInternal ="true">
+
+    <stc:attribute type="core.Sequenceable" value="true"/>
+    <stc:attribute type="framework.CommandDescription" value="EVPN Next Gen Wizard"/>
+    <stc:attribute type="framework.CommandCategory" value="STAK Command"/>
+
+    <stc:property category="input" name="EvpnMplsWizardGenParamsHandle" displayName="Handle to the Evpn Mpls Params" type="handle" default="1">
+      <stc:attribute type="framework.PropertyDescription" value="EvpnMplsConfigGenParams Handle"/>
+    </stc:property>
+
+    <stc:property category="output" name="EviHandles" type="handle" default="0" minOccurs="0" maxOccurs="unbounded">
+          <stc:attribute type="framework.PropertyDescription"
+               value="VRFs that were created"/>
+      </stc:property>
+    
+    <stc:property category="output" name="PeHandles" type="handle" default="0" minOccurs="0" maxOccurs="unbounded">
+          <stc:attribute type="framework.PropertyDescription"
+               value="PEs that were created"/>
+      </stc:property>
+
+    <stc:property category="output" name="ProviderDeviceHandles" type="handle" default="0" minOccurs="0" maxOccurs="unbounded">
+          <stc:attribute type="framework.PropertyDescription"
+               value="Provider devices that were created"/>
+      </stc:property>
+      
+    </stc:class>
+ </stc:meta>

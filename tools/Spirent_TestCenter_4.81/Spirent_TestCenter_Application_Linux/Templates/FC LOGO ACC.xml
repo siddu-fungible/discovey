@@ -1,0 +1,16 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCLOGOACC"
+    showName="FC LOGO ACC"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:ELSLOGOLSACC"
+    description="FC LOGO ACC">
+    <pdus>
+      <pdu name="proto3" pdu="fc:ELSLOGOLSACC"/>
+    </pdus>
+  </template>
+</frame>

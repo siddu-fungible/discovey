@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="SQL_Redirect" type="stream" layer="tcp" closeType="server_fin">
+  <MetaData description="SQL_Redirect" protocol="SQL_Redirect_and_Queries" application="SQL" createDate="">
+    <Sapee version="16" clientIp="10.7.1.123" clientPort="1053" serverIp="10.7.1.147" serverPort="1521" startTime="0" dataStartTime="0"/>
+  </MetaData>
+  <Packets>
+    <Packet name="packet_1" pktDelay="11" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>01060000010000000138012C000008007FFF860E0000010000CC003A0000020061610000000000000000000003D0000000000000000000000000284445534352495054494F4E3D28414444524553533D2850524F544F434F4C3D5443502928484F53543D31302E372E312E3134372928504F52543D31353231292928434F4E4E4543545F444154413D285345525645523D4445444943415445442928534552564943455F4E414D453D4F524129284349443D2850524F4752414D3D433A5C6F7261636C655C6F726139325C62696E5C73716C706C7573772E6578652928484F53543D454D45412D4C41422D5043312928555345523D41646D696E6973747261746F7229292929</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_2" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>003E000005000000003428414444524553533D2850524F544F434F4C3D7463702928484F53543D31302E372E312E3134372928504F52543D333831312929</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables/>
+  <Modifiers/>
+</Flow>

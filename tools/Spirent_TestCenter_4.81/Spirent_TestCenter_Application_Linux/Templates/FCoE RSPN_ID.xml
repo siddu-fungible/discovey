@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoERSPN_ID" 
+    showName="FCoE RSPN_ID"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE RSPN_ID">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>02</rCtl>
+        <dId>FFFFFC</dId>
+        <frameControl>290000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:RspnId">
+        <ctIuPreamble>
+          <commandRespondCode>0218</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

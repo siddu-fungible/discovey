@@ -1,0 +1,229 @@
+{
+    "methodology_key": "DHCPRATE",
+    "state_modifiers": [
+        {
+            "property": "Dhcpv4ClientOuterVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ClientOuterVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ClientOuterVlanIdBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ClientOuterVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdClientOuterVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdClientOuterVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdClientOuterVlanIdBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdClientOuterVlanPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ClientInnerVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv4ClientInnerVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv4ClientInnerVlanIdBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv4ClientInnerVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdClientInnerVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdClientInnerVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdClientInnerVlanBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdClientInnerVlanPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv4ServerOuterVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ServerOuterVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ServerOuterVlanIdBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ServerOuterVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdServerOuterVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdServerOuterVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdServerOuterVlanIdBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv6PdServerOuterVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% != \"QinQ\")",
+            "message": "Disabled when Server VLAN mode is not QinQ"
+        },
+        {
+            "property": "Dhcpv4ServerInnerVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv4ServerInnerVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv4ServerInnerVlanIdBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv4ServerInnerVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdServerInnerVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdServerInnerVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdServerInnerVlanIdBlockStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        },
+        {
+            "property": "Dhcpv6PdServerInnerVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ServerHostVlanType% == \"None\")",
+            "message": "Disabled when Server VLAN mode is None"
+        }
+    ]
+}

@@ -1,0 +1,280 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5970" serializationBase="true" 
+ Identifier="Router Protocols\STP Results"
+ PrimaryClass="Router"
+ Description="object://core/Router"
+ Path="Router Protocols"
+ CustomDisplayPath="Switching"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="STP Results">
+  <RealTimeResultColumnDefinition id="5971" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 298">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5972" 
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 299">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5973" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port Router"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 23">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5974" 
+   GroupName="STP"
+   GroupId="object://customgroup/39853bd7-23f8-4b43-9a3e-779f065fb06d/Main"
+   ColumnClassName="BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults BridgePortResults"
+   ColumnPropertyName="PortId BridgeId RootId RegionalRootId DesignatedId TxBpdus RxBpdus TxBpduFlag RxBpduFlag TxTcBitSet RxTcBitSet TxTcAck RxTcAck TxTcn RxTcn TxProposals RxProposals TxAgree RxAgree TxPortRole RxPortRole TxPortState RxPortState VlanId"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, AllDevice.Name AS &apos;Device Name&apos;, BridgePortResults.PortId AS &apos;Port Id&apos;, BridgePortResults.BridgeId AS &apos;Bridge Id&apos;, BridgePortResults.RootId AS &apos;Root Id&apos;, BridgePortResults.RegionalRootId AS &apos;Regional Root Id&apos;, BridgePortResults.DesignatedId AS &apos;Designated Bridge Id&apos;, BridgePortResults.TxBpdus AS &apos;Tx BPDUs&apos;, BridgePortResults.RxBpdus AS &apos;Rx BPDUs&apos;, BridgePortResults.TxBpduFlag AS &apos;Tx BPDU Flag&apos;, BridgePortResults.RxBpduFlag AS &apos;Rx BPDU Flag&apos;, BridgePortResults.TxTcBitSet AS &apos;Tx TC-bit Set&apos;, BridgePortResults.RxTcBitSet AS &apos;Rx TC-bit Set&apos;, BridgePortResults.TxTcAck AS &apos;Tx TC Ack&apos;, BridgePortResults.RxTcAck AS &apos;Rx TC Ack&apos;, BridgePortResults.TxTcn AS &apos;Tx TCNs&apos;, BridgePortResults.RxTcn AS &apos;Rx TCN&apos;, BridgePortResults.TxProposals AS &apos;Tx Proposals&apos;, BridgePortResults.RxProposals AS &apos;Rx Proposals&apos;, BridgePortResults.TxAgree AS &apos;Tx TC Agree&apos;, BridgePortResults.RxAgree AS &apos;Rx TC Agree&apos;, BridgePortResults.TxPortRole AS &apos;Tx Port Role&apos;, BridgePortResults.RxPortRole AS &apos;Rx Port Role&apos;, BridgePortResults.TxPortState AS &apos;Tx Port State&apos;, BridgePortResults.RxPortState AS &apos;Rx Port State&apos;, BridgePortResults.VlanId AS &apos;Vlan Id&apos; FROM AllDevice, Port, BridgePortResults, BridgePortConfig, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = AllDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND BridgePortConfig.ParentHnd = AllDevice.Handle AND BridgePortResults.ParentHnd = BridgePortConfig.Handle AND AllDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND BridgePortResults.DataSetId = @DataSetId AND BridgePortConfig.DataSetId = @DataSetId AND  RelationTable.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 24">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5975" 
+   ConfigClassId="bridgeportconfig"
+   ResultClassId="bridgeportresults"
+   ResultRootList="17"
+   PropertyIdArray="bridgeportresults.portid bridgeportresults.bridgeid bridgeportresults.rootid bridgeportresults.regionalrootid bridgeportresults.designatedid bridgeportresults.txbpdus bridgeportresults.rxbpdus bridgeportresults.txbpduflag bridgeportresults.rxbpduflag bridgeportresults.txtcbitset bridgeportresults.rxtcbitset bridgeportresults.txtcack bridgeportresults.rxtcack bridgeportresults.txtcn bridgeportresults.rxtcn bridgeportresults.txproposals bridgeportresults.rxproposals bridgeportresults.txagree bridgeportresults.rxagree bridgeportresults.txportrole bridgeportresults.rxportrole bridgeportresults.txportstate bridgeportresults.rxportstate bridgeportresults.vlanid"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 17">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5976" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="PortId"
+   ColumnDescription=""
+   ColumnWidth="62"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 300">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5977" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="BridgeId"
+   ColumnDescription=""
+   ColumnWidth="107"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 301">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5978" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RootId"
+   ColumnDescription=""
+   ColumnWidth="98"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 302">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5979" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RegionalRootId"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 303">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5980" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="DesignatedId"
+   ColumnDescription=""
+   ColumnWidth="122"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 304">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5981" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxBpdus"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 305">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5982" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxBpdus"
+   ColumnDescription=""
+   ColumnWidth="58"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 306">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5983" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxBpduFlag"
+   ColumnDescription=""
+   ColumnWidth="53"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 307">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5984" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxBpduFlag"
+   ColumnDescription=""
+   ColumnWidth="55"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 308">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5985" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxTcBitSet"
+   ColumnDescription=""
+   ColumnWidth="56"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 309">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5986" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxTcBitSet"
+   ColumnDescription=""
+   ColumnWidth="56"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 310">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5987" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxTcAck"
+   ColumnDescription=""
+   ColumnWidth="41"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 311">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5988" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxTcAck"
+   ColumnDescription=""
+   ColumnWidth="42"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 312">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5989" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxTcn"
+   ColumnDescription=""
+   ColumnWidth="51"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 313">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5990" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxTcn"
+   ColumnDescription=""
+   ColumnWidth="49"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 314">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5991" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxProposals"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 315">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5992" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxProposals"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 316">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5993" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxAgree"
+   ColumnDescription=""
+   ColumnWidth="44"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 317">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5994" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxAgree"
+   ColumnDescription=""
+   ColumnWidth="51"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 318">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5995" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxPortRole"
+   ColumnDescription=""
+   ColumnWidth="50"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 319">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5996" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxPortRole"
+   ColumnDescription=""
+   ColumnWidth="51"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 320">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5997" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="TxPortState"
+   ColumnDescription=""
+   ColumnWidth="51"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 321">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5998" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="RxPortState"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 322">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5999" 
+   ColumnClassName="BridgePortResults"
+   ColumnPropertyName="VlanId"
+   ColumnDescription=""
+   ColumnWidth="49"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 323">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

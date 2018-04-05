@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<Playlist type="attack" name="CodeRedII">
+  <MetaData description="Code Red II Worm"/>
+  <Attacks>
+    <Attack file="System/base_threats/coderedII.xml"
+            name="coderedII"
+            description="Code Red II Worm"
+            serverPort="80"
+            pktDelay="200"
+            inactivityTimeout="100000" />
+  </Attacks>
+</Playlist>

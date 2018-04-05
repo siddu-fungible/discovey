@@ -1,0 +1,21 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoEESCAccept"
+    showName="FCoE ESC Accept"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE ESC Accept">
+    <pdus>
+      <pdu name="proto1" pdu="fc:FCoEHeader">
+      </pdu>
+      <pdu name="proto2" pdu="fc:FC">
+      </pdu>
+      <pdu name="proto3" pdu="fcsw:EscAcc">
+      </pdu>
+    </pdus>
+  </template>
+</frame>

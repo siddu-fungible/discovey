@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="L2VLANIDVLANPri" showName="L2 VLANID VLAN Pri" version="1.0" category="Favorites" readonly="false" validate="true" firstPdu="ethernet:EthernetII" description="L2 (no IP) VLAN ID and VLAN Priority">
+      <pdus>
+<pdu name="eth1" pdu="ethernet:EthernetII">
+<vlans>
+<Vlan name="Vlan">
+<pri filterMinValue="0" filterMaxValue="111">111</pri>
+<id filterMinValue="0" filterMaxValue="4095">4095</id>
+</Vlan></vlans>
+</pdu>
+</pdus>
+</template>
+</frame>

@@ -1,0 +1,380 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/4.10/Access/PPP"  xml:lang="en">
+<label>PPP</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    
+	<supercedes>http://spirent.com/NTAF/harness/STC/3.80/Access/PPP</supercedes>
+<actionDecl name="PppConnect">
+    <label>Connect Sessions</label>
+    <tooltip>Connect the PPP session</tooltip>
+    <description>Connect the PPP session</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>UNDEFINED</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="CONNECT">CONNECT</allowedValue>
+            <allowedValue label="DISCONNECT">DISCONNECT</allowedValue>
+            <allowedValue label="RETRY">RETRY</allowedValue>
+            <allowedValue label="PAUSE">PAUSE</allowedValue>
+            <allowedValue label="RESUME">RESUME</allowedValue>
+            <allowedValue label="TERMINATE">TERMINATE</allowedValue>
+        </parameter>
+        <parameter  name="IpCpMode">
+            <label>IpCpMode</label>
+            <tooltip>IPCP Mode</tooltip>
+            <description>IPCP Mode</description>
+            <datatype>string</datatype>
+            <default>IPV4V6</default>
+            <allowedValue label="IPV4V6">IPV4V6</allowedValue>
+            <allowedValue label="IPV4">IPV4</allowedValue>
+            <allowedValue label="IPV6">IPV6</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>PPPoX Block List</tooltip>
+            <description>PPPoX Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+
+
+<actionDecl name="PppDisconnect">
+    <label>Disconnect Sessions</label>
+    <tooltip>Disconnect the PPP session</tooltip>
+    <description>Disconnect the PPP session</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>UNDEFINED</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="CONNECT">CONNECT</allowedValue>
+            <allowedValue label="DISCONNECT">DISCONNECT</allowedValue>
+            <allowedValue label="RETRY">RETRY</allowedValue>
+            <allowedValue label="PAUSE">PAUSE</allowedValue>
+            <allowedValue label="RESUME">RESUME</allowedValue>
+            <allowedValue label="TERMINATE">TERMINATE</allowedValue>
+        </parameter>
+        <parameter  name="IpCpMode">
+            <label>IpCpMode</label>
+            <tooltip>IPCP Mode</tooltip>
+            <description>IPCP Mode</description>
+            <datatype>string</datatype>
+            <default>IPV4V6</default>
+            <allowedValue label="IPV4V6">IPV4V6</allowedValue>
+            <allowedValue label="IPV4">IPV4</allowedValue>
+            <allowedValue label="IPV6">IPV6</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>PPPoX Block List</tooltip>
+            <description>PPPoX Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+
+
+<actionDecl name="PppAbort">
+    <label>Abort Emulation</label>
+    <tooltip>Reset PPP emulation</tooltip>
+    <description>Reset PPP emulation</description>
+        <parameter  name="ControlType">
+            <label>ControlType</label>
+            <tooltip>Control Type</tooltip>
+            <description>Control Type</description>
+            <datatype>string</datatype>
+            <default>UNDEFINED</default>
+            <allowedValue label="UNDEFINED">UNDEFINED</allowedValue>
+            <allowedValue label="CONNECT">CONNECT</allowedValue>
+            <allowedValue label="DISCONNECT">DISCONNECT</allowedValue>
+            <allowedValue label="RETRY">RETRY</allowedValue>
+            <allowedValue label="PAUSE">PAUSE</allowedValue>
+            <allowedValue label="RESUME">RESUME</allowedValue>
+            <allowedValue label="TERMINATE">TERMINATE</allowedValue>
+        </parameter>
+        <parameter  name="IpCpMode">
+            <label>IpCpMode</label>
+            <tooltip>IPCP Mode</tooltip>
+            <description>IPCP Mode</description>
+            <datatype>string</datatype>
+            <default>IPV4V6</default>
+            <allowedValue label="IPV4V6">IPV4V6</allowedValue>
+            <allowedValue label="IPV4">IPV4</allowedValue>
+            <allowedValue label="IPV6">IPV6</allowedValue>
+        </parameter>
+        <parameter  name="BlockList">
+            <label>BlockList</label>
+            <tooltip>PPPoX Block List</tooltip>
+            <description>PPPoX Block List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+
+
+	<subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/PPP</subharness>
+
+
+</query-harness>
+

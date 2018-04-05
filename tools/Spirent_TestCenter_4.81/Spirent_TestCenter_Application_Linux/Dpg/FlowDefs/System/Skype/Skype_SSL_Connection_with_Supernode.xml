@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="Skype_SSL_Connection_with_Supernode" type="stream" layer="tcp" closeType="server_fin">
+  <MetaData description="Skype_SSL_Connection_with_Supernode" protocol="Skype_TCP" application="Skype" createDate="">
+    <Sapee version="16" clientIp="10.40.60.44" clientPort="1669" serverIp="71.143.189.131" serverPort="443" startTime="1790" dataStartTime="1936"/>
+  </MetaData>
+  <Packets>
+    <Packet name="packet_1" pktDelay="92" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>8046010301002D0000001000000500000400000A0000090000640000620000080000030000060100800700C00300800600400200800400808D5A8358E9063FE40572BB30E19EF73C</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_2" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>160301004A020000460301401BE48602ADE029E17774E544B9C99CB431315E02DD779D154A9609BA5DA870201CA0E4F64C6351AE2F8E4EE1E6766A0A88D5D8C55CAE98C5E481F22A69BF9058000500</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_3" pktDelay="173" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>98D32D0471F16C1508AEC4493A7C865737458911531527D58D5240F297FD9CB3CB1BC2C3B423614CE90808D3FFE63B783D721F5BFF56838765FAE3E497370B79C919FB2E84ED9837EC</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_4" pktDelay="1565" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>C6851FCDFA4DBC1779CBB7DB9B5E99D4243E3FB5939E29A68E05724BB72CF57CED0B08E2B94381F4D45B0D488746E9476B5D60AAB6DEBEC9EDF2107E9BC9C9</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_5" pktDelay="138" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>36B4D56367BCD1404E03DFD6F69BB1BF618F8C43424A6C97C25C1B</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_6" pktDelay="1" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>869E39663120E7205E66F1EDFAA175BF84444FAC05779C3CE289F223A0D7AB8BF314E656DEC0F4B999B84EC65EBA7A1D5603BC0766CB7E54041EE87E61C845DECCD0CC495BFC48E36187</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_7" pktDelay="863" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>BDC6D26D</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_8" pktDelay="130" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>9E60B706197596058A57BE547156031925D2597253BF9512250CB4BE6560850DC9F93E3F9F3BCBE32DD6F4908F8D2AEB05E3D4BFD354E55F672E17B2CD4892E825D8C044D174EE8E38AAD1DAAF0FAAE850B8DBC02E60F5E46F0BAB1F6C54705C2A157165CE7E9DE37741280B18CD42234B820DD0FFF3ED9F5D02362EFE5B3B4FB3B3F5E21182302053CA8447E8F7F879CF2C2B963AB1A87C44EFEFAE8304B2FFB242CF951C9AFA7F46C546BFFB0E4B6416F6311492076F4213CF0A853D83419C2491F59B2CC8D80A522D5713757057B38B4D100B949AD730</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_9" pktDelay="78" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>7D7020CA7C2AAB00117494FF3866009036D64D4E19E5010FF0CE425B37265A8A06DCEB5A6CC7DF6D46A4B4A105A9F71D44924FF95942FFFBC37571EA6ABED29DDA54EFD12C5ACAB54A1A23EA847123DC45EA11CA1F2DAB108D6BA33A63B77C7C4CC188B631303CC323BDF73391E5985D28EFF78849D4B1CE035592D9281ACF46CA36C5622AC1CBE74D0A5367CEDAC7D8974163E22025FBE376D293746783B53BBF0773C3BBBE1D6DB246323B1E42FF10E7243EE4087B31C02ABEFF3B3A23CDD59E85696E1B4389409E06E8887B2FBB213B5C854F938F4AD8C2A46E4DAF8C75C091D2D7759EC30160902B398AA2141800C21D4EA4DF4B97D235A8B9C57737BB3B5A51F9AC11588D5589B2740F20BC63C4967377508BD92ACA1AFC3E3DF5FD1D6C614FC9827F5C99651AB2F7D65F6000BBA4D770B1DB4326105598BF074615B9A3DD57F3C5F5D9DEF2AD41DC3FB3D58FE1BA9ADEAAAFD5FFAE1AFAF54DD878C27ABF55A5FA5D1AF319C124AF19740D1E4453CDA749174356D1BFCFCB800FF0B34F9A96708C3CB853E217D9307DB521B7455E75413C0BB7304B20492993DF8F07BC2F6FA4AF973627A5E931E21823BC56D50D17569F4C0CEDE23BDDC8B55A5705BFFED22FC844257DFE9F7B041D349E0E4934DD76220F06980477CB7E0F9C84899D654F4CDA55A5B8E25250528988FF693E12E181931D40FD249A419A3A21EE3A526627AAAFAA10240327D80CC257C4FC3E52A6C5C36E96DEB094584DDB155434E3849C71072217E14EEBD3FC7BA85B403104485E4B34744E0019F22AFFE06CD801F80BE78155FA691FE85BAF18FDB45655DC98315F5F5489F26CEFB6A78CC8B0D87520514DCAFE2E6441B9BF858A4BDE59F4014B72060B1467FDD4FE9BCF79DAF8D7C4CEF13B0B7B8BEAAFC845E66BC9B700C252AF0AA63028E8873FAB3706325EDCA85F47DA2D22171DDB25F7181645F74DADBED74821A6AF7E6CE0E4E49C3C</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_10" pktDelay="109" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>F36F612FDE2E0A60F223B5BA29</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_11" pktDelay="2673" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>66ED83C0CA7D64CD608226F6960AD42ED8D469962795B34EC3A62F7FC434B8E24B1F65715EDC6BBA4228C4B20A4A3DAB227C5E97B2A4F41FEA72140AA177D123B7689759582293099D6891275BDC0CD8E0CA</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_12" pktDelay="1139" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>042D0F86E48F20C4D94E9893E9002C255A5C461CEDC2BA2B51184AF6550A45A68A37</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_13" pktDelay="588" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>042D0F86E48F20C4D94E9893E9002C255A5C461CEDC2BA2B51184AF6550A45A68A37216967CFE5C00AFFE68770D12A</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_14" pktDelay="23308" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>DCBD7E3B508C2A72951A2705AB60F84F66B35A9D628DBBF37B0291E82B4B527FA770E2A833B5C28ACF83ADED7301C507A7DB515F</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_15" pktDelay="128" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>27E8F540CCCF510EFEB8667559</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_16" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>D169FCE901ECAEA4ED62935852B1B9E05AF01C8C669EA11D96902656EB901694F1AE72377D147CE3EB1919C09719ADA5A5F76BA74BF9A2949D1231A36CF72F156715BC1B7D70B8F2522E881E2F8858E2F762</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables/>
+  <Modifiers/>
+</Flow>

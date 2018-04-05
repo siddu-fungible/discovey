@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ResultViewCatalog>
+  <ResultViewEntry type="Grid" name="Port Pair Results By Actual Rx Ports" objectUri="object://l2l3/TxPortPairResults" profile="l2l3" menuPath="Port Traffic" owner="System" identifier="Port Traffic\Port Pair Results By Actual Rx Ports" />
+  <ResultViewEntry type="Grid" name="Stream Results By Actual Rx Ports" objectUri="object://l2l3/TxStreamResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Stream Results By Actual Rx Ports" />
+  <ResultViewEntry type="Grid" name="Stream Block Results By Actual Rx Ports" objectUri="object://l2l3/TxStreamBlockResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Stream Block Results By Actual Rx Ports" />
+  <ResultViewEntry type="Grid" name="Stream Results By Expected Rx Ports" objectUri="object://l2l3/TxStreamResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Stream Results By Expected Rx Ports" />
+  <ResultViewEntry type="Grid" name="Traffic Group Results By Actual Rx Ports" objectUri="object://l2l3/TxTrafficGroupResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Traffic Group Results By Actual Rx Ports" />
+  <ResultViewEntry type="Grid" name="Summarized Traffic Group Results" objectUri="object://l2l3/TxTrafficGroupResults" profile="l2l3" menuPath="Stream Results" owner="System" identifier="Stream Results\Summarized Traffic Group Results" />
+  <ResultViewEntry type="Grid" name="RSVP Sub-LSP Results" objectUri="object://rsvp/RsvpSubLspResults" profile="rsvp" menuPath="Routing Protocols\LDP-RSVP LSP Results" owner="System" identifier="Routing Protocols\LDP-RSVP LSP Results\RSVP Sub-LSP Results" />
+</ResultViewCatalog>

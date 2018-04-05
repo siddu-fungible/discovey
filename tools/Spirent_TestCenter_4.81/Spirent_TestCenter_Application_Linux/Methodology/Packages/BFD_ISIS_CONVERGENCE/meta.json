@@ -1,0 +1,831 @@
+{
+  "methodology_key": "BFD_ISIS_CONVERGENCE",
+  "display_name": "BFD ISIS Convergence Test",
+  "short_display_name": "BFD_ISIS_CONVERGENCE",
+  "description": "Determine the convergence time required to switch traffic from a primary ISIS route to a secondary route when the ISIS protocol uses BFD.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "port_groups": [
+    {
+      "property": "PortGroupIngressPort",
+      "display_name": "IngressPort",
+      "description": "IngressPort",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "PortGroupPrimaryEgressPort",
+      "display_name": "PrimaryEgressPort",
+      "description": "PrimaryEgressPort",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "PortGroupSecondaryEgressPort",
+      "display_name": "SecondaryEgressPort",
+      "description": "SecondaryEgressPort",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "topology_side": "WEST",
+      "display_name": "West-side Configuration",
+      "description": "Configuration for the ports on the west side of the topology",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "Start IPv4 address for ingress endpoints.",
+          "display_name": "Ingress IPv4 Address Start",
+          "property": "IngressIpv4AddressStart",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.18.1.2"
+        },
+        {
+          "description": "IPv4 address step for ingress endpoints.",
+          "display_name": "Ingress IPv4 Address Step",
+          "property": "IngressIpv4AddressStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "IPv4 Prefix Length for ingress endpoints.",
+          "display_name": "Ingress IPv4 Prefix Length",
+          "property": "IngressIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32"
+        },
+        {
+          "description": "Start IPv4 Gateway address for ingress endpoints.",
+          "display_name": "Ingress IPv4 Gateway Address Start",
+          "property": "IngressIpv4GatewayAddressStart",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.18.1.1"
+        },
+        {
+          "description": "IPv4 Gateway address step for ingress endpoints.",
+          "display_name": "Ingresss IPv4 Gateway Address Step",
+          "property": "IngressIpv4GatewayAddressStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0"
+        },
+        {
+          "description": "Start VLAN ID for ingress endpoints.",
+          "display_name": "Ingress VLAN ID Start",
+          "property": "IngressVlanIdStart",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "VLAN ID step for ingress endpoints.",
+          "display_name": "Ingress VLAN ID Step",
+          "property": "IngressVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Start Inner VLAN ID for ingress endpoints.",
+          "display_name": "Ingress Inner VLAN ID Start",
+          "property": "IngressInnerVlanIdStart",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Inner VLAN ID step for ingress endpoints.",
+          "display_name": "Ingress Inner VLAN ID Step",
+          "property": "IngressInnerVlanIdStep",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Start MAC address for ingress endpoints.",
+          "display_name": "Ingress MAC Address Start",
+          "property": "IngressMacAddressStart",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:02"
+        },
+        {
+          "description": "Step MAC address for ingress endpoints.",
+          "display_name": "Ingress MAC Address Step",
+          "property": "IngressMacAddressStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Ingress Devices Per Port",
+          "display_name": "Ingress Devices Per Port",
+          "property": "IngressDevicesPerPort",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Ingress VLAN Type",
+          "display_name": "IngressVlanType",
+          "property": "IngressVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "VLAN",
+          "acceptable_values": [
+            "NONE",
+            "VLAN",
+            "QinQ"
+          ]
+        }
+      ]
+    },
+    {
+      "topology_side": "EAST",
+      "display_name": "East-side Configuration",
+      "description": "Configuration for the ports on the east side of the topology",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "Start IPv4 address for primary egress endpoints.",
+          "display_name": "Primary Egress IPv4 Address Start",
+          "property": "PrimaryEgressIpv4AddressStart",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.19.1.2"
+        },
+        {
+          "description": "IPv4 address step for primary egress endpoints.",
+          "display_name": "Primary Egress IPv4 Address Step",
+          "property": "PrimaryEgressIpv4AddressStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "IPv4 prefix length for primary egress endpoints.",
+          "display_name": "Primary Egress IPv4 Prefix Length",
+          "property": "PrimaryEgressIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32"
+        },
+        {
+          "description": "Start IPv4 Gateway address for primary egress endpoints.",
+          "display_name": "Primary Egress IPv4 Gateway Address Start",
+          "property": "PrimaryEgressIpv4GatewayAddressStart",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.19.1.1"
+        },
+        {
+          "description": "IPv4 Gateway address step for primary egress endpoints.",
+          "display_name": "Primary Egress IPv4 Gateway Address Step",
+          "property": "PrimaryEgressIpv4GatewayAddressStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0"
+        },
+        {
+          "description": "Start VLAN ID for prmary egress endpoints.",
+          "display_name": "Primary Egress VLAN ID Start",
+          "property": "PrimaryEgressVlanIdStart",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "101",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "VLAN ID step for primary egress endpoints.",
+          "display_name": "Primary Egress VLAN ID Step",
+          "property": "PrimaryEgressVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Inner VLAN ID start for primary egress endpoints.",
+          "display_name": "Primary Egress Inner VLAN ID Start",
+          "property": "PrimaryEgressInnerVlanIdStart",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Inner VLAN ID step for primary egress endpoints.",
+          "display_name": "Primary Egress Inner VLAN ID Step",
+          "property": "PrimaryEgressInnerVlanIdStep",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Start MAC address for primary egress endpoints.",
+          "display_name": "Primary Egress MAC Address Start",
+          "property": "PrimaryEgressMacAddressStart",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:95:00:00:02"
+        },
+        {
+          "description": "Step MAC address for primary egress endpoints.",
+          "display_name": "Primary Egress MAC Address Step",
+          "property": "PrimaryEgressMacAddressStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Primary Egress Devices Per Port",
+          "display_name": "Primary Egress Devices Per Port",
+          "property": "PrimaryEgressDevicesPerPort",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Secondary Egress IPv4 Prefix Length",
+          "display_name": "Secondary Egress IPv4 Prefix Length",
+          "property": "SecondaryEgressIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32"
+        },
+        {
+          "description": "IPv4 gateway start address for secondary egress endpoints.",
+          "display_name": "Secondary Egress IPv4 Gateway Start Address",
+          "property": "SecondaryEgressIpv4GatewayAddressStart",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.20.1.1"
+        },
+        {
+          "description": "IPv4 gateway address step for secondary egress endpoints.",
+          "display_name": "Secondary Egress IPv4 Gateway Step",
+          "property": "SecondaryEgressIpv4GatewayAddressStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0"
+        },
+        {
+          "description": "Secondary Egress Start IPv4 Address",
+          "display_name": "Secondary Egress Start IPv4 Address",
+          "property": "SecondaryEgressIpv4AddressStart",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "198.20.1.2"
+        },
+        {
+          "description": "Secondary Egress IPv4 Address Step",
+          "display_name": "Secondary Egress IPv4 Address Step",
+          "property": "SecondaryEgressIpv4AddressStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0"
+        },
+        {
+          "description": "Secondary Egress MAC Address Start",
+          "display_name": "Secondary Egress MAC Address Start",
+          "property": "SecondaryEgressMacAddressStart",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:96:00:00:02"
+        },
+        {
+          "description": "Secondary Egress MAC Address Step",
+          "display_name": "Secondary Egress MAC Address Step",
+          "property": "SecondaryEgressMacAddressStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Secondary Egress Start VLAN ID",
+          "display_name": "Secondary Egress Start VLAN ID",
+          "property": "SecondaryEgressVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "102",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Secondary Egress VLAN ID Step",
+          "display_name": "Secondary Egress VLAN ID Step",
+          "property": "SecondaryEgressVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Secondary Egress Inner VLAN ID Start",
+          "display_name": "Secondary Egress Inner VLAN ID Start",
+          "property": "SecondaryEgressInnerVlanIdStart",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Secondary Egress Inner VLAN ID Step",
+          "display_name": "Secondary Egress Inner VLAN ID Step",
+          "property": "SecondaryEgressInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Secondary Egress Enable IPv4",
+          "display_name": "Secondary Egress Enable IPv4",
+          "property": "SecondaryEgressEnableIpv4",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Secondary Egress Devices Per Port",
+          "display_name": "Secondary Egress Devices Per Port",
+          "property": "SecondaryEgressDevicesPerPort",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Primary Egress VLAN Type",
+          "display_name": "Primary Egress VLAN Type",
+          "property": "PrimaryEgressVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "VLAN",
+          "acceptable_values": [
+            "NONE",
+            "VLAN",
+            "QinQ"
+          ]
+        },
+        {
+          "description": "Secondary Egress VLAN Type",
+          "display_name": "Secondary Egress VLAN Type",
+          "property": "SecondaryEgressVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "VLAN",
+          "acceptable_values": [
+            "NONE",
+            "VLAN",
+            "QinQ"
+          ]
+        }
+      ]
+    },
+    {
+      "display_name": "Traffic Configuration",
+      "description": "Parameters for traffic configuration",
+      "group_type": "TRAFFIC",
+      "test_properties": [
+        {
+          "description": "Traffic Load",
+          "display_name": "Traffic Load",
+          "property": "TrafficLoad",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "20",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Traffic Frame Length",
+          "display_name": "Traffic Frame Length",
+          "property": "TrafficFrameLength",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "256"
+        },
+        {
+          "description": "Traffic Load Units",
+          "display_name": "Traffic Load Units",
+          "property": "TrafficLoadUnits",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "PERCENT_LINE_RATE",
+          "acceptable_values": [
+            "PERCENT_LINE_RATE",
+            "FRAMES_PER_SECOND",
+            "BITS_PER_SECOND",
+            "KILOBITS_PER_SECOND",
+            "MEGABITS_PER_SECOND"
+          ]
+        }
+      ]
+    },
+    {
+      "display_name": "Configure Protocol",
+      "description": "Configure Protocol",
+      "group_type": "PROTOCOL",
+      "test_properties": [
+        {
+          "description": "ISIS Area ID",
+          "display_name": "ISIS Area ID",
+          "property": "IsisAreaId",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "000001"
+        },
+        {
+          "description": "ISIS Router Priority",
+          "display_name": "ISIS Router Priority",
+          "property": "IsisRouterPriority",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "0"
+        },
+        {
+          "description": "BFD Detect Multiplier",
+          "display_name": "BFD Detect Multiplier",
+          "property": "BfdDetectMultiplier",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "5",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "BFD RX Interval",
+          "display_name": "BFD RX Interval",
+          "property": "BfdRxInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "5000",
+          "minimum": "1",
+          "maximum": "1000000000"
+        },
+        {
+          "description": "BFD TX Interval",
+          "display_name": "BFD TX Interval",
+          "property": "BfdTxInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2000",
+          "minimum": "1",
+          "maximum": "1000000000"
+        },
+        {
+          "description": "ISIS Hello Interval (sec)",
+          "display_name": "ISIS Hello Interval (sec)",
+          "property": "IsisHelloInterval",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "300"
+        },
+        {
+          "description": "ISIS Hello Multiplier",
+          "display_name": "ISIS Hello Multiplier",
+          "property": "IsisHelloMultiplier",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "3",
+          "minimum": "1",
+          "maximum": "100"
+        },
+        {
+          "description": "ISIS Circuit ID",
+          "display_name": "ISIS Circuit ID",
+          "property": "IsisCircuitId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "255"
+        },
+        {
+          "description": "Tree Topology Max Interface Per Router",
+          "display_name": "Tree Topology Max Interface Per Router",
+          "property": "TreeTopologyMaxIfPerRouter",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "4",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "Tree Topology Max Routers Per Transit Network",
+          "display_name": "Tree Topology Max Routers Per Transit Network",
+          "property": "TreeTopologyMaxRoutersPerTransitNetwork",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "5",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "Tree Topology Num Simulated Routers",
+          "display_name": "Tree Topology Num Simulated Routers",
+          "property": "TreeTopologyNumSimulatedRouters",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "3",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "Grid Topology Attach Column Index",
+          "display_name": "Grid Topology Attach Column Index",
+          "property": "GridTopologyAttachColumnIndex",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "Grid Topology Attach Row Index",
+          "display_name": "Grid Topology Attach Row Index",
+          "property": "GridTopologyAttachRowIndex",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "Grid Topology Columns",
+          "display_name": "Grid Topology Columns",
+          "property": "GridTopologyColumns",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "4",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "Grid Topology Rows",
+          "display_name": "Grid Topology Rows",
+          "property": "GridTopologyRows",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "4",
+          "minimum": "1",
+          "maximum": "32768"
+        },
+        {
+          "description": "IPv4 Route Prefix Length Start",
+          "display_name": "IPv4 Route Prefix Length Start",
+          "property": "Ipv4RoutePrefixLengthStart",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "1",
+          "maximum": "32"
+        },
+        {
+          "description": "IPv4 Route Count",
+          "display_name": "IPv4 Route Count",
+          "property": "Ipv4RouteCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "20",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "IPv4 Route Prefix Length End",
+          "display_name": "IPv4 Route Prefix Length End",
+          "property": "Ipv4RoutePrefixLengthEnd",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "1",
+          "maximum": "32"
+        },
+        {
+          "description": "ISIS Topology",
+          "display_name": "ISIS Topology",
+          "property": "IsisTopology",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "TREE",
+          "acceptable_values": [
+            "TREE",
+            "GRID"
+          ]
+        },
+        {
+          "description": "ISIS Level",
+          "display_name": "ISIS Level",
+          "property": "IsisLevel",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "LEVEL2",
+          "acceptable_values": [
+            "LEVEL1",
+            "LEVEL2",
+            "LEVEL1_AND_2"
+          ]
+        },
+        {
+          "description": "BFD Interval Time Unit",
+          "display_name": "BFD Interval Time Unit",
+          "property": "BfdIntervalTimeUnit",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "MSEC",
+          "acceptable_values": [
+            "MSEC",
+            "USEC"
+          ]
+        },
+        {
+          "description": "Grid Topology Emulated Router Position",
+          "display_name": "Grid Topology Emulated Router Position",
+          "property": "GridTopologyEmulatedRouterPos",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "ATTACHED_TO_GRID",
+          "acceptable_values": [
+            "ATTACHED_TO_GRID",
+            "MEMBER_OF_GRID"
+          ]
+        },
+        {
+          "description": "IPv4 Route Prefix Length Distribution Type",
+          "display_name": "IPv4 Route Prefix Length Distribution Type",
+          "property": "Ipv4RoutePrefixLengthDistType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "FIXED",
+          "acceptable_values": [
+            "FIXED",
+            "LINEAR"
+          ]
+        },
+        {
+          "description": "Tree Topology Interface Type",
+          "display_name": "Tree Topology Interface Type",
+          "property": "TreeTopologyIfType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "POINT_TO_POINT",
+          "acceptable_values": [
+            "POINT_TO_POINT",
+            "BROADCAST"
+          ]
+        },
+        {
+          "description": "ISIS Network Type",
+          "display_name": "ISIS Network Type",
+          "property": "IsisNetworkType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "BROADCAST",
+          "acceptable_values": [
+            "BROADCAST",
+            "P2P"
+          ]
+        },
+        {
+          "description": "IPv4 Route Address End",
+          "display_name": "IPv4 Route Address End",
+          "property": "Ipv4RouteAddressEnd",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "223.255.255.255"
+        },
+        {
+          "description": "IPv4 Route Address Start",
+          "display_name": "IPv4 Route Address Start",
+          "property": "Ipv4RouteAddressStart",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "20.0.1.0"
+        }
+      ]
+    },
+    {
+      "display_name": "Configure Convergence",
+      "description": "Configure Convergence",
+      "group_type": "PROTOCOL",
+      "test_properties": [
+        {
+          "description": "Stream Convergence Threshold (us)",
+          "display_name": "Stream Convergence Threshold (us)",
+          "property": "StreamConvergenceThreshold",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10000000",
+          "minimum": "0",
+          "maximum": "4294967295"
+        }
+      ]
+    },
+    {
+      "display_name": "Run Convergence Test",
+      "description": "Run Convergence Test",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "description": "Maximum time to wait for stream convergence in seconds",
+          "display_name": "Convergence Timeout (sec)",
+          "property": "ConvergenceTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "120",
+          "minimum": "10",
+          "maximum": "600"
+        },
+        {
+          "description": "Wait time for protocols to establish in seconds.",
+          "display_name": "Protocol Establish Wait Time (sec)",
+          "property": "ProtocolEstablishWaitTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "300",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Convergence Trigger Event",
+          "display_name": "Convergence Trigger Event",
+          "property": "ConvergenceTriggerEvent",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "BREAK_LINK",
+          "acceptable_values": [
+            "BFD_STOP",
+            "BREAK_LINK"
+          ]
+        },
+        {
+          "description": "Wait Before Starting Traffic (sec)",
+          "display_name": "Wait Before Starting Traffic (sec)",
+          "property": "WaitBeforeStartingTraffic",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.005",
+          "maximum": "2147483647.0"
+        }
+      ]
+    }
+  ]
+}

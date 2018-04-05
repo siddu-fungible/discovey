@@ -1,0 +1,228 @@
+<Template>
+<Description />
+<Image />
+<DataModelXml>
+<StcSystem id="1"
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2"
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName="Untitled.tcc"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="17"/>
+    <Tags id="3" serializationBase="true"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1234"/>
+      <Relation type="UserTag" target="1235"/>
+      <Relation type="UserTag" target="1236"/>
+      <Relation type="UserTag" target="1237"/>
+      <Relation type="UserTag" target="1238"/>
+      <Relation type="UserTag" target="1239"/>
+      <Relation type="UserTag" target="1240"/>
+      <Relation type="UserTag" target="1241"/>
+      <Tag id="1234"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttEmulatedDevice">
+      </Tag>
+      <Tag id="1235"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv4If">
+      </Tag>
+      <Tag id="1236"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIgmpHostConfig">
+      </Tag>
+      <Tag id="1237"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttEthIIIf">
+      </Tag>
+      <Tag id="1238"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIgmpGroupMembership">
+      </Tag>
+      <Tag id="1239"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv4NetworkBlock">
+      </Tag>
+      <Tag id="1240"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv4Group">
+      </Tag>
+      <Tag id="1241"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIgmpHostConfigMembership">
+      </Tag>
+    </Tags>
+    <EmulatedDevice id="2328" serializationBase="true"
+     DeviceCount="1"
+     EnablePingResponse="FALSE"
+     RouterId="192.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterId="2000::1"
+     Ipv6RouterIdStep="::1"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Device 1">
+      <Relation type="TopLevelIf" target="2329"/>
+      <Relation type="PrimaryIf" target="2329"/>
+      <Relation type="UserTag" target="1234"/>
+      <Ipv4If id="2329"
+       Address="192.85.1.3"
+       AddrStep="0.0.0.1"
+       AddrStepMask="255.255.255.255"
+       SkipReserved="TRUE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       PrefixLength="24"
+       UsePortDefaultIpv4Gateway="FALSE"
+       Gateway="192.85.1.1"
+       GatewayStep="0.0.0.0"
+       GatewayRepeatCount="0"
+       GatewayRecycleCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       Ttl="255"
+       TosType="TOS"
+       Tos="192"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 3">
+        <Relation type="StackedOnEndpoint" target="2330"/>
+        <Relation type="UserTag" target="1235"/>
+      </Ipv4If>
+      <EthIIIf id="2330"
+       SourceMac="00:10:94:00:00:01"
+       SrcMacStep="00:00:00:00:00:01"
+       SrcMacList=""
+       SrcMacStepMask="00:00:ff:ff:ff:ff"
+       SrcMacRepeatCount="0"
+       Authenticator="default"
+       UseDefaultPhyMac="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="EthernetII 3">
+        <Relation type="UserTag" target="1237"/>
+      </EthIIIf>
+      <IgmpHostConfig id="2331"
+       V1RouterPresentTimeout="400"
+       Ipv4DontFragment="FALSE"
+       TosType="TOS"
+       Ipv4Tos="192"
+       Version="IGMP_V2"
+       ForceRobustJoin="FALSE"
+       ForceLeave="FALSE"
+       ForceSimpleJoin="FALSE"
+       PackReports="FALSE"
+       InsertLengthErrors="FALSE"
+       InsertCheckSumErrors="FALSE"
+       RobustnessVariable="2"
+       UnsolicitedReportInterval="10"
+       AllowNoMemberships="FALSE"
+       IfHandle="0"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IgmpHostConfig 1">
+        <Relation type="UsesIf" target="2329"/>
+        <Relation type="UserTag" target="1236"/>
+      </IgmpHostConfig>
+      <IgmpHostConfig id="2331"
+       V1RouterPresentTimeout="400"
+       Ipv4DontFragment="FALSE"
+       TosType="TOS"
+       Ipv4Tos="192"
+       Version="IGMP_V2"
+       ForceRobustJoin="FALSE"
+       ForceLeave="FALSE"
+       ForceSimpleJoin="FALSE"
+       PackReports="FALSE"
+       InsertLengthErrors="FALSE"
+       InsertCheckSumErrors="FALSE"
+       RobustnessVariable="2"
+       UnsolicitedReportInterval="10"
+       AllowNoMemberships="FALSE"
+       IfHandle="0"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IgmpHostConfig 1">
+        <Relation type="UsesIf" target="2329"/>
+        <Relation type="UserTag" target="1241"/>
+        <IgmpGroupMembership id="2210"
+         FilterMode="EXCLUDE"
+         UserDefinedSources="FALSE"
+         IsSourceList="FALSE"
+         CalculateLatency="FALSE"
+         DeviceGroupMapping="MANY_TO_MANY"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="IgmpGroupMembership 1">
+          <Relation type="UserTag" target="1238"/>
+          <Relation type="SubscribedGroups" target="2207"/>
+          <Ipv4NetworkBlock id="2211"
+           StartIpList="192.0.1.0"
+           PrefixLength="32"
+           NetworkCount="1"
+           AddrIncrement="1"
+           Active="TRUE"
+           LocalActive="TRUE"
+           Name="Ipv4 Network Block 2">
+          </Ipv4NetworkBlock>
+        </IgmpGroupMembership>
+      </IgmpHostConfig>
+    </EmulatedDevice>
+    <Ipv4Group id="2207" serializationBase="true"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Ipv4Group 1">
+      <Ipv4NetworkBlock id="2208"
+       StartIpList="225.0.0.1"
+       PrefixLength="32"
+       NetworkCount="4"
+       AddrIncrement="1"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Ipv4 Network Block 1">
+        <Relation type="UserTag" target="1239"/>
+      </Ipv4NetworkBlock>
+      <Relation type="UserTag" target="1240"/>
+    </Ipv4Group>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

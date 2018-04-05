@@ -1,0 +1,26 @@
+[
+    {
+        "measurements": ["stm_events"],
+        "allow_downsample": false,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "BLL_TOKEN",
+                    "dbkey": "stc_session_token"
+                }
+            }
+        ]
+    },
+    {
+        "measurements": ["^stc_rt_.*"],
+        "allow_downsample": false,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "BLL_TOKEN",
+                    "dbkey": "stc_session_token"
+                }
+            }
+        ]
+    }
+]

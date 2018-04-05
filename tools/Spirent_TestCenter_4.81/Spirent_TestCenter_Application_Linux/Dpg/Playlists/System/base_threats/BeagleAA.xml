@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<Playlist type="attack" name="beagleAA">
+  <MetaData description="Beagle.AA Worm"/>
+  <Attacks>
+    <Attack file="System/base_threats/beagleAA.xml"
+            name="beagleAA"
+            description="Beagle.AA Worm"
+            serverPort="25"
+            pktDelay="200"
+            inactivityTimeout="100000" />
+  </Attacks>
+</Playlist>

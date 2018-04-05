@@ -1,0 +1,583 @@
+{
+  "methodology_key": "IPTV_MULTICHANNEL",
+  "display_name": "IPTV Multi-Channel",
+  "short_display_name": "IPTV_MULTICHANNEL",
+  "description": "The IPTV Multi-Channel Methodology sets up a test with hosts joining and leaving multiple channels at a time",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "CUSTOM",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "PortGroupIptvHost"
+      },
+      {
+        "side": "EAST",
+        "port_group": "PortGroupIptvSource"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "PortGroupIptvHost",
+      "display_name": "IPTV Host Port Group",
+      "description": "Group of ports on the IPTV Host side of the topology",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "PortGroupIptvSource",
+      "display_name": "IPTV Source Port Group",
+      "description": "Group of ports on the IPTV Source side of the topology",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "resource_groups": [
+    {
+      "property": "MetricsService",
+      "display_name": "Metrics Services",
+      "description": "List of Metrics to use for the methodology.",
+      "type": "METRICS",
+      "resource_list": []
+    }
+  ],
+  "property_groups": [
+    {
+      "group_type": "GLOBAL",
+      "display_name": "Global Parameters",
+      "description": "Global configuration parameters",
+      "test_properties": [
+        {
+          "description": "Amount of time in milliseconds to wait for the first multicast packet after sending the IGMP join to consider the IGMP join a success (must be less than the Join Wait Time)",
+          "display_name": "Join Latency Threshold",
+          "property": "JoinLatencyThreshold",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "50.00",
+          "minimum": "0.0",
+          "maximum": "4294967295.0",
+          "units": "ms"
+        },
+        {
+          "description": "Amount of time in milliseconds to wait for the last multicast packet after sending the IGMP leave to consider the IGMP leave a success (must be less than the Join Wait Time)",
+          "display_name": "Leave Latency Threshold",
+          "property": "LeaveLatencyThreshold",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2000.00",
+          "minimum": "0.0",
+          "maximum": "4294967295.0",
+          "units": "ms"
+        },
+        {
+          "description": "Enable PPPoE on the IPTV clients",
+          "display_name": "Enable PPPoE Client Emulation",
+          "property": "ClientEnablePppoe",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "IPTV Client Configuration",
+      "description": "Configuration settings for the IPTV clients",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "Number of IPTV clients to emulate",
+          "display_name": "Client Count",
+          "property": "ClientCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Multicast version for the IPTV clients",
+          "display_name": "Multicast Version",
+          "property": "ClientMulticastVersion",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "IGMPv2",
+          "acceptable_values": [
+            "IGMPv1",
+            "IGMPv2",
+            "IGMPv3"
+          ]
+        },
+        {
+          "description": "Use Join/Leave Maximum Rate and Burst Size",
+          "display_name": "Use Max Rate & Burst Size",
+          "property": "UseMaxRateBurstSize",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Join/Leave shaping rate in packets/second",
+          "display_name": "Join/Leave Rate",
+          "property": "SetJoinLeaveRateValue",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "packets/s"
+        },
+        {
+          "description": "Starting MAC address for IPTV clients",
+          "display_name": "MAC Address",
+          "property": "ClientMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:96:00:00:01"
+        },
+        {
+          "description": "Starting IPv4 address for IPTV clients",
+          "display_name": "IPv4 Address",
+          "property": "ClientIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.3"
+        },
+        {
+          "description": "Step of MAC address for IPTV clients",
+          "display_name": "MAC Address Step",
+          "property": "ClientMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Step of IPv4 address for IPTV clients",
+          "display_name": "IPv4 Address Step",
+          "property": "ClientIpv4AddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0"
+        },
+        {
+          "description": "Step of MAC address across multiple IPTV client ports",
+          "display_name": "MAC Address Port Step",
+          "property": "ClientMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00"
+        },
+        {
+          "description": "Step of IPv4 address across multiple IPTV client ports",
+          "display_name": "IPv4 Address Port Step",
+          "property": "ClientIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.0.0.0"
+        },
+        {
+          "description": "Set up the IPTV clients to use one or more VLANs",
+          "display_name": "VLAN Mode",
+          "property": "ClientVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ]
+        },
+        {
+          "description": "Starting IPv4 gateway address for IPTV clients",
+          "display_name": "IPv4 Gateway Address",
+          "property": "ClientIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.1"
+        },
+        {
+          "description": "Starting outer VLAN ID for IPTV clients",
+          "display_name": "Outer VLAN ID",
+          "property": "ClientOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of IPv4 gateway address for IPTV clients",
+          "display_name": "IPv4 Gateway Address Step",
+          "property": "ClientIpv4GwAddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0"
+        },
+        {
+          "description": "Step of outer VLAN ID for IPTV clients",
+          "display_name": "Outer VLAN ID Step",
+          "property": "ClientOuterVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of IPv4 gateway address across multiple IPTV client ports",
+          "display_name": "IPv4 Gateway Address Port Step",
+          "property": "ClientIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.0.0.0"
+        },
+        {
+          "description": "Step of outer VLAN ID across multiple IPTV client ports",
+          "display_name": "Outer VLAN ID Port Step",
+          "property": "ClientOuterVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "4095"
+        },
+        {
+          "description": "IPTV client's IPv4 prefix length",
+          "display_name": "Prefix Length",
+          "property": "ClientIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits"
+        },
+        {
+          "description": "Starting VLAN ID for IPTV clients",
+          "display_name": "VLAN ID",
+          "property": "ClientInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "PPPoE Client Block Authentication",
+          "display_name": "PPPoE Client Block Authentication",
+          "property": "PppoeClientAuthentication",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "No Authentication",
+          "acceptable_values": [
+            "No Authentication",
+            "Auto Negotiate",
+            "CHAP MD5 Authentication",
+            "PAP Authentication"
+          ]
+        },
+        {
+          "description": "Step of VLAN ID for IPTV clients",
+          "display_name": "VLAN ID Step",
+          "property": "ClientInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "PPPoE Client Block Username",
+          "display_name": "PPPoE Client Username",
+          "property": "PppoeClientBlockUsername",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "spirent"
+        },
+        {
+          "description": "Step of VLAN ID across multiple IPTV client ports",
+          "display_name": "VLAN ID Port Step",
+          "property": "ClientInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "PPPoE Client Block Password",
+          "display_name": "PPPoE Client Password",
+          "property": "PppoeClientBlockPassword",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "spirent"
+        },
+        {
+          "description": "Maximum amount of time in seconds to wait for PPPoX sessions to connect",
+          "display_name": "Max PPPoX Connect Wait Time",
+          "property": "PppoxConnectMaxWaitTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "300",
+          "minimum": "1.00",
+          "maximum": "4294967295.00",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "Multicast Source Configuration",
+      "description": "Configuration for the multicastl source(s)",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "Starting MAC address for multicast sources",
+          "display_name": "MAC Address",
+          "property": "SourceMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:96:00:01:01"
+        },
+        {
+          "description": "Starting IPv4 addres for multicast sources",
+          "display_name": "IPv4 Address",
+          "property": "SourceIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.1"
+        },
+        {
+          "description": "Step MAC address across multiple multicast source ports",
+          "display_name": "MAC Address Port Step",
+          "property": "SourceMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00"
+        },
+        {
+          "description": "Step of IPv4 address across multiple multicast source ports",
+          "display_name": "IPv4 Address Port Step",
+          "property": "SourceIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.0.0.0"
+        },
+        {
+          "description": "Set up the multicast sources to use one or more VLANs",
+          "display_name": "VLAN mode",
+          "property": "SourceVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ]
+        },
+        {
+          "description": "Starting IPv4 gateway address for multicast sources",
+          "display_name": "IPv4 Gateway Address",
+          "property": "SourceIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.3"
+        },
+        {
+          "description": "Starting outer VLAN ID for multicast sources",
+          "display_name": "Outer VLAN ID",
+          "property": "SourceOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of IPv4 gateway address across multiple multicast source ports",
+          "display_name": "IPv4 Gateway Address Port Step",
+          "property": "SourceIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.0.0.0"
+        },
+        {
+          "description": "Step of outer VLAN ID across multiple multicast source ports",
+          "display_name": "Outer VLAN ID Port Step",
+          "property": "SourceOuterVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Prefix length of the IPv4 multicast sources",
+          "display_name": "IPv4 Prefix Length",
+          "property": "SourceIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits"
+        },
+        {
+          "description": "Starting VLAN ID for multicast sources",
+          "display_name": "VLAN ID",
+          "property": "SourceInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Total channel bandwidth specified in mbps",
+          "display_name": "Total Channel Bandwidth",
+          "property": "TotalChannelBandwidth",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "megabits/s"
+        },
+        {
+          "description": "Step of VLAN ID across multiple multicast source ports",
+          "display_name": "VLAN ID Port Step",
+          "property": "SourceInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "4095"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Multicast and Channel Configuration",
+      "description": "Configure Multicast Group Addresses and Channel Blocks",
+      "test_properties": [
+        {
+          "description": "Number of concurrent IPTV channels received per IPTV client",
+          "display_name": "Multicast Channels per Block",
+          "property": "MulticastChannelBlockSize",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "4",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Number of multicast channel blocks to create",
+          "display_name": "Multicast Channel Block Count",
+          "property": "MulticastChannelBlockCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Starting IPv4 address for multicast groups",
+          "display_name": "Multicast Group IPv4 Address",
+          "property": "MulticastGroupIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "225.0.0.1"
+        },
+        {
+          "description": "Step of IPv4 address for stepping multicast groups across channel blocks",
+          "display_name": "Multicast Group Block IPv4 Address Step",
+          "property": "MulticastGroupBlockIpv4AddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.4"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "IPTV Test Configuration",
+      "description": "IPTV channel change and viewing configuration parameters",
+      "test_properties": [
+        {
+          "description": "Number of times the IPTV clients should change channels (switch to new channel blocks)",
+          "display_name": "Channel Change Count",
+          "property": "ChannelChangeCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "2147483647"
+        },
+        {
+          "description": "Amount of time (in seconds) to wait before the latency calculation is performed",
+          "display_name": "Join Wait Time",
+          "property": "JoinWaitTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0.0",
+          "maximum": "4294967295.0",
+          "units": "seconds"
+        },
+        {
+          "description": "Amount of time in seconds to wait between sending the IGMP Join and the IGMP Leave excluding the Join/Leave Wait Times for latency calculation (the amount of time the clients will view the channels)",
+          "display_name": "Channel View Time (Join-Leave Interval)",
+          "property": "ChannelViewTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.00",
+          "minimum": "0.005",
+          "maximum": "2147483647.0",
+          "units": "seconds"
+        },
+        {
+          "description": "Amount of time (in seconds) to wait before the latency calculation is performed",
+          "display_name": "Leave Wait Time",
+          "property": "LeaveWaitTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0.0",
+          "maximum": "4294967295.0",
+          "units": "seconds"
+        },
+        {
+          "description": "Maximum amount of time in seconds to wait for PPPoX sessions to disconnect",
+          "display_name": "Max PPPoX Disconnect Wait Time",
+          "property": "PppoxDisconnectMaxWaitTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "300",
+          "minimum": "0.0",
+          "maximum": "4294967295.0",
+          "units": "seconds"
+        }
+      ]
+    }
+  ]
+}

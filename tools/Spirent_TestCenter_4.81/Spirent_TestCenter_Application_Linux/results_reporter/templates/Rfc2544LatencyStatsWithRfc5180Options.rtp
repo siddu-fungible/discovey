@@ -1,0 +1,1784 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>NONE</instance>
+      </value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.80.3990.0002</instance>
+      </value>
+      <path>select Version from StcSystem where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2011-08-31 21:08:58</instance>
+      </value>
+      <path>select CreatedTime from DataSet where Id = =$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstEndDate</name>
+      <persist>false</persist>
+      <path>select CreatedTime from DataSet where Id = =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>D1AvgLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.105</instance>
+      </value>
+      <path>select AvgLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1MinLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+      </value>
+      <path>select MinLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Rx</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>844596</instance>
+      </value>
+      <path>select RxFrameCount from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Load</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>50.0</instance>
+      </value>
+      <path>select IntendedLoad from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Iter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select IterationNum from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Stream</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select DataSetId from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>D1MaxLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.11</instance>
+      </value>
+      <path>select MaxLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Id</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select Id from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>D1FS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>128.0</instance>
+      </value>
+      <path>select (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN "Configured-" || ConfiguredFrameSize || " Avg-" || FrameSize ELSE FrameSize END) from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1FD</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>N/A</instance>
+      </value>
+      <path>select FrameLengthDistribution from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Tx</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>844596</instance>
+      </value>
+      <path>select TxFrameCount from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <path>select ParamValue from EotResultNodeParam where Name='@endDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>histogram</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>D1MinJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select MinJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1MaxJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select MaxJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1AvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select AvgJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>ResultViewMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>HISTOGRAM</instance>
+      </value>
+      <path>select distinct upper(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Fixed</instance>
+      </value>
+      <path>select distinct FrameSizeType from Rfc2544LatencyPerLoadResult;</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions,Advanced Test Summary,Trial Summary,IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistName</name>
+      <persist>false</persist>
+      <path>select fd.name AS 'iMIX Distribution' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544LatencyPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSMode</name>
+      <persist>false</persist>
+      <path>select fds.frameLengthMode AS 'Frame Length Mode' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544LatencyPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLen</name>
+      <persist>false</persist>
+      <path>select coalesce((case when fds.frameLengthMode = 'FIXED' then CAST(fds.fixedFrameLength AS varchar(10)) else CAST(fds.minFrameLength AS varchar(10)) || '-' || CAST(fds.maxFrameLength AS varchar(10)) end),'-') AS 'IP Frame Length' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544LatencyPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeight</name>
+      <persist>false</persist>
+      <path>select fds.weight AS 'Weight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544LatencyPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWt</name>
+      <persist>false</persist>
+      <path>select round((case when TotalWt.totalWeight=0 then 0 else ((fds.weight * 100.0) /totalWeight) end),2) AS 'Percentage(%)' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544LatencyPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd left join (select fd.handle AS 'Handle', coalesce(sum(fds.weight),0) AS 'TotalWeight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544LatencyPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fds.parenthnd = fd.handle group by fd.handle) AS TotalWt ON TotalWt.handle = fd.handle order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>TestSum</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1^No Extension Header^100:0^128^50.0^0.0^0.1^0.105^0.11^0.0^0.0^0.0</instance>
+      </value>
+      <path>SELECT DataSetId||'^' ||Ipv6ExtensionHeader ||'^' ||Ipv6Ipv4CoexistenceRatio ||'^' ||FrameSize ||'^' ||IntendedLoad ||'^' || CASE WHEN PercentLoss IS NULL THEN '' ELSE PercentLoss END ||'^' || (ROUND(MIN(MinLatency) * 1000) / 1000) ||'^' || (ROUND(AVG(AvgLatency) * 1000) / 1000 ) ||'^' || (ROUND(MAX(MaxLatency) * 1000) / 1000) ||'^' ||CASE WHEN MinJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(MAX(MinJitter) * 1000) / 1000 END ||'^' ||CASE WHEN AvgJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(AVG(AvgJitter) * 1000) / 1000 END ||'^' ||CASE WHEN MaxJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(MAX(MaxJitter) * 1000) / 1000 END FROM (SELECT (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN "Configured-" || ConfiguredFrameSize || " Avg-" || FrameSize ELSE FrameSize END) AS FrameSize, DataSetid, IPv6ExtensionHeader, Ipv6Ipv4CoexistenceRatio, IntendedLoad, PercentLoss, MinLatency, AvgLatency, MaxLatency, MinJitter, AvgJitter, MaxJitter FROM Rfc2544LatencyPerLoadResult WHERE DataSetId BETWEEN =$@StartDataSetId$ AND =$@EndDataSetId$) GROUP BY Ipv6ExtensionHeader,FrameSize, Ipv6Ipv4CoexistenceRatio, IntendedLoad ORDER BY MIN(DataSetId)</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>LatencyType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>LILO</instance>
+      </value>
+      <path>select C.LatencyType from Rfc2544LatencyConfig C,Rfc2544LatencyCommand LC, Sequencer S where LC.handle = C.parenthnd and (LC.parenthnd = S.currentcommand OR LC.handle = S.currentcommand)</path>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1^No Extension Header^100:0^128^0.0^50.0^0.0^0.0^0.0^0.0^0.0^0.0^0.0</instance>
+      </value>
+      <path>SELECT DataSetId||'^' ||Ipv6ExtensionHeader ||'^' ||Ipv6Ipv4CoexistenceRatio ||'^' ||FrameSize ||'^' ||Ipv4IntendedLoad ||'^' ||IntendedLoad ||'^' || CASE WHEN PercentLoss IS NULL THEN '' ELSE PercentLoss END ||'^' || CASE WHEN Ipv4MinLatency = '1.#QNAN' THEN 'N/A' ELSE (ROUND(MIN(Ipv4MinLatency) * 1000) / 1000) END ||'^' || CASE WHEN Ipv4AvgLatency = '1.#QNAN' THEN 'N/A' ELSE (ROUND(AVG(Ipv4AvgLatency) * 1000) / 1000) END ||'^' || CASE WHEN Ipv4MaxLatency = '1.#QNAN' THEN 'N/A' ELSE (ROUND(MAX(Ipv4MaxLatency) * 1000) / 1000) END ||'^' ||CASE WHEN Ipv4MinJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(MAX(Ipv4MinJitter) * 1000) / 1000 END ||'^' ||CASE WHEN Ipv4AvgJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(AVG(Ipv4AvgJitter) * 1000) / 1000 END ||'^' ||CASE WHEN Ipv4MaxJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(MAX(Ipv4MaxJitter) * 1000) / 1000 END FROM (SELECT (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN "Configured-" || ConfiguredFrameSize || " Avg-" || FrameSize ELSE FrameSize END) AS FrameSize,DataSetId, IPv6ExtensionHeader, Ipv6Ipv4CoexistenceRatio, Coalesce(Ipv4IntendedLoad, 0) AS Ipv4IntendedLoad, IntendedLoad, PercentLoss, Ipv4MinLatency, Ipv4AvgLatency, Ipv4MaxLatency, Ipv4MinJitter, Ipv4AvgJitter, Ipv4MaxJitter FROM Rfc2544LatencyPerLoadResult WHERE DataSetId BETWEEN =$@StartDataSetId$ AND =$@EndDataSetId$) GROUP BY Ipv6ExtensionHeader,FrameSize, Ipv6Ipv4CoexistenceRatio, IntendedLoad ORDER BY MIN(DataSetId)</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1^No Extension Header^100:0^128^50.0^50.0^0.0^0.1^0.105^0.11^0.0^0.0^0.0</instance>
+      </value>
+      <path>SELECT DataSetId||'^' ||Ipv6ExtensionHeader ||'^' ||Ipv6Ipv4CoexistenceRatio ||'^' ||FrameSize ||'^' ||Ipv6IntendedLoad ||'^' ||IntendedLoad ||'^' || CASE WHEN PercentLoss IS NULL THEN '' ELSE PercentLoss END ||'^' || CASE WHEN Ipv6MinLatency = '1.#QNAN' THEN 'N/A' ELSE (ROUND(MIN(Ipv6MinLatency) * 1000) / 1000) END ||'^' || CASE WHEN Ipv6AvgLatency = '1.#QNAN' THEN 'N/A' ELSE (ROUND(AVG(Ipv6AvgLatency) * 1000) / 1000) END ||'^' || CASE WHEN Ipv6MaxLatency = '1.#QNAN' THEN 'N/A' ELSE (ROUND(MAX(Ipv6MaxLatency) * 1000) / 1000) END ||'^' ||CASE WHEN Ipv6MinJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(MAX(Ipv6MinJitter) * 1000) / 1000 END ||'^' ||CASE WHEN Ipv6AvgJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(AVG(Ipv6AvgJitter) * 1000) / 1000 END ||'^' ||CASE WHEN Ipv6MaxJitter = '1.#QNAN' THEN 'N/A' ELSE ROUND(MAX(Ipv6MaxJitter) * 1000) / 1000 END FROM (SELECT (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN "Configured-" || ConfiguredFrameSize || " Avg-" || FrameSize ELSE FrameSize END) AS FrameSize, DataSetId, IPv6ExtensionHeader, Ipv6Ipv4CoexistenceRatio, Coalesce(Ipv6IntendedLoad,0) AS Ipv6IntendedLoad, IntendedLoad, PercentLoss, Ipv6MinLatency, Ipv6AvgLatency, Ipv6MaxLatency, Ipv6MinJitter, Ipv6AvgJitter, Ipv6MaxJitter FROM Rfc2544LatencyPerLoadResult WHERE DataSetId BETWEEN =$@StartDataSetId$ AND =$@EndDataSetId$) GROUP BY Ipv6ExtensionHeader,FrameSize, Ipv6Ipv4CoexistenceRatio, IntendedLoad ORDER BY MIN(DataSetId)</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6ExtensionHeader</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>No Extension Header</instance>
+      </value>
+      <path>select Ipv6ExtensionHeader from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6Ipv4CoexistenceRatio</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>100:0</instance>
+      </value>
+      <path>select Ipv6Ipv4CoexistenceRatio from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4TxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+      </value>
+      <path>select Ipv4TxFrameCount from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6TxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>844596</instance>
+      </value>
+      <path>select Ipv6TxFrameCount from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6RxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>844596</instance>
+      </value>
+      <path>select Ipv6RxFrameCount from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4RxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+      </value>
+      <path>select Ipv4RxFrameCount from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6MinLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+      </value>
+      <path>select Ipv6MinLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4MinLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv4MinLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6AvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.105</instance>
+      </value>
+      <path>select Ipv6AvgLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4AvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv4AvgLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6MaxLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.11</instance>
+      </value>
+      <path>select Ipv6MaxLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4MaxLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv4MaxLatency from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6MinJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv6MinJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4MinJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv4MinJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6AvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv6AvgJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4AvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv4AvgJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6MaxJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv6MaxJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4MaxJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Ipv4MaxJitter from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv6IntendedLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>50.0</instance>
+      </value>
+      <path>select Coalesce(Ipv6IntendedLoad,0) from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>D1Ipv4IntendedLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select Coalesce(Ipv4IntendedLoad,0) from Rfc2544LatencyPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2544ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnitString</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>%</instance>
+      </value>
+      <path>select (case DisplayLoadUnit when "PERCENT_LINE_RATE" then "%" when "FRAMES_PER_SECOND" then "fps" when "INTER_BURST_GAP" then "Inter-burst Gap" when "MEGABITS_PER_SECOND" then "Mbps" when "KILOBITS_PER_SECOND" then "Kbps" when "BITS_PER_SECOND" then "bps" end ) from BenchmarkRfc2544ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>TestResultsColour</name>
+      <persist>false</persist>
+      <value type="String">#ff0000</value>
+      <script><![CDATA[# Set the text colour based on pass/fail&#xa;# In table: <td bgcolor="=$computedVarName$">&#xa;# In graphs: =$computedVarName$ instead of #xxxxxx&#xa;if {($TestStatus == "COMPLETED")||($TestStatus == "PASSED")} {&#xa;set result "#00ff00"&#xa;} else {&#xa;set result "#ff0000"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DetailStatsEnabled</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check if Detailed Stas Flag was enabled&#xa;&#xa;if {$DetailStatus == 1} {&#xa;set result "Enabled"&#xa;} else {&#xa;set result "Disabled"&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2011-08-31 16:29:40 PDT</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String">2011-08-31 14:08:58 PDT</value>
+      <script><![CDATA[# generate the report start time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>TestEndDate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# generate the report end time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstEndDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Histogram</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>NoteResultViewMode</name>
+      <persist>false</persist>
+      <value type="String">Note: The current result counter mode 'HISTOGRAM' does not support Jitter measurements</value>
+      <script><![CDATA[# Sets the 'Note' variable  to be displayed on the template page layout&#xa;&#xa;if {($ResultViewMode == "JITTER" || $ResultViewMode == "LATENCY_JITTER")} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: The current result counter mode '${ResultViewMode}'  does not support Jitter measurements"&#xa;&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeTitle</name>
+      <persist>false</persist>
+      <value type="String">Frame Size (bytes)</value>
+      <script><![CDATA[#Derive the Framesize title based on the frame size type&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result "iMIX \n Distribution"&#xa;} else {&#xa;set result "Frame Size\n(bytes)"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,Trial Summary,IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixNote</name>
+      <persist>false</persist>
+      <value type="String">Note: Imix Distributions are only available for the 'iMIX' Frame Size Type</value>
+      <script><![CDATA[#Display Note when frame size type is not iMIX&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Imix Distributions are only available for the 'iMIX' Frame Size Type "&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistNameVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSDistName&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSModeVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSMode&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLenVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSIPLen&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeightVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSWeight&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWtVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSPercentWt&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixDefaultEthernet</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Calculate Default Ethernet frame length for frame sizes in iMIX Distributions&#xa;&#xa;# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;&#xa;set result ""&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;&#xa;set etherlen "-"&#xa;if {$fmode != "RANDOM"}  {&#xa;   set fsize [expr int($fsize)]&#xa;   set etherlen [expr $fsize + 18]      &#xa;    if {$etherlen < 64} {&#xa;         set etherlen 64&#xa;     }&#xa;} else {&#xa;   set flist [split $fsize "-"]&#xa;   set minlen [expr [lindex $flist 0] + 18]&#xa;   set maxlen [expr [lindex $flist 1] + 18]&#xa;   if { $minlen < 64}  {&#xa;        set minlen 64&#xa;   }&#xa;   if { $maxlen < 64}  {&#xa;        set maxlen 64&#xa;   }&#xa;   set etherlen "$minlen-$maxlen"&#xa;}&#xa;lappend result $etherlen&#xa;}&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixPosLen</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Calculate POS length&#xa;# Check for empty row&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result ""&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;&#xa;set poslen "-"&#xa;&#xa;if {$fmode != "RANDOM"}  {&#xa;    &#xa;    set fsize [expr int($fsize)]&#xa;    set poslen [expr $fsize + 8]      &#xa;&#xa;} else {&#xa;    set flist [split $fsize "-"]&#xa;    &#xa;    set minlen [expr [lindex $flist 0] + 8]&#xa;    set maxlen [expr [lindex $flist 1] + 8]&#xa;    &#xa;    set poslen "$minlen-$maxlen"&#xa;}&#xa;    lappend result $poslen&#xa;&#xa;}&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1285613321755</value>
+      <script><![CDATA[set result "1314840403705"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Mon Sep 27 11:48:41.755 PDT 2010</value>
+      <script><![CDATA[set result "Wed Aug 31 18:26:43.705 PDT 2011"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>D1FSToDisplay</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>128.0</instance>
+      </value>
+      <script><![CDATA[# Display frame size or frame length distribution depending on the frame size mode&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result $D1FS&#xa;} else {&#xa;set result $D1FD&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.Fs</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>128.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results frame size values&#xa;set result [list]&#xa;&#xa;catch { array unset TestSumData }&#xa;set cols [list DataSetId IPv6ExtensionHeader CoexistenceRatio Fs Intended PercentLoss MinLatency AvgLatency MaxLatency MinJitter AvgJitter MaxJitter]&#xa;&#xa;foreach col $cols {&#xa;   set TestSumData($col) [list]&#xa;}&#xa;&#xa;foreach row $TestSum {&#xa;   set rowList [split $row "^"]&#xa;   foreach col $cols value $rowList {&#xa;      lappend TestSumData($col) $value&#xa;   }&#xa;}&#xa;&#xa;set result $TestSumData(Fs)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.Intended</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>50.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results intended load values&#xa;set result $TestSumData(Intended)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.PercentLoss</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results percent loss values&#xa;set result $TestSumData(PercentLoss)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.HdrFsCoExtLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>EH:No Extension Header FS:128 CR:100:0 LS:50.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results frame size & intended load values&#xa;set result [list]&#xa;&#xa;foreach extHeader $TestSumData(IPv6ExtensionHeader) fsize $TestSumData(Fs) coextRatio $TestSumData(CoexistenceRatio) load $TestSumData(Intended) {&#xa;   lappend result "EH:$extHeader FS:$fsize CR:$coextRatio LS:$load"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.MinLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $TestSumData(MinLatency)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.AvgLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.105</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results average latency values&#xa;set result $TestSumData(AvgLatency)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.MaxLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.11</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results max latency values&#xa;set result $TestSumData(MaxLatency)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.MinJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min jitter values&#xa;set result $TestSumData(MinJitter)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.AvgJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results average jitter values&#xa;set result $TestSumData(AvgJitter)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.MaxJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results max jitter values&#xa;set result $TestSumData(MaxJitter)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.LatencyType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>LILO</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results latency type values&#xa;set result [list]&#xa;&#xa;foreach fsize $TestSumData(Fs) {&#xa;   lappend result $LatencyType&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.IPv4Intended</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results frame size values&#xa;set result [list]&#xa;&#xa;catch { array unset IPv4TestSumData }&#xa;set cols [list DataSetId IPv6ExtensionHeader CoexistenceRatio Fs IPv4IntendedLoad IntendedLoad IPv4PercentLoss IPv4MinLatency IPv4AvgLatency IPv4MaxLatency IPv4MinJitter IPv4AvgJitter IPv4MaxJitter]&#xa;&#xa;foreach col $cols {&#xa;   set IPv4TestSumData($col) [list]&#xa;}&#xa;&#xa;foreach row $IPv4TestSum {&#xa;   set rowList [split $row "^"]&#xa;   foreach col $cols value $rowList {&#xa;      lappend IPv4TestSumData($col) $value&#xa;   }&#xa;}&#xa;&#xa;set result $IPv4TestSumData(IPv4IntendedLoad)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.MinLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(IPv4MinLatency)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.AvgLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(IPv4AvgLatency)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.MaxLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(IPv4MaxLatency)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.MinJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(IPv4MinJitter)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.AvgJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(IPv4AvgJitter)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.MaxJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.11</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary Max Latency&#xa;set result $TestSumData(MaxLatency)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.Fs</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>128.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(Fs)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.TotalIntended</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>50.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(IntendedLoad)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.FrameLossPercentage</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv4TestSumData(IPv4PercentLoss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.IPv6Intended</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>50.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results frame size values&#xa;set result [list]&#xa;&#xa;catch { array unset IPv6TestSumData }&#xa;set cols [list DataSetId IPv6ExtensionHeader CoexistenceRatio Fs IPv6IntendedLoad IntendedLoad IPv6PercentLoss IPv6MinLatency IPv6AvgLatency IPv6MaxLatency IPv6MinJitter IPv6AvgJitter IPv6MaxJitter]&#xa;&#xa;foreach col $cols {&#xa;   set IPv6TestSumData($col) [list]&#xa;}&#xa;&#xa;foreach row $IPv6TestSum {&#xa;   set rowList [split $row "^"]&#xa;   foreach col $cols value $rowList {&#xa;      lappend IPv6TestSumData($col) $value&#xa;   }&#xa;}&#xa;&#xa;set result $IPv6TestSumData(IPv6IntendedLoad)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.MinLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IPv6MinLatency)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.AvgLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.105</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IPv6AvgLatency)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.MaxLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.11</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IPv6MaxLatency)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.MinJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IPv6MinJitter)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.AvgJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IPv6AvgJitter)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.MaxJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IPv6MaxJitter)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.Fs</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>128.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(Fs)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.TotalIntended</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>50.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IntendedLoad)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.FrameLossPercentage</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results min latency values&#xa;set result $IPv6TestSumData(IPv6PercentLoss)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv4TestSum.HdrFsCoExtLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>EH:No Extension Header FS:128 CR:100:0 LS:50.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results frame size & intended load values&#xa;set result [list]&#xa;&#xa;foreach extHeader $TestSumData(IPv6ExtensionHeader) fsize $IPv4TestSumData(Fs) coextRatio $TestSumData(CoexistenceRatio) load $IPv4TestSumData(IntendedLoad) {&#xa;   lappend result "EH:$extHeader FS:$fsize CR:$coextRatio LS:$load"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv4 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>IPv6TestSum.HdrFsCoExtLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>EH:No Extension Header FS:128 CR:100:0 LS:50.0</instance>
+      </value>
+      <script><![CDATA[# Calculate latency summary results frame size & intended load values&#xa;set result [list]&#xa;&#xa;foreach extHeader $TestSumData(IPv6ExtensionHeader) fsize $IPv6TestSumData(Fs) coextRatio $TestSumData(CoexistenceRatio) load $IPv6TestSumData(IntendedLoad) {&#xa;   lappend result "EH:$extHeader FS:$fsize CR:$coextRatio LS:$load"&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.IPv6ExtensionHdr</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>No Extension Header</instance>
+      </value>
+      <script><![CDATA[set result $TestSumData(IPv6ExtensionHeader)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.IPv6IPv4CoextRatio</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>100:0</instance>
+      </value>
+      <script><![CDATA[set result $TestSumData(CoexistenceRatio)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,IPv4 Advanced Test Summary,Test Summary,IPv6 Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnit</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Mbps</instance>
+      </value>
+      <script><![CDATA[if {[info exist DisplayLoadUnitString]} {&#xa;    set result $DisplayLoadUnitString&#xa;} else {&#xa;    set result "%"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>D1DetailStats</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Trial</td>&#xa;    <td bgcolor="#eeeeee">IPv6\nExtension\nHeader</td>&#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;    <td bgcolor="#eeeeee">Coexistence\nRatio\n(IPv6:IPv4)</td>&#xa;    <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">IPv6\nIntended\nLoad (=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">IPv4\nIntended\nLoad (=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv6 Min\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv6 Avg\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv6 Max\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv4 Min\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv4 Avg\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv4 Max\nLatency\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">Min\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">Avg\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">Max\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv6 Min\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv6 Avg\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv6 Max\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv4 Min\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv4 Avg\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">IPv4 Max\nJitter\n(uSec)</td>&#xa;    <td bgcolor="#eeeeee">Total\nTx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Total\nRx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">IPv6\nTx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">IPv6\nRx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">IPv4\nTx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">IPv4\nRx\nFrames</td>&#xa;  </tr>&#xa;  <tr iterate="=$D1Iter$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$D1Iter$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$D1Ipv6ExtensionHeader$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$D1FSToDisplay$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$D1Ipv6Ipv4CoexistenceRatio$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$D1Load$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6IntendedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4IntendedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1MinLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1AvgLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1MaxLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6MinLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6AvgLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6MaxLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4MinLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4AvgLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4MaxLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1MinJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1AvgJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1MaxJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6MinJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6AvgJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6MaxJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4MinJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4AvgJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4MaxJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Tx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Rx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6TxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv6RxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4TxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$D1Ipv4RxFrameCount$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>AggThruFS</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;      <td bgcolor="#eeeeee">IPv6\nExtension\nHeader</td>&#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;      <td bgcolor="#eeeeee">Coexistence\nRatio\n(IPv6:IPv4)</td>&#xa;     <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;      <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;      <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;      <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Latency\nType</td>&#xa;  </tr>&#xa; <tr iterate="=$TestSum.Fs$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6ExtensionHdr$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.Fs$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6IPv4CoextRatio$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.Intended$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.MinLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.AvgLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.MaxLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.LatencyType$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>AggJitterFS</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;      <td bgcolor="#eeeeee">IPv6\nExtension\nHeader</td>&#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;      <td bgcolor="#eeeeee">Coexistence\nRatio\n(IPv6:IPv4)</td>&#xa;      <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;     <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa;      <td bgcolor="#eeeeee">Min\nJitter\n(uSec)</td>&#xa;      <td bgcolor="#eeeeee">Avg\nJitter\n(uSec)</td>&#xa;      <td bgcolor="#eeeeee">Max\nJitter\n(uSec)</td>&#xa;   </tr>&#xa; <tr iterate="=$TestSum.Fs$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6ExtensionHdr$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.Fs$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6IPv4CoextRatio$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.Intended$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.PercentLoss$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.MinJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.AvgJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.MaxJitter$</td>&#xa; </tr>&#xa;</table>&#xa;&#xa;&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>FrameSizeImixDistribution</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">iMIX\nDistribution</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLength Mode</td>&#xa;     <td bgcolor="#eeeeee">IP Total\nLength</td>&#xa;     <td bgcolor="#eeeeee">Default\nEthernet</td>&#xa;     <td bgcolor="#eeeeee">POS\nLength</td>&#xa;     <td bgcolor="#eeeeee">Weight</td>&#xa;     <td bgcolor="#eeeeee">Percentage\n(%)</td>&#xa;  </tr>&#xa; <tr iterate="=$ImixFSDistName$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$ImixFSDistNameVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSModeVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSIPLenVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixDefaultEthernet$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixPosLen$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSWeightVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSPercentWtVal$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>IPv4LatencyJitter</name>
+      <script><![CDATA[<table>   &#xa;  <tr>     &#xa;    <td bgcolor="#eeeeee">IPv6\nExtension\nHeader</td>     &#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>     &#xa;    <td bgcolor="#eeeeee">Coexistence\nRatio\n(IPv6:IPv4)</td>     &#xa;    <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>     &#xa;    <td bgcolor="#eeeeee">IPv4\nIntended\nLoad (=$DisplayLoadUnit$)</td>     &#xa;    <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>     &#xa;    <td bgcolor="#eeeeee">IPv4 Min\nLatency\n(uSec)</td>     &#xa;    <td bgcolor="#eeeeee">IPv4 Avg\nLatency\n(uSec)</td>     &#xa;    <td bgcolor="#eeeeee">IPv4 Max\nLatency\n(uSec)</td>          &#xa;    <td bgcolor="#eeeeee">IPv4 Min\nJitter\n(uSec)</td>     &#xa;    <td bgcolor="#eeeeee">IPv4 Avg\nJitter\n(uSec)</td>     &#xa;    <td bgcolor="#eeeeee">IPv4 Max\nJitter\n(uSec)</td>     &#xa;  </tr> &#xa;  <tr iterate="=$IPv4TestSum.Fs$">    &#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6ExtensionHdr$</td>    &#xa;    <td halign="right" bgcolor="#eeeeee">=$IPv4TestSum.Fs$</td>    &#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6IPv4CoextRatio$</td>    &#xa;    <td halign="right" bgcolor="#eeeeee">=$IPv4TestSum.TotalIntended$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.IPv4Intended$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.FrameLossPercentage$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.MinLatency$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.AvgLatency$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.MaxLatency$</td>        &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.MinJitter$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.AvgJitter$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv4TestSum.MaxJitter$</td>    &#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>IPv6LatencyJitter</name>
+      <script><![CDATA[<table>  &#xa;  <tr>    &#xa;    <td bgcolor="#eeeeee">IPv6\nExtension\nHeader</td>    &#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>    &#xa;    <td bgcolor="#eeeeee">Coexistence\nRatio\n(IPv6:IPv4)</td>    &#xa;    <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>     &#xa;    <td bgcolor="#eeeeee">IPv6\nIntended Load (=$DisplayLoadUnit$)</td>    &#xa;    <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>    &#xa;    <td bgcolor="#eeeeee">IPv6 Min\nLatency\n(uSec)</td>    &#xa;    <td bgcolor="#eeeeee">IPv6 Avg\nLatency\n(uSec)</td>    &#xa;    <td bgcolor="#eeeeee">IPv6 Max\nLatency\n(uSec)</td>        &#xa;    <td bgcolor="#eeeeee">IPv6 Min\nJitter\n(uSec)</td>    &#xa;    <td bgcolor="#eeeeee">IPv6 Avg\nJitter\n(uSec)</td>    &#xa;    <td bgcolor="#eeeeee">IPv6 Max\nJitter\n(uSec)</td>  &#xa;  </tr>  &#xa;  <tr iterate="=$IPv6TestSum.Fs$">    &#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6ExtensionHdr$</td>    &#xa;    <td halign="right" bgcolor="#eeeeee">=$IPv6TestSum.Fs$</td>    &#xa;    <td halign="right" bgcolor="#eeeeee">=$TestSum.IPv6IPv4CoextRatio$</td>    &#xa;    <td halign="right" bgcolor="#eeeeee">=$IPv6TestSum.TotalIntended$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.IPv6Intended$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.FrameLossPercentage$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.MinLatency$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.AvgLatency$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.MaxLatency$</td>        &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.MinJitter$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.AvgJitter$</td>    &#xa;    <td halign="right" bgcolor="#ffffff">=$IPv6TestSum.MaxJitter$</td>  &#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>ThruBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>TestSum.MinLatency</name>
+        <title>Min Latency</title>
+        <color>#40ff40</color>
+        <valueAxis>Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>TestSum.AvgLatency</name>
+        <title>Avg Latency</title>
+        <color>#ffff40</color>
+        <valueAxis>Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>TestSum.MaxLatency</name>
+        <title>Max Latency</title>
+        <color>#ff4040</color>
+        <valueAxis>Latency (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>TestSum.HdrFsCoExtLoad</xStatistic>
+      <xTitle>IPv6 Extension Header [EH], Frame Size [FS], IPv6:IPv4 Coexistence Ratio [CR] and Intended Load (%) [LS]</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>JitterBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>TestSum.MinJitter</name>
+        <title>Min Jitter</title>
+        <color>#40ff40</color>
+        <valueAxis>Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>TestSum.AvgJitter</name>
+        <title>Avg Jitter</title>
+        <color>#ffff40</color>
+        <valueAxis>Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>TestSum.MaxJitter</name>
+        <title>Max Jitter</title>
+        <color>#ff4040</color>
+        <valueAxis>Jitter (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>TestSum.HdrFsCoExtLoad</xStatistic>
+      <xTitle>IPv6 Extension Header [EH], Frame Size [FS], IPv6:IPv4 Coexistence Ratio [CR] and Intended Load (%) [LS]</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>IPv4LatencyBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>IPv4TestSum.MinLatency</name>
+        <title>IPv4 Min Latency</title>
+        <color>#40ff40</color>
+        <valueAxis>IPv4 Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv4TestSum.AvgLatency</name>
+        <title>IPv4 Avg Latency</title>
+        <color>#ffff40</color>
+        <valueAxis>IPv4 Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv4TestSum.MaxLatency</name>
+        <title>IPv4 Max Latency</title>
+        <color>#ff4040</color>
+        <valueAxis>IPv4 Latency (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>IPv4TestSum.HdrFsCoExtLoad</xStatistic>
+      <xTitle>IPv6 Extension Header [EH], Frame Size [FS], IPv6:IPv4 Coexistence Ratio [CR] and Intended Load (%) [LS]</xTitle>
+      <yTitle></yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>IPv4JitterBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>IPv4TestSum.MinJitter</name>
+        <title>IPv4 Min Jitter</title>
+        <color>#40ff40</color>
+        <valueAxis>IPv4 Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv4TestSum.AvgJitter</name>
+        <title>IPv4 Avg Jitter</title>
+        <color>#ffff40</color>
+        <valueAxis>IPv4 Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv4TestSum.MaxJitter</name>
+        <title>IPv4 Max Jitter</title>
+        <color>#ff4040</color>
+        <valueAxis>IPv4 Jitter (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>IPv4TestSum.HdrFsCoExtLoad</xStatistic>
+      <xTitle>IPv6 Extension Header [EH], Frame Size [FS], IPv6:IPv4 Coexistence Ratio [CR] and Intended Load (%) [LS]</xTitle>
+      <yTitle></yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>IPv6LatencyBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>IPv6TestSum.MinLatency</name>
+        <title>IPv6 Min Latency</title>
+        <color>#40ff40</color>
+        <valueAxis>IPv6 Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv6TestSum.AvgLatency</name>
+        <title>IPv6 Avg Latency</title>
+        <color>#ffff40</color>
+        <valueAxis>IPv6 Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv6TestSum.MaxLatency</name>
+        <title>IPv6 Max Latency</title>
+        <color>#ff4040</color>
+        <valueAxis>IPv6 Latency (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>IPv6TestSum.HdrFsCoExtLoad</xStatistic>
+      <xTitle>IPv6 Extension Header [EH], Frame Size [FS], IPv6:IPv4 Coexistence Ratio [CR] and Intended Load (%) [LS]</xTitle>
+      <yTitle></yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>IPv6JitterBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>IPv6TestSum.MinJitter</name>
+        <title>IPv6 Min Jitter</title>
+        <color>#40ff40</color>
+        <valueAxis>IPv6 Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv6TestSum.AvgJitter</name>
+        <title>IPv6 Avg Jitter</title>
+        <color>#ffff40</color>
+        <valueAxis>IPv6 Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>IPv6TestSum.MaxJitter</name>
+        <title>IPv6 Max Jitter</title>
+        <color>#ff4040</color>
+        <valueAxis>IPv6 Jitter (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>IPv6TestSum.HdrFsCoExtLoad</xStatistic>
+      <xTitle>IPv6 Extension Header [EH], Frame Size [FS], IPv6:IPv4 Coexistence Ratio [CR] and Intended Load (%) [LS]</xTitle>
+      <yTitle></yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>startDateStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>SpirentLogoJpg</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>200</x>
+        <y>350</y>
+        <width>300</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>449</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>449</y>
+        <width>125</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC2544&amp;nbsp;Latency&amp;nbsp;Test&amp;nbsp;With&amp;nbsp;RFC5180&amp;nbsp;Options</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>80</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>25</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdrLogo</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>900</y>
+        <width>1200</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>1080</x>
+        <y>100</y>
+        <width>120</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Graph">
+        <name>AggThruFS</name>
+        <x>35</x>
+        <y>155</y>
+        <width>800</width>
+        <height>400</height>
+        <value>ThruBar</value>
+      </instance>
+      <instance type="Text">
+        <name>AggThruTitleStr</name>
+        <x>80</x>
+        <y>120</y>
+        <width>229</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Latency&amp;nbsp;by&amp;nbsp;IPv6&amp;nbsp;Extension&amp;nbsp;Header,&amp;nbsp;Frame&amp;nbsp;Size,&amp;nbsp;IPv6:IPv4&amp;nbsp;Coexistence&amp;nbsp;Ratio&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>AggFsThruAvTbl</name>
+        <x>35</x>
+        <y>580</y>
+        <width>628</width>
+        <height>111</height>
+        <value>AggThruFS</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Advanced Test Summary" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Graph">
+        <name>AggJitterFS</name>
+        <x>35</x>
+        <y>155</y>
+        <width>800</width>
+        <height>400</height>
+        <value>JitterBar</value>
+      </instance>
+      <instance type="Text">
+        <name>AggJitterTitleStr</name>
+        <x>80</x>
+        <y>130</y>
+        <width>225</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Jitter&amp;nbsp;by&amp;nbsp;IPv6&amp;nbsp;Extension&amp;nbsp;Header,&amp;nbsp;Frame&amp;nbsp;Size,&amp;nbsp;IPv6:IPv4&amp;nbsp;Coexistence&amp;nbsp;Ratio&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>AggFsJitterAvTbl</name>
+        <x>35</x>
+        <y>580</y>
+        <width>655</width>
+        <height>111</height>
+        <value>AggJitterFS</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>NoteTxt</name>
+        <x>155</x>
+        <y>105</y>
+        <width>100</width>
+        <height>15</height>
+        <size>10</size>
+        <value xml:space="preserve">=$NoteResultViewMode$</value>
+        <color>#FF0000</color>
+      </instance>
+    </page>
+    <page name="IPv6 Advanced Test Summary" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>IPv6LatJitter</name>
+        <x>35</x>
+        <y>815</y>
+        <width>939</width>
+        <height>111</height>
+        <value>IPv6LatencyJitter</value>
+        <size>10</size>
+      </instance>
+      <instance type="Graph">
+        <name>JittervsFSLoad</name>
+        <x>35</x>
+        <y>490</y>
+        <width>750</width>
+        <height>300</height>
+        <value>IPv6JitterBar</value>
+      </instance>
+      <instance type="Graph">
+        <name>LatencyvsFsLoad</name>
+        <x>35</x>
+        <y>155</y>
+        <width>750</width>
+        <height>300</height>
+        <value>IPv6LatencyBar</value>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>NoteText</name>
+        <x>155</x>
+        <y>110</y>
+        <width>400</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$NoteResultViewMode$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Text">
+        <name>LatencyHdr</name>
+        <x>80</x>
+        <y>130</y>
+        <width>225</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">IPv6&amp;nbsp;Latency&amp;nbsp;by&amp;nbsp;IPv6&amp;nbsp;Extension&amp;nbsp;Header,&amp;nbsp;Frame&amp;nbsp;Size,&amp;nbsp;IPv6:IPv4&amp;nbsp;Coexistence&amp;nbsp;Ratio&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>JitterHdr</name>
+        <x>80</x>
+        <y>465</y>
+        <width>225</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">IPv6&amp;nbsp;Jitter&amp;nbsp;by&amp;nbsp;IPv6&amp;nbsp;Extension&amp;nbsp;Header,&amp;nbsp;Frame&amp;nbsp;Size,&amp;nbsp;IPv6:IPv4&amp;nbsp;Coexistence&amp;nbsp;Ratio&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="IPv4 Advanced Test Summary" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>IPv4LatJitter</name>
+        <x>35</x>
+        <y>815</y>
+        <width>701</width>
+        <height>43</height>
+        <value>IPv4LatencyJitter</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>LatencyHdr</name>
+        <x>80</x>
+        <y>130</y>
+        <width>225</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">IPv4&amp;nbsp;Latency&amp;nbsp;by&amp;nbsp;IPv6&amp;nbsp;Extension&amp;nbsp;Header,&amp;nbsp;Frame&amp;nbsp;Size,&amp;nbsp;IPv6:IPv4&amp;nbsp;Coexistence&amp;nbsp;Ratio&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>JitterHdr</name>
+        <x>80</x>
+        <y>465</y>
+        <width>207</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">IPv4&amp;nbsp;Jitter&amp;nbsp;by&amp;nbsp;IPv6&amp;nbsp;Extension&amp;nbsp;Header,&amp;nbsp;Frame&amp;nbsp;Size,&amp;nbsp;IPv6:IPv4&amp;nbsp;Coexistence&amp;nbsp;Ratio&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdrLogo</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>LatencyvsFsLoad</name>
+        <x>35</x>
+        <y>155</y>
+        <width>750</width>
+        <height>300</height>
+        <value>IPv4LatencyBar</value>
+      </instance>
+      <instance type="Graph">
+        <name>JittervsFsLoad</name>
+        <x>35</x>
+        <y>490</y>
+        <width>750</width>
+        <height>300</height>
+        <value>IPv4JitterBar</value>
+      </instance>
+      <instance type="Text">
+        <name>NoteText</name>
+        <x>155</x>
+        <y>110</y>
+        <width>400</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$NoteResultViewMode$</value>
+        <color>#ff0000</color>
+      </instance>
+    </page>
+    <page name="Trial Summary" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>LoadStr</name>
+        <x>290</x>
+        <y>110</y>
+        <width>114</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Latency&amp;nbsp;by&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>LoadTbl</name>
+        <x>35</x>
+        <y>150</y>
+        <width>1810</width>
+        <height>111</height>
+        <value>D1DetailStats</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="iMIX Distributions" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>ImixDistTitle</name>
+        <x>110</x>
+        <y>120</y>
+        <width>234</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;sizes&amp;nbsp;for&amp;nbsp;iMIX&amp;nbsp;Distributions</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>ImixDistFSTbl</name>
+        <x>35</x>
+        <y>165</y>
+        <width>390</width>
+        <height>47</height>
+        <value>FrameSizeImixDistribution</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>ImixNoteTxt</name>
+        <x>55</x>
+        <y>150</y>
+        <width>0</width>
+        <height>10</height>
+        <size>10</size>
+        <value xml:space="preserve">=$ImixNote$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>1200</width>
+      <height>1000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titleStr</name>
+        <x>200</x>
+        <y>110</y>
+        <width>243</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>VersionStr</name>
+        <x>35</x>
+        <y>840</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2C</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>InputStartIdStr</name>
+        <x>35</x>
+        <y>860</y>
+        <width>165</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>880</y>
+        <width>136</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>550</x>
+        <y>0</y>
+        <width>650</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>1050</x>
+        <y>105</y>
+        <width>150</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>900</y>
+        <width>1200</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>900</y>
+        <width>308</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>TheoMax</name>
+        <x>17</x>
+        <y>140</y>
+        <width>656</width>
+        <height>256</height>
+        <src>theoMaxPosAtm.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

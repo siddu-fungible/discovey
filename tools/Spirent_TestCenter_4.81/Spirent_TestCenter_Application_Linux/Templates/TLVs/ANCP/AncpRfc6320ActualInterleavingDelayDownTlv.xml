@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ANCP Actual Interleaving Delay Downstream TLV"
+    showName="Actual Interleaving Delay Downstream TLV"
+    version="1.00"
+    category="ANCP DSL Line Attributes (RFC_6320)"
+    readonly="true"
+    validate="true"
+    firstPdu="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv"
+    description="ANCP DSL Line Attributes Actual Interleaving Delay Downstream TLV" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ancp_rfc6320:ActualInterleavingDelayDownstreamTlv" />
+    </pdus>
+  </template>
+</frame>

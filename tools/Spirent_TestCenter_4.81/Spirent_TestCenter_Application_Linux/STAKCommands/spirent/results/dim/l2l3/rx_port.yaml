@@ -1,0 +1,17 @@
+dimension_set:
+  name: rx_port
+  description: Attributes of a RX port
+  bll:
+    plugin: l2l3
+    group: port
+  attributes:
+  - name: handle
+    display_name: Rx Port Handle 
+    description: Rx Port BLL handle
+    base_unit: none
+    data_type: integer
+  - name: name
+    display_name: Rx Port Name
+    description: Rx Port name
+    base_unit: none
+    data_type: string

@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<FrameLengthDistribution id="5242" serializationBase="true" 
+ Seed="10900842"
+ Active="TRUE"
+ Name="TCPv4">
+  <FrameLengthDistributionSlot id="5243" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="72"
+   MinFrameLength="71"
+   MaxFrameLength="73"
+   Weight="5867"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 17">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5244" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="74"
+   MinFrameLength="73"
+   MaxFrameLength="75"
+   Weight="200"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 18">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5245" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="576"
+   MinFrameLength="575"
+   MaxFrameLength="577"
+   Weight="2366"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 19">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5246" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="1500"
+   MinFrameLength="1499"
+   MaxFrameLength="1500"
+   Weight="1567"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 20">
+  </FrameLengthDistributionSlot>
+</FrameLengthDistribution>

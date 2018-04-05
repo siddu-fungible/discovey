@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGRPL" 
+    showName="FC GRPL" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:GsRequestWithHbaIdentifier" 
+    description="FC GRPL">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GsRequestWithHbaIdentifier">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>10</gsSubType>
+          <commandRespondCode>0102</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

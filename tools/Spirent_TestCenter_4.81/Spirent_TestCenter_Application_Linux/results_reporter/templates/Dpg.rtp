@@ -1,0 +1,942 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>iStartDate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select CreatedTime from DataSet where id = (select min(Id) from DataSet); -- only on data set ID, grab the first one</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartID</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select =$@StartDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndID</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select =$@EndDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FileNameID</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ParamValue from EotResultNodeParam where name = '@dsFileName'; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DataSetID</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select DataSetId from EotResultNodeParam where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DpgClientPortName</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select PortName from DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientPlaylists,DpgClientGoodputRates,DpgClientEotResults,DpgClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsElapsedSeconds</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT ElapsedSeconds FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsAttemptedPlaylists</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT AttemptedPlaylists FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientPlaylists,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsSuccessfulPlaylists</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT SuccessfulPlaylists FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientPlaylists,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsUnsuccessfulPlaylists</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT UnsuccessfulPlaylists FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientPlaylists,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsAbortedPlaylists</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT AbortedPlaylists FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientPlaylists,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputRxBytes</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputRxBytes FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientEotResults,DpgClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputAvgRxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputAvgRxRateBps FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientGoodputRates,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputMaxRxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMaxRxRateBps FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientGoodputRates,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputMinRxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMinRxRateBps FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientGoodputRates,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputTxBytes</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputTxBytes FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientEotResults,DpgClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputAvgTxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputAvgTxRateBps FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientGoodputRates,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputMaxTxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMaxTxRateBps FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientGoodputRates,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsGoodputMinTxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMinTxRateBps FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientGoodputRates,DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsPortName</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT PortName FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerGoodputCounters,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsElapsedSeconds</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT ElapsedSeconds FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputRxBytes</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputRxBytes FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputCounters,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputAvgRxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputAvgRxRateBps FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputMaxRxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMaxRxRateBps FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputMinRxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMinRxRateBps FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputTxBytes</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputTxBytes FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputCounters,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputAvgTxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputAvgTxRateBps FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputMaxTxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMaxTxRateBps FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgServerEotResultsGoodputMinTxRateBps</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT GoodputMinTxRateBps FROM DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>ClientPortCount</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select count(PortName) from DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ServerPortCount</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select count(PortName) from DpgServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DpgClientDeviceName</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select AllDevice.Name from AllDevice, DpgClientProtocolConfig, DpgClientEotResults where(AllDevice.Handle=DpgClientProtocolConfig.ParentHnd AND DpgClientEotResults.ParentProtocolConfig = DpgClientProtocolConfig.Handle) order by DpgClientEotResults.Id</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientGoodputRates,DpgClientEotResults,DpgClientGoodputCounters,DpgClientPlaylists</pageName>
+    </instance>
+    <instance>
+      <name>DpgServerDeviceName</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select AllDevice.Name from AllDevice, DpgServerProtocolConfig, DpgServerEotResults where (AllDevice.Handle=DpgServerProtocolConfig.ParentHnd AND DpgServerEotResults.ParentProtocolConfig = DpgServerProtocolConfig.Handle) order by DpgServerEotResults.Id</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgServerGoodputRates,DpgServerEotResults,DpgServerGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsPlaylistAvgDuration</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>SELECT PlaylistAvgDuration FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsPlaylistMaxDuration</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>SELECT PlaylistMaxDuration FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientEotResults,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsPlaylistMinDuration</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>SELECT PlaylistMinDuration FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientEotResults,DpgServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoDpgClientEotResultsTxAttack</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>SELECT TxAttacks FROM DpgClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>DpgClientEotResults,DpgClientPlaylists</pageName>
+    </instance>
+    <instance>
+      <name>DpgClientPlaylistName</name>
+      <persist>false</persist>
+      <path>SELECT DpgAllPlaylists.Name FROM DpgAllPlaylists, DpgClientEotResults, RelationTable WHERE (DpgClientEotResults.DataSetId = RelationTable.DataSetId AND DpgClientEotResults.ParentProtocolConfig=RelationTable.SourceHnd AND RelationTable.TargetHnd=DpgAllPlaylists.Handle AND DpgAllPlaylists.DataSetId = RelationTable.DataSetId) ORDER BY DpgClientEotResults.Id</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>IterStartDate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# generate the iteration start date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $iStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>GetStartDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# returnst the start data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists StartID] == 1} {&#xa;  set result $StartID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetEndDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# returnst the end data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists EndID] == 1} {&#xa;  set result $EndID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetFileName</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# returnst the DB file name&#xa;# - note that detailed stats does not have the @StartDataSetId when launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists FileNameID] == 1} {&#xa;  set result $FileNameID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result "1318042750264"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result "Fri Oct 07 16:59:10.264 HST 2011"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>DpgClientResultsPerPort</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;   <td colspan="1" rowspan="1" bgcolor="#eeeeee">Port Name</td>&#xa;   <td bgcolor="#eeeeee">Device Name</td>&#xa;   <td bgcolor="#eeeeee">Elapsed\nSeconds</td>&#xa;   <td bgcolor="#eeeeee">Playlist\nName</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nPlaylists</td>&#xa;   <td bgcolor="#eeeeee">Successful\nPlaylists</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nPlaylists</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nPlaylists</td>&#xa;   <td bgcolor="#eeeeee">Playlist Avg\nDuration (msec)</td>&#xa;   <td bgcolor="#eeeeee">Playlist Max\nDuration (msec)</td>&#xa;   <td bgcolor="#eeeeee">Playlist Min\nDuration (msec)</td>&#xa;   <td bgcolor="#eeeeee">Total Attacks\nSent</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nRx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Rx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Rx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Rx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nTx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Tx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Tx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Tx Rate\nbps</td>&#xa; </tr>&#xa; <tr iterate="$DpgClientPortName$">&#xa;   <td colspan="1" rowspan="1" bgcolor="#ffffff">=$DpgClientPortName$</td>&#xa;   <td bgcolor="#ffffff">=$DpgClientDeviceName$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsElapsedSeconds$</td>&#xa;   <td bgcolor="#ffffff">=$DpgClientPlaylistName$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsAttemptedPlaylists$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsSuccessfulPlaylists$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsUnsuccessfulPlaylists$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsAbortedPlaylists$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsPlaylistAvgDuration$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsPlaylistMaxDuration$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsPlaylistMinDuration$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsTxAttack$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputRxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputAvgRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputMaxRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputMinRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputTxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputAvgTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputMaxTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgClientEotResultsGoodputMinTxRateBps$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>DpgServerResultsPerPort</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;   <td bgcolor="#eeeeee">Port Name</td>&#xa;   <td bgcolor="#eeeeee">Device Name</td>&#xa;   <td bgcolor="#eeeeee">Elapsed\nSeconds</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nRx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Rx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Rx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Rx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nTx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Tx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Tx Rate\nbps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Tx Rate\nbps</td>&#xa; </tr>&#xa; <tr iterate="$DpgServerDeviceName$">&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsPortName$</td>&#xa;   <td bgcolor="#ffffff">=$DpgServerDeviceName$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsElapsedSeconds$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputRxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputAvgRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputMaxRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputMinRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputTxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputAvgTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputMaxTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoDpgServerEotResultsGoodputMinTxRateBps$</td>&#xa; </tr>&#xa;</table>&#xa;&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>DpgClientEotResults</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoDpgClientEotResultsAttemptedPlaylists</name>
+        <title>Attempted Playlists</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsSuccessfulPlaylists</name>
+        <title>Successful Playlists</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsUnsuccessfulPlaylists</name>
+        <title>Unsuccessful Playlists</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsAbortedPlaylists</name>
+        <title>Aborted Playlists</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsTxAttack</name>
+        <title>Total Attacks Sent</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <title>DPG Client Playlists Results</title>
+      <xStatistic>DpgClientDeviceName</xStatistic>
+      <xTitle>Client</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>DpgClientGoodputCounters</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputRxBytes</name>
+        <title>Bytes Received</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputTxBytes</name>
+        <title>Bytes Transmitted</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <title>DPG Client Goodput Counters</title>
+      <xStatistic>DpgClientDeviceName</xStatistic>
+      <xTitle>Client</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>DpgClientGoodputRates</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputAvgRxRateBps</name>
+        <title>Goodput Avg Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputMaxRxRateBps</name>
+        <title>Goodput Max Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputMinRxRateBps</name>
+        <title>Goodput Min Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputAvgTxRateBps</name>
+        <title>Goodput Avg Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputMaxTxRateBps</name>
+        <title>Goodput Max Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgClientEotResultsGoodputMinTxRateBps</name>
+        <title>Goodput Min Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <title>DPG Client Goodput Rates</title>
+      <xStatistic>DpgClientDeviceName</xStatistic>
+      <xTitle>Client</xTitle>
+      <yTitle>Rate in Bits per Second</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>DpgServerGoodputCounters</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputRxBytes</name>
+        <title>Goodput Rx Bytes</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputTxBytes</name>
+        <title>Goodput Tx Bytes</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <title>DPG Server Goodput Counters</title>
+      <xStatistic>DpgServerDeviceName</xStatistic>
+      <xTitle>Server</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>DpgServerGoodputRates</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputAvgRxRateBps</name>
+        <title>Goodput Avg Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputMaxRxRateBps</name>
+        <title>Goodput Max Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputMinRxRateBps</name>
+        <title>Goodput Min Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputAvgTxRateBps</name>
+        <title>Goodput Avg Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputMaxTxRateBps</name>
+        <title>Goodput Max Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoDpgServerEotResultsGoodputMinTxRateBps</name>
+        <title>Goodput Min Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <title>DPG Server Goodput Rates</title>
+      <xStatistic>DpgServerDeviceName</xStatistic>
+      <xTitle>Server</xTitle>
+      <yTitle>Rate in Bits per Second</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TestStartStr</name>
+        <x>155</x>
+        <y>450</y>
+        <width>61</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Created:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>FileNameStr</name>
+        <x>155</x>
+        <y>481</y>
+        <width>50</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">File&amp;nbsp;Name:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>133</x>
+        <y>245</y>
+        <width>305</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;DPG&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartVar</name>
+        <x>270</x>
+        <y>451</y>
+        <width>166</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$IterStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>upperLeftLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSideLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>ConfigStr</name>
+        <x>154</x>
+        <y>419</y>
+        <width>80</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Configuration:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>ConfigVar</name>
+        <x>269</x>
+        <y>420</y>
+        <width>204</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ClientPortCount$&amp;nbsp;Client&amp;nbsp;Port(s)&amp;nbsp;and&amp;nbsp;=$ServerPortCount$&amp;nbsp;Server&amp;nbsp;Port(s)</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="MultiText">
+        <name>FileNameVar</name>
+        <x>270</x>
+        <y>481</y>
+        <width>400</width>
+        <height>100</height>
+        <size>12</size>
+        <value xml:space="preserve">=$GetFileName$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="DpgClientEotResults" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>DpgClientEotResults</name>
+        <x>5</x>
+        <y>137</y>
+        <width>1451</width>
+        <height>60</height>
+        <value>DpgClientResultsPerPort</value>
+        <size>10</size>
+        <alternateRowColors>true</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>Title</name>
+        <x>262</x>
+        <y>106</y>
+        <width>146</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">DPG&amp;nbsp;Client&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="DpgClientPlaylists" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>DpgClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>DpgClientEotResults</value>
+      </instance>
+    </page>
+    <page name="DpgClientGoodputCounters" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>DpgClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>DpgClientGoodputCounters</value>
+      </instance>
+    </page>
+    <page name="DpgClientGoodputRates" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>DpgClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>DpgClientGoodputRates</value>
+      </instance>
+    </page>
+    <page name="DpgServerEotResults" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>DpgServerEotResults</name>
+        <x>5</x>
+        <y>137</y>
+        <width>699</width>
+        <height>60</height>
+        <value>DpgServerResultsPerPort</value>
+        <size>10</size>
+        <alternateRowColors>true</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>Title</name>
+        <x>262</x>
+        <y>106</y>
+        <width>156</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">DPG&amp;nbsp;Server&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="DpgServerGoodputCounters" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>DpgClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>DpgServerGoodputCounters</value>
+      </instance>
+    </page>
+    <page name="DpgServerGoodputRates" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>DpgClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>DpgServerGoodputRates</value>
+      </instance>
+    </page>
+    <page name="Version" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>VerStr</name>
+        <x>35</x>
+        <y>450</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R1</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>590</x>
+        <y>130</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>465</y>
+        <width>720</width>
+        <height>70</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>35</x>
+        <y>432</y>
+        <width>266</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

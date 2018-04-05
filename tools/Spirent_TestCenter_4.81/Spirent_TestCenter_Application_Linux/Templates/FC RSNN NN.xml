@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCRSNN_NN" 
+    showName="FC RSNN_NN"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:RsnnNn"
+    description="FC RSNN_NN">
+    <pdus>
+      <pdu name="rsnnNn1" pdu="fcgs:RsnnNn" >
+      	<ctIuPreamble>
+          <commandRespondCode>0239</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

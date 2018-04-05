@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- Inputs for unit tests configuration are picked from this file-->
+
+<VxlanConfigGenParams id="2134" serializationBase="true" 
+ VxlanConfiguration="QUICK_TOPOLOGY"
+ VxlanSegmentType="MULTICAST_LEARNING"
+ VxlanSegmentMulticastType="IGMP"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="VxlanConfigGenParams 2">
+  <VxlanGenVtepParams id="2135" 
+   VtepsPerSubInterfaceCount="1900"
+   AutoSelectUdpSourcePort="TRUE"
+   UdpSourcePort="1025"
+   UdpSourcePortStep="1"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="VxlanGenVtepParams 2">
+  </VxlanGenVtepParams>
+  <VxlanGenHostParams id="2136" 
+   VxlanSegmentsPerVtep="4"
+   VmsPerVtep="10"
+   UseSameVnisAcrossVteps="TRUE"
+   Vni="1"
+   VniStep="1"
+   EnableIp="TRUE"
+   HostIpAddress="100.0.0.1"
+   IpaddressStep="0.0.0.1"
+   IpaddressIncrementPerPort="0.0.0.0"
+   IpPrefix="24"
+   IpAddressStepPerSegment="0.0.1.0"
+   EnableVlan="FALSE"
+   VlanId="1"
+   VlanIdStep="1"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="VxlanGenHostParams 2">
+  </VxlanGenHostParams>
+  <VxlanTrafficParams id="2137" 
+   TrafficLoadPercentPorts="10"
+   TrafficFrameSize="1518"
+   TrafficFlow="BIDIRECTIONAL"
+   TrafficType="IPV4"
+   CreateTraffic="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="VxlanTrafficParams 2">
+  </VxlanTrafficParams>
+  <VxlanGenVtepPortParams id="2138" 
+   GatewayIpAddress="192.168.100.1"
+   VtepIpAddressStep="0.0.0.1"
+   SubInterfaceEnable="FALSE"
+   SubInterfaceCount="1"
+   VlanId="1"
+   VlanIdStep="1"
+   PrefixLength="24"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="VxlanGenVtepPortParams 1">
+  </VxlanGenVtepPortParams>
+  <VxlanGenVtepPortParams id="2139" 
+   GatewayIpAddress="192.168.100.1"
+   VtepIpAddressStep="0.0.0.1"
+   SubInterfaceEnable="FALSE"
+   SubInterfaceCount="1"
+   VlanId="1"
+   VlanIdStep="1"
+   PrefixLength="24"
+   Active="FALSE"
+   LocalActive="FALSE"
+   Name="VxlanGenVtepPortParams 2">
+  </VxlanGenVtepPortParams>
+  <VxlanGenHostPortParams id="2140" 
+   MacAddress="10:00:00:10:00:01"
+   MacAddressStep="00:00:00:00:00:01"
+   DutVtepIpAddress="192.168.100.1"
+   IpAddressStep="0.0.0.1"
+   IpPrefix="24"
+   Active="FALSE"
+   LocalActive="FALSE"
+   Name="VxlanGenHostPortParams 1">
+  </VxlanGenHostPortParams>
+  <VxlanGenHostPortParams id="2141" 
+   MacAddress="10:00:00:10:00:01"
+   MacAddressStep="00:00:00:00:00:01"
+   DutVtepIpAddress="192.168.100.1"
+   IpAddressStep="0.0.0.1"
+   IpPrefix="24"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="VxlanGenHostPortParams 2">
+  </VxlanGenHostPortParams>
+</VxlanConfigGenParams>

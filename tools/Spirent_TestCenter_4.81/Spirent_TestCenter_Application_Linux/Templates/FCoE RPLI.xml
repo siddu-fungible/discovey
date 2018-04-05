@@ -1,0 +1,32 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoERPLI" 
+    showName="FCoE RPLI" 
+    version="1.0" 
+    category="Switching" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE RPLI">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>02</rCtl>
+        <dId>FFFFFA</dId>
+        <frameControl>290000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:Rpli">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>01</gsSubType>
+          <commandRespondCode>029B</commandRespondCode>
+        </ctIuPreamble>
+        <osLunMapEntries>
+          <OsLunMapEntry name="OsLunMapEntry_0">
+          </OsLunMapEntry>
+        </osLunMapEntries>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

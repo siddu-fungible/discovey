@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGIEL" 
+    showName="FC GIEL" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:Giel" 
+    description="FC GIEL">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:Giel">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>01</gsSubType>
+          <commandRespondCode>0101</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="906" serializationBase="true" 
+ Identifier="Carrier Ethernet\EOAM Results\SLM Results"
+ PrimaryClass="EoamMaintenancePointConfig"
+ Description="object://eoam/EoamMaintenancePointConfig"
+ Path="Carrier Ethernet\EOAM Results"
+ CustomDisplayPath="Carrier Ethernet\EOAM"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ IsDeprecated="FALSE"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="SLM Results">
+  <RealTimeResultGroupDefinition id="947" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName=""
+   ColumnPropertyName=""
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 12">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="908" 
+   GroupName="EOAM SLM Results"
+   GroupId="object://customgroup/8e9f68af-6119-4acf-8e39-91d36b45bece/Main"
+   ColumnClassName="EoamSlmResults EoamSlmResults EoamSlmResults EoamSlmResults EoamSlmResults EoamSlmResults EoamSlmResults EoamSlmResults"
+   ColumnPropertyName="MaintenancePointName SlmTxCount SlmRxCount SlrTxCount SlrRxCount FrameLossFarEnd FrameLossNearEnd FrameLossRatio"
+   SqlString="SELECT EoamSlmResults.MaintenancePointName AS &apos;MP Name&apos;, EoamSlmResults.SlmTxCount AS &apos;SLM Message Tx Count&apos;, EoamSlmResults.SlmRxCount AS &apos;SLM Message Rx Count&apos;, EoamSlmResults.SlrTxCount AS &apos;SLM Response Tx Count&apos;, EoamSlmResults.SlrRxCount AS &apos;SLM Response Rx Count&apos;, EoamSlmResults.FrameLossFarEnd AS &apos;Far End Frame Loss&apos;, EoamSlmResults.FrameLossNearEnd AS &apos;Near End Frame Loss&apos;, EoamSlmResults.FrameLossRatio AS &apos;SLM Frame Loss Ratio&apos; FROM EoamMaintenancePointConfig, EoamSlmResults WHERE ( EoamSlmResults.ParentHnd = EoamMaintenancePointConfig.Handle AND EoamMaintenancePointConfig.DataSetId = @DataSetId AND EoamSlmResults.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 12">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="950" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="MaintenancePointName"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 180">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="951" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="SlmTxCount"
+   ColumnDescription=""
+   ColumnWidth="126"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 181">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="952" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="SlmRxCount"
+   ColumnDescription=""
+   ColumnWidth="127"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 182">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="953" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="SlrTxCount"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 183">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="954" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="SlrRxCount"
+   ColumnDescription=""
+   ColumnWidth="132"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 184">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="955" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="FrameLossFarEnd"
+   ColumnDescription=""
+   ColumnWidth="132"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 185">
+  </RealTimeResultColumnDefinition>
+    <RealTimeResultColumnDefinition id="956" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="FrameLossNearEnd"
+   ColumnDescription=""
+   ColumnWidth="132"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 186">
+  </RealTimeResultColumnDefinition>
+    <RealTimeResultColumnDefinition id="957" 
+   ColumnClassName="EoamSlmResults"
+   ColumnPropertyName="FrameLossRatio"
+   ColumnDescription=""
+   ColumnWidth="132"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 187">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="951" 
+   ConfigClassId="eoammaintenancepointconfig"
+   ResultClassId="eoamslmresults"
+   ResultRootList="2"
+   PropertyIdArray="eoamslmresults.slmtxcount eoamslmresults.slmrxcount eoamslmresults.slrtxcount eoamslmresults.slrrxcount eoamslmresults.FrameLossFarEnd eoamslmresults.FrameLossNearEnd eoamslmresults.FrameLossRatio"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 6">
+  </ResultQuery>
+</ResultDataSet>

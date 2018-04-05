@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="CIFS_Session_Setup" type="stream" layer="tcp" closeType="client_fin">
+  <MetaData description="CIFS_Session_Setup" protocol="CIFS" application="CIFS" createDate=""/>
+  <Packets>
+    <Packet name="Session_Setup_AndX_Request_Negotiate" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>000000d4ff534d4273000000000803c80000000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>4379</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>000002000cff000000003032000100000000004a0000000000fde303809900604806062b0601050502a03e303ca00e300c060a2b06010401823702020aa22a04284e544c4d53535000010000001502086005000500200000000300030025000000564e455433424c550055006e00690078000000530061006d0062006100200033002e0039002e0030002d00530056004e002d006200750069006c0064002d0031003100350037003200000056004e004500540033000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="Session_Setup_AndX_Response_Challenge" pktDelay="1" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>0000019cff534d4273160000c08803c80000000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>4379</pattern>
+            </pdu>
+            <pdu name="User_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>020004ff009c010000b3007101a181b03081ada0030a0101a10c060a2b06010401823702020aa281970481944e544c4d53535000020000000c000c003800000015028a6228a3a326a53fa6f50000000000000000500050004400000006006f140000000f56004900530054004100320002000c0056004900530054004100320001000c0056004900530054004100320004000c0076006900730074006100320003000c0076006900730074006100320007000800a861b7cbb9ecc50100000000570069006e0064006f00770073002000280054004d002900200043006f006400650020004e0061006d006500200022004c006f006e00670068006f0072006e002200200055006c00740069006d00610074006500200035003200330031000000570069006e0064006f00770073002000280054004d002900200043006f006400650020004e0061006d006500200022004c006f006e00670068006f0072006e002200200055006c00740069006d00610074006500200036002e0030000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+ <Packet name="Session_Setup_AndX_Request_Authorize" pktDelay="2" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>00000140ff534d4273000000000803c80000000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>4379</pattern>
+            </pdu>
+            <pdu name="User_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>03000cff00000000303200010000000000b60000000000fde303800501a181b33081b0a281ad0481aa4e544c4d5353500003000000180018004000000018001800580000000a000a00700000001a001a007a0000000600060094000000100010009a0000001502086042c09b264cbc4669000000000000000000000000000000009cd7e4af2d7e934adc9b307231a958539b3d2c368b964cea56004e00450054003300610064006d0069006e006900730074007200610074006f00720042004c00550027a371f82c27e3005374d8e8d1ebb9500055006e00690078000000530061006d0062006100200033002e0039002e0030002d00530056004e002d006200750069006c0064002d0031003100350037003200000056004e004500540033000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+ <Packet name="Session_Setup_AndX_Response" pktDelay="4" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>000000f2ff534d4273000000008803c80000000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>4379</pattern>
+            </pdu>
+            <pdu name="User_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>030004ff00f20000000900c700a1073005a0030a0100570069006e0064006f00770073002000280054004d002900200043006f006400650020004e0061006d006500200022004c006f006e00670068006f0072006e002200200055006c00740069006d00610074006500200035003200330031000000570069006e0064006f00770073002000280054004d002900200043006f006400650020004e0061006d006500200022004c006f006e00670068006f0072006e002200200055006c00740069006d00610074006500200036002e0030000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>    
+  </Packets>
+  <Variables>
+    <Variable name="process_id"
+              targets="Session_Setup_AndX_Request_Negotiate/Process_Id/pattern Session_Setup_AndX_Response_Challenge/Process_Id/pattern Session_Setup_AndX_Request_Authorize/Process_Id/pattern Session_Setup_AndX_Response/Process_Id/pattern"
+              value="4379" endian="little"
+              description="Process ID" />
+    <Variable name="user_id"
+              targets="Session_Setup_AndX_Response_Challenge/User_Id/pattern Session_Setup_AndX_Request_Authorize/User_Id/pattern Session_Setup_AndX_Response/User_Id/pattern"
+              value="0008" endian="little"
+              description="User ID" />
+  </Variables>
+  <Modifiers/>
+</Flow>

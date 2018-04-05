@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<FrameLengthDistribution id="5281" serializationBase="true" 
+ Seed="10900842"
+ Active="TRUE"
+ Name="X_RPR_Trimodal">
+  <FrameLengthDistributionSlot id="5282" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="40"
+   MinFrameLength="39"
+   MaxFrameLength="41"
+   Weight="60"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 42">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5283" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="494"
+   MinFrameLength="493"
+   MaxFrameLength="495"
+   Weight="20"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 43">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5284" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="1500"
+   MinFrameLength="1499"
+   MaxFrameLength="1500"
+   Weight="20"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 44">
+  </FrameLengthDistributionSlot>
+</FrameLengthDistribution>

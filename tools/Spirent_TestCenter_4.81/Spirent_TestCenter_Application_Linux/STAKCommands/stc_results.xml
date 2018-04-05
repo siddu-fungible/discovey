@@ -1,0 +1,160 @@
+<?xml version="1.0" ?>
+<stc:meta plugin="core" version="0.0.0-0" package="spirent.results" xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    
+    <stc:class
+        name="LoadResultsProviderFilesCommand"
+        displayName="Load ResultSet and DimensionSet files Command"
+        canCreate="true"
+        isInternal="true"
+        bllDirectInterface="true"
+        pythonVirtualenv="spirent.magellan">
+
+        <stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="false"/>
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="spirent//core"/>
+        
+        <stc:property name="LoadTestFiles" type="bool" default="false" category="input"
+            displayName="Load Test Files">
+            <stc:attribute type="framework.PropertyDescription"
+                         value="Load test files, i.e. test:true in yaml provider files"
+                         internalType="string"/>
+        </stc:property>
+        
+    </stc:class>   
+    
+    <stc:class
+      name="ResultDimensionProviderRegistry"
+      baseClass="DynamicScriptable"
+      isSingleton="true"
+      profile="core"
+      noSave="true"
+      bllDirectInterface="true"
+      dynamicEvents="ResetSingleton">
+
+        <stc:relation
+          name="ResultDimensionRegistryParentSystem"
+          type="framework.ParentChild"
+          srcClassRef="StcSystem"
+          dstClassRef="spirent.results.ResultDimensionProviderRegistry"
+          minOccurs="1"
+          maxOccurs="1"
+        />
+
+    </stc:class>
+    
+    <stc:class
+        name="ResultDimensionProvider"
+        baseClass="DynamicScriptable"
+        noSave="true"
+        canCreate="false">
+        
+        <stc:relation
+            name="ParentResultDimensionRegistry"
+            type="framework.ParentChild"
+            srcClassRef="spirent.results.ResultDimensionProviderRegistry"
+            dstClassRef="spirent.results.ResultDimensionProvider"
+        />
+        
+        <stc:property name="Plugin" type="string" default=""
+                category="config" displayName="Plugin Plugin"/>
+        <stc:property name="Group" type="string" default=""
+            category="config" displayName="Provider Group"/>
+        <stc:property name="Description" type="string" default=""
+            category="config" displayName="Provider Description"/>
+    
+    </stc:class>
+    
+    <stc:class
+        name="ResultSet"
+        baseClass="spirent.results.ResultDimensionProvider"
+        noSave="true">
+        
+        <stc:property name="DimensionSets" type="string" default=""
+            category="config" displayName="Default Dimension Sets" minOccurs="0" maxOccurs="unbounded"/>
+        <stc:property name="PrimaryDimensionSet" type="string" default=""
+            category="config" displayName="Primary Dimension Set" />
+        <stc:property name="IlTableName" type="string" default=""
+            category="config" displayName="IL Table Name" />
+        <stc:property name="IlMsgSet" type="string" default=""
+            category="config" displayName="IL Message Set" />
+        <stc:property name="IlDefaultSubscriptionFacts" type="string" default=""
+            category="config" displayName="Default IL Subscription Facts" minOccurs="0" maxOccurs="unbounded"/>
+    </stc:class>
+    
+    <stc:class
+        name="DimensionSet"
+        baseClass="spirent.results.ResultDimensionProvider"
+        noSave="true">
+        
+    </stc:class>
+    
+    <stc:class
+        name="BaseFactDimensionProperty"
+        baseClass="DynamicScriptable"
+        noSave="true"
+        canCreate="false">
+        
+        <stc:property name="DbDataType" type="string" default=""
+            category="config" displayName="DB Data Type"/>
+            
+        <stc:property name="DbBaseUnit" type="string" default=""
+            category="config" displayName="Db Base Unit"/>
+        
+        <stc:property name="Description" type="string" default=""
+            category="config" displayName="Property Description"/>
+
+        <stc:property name="DisplayName" type="string" default=""
+            category="config" displayName="Display Name"/>
+        
+    </stc:class>
+    
+    <stc:class
+        name="ResultSetFact"
+        baseClass="spirent.results.BaseFactDimensionProperty"
+        noSave="true">
+        
+        <stc:relation name="ParentResultSet" 
+            type="framework.ParentChild"
+            srcClassRef="spirent.results.ResultSet"
+            dstClassRef="spirent.results.ResultSetFact"
+        />
+        
+        <stc:property name="IlColumnDef" type="string" default=""
+            category="config" displayName="IL Column Definition"/>
+        <stc:property name="IlDataType" type="string" default=""
+            category="config" displayName="IL Data Type"/>
+    </stc:class>
+    
+    <stc:class
+        name="ResultSetDerivedFact"
+        baseClass="spirent.results.BaseFactDimensionProperty"
+        noSave="true">
+        
+        <stc:relation name="ParentResultSet" 
+            type="framework.ParentChild"
+            srcClassRef="spirent.results.ResultSet"
+            dstClassRef="spirent.results.ResultSetDerivedFact"
+        />
+        
+        <stc:property name="DbQuery" type="string" default=""
+            category="config" displayName="Query For Derived Fact"/>
+        <stc:property name="ReferredFactList" type="string" default=""
+            minOccurs="1" maxOccurs="unbounded" category="config" displayName="Referred Fact List"/>
+        
+    </stc:class>
+    
+    <stc:class
+        name="DimensionAttribute"
+        baseClass="spirent.results.BaseFactDimensionProperty"
+        noSave="true">
+        
+        <stc:relation name="ParentDimension" 
+            type="framework.ParentChild"
+            srcClassRef="spirent.results.DimensionSet"
+            dstClassRef="spirent.results.DimensionAttribute"
+        />
+        
+    </stc:class>
+    
+        
+
+</stc:meta>

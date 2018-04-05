@@ -1,0 +1,12 @@
+{
+    "GetSupportedPhysCommand": {
+        "title": "Schema for the PortList of spirent.methodology.manager.GetSupportedPhysCommand.",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+            "title": "Port",
+            "type": "object",
+            "$ref": "#/MetaDataSchema/definitions/port"
+        }
+    }
+}

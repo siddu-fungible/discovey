@@ -1,0 +1,583 @@
+{
+  "methodology_key": "DHCPPDOPPPOXRATE",
+  "display_name": "DHCP-PD over PPPoE Setup Rate",
+  "short_display_name": "DHCP-PD over PPPoE",
+  "description": "Determines the maximum DHCP-PD over PPPoE subscriber setup rate supported by a DUT for a given number of max DHCP-PD over PPPoE sessions.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "ClientPort"
+      },
+      {
+        "side": "EAST",
+        "port_group": "TrafficPort"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "ClientPort",
+      "display_name": "Client Port Group",
+      "description": "Port group containing ports emulating DHCP-PD over PPPoE sessions",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "TrafficPort",
+      "display_name": "Traffic Port",
+      "description": "Optional group of ports the DHCP-PD over PPPoE sessions can send and receive traffic from",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "resource_groups": [
+    {
+      "property": "MetricsService",
+      "display_name": "Metrics Services",
+      "description": "List of Metrics to use for the methodology.",
+      "type": "METRICS",
+      "resource_list": []
+    }
+  ],
+  "property_groups": [
+    {
+      "group_type": "GLOBAL",
+      "display_name": "Global Parameters",
+      "description": "Global configuration parameters.",
+      "test_properties": [
+        {
+          "description": "Number of DHCP-PD over PPPoE sessions to configure for the rate test",
+          "display_name": "Session Count",
+          "property": "SessionCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Maximum number of DHCP-PD over PPPoE sessions allowed to be in progress at any time",
+          "display_name": "Outstanding Session Count",
+          "property": "OutstandingSessionCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64000",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "PPPoE Disconnect and DHCP-PD Release Rate",
+          "display_name": "Disconnect/Release Rate ",
+          "property": "DisconnectReleaseRate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "1000",
+          "units": "sessions/s"
+        },
+        {
+          "description": "PPPoE Disconnect and DHCP-PD Release Wait Time",
+          "display_name": "Disconnect/Release Wait Time",
+          "property": "DisconnectReleaseWaitTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "30",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "DHCP-PD over PPPoE Traffic",
+      "description": "DHCP-PD over PPPoE Traffic port Group Command",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "Starting IPv6 Address for traffic endpoints",
+          "display_name": "IPv6 Address",
+          "property": "TrafficHostIPv6Addr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2001::2"
+        },
+        {
+          "description": "Prefix length (in bits) of the IPv6 address for traffic hosts",
+          "display_name": "Prefix Length",
+          "property": "TrafficHostPrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64",
+          "minimum": "0",
+          "maximum": "128",
+          "units": "bits"
+        },
+        {
+          "description": "Traffic Host IPv6 Gateway Address",
+          "display_name": "IPv6 Gateway Address",
+          "property": "TrafficHostGwAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2001::1"
+        },
+        {
+          "description": "DHCP-PD over PPPoE Host Vlan Mode",
+          "display_name": "VLAN Mode",
+          "property": "HostVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ]
+        },
+        {
+          "description": "Starting ID for Outer VLAN of traffic host devices",
+          "display_name": "Outer VLAN ID",
+          "property": "TrafficHostOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Starting ID for VLAN of traffic host devices",
+          "display_name": "VLAN ID",
+          "property": "TrafficHostInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "DHCP-PD over PPPoE Client",
+      "description": "DHCP-PD over PPPoE Client Group Command",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "DHCP-PD over PPPoE Client Vlan Mode",
+          "display_name": "VLAN Mode",
+          "property": "ClientVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ]
+        },
+        {
+          "description": "DHCP-PD over PPPoE Client and host Outer VLAN ID",
+          "display_name": "Outer VLAN ID",
+          "property": "ClientOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "DHCP-PD over PPPoE Client and host Outer VLAN ID Step",
+          "display_name": "Outer VLAN ID Step",
+          "property": "ClientOuterVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "DHCP-PD over PPPoE Client and Host Outer VLAN ID Port Step",
+          "display_name": "Outer VLAN ID Port Step",
+          "property": "ClientOuterVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "DHCP-PD over PPPoE Client and host VLAN ID",
+          "display_name": "VLAN ID",
+          "property": "ClientInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "DHCP-PD over PPPoE Client and Host VLAN ID Step",
+          "display_name": "VLAN ID Step",
+          "property": "ClientInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "DHCP-PD over PPPoE Client and Host VLAN ID Port Step",
+          "display_name": "VLAN Port Step",
+          "property": "ClientInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Enable or disable automatic retry to connect failed PPPoE sessions",
+          "display_name": "Enable Auto Retry",
+          "property": "EnableAutoRetry",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "FALSE"
+        },
+        {
+          "description": "Maximum number of automatic retry attempts",
+          "display_name": "Auto Retry Count",
+          "property": "AutoRetryCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "65535",
+          "minimum": "1",
+          "maximum": "65535"
+        },
+        {
+          "description": "Type of authentication to use",
+          "display_name": "Authentication",
+          "property": "FrontClientAuthentication",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "No Authentication",
+          "acceptable_values": [
+            "No Authentication",
+            "Negotiate",
+            "CHAP MD5 Authentication",
+            "PAP Authentication"
+          ]
+        },
+        {
+          "description": "User name for authenticated PPP sessions",
+          "display_name": "Username",
+          "property": "Username",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "spirent"
+        },
+        {
+          "description": "Password for authenticated PPP sessions",
+          "display_name": "Password",
+          "property": "Password",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "spirent"
+        },
+        {
+          "description": "Enable transmission of echo requests",
+          "display_name": "Enable Echo Requests",
+          "property": "EnableEchoRequests",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "FALSE"
+        },
+        {
+          "description": "Interval in seconds between sending out consecutive echo requests",
+          "display_name": "Echo Request Frequency",
+          "property": "EchoRequestGenFreq",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "seconds"
+        },
+        {
+          "description": "Number of consecutive, unanswered echo requests to send before failing the subscriber session",
+          "display_name": "Echo Request Max Attempts",
+          "property": "ClientMaxLcpEchoRequestAttempts",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Timeout value in seconds for acknowledgment of a PADI packet",
+          "display_name": "PADI Timeout",
+          "property": "PadiTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "3",
+          "minimum": "1",
+          "maximum": "65535",
+          "units": "seconds"
+        },
+        {
+          "description": "Maximum number of PADI packets that can be sent, without acknowledgment, before a session fails",
+          "display_name": "PADI Max Attempts",
+          "property": "PadiMaxAttempts",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Timeout value in seconds for acknowledgment of a PADR packet",
+          "display_name": "PADR Timeout",
+          "property": "PadrTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "3",
+          "minimum": "1",
+          "maximum": "65535",
+          "units": "seconds"
+        },
+        {
+          "description": "Maximum number of PADR packets that can be sent, without acknowledgment, before a session fails",
+          "display_name": "PADR Max Attempts",
+          "property": "PadrMaxAttempts",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "65535"
+        },
+        {
+          "description": "Timeout value in seconds for acknowledgment of a configure request",
+          "display_name": "LCP Config Request Timeout",
+          "property": "LcpConfigRequestTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "3",
+          "minimum": "1",
+          "maximum": "65535",
+          "units": "seconds"
+        },
+        {
+          "description": "Maximum number of configure requests that can be sent, without acknowledgment, before a session fails",
+          "display_name": "LCP Config Request Max Attempts",
+          "property": "LcpConfigRequestMaxAttempts",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "65535"
+        },
+        {
+          "description": "Timeout value in seconds for acknowledgment of an NCP Configure-Request",
+          "display_name": "NCP Config Request Timeout",
+          "property": "NcpConfigRequestTimeout",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "3",
+          "minimum": "1",
+          "maximum": "65535",
+          "units": "seconds"
+        },
+        {
+          "description": "Maximum number of NCP Configure-Requests that can be sent, without acknowledgment, before a session fails",
+          "display_name": "NCP Config Request Max Attempts",
+          "property": "NcpConfigRequestMaxAttempts",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "65535"
+        }
+      ]
+    },
+    {
+      "group_type": "TRAFFIC",
+      "display_name": "Traffic",
+      "description": "Parameters for traffic configuration",
+      "test_properties": [
+        {
+          "description": "Enable Traffic between DHCP-PD over PPPoE and Host",
+          "display_name": "Enable Traffic",
+          "property": "EnableTraffic",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        },
+        {
+          "description": "Amount of traffic to transmit in the given load units",
+          "display_name": "Traffic Load",
+          "property": "TrafficLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "0.00",
+          "maximum": "4294967295.00"
+        },
+        {
+          "description": "Amount of time in seconds to run traffic between clients and traffic hosts",
+          "display_name": "Traffic Duration",
+          "property": "TrafficTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "3.00",
+          "minimum": "0.00",
+          "maximum": "4294967295.00",
+          "units": "seconds"
+        },
+        {
+          "description": "Load unit applied to the stream block",
+          "display_name": "Traffic Load Unit",
+          "property": "FrontTrafficLoadUnit",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "Frames/sec (fps)",
+          "acceptable_values": [
+            "Percent (%)",
+            "Frames/sec (fps)",
+            "bps",
+            "Kbps",
+            "Mbps"
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "DHCP-PD over PPPoE Setup Rate Test",
+      "description": "Configuration for the setup rate search space",
+      "test_properties": [
+        {
+          "description": "The minimum rate to use when doing binary search",
+          "display_name": "Minimum Request Rate",
+          "property": "MinRequestRate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "70",
+          "minimum": "0",
+          "maximum": "1000",
+          "units": "sessions/s"
+        },
+        {
+          "description": "The maximum rate to use when doing binary search",
+          "display_name": "Maximum Request Rate",
+          "property": "MaxRequestRate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "1000",
+          "units": "sessions/s"
+        },
+        {
+          "description": "The resolution of the binary search and the amount to backoff the rate by when Stability Backoff is enabled ",
+          "display_name": "Request Rate Step",
+          "property": "BenchmarkStepValue",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "1000",
+          "units": "sessions/s"
+        },
+        {
+          "description": "Enables the stability backoff phase of benchmarking to test the stability of the maximum scale rate found through binary search",
+          "display_name": "Enable Stability Backoff",
+          "property": "EnableStabilityBackoff1",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        },
+        {
+          "description": "Number of times to repeat the test value when searching for a stable value (not used if Enable Stability Backoff is  false)",
+          "display_name": "Stability Backoff Repeat Count",
+          "property": "StabilityRepeatCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "5",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Number of trials of a particular rate that must be successful for the rate to be considered stable during the stability backoff phase of benchmarking",
+          "display_name": "Stability Backoff Success",
+          "property": "StabilityBackoffSuccess",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Maximum amount of time (in seconds) to wait for DHCP-PD over PPPoE  sessions to go into bound state",
+          "display_name": "Setup Wait Time",
+          "property": "SetupWaitTime",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "30",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Result Validation Criteria",
+      "description": "Configure parameters that affect methodology summary results",
+      "test_properties": [
+        {
+          "description": "Percent tolerance to apply to the configured DHCP-PD over PPPoE session connect rate to determine if the actual session setup rate is acceptable",
+          "display_name": "Setup Rate Tolerance",
+          "property": "PercentTolerance",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Expected session rate the test must at least converge on for the overall test to pass",
+          "display_name": "Session Rate Threshold",
+          "property": "ExpectedSessionRate",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "1.00",
+          "maximum": "10000.00",
+          "units": "sessions/s"
+        }
+      ]
+    }
+  ]
+}

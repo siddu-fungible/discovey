@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <!-- root element -->
+    <xs:element name="frame">
+        <xs:complexType>
+            <xs:choice>
+                <xs:element ref="template"/>
+                <xs:element ref="config"/>
+            </xs:choice>
+	<xs:attribute name="valid" use="optional" type="xs:boolean" default="true"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- config - one possible root element -->
+    <xs:element name="config">
+        <xs:complexType>
+            <xs:sequence>
+		<xs:element ref="modifiers" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="pdus" minOccurs="1" maxOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- template - one possible root element -->
+    <xs:element name="template">
+        <xs:complexType>
+            <xs:sequence>
+              <xs:element ref="modifiers" minOccurs="0" maxOccurs="1"/>
+              <xs:element ref="pdus" minOccurs="1" maxOccurs="1"/>
+            </xs:sequence>
+            <xs:attribute name="name" use="required" type="xs:string"/>
+            <xs:attribute name="version" use="required" type="version_string"/>
+            <xs:attribute name="showName" use="optional" type="xs:token" default=""/>
+            <xs:attribute name="category" use="required" type="xs:token"/>
+            <xs:attribute name="readonly" use="optional" type="xs:boolean" default="false"/>
+            <xs:attribute name="validate" use="optional" type="xs:boolean" default="true"/>
+            <xs:attribute name="description" use="required"/>
+            <xs:attribute name="firstPdu" use="required" type="xs:token" />
+        </xs:complexType>
+    </xs:element>
+    
+    <!-- version type -->
+    <xs:simpleType name="version_string">
+        <xs:restriction base="xs:decimal">
+            <xs:fractionDigits value="2"/>
+            <xs:minExclusive value="0.01"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+
+    <!-- modifiers tag -->
+    <xs:element name="modifiers">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element ref="modifier" minOccurs="0" maxOccurs="unbounded" />
+          <xs:element ref="wildcard" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:NCName" use="optional" />
+      </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="MODIFIER_MODE">
+        <xs:restriction base="xs:NCName">
+            <xs:enumeration value="Increment"/>
+            <xs:enumeration value="Decrement"/>
+            <xs:enumeration value="Random"/>
+            <xs:enumeration value="List"/>
+            <xs:enumeration value="Shuffle"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+
+    <xs:element name="modifier">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="mode" type="MODIFIER_MODE" minOccurs="0" maxOccurs="1" />
+          <xs:element name="count" type="xs:unsignedLong" minOccurs="0" maxOccurs="1" />
+          <xs:element name="data" type="xs:string" minOccurs="0" maxOccurs="1" />
+          <xs:element name="datatype" type="xs:string" minOccurs="0" maxOccurs="1" />
+          <xs:element name="mask" type="xs:string" minOccurs="0" maxOccurs="1" />
+          <xs:element name="step" type="xs:string" minOccurs="0" maxOccurs="1" />
+          <xs:element name="offset" type="xs:unsignedLong" minOccurs="0" maxOccurs="1" />
+          <xs:element name="stutterCount" type="xs:unsignedLong" minOccurs="0" maxOccurs="1" />
+          <xs:element name="forEachModifyList" type="xs:string"  minOccurs="0" maxOccurs="1" />
+          <xs:element name="useStream" type="xs:boolean" minOccurs="0" maxOccurs="1" />
+         </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />	
+      </xs:complexType>
+    </xs:element>
+
+    <xs:element name="wildcard">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="data" type="xs:string" minOccurs="0" maxOccurs="1" />
+         </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />	
+      </xs:complexType>
+    </xs:element>
+
+    <!-- pdus tag -->
+    <xs:element name="pdus">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element ref="pdu" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+
+        <xs:attribute name="modifier" use="optional" type="xs:string" />
+
+      </xs:complexType>
+    </xs:element>
+    
+	<!-- pdu tag -->
+    <xs:element name="pdu">
+      <xs:complexType>
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+          <xs:any processContents="skip"/>
+        </xs:sequence>
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+        <xs:attribute name="pdu" use="required" type="xs:token"/>
+        <xs:attribute name="modifier" use="optional" type="xs:string" />
+      </xs:complexType>
+    
+    </xs:element>
+
+</xs:schema>

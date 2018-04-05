@@ -1,0 +1,582 @@
+{
+  "methodology_key": "DDOS",
+  "display_name": "Distributed Denial of Service",
+  "short_display_name": "DDOS",
+  "description": "Validate the ability of a SUT to forward traffic while undergoing DDoS attacks.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "port_groups": [
+    {
+      "property": "PortPool",
+      "display_name": "Ports",
+      "description": "The pool of ports to choose from for connection end points",
+      "enable_unique_tags": true,
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "PortTag_1"
+        },
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "PortTag_2"
+        },
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "PortTag_3"
+        },
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "PortTag_4"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "TRAFFIC",
+      "display_name": "Stateless Background Traffic",
+      "description": "Spirent Signature traffic configuration",
+      "test_properties": [
+        {
+          "property": "ConnectionConfigurationTable",
+          "display_name": "DDoS Stateless Background Traffic Configuration",
+          "description": "The stateless background traffic to be used in the DDoS Methodology",
+          "column_definitions": [
+            {
+              "description": "Name of the connection",
+              "display_name": "Name",
+              "property": "ConnectionName",
+              "property_value_type": "STRING",
+              "is_collection": false
+            },
+            {
+              "description": "The percent bandwidth used by this connection",
+              "display_name": "Bandwidth",
+              "property": "Bandwidth",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "5.0",
+              "maximum": "100.0",
+              "units": "%"
+            },
+            {
+              "description": "Client port for the connection",
+              "display_name": "Client Port",
+              "property": "ClientPortTag",
+              "property_value_type": "PORT_GROUP",
+              "is_collection": false
+            },
+            {
+              "description": "The IPv4 address prefix length for the client end point",
+              "display_name": "Client IPv4 Prefix Length",
+              "property": "ClientIpv4PrefixLength",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "32"
+            },
+            {
+              "description": "The IPv4 address for the client end point",
+              "display_name": "Client IPv4 Address",
+              "property": "ClientIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The IPv4 address for the client end point's gateway",
+              "display_name": "Client IPv4 Gateway Address",
+              "property": "ClientIpv4GwAddr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The MAC address for the client end point",
+              "display_name": "Client MAC Address",
+              "property": "ClientMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "The VLAN mode for the client end of the connection",
+              "display_name": "Client VLAN Mode",
+              "property": "ClientVlanMode",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "None",
+                "VLAN",
+                "QinQ"
+              ]
+            },
+            {
+              "description": "The VLAN ID for the client end point",
+              "display_name": "Client VLAN ID",
+              "property": "ClientVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The VLAN priority for the client end point",
+              "display_name": "Client VLAN Priority",
+              "property": "ClientVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The inner VLAN ID for the client end point",
+              "display_name": "Client Inner VLAN ID",
+              "property": "ClientInnerVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The inner VLAN priority for the client end point",
+              "display_name": "Client Inner VLAN Priority",
+              "property": "ClientInnerVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The Client Traffic Generated DSCP value of the connection",
+              "display_name": "Client DSCP Value",
+              "property": "ClientDscpValue",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "High Priority",
+                "Best Effort",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43",
+                "CS1",
+                "CS2",
+                "CS3",
+                "CS4",
+                "CS5",
+                "CS6",
+                "CS7"
+              ]
+            },
+            {
+              "description": "Server port for the connection",
+              "display_name": "Server Port",
+              "property": "ServerPortTag",
+              "property_value_type": "PORT_GROUP",
+              "is_collection": false
+            },
+            {
+              "description": "The IPv4 address prefix length for the server end point",
+              "display_name": "Server IPv4 Prefix Length",
+              "property": "ServerIpv4PrefixLength",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "32"
+            },
+            {
+              "description": "The IPv4 address for the server end point",
+              "display_name": "Server IPv4 Address",
+              "property": "ServerIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The IPv4 address for the server end point's gateway",
+              "display_name": "Server IPv4 Gateway Address",
+              "property": "ServerIpv4GwAddr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "The MAC address for the server end point",
+              "display_name": "Server MAC Address",
+              "property": "ServerMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "The VLAN mode for the server end of the connection",
+              "display_name": "Server VLAN Mode",
+              "property": "ServerVlanMode",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "None",
+                "VLAN",
+                "QinQ"
+              ]
+            },
+            {
+              "description": "The VLAN ID for the server end point",
+              "display_name": "Server VLAN ID",
+              "property": "ServerVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The VLAN priority for the server end point",
+              "display_name": "Server VLAN Priority",
+              "property": "ServerVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The inner VLAN ID for the server end point",
+              "display_name": "Server Inner VLAN ID",
+              "property": "ServerInnerVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The inner VLAN priority for the server end point",
+              "display_name": "Server Inner VLAN Priority",
+              "property": "ServerInnerVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The Server Traffic Generated DSCP value of the connection",
+              "display_name": "Server DSCP Value",
+              "property": "ServerDscpValue",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "High Priority",
+                "Best Effort",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43",
+                "CS1",
+                "CS2",
+                "CS3",
+                "CS4",
+                "CS5",
+                "CS6",
+                "CS7"
+              ]
+            }
+          ],
+          "table": [
+            [
+              "Basic",
+              "5.0",
+              "Client",
+              "24",
+              "192.168.0.2",
+              "192.168.0.1",
+              "00:10:94:00:00:01",
+              "None",
+              "100",
+              "1",
+              "100",
+              "1",
+              "Best Effort",
+              "Server",
+              "24",
+              "192.168.0.1",
+              "192.168.0.2",
+              "00:10:95:00:00:01",
+              "None",
+              "100",
+              "1",
+              "100",
+              "1",
+              "Best Effort"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TRAFFIC",
+      "display_name": "Attack Traffic Schedule",
+      "description": "DDoS Attack Schedule",
+      "test_properties": [
+        {
+          "property": "AttackConfigTable",
+          "display_name": "DDoS Attack Configuration",
+          "description": "The attack schedule for the DDoS Methodology",
+          "column_definitions": [
+            {
+              "description": "Type of DDoS attack to transmit",
+              "display_name": "Attack Type",
+              "property": "AttackTableType",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "ARP Flood",
+                "Fake Session",
+                "ICMP Fragmentation",
+                "ICMP Ping of Death",
+                "ICMP Ping Sweep",
+                "IP Fragmentation",
+                "LAND",
+                "Malformed IP Options",
+                "Monlist",
+                "Nestea",
+                "Nuke",
+                "Short Fragment",
+                "TCP ACK Flood",
+                "TCP ACK Fragmentation Flood",
+                "TCP FIN Flood",
+                "TCP Port Scan",
+                "TCP PUSH ACK",
+                "TCP RST Flood",
+                "TCP SYN Flood",
+                "TCP SYN-ACK Flood",
+                "TCP XMAS Tree",
+                "Teardrop",
+                "TIDCMP",
+                "UDP Flood",
+                "UDP Fragmentation",
+                "UDP Port Scan"
+              ]
+            },
+            {
+              "description": "Start Time offset from start of attack phase",
+              "display_name": "Start Time",
+              "property": "AttackTableStartTime",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.00",
+              "maximum": "4294967295.00",
+              "units": "seconds"
+            },
+            {
+              "description": "Amount of time to perform the attack",
+              "display_name": "Attack Duration",
+              "property": "AttackTableDuration",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "5.00",
+              "maximum": "4294967295.00",
+              "units": "seconds"
+            },
+            {
+              "description": "Percent of link bandwidth to allot to the attack",
+              "display_name": "Attack Bandwidth",
+              "property": "AttackTableBandwidth",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.01",
+              "maximum": "4294967295.00",
+              "units": "%"
+            },
+            {
+              "description": "Source port for the attack",
+              "display_name": "Attack Source Port",
+              "property": "AttackTableSrcStcPort",
+              "property_value_type": "PORT_GROUP",
+              "is_collection": false
+            },
+            {
+              "description": "Source IPv4 Address to be used for the attack (if applicable)",
+              "display_name": "Source IPv4 Address",
+              "property": "AttackTableSrcIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Source MAC Address to be used for the attack (if applicable)",
+              "display_name": "Source MAC Address",
+              "property": "AttackTableSrcMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "The VLAN mode for the attack traffic",
+              "display_name": "Attack VLAN Mode",
+              "property": "AttackTableVlanMode",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "None",
+                "VLAN",
+                "QinQ"
+              ]
+            },
+            {
+              "description": "The VLAN ID for the attack traffic",
+              "display_name": "Attack VLAN ID",
+              "property": "AttackTableVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The VLAN priority for the attack traffic",
+              "display_name": "Attack VLAN Priority",
+              "property": "AttackTableVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The inner VLAN ID for the attack traffic",
+              "display_name": "Attack Inner VLAN ID",
+              "property": "AttackTableInnerVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "The inner VLAN priority for the attack traffic",
+              "display_name": "Attack Inner VLAN Priority",
+              "property": "AttackTableInnerVlanPri",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "7"
+            },
+            {
+              "description": "The Attack Traffic Generated DSCP value",
+              "display_name": "Attack DSCP Value",
+              "property": "AttackTableDscpValue",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "High Priority",
+                "Best Effort",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43",
+                "CS1",
+                "CS2",
+                "CS3",
+                "CS4",
+                "CS5",
+                "CS6",
+                "CS7"
+              ]
+            },
+            {
+              "description": "Source TCP/UDP Port to be used for the attack (if applicable)",
+              "display_name": "Source TCP/UDP Port",
+              "property": "AttackTableSrcPort",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "65535"
+            },
+            {
+              "description": "Destination IPv4 Address to be used for the attack (if applicable)",
+              "display_name": "Destination IPv4 Address",
+              "property": "AttackTableDstIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Destination MAC Address to be used for the attack (if applicable)",
+              "display_name": "Destination MAC Address",
+              "property": "AttackTableDstMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "Destination TCP/UDP Port to be used for the attack (if applicable)",
+              "display_name": "Destination TCP/UDP Port",
+              "property": "AttackTableDstPort",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "65535"
+            }
+          ],
+          "table": [
+            [
+              "ARP Flood",
+              "10.00",
+              "30.00",
+              "5.0",
+              "AttackPort",
+              "10.10.10.2",
+              "00:22:44:66:88:aa",
+              "None",
+              "100",
+              "1",
+              "100",
+              "1",
+              "Best Effort",
+              "80",
+              "10.10.10.1",
+              "00:33:55:77:99:bb",
+              "80"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Test Parameters",
+      "description": "All parameters used in the test iterations",
+      "test_properties": [
+        {
+          "description": "Pass/Fail threshold for background traffic",
+          "display_name": "Background Traffic Threshold",
+          "property": "BackgroundTrafficThreshold",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "99.9",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        }
+      ]
+    }
+  ]
+}

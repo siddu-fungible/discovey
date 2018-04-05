@@ -1,0 +1,1387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>iStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2009-06-18 15:29:15</instance>
+      </value>
+      <path>select CreatedTime from DataSet where id = (select min(Id) from DataSet); -- only on data set ID, grab the first one</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select =$@StartDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2147483647</instance>
+      </value>
+      <path>select =$@EndDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FileNameID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>HTTP_results</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where name = '@dsFileName'; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DataSetID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select DataSetId from EotResultNodeParam where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>HttpClientPortName</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>select PortName from HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientTransactions,HttpClientResults,HttpClientResponseCodes,HttpClientResponseTime,HttpClientGoodputRates,HttpClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsElapsedSeconds</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT ElapsedSeconds FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAttemptedTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedTransactions FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientTransactions,HttpClientResults,HttpClientResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsSuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactions FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientTransactions,HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsUnsuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactions FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientTransactions,HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAbortedTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedTransactions FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientTransactions,HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsMinResponseTimePerUrlMsec</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT MinResponseTimePerUrlMsec FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientResponseTime</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsMaxResponseTimePerUrlMsec</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT MaxResponseTimePerUrlMsec FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientResponseTime</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAvgResponseTimePerUrlMsec</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AvgResponseTimePerUrlMsec FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientResponseTime</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsSumResponseTimePerUrlMsec</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT SumResponseTimePerUrlMsec FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputRxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputRxBytes FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputAvgRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgRxRateBps FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputMaxRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxRxRateBps FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputMinRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinRxRateBps FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputTxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputTxBytes FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputAvgTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgTxRateBps FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputMaxTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxTxRateBps FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsGoodputMinTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinTxRateBps FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsRxResponseCode200</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT RxResponseCode200 FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsRxResponseCode400</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT RxResponseCode400 FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsRxResponseCode404</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT RxResponseCode404 FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsRxResponseCode405</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT RxResponseCode405 FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults,HttpClientResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsPortName</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT PortName FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputRates,HttpServerTransactions,HttpServerGoodputCounters,HttpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsElapsedSeconds</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT ElapsedSeconds FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsTotalConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT TotalConnections FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerTransactions,HttpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsSuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactions FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerTransactions</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsUnsuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactions FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerTransactions</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputRxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputRxBytes FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputAvgRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgRxRateBps FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputMaxRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxRxRateBps FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputMinRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinRxRateBps FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputTxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputTxBytes FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputAvgTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgTxRateBps FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputMaxTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxTxRateBps FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsGoodputMinTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinTxRateBps FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerGoodputRates</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsTxResponseCode200</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT TxResponseCode200 FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsTxResponseCode400</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT TxResponseCode400 FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsTxResponseCode404</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT TxResponseCode404 FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsTxResponseCode405</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT TxResponseCode405 FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults,HttpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAttemptedConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedConnections FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsSuccessfulConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulConnections FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsUnsuccessfulConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulConnections FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAbortedConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedConnections FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>ClientPortCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>select count(PortName) from HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ServerPortCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>select count(PortName) from HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>HttpClientDeviceName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Device 1</instance>
+      </value>
+      <path>select AllDevice.Name from AllDevice, HttpClientProtocolConfig where(AllDevice.Handle=HttpClientProtocolConfig.ParentHnd )</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>HttpServerDeviceName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Device 2</instance>
+      </value>
+      <path>select AllDevice.Name from AllDevice, HttpServerProtocolConfig where(AllDevice.Handle=HttpServerProtocolConfig.ParentHnd )</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAttemptedTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedTransactionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsUnsuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsSuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAbortedTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedTransactionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsTotalConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT TotalConnectionsPerSecond FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsSuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactionsPerSecond FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpServerEotResultsUnsuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactionsPerSecond FROM HttpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpServerResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAttemptedConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedConnectionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsSuccessfulConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulConnectionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsUnsuccessfulConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulConnectionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoHttpClientEotResultsAbortedConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedConnectionsPerSecond FROM HttpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>HttpClientResults</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2009-06-18 11:30:18 EDT</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>IterStartDate</name>
+      <persist>false</persist>
+      <value type="String">2009-06-18 11:29:15 EDT</value>
+      <script><![CDATA[# generate the iteration start date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $iStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>GetStartDataSetId</name>
+      <persist>false</persist>
+      <value type="String">1</value>
+      <script><![CDATA[# returnst the start data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists StartID] == 1} {&#xa;  set result $StartID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetEndDataSetId</name>
+      <persist>false</persist>
+      <value type="String">2147483647</value>
+      <script><![CDATA[# returnst the end data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists EndID] == 1} {&#xa;  set result $EndID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetFileName</name>
+      <persist>false</persist>
+      <value type="String">Y:\STC3.30\1.db</value>
+      <script><![CDATA[# returnst the DB file name&#xa;# - note that detailed stats does not have the @StartDataSetId when launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists FileNameID] == 1} {&#xa;  set result $FileNameID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1245338790296</value>
+      <script><![CDATA[set result "1270154801883"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Thu Jun 18 11:26:30.296 EDT 2009</value>
+      <script><![CDATA[set result "Thu Apr 01 10:46:41.883 HST 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>HttpClientStatsPerPort</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Port Name</td>&#xa;   <td bgcolor="#eeeeee">Device Name</td>&#xa;   <td bgcolor="#eeeeee">Elapsed\nSeconds</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Successful\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Successful\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Min Response\nTime Per Url\nmsec</td>&#xa;   <td bgcolor="#eeeeee">Max Response\nTime Per Url\nmsec</td>&#xa;   <td bgcolor="#eeeeee">Avg Response\nTime Per Url\nmsec</td>&#xa;   <td bgcolor="#eeeeee">Sum Response\nTime Per Url\nmsec</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nRx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nTx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMinTxRateBps</td>&#xa;   <td bgcolor="#eeeeee">Rx Response\nCode 200\nCount</td>&#xa;   <td bgcolor="#eeeeee">Rx Response\nCode 400\nCount</td>&#xa;   <td bgcolor="#eeeeee">Rx Response\nCode 404\nCount</td>&#xa;   <td bgcolor="#eeeeee">Rx Response\nCode 405\nCount</td>&#xa; </tr>&#xa; <tr iterate="$HttpClientPortName$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$HttpClientPortName$</td>&#xa;   <td bgcolor="#ffffff">=$HttpClientDeviceName$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsElapsedSeconds$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAttemptedConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsSuccessfulConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsUnsuccessfulConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAbortedConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAttemptedConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsSuccessfulConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsUnsuccessfulConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAbortedConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAttemptedTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsSuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsUnsuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAbortedTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAttemptedTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsSuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsUnsuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAbortedTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsMinResponseTimePerUrlMsec$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsMaxResponseTimePerUrlMsec$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsAvgResponseTimePerUrlMsec$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsSumResponseTimePerUrlMsec$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputRxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputAvgRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputMaxRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputMinRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputTxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputAvgTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputMaxTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsGoodputMinTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsRxResponseCode200$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsRxResponseCode400$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsRxResponseCode404$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpClientEotResultsRxResponseCode405$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>HttpServerStatsPerPort</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Port Name</td>&#xa;    <td bgcolor="#eeeeee">Device Name</td>&#xa;   <td bgcolor="#eeeeee">Elapsed\nSeconds</td>&#xa;   <td bgcolor="#eeeeee">Total\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Total\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nRx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nTx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Tx Response\nCode 200\nCount</td>&#xa;   <td bgcolor="#eeeeee">Tx Response\nCode 400\nCount</td>&#xa;   <td bgcolor="#eeeeee">Tx Response\nCode 404\nCount</td>&#xa;   <td bgcolor="#eeeeee">Tx Response\nCode 405\nCount</td>&#xa; </tr>&#xa; <tr iterate="$HttpServerDeviceName$">&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsPortName$</td>&#xa;   <td bgcolor="#ffffff">=$HttpServerDeviceName$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsElapsedSeconds$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsTotalConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsTotalConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsSuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsUnsuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsSuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsUnsuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputRxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputAvgRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputMaxRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputMinRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputTxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputAvgTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputMaxTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsGoodputMinTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsTxResponseCode200$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsTxResponseCode400$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsTxResponseCode404$</td>&#xa;   <td bgcolor="#ffffff">=$AutoHttpServerEotResultsTxResponseCode405$</td>&#xa; </tr>&#xa;</table>&#xa;&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>HttpClientEotResults</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpClientEotResultsAttemptedTransactions</name>
+        <title>Attempted Transactions</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsSuccessfulTransactions</name>
+        <title>Successful Transactions</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsUnsuccessfulTransactions</name>
+        <title>Unsuccessful Transactions</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsAbortedTransactions</name>
+        <title>Aborted Transactions</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Client Transaction Results</title>
+      <xStatistic>HttpClientPortName</xStatistic>
+      <xTitle>Client</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpClientResponseTime</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpClientEotResultsMinResponseTimePerUrlMsec</name>
+        <title>Min Response Time</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsMaxResponseTimePerUrlMsec</name>
+        <title>Max Response Time</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsAvgResponseTimePerUrlMsec</name>
+        <title>Average Response Time</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Client Response Time Results</title>
+      <xStatistic>HttpClientPortName</xStatistic>
+      <xTitle>Port</xTitle>
+      <yTitle>Milliseconds</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpClientGoodputCounters</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputRxBytes</name>
+        <title>Bytes Received</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputTxBytes</name>
+        <title>Bytes Transmitted</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Client Goodput Counters</title>
+      <xStatistic>HttpClientPortName</xStatistic>
+      <xTitle></xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpClientGoodputRates</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputAvgRxRateBps</name>
+        <title>Goodput Avg Rx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputMaxRxRateBps</name>
+        <title>Goodput Max Rx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputMinRxRateBps</name>
+        <title>Goodput Min Rx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputAvgTxRateBps</name>
+        <title>Goodput Avg Tx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputMaxTxRateBps</name>
+        <title>Goodput Max Tx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsGoodputMinTxRateBps</name>
+        <title>Goodput Min Tx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Client Goodput Rates</title>
+      <xStatistic>HttpClientPortName</xStatistic>
+      <xTitle></xTitle>
+      <yTitle>Rate in Bits per Second</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpClientResponseCodeCounts</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpClientEotResultsRxResponseCode200</name>
+        <title>200</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsRxResponseCode400</name>
+        <title>400</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsRxResponseCode404</name>
+        <title>404</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsRxResponseCode405</name>
+        <title>405</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpClientEotResultsAttemptedTransactions</name>
+        <title>Total Attempted Transactions</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Client Response Code Counters</title>
+      <xStatistic>HttpClientPortName</xStatistic>
+      <xTitle>Response Code</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpServerConnections</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpServerEotResultsTotalConnections</name>
+        <title>Total Connections</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsSuccessfulTransactions</name>
+        <title>Successful Transactions</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsUnsuccessfulTransactions</name>
+        <title>Unsuccessful Transactions</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Server Transactions</title>
+      <xStatistic>AutoHttpServerEotResultsPortName</xStatistic>
+      <xTitle>Port</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpServerGoodputCounters</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputRxBytes</name>
+        <title>Goodput Rx Bytes</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputTxBytes</name>
+        <title>Goodput Tx Bytes</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Server Goodput Counters</title>
+      <xStatistic>AutoHttpServerEotResultsPortName</xStatistic>
+      <xTitle>Port</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpServerGoodputRates</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputAvgRxRateBps</name>
+        <title>Goodput Avg Rx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputMaxRxRateBps</name>
+        <title>Goodput Max Rx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputMinRxRateBps</name>
+        <title>Goodput Min Rx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputAvgTxRateBps</name>
+        <title>Goodput Avg Tx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputMaxTxRateBps</name>
+        <title>Goodput Max Tx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsGoodputMinTxRateBps</name>
+        <title>Goodput Min Tx</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Server Goodput Rates</title>
+      <xStatistic>AutoHttpServerEotResultsPortName</xStatistic>
+      <xTitle>Port</xTitle>
+      <yTitle>Rate in Bits per Second</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>HttpServerResponseCodeCounts</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoHttpServerEotResultsTxResponseCode200</name>
+        <title>200</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsTxResponseCode400</name>
+        <title>400</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsTxResponseCode404</name>
+        <title>404</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsTxResponseCode405</name>
+        <title>405</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoHttpServerEotResultsTotalConnections</name>
+        <title>TotalConnections</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title>HTTP Server Response Code Counters</title>
+      <xStatistic>AutoHttpServerEotResultsPortName</xStatistic>
+      <xTitle>Port and Response Code</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TestStartStr</name>
+        <x>155</x>
+        <y>450</y>
+        <width>61</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Created:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>FileNameStr</name>
+        <x>155</x>
+        <y>481</y>
+        <width>50</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">File&amp;nbsp;Name:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>133</x>
+        <y>245</y>
+        <width>305</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;HTTP&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartVar</name>
+        <x>270</x>
+        <y>451</y>
+        <width>166</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$IterStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>upperLeftLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSideLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>ConfigStr</name>
+        <x>154</x>
+        <y>419</y>
+        <width>80</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Configuration:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>ConfigVar</name>
+        <x>269</x>
+        <y>420</y>
+        <width>204</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ClientPortCount$&amp;nbsp;Client&amp;nbsp;Port(s)&amp;nbsp;and&amp;nbsp;=$ServerPortCount$&amp;nbsp;Server&amp;nbsp;Port(s)</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="MultiText">
+        <name>FileNameVar</name>
+        <x>270</x>
+        <y>481</y>
+        <width>400</width>
+        <height>100</height>
+        <size>12</size>
+        <value xml:space="preserve">=$GetFileName$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="HttpClientResults" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>HttpClientEotResults</name>
+        <x>5</x>
+        <y>137</y>
+        <width>1893</width>
+        <height>94</height>
+        <value>HttpClientStatsPerPort</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>Title</name>
+        <x>262</x>
+        <y>106</y>
+        <width>146</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">HTTP&amp;nbsp;Client&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="HttpClientTransactions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpClientEotResults</value>
+      </instance>
+    </page>
+    <page name="HttpClientResponseTime" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpClientResponseTime</value>
+      </instance>
+    </page>
+    <page name="HttpClientGoodputCounters" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpClientGoodputCounters</value>
+      </instance>
+    </page>
+    <page name="HttpClientGoodputRates" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpClientGoodputRates</value>
+      </instance>
+    </page>
+    <page name="HttpClientResponseCodes" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpClientResponseCodeCounts</value>
+      </instance>
+    </page>
+    <page name="HttpServerResults" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>HttpServerEotResults</name>
+        <x>5</x>
+        <y>137</y>
+        <width>1212</width>
+        <height>60</height>
+        <value>HttpServerStatsPerPort</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>Title</name>
+        <x>262</x>
+        <y>106</y>
+        <width>156</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">HTTP&amp;nbsp;Server&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="HttpServerTransactions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpServerConnections</value>
+      </instance>
+    </page>
+    <page name="HttpServerGoodputCounters" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpServerGoodputCounters</value>
+      </instance>
+    </page>
+    <page name="HttpServerGoodputRates" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpServerGoodputRates</value>
+      </instance>
+    </page>
+    <page name="HttpServerResponseCodes" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>HttpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>HttpServerResponseCodeCounts</value>
+      </instance>
+    </page>
+    <page name="Version" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>VerStr</name>
+        <x>35</x>
+        <y>450</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R1</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>590</x>
+        <y>130</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>465</y>
+        <width>720</width>
+        <height>70</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>35</x>
+        <y>432</y>
+        <width>266</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

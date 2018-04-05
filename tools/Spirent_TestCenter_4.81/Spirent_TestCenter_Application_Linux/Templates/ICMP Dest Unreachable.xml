@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_IcmpDestUnreach"
+    showName="ICMP Dest Unreachable"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="icmp:IcmpDestUnreach"
+    description="ICMP Dest Unreachable" >
+
+    <pdus>
+      <pdu name="proto1" pdu="icmp:IcmpDestUnreach" />
+    </pdus>
+  </template>
+</frame>

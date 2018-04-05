@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5941" serializationBase="true" 
+ Identifier="Router Protocols\IGMP Querier Results"
+ PrimaryClass="EmulatedDevice"
+ Description="object://core/EmulatedDevice"
+ Path="Router Protocols"
+ CustomDisplayPath="Multicast"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="IGMP Querier Results">
+  <RealTimeResultColumnDefinition id="5942" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 670">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5943" 
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 671">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5944" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port EmulatedDevice"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 44">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5945" 
+   GroupName="IGMP Querier Results"
+   GroupId="object://customgroup/18826d4a-e07e-4e93-bbe9-c14086470e6a/Main"
+   ColumnClassName="IgmpRouterResults IgmpRouterResults IgmpRouterResults IgmpRouterResults IgmpRouterResults IgmpRouterResults IgmpRouterResults"
+   ColumnPropertyName="McastCompatibilityMode RouterState TxFrameCount RxFrameCount RxUnknownTypeCount RxIgmpCheckSumErrorCount RxIgmpLengthErrorCount"
+   SqlString="SELECT Port.Name AS 'Port Name', AllDevice.Name AS 'Device Name', IgmpRouterResults.McastCompatibilityMode AS 'Multicast Version', IgmpRouterResults.RouterState AS 'Router State', SUM(IgmpRouterResults.TxFrameCount) AS 'Tx Frames', SUM(IgmpRouterResults.RxFrameCount) AS 'Rx Frames', SUM(IgmpRouterResults.RxUnknownTypeCount) AS 'Rx Unknown Types', SUM(IgmpRouterResults.RxIgmpCheckSumErrorCount) AS 'Rx IGMP Checksum Errors', SUM(IgmpRouterResults.RxIgmpLengthErrorCount) AS 'Rx IGMP Length Errors' FROM AllDevice, Port, IgmpRouterResults, IgmpRouterConfig, RelationTable  WHERE (  RelationTable.Type = 'AffiliationPort' AND  RelationTable.SourceHnd = AllDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND IgmpRouterConfig.ParentHnd = AllDevice.Handle AND IgmpRouterResults.ParentHnd = IgmpRouterConfig.Handle AND IgmpRouterResults.IfHandle = IgmpRouterConfig.IfHandle AND AllDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND IgmpRouterResults.DataSetId = @DataSetId AND IgmpRouterConfig.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) GROUP BY IgmpRouterResults.IfHandle"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 45">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5946" 
+   ConfigClassId="igmprouterconfig"
+   ResultClassId="igmprouterresults"
+   ResultRootList="17"
+   PropertyIdArray="igmpdeviceresults.mcastcompatibilitymode multicastdeviceresults.txframecount multicastdeviceresults.rxframecount multicastdeviceresults.rxunknowntypecount igmpdeviceresults.rxigmpchecksumerrorcount igmpdeviceresults.rxigmplengtherrorcount igmpdeviceresults.routerstate"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 29">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5947" 
+   ColumnClassName="IgmpRouterResults"
+   ColumnPropertyName="McastCompatibilityMode"
+   ColumnDescription=""
+   ColumnWidth="56"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 672">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5948" 
+   ColumnClassName="IgmpRouterResults"
+   ColumnPropertyName="RouterState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 673">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5949" 
+   ColumnClassName="IgmpRouterResults"
+   ColumnPropertyName="TxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="65"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 674">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5950" 
+   ColumnClassName="IgmpRouterResults"
+   ColumnPropertyName="RxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="62"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 675">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5951" 
+   ColumnClassName="IgmpRouterResults"
+   ColumnPropertyName="RxUnknownTypeCount"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 676">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5952" 
+   ColumnClassName="IgmpRouterResults"
+   ColumnPropertyName="RxIgmpCheckSumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 677">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5953" 
+   ColumnClassName="IgmpRouterResults"
+   ColumnPropertyName="RxIgmpLengthErrorCount"
+   ColumnDescription=""
+   ColumnWidth="82"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 678">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

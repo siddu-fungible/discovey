@@ -1,0 +1,52 @@
+{
+    "methodology_key": "CLOUDSTRESS_MEMORYBENCHMARK_FIXEDLOAD",
+    "state_modifiers": [
+        {
+            "property_group": "AutoDeployConfig",
+            "state_type": "hidden",
+            "type": "expression",
+            "value": "has_deployment_config() == false",
+            "message": "Auto-Deployment Configuration is not used when there aren't any templates that need auto-deploying."
+        }
+    ],
+    "validations": [
+        {
+            "property": "MinInstanceCount",
+            "type": "expression",
+            "value": "(%MinInstanceCount% > %MaxInstanceCount%)",
+            "message": "Minimum Instance Count must be less than or equal to the Maximum Instance Count."
+        },
+        {
+            "property": "InitialInstanceCount",
+            "type": "expression",
+            "value": "(%MinInstanceCount% > %InitialInstanceCount%) || (%InitialInstanceCount% > %MaxInstanceCount%)",
+            "message": "Initial Instance Count must be between the Minimum and Maximum Instance Count inclusive."
+        },
+
+
+        {
+            "property": "FixedMemoryLoadParams.MemoryReadSize",
+            "type": "expression",
+            "value": "(%FixedMemoryLoadParams.MemoryReadSize% & (%FixedMemoryLoadParams.MemoryReadSize% - 1)) != 0",
+            "message": "The memory read block size must be a power of 2."
+        },
+        {
+            "property": "FixedMemoryLoadParams.MemoryWriteSize",
+            "type": "expression",
+            "value": "(%FixedMemoryLoadParams.MemoryWriteSize% & (%FixedMemoryLoadParams.MemoryWriteSize% - 1)) != 0",
+            "message": "The memory write block size must be a power of 2."
+        },
+        {
+            "property": "FixedMemoryLoadParams.MemoryBufferSize",
+            "type": "expression",
+            "value": "(%FixedMemoryLoadParams.MemoryBufferSize% % %FixedMemoryLoadParams.MemoryReadSize%) != 0",
+            "message": "The memory buffer size must be a multiple of memory read block size and the memory write block size."
+        },
+        {
+            "property": "FixedMemoryLoadParams.MemoryBufferSize",
+            "type": "expression",
+            "value": "(%FixedMemoryLoadParams.MemoryBufferSize% % %FixedMemoryLoadParams.MemoryWriteSize%) != 0",
+            "message": "The memory buffer size must be a multiple of the memory read block size and the memory write block size."
+        }
+    ]
+}

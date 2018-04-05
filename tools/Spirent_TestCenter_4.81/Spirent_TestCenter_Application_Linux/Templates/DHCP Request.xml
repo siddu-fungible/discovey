@@ -1,0 +1,35 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Dhcprequest"
+    showName="DHCP Request"
+    version="1.00"
+    category="Access"
+    readonly="true"
+    validate="true"
+    firstPdu="dhcp:Dhcpclientmsg"
+    description="DHCP Request" >
+
+    <pdus>
+      <pdu name="proto1" pdu="dhcp:Dhcpclientmsg">
+        <clientAddr override="true">0.0.0.0</clientAddr>
+        <options>
+          <DHCPOption name="DHCPOption1">
+            <messageType><code>3</code></messageType></DHCPOption>
+          <DHCPOption name="DHCPOption2">
+            <messageSize /></DHCPOption>
+          <DHCPOption name="DHCPOption3">
+            <clientIdHW /></DHCPOption>
+          <DHCPOption name="DHCPOption4">
+            <serverId /></DHCPOption>
+          <DHCPOption name="DHCPOption5">
+            <hostName /></DHCPOption>
+          <DHCPOption name="DHCPOption6">
+            <paramReqList /></DHCPOption>
+          <DHCPOption name="DHCPOption7">
+            <endOfOptions /></DHCPOption>
+        </options>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

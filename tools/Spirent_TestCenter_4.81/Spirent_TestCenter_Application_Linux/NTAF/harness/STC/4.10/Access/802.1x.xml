@@ -1,0 +1,88 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/4.10/Access/802.1x"  xml:lang="en">
+<label>802.1x</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    
+	<supercedes>http://spirent.com/NTAF/harness/STC/3.80/Access/802.1x</supercedes>
+<actionDecl name="Dot1xWaitForAuthState">
+    <label>Wait For Supplicant Authentication State</label>
+    <tooltip>Wait for a specified authentication state for supplicants (e.g. authenticated).</tooltip>
+    <description>Wait for a specified authentication state for supplicants (e.g. authenticated).</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="WaitSupplicantState">
+            <label>WaitSupplicantState</label>
+            <tooltip>Wait Supplicant State</tooltip>
+            <description>Wait Supplicant State</description>
+            <datatype>string</datatype>
+            <default>AUTH_SUCCESS</default>
+            <allowedValue label="UNAUTHORIZED">UNAUTHORIZED</allowedValue>
+            <allowedValue label="AUTHENTICATING">AUTHENTICATING</allowedValue>
+            <allowedValue label="REAUTHENTICATING">REAUTHENTICATING</allowedValue>
+            <allowedValue label="AUTH_SUCCESS">AUTH_SUCCESS</allowedValue>
+            <allowedValue label="AUTH_FAILED">AUTH_FAILED</allowedValue>
+            <allowedValue label="LOGGING_OFF">LOGGING_OFF</allowedValue>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+
+
+	<subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/802.1x</subharness>
+
+
+</query-harness>
+

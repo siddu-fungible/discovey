@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Ospfv2DD"
+    showName="OSPFv2 Database Description"
+    version="1.00"
+    category="Routing"
+    readonly="true"
+    validate="true"
+    firstPdu="ospfv2:Ospfv2DatabaseDescription"
+    description="OSPFV2 Database Description" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ospfv2:Ospfv2DatabaseDescription"> 
+      </pdu>
+    </pdus>
+  </template>
+</frame>

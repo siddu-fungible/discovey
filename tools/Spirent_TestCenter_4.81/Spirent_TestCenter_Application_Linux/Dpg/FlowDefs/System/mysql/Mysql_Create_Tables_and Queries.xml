@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="Mysql_Create_Tables_and Queries" type="stream" layer="tcp" closeType="server_fin">
+  <MetaData description="Mysql_Create_Tables_and Queries" protocol="mysql" application="mysql" createDate="">
+    <Sapee version="16" clientIp="10.40.113.231" clientPort="1392" serverIp="10.40.113.25" serverPort="3306" startTime="0" dataStartTime="1"/>
+  </MetaData>
+  <Packets>
+    <Packet name="packet_1" pktDelay="1" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>300000000A342E302E31352D7374616E646172640002000000677A536F53344645002C2008020000000000000000000000000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_2" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>120000018524000000726F6F74005C47535F50404E53</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_3" pktDelay="201" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000020000000200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_4" pktDelay="13" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>100000000373656C656374202A2066726F6D202A</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_5" pktDelay="1534" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>97000001FF2804596F75206861766520616E206572726F7220696E20796F75722053514C2073796E7461782E2020436865636B20746865206D616E75616C207468617420636F72726573706F6E647320746F20796F7572204D7953514C207365727665722076657273696F6E20666F72207468652072696768742073796E74617820746F20757365206E65617220272A27206174206C696E652031</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_6" pktDelay="1" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>13000000036372656174652064620A73616D706C656462</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_7" pktDelay="921" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>A1000001FF2804596F75206861766520616E206572726F7220696E20796F75722053514C2073796E7461782E2020436865636B20746865206D616E75616C207468617420636F72726573706F6E647320746F20796F7572204D7953514C207365727665722076657273696F6E20666F72207468652072696768742073796E74617820746F20757365206E656172202764620A73616D706C65646227206174206C696E652031</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_8" pktDelay="28" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>19000000036372656174652064617461626173652073616D706C656462</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_9" pktDelay="466" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000010001000200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_10" pktDelay="1" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>1900000003637265617465207461626C652073616D706C657461626C65</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_11" pktDelay="900" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>17000001FF16044E6F2044617461626173652053656C6563746564</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_12" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>2200000003637265617465207461626C652073616D706C6564622E73616D706C657461626C65</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_13" pktDelay="1096" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>26000001FF590441207461626C65206D7573742068617665206174206C65617374203120636F6C756D6E</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_14" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>5A00000003637265617465207461626C652073616D706C6564622E73616D706C657461626C6520286E616D65207661726368617228323029206E756C6C2C2073736E20696E7465676572206E6F746E756C6C207072696D6172796B657929</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_15" pktDelay="353" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>A9000001FF2804596F75206861766520616E206572726F7220696E20796F75722053514C2073796E7461782E2020436865636B20746865206D616E75616C207468617420636F72726573706F6E647320746F20796F7572204D7953514C207365727665722076657273696F6E20666F72207468652072696768742073796E74617820746F20757365206E65617220276E6F746E756C6C207072696D6172796B65792927206174206C696E652031</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_16" pktDelay="1" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>5600000003637265617465207461626C652073616D706C6564622E73616D706C657461626C6520286E616D65207661726368617228323029206E756C6C2C2073736E20696E74206E6F746E756C6C207072696D6172796B657929</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_17" pktDelay="947" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>A9000001FF2804596F75206861766520616E206572726F7220696E20796F75722053514C2073796E7461782E2020436865636B20746865206D616E75616C207468617420636F72726573706F6E647320746F20796F7572204D7953514C207365727665722076657273696F6E20666F72207468652072696768742073796E74617820746F20757365206E65617220276E6F746E756C6C207072696D6172796B65792927206174206C696E652031</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_18" pktDelay="1" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>5700000003637265617465207461626C652073616D706C6564622E73616D706C657461626C6520286E616D65207661726368617228323029206E756C6C2C2073736E20696E74206E6F746E756C6C207072696D617279206B657929</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_19" pktDelay="889" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>AA000001FF2804596F75206861766520616E206572726F7220696E20796F75722053514C2073796E7461782E2020436865636B20746865206D616E75616C207468617420636F72726573706F6E647320746F20796F7572204D7953514C207365727665722076657273696F6E20666F72207468652072696768742073796E74617820746F20757365206E65617220276E6F746E756C6C207072696D617279206B65792927206174206C696E652031</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_20" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>5800000003637265617465207461626C652073616D706C6564622E73616D706C657461626C6520286E616D65207661726368617228323029206E756C6C2C2073736E20696E74204E4F54204E554C4C205052494D415259204B455929</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_21" pktDelay="719" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000010000000200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_22" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>170000000373656C656374202A2066726F6D2073616D706C656462</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_23" pktDelay="996" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>17000001FF16044E6F2044617461626173652053656C6563746564</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_24" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>6700000003637265617465207461626C652073616D706C6564622E73616D706C657461626C6520286E616D65207661726368617228323029206E756C6C2C2073736E20696E74204E4F54204E554C4C205052494D415259204B4559204155544F5F494E4352454D454E5429</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_25" pktDelay="259" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>25000001FF1A045461626C65202773616D706C657461626C652720616C726561647920657869737473</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_26" pktDelay="1" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>200000000364726F70207461626C652073616D706C6564622E73616D706C657461626C65</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_27" pktDelay="327" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000010000000200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_28" pktDelay="1" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>6700000003637265617465207461626C652073616D706C6564622E73616D706C657461626C6520286E616D65207661726368617228323029206E756C6C2C2073736E20696E74204E4F54204E554C4C205052494D415259204B4559204155544F5F494E4352454D454E5429</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_29" pktDelay="1428" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000010000000200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_30" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>4400000003696E7365727420696E746F2073616D706C6564622E73616D706C657461626C652076616C7565730A28277361696C616A61272C2031290A28277372696C656B68612729</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_31" pktDelay="596" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>A2000001FF2804596F75206861766520616E206572726F7220696E20796F75722053514C2073796E7461782E2020436865636B20746865206D616E75616C207468617420636F72726573706F6E647320746F20796F7572204D7953514C207365727665722076657273696F6E20666F72207468652072696768742073796E74617820746F20757365206E656172202728277372696C656B6861272927206174206C696E652033</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_32" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>100000000328277372696C656B6861272C203129</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_33" pktDelay="224" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>A4000001FF2804596F75206861766520616E206572726F7220696E20796F75722053514C2073796E7461782E2020436865636B20746865206D616E75616C207468617420636F72726573706F6E647320746F20796F7572204D7953514C207365727665722076657273696F6E20666F72207468652072696768742073796E74617820746F20757365206E6561722027277372696C656B6861272C20312927206174206C696E652031</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_34" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>3800000003696E7365727420696E746F2073616D706C6564622E73616D706C657461626C652076616C7565730A28277372696C656B6861272C203229</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_35" pktDelay="164" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000010001020200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_36" pktDelay="1" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>230000000373656C656374202A2066726F6D2073616D706C6564622E73616D706C657461626C65</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_37" pktDelay="1060" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>01000001021B0000020B73616D706C657461626C65046E616D650314000001FD030000001A0000030B73616D706C657461626C650373736E030B000001030303420001000004FE0B000005087372696C656B6861013201000006FE</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_38" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>3700000003696E7365727420696E746F2073616D706C6564622E73616D706C657461626C652076616C7565730A28277361696C616A61272C203129</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_39" pktDelay="1406" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000010001010200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_40" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>150000000273616D706C6564622E73616D706C657461626C65</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_41" pktDelay="322" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>31000001FF4E04496E636F7272656374206461746162617365206E616D65202773616D706C6564622E73616D706C657461626C6527</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_42" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>090000000273616D706C656462</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_43" pktDelay="1087" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>050000010000000200</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_44" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>1A0000000373656C656374202A2066726F6D2073616D706C657461626C65</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_45" pktDelay="636" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>01000001021B0000020B73616D706C657461626C65046E616D650314000001FD030000001A0000030B73616D706C657461626C650373736E030B000001030303420001000004FE0B000005087372696C656B686101320A000006077361696C616A61013101000007FE</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_46" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>0100000001</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables/>
+  <Modifiers/>
+</Flow>

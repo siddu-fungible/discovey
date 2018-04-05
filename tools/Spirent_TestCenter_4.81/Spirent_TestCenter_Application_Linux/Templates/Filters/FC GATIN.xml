@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGATIN" 
+    showName="FC GATIN" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:Gatin" 
+    description="FC GATIN">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:Gatin">
+        <ctIuPreamble>
+          <commandRespondCode>0128</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

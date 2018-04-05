@@ -1,0 +1,31 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoERDIAccept"
+    showName="FCoE RDI Accept"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE RDI Accept">
+    <pdus>
+      <pdu name="proto1" pdu="fc:FCoEHeader">
+	      <sof>28</sof>
+        <eof>41</eof>
+      </pdu>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>03</rCtl>
+			  <dId>fffffd</dId>
+			  <sId>fffffd</sId>
+			  <frameControl>290000</frameControl>	
+      </pdu>
+      <pdu name="proto3" pdu="fcsw:Rdi">
+        <command>02</command>
+				<domainID>
+				  <RdiDomainId name="RdiDomainId_0"/>
+				</domainID>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

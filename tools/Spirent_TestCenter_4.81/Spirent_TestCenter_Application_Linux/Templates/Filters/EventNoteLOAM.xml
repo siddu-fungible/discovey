@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Link OAM Event Notification"
+    showName="Link OAM Event Notification"
+    version="1.00"
+    category="Link OAM"
+    readonly="true"
+    validate="true"
+    firstPdu="LinkOAM:EventNoteOAMPDU"
+    description="Link OAM" >
+
+    <pdus>
+      <pdu name="proto1" pdu="LinkOAM:EventNoteOAMPDU" />
+    </pdus>
+  </template>
+</frame>

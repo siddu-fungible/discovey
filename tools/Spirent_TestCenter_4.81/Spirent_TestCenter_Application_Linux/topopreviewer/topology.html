@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<!-- START SIGMA IMPORTS -->
+<script src="./linkurious.js/src/sigma.core.js"></script>
+<script src="./linkurious.js/src/conrad.js"></script>
+<script src="./linkurious.js/src/utils/sigma.utils.js"></script>
+<script src="./linkurious.js/src/utils/sigma.polyfills.js"></script>
+<script src="./linkurious.js/src/sigma.settings.js"></script>
+<script src="./linkurious.js/src/classes/sigma.classes.dispatcher.js"></script>
+<script src="./linkurious.js/src/classes/sigma.classes.configurable.js"></script>
+<script src="./linkurious.js/src/classes/sigma.classes.graph.js"></script>
+<script src="./linkurious.js/src/classes/sigma.classes.camera.js"></script>
+<script src="./linkurious.js/src/classes/sigma.classes.quad.js"></script>
+<script src="./linkurious.js/src/captors/sigma.captors.mouse.js"></script>
+<script src="./linkurious.js/src/captors/sigma.captors.touch.js"></script>
+<script src="./linkurious.js/src/renderers/sigma.renderers.canvas.js"></script>
+<script src="./linkurious.js/src/renderers/sigma.renderers.webgl.js"></script>
+<script src="./linkurious.js/src/renderers/sigma.renderers.svg.js"></script>
+<script src="./linkurious.js/src/renderers/sigma.renderers.def.js"></script>
+<script src="./linkurious.js/src/renderers/webgl/sigma.webgl.nodes.def.js"></script>
+<script src="./linkurious.js/src/renderers/webgl/sigma.webgl.nodes.fast.js"></script>
+<script src="./linkurious.js/src/renderers/webgl/sigma.webgl.edges.def.js"></script>
+<script src="./linkurious.js/src/renderers/webgl/sigma.webgl.edges.fast.js"></script>
+<script src="./linkurious.js/src/renderers/webgl/sigma.webgl.edges.arrow.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.labels.def.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.hovers.def.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.nodes.def.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edges.def.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edges.curve.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edges.arrow.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edges.curvedArrow.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edgehovers.def.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edgehovers.curve.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edgehovers.arrow.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.edgehovers.curvedArrow.js"></script>
+<script src="./linkurious.js/src/renderers/canvas/sigma.canvas.extremities.def.js"></script>
+<script src="./linkurious.js/src/renderers/svg/sigma.svg.utils.js"></script>
+<script src="./linkurious.js/src/renderers/svg/sigma.svg.nodes.def.js"></script>
+<script src="./linkurious.js/src/renderers/svg/sigma.svg.edges.def.js"></script>
+<script src="./linkurious.js/src/renderers/svg/sigma.svg.edges.curve.js"></script>
+<script src="./linkurious.js/src/renderers/svg/sigma.svg.edges.curvedArrow.js"></script>
+<script src="./linkurious.js/src/renderers/svg/sigma.svg.labels.def.js"></script>
+<script src="./linkurious.js/src/renderers/svg/sigma.svg.hovers.def.js"></script>
+<script src="./linkurious.js/src/middlewares/sigma.middlewares.rescale.js"></script>
+<script src="./linkurious.js/src/middlewares/sigma.middlewares.copy.js"></script>
+<script src="./linkurious.js/src/misc/sigma.misc.animation.js"></script>
+<script src="./linkurious.js/src/misc/sigma.misc.bindEvents.js"></script>
+<script src="./linkurious.js/src/misc/sigma.misc.bindDOMEvents.js"></script>
+<script src="./linkurious.js/src/misc/sigma.misc.drawHovers.js"></script>
+<script src="./linkurious.js/plugins/sigma.plugins.dragNodes/sigma.plugins.dragNodes.js"></script>
+<script src="./linkurious.js/plugins/sigma.helpers.graph/sigma.helpers.graph.js"></script>
+<script src="./linkurious.js/plugins/sigma.plugins.activeState/sigma.plugins.activeState.js"></script>
+<script src="./linkurious.js/plugins/sigma.plugins.select/sigma.plugins.select.js"></script>
+<script src="./linkurious.js/plugins/sigma.plugins.keyboard/sigma.plugins.keyboard.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/settings.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.labels.def.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.hovers.def.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.nodes.def.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.nodes.cross.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.nodes.diamond.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.nodes.equilateral.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.nodes.square.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.nodes.star.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.edges.def.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.edges.curve.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.edges.arrow.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.edges.curvedArrow.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.linkurious/canvas/sigma.canvas.edges.autoCurve.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.customShapes/shape-library.js"></script>
+<script src="./linkurious.js/plugins/sigma.renderers.customShapes/sigma.renderers.customShapes.js"></script>
+<script src="./linkurious.js/plugins/sigma.parsers.json/sigma.parsers.json.js"></script>
+<script src="./linkurious.js/plugins/sigma.plugins.tooltips/sigma.plugins.tooltips.js"></script>
+<!-- END SIGMA IMPORTS -->
+
+<script src="./mustache.js/mustache.min.js"></script>
+<script src="./disptemplate.js"></script>
+
+<div id="container">
+  <style>
+    #graph-container {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+    }
+
+    .sigma-tooltip {
+      max-width: 240px;
+      max-height: 380px;
+      background-color: rgb(249, 247, 237);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      border-radius: 6px;
+    }
+
+    .sigma-tooltip-header {
+      font-variant: small-caps;
+      font-size: 120%;
+      color: #437356;
+      border-bottom: 1px solid #aac789;
+      padding: 10px;
+    }
+
+    .sigma-tooltip-body {
+      padding: 10px;
+	  max-height: 250px;
+	  overflow-y:auto;
+    }
+	
+	 .sigma-tooltip-body th {
+      color: #999;
+      text-align: left;
+    }
+
+    .sigma-tooltip-footer {
+      padding: 10px;
+      border-top: 1px solid #aac789;
+    }
+
+    .sigma-tooltip > .arrow {
+      border-width: 10px;
+      position: absolute;
+      display: block;
+      width: 0;
+      height: 0;
+      border-color: transparent;
+      border-style: solid;
+    }
+
+    .sigma-tooltip.top {
+      margin-top: -12px;
+    }
+    .sigma-tooltip.top > .arrow {
+      left: 50%;
+      bottom: -10px;
+      margin-left: -10px;
+      border-top-color: rgb(249, 247, 237);
+      border-bottom-width: 0;
+    }
+
+    .sigma-tooltip.bottom {
+      margin-top: 12px;
+    }
+    .sigma-tooltip.bottom > .arrow {
+      left: 50%;
+      top: -10px;
+      margin-left: -10px;
+      border-bottom-color: rgb(249, 247, 237);
+      border-top-width: 0;
+    }
+
+    .sigma-tooltip.left {
+      margin-left: -12px;
+    }
+    .sigma-tooltip.left > .arrow {
+      top: 50%;
+      right: -10px;
+      margin-top: -10px;
+      border-left-color: rgb(249, 247, 237);
+      border-right-width: 0;
+    }
+
+    .sigma-tooltip.right {
+      margin-left: 12px;
+    }
+    .sigma-tooltip.right > .arrow {
+      top: 50%;
+      left: -10px;
+      margin-top: -10px;
+      border-right-color: rgb(249, 247, 237);
+      border-left-width: 0;
+    }
+	#summanry-container {
+      top: 10px;
+      /*bottom: 10px;*/
+      left: 10px;
+      position: absolute;
+      width: 380px;
+	  height: 370px;
+      background-color: rgb(249, 247, 237);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+	#filter-container {
+      top: 10px;
+      right: 10px;
+      position: absolute;
+      width: 240px;
+	  height: 140px;
+      background-color: rgb(249, 247, 237);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    #summanry-container > div {
+      margin: 10px;
+      overflow-x: auto;
+    }
+	#find-btn{
+	  right: 10px;
+	  width: 60px;
+	  margin-top:10px;
+	  margin-right:15px;
+	}
+	h2.underline {
+      color: #437356;
+      background: #f4f0e4;
+      margin: 0;
+      border-radius: 2px;
+      padding: 8px 12px;
+      font-weight: 700;
+    }
+	input.inputclass
+	{
+	 width: 110px;
+	}
+	.line {
+      clear: both;
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 12px 0 0 0;
+      border-bottom: 1px solid #aac789;
+      background: transparent;
+    }
+	
+  </style>
+	<div id="graph-container"></div>
+	<div id="summanry-container">
+		<h2 class="underline" >
+			<a id=summaryExpand href="javascript:void(0);" onclick="clickSummaryFlag(this)">-</a>
+			Summary:
+		</h2>
+		<object style=" " type="text/x-scriptlet" data="./summary.js" width="100%" height="85%"></object> 
+	</div>
+	<div id="filter-container">
+		<h2 class="underline">
+			<a id=filterExpand href="javascript:void(0);" onclick="clickFilterFlag(this)">-</a>
+			Filter:
+		</h2>
+		<div id="filter-body">
+			<table cellpadding="6">
+				<tr>
+					<th>Router ID:</th>
+					<td><input id="router-id" type="text" class="inputclass" /></td>
+				</tr>
+			</table>
+			<span class="line"></span>
+			<div align="right" >
+				<button id="find-btn" onclick="find()">Find</button>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+/**
+ * This is an example on how to use node tooltips based on a random graph. *///var i,
+
+  var findColor = 'darkOrange';
+  var hoverNodeColor = 'blue';
+    g = {
+      nodes: [],
+      edges: []
+    };
+
+// Instanciate sigma:
+s = new sigma({
+  graph: g,
+  renderer: {
+    // IMPORTANT:
+    // This works only with the canvas renderer, so the
+    // renderer type set as "canvas" is necessary here.
+    container: document.getElementById('graph-container'),
+    type: 'canvas'
+  },
+  settings: {
+    minNodeSize: 8,
+    maxNodeSize: 16,
+    dragNodeStickiness: 0.01,
+    nodeBorderSize: 2,
+    defaultNodeBorderColor: '#000',
+    enableEdgeHovering: true,
+   // edgeHoverColor: 'edge',
+    edgeHoverExtremities: true,
+    edgeHoverHighlightNodes: 'circle',
+    drawLabels: false,
+	eventsEnabled: true,
+	mouseEnabled:true,
+  }
+});
+
+/* Minimal example of the tooltip plugin instantiation:
+sigma.plugins.tooltips(s, s.renderers[0], {
+  node: {
+    template: 'Hello node!'
+  }
+});
+*/
+
+
+var config = {
+  node: [{
+    show: 'hovers',
+    hide: 'hovers',
+    cssClass: 'sigma-tooltip',
+    position: 'bottom',
+    //autoadjust: true,
+    template: disptemplate,
+    renderer: function(node, template) {
+      // The function context is s.graph
+      node.degree = this.degree(node.id);
+	
+      // Returns an HTML string:
+      return Mustache.render(template, node);
+
+      // Returns a DOM Element:
+      //var el = document.createElement('div');
+      //return el.innerHTML = Mustache.render(template, node);
+    }
+  }
+  /*, {
+    show: 'rightClickNode',
+	
+    cssClass: 'sigma-tooltip',
+    position: 'right',
+    template:
+    '<div class="arrow"></div>' +
+    ' <div class="sigma-tooltip-header">{{label}}</div>' +
+    '  <div class="sigma-tooltip-body">' +
+    '   <p> Context menu or details for {{data.name}} </p>' +
+    '  </div>' +
+    ' <div class="sigma-tooltip-footer">Number of connections: {{degree}}</div>',
+    renderer: function(node, template) {
+      node.degree = this.degree(node.id);
+      return Mustache.render(template, node);
+    }
+  }*/]
+  /*,
+  stage: {
+    template:
+    '<div class="arrow"></div>' +
+    '<div class="sigma-tooltip-header"> Menu </div>'
+  }*/
+};
+
+// Instanciate the ActiveState plugin:
+var activeState = sigma.plugins.activeState(s);
+
+// Initialize the dragNodes plugin:
+var dragListener = sigma.plugins.dragNodes(s, s.renderers[0], activeState);
+
+// Initialize the Select plugin:
+var select = sigma.plugins.select(s, activeState);
+
+// Initialize the Keyboard plugin:
+var keyboard = sigma.plugins.keyboard(s, s.renderers[0]);
+
+// Bind the Keyboard plugin to the Select plugin:
+select.bindKeyboard(keyboard);
+
+
+s.bind("hovers", function(e) {
+		 var node;
+		 if(0<e.data.enter.nodes.length)
+		 {
+		     node = e.data.enter.nodes[0];
+			 resetFrom(hoverNodeColor);
+			 node.color = hoverNodeColor;
+			 var edges = s.graph.edges(),
+			edgeLen = edges.length;
+			for (i = 0; i < edgeLen; i++) 
+			{
+				if(node.id == edges[i].source || node.id == edges[i].target)
+				{
+					edges[i].color = hoverNodeColor;
+				}
+			}
+			s.refresh();
+		 }
+		 else if(0<e.data.leave.nodes.length)
+		 {
+		    resetFrom(hoverNodeColor);
+			find();
+		 }
+    
+	   }
+	   );
+dragListener.bind('startdrag', function(event) {
+  console.log(event);
+});
+dragListener.bind('drag', function(event) {
+  console.log(event);
+});
+dragListener.bind('drop', function(event) {
+  console.log(event);
+});
+dragListener.bind('dragend', function(event) {
+  console.log(event);
+});
+   // first you load a json with (important!) s parameter to refer to the sigma instance   
+
+sigma.parsers.json(
+  'data.json',
+  s,
+  function() {
+    // this below adds x, y attributes as well as size = degree of the node 
+    var i,
+    nodes = s.graph.nodes(),
+    len = nodes.length;
+
+    for (i = 0; i < len; i++) {
+        //nodes[i].x = Math.random();
+        //nodes[i].y = Math.random();
+        //nodes[i].size = s.graph.degree(nodes[i].id);
+        nodes[i].color = nodes[i].center ? '#333' : '#FFFFFF';
+
+		
+    }
+// Curve parallel edges:
+sigma.canvas.edges.autoCurve(s);
+
+    CustomShapes.init(s);
+	
+    // Refresh the display:
+    s.refresh();
+
+    // ForceAtlas Layout
+    //s.startForceAtlas2();
+  }
+); 
+
+// Instanciate the tooltips plugin with a Mustache renderer for node tooltips:
+var tooltips = sigma.plugins.tooltips(s, s.renderers[0], config);
+
+
+// Manually open a tooltip on a node:
+//var n = s.graph.nodes('n10');
+//var prefix = s.renderers[0].camera.prefix;
+//tooltips.open(n, config.node[0], n[prefix + 'x'], n[prefix + 'y']);
+
+
+tooltips.bind('shown', function(event) {
+  console.log('tooltip shown', event);
+});
+
+tooltips.bind('hidden', function(event) {
+  console.log('tooltip hidden', event);
+});
+
+function resetFrom(color)
+{
+var nodes = s.graph.nodes(),
+len = nodes.length,
+edges = s.graph.edges(),
+edgeLen = edges.length;
+
+for (i = 0; i < len; i++) {
+        if(nodes[i].color == color){
+		nodes[i].color = nodes[i].center ? '#333' : '#FFFFFF';
+		}
+    }
+ for (i = 0; i < edgeLen; i++) {
+		if(edges[i].color == color){
+		edges[i].color = '#ccc';
+		}
+    }
+	s.refresh();
+}
+function find()
+{
+resetFrom(findColor);
+
+var routerId=document.getElementById("router-id").value;
+
+nodes = s.graph.nodes(),
+len = nodes.length,
+id=0,
+edges = s.graph.edges(),
+edgeLen = edges.length;
+
+ for (i = 0; i < len; i++) {
+        var addressArr = nodes[i].label.split("; ");
+		var addressLen = addressArr.length;
+		for( j = 0; j <  addressLen; j ++)
+		{
+			if(addressArr[j] == routerId)
+			{
+				id = nodes[i].id;
+				nodes[i].color = findColor;
+				break;
+			}
+		}
+		if( 0 != id)
+		{
+			break;
+		}
+    }
+ for (i = 0; i < edgeLen; i++) {
+		if(id == edges[i].source || id == edges[i].target)
+		{
+			if(edges[i].color != hoverNodeColor)
+			{ 
+		     edges[i].color = findColor;
+			}
+		}
+    }
+	
+	s.refresh();
+}
+
+function clickSummaryFlag(summaryExpandFlag)
+{
+	if("-"==summaryExpandFlag.innerHTML)
+	{
+		summaryExpandFlag.innerHTML = "+";
+		document.getElementById("summanry-container").style.height = "00px";
+		document.getElementById("summanry-container").style.width = "200px";
+	}
+	else
+	{
+		summaryExpandFlag.innerHTML = "-";
+		document.getElementById("summanry-container").style.height = "310px";
+		document.getElementById("summanry-container").style.width = "380px";
+	}
+}
+
+function clickFilterFlag(filterExpandFlag)
+{
+	if("-"==filterExpandFlag.innerHTML)
+	{
+		filterExpandFlag.innerHTML = "+";
+		document.getElementById("filter-container").style.height = "00px";
+		document.getElementById("filter-body").style.visibility = "hidden";
+	}
+	else
+	{
+		filterExpandFlag.innerHTML = "-";
+		document.getElementById("filter-container").style.height = "140px";
+		document.getElementById("filter-body").style.visibility = "visible";
+	}
+}
+</script>

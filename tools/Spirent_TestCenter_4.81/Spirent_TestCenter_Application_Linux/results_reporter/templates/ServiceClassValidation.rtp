@@ -1,0 +1,669 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>TableList</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>GeneratorPortResults</instance>
+        <instance>TxCpuPortResults</instance>
+        <instance>AnalyzerPortResults</instance>
+        <instance>RxCpuPortResults</instance>
+        <instance>PortAvgLatencyResults</instance>
+        <instance>OverflowResults</instance>
+        <instance>DiffServResults</instance>
+        <instance>TxEotStreamResults</instance>
+        <instance>RxEotStreamResults</instance>
+        <instance>StcSystem</instance>
+        <instance>ActiveEventManager</instance>
+        <instance>AutomationOptions</instance>
+        <instance>PhysicalChassisManager</instance>
+        <instance>Sequencer</instance>
+        <instance>SetDurationCommand</instance>
+        <instance>ResultsClearAllCommand</instance>
+        <instance>AnalyzerStartCommand</instance>
+        <instance>GeneratorStartCommand</instance>
+        <instance>GeneratorWaitForStopCommand</instance>
+        <instance>GeneratorStopCommand</instance>
+        <instance>WaitCommand</instance>
+        <instance>AnalyzerStopCommand</instance>
+        <instance>EOTResultsWriteIterationCommand</instance>
+        <instance>IfManager</instance>
+        <instance>Project</instance>
+        <instance>TestResultSetting</instance>
+        <instance>DeviceAddrOptions</instance>
+        <instance>TrafficOptions</instance>
+        <instance>ResultOptions</instance>
+        <instance>LabelBindingGlobalConfig</instance>
+        <instance>BgpGlobalConfig</instance>
+        <instance>ArpNdConfig</instance>
+        <instance>L2LearningConfig</instance>
+        <instance>PimGlobalConfig</instance>
+        <instance>ResultDataSet</instance>
+        <instance>RealTimeResultColumnDefinition</instance>
+        <instance>RealTimeResultGroupDefinition</instance>
+        <instance>ResultQuery</instance>
+        <instance>Port</instance>
+        <instance>Host</instance>
+        <instance>EthIIIf</instance>
+        <instance>HdlcIf</instance>
+        <instance>PppIf</instance>
+        <instance>Ipv4If</instance>
+        <instance>Ipv6If</instance>
+        <instance>Analyzer</instance>
+        <instance>AnalyzerConfig</instance>
+        <instance>FrameLengthHistogram</instance>
+        <instance>InterarrivalTimeHistogram</instance>
+        <instance>JitterHistogram</instance>
+        <instance>LatencyHistogram</instance>
+        <instance>SeqDiffCheckHistogram</instance>
+        <instance>SeqRunLengthHistogram</instance>
+        <instance>DiffServConfig</instance>
+        <instance>Generator</instance>
+        <instance>GeneratorConfig</instance>
+        <instance>Capture</instance>
+        <instance>CaptureFilter</instance>
+        <instance>CaptureFilterStartEvent</instance>
+        <instance>CaptureFilterStopEvent</instance>
+        <instance>ArpCache</instance>
+        <instance>ArpNdReport</instance>
+        <instance>PingReport</instance>
+        <instance>StpPortConfig</instance>
+        <instance>Dhcpv4PortConfig</instance>
+        <instance>Dhcpv4PortResults</instance>
+        <instance>Dhcpv6PortConfig</instance>
+        <instance>Dhcpv6PortResults</instance>
+        <instance>IgmpPortConfig</instance>
+        <instance>IgmpPortResults</instance>
+        <instance>MldPortConfig</instance>
+        <instance>MldPortResults</instance>
+        <instance>L2tpPortConfig</instance>
+        <instance>PppoxPortConfig</instance>
+        <instance>PppoePortResults</instance>
+        <instance>PppProtocolConfig</instance>
+        <instance>PppProtocolResults</instance>
+        <instance>EoamPortConfig</instance>
+        <instance>EthernetCopper</instance>
+        <instance>Mii</instance>
+        <instance>MiiRegister</instance>
+        <instance>StreamBlock</instance>
+        <instance>IptvPortConfig</instance>
+        <instance>ArpNdResults</instance>
+        <instance>HostGenParams</instance>
+        <instance>DeviceGenIpv4IfParams</instance>
+        <instance>DeviceGenLinkedStep</instance>
+        <instance>DeviceGenEthIIIfParams</instance>
+        <instance>GroupCollection</instance>
+        <instance>TrafficGroup</instance>
+        <instance>ContinuousTestConfig</instance>
+        <instance>FixedDurationTestConfig</instance>
+        <instance>ServiceClass</instance>
+        <instance>ServiceClassParameterThreshold</instance>
+        <instance>SequencerLoopCommand</instance>
+        <instance>EotResultNode</instance>
+        <instance>EotResultNodeParam</instance>
+        <instance>EotResultViewDefinition</instance>
+      </value>
+      <path>select TableName from TableIndex;</path>
+      <multivalued>true</multivalued>
+    </instance>
+    <instance>
+      <name>TrafficGroupName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>tga</instance>
+        <instance>tga</instance>
+      </value>
+      <path>select GC.GroupName from TrafficGroup TG, GroupCollection GC where TG.ParentHnd=GC.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>TargetClass</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Class 1</instance>
+      </value>
+      <path>select ServiceClass.name from TrafficGroup, RelationTable, ServiceClass where TrafficGroup.Handle = RelationTable.TargetHnd and ServiceClass.Handle = RelationTable.SourceHnd</path>
+      <multivalued>true</multivalued>
+    </instance>
+    <instance>
+      <name>SubgroupName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>stg1</instance>
+      </value>
+      <path>select TrafficGroup.GroupName from TrafficGroup, RelationTable, ServiceClass where TrafficGroup.Handle = RelationTable.TargetHnd and ServiceClass.Handle = RelationTable.SourceHnd</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>Load</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>10</instance>
+      </value>
+      <path>select Load from TrafficGroup, StreamBlock, RelationTable where TrafficGroup.Handle = RelationTable.SourceHnd and StreamBlock.Handle = RelationTable.TargetHnd group by GroupName</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>FrameSize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>128</instance>
+      </value>
+      <path>select FixedFrameLength from TrafficGroup, StreamBlock, RelationTable where TrafficGroup.Handle = RelationTable.SourceHnd and StreamBlock.Handle = RelationTable.TargetHnd group by GroupName</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>PassFailOld</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Pass</instance>
+      </value>
+      <path>select substr("FailPass", 4*(FullCount = PassCount)+1, 4) As "PassFail" from (select GroupName, count(*) as FullCount from TrafficGroup, StreamBlock, RelationTable where TrafficGroup.Handle = RelationTable.SourceHnd and StreamBlock.Handle = RelationTable.TargetHnd group by TrafficGroup.GroupName), (select GroupName as PassGroupName, count(*) as PassCount from TrafficGroup, StreamBlock, RelationTable where TrafficGroup.Handle = RelationTable.SourceHnd and StreamBlock.Handle = RelationTable.TargetHnd group by TrafficGroup.GroupName) where GroupName = PassGroupName</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>ParamGroupName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Class 1</instance>
+      </value>
+      <path>SELECT ServiceClass.Name FROM ServiceClass, ServiceClassParameterThreshold where SERVICECLASSPARAMETERTHRESHOLD.ParentHnd = SERVICECLASS.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>ParamMin</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>SELECT Min FROM ServiceClass, ServiceClassParameterThreshold where SERVICECLASSPARAMETERTHRESHOLD.ParentHnd = SERVICECLASS.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>ParamMax</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>5000.0</instance>
+      </value>
+      <path>SELECT Max FROM ServiceClass, ServiceClassParameterThreshold where SERVICECLASSPARAMETERTHRESHOLD.ParentHnd = SERVICECLASS.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>ServiceClassName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Class 1</instance>
+      </value>
+      <path>select Name from ServiceClass</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>ParamName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>MaxLatency</instance>
+      </value>
+      <path>SELECT ParameterId FROM ServiceClass, ServiceClassParameterThreshold where SERVICECLASSPARAMETERTHRESHOLD.ParentHnd = SERVICECLASS.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTstSub</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>stg1</instance>
+        <instance>stg2</instance>
+      </value>
+		<path>select TG.GroupName from TrafficGroup as TG, GroupCollection as GC, RelationTable as r where TG.ParentHnd=GC.Handle and r.Type = 'AffiliationTrafficGroup' and r.SourceHnd = tg.Handle group by GC.Handle,TG.Handle order by GC.Handle, TG.Handle;</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTstGrp</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>tga</instance>
+        <instance>tga</instance>
+      </value>
+		<path>select GC.GroupName from TrafficGroup TG, GroupCollection GC, RelationTable r where TG.ParentHnd=GC.Handle and r.Type = 'AffiliationTrafficGroup' and r.SourceHnd = TG.Handle group by GC.Handle,TG.Handle order by GC.Handle, TG.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTstTxCnt</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1689190</instance>
+      </value>
+		<path>select TxFrameCount as 'Tx Frame Count' from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select StreamBlockHandle, sum(TxFrameCount) as TxFrameCount from (select Tx.TxDataSetId as TxDataSetId, Tx.ParentStreamBlock as StreamBlockHandle, Tx.FrameCount as TxFrameCount from (select Tx.*, Sbtt.DataSetId as TxDataSetId, Sbtt.RxPort as RxPort from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = =$@StartDataSetId$ and Tx.DataSetId = =$@StartDataSetId$ and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.DataSetId = =$@StartDataSetId$ and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') group by Tx.StreamId) group by TxDataSetId, StreamBlockHandle)  where rt.DataSetId = =$@StartDataSetId$ and rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = StreamBlockHandle and tg.ParentHnd = gc.Handle and tg.DataSetId = =$@StartDataSetId$ and gc.DataSetId = =$@StartDataSetId$ group by gc.Handle, tg.Handle order by gc.Handle, tg.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTstRxCnt</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1689190</instance>
+      </value>
+		<path>select RxFrameCount as 'Rx Frame Count' from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select StreamBlockHandle, sum(RxFrameCount) as RxFrameCount from (select Tx.TxDataSetId as TxDataSetId, Tx.ParentStreamBlock as StreamBlockHandle, coalesce(sum(Rx.FrameCount), 0) as RxFrameCount from (select Tx.*, Sbtt.DataSetId as TxDataSetId, Sbtt.RxPort as SbttRxPort from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = =$@StartDataSetId$ and Tx.DataSetId = =$@StartDataSetId$ and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.DataSetId = =$@StartDataSetId$ and Tx.StreamId = Rx.Comp32 and (Tx.SbttRxPort = 0 or Tx.SbttRxPort like '%'||Rx.ParentHnd||'%') group by Tx.StreamId) group by TxDataSetId, StreamBlockHandle)  where rt.DataSetId = =$@StartDataSetId$ and rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = StreamBlockHandle and tg.ParentHnd = gc.Handle and tg.DataSetId = =$@StartDataSetId$ and gc.DataSetId = =$@StartDataSetId$ group by gc.Handle, tg.Handle order by gc.Handle, tg.Handle</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTstMinLat</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.09</instance>
+        <instance>0.11</instance>
+      </value>
+		<path>select (case when coalesce(min(RxMinLatency), 0.0) &lt; 0.01 then 'N/A' else coalesce(min(RxMinLatency), 0.0) end) from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select StreamBlockHandle, min(RxMinLatency) as RxMinLatency from (select Tx.TxDataSetId as TxDataSetId, Tx.ParentStreamBlock as StreamBlockHandle, min(Rx.MinLatency) as RxMinLatency from (select Tx.*, Sbtt.DataSetId as TxDataSetId, Sbtt.RxPort as SbttRxPort from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = =$@StartDataSetId$ and Tx.DataSetId = =$@StartDataSetId$ and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.DataSetId = =$@StartDataSetId$ and Tx.StreamId = Rx.Comp32 and (Tx.SbttRxPort = 0 or Tx.SbttRxPort like '%'||Rx.ParentHnd||'%') group by Tx.StreamId) group by TxDataSetId, StreamBlockHandle)  where rt.DataSetId = =$@StartDataSetId$ and rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = StreamBlockHandle and tg.ParentHnd = gc.Handle and tg.DataSetId = =$@StartDataSetId$ and gc.DataSetId = =$@StartDataSetId$ group by gc.Handle, tg.Handle order by gc.Handle, tg.Handle</path>
+      <multivalued>true</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTstAvgLat</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.095</instance>
+        <instance>0.118</instance>
+      </value>
+		<path>select (case when (sum(RxTotalLatency) &lt; 0 or sum(RxSigFrameCount) == 0) then 'N/A' else coalesce(round(cast(sum(RxTotalLatency) / 100 as double) / sum(RxSigFrameCount), 3), 0.0)end) from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select StreamBlockHandle, sum(RxTotalLatency) as RxTotalLatency, sum(RxSigFrameCount) as RxSigFrameCount from (select Tx.TxDataSetId as TxDataSetId, Tx.ParentStreamBlock as StreamBlockHandle, coalesce(sum(Rx.TotalLatency), 0) as RxTotalLatency, coalesce(sum(Rx.SigFrameCount), 0) as RxSigFrameCount	from 	(select Tx.*, Sbtt.DataSetId as TxDataSetId, Sbtt.RxPort as SbttRxPort from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = =$@StartDataSetId$ and Tx.DataSetId = =$@StartDataSetId$ and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.DataSetId = =$@StartDataSetId$ and Tx.StreamId = Rx.Comp32 and (Tx.SbttRxPort = 0 or Tx.SbttRxPort like '%'||Rx.ParentHnd||'%') group by Tx.StreamId) group by TxDataSetId, StreamBlockHandle) where rt.DataSetId = =$@StartDataSetId$ and rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = StreamBlockHandle and tg.ParentHnd = gc.Handle and tg.DataSetId = =$@StartDataSetId$ and gc.DataSetId = =$@StartDataSetId$ group by gc.Handle, tg.Handle order by gc.Handle, tg.Handle</path>
+      <multivalued>true</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTstMaxLat</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.1</instance>
+        <instance>0.12</instance>
+      </value>
+      <path>select (case when coalesce(max(RxMaxLatency), 0.0) &lt; 0.01 then 'N/A' else coalesce(max(RxMaxLatency), 0.0) end) from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select StreamBlockHandle, max(RxMaxLatency) as RxMaxLatency from (select Tx.TxDataSetId as TxDataSetId, Tx.ParentStreamBlock as StreamBlockHandle, max(Rx.MaxLatency) as RxMaxLatency from (select Tx.*, Sbtt.DataSetId as TxDataSetId, Sbtt.RxPort as SbttRxPort from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = =$@StartDataSetId$ and Tx.DataSetId = =$@StartDataSetId$ and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.DataSetId = =$@StartDataSetId$ and Tx.StreamId = Rx.Comp32 and (Tx.SbttRxPort = 0 or Tx.SbttRxPort like '%'||Rx.ParentHnd||'%') group by Tx.StreamId) group by TxDataSetId, StreamBlockHandle)  where rt.DataSetId = =$@StartDataSetId$ and rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = StreamBlockHandle and tg.ParentHnd = gc.Handle and tg.DataSetId = =$@StartDataSetId$ and gc.DataSetId = =$@StartDataSetId$ group by gc.Handle, tg.Handle order by gc.Handle, tg.Handle</path>
+      <multivalued>true</multivalued>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>histogram</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>ParamActive</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>SELECT ServiceClassParameterThreshold.Active FROM ServiceClass, ServiceClassParameterThreshold where SERVICECLASSPARAMETERTHRESHOLD.ParentHnd = SERVICECLASS.Handle</path>
+      <multivalued>true</multivalued>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>LoadOld</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>10.0</instance>
+        <instance>20.0</instance>
+        <instance>30.0</instance>
+        <instance>40.0</instance>
+        <instance>50.0</instance>
+        <instance>60.0</instance>
+      </value>
+      <script><![CDATA[set result [list 10 20 30 40 50 60]&#xa;]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>FrameSizeOld</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>64.0</instance>
+        <instance>128.0</instance>
+        <instance>256.0</instance>
+        <instance>512.0</instance>
+        <instance>1024.0</instance>
+        <instance>1518.0</instance>
+      </value>
+      <script><![CDATA[set result [list 64 128 256 512 1024 1518]&#xa;]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>Duration</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+      </value>
+      <script><![CDATA[set result [list 10 10 10 10 10 10]&#xa;]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>PassFail</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Pass</instance>
+      </value>
+      <script><![CDATA[set result [list]&#xa;&#xa;package require java&#xa;&#xa;set ::dbname $dataSource&#xa;&#xa;# For each class, get the list of passed subgroups&#xa;foreach class $TargetClass {&#xa;    if {[lsearch [array names passingGroupsByClass] $class] == -1} {&#xa;        set passingGroups [list]&#xa;&#xa;        # Make this fetch from database for this class&#xa;        set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;&#xa;        # Get Query for this class from ServiceClass table's SqlQuery column&#xa;        set query "SELECT SqlQuery FROM ServiceClass WHERE Name = '$class'"&#xa;        set tr [$db query $query]&#xa;&#xa;        set queryRowCount [java::field $tr nrows]&#xa;        if {$queryRowCount > 0} {&#xa;            # Extract query to query    &#xa;            set queryrow [[java::field $tr rows] get 0]&#xa;            set queryrowarray [java::cast {java.lang.Object[]} $queryrow]&#xa;            set query [[$queryrowarray get 0] toString]&#xa;&#xa;            # Get the subgroups from running the query&#xa;            set query "SELECT \"Traffic Subgroup\" FROM \($query\)"&#xa;            puts "$query"&#xa;            set passingStreamRows [$db query $query]&#xa;            set count [java::field $passingStreamRows nrows]&#xa;            for {set i 0} {$i < $count} {incr i} {&#xa;                set streamRow [[java::field $passingStreamRows rows] get $i]&#xa;                set streamrowarray [java::cast {java.lang.Object[]} $streamRow]&#xa;                lappend passingGroups [[$streamrowarray get 0] toString]&#xa;            }&#xa;        }&#xa;&#xa;        set passingGroupsByClass($class) $passingGroups&#xa;    }&#xa;}&#xa;&#xa;# For each subgroup&#xa;set currentSubgroupIndex 0&#xa;foreach subgroup $SubgroupName {&#xa;    # Get its class&#xa;    set class [lindex $TargetClass $currentSubgroupIndex]&#xa;&#xa;    # Check if the group passed in its class, if so output "Pass"&#xa;    if {[lsearch $passingGroupsByClass($class) $subgroup] >= 0} {&#xa;        lappend result "Pass"&#xa;    } else {&#xa;        lappend result "Fail"&#xa;    }&#xa;&#xa;    incr currentSubgroupIndex&#xa;} &#xa;&#xa;set PassFail $result&#xa;&#xa;unset passingGroupsByClass&#xa;]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>PassFailColor</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>#00ff00</instance>
+      </value>
+      <script><![CDATA[set result [list]&#xa;&#xa;foreach value $PassFail {&#xa;  if {$value == "Pass"} {&#xa;    lappend result "#00ff00"&#xa;  }  else {&#xa;    lappend result "#ff0000"&#xa;  }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>ClassParams</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0 &lt;= MaxLatency &lt;= 5000.0</instance>
+      </value>
+      <script><![CDATA[set result [list]&#xa;&#xa;#set SubgroupName [list one one two two three three three]&#xa;#set ParamMin [list 10 10 10 0 0 0 0 ]&#xa;#set ParamMax [list 10 20 30 1 2 3 4 ]&#xa;&#xa;set grouplist [list]&#xa;&#xa;set numParams [llength $ParamMin]&#xa;for {set i 0} {$i < $numParams} {incr i} {&#xa;  set subgroup [lindex $ParamGroupName $i]&#xa;  if {[lsearch $grouplist $subgroup] == -1} {&#xa;     lappend grouplist $subgroup&#xa;  }&#xa;&#xa;  set active [lindex $ParamActive $i]&#xa;    set min [lindex $ParamMin $i]&#xa;    set max [lindex $ParamMax $i]&#xa;    set name [lindex $ParamName $i]&#xa;  if {$active} {&#xa;    lappend groupResult($subgroup) "$min <= $name <= $max"&#xa;  } else {&#xa;    lappend groupResult($subgroup) "Disabled: ($min <= $name <= $max)"&#xa;  }&#xa;}&#xa;&#xa;foreach name $grouplist {&#xa;  set params ""&#xa;  set first 1&#xa;    foreach param $groupResult($name) {&#xa;      if {$first == 1} {&#xa;        set first 0&#xa;      } else {&#xa;        set params "$params\\n"&#xa;      }&#xa;        set params "$params $param"&#xa;    }&#xa;    lappend result $params&#xa;}&#xa;&#xa;puts $result&#xa;]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>GrpTrafficStats</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check if Traffic Group Stats Flag was enabled&#xa;#  $TableList is a list of all tables in this DB&#xa;&#xa;# default to no table&#xa;set result  "No"&#xa;&#xa;set index 0&#xa;# existance of the traffic group table means trafic groups tats were collected&#xa;foreach tmp ($TableList) {&#xa;    set str [lindex $TableList $index]&#xa;    if {($str == "TrafficGroup")}  {&#xa;      set result  ""&#xa;   }&#xa;   incr index&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Histogram</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+        <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result "1208557553367"]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <script><![CDATA[set result "Fri Apr 18 15:25:53.367 PDT 2008"]]></script>
+      <multivalued>false</multivalued>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>PerIterationGroupRatings</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Traffic Group</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Subgroup</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Target Class</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Pass/Fail</td>&#xa;  </tr>&#xa;  <tr iterate="=$SubgroupName$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">=$TrafficGroupName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">=$SubgroupName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TargetClass$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="=$PassFailColor$">=$PassFail$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>ClassParams</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Traffic Class</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Parameters</td>&#xa;  </tr>&#xa;  <tr iterate="=$ServiceClassName$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ServiceClassName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ClassParams$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>GrpGroupTest</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Traffic Group</td>&#xa;    <td bgcolor="#eeeeee">Sub Group</td>&#xa;    <td bgcolor="#eeeeee">Tx Frames\nTotal</td>&#xa;    <td bgcolor="#eeeeee">Rx Frames\nTotal</td>&#xa;    <td bgcolor="#eeeeee">Latency\nMin (usec)</td>&#xa;    <td bgcolor="#eeeeee">Latency\nAvg (usec)</td>&#xa;    <td bgcolor="#eeeeee">Latency\nMax (usec)</td>&#xa;  </tr>&#xa; <tr iterate="=$GrpTstGrp$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$GrpTstGrp$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$GrpTstSub$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$GrpTstTxCnt$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$GrpTstRxCnt$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$GrpTstMinLat$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$GrpTstAvgLat$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$GrpTstMaxLat$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Title">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>200</x>
+        <y>342</y>
+        <width>292</width>
+        <height>30</height>
+        <size>25</size>
+        <value>Spirent TestCenter Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>449</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value>Test Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>450</y>
+        <width>90</width>
+        <height>15</height>
+        <size>12</size>
+        <value>Service Class Validation</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>103</width>
+        <height>16</height>
+        <size>12</size>
+        <value>Counter Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value>=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>nameLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>hdrLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+    </page>
+    <page name="Test Summary">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>Title</name>
+        <x>200</x>
+        <y>106</y>
+        <width>319</width>
+        <height>20</height>
+        <size>16</size>
+        <value>Service Class Validation Results by Traffic Group</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>PerIterationGroupResults</name>
+        <x>229</x>
+        <y>144</y>
+        <width>264</width>
+        <height>102</height>
+        <value>PerIterationGroupRatings</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Traffic Group Results">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TitleStr</name>
+        <x>230</x>
+        <y>99</y>
+        <width>149</width>
+        <height>21</height>
+        <size>16</size>
+        <value>=$GrpTrafficStats$ Traffic Group Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>TestTbl</name>
+        <x>113</x>
+        <y>145</y>
+        <width>450</width>
+        <height>81</height>
+        <value>GrpGroupTest</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Class Parameters">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      
+      
+      <instance type="Table">
+        <name>ClassParameters</name>
+        <x>195</x>
+        <y>149</y>
+        <width>307</width>
+        <height>107</height>
+        <value>ClassParams</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>Class Parameters</name>
+        <x>280</x>
+        <y>112</y>
+        <width>134</width>
+        <height>20</height>
+        <size>16</size>
+        <value>Class Parameters</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+        <page name="Version">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>VerStr</name>
+        <x>35</x>
+        <y>450</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value>Template Version: R1</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>590</x>
+        <y>130</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>465</y>
+        <width>720</width>
+        <height>70</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>35</x>
+        <y>432</y>
+        <width>237</width>
+        <height>11</height>
+        <size>9</size>
+        <value>Template Timestamp: =$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5186" serializationBase="true" 
+ Identifier="Host Protocols\MLD Results"
+ PrimaryClass="EmulatedDevice"
+ Description="object://core/EmulatedDevice"
+ Path="Host Protocols"
+ CustomDisplayPath="Multicast\MLD"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="MLD Results">
+  <RealTimeResultColumnDefinition id="5187" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 203">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5188" 
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="72"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 204">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5189" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port EmulatedDevice"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 19">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5190" 
+   GroupName="MLD Results"
+   GroupId="object://customgroup/a1744270-a2a0-4359-aafa-cc979015f920/Main"
+   ColumnClassName="MldHostResults MldHostResults MldHostResults MldHostResults MldHostResults MldHostResults MldHostResults"
+   ColumnPropertyName="McastCompatibilityMode HostState TxFrameCount RxFrameCount RxUnknownTypeCount RxMldCheckSumErrorCount RxMldLengthErrorCount"
+   SqlString="SELECT Port.Name AS 'Port Name', AllDevice.Name AS 'Device Name', MldHostResults.McastCompatibilityMode AS 'Multicast Version', MldHostResults.HostState AS 'Host State', SUM(MldHostResults.TxFrameCount) AS 'Tx Frames', SUM(MldHostResults.RxFrameCount) AS 'Rx Frames', SUM(MldHostResults.RxUnknownTypeCount) AS 'Rx Unknown Types', SUM(MldHostResults.RxMldCheckSumErrorCount) AS 'Rx MLD Checksum Errors', SUM(MldHostResults.RxMldLengthErrorCount) AS 'Rx MLD Length Errors' FROM AllDevice, Port, MldHostResults, MldHostConfig, RelationTable  WHERE (  RelationTable.Type = 'AffiliationPort' AND  RelationTable.SourceHnd = AllDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND MldHostConfig.ParentHnd = AllDevice.Handle AND MldHostResults.ParentHnd = MldHostConfig.Handle AND MldHostResults.IfHandle = MldHostConfig.IfHandle AND AllDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND MldHostResults.DataSetId = @DataSetId AND MldHostConfig.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) GROUP BY MldHostResults.IfHandle"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 20">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5191" 
+   ConfigClassId="mldhostconfig"
+   ResultClassId="mldhostresults"
+   ResultRootList="8"
+   PropertyIdArray="mlddeviceresults.mcastcompatibilitymode multicastdeviceresults.txframecount multicastdeviceresults.rxframecount multicastdeviceresults.rxunknowntypecount mlddeviceresults.rxmldchecksumerrorcount mlddeviceresults.rxmldlengtherrorcount mlddeviceresults.hoststate"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 9">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5192" 
+   ColumnClassName="MldHostResults"
+   ColumnPropertyName="McastCompatibilityMode"
+   ColumnDescription=""
+   ColumnWidth="101"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 205">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5193" 
+   ColumnClassName="MldHostResults"
+   ColumnPropertyName="HostState"
+   ColumnDescription=""
+   ColumnWidth="81"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 206">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5194" 
+   ColumnClassName="MldHostResults"
+   ColumnPropertyName="TxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 207">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5195" 
+   ColumnClassName="MldHostResults"
+   ColumnPropertyName="RxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 208">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5196" 
+   ColumnClassName="MldHostResults"
+   ColumnPropertyName="RxUnknownTypeCount"
+   ColumnDescription=""
+   ColumnWidth="113"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 209">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5197" 
+   ColumnClassName="MldHostResults"
+   ColumnPropertyName="RxMldCheckSumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="143"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 210">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5198" 
+   ColumnClassName="MldHostResults"
+   ColumnPropertyName="RxMldLengthErrorCount"
+   ColumnDescription=""
+   ColumnWidth="126"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 211">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

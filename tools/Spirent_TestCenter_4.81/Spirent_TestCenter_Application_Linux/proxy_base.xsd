@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:stceng="urn:www.spirentcom.com:CaptureReplayEngine.xsd"
+           targetNamespace="urn:www.spirentcom.com:CaptureReplayEngine.xsd"
+           elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+    <xs:simpleType name="ResultColumnTypeEnum">
+        <xs:annotation>
+            <xs:documentation>
+                This type is used in result table's column type
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base = "xs:NMTOKEN">
+            <xs:enumeration value="s8" />
+            <xs:enumeration value="s16" />
+            <xs:enumeration value="s32" />
+            <xs:enumeration value="s64" />
+            <xs:enumeration value="u8" />
+            <xs:enumeration value="u16" />
+            <xs:enumeration value="u32" />
+            <xs:enumeration value="u64" />
+            <xs:enumeration value="bool" />
+            <xs:enumeration value="double" />
+            <xs:enumeration value="string" />
+            <xs:enumeration value="mac" />
+            <xs:enumeration value="ip" />
+            <xs:enumeration value="ipv6" />
+            <xs:enumeration value="handle" />
+            <xs:enumeration value="classId" />
+            <xs:enumeration value="propertyId" />
+            <xs:enumeration value="relationId" />
+            <xs:enumeration value="csp" />
+            <xs:enumeration value="inputFilePath" />
+            <xs:enumeration value="outputFilePath" />
+        </xs:restriction>
+    </xs:simpleType>
+    
+
+</xs:schema>

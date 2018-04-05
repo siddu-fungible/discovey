@@ -1,0 +1,27 @@
+{
+    "ProcessDataCmdTopLevelOnly": {
+        "title": "Schema of the top level for the ProcessDataCommand.",
+        "type": "object",
+        "properties": {
+            "enable": {
+                "description": "Enables (or disables) the entire JSON for the ProcessDataCommand's InputJson property.",
+                "type": "boolean"
+            },
+            "description": {
+                "description": "An optional description for the entire JSON data structure for ProcessDataCommand's InputJson property.",
+                "type": "string"
+            },
+            "operation_list": {
+                "description": "An ordered list of operations to be processed by ProcessDataCommand.",
+                "type": "array",
+                "items": {
+                    "type": "object"
+                },
+                "minItems": 1
+            }
+        },
+        "required": [
+            "operation_list"
+        ]
+    }
+}

@@ -1,0 +1,43 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/4.20/Main"  xml:lang="en">
+	 <label>Spirent TestCenter 4.20</label> 
+	 <author>Spirent Communications</author> 
+ <actionDecl name="open"> 
+	 <label>open</label> 
+	 <tooltip>Open STC session</tooltip> 
+	 <parameter name="fileName"> 
+		 <label>File name</label> 
+		 <tooltip>configuration file name</tooltip> 
+		 <datatype>anyURI</datatype> 
+	 </parameter> 
+	 <parameter name="portLocation"> 
+		 <label>chassis's port location</label> 
+		 <tooltip>chassis's port location</tooltip> 
+		 <datatype>string</datatype> 
+		 <allowedCount> 
+			 <min>0</min> 
+			 <max>65535</max> 
+		 </allowedCount> 
+		 <allowedPattern>//[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+/[0-9]+</allowedPattern> 
+		 <mandatory>false</mandatory> 
+	 </parameter> 
+	 <parameter name="labserver"> 
+		 <label>Labserver</label> 
+		 <tooltip>Lab Server Address</tooltip> 
+		 <description>The lab server address. If blank, lab server is not used.</description> 
+		 <datatype>string</datatype> 
+		 <mandatory>false</mandatory> 
+	 </parameter> 
+ </actionDecl> 
+	 <supercedes>http://spirent.com/NTAF/harness/STC/4.10/Main</supercedes> 
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.10/Main</subharness> 
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Access/ANCP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Carrier%20Ethernet/EOAM</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Switching/Openflow</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Switching/OTV</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Switching/Trill</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Switching/VEPA</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Admin</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Basic</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Config</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/4.20/Learning</subharness>
+</query-harness>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5622" serializationBase="true" 
+ Identifier="Video Quality\Audio Program Information Results"
+ PrimaryClass="VqAudioStreamResults"
+ Description="object://vqana/VqAudioStreamResults"
+ Path="Video Quality"
+ CustomDisplayPath="Triple Play\Video Quality"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="Audio Program Information">
+  <RealTimeResultColumnDefinition id="5623" 
+   ColumnClassName="VqChannelBlockConfig"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 455">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5624" 
+   ColumnClassName="VqChannelBlockConfig"
+   ColumnPropertyName="ProbeHostName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="119"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 456">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5625" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="VqChannelBlockConfig VqChannelBlockConfig"
+   ColumnPropertyName="PortName ProbeHostName"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 52">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5626" 
+   GroupName="Main"
+   GroupId="object://customgroup/0f99ff65-2872-4fb5-9cd4-94ae8cdc7d47/Main"
+   ColumnClassName="VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults"
+   ColumnPropertyName="SrcAddr SrcUdpPort DstAddr DstUdpPort Pid RtpSsrc CodecType AudioChannelCount RefClockRate"
+   SqlString="SELECT VqAudioStreamResults.SrcAddr AS &apos;Source Address&apos;, VqAudioStreamResults.SrcUdpPort AS &apos;Source UDP Port&apos;, VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.Pid AS &apos;PID&apos;, VqAudioStreamResults.RtpSsrc AS &apos;RTP SSRC&apos;, VqAudioStreamResults.CodecType AS &apos;CODEC Type&apos;, VqAudioStreamResults.AudioChannelCount AS &apos;Number of Audio Channels&apos;, VqAudioStreamResults.RefClockRate AS &apos;Audio Reference Clock Rate&apos; FROM VqAudioStreamResults, VqProbeChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqProbeChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqProbeChannelBlock.DataSetId = @DataSetId  ) UNION SELECT VqAudioStreamResults.SrcAddr AS &apos;Source Address&apos;, VqAudioStreamResults.SrcUdpPort AS &apos;Source UDP Port&apos;, VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.Pid AS &apos;PID&apos;, VqAudioStreamResults.RtpSsrc AS &apos;RTP SSRC&apos;, VqAudioStreamResults.CodecType AS &apos;CODEC Type&apos;, VqAudioStreamResults.AudioChannelCount AS &apos;Number of Audio Channels&apos;, VqAudioStreamResults.RefClockRate AS &apos;Audio Reference Clock Rate&apos; FROM VqAudioStreamResults, VqDeviceChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqDeviceChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqDeviceChannelBlock.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 53">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5627" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="SrcAddr"
+   ColumnDescription=""
+   ColumnWidth="94"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 457">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5628" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="SrcUdpPort"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 458">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5629" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="DstAddr"
+   ColumnDescription=""
+   ColumnWidth="116"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 459">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5630" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="DstUdpPort"
+   ColumnDescription=""
+   ColumnWidth="122"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 460">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5631" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="Pid"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 461">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5632" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="RtpSsrc"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 462">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5633" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="CodecType"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 463">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5634" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="AudioChannelCount"
+   ColumnDescription=""
+   ColumnWidth="150"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 464">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5635" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="RefClockRate"
+   ColumnDescription=""
+   ColumnWidth="155"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 465">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="114" 
+   ConfigClassId="vqanalyzer"
+   ResultClassId="vqaudiostreamresults"
+   ResultRootList="2"
+   PropertyIdArray="vqstreamresults.srcaddr vqstreamresults.srcudpport vqstreamresults.dstaddr vqstreamresults.dstudpport vqstreamresults.pid vqstreamresults.rtpssrc vqstreamresults.codectype vqaudiostreamresults.audiochannelcount vqaudiostreamresults.refclockrate"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 13">
+  </ResultQuery>
+</ResultDataSet>

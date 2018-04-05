@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Ripng"
+    showName="RIPng"
+    version="1.00"
+    category="Routing"
+    readonly="true"
+    validate="true"
+    firstPdu="rip:Ripng"
+    description="RIPng" >
+
+    <pdus>
+      <pdu name="proto1" pdu="rip:Ripng" />
+    </pdus>
+  </template>
+</frame>

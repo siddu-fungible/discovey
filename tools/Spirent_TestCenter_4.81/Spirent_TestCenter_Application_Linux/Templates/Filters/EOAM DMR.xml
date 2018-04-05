@@ -1,0 +1,17 @@
+﻿<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="DMR EOAM"
+    showName="Delay Measurement Reply (DMR)"
+    version="1.00"
+    category="EOAM"
+    readonly="true"
+    validate="true"
+    firstPdu="serviceoam:DMR"
+    description="Ethernet OAM DMR" >
+
+    <pdus>
+      <pdu name="proto1" pdu="serviceoam:DMR" />
+    </pdus>
+  </template>
+</frame>

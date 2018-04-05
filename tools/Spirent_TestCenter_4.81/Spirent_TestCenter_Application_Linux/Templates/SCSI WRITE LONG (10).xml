@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ScsiWriteLong10"
+    showName="SCSI WRITE LONG (10)"
+    version="1.00"
+    category="SCSI"
+    readonly="true"
+    validate="true"
+    firstPdu="scsi:WriteLong10"
+    description="SCSI WRITE LONG (10)">
+
+    <pdus>
+      <pdu name="writelong10" pdu="scsi:WriteLong10"/>
+    </pdus>
+
+  </template>
+</frame>

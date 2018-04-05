@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="L2VLANID" showName="L2 VLANID" version="1.0" category="Favorites" readonly="false" validate="true" firstPdu="ethernet:EthernetII" description="L2 (no IP) VLAN ID">
+      <pdus>
+<pdu name="eth1" pdu="ethernet:EthernetII">
+<vlans>
+<Vlan name="Vlan">
+<id filterMinValue="0" filterMaxValue="4095">4095</id>
+</Vlan></vlans>
+</pdu>
+</pdus>
+</template>
+</frame>

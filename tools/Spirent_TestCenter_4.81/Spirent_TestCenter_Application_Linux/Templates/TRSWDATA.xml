@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_trswdata"
+    showName="Transport Software Data"
+    version="1.00"
+    category="Nokia"
+    readonly="true"
+    validate="true"
+    firstPdu="trswdata:TransportSoftwareData"
+    description="Transport Software Data" >
+
+    <pdus>
+      <pdu name="proto1" pdu="trswdata:TransportSoftwareData" />
+    </pdus>
+  </template>
+</frame>

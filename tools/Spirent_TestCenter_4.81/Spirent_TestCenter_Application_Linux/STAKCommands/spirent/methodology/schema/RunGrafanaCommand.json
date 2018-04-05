@@ -1,0 +1,130 @@
+{
+    "RunGrafanaCommand": {
+        "title": "Schema for the RunGrafanaCommand.",
+        "type": "object",
+        "properties": {
+            "enable": {
+                "description": "Enables (or disables) the entire JSON for the RunGrafanaCommand's InputJson property.",
+                "type": "boolean"
+            },
+            "description": {
+                "description": "An optional description for the entire JSON data structure for RunGrafanaCommand's InputJson property.",
+                "type": "string"
+            },
+            "operation_list": {
+                "description": "An ordered list of operations to be processed by RunGrafanaCommand.",
+                "type": "array",
+                "items": {
+                    "$ref": "#/RunGrafanaCommand/definitions/operation"
+                },
+                "minItems": 1
+            }
+        },
+        "required": [
+            "operation_list"
+        ],
+        "additionalProperties": false,
+        "definitions": {
+            "operation": {
+                "description": "Presented here is a oneOf clause that permits only one operation per operation object. Each is defined else where for clarity here.",
+                "type": "object",
+                "oneOf": [
+                    {
+                        "properties": {
+                            "enable": {
+                                "description": "Enable/disable this operation",
+                                "type": "boolean"
+                            },
+                            "create_datasource": {
+                                "$ref": "#/RunGrafanaCommand/definitions/create_datasource"
+                            }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                            "create_datasource"
+                        ]
+                    },
+                    {
+                        "properties": {
+                            "enable": {
+                                "description": "Enable/disable this operation",
+                                "type": "boolean"
+                            },
+                            "delete_datasource": {
+                                "$ref": "#/RunGrafanaCommand/definitions/delete_datasource"
+                            }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                            "delete_datasource"
+                        ]
+                    }
+                ]
+            },
+            "create_datasource": {
+                "description": "This operation will create a Grafana datasource",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "Name of datasource",
+                        "type": "string"
+                    },
+                    "type": {
+                        "description": "Type of datasource",
+                        "type": "string"
+                    },
+                    "url": {
+                        "description": "URL of datasource",
+                        "type": "string"
+                    },
+                    "access": {
+                        "description": "Access of datasource",
+                        "enum": [
+                            "proxy",
+                            "direct"
+                        ]
+                    },
+                    "basicAuth": {
+                        "description": "Basic auth",
+                        "type": "boolean"
+                    },
+                    "basicAuthUser": {
+                        "description": "Basic auth user",
+                        "type": "string"
+                    },
+                    "basicAuthPassword": {
+                        "description": "Basic auth password",
+                        "type": "string"
+                    },
+                    "user": {
+                        "description": "user name",
+                        "type": "string"
+                    },
+                    "password": {
+                        "description": "user password",
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": true,
+                "required": [
+                    "name",
+                    "type"
+                ]
+            },
+            "delete_datasource": {
+                "description": "This operation will delete a Grafana datasource",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "Name of datasource",
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "name"
+                ]
+            }
+        }
+    }
+}

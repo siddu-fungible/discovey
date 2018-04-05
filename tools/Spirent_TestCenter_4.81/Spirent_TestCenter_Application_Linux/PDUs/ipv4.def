@@ -1,0 +1,508 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="ipv4" showName="IPv4" version="1.00"
+    description="This is a sample PDU library for IPv4 as defined in XML Stream Editor.">
+    
+  <TYPE_DEFS>
+        
+    <TYPE_DEF name="ToSPrecedence" type="INTEGER" bitLength="3" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Network Control" value="7" />
+        <VAL_ENUM uiShowName="Internetwork Control" value="6" />
+        <VAL_ENUM uiShowName="CRITIC/ECP" value="5" />
+        <VAL_ENUM uiShowName="Flash Override" value="4" />
+        <VAL_ENUM uiShowName="Flash" value="3" />
+        <VAL_ENUM uiShowName="Immediate" value="2" />
+        <VAL_ENUM uiShowName="Priority" value="1" />
+        <VAL_ENUM uiShowName="Routine" value="0" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="ToSByte" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="ToS Byte" niMapped="true">
+      <FIELD name="precedence" type="ToSPrecedence"
+			defaultValue="0"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="Precedence" 
+			uiOverrideEditor="ToSEditor"
+			isNiMapped="true" />   
+      <FIELD name="dBit" type="BITSTRING" bitLength="1"
+			defaultValue="0"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="D Bit"
+			isNiMapped="true" />
+      <FIELD name="tBit" type="BITSTRING" bitLength="1"
+			defaultValue="0"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="T Bit" 
+			isNiMapped="true" />
+      <FIELD name="rBit" type="BITSTRING" bitLength="1"
+			defaultValue="0"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="R Bit"
+			isNiMapped="true" />
+      <FIELD name="mBit" type="BITSTRING" bitLength="1"
+     			defaultValue="0"
+     			uiNoShow="Filter,Frame,Interface"
+     			uiShowName="M Bit"
+			isNiMapped="true" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="1"
+			defaultValue="0"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="Reserved"
+			isNiMapped="true" />
+    </TYPE_DEF> 
+        
+    <TYPE_DEF name="DiffServByte" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="DiffServ Byte" niMapped="true">
+      <FIELD name="dscpHigh" type="INTEGER" bitLength="3"
+			defaultValue="0"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="DSCP High"
+			isNiMapped="true" />
+      <FIELD name="dscpLow" type="INTEGER" bitLength="3"
+			defaultValue="0"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="DSCP Low"
+			isNiMapped="true" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="2"
+			defaultValue="00"
+			uiNoShow="Filter,Frame,Interface"
+			uiShowName="Reserved"
+			isNiMapped="true" />
+    </TYPE_DEF>
+        
+    <TYPE_DEF name="ToSDiffServ" type="CHOICE"
+			unitType="ELEMENT" uiShowName="ToS DiffServ Byte" niMapped="true">
+      <FIELD name="tos" type="ToSByte" 
+			pduModifierType="AGGREGATE" 
+			uiNoShow="Filter,Frame,Interface" 
+			uiShowName="ToS Byte" 
+			isNiMapped="true"/>
+      <FIELD name="diffServ" 
+			pduModifierType="AGGREGATE"
+			type="DiffServByte" 
+			uiNoShow="Filter,Frame,Interface" 
+			uiShowName="DiffServ Byte" 
+			isNiMapped="true"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="ControlFlags" type="SEQUENCE"
+			unitType="ELEMENT" uiShowName="Control Flags" >
+      <FIELD name="reserved" type="BITSTRING" bitLength="1" 
+			defaultValue="0"
+			uiShowName="Reserved" />
+      <FIELD name="dfBit" type="BITSTRING" bitLength="1"
+			defaultValue="0"
+			uiShowName="DF Bit" />
+      <FIELD name="mfBit" type="BITSTRING" bitLength="1"
+			defaultValue="0"
+			uiShowName="MF Bit" />
+    </TYPE_DEF> 
+
+
+    <!-- This section defines all IPv4 header option enumerations and option type defs -->
+
+    <TYPE_DEF name="Ipv4OptionType" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="End of Options List" value="0" />
+        <VAL_ENUM uiShowName="NOP" value="1" />
+        <VAL_ENUM uiShowName="Security" value="130" />
+        <VAL_ENUM uiShowName="Loose Source Route" value="131" />
+        <VAL_ENUM uiShowName="Time Stamp" value="68" />
+        <VAL_ENUM uiShowName="Extended Security" value="133" />
+        <VAL_ENUM uiShowName="Record Route" value="7" />
+        <VAL_ENUM uiShowName="Stream Identifier" value="136" />
+        <VAL_ENUM uiShowName="Strict Source Route" value="137" />
+        <VAL_ENUM uiShowName="MTU Probe" value="11" />
+        <VAL_ENUM uiShowName="MTU Reply" value="12" />
+        <VAL_ENUM uiShowName="Traceroute" value="82" />
+        <VAL_ENUM uiShowName="Address Extension" value="147" />
+        <VAL_ENUM uiShowName="Router Alert" value="148" />
+        <VAL_ENUM uiShowName="Selective Directed Broadcast Mode" value="149" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Ipv4Addr" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="IPv4 Address" >
+        <FIELD name="value" type="IPV4ADDR"
+            defaultValue="192.0.0.1"
+            uiShowName="Ipv4 Address" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Ipv4AddressList" type="SET_OF"
+        elementType="Ipv4Addr" unitType="ELEMENT" maxOccurs="63"/>
+
+        
+    <TYPE_DEF name="Ipv4OptionEndOfOptions" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="End of Options" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="0"
+          uiShowName="Option Type" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionNop" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="NOP" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="1"
+          uiShowName="Option Type" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionSecurity" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Security" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="130"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="11"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="security" type="INTEGER" bitLength="16" defaultValue="1"
+          uiShowName="Security" uiNoShow="Interface" />
+      <FIELD name="compartments" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="Compartments" uiNoShow="Interface" />
+      <FIELD name="handlingRestrictions" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="Handling Restrictions" uiNoShow="Interface" />
+      <FIELD name="txControlCode" type="INTEGER" bitLength="24" defaultValue="0"
+          uiShowName="Transmission Control Code" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionLooseSourceRoute" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Loose Source Route" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="131"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Length" uiNoShow="Interface" procfnTarget="RECORDROUTELENGTH" />
+      <FIELD name="pointer" type="INTEGER" bitLength="8" defaultValue="4"
+          uiShowName="Pointer" uiNoShow="Interface" />
+      <FIELD name="addrList" type="Ipv4AddressList"
+          uiShowName="IP Address List" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionTimeStamp" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Time Stamp" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="68"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="5"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="pointer" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Pointer" uiNoShow="Interface" />
+      <FIELD name="overflow" type="INTEGER" bitLength="4" defaultValue="0"
+          uiShowName="Overflow" uiNoShow="Interface" />
+      <FIELD name="flag" type="INTEGER" bitLength="4" defaultValue="0"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="timestamp" type="OCTETSTRING" minByteLength="1" maxByteLength="8"
+          uiShowName="Option Type" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionExtendedSecurity" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Extended Security" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="133"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="formatCode" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Format Code" uiNoShow="Interface" />
+      <FIELD name="addSecInfo" type="OCTETSTRING" minByteLength="0" maxByteLength="29"
+          uiShowName="Overflow" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionRecordRoute" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Record Route" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="7"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Length" uiNoShow="Interface" procfnTarget="RECORDROUTELENGTH" />
+      <FIELD name="pointer" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Pointer" uiNoShow="Interface" procfnTarget="RECORDROUTEPOINTER" />
+      <FIELD name="addrList" type="Ipv4AddressList"
+          uiShowName="Route List" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionStreamIdentifier" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Stream Identifier" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="136"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="4"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="streamId" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="Stream Identifier" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionStrictSourceRoute" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Strict Source Route" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="137"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="0" uiControlState="ALLOW_OVERRIDE"
+          uiShowName="Length" uiNoShow="Interface" procfnTarget="RECORDROUTELENGTH" />
+      <FIELD name="pointer" type="INTEGER" bitLength="8" defaultValue="4"
+          uiShowName="Pointer" uiNoShow="Interface" />
+      <FIELD name="addrList" type="Ipv4AddressList"
+          uiShowName="Route List" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionMtuProbe" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="MTU Probe" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="11"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="4"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="mtu" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="MTU Value" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionMtuReply" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="MTU Reply" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="12"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="4"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="mtu" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="MTU Value" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionTraceRoute" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Trace Route" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="82"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="12"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="idNumber" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="ID Number" uiNoShow="Interface" />
+      <FIELD name="outboundHopCnt" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="Outbound Hop Count" uiNoShow="Interface" />
+      <FIELD name="returnHopCnt" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="Return Hop Count" uiNoShow="Interface" />
+      <FIELD name="originatorIp" type="IPV4ADDR" defaultValue="192.0.0.1"
+          uiShowName="Originator IP Address" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionAddressExtension" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Address Extension" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="147"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="10"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="sourceIpv7" type="INTEGER" bitLength="24" defaultValue="0"
+          uiShowName="Source IPv7 Administrative Domain" uiNoShow="Interface" />
+      <FIELD name="source7thByte" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Source 7th Byte" uiNoShow="Interface" />
+      <FIELD name="destIpv7" type="INTEGER" bitLength="24" defaultValue="0"
+          uiShowName="Destination IPv7 Administrative Domain" uiNoShow="Interface" />
+      <FIELD name="dest7thByte" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Destination 7th Byte" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionRouterAlert" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Router Alert" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="148"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="4"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="routerAlert" type="INTEGER" bitLength="16" defaultValue="0"
+          uiShowName="Router Alert Value" uiNoShow="Interface" />
+    </TYPE_DEF>
+    <TYPE_DEF name="Ipv4OptionSelectiveBroadcastMode" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Selective Directed Broadcast Mode" >
+      <FIELD name="type" type="Ipv4OptionType" defaultValue="149"
+          uiShowName="Option Type" uiNoShow="Interface" />
+      <FIELD name="length" type="INTEGER" bitLength="8" defaultValue="0"
+          uiShowName="Length" uiNoShow="Interface" />
+      <FIELD name="addrList" type="Ipv4AddressList"
+          uiShowName="Route List" uiNoShow="Interface" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="IPv4HeaderOption" type="CHOICE"
+        unitType="ELEMENT" uiShowName="IPv4 Header Option" >
+      <FIELD name="endOfOptlist" type="Ipv4OptionEndOfOptions"
+          uiShowName="End of Options" />
+      <FIELD name="nop" type="Ipv4OptionNop"
+          uiShowName="NOP" />
+      <FIELD name="security" type="Ipv4OptionSecurity"
+          uiShowName="Security" />
+      <FIELD name="looseSrcRoute" type="Ipv4OptionLooseSourceRoute"
+          uiShowName="Loose Source Route" />
+      <FIELD name="timestamp" type="Ipv4OptionTimeStamp"
+          uiShowName="Time Stamp" />
+      <FIELD name="extSecurity" type="Ipv4OptionExtendedSecurity"
+          uiShowName="Extended Security" />
+      <FIELD name="recordRoute" type="Ipv4OptionRecordRoute"
+          uiShowName="Record Route" />
+      <FIELD name="streamId" type="Ipv4OptionStreamIdentifier"
+          uiShowName="Stream Identifier" />
+      <FIELD name="strictSrcRoute" type="Ipv4OptionStrictSourceRoute"
+          uiShowName="Strict Source Route" />
+      <FIELD name="mtuProbe" type="Ipv4OptionMtuProbe"
+          uiShowName="MTU Probe" />
+      <FIELD name="tracert" type="Ipv4OptionTraceRoute"
+          uiShowName="Trace Route" />
+      <FIELD name="addrExt" type="Ipv4OptionAddressExtension"
+          uiShowName="Address Extension" />
+      <FIELD name="rtrAlert" type="Ipv4OptionRouterAlert"
+          uiShowName="Router Alert" />
+      <FIELD name="selBrdcast" type="Ipv4OptionSelectiveBroadcastMode"
+          uiShowName="Selective Directed Broadcast Mode" />
+    </TYPE_DEF>
+ 
+    <TYPE_DEF name="IPv4HeaderOptionsList" type="SET_OF"
+              minOccurs="0" maxOccurs ="40" 
+        elementType="IPv4HeaderOption" unitType="ELEMENT" />
+        
+      
+		<TYPE_DEF name="IPv4" type="SEQUENCE" unitType="HEADER"
+			level="3" uiShowName="IPv4 Header" niMapped="true">
+        
+		<FIELD name="version" type="INTEGER" bitLength="4" 
+			defaultValue="4"
+			uiControlState="ALLOW_OVERRIDE" 
+			uiNoShow="Interface"
+			uiShowCommon="false"
+			uiShowName="Version" />
+
+		<FIELD name="ihl" type="INTEGER" bitLength="4"
+      uiControlState="ALLOW_OVERRIDE" 
+			defaultValue="5"
+			uiNoShow="Interface"
+			uiShowCommon="false"
+      procfnTarget="INTERNETHDRLENGTH"
+			uiShowName="Header length" />
+
+		<FIELD name="tosDiffserv" type="ToSDiffServ"
+			defaultValue="tos"
+			uiOverrideEditor="ToSDiffServEditor"
+			uiShowName="ToS/DiffServ"
+			uiNoShowModifier="Interface"
+            isNiMapped="true"/>
+
+		<FIELD name="totalLength" type="INTEGER" bitLength="16"
+			defaultValue="20"
+      uiNoShow="Interface"
+      uiNoShowModifier="Frame,Interface,Filter"
+      uiControlState="CALCULATED"
+      binder="calculated"
+      uiGenerateError="true" 
+			procfnTarget="TOTALLENGTH"
+			uiShowName="Total length" />
+
+		<FIELD name="identification" type="INTEGER" bitLength="16"
+			defaultValue="0" 
+			uiNoShow="Interface"
+			uiShowCommon="false"
+			uiShowName="Identification" />
+
+		<FIELD name="flags" type="ControlFlags"
+			uiNoShow="Interface" 
+			uiShowCommon="false"
+			uiShowName="Control Flags" />
+
+		<FIELD name="fragOffset" type="INTEGER" bitLength="13"
+			defaultValue="0"
+			uiNoShow="Interface" 
+			uiShowCommon="false"
+			uiShowName="Fragment Offset" />
+ 
+		<FIELD name="ttl" type="INTEGER" bitLength="8"
+			defaultValue="255"
+			uiShowName="Time to live"
+			uiNoShowModifier="Interface"
+            isNiMapped="true"/>
+
+		<FIELD name="protocol" type="types:IpProtocolNumbers"
+			defaultValue="253"  
+			uiControlState="ALLOW_OVERRIDE" 
+			procfnTarget="NEXTHDR"
+			uiShowName="Protocol"
+			uiNoShow="Interface"/>
+
+		<FIELD name="checksum" type="INTEGER" bitLength="16"
+			defaultValue="0"
+			uiControlState="CALCULATED" 
+			procfnTarget="HDRCHECKSUM"
+			uiNoShow="Interface,Filter"
+      uiNoShowModifier="Interface,Frame,Filter"
+      uiGenerateError="true" 
+			uiShowCommon="false"
+			uiShowName="Checksum" />
+
+		<FIELD name="sourceAddr" type="IPV4ADDR"
+			defaultValue="192.85.1.2"
+			uiShowName="Source" 
+            		isNiMapped="true"
+            		isNiPrimaryKey="true"/>
+
+		<FIELD name="destAddr" type="IPV4ADDR"
+			defaultValue="192.0.0.1" 
+			uiShowName="Destination"
+			uiNoShow="Interface" 
+                        isNiMapped="true" />
+
+                <FIELD name="options" type="IPv4HeaderOptionsList"
+                        uiShowName="Header Options" uiNoShow="Interface" />
+
+      <FIELD name="padding" type="ALIGNMENTPAD" xAlignment="4" yAlignment="0"
+             padType="NONE" defaultValue="0" uiNoShow="Filter,Frame,Interface"
+             uiShowName="4 Byte Alignment Padding"/>
+      
+		<FIELD name="prefixLength" type="INTEGER" bitLength="8"
+			defaultValue="24" minValue="0" maxValue="32" 
+			doNotBuild="true"
+			uiShowName="Prefix Length"
+			uiNoShow="Filter,Frame" 
+			uiNoShowModifier="Interface"
+            isNiMapped="true"
+            isNiPrimaryKey="true"/>
+
+		<FIELD name="destPrefixLength" type="INTEGER" bitLength="8"
+			defaultValue="24" minValue="1" maxValue="32" 
+			doNotBuild="true"
+			uiShowName="Destination Prefix Length"
+			uiNoShow="Filter,Frame" 
+			uiNoShowModifier="Interface"
+			isNiMapped="true"
+			isNiPrimaryKey="true"/>
+
+		<FIELD name="gateway" type="IPV4ADDR"
+			defaultValue="192.85.1.1"
+			doNotBuild="true"
+			uiShowName="Gateway"
+			uiNoShow="Filter"  
+      isNiMapped="true" 
+      isNiPrimaryKey="true"/>
+				
+		<NEXT_HEADERS>
+			<NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="4" />
+			<NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="41" />
+			<NXT_HDR id="icmp:IcmpDestUnreach" name="ICMP Destination Unreachable" value="1" />
+			<NXT_HDR id="icmp:IcmpTimeExceeded" name="ICMP Time Exceeded" value="1" />
+			<NXT_HDR id="icmp:IcmpParameterProblem" name="ICMP Parameter Problem" value="1" />
+			<NXT_HDR id="icmp:IcmpSourceQuench" name="ICMP Source Quench" value="1" />
+			<NXT_HDR id="icmp:IcmpRedirect" name="ICMP Redirect" value="1" />
+			<NXT_HDR id="icmp:IcmpEchoRequest" name="ICMP Echo Request" value="1" />
+			<NXT_HDR id="icmp:IcmpEchoReply" name="ICMP Echo Reply" value="1" />
+			<NXT_HDR id="icmp:IcmpTimestampRequest" name="ICMP Timestamp Request" value="1" />
+			<NXT_HDR id="icmp:IcmpTimestampReply" name="ICMP Timestamp Reply" value="1" />
+			<NXT_HDR id="icmp:IcmpInfoRequest" name="ICMP Info Request" value="1" />
+			<NXT_HDR id="icmp:IcmpInfoReply" name="ICMP Info Reply" value="1" />
+			<NXT_HDR id="icmp:IcmpMaskRequest" name="ICMP Address Mask Request" value="1" />
+			<NXT_HDR id="icmp:IcmpMaskReply" name="ICMP Address Mask Reply" value="1" />
+			<NXT_HDR id="icmp:IcmpRouterSolicitation" name="ICMP Router Solicitation" value="1" />
+			<NXT_HDR id="icmp:IcmpRouterAdvertisement" name="ICMP Router Advertisement" value="1" />
+			<NXT_HDR id="igmp:Igmpv1" name="IGMPv1" value="2"/>
+			<NXT_HDR id="igmp:Igmpv2" name="IGMPv2" value="2"/>
+			<NXT_HDR id="igmp:Igmpv2Query" name="IGMPv2 Query" value="2"/>
+			<NXT_HDR id="igmp:Igmpv2Report" name="IGMPv2 Report" value="2"/>
+			<NXT_HDR id="igmp:Igmpv3Query" name="IGMPv3 Query" value="2"/>
+			<NXT_HDR id="igmp:Igmpv3Report" name="IGMPv3 Report" value="2"/>
+
+			<NXT_HDR id="tcp:Tcp" name="Tcp Header" value="6" />
+			<NXT_HDR id="udp:Udp" name="Udp Header" value="17" />
+			<NXT_HDR id="sctp:Sctp" name="SCTP Header" value="132" />
+			<NXT_HDR id="gre:Gre" name="GRE" value="47" />
+			<NXT_HDR id="ospfv2:Ospfv2Unknown" name="OSPFv2 Unknown" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2Hello" name="OSPFv2 Hello" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2DatabaseDescription" name="OSPFv2 Database Description" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2LinkStateRequest" name="OSPFv2 Link State Request" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2LinkStateUpdate" name="OSPFv2 Link State Update" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2LinkStateAcknowledge" name="OSPFv2 Link State Acknowledge" value="89" />
+			<NXT_HDR id="pim:Pimv4Hello" name="Pim Hello" value="103" />
+			<NXT_HDR id="pim:Pimv4Register" name="Pim Register" value="103" />
+            <NXT_HDR id="pim:Pimv4NullRegister" name="Pim Register" value="103" />
+			<NXT_HDR id="pim:Pimv4RegisterStop" name="Pim RegisterStop" value="103" />
+			<NXT_HDR id="pim:Pimv4JoinPrune" name="Pim Join/Prune" value="103" />
+			<NXT_HDR id="pim:Pimv4Assert" name="Pim Assert" value="103" />
+			<NXT_HDR id="l2tpv3:L2TPv3" name="L2TPv3 Header" value="115" />
+			<NXT_HDR id="lspping:LspRequest" name="LSP Ping Echo Request" value="3503" />
+			<NXT_HDR id="lspping:LspReply" name="LSP Ping Echo Reply" value="3503" />
+
+			<NXT_HDR id="custom:Custom" name="Custom" value="253" />
+			<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="253" />
+			
+		</NEXT_HEADERS>
+			
+			
+    </TYPE_DEF> 
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

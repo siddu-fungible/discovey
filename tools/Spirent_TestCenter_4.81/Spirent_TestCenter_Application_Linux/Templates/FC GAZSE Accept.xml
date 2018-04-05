@@ -1,0 +1,35 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGAZSEAccept" 
+    showName="FC GAZSE Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GazseAccept"
+    description="FC GAZSE Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GazseAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+								<enhancedZones>
+										<EnhancedZone name="EnhancedZone_0">
+												<zoneAttributeEntries>
+														<ZoneAttributeEntry name="ZoneAttributeEntry_0">
+														</ZoneAttributeEntry>
+												</zoneAttributeEntries>
+												<zoneType>
+														<EnhancedZoneMemberIdentifierTypes name="EnhancedZoneMemberIdentifierTypes_0">
+																<zoneMemberNPortName />
+														</EnhancedZoneMemberIdentifierTypes>
+												</zoneType>
+										</EnhancedZone>
+								</enhancedZones>
+						</pdu>
+    </pdus>
+  </template>
+</frame>

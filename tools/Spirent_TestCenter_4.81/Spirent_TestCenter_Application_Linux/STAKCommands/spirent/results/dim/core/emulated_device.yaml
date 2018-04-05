@@ -1,0 +1,16 @@
+dimension_set:
+  name: emulated_device
+  description: Attributes of an emulated device
+  bll:
+    plugin: core
+  attributes:
+  - name: name
+    display_name: Device Name
+    description: Emulated device name
+    base_unit: none
+    data_type: string
+  - name: handle
+    display_name: Device Handle
+    description: Emulated device BLL handle
+    base_unit: none
+    data_type: integer

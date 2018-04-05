@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5409" serializationBase="true" 
+ Identifier="Host Protocols\IGMP-MLD Group Results\IGMP Host-Group Results"
+ PrimaryClass="IgmpGroupMembershipResults"
+ Description="object://igmpmld/IgmpGroupMembershipResults"
+ Path="Host Protocols\IGMP-MLD Group Results"
+ CustomDisplayPath="Multicast\IGMP-MLD Group Results"
+ CustomDisplayName="IGMP Device-Group Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="IGMP Device-Group Results">
+  <ResultQuery id="5410" 
+   ConfigClassId="igmpgroupmembership"
+   ResultClassId="igmpgroupmembershipresults"
+   ResultRootList="8"
+   PropertyIdArray="igmpgroupmembershipresults.hostaddr igmpgroupmembershipresults.groupaddr igmpgroupmembershipresults.state igmpgroupmembershipresults.statechangetimestamp igmpgroupmembershipresults.jointimestamp igmpgroupmembershipresults.leavetimestamp igmpgroupmembershipresults.joinlatency igmpgroupmembershipresults.leavelatency igmpgroupmembershipresults.joinfail igmpgroupmembershipresults.duplicatejoin"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   Name="ResultQuery 15">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5411" 
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 242">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5412" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="HostAddr"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="82"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 243">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5413" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="GroupAddr"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 244">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5414" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="State"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 245">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5415" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="StateChangeTimestamp"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="143"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 246">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5416" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="JoinTimestamp"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 247">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5417" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="LeaveTimestamp"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="105"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 248">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5418" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="JoinLatency"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="117"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 249">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5419" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="LeaveLatency"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="126"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 250">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5420" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 17">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5421" 
+   GroupName="IGMP Device-Group Results"
+   GroupId="object://igmpmld/IgmpGroupMembershipResults"
+   ColumnClassName="IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults IgmpGroupMembershipResults"
+   ColumnPropertyName="HostAddr GroupAddr State StateChangeTimestamp JoinTimestamp LeaveTimestamp JoinLatency LeaveLatency JoinFailImage DuplicateJoinImage"
+   SqlString="SELECT AllDevice.Name AS 'Name', IgmpGroupMembershipResults.HostAddr AS 'Host Address', IgmpGroupMembershipResults.GroupAddr AS 'Group Address', IgmpGroupMembershipResults.State AS 'State', (IgmpGroupMembershipResults.JoinLatency/1000) AS 'Join Latency (msec)', (IgmpGroupMembershipResults.LeaveLatency/1000) AS 'Leave Latency (msec)', IgmpGroupMembershipResults.JoinFail AS 'Join Failure (No Traffic)', IgmpGroupMembershipResults.DuplicateJoin AS 'Duplicate Join' FROM IgmpGroupMembershipResults, AllDevice, IgmpGroupMembership, IgmpHostConfig WHERE ( IgmpGroupMembershipResults.ParentHnd = IgmpGroupMembership.Handle AND IgmpGroupMembershipResults.ResultIf = IgmpHostConfig.IfHandle AND IgmpGroupMembership.ParentHnd = IgmpHostConfig.Handle AND IgmpHostConfig.ParentHnd = AllDevice.Handle AND AllDevice.DataSetId = @DataSetId AND IgmpGroupMembership.DataSetId = @DataSetId AND IgmpHostConfig.DataSetId = @DataSetId) "
+   UseCustomSqlString="TRUE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 18">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5422" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="JoinFailImage"
+   ColumnDescription=""
+   ColumnWidth="72"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 140">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5423" 
+   ColumnClassName="IgmpGroupMembershipResults"
+   ColumnPropertyName="DuplicateJoinImage"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 141">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

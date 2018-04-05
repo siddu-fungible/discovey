@@ -1,0 +1,146 @@
+<?xml version="1.0" ?>
+<stc:meta xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd"
+    plugin="plcommands" package="spirent.methodology.sampling"
+    version="0.0.0-0">
+
+<stc:class name="SetupSubscriptionCommand"
+    displayName="Set up Sampling Subscription Command"
+    bllDirectInterface="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none"
+        type="core.Sequenceable" value="true" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandDescription"
+        value="Set up Sampling Subscription Command" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandCategory"
+        value="Test Methodology//Sampling" />
+    <stc:attribute type="core.RequirePostApplyToIL" internalType="bool"
+        value="true" />
+    <stc:property name="PollingInterval" category="input" type="u32"
+        default="1" displayName="Polling Interval (s)">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Polling Interval in seconds" />
+    </stc:property>
+    <stc:property name="ValueIdleTimeout" category="input" type="u32"
+        default="60"
+        displayName="Time to mark subscription complete if all values stay constant">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Time to mark subscription complete if all polled values in subscription stay constant" />
+    </stc:property>
+    <stc:property name="PropertyList" category="input" type="string" default=""
+        displayName="Whitespace-separated list of classname.property values">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Whitespace-separated list of classname.property values" />
+    </stc:property>
+    <stc:property name="ResultParent" category="input" type="handle"
+        default="" minOccurs="0" maxOccurs="unbounded"
+        displayName="Root(s) of subscription, port(s) or project ">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Root(s) of subscription, can be port or project" />
+    </stc:property>
+    <stc:property name="EnableCondition" category="input" type="bool"
+        default="false" displayName="Enable Terminal Values">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Enable Terminal Value(s) for completion of subscription" />
+    </stc:property>
+    <stc:property name="TerminalValueList" category="input" type="u32"
+        default="" displayName="Terminal Value List"
+        minOccurs="0" maxOccurs="unbounded">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Terminal Value List. Subscription will be marked complete if properties reach values (count must match with subscribed property list)" />
+        <stc:condition type="applicable" property="EnableCondition"
+            operator="equal" value="true" />
+    </stc:property>
+<!-- CATEGORY: Results: Sampling -->
+</stc:class>
+
+<stc:class name="StoreEventCommand"
+    displayName="Store Sampling Event Command"
+    bllDirectInterface="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none"
+        type="core.Sequenceable" value="true" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandDescription"
+        value="Store Sampling Event Commnad" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandCategory"
+        value="Test Methodology//Sampling" />
+    <stc:attribute type="core.RequireApplyToIL" internalType="bool"
+        value="false" />
+    <stc:attribute type="core.RequirePostApplyToIL" internalType="bool"
+        value="false" />
+    <stc:property name="EventName" category="input" type="string" default=""
+        displayName="Name of Timestamp Event">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Name of Timestamp Event" />
+    </stc:property>
+<!-- CATEGORY: Results: Sampling -->
+</stc:class>
+
+<stc:class name="PollSubscriptionCommand"
+    displayName="Poll Subscription Results Command"
+    bllDirectInterface="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none"
+        type="core.Sequenceable" value="true" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandDescription"
+        value="Poll and Wait for Sampling Subscription" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandCategory"
+        value="Test Methodology//Sampling" />
+    <stc:attribute type="core.RequireApplyToIL" internalType="bool"
+        value="false" />
+    <stc:attribute type="core.RequirePostApplyToIL" internalType="bool"
+        value="false" />
+    <stc:property name="PollingPeriod" category="input" type="u32"
+        default="300"
+        displayName="Maximum Polling Period (s)">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Maximum Polling Period" />
+        <stc:numericValidation minInclusive="1" maxInclusive="4294967295" />
+    </stc:property>
+<!-- CATEGORY: Results: Sampling -->
+</stc:class>
+
+<stc:class name="AppendToEotCommand"
+    displayName="Append Sampled Data to EOT Database"
+    bllDirectInterface="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none"
+        type="core.Sequenceable" value="true" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandDescription"
+        value="Append Sampled data to EOT Database" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandCategory"
+        value="Test Methodology//Sampling" />
+    <stc:attribute type="core.RequireApplyToIL" internalType="bool"
+        value="true" />
+    <stc:attribute type="core.RequirePostApplyToIL" internalType="bool"
+        value="false" />
+    <stc:property name="EventTableName" category="input" type="string"
+        default="Methodology_SamplingEvent"
+        displayName="Name for Event Table in DB">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Name for Event Table in DB" />
+    </stc:property>
+    <stc:property name="DataTableName" category="input" type="string"
+        default="Methodology_SamplingData"
+        displayName="Name for Data Table in DB">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none"
+            type="framework.PropertyDescription"
+            value="Name for Data Table in DB" />
+    </stc:property>
+<!-- CATEGORY: Results: Sampling -->
+</stc:class>
+
+</stc:meta>

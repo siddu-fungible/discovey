@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="LDAP" type="stream">
+  <MetaData description="LDAP" protocol="LDAP" application="LDAP" createDate=""/>
+  <Streams>
+    <Stream file="System/LDAP/LDAP_Bind_And_Search.xml" name="Bind_And_Search" description="Bind_And_Search" startTime="0" dataDelay="10" serverPort="389" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="4294967295"/>
+  </Streams>
+</Playlist>

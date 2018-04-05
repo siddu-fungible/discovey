@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="TCP_ANCP_Port_Management"
+    showName="TCP/ANCP Port Management (OAM)"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="tcp:Tcp"
+    description="TCP/ANCP Port Management (OAM)" >
+
+    <pdus>
+     <pdu name="tcp" pdu="tcp:Tcp" >
+        <sourcePort>6068</sourcePort>
+        <destPort>6068</destPort>
+     </pdu>
+     <pdu name="proto1" pdu="ancp_rfc6320:AncpOamLoopback">
+         <AncpHeader>
+            <generalMessageType>32</generalMessageType>
+            <messageType>32</messageType>
+         </AncpHeader>
+     </pdu>
+    </pdus>
+  </template>
+</frame>

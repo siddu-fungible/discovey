@@ -1,0 +1,1011 @@
+{
+  "methodology_key": "RFC3918SCGRPFWDMATRIX",
+  "display_name": "RFC 3918 Scaled Group Forwarding Matrix",
+  "short_display_name": "RFC3918_2",
+  "description": "This follows RFC3918 section 4.2, which determines the forwarding rate as a function of tested multicast groups for a fixed number of tested DUT/SUT ports.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "CUSTOM",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "WestPortGroup"
+      },
+      {
+        "side": "EAST",
+        "port_group": "EastPortGroup"
+      },
+      {
+        "side": "SOUTH",
+        "port_group": "SouthPortGroup"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "WestPortGroup",
+      "display_name": "Multicast Source Port Group",
+      "description": "Multicast traffic source ports",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "EastPortGroup",
+      "display_name": "Multicast Receiver Port Group",
+      "description": "Multicast receiver ports",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "SouthPortGroup",
+      "display_name": "Monitor Port Group",
+      "description": "Ports used to monitor for flooding when testing L2 switches",
+      "min_occurs": "0",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "GLOBAL",
+      "display_name": "Global Parameters",
+      "description": "Global configuration parameters.",
+      "test_properties": [
+        {
+          "description": "IP version for test",
+          "display_name": "IP Version",
+          "property": "IpVersion",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "IPv4",
+          "acceptable_values": [
+            "IPv4",
+            "IPv6"
+          ],
+          "endpoint_profile_property_name": "IpVersion"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "Multicast Source Ports",
+      "description": "Multicast traffic source ports",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "Starting IPv4 address of west devices",
+          "display_name": "IPv4 Address",
+          "property": "WestIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.85.1.2",
+          "endpoint_profile_property_name": "Ipv4Addr"
+        },
+        {
+          "description": "Step of IPv4 address across multiple west ports",
+          "display_name": "IPv4 Address Port Step",
+          "property": "WestIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4AddrPortStep"
+        },
+        {
+          "description": "Starting IPv4 gateway address of west devices",
+          "display_name": "IPv4 Gateway Address",
+          "property": "WestIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.85.1.1",
+          "endpoint_profile_property_name": "Ipv4GwAddr"
+        },
+        {
+          "description": "Step of IPv4 gateway address across multiple west ports",
+          "display_name": "IPv4 Gateway Address Port Step",
+          "property": "WestIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4GwAddrPortStep"
+        },
+        {
+          "description": "Prefix length (in bits) of the IPv4 address on west devices",
+          "display_name": "IPv4 Prefix Length",
+          "property": "WestIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv4PrefixLength"
+        },
+        {
+          "description": "Starting IPv6 address of west devices",
+          "display_name": "IPv6 Address",
+          "property": "WestIpv6Addr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::2",
+          "endpoint_profile_property_name": "Ipv6Addr"
+        },
+        {
+          "description": "Step of IPv6 address across multiple west ports",
+          "display_name": "IPv6 Address Port Step",
+          "property": "WestIpv6AddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "Ipv6AddrPortStep"
+        },
+        {
+          "description": "West IPv6 Gateway Addresses on west devices",
+          "display_name": "IPv6 Gateway Address",
+          "property": "WestIpv6GwAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::1",
+          "endpoint_profile_property_name": "Ipv6GwAddr"
+        },
+        {
+          "description": "Step of IPv6 gateway address across multiple west ports",
+          "display_name": "IPv6 Gateway Address Port Step",
+          "property": "WestIpv6GwAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "Ipv6GwAddrPortStep"
+        },
+        {
+          "description": "Starting Link-local address of west devices",
+          "display_name": "Link-Local Address",
+          "property": "WestLinkLocalAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "FE80::1",
+          "endpoint_profile_property_name": "LinkLocalAddr"
+        },
+        {
+          "description": "Step of Link-local address across multiple west ports",
+          "display_name": "Link-Local Address Port Step",
+          "property": "WestLinkLocalAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "LinkLocalAddrPortStep"
+        },
+        {
+          "description": "Prefix length (in bits) of the IPv6 address on west devices",
+          "display_name": "IPv6 Prefix Length",
+          "property": "WestIpv6PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64",
+          "minimum": "0",
+          "maximum": "128",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv6PrefixLength"
+        },
+        {
+          "description": "Starting MAC address of west devices",
+          "display_name": "MAC Address",
+          "property": "WestMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:01",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "Step of MAC address across multiple west ports",
+          "display_name": "MAC Address Port Step",
+          "property": "WestMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:01:00",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        },
+        {
+          "description": "Starting outer VLAN ID of west devices",
+          "display_name": "VLAN ID",
+          "property": "WestOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "Step of outer VLAN ID across multiple west ports",
+          "display_name": "VLAN ID Port Step",
+          "property": "WestOuterVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdPortStep"
+        },
+        {
+          "description": "Starting inner VLAN ID of west devices",
+          "display_name": "Inner VLAN ID",
+          "property": "WestInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Step of inner VLAN ID across multiple west ports",
+          "display_name": "Inner VLAN ID Port Step",
+          "property": "WestInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdPortStep"
+        },
+        {
+          "description": "Determines how many VLAN headers to use for the west ports",
+          "display_name": "VLAN Mode",
+          "property": "WestVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "Multicast Receiver Ports",
+      "description": "Hosts ports receiving thhe multicast traffic",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "Starting IPv4 address of east devices",
+          "display_name": "IPv4 Address",
+          "property": "EastIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.86.1.2",
+          "endpoint_profile_property_name": "Ipv4Addr"
+        },
+        {
+          "description": "Step of IPv4 address across multiple east ports",
+          "display_name": "IPv4 Address Port Step",
+          "property": "EastIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4AddrPortStep"
+        },
+        {
+          "description": "Starting IPv4 gateway address of east devices",
+          "display_name": "IPv4 Gateway Address",
+          "property": "EastIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.86.1.1",
+          "endpoint_profile_property_name": "Ipv4GwAddr"
+        },
+        {
+          "description": "Step of IPv4 gateway address across multiple east ports",
+          "display_name": "IPv4 Gateway Address Port Step",
+          "property": "EastIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4GwAddrPortStep"
+        },
+        {
+          "description": "Prefix length (in bits) of the IPv4 address on east devices",
+          "display_name": "IPv4 Prefix Length",
+          "property": "EastIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv4PrefixLength"
+        },
+        {
+          "description": "Starting IPv6 address of east device",
+          "display_name": "IPv6 Address",
+          "property": "EastIpv6Addr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::1:0:2",
+          "endpoint_profile_property_name": "Ipv6Addr"
+        },
+        {
+          "description": "Step of IPv6 address across multiple east ports",
+          "display_name": "IPv6 Address Port Step",
+          "property": "EastIpv6AddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "Ipv6AddrPortStep"
+        },
+        {
+          "description": "East IPv6 Gateway Address for east side ports",
+          "display_name": "IPv6 Gateway Address",
+          "property": "EastIpv6GwAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::1:0:1",
+          "endpoint_profile_property_name": "Ipv6GwAddr"
+        },
+        {
+          "description": "Step of IPv6 gateway address across multiple east ports",
+          "display_name": "IPv6 Gateway Address Port Step",
+          "property": "EastIpv6GwAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "Ipv6GwAddrPortStep"
+        },
+        {
+          "description": "Starting Link-local address of east devices",
+          "display_name": "Link-Local Address",
+          "property": "EastLinkLocalAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "FE80::1:0:1",
+          "endpoint_profile_property_name": "LinkLocalAddr"
+        },
+        {
+          "description": "Step of Link-local address across multiple east ports",
+          "display_name": "Link-Local Address Port Step",
+          "property": "EastLinkLocalAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "LinkLocalAddrPortStep"
+        },
+        {
+          "description": "Prefix length (in bits) of the IPv6 address on east devices",
+          "display_name": "IPv6 Prefix Length",
+          "property": "EastIpv6PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64",
+          "minimum": "0",
+          "maximum": "128",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv6PrefixLength"
+        },
+        {
+          "description": "Starting MAC address of east devices",
+          "display_name": "MAC Address",
+          "property": "EastMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:95:00:00:01",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "Step of MAC address across multiple east ports",
+          "display_name": "MAC Address Port Step",
+          "property": "EastMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:01:00",
+          "endpoint_profile_property_name": "LinkLocalAddrPortStep"
+        },
+        {
+          "description": "Starting VLAN ID of east devices",
+          "display_name": "VLAN ID",
+          "property": "EastOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "Step of outer VLAN ID across multiple east ports",
+          "display_name": "VLAN ID Port Step",
+          "property": "EastOuterVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdPortStep"
+        },
+        {
+          "description": "Starting inner VLAN ID of east devices",
+          "display_name": "Inner VLAN ID",
+          "property": "EastInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Step of inner VLAN ID across multiple east ports",
+          "display_name": "Inner VLAN ID Port Step",
+          "property": "EastInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdPortStep"
+        },
+        {
+          "description": "Determines how many VLAN headers to use for the east devices",
+          "display_name": "VLAN Mode",
+          "property": "EastVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Test Criteria Parameters",
+      "description": "Test Criteria Parameters",
+      "test_properties": [
+        {
+          "description": "Minimum acceptable forwarding rate to consider the test a pass",
+          "display_name": "Minimum Acceptable Forwarding Rate",
+          "property": "MinAcceptableFwdRate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "1",
+          "maximum": "4294967295",
+          "units": "frames/s"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Test Option Parameters",
+      "description": "Test Option Parameters",
+      "test_properties": [
+        {
+          "description": "Specifies the learning mode executed at the beginning of the test",
+          "display_name": "Learning Mode",
+          "property": "LearningMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "L3"
+          ]
+        },
+        {
+          "description": "Number of seconds to offer multicast traffic for each iteration of the test",
+          "display_name": " Traffic Duration",
+          "property": "TrafficDuration",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "120",
+          "minimum": "30",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Delay between when the test is started and the participating ports are checked for their physical link status",
+          "display_name": "Test Start Delay",
+          "property": "TestStartDelay",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Delay before initiating collection of results after test traffic is stopped ",
+          "display_name": "Results Collection Delay",
+          "property": "RsltCollectDelay",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "15",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Specifies the frequency to verify that the DUT can forward test frames",
+          "display_name": "Verification Frequency",
+          "property": "VerificationFrequency",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "No Verification",
+          "acceptable_values": [
+            "No Verification",
+            "Verify After Topology Changes",
+            "Verify After Frame Size Changes",
+            "Verify Before Every Iteration"
+          ]
+        },
+        {
+          "description": "Rate at which multicast traffic is offered, per source port, during the verification phase",
+          "display_name": "Verification Tx Frame Rate",
+          "property": "VerificationTxFrameRate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "1",
+          "maximum": "4294967295",
+          "units": "frames/s"
+        },
+        {
+          "description": "Number of frames of verification traffic to send from each source port",
+          "display_name": "Verification Tx Frame Count",
+          "property": "VerificationTxFrameCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Specifies whether or not to abort the test if verification fails",
+          "display_name": "Abort On Verification Failure",
+          "property": "VerificationAbortOnFail",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "ON",
+          "acceptable_values": [
+            "OFF",
+            "ON"
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Traffic Option Parameters",
+      "description": "Traffic Option Parameters",
+      "test_properties": [
+        {
+          "description": "Outer VLAN priority bits for the multicast traffic",
+          "display_name": "VLAN Priority",
+          "property": "OuterVlanPriority",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "7"
+        },
+        {
+          "description": "Inner VLAN priority bits for the multicast traffic",
+          "display_name": "Inner VLAN Priority",
+          "property": "InnerVlanPriority",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "7"
+        },
+        {
+          "description": "Time To Live/Hop Limit value for IPv4/IPv6 header",
+          "display_name": "Time To Live/Hop Limit",
+          "property": "TimeToLive",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "255"
+        },
+        {
+          "description": "Differentiated Services Code Point",
+          "display_name": "DSCP Type",
+          "property": "DscpType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "Default Best Effort",
+          "acceptable_values": [
+            "Default Best Effort",
+            "Expedited Forwarding",
+            "AF11",
+            "AF12",
+            "AF13",
+            "AF21",
+            "AF22",
+            "AF23",
+            "AF31",
+            "AF32",
+            "AF33",
+            "AF41",
+            "AF42",
+            "AF43",
+            "CS1",
+            "CS2",
+            "CS3",
+            "CS4",
+            "CS5",
+            "CS6",
+            "CS7"
+          ]
+        },
+        {
+          "description": "IPv6 flow label header value for multicast traffic",
+          "display_name": "IPv6 Flow Label",
+          "property": "IPv6FlowLabel",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "1048575"
+        },
+        {
+          "description": "Specifies the Layer 4 Protocol for the multicast traffic",
+          "display_name": "Transport Layer Configuration",
+          "property": "TransportLayerConfiguration",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "UDP",
+          "acceptable_values": [
+            "None",
+            "UDP",
+            "TCP"
+          ]
+        },
+        {
+          "description": "Starting value for the source UDP/TCP port number",
+          "display_name": "Source UDP/TCP Port Start",
+          "property": "SrcPortStart",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "7",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Source UDP/TCP port count for the multicast traffic",
+          "display_name": "Source UDP/TCP Port Count",
+          "property": "SrcPortCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "65535"
+        },
+        {
+          "description": "Source UDP/TCP port step value for the multicast traffic",
+          "display_name": "Source UDP/TCP Port Step",
+          "property": "SrcPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "65535"
+        },
+        {
+          "description": "Starting value for the destination UDP/TCP port number",
+          "display_name": "Destination UDP/TCP Port Start",
+          "property": "DstPortStart",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "7",
+          "minimum": "0",
+          "maximum": "65535"
+        },
+        {
+          "description": "Destination UDP/TCP port count for the multicast traffic",
+          "display_name": "Destination UDP/TCP Port Count",
+          "property": "DstPortCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "65535"
+        },
+        {
+          "description": "Destination UDP/TCP port step value for the multicast traffic",
+          "display_name": "Destination UDP/TCP Port Step",
+          "property": "DstPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "65535"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Multicast Test Parameters",
+      "description": "Multicast Test Parameters",
+      "test_properties": [
+        {
+          "description": "Delay after IGMP/MLD joins are sent to the time multicast traffic is started",
+          "display_name": "Join Delay",
+          "property": "JoinDelay",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "15",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Delay after leaves are sent to the time joins are sent for the next multicast group count being tested",
+          "display_name": "Leave Delay",
+          "property": "LeaveDelay",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "15",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "IPv4 IGMP receiver client version to configure for East port group",
+          "display_name": "Multicast Client Version",
+          "property": "MulticastClientVersion",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "IGMPv1",
+          "acceptable_values": [
+            "IGMPv1",
+            "IGMPv2",
+            "IGMPv3",
+            "MLDv1",
+            "MLDv2"
+          ]
+        },
+        {
+          "description": "Starting IPv4 multicast address for the first multicast source port",
+          "display_name": "Multicast IPv4 Address",
+          "property": "MulticastIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "225.0.0.1"
+        },
+        {
+          "description": "Step of IPv4 multicast address across multiple source ports",
+          "display_name": "Multicast IPv4 Address Port Step",
+          "property": "MulticastIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.1.0.0"
+        },
+        {
+          "description": "Starting IPv6 multicast address for the first multicast source port",
+          "display_name": "Multicast IPv6 Address",
+          "property": "MulticastIpv6Addr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "ff1e::1"
+        },
+        {
+          "description": "Step of IPv6 multicast address across multiple source ports",
+          "display_name": "Multicast IPv6 Address Port Step",
+          "property": "MulticastIpv6AddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0"
+        },
+        {
+          "description": "Increment of multicast addresses within a source port",
+          "display_name": "Multicast Group Increment",
+          "property": "MulticastGrpIncr",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "4294967295"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Search Parameters",
+      "description": "Search Parameters",
+      "test_properties": [
+        {
+          "description": "Number of trials to perform for each frame size and multicast group count",
+          "display_name": "Number Of Trials",
+          "property": "NumberOfTrials",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Select a range or list of frame sizes to test",
+          "display_name": "Frame Size Selection Mode",
+          "property": "FrameSizeSelectMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "RANGE",
+          "acceptable_values": [
+            "RANGE",
+            "LIST"
+          ]
+        },
+        {
+          "description": "Minimum frame size to test",
+          "display_name": "Minimum Frame Size",
+          "property": "MinimumFrameSize",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64",
+          "minimum": "64",
+          "maximum": "16352",
+          "units": "bytes"
+        },
+        {
+          "description": "Maximum Frame size to test",
+          "display_name": "Maximum Frame Size",
+          "property": "MaximumFrameSize",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1518",
+          "minimum": "64",
+          "maximum": "16352",
+          "units": "bytes"
+        },
+        {
+          "description": "Step value for frames sizes to test",
+          "display_name": "Frame Size Step",
+          "property": "FrameSizeStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "128",
+          "minimum": "1",
+          "maximum": "16352",
+          "units": "bytes"
+        },
+        {
+          "description": "List of frame sizes to test",
+          "display_name": "Frame Size Value List",
+          "property": "FrameSizeValueList",
+          "property_value_type": "INTEGER",
+          "is_collection": true,
+          "property_value": [
+            "64",
+            "128",
+            "256",
+            "512",
+            "1024",
+            "1280",
+            "1518"
+          ],
+          "minimum": "64",
+          "maximum": "16352",
+          "units": "bytes"
+        },
+        {
+          "description": "Select a range or custom list of values for the multicast group counts per source port to test",
+          "display_name": "Multicast Group Count Selection Mode",
+          "property": "McGroupCntSelectMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "RANGE",
+          "acceptable_values": [
+            "RANGE",
+            "LIST"
+          ]
+        },
+        {
+          "description": "Start count for number of multicast groups per source port to test",
+          "display_name": "Multicast Start Group Count",
+          "property": "McStartGrpCnt",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "End count for number of multicast groups per source port to test",
+          "display_name": "Multicast End Group Count",
+          "property": "McEndGrpCnt",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Step count for the number of multicast groups per source port to test",
+          "display_name": "Multicast Group Count Step",
+          "property": "McGrpCountStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "List of multicast group counts per source port to test",
+          "display_name": "Multicast Group Count List",
+          "property": "McGrpCntList",
+          "property_value_type": "INTEGER",
+          "is_collection": true,
+          "property_value": [
+            "10",
+            "20",
+            "30"
+          ],
+          "minimum": "1",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Minimum load performed for a given frame size",
+          "display_name": "Minimum Load",
+          "property": "MinLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.001",
+          "maximum": "100",
+          "units": "%"
+        },
+        {
+          "description": "Maximum load performed for a given frame size",
+          "display_name": "Maximum Load",
+          "property": "MaxLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "0.001",
+          "maximum": "100",
+          "units": "%"
+        },
+        {
+          "description": "Value to use to step through increasing loads, between minimum and maximum load, for each frame size tested",
+          "display_name": "Load Step",
+          "property": "LoadStep",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.00",
+          "minimum": "0.001",
+          "maximum": "100",
+          "units": "%"
+        }
+      ]
+    }
+  ]
+}

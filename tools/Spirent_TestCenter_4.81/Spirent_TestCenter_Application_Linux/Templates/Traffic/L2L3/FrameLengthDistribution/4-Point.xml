@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<FrameLengthDistribution id="5228" serializationBase="true" 
+ Seed="10900842"
+ Active="TRUE"
+ Name="4-Point">
+  <FrameLengthDistributionSlot id="5229" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="40"
+   MinFrameLength="40"
+   MaxFrameLength="41"
+   Weight="55"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 8">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5230" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="576"
+   MinFrameLength="575"
+   MaxFrameLength="577"
+   Weight="15"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 9">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5231" 
+   FrameLengthMode="FIXED"
+   FixedFrameLength="1500"
+   MinFrameLength="1499"
+   MaxFrameLength="1500"
+   Weight="10"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 10">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5232" 
+   FrameLengthMode="RANDOM"
+   FixedFrameLength="730"
+   MinFrameLength="40"
+   MaxFrameLength="1500"
+   Weight="20"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 11">
+  </FrameLengthDistributionSlot>
+</FrameLengthDistribution>

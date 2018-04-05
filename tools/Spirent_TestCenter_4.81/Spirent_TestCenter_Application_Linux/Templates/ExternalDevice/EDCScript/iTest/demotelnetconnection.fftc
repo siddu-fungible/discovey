@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989">
+    <execution estimatedExecutionTime="2"/>
+    <procedures>
+        <item name="main" defaultSessionType="com.fnfr.svt.applications.telnet">
+            <steps>
+                <item guid="f04f79c1-d295-46be-9156-234135b1ebbe" action="comment">
+                    <command>
+                        <body>&quot;open connection; input username and password&quot;</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="9ad00036-2eb2-462c-ba47-37f2f2ad2781" action="return">
+                    <command>
+                        <body>0</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session">
+                    <defaultValue>s1</defaultValue>
+                </item>
+                <item name="privilegedpasswd"/>
+                <item name="username"/>
+                <item name="password"/>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

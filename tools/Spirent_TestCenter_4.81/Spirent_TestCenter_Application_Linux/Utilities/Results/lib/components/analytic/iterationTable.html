@@ -1,0 +1,32 @@
+<div ng-controller="resultCtrl">
+
+    <!-- Test Report Summary Table -->
+    <div ng-repeat="subdata in dataArray" >
+        <tr>
+            <td>{{subdata.info.displayName}}</td>
+        </tr>
+        <table class="library-table">
+            <thead>
+            <tr>
+                <th ng-if="!subdata.data.rows.length">Empty Table</th>
+                <th ng-if= "subdata.data.rows.length" ng-repeat="columnHeader in subdata.data.columnNames track by $index">{{columnHeader}}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="row in subdata.data.rows">
+                <td ng-repeat="value in row track by $index">
+                    <!-- File Link -->
+                    <div ng-if="$index == 0">
+                        <a href="" ng-click="openInTab(value)">View</a>
+                    </div>
+                    <!-- Row Data -->
+                    <div ng-if="$index != 0">
+                        {{value}}
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>

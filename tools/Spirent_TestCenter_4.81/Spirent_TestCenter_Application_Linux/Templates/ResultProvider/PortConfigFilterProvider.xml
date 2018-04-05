@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultProvider id="598" serializationBase="true" 
+ ProviderPluginName="core"
+ ProviderName="PortConfigFilterProvider"
+ ResultSource="Port"
+ IlMsgKeyPropName="NA"
+ IsIlMsgKeyResolvedInBll="FALSE"
+ AutoGroupProperty=""
+ AutoJoinProperties=""
+ ResultGroupDefs=""
+ AutoIncludeProperties=""
+ AdditionalRsa=""
+ StandardRsa="Project:Y Port:Y EmulatedDevice:N NetworkInterface:N"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="ResultProvider 3">  
+</ResultProvider>

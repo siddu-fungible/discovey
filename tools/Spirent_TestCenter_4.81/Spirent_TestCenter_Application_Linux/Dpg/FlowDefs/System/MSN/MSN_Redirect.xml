@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="MSN_Redirect" type="stream" layer="tcp" closeType="server_rst">
+  <MetaData description="MSN_Redirect" protocol="MSN_Traffic" application="MSN" createDate="">
+    <Sapee version="16" clientIp="192.168.1.69" clientPort="1088" serverIp="207.46.28.93" serverPort="1863" startTime="0" dataStartTime="117"/>
+  </MetaData>
+  <Packets>
+    <Packet name="packet_1" pktDelay="99" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>5645522031204D534E503135204D534E503134204D534E50313320435652300D0A</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_2" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>5645522031204D534E5031350D0A</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_3" pktDelay="99" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>4356522032203078303430392077696E6E7420352E312069333836204D534E4D53475220382E312E30313738204D534654207368656B6861725F68656D6E616E6940686F746D61696C2E636F6D0D0A55535220332053534F2049207368656B6861725F68656D6E616E6940686F746D61696C2E636F6D0D0A</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_4" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>435652203220382E312E3031373820382E312E3031373820382E312E3031373820687474703A2F2F6D736772757365722E646C736572766963652E6D6963726F736F66742E636F6D2F646F776E6C6F61642F352F362F342F35363436343831462D333345462D344230382D414630302D3439303446373637374238392F454E2F496E7374616C6C5F574C4D657373656E6765722E65786520687474703A2F2F646F776E6C6F61642E6C6976652E636F6D2F3F736B753D6D657373656E6765720D0A</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_5" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>5846522033204E53203230372E34362E3130362E3130313A31383633205520440D0A</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables/>
+  <Modifiers/>
+</Flow>

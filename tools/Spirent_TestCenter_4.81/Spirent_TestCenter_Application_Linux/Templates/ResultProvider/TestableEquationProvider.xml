@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<EquationProvider id="565" serializationBase="true" 
+ ProviderPluginName="core"
+ ResultSource="TestableResultSource"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="EquationProvider 1">
+  <ExternalEquationResultProperty id="566" 
+   Equation="MATH:Col::TestableResultSource.ExpectedRxFrameCount-Col::TestableResultSource.RxFrameCount"
+   StandardGroupingDefinition="Default:SUM"
+   PropertyName="Frameloss"
+   PropertyType="U64"
+   PropertyUnitType="FRAMES"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ExternalEquationResultProperty 1">
+  </ExternalEquationResultProperty>
+  <ExternalEquationResultProperty id="567" 
+   Equation="MATH:Col::TestableResultSource.RxFrameCount*8"
+   StandardGroupingDefinition="Default:SUM"
+   PropertyName="RxFrameCountTimes8"
+   PropertyType="U64"
+   PropertyUnitType="FRAMES"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ExternalEquationResultProperty 1">
+  </ExternalEquationResultProperty>
+  <ExternalEquationResultProperty id="568"
+   ExpressionType="MATH"
+   Equation="(TestableResultSource.RxFrameCount / 1000000)"
+   StandardGroupingDefinition="Default:SUM"
+   PropertyName="ConvertToDouble"
+   PropertyDisplayName="Convert To Double"
+   PropertyType="U64"
+   Precision="10"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ExternalEquationResultProperty 1">
+  </ExternalEquationResultProperty>
+</EquationProvider>
+
+
+

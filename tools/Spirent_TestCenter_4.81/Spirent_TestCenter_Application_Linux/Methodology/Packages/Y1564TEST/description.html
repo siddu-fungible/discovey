@@ -1,0 +1,376 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 4.3.7.2 (Linux)"/>
+	<meta name="author" content="user"/>
+	<meta name="created" content="2016-08-23T11:08:00"/>
+	<meta name="changed" content="2016-08-24T12:37:00"/>
+	<meta name="Operator" content="user"/>
+	<style type="text/css">
+		@page { size: 8.5in 11in; margin: 1in }
+		p { margin-top: 0.17in; margin-bottom: 0.17in; direction: ltr; color: #000000; line-height: 120%; text-align: left; widows: 2; orphans: 2 }
+		p.western { font-family: "Arial", serif; font-size: 12pt; so-language: en-US }
+		p.cjk { font-family: "Courier New"; font-size: 12pt; so-language: en-US }
+		p.ctl { font-family: "Arial"; font-size: 12pt; so-language: ar-SA }
+		h1 { margin-bottom: 0.08in; direction: ltr; color: #4f81bd; line-height: 115%; text-align: left; widows: 0; orphans: 0; page-break-after: auto }
+		h1.western { font-family: "Arial", serif; font-size: 16pt; so-language: en-US }
+		h1.cjk { font-family: "Courier New"; font-size: 16pt; so-language: en-US }
+		h1.ctl { font-family: "Arial"; font-size: 14pt; so-language: ar-SA }
+		a:link { color: #0000ff }
+		a.western:link { so-language: zxx }
+		a.cjk:link { so-language: zxx }
+		a.ctl:link { font-family: "Times New Roman"; so-language: zxx }
+	</style>
+</head>
+<body lang="en-US" link="#0000ff" dir="ltr">
+<h1 class="western" align="left" style="widows: 0; orphans: 0"><font color="#4f81bd"><font face="Arial, serif"><font size="4" style="font-size: 16pt"><span lang="en-US"><b>Overview</b></span></font></font></font></h1>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+Y.1564 methodology implements the tests specified in the ITU-T Y.1564
+standard, &ldquo;Ethernet service activation test methodology&rdquo;,
+which specifies procedures for validating a SUT&rsquo;s ability to
+transport services based on set of acceptance criteria in a service
+level agreement (SLA).  </span></font></font></font>
+</p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+methodology is implemented according to the Y.1564 standard, which
+defines two major sections:</span></font></font></font></p>
+<ul>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Service
+	Configuration, where services are tested sequentially.  The service
+	configuration test is further broken down into five sub-tests:</span></font></font></font></p>
+	<ul>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">CIR
+		(Committed Information Rate) &ndash; Service traffic is increased
+		by step increments from zero to the committed information rate.</span></font></font></font></p>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">EIR
+		(Excess Information Rate) &ndash; Service traffic is increased
+		beyond the committed information rate, at the excess information
+		rate.</span></font></font></font></p>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Policing
+		Test &ndash; Service traffic is transmitted at a rate equal to CIR
+		+ 125% of EIR.</span></font></font></font></p>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">CBS
+		(Committed Burst Size) &ndash; Service traffic is transmitted for
+		short bursts (at line rate) within the committed burst size
+		specified in the SLA.</span></font></font></font></p>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">EBS
+		(Excess Burst Size) &ndash; Service traffic is transmitted for
+		longer bursts, exceeding the committed burst size specified in the
+		SLA.</span></font></font></font></p>
+	</ul>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Service
+	Performance, where all services are tested simultaneously at the
+	committed information rate (CIR)</span></font></font></font></p>
+</ul>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+methodology includes all parts of the above tests, including the
+color-aware variants of the service configuration sub-tests.</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Acceptance
+criteria for each service are specified by three parameters:</span></font></font></font></p>
+<ul>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">FLR
+	(frame loss ratio)</span></font></font></font></p>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">FTD
+	(frame transfer delay)</span></font></font></font></p>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">FDV
+	(frame delay variation)</span></font></font></font></p>
+</ul>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">In
+this methodology, Spirent TestCenter ports are used to generate
+service traffic, as well as measure received traffic.  Spirent
+TestCenter also measures the FLR, FTD and FDV of the received service
+traffic, and compares the measured values against the acceptance
+criteria for each service</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">This
+methodology works with IPv4, IPv6, or both.  The methodology can also
+work with single or stacked (QinQ) VLANs.</span></font></font></font></p>
+<h1 class="western" align="left" style="widows: 0; orphans: 0"><font color="#4f81bd"><font face="Arial, serif"><font size="4" style="font-size: 16pt"><span lang="en-US"><b>Topology</b></span></font></font></font></h1>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+topology for this methodology is shown in the diagram below, consists
+of:</span></font></font></font></p>
+<ul>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Multiple
+	Spirent TestCenter ports, which transmit and receive test service
+	traffic</span></font></font></font></p>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+	DUT, which is typically a service-aware switch or router</span></font></font></font></p>
+</ul>
+<p class="western" align="center" style="widows: 2; orphans: 2"><img src="data:image/png;base64,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" align="bottom" width="497" height="400" border="0"></p>
+<h1 class="western" align="left" style="widows: 0; orphans: 0"><font color="#4f81bd"><font face="Arial, serif"><font size="4" style="font-size: 16pt"><span lang="en-US"><b>Test
+Steps</b></span></font></font></font></h1>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+steps in this methodology are as follows:</span></font></font></font></p>
+<ol>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Define
+	a set of stream blocks, one per test service, with the attributes as
+	configured in the methodology.</span></font></font></font></p>
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Run
+	the Service Configuration test, for each service, sequentially</span></font></font></font></p>
+</ol>
+<ol>
+	<ol type="a">
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Start
+		the Committed Information Rate sub-test, if selected</span></font></font></font></p>
+		<ul>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Ramp
+			up the traffic, from 0% of CIR in the number of steps specified,
+			up to 100% of CIR</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Measure
+			the minimum, average and maximum values for FLR, FTD, and FDV</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			the measured maximum values exceed the acceptance criteria for any
+			service, the sub-test fails; otherwise it passes</span></font></font></font></p>
+		</ul>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Start
+		the EIR sub-test, if selected</span></font></font></font></p>
+		<ul>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Transmit
+			traffic at the EIR rate.  If &ldquo;color-aware&rdquo; has been
+			selected, transmit &ldquo;green&rdquo; frames at the CIR rate, and
+			&ldquo;yellow&rdquo; frames at the EIR rate.</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			&ldquo;non-color aware&rdquo; has been selected, measure the FLR,
+			FTD and FDV for all received frames; otherwise, if &ldquo;color-aware&rdquo;
+			has been selected, measure the minimum, average and maximum values
+			for FLR, FTD, and FDV for the &ldquo;green&rdquo; frames</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			the measured maximum values exceed the acceptance criteria for any
+			service, the sub-test fails; otherwise it passes</span></font></font></font></p>
+		</ul>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Start
+		the policing sub-test, if selected</span></font></font></font></p>
+		<ul>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Transmit
+			traffic at the EIR.  If non-color-aware has been selected,
+			transmit all frames at CIR + 125% of EIR; otherwise, if
+			&ldquo;color-aware&rdquo; has been selected, transmit &ldquo;green&rdquo;
+			frames at the CIR rate, and &ldquo;yellow&rdquo; frames at 125% of
+			the EIR rate.</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			&ldquo;non-color aware&rdquo; has been selected, measure the FLR,
+			FTD and FDV for all received frames; otherwise, if &ldquo;color-aware&rdquo;
+			has been selected, measure the minimum, average and maximum values
+			for FLR, FTD, and FDV for the &ldquo;green&rdquo; frames</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			the measured maximum values exceed the acceptance criteria for any
+			service, the sub-test fails; otherwise it passes</span></font></font></font></p>
+		</ul>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Start
+		the CBS sub-test, if selected</span></font></font></font></p>
+		<ul>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Throughout
+			the CBS test, transmit a constant stream of traffic at the CIR.</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Send
+			traffic in repeated line-rate bursts at the committed burst size,
+			for the configured duration</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Pause
+			burst transmissions for a duration equal to 10 times the burst
+			duration</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Repeat
+			burst transmissions for the configured number of burst cycles</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Measure
+			the FLR, FTD and FDV.</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			the measured maximum values exceed the acceptance criteria for any
+			service, the sub-test fails; otherwise it passes</span></font></font></font></p>
+		</ul>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Start
+		the EBS sub-test, if selected</span></font></font></font></p>
+		<ul>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			&ldquo;non-color-aware&rdquo; has been selected, transmit a
+			constant stream of frames at the CIR+ EIR rate; otherwise, If
+			&ldquo;color-aware&rdquo; has been selected, send a constant
+			stream of &ldquo;green&rdquo; frames at CIR, and a constant stream
+			of &ldquo;yellow&rdquo; frames at EIR.</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			&ldquo;non-color-aware&rdquo; has been selected, send traffic in
+			repeated line-rate bursts  at two times the EBS size; otherwise if
+			&ldquo;color-aware&rdquo; has been selected, send  repeated
+			line-rate bursts of &ldquo;yellow&rdquo; frames for two times the
+			EBS size</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Pause
+			burst transmissions for a duration equal to 10 times the burst
+			duration</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Repeat
+			burst transmissions for the configured number of burst cycles</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Measure
+			the FLR, FTD and FDV.</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			the measured maximum values exceed the acceptance criteria for any
+			service, the sub-test fails; otherwise it passes</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			&ldquo;non-color aware&rdquo; has been selected, measure the FLR,
+			FTD and FDV for all received frames; otherwise, if &ldquo;color-aware&rdquo;
+			has been selected, measure the minimum, average and maximum values
+			for FLR, FTD, and FDV for the &ldquo;green&rdquo; frames</span></font></font></font></p>
+			<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+			<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+			the measured maximum values exceed the acceptance criteria for any
+			service, the sub-test fails; otherwise it passes</span></font></font></font></p>
+		</ul>
+	</ol>
+</ol>
+<ol start="3">
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Start
+	the Service Performance test, if selected by the user</span></font></font></font></p>
+</ol>
+<ol>
+	<ol type="a">
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Transmit
+		traffic for all services, simultaneously.</span></font></font></font></p>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">On
+		the each of the specified receive ports for each service, measure
+		the FLR, FTD, and FDV.</span></font></font></font></p>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">If
+		the maximum measured FLR, FTD or FDV exceeds the acceptance
+		criteria for any service, </span></font></font></font><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><b>fail</b></span></font></font></font><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">
+		the service performance test.</span></font></font></font></p>
+	</ol>
+</ol>
+<ol start="4">
+	<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+	test passes if,</span></font></font></font></p>
+	<ul>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">All
+		service configuration sub-tests pass</span></font></font></font></p>
+		<li/>
+<p class="western" align="left" style="widows: 2; orphans: 2">
+		<font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">The
+		service performance test passes</span></font></font></font></p>
+	</ul>
+</ol>
+<h1 class="western" align="left" style="widows: 0; orphans: 0"><br/>
+<br/>
+
+</h1>
+<h1 class="western" align="left" style="widows: 0; orphans: 0"><font color="#4f81bd"><font face="Arial, serif"><font size="4" style="font-size: 16pt"><span lang="en-US"><b>Resources</b></span></font></font></font></h1>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Standards</span></font></font></font></p>
+<ul>
+	<li/>
+<p align="left" style="margin-top: 0in; margin-bottom: 0.14in; line-height: 115%; widows: 2; orphans: 2">
+	<font color="#000000"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><a class="western" href="https://www.itu.int/rec/T-REC-Y.1564-201602-I/en"><font color="#0000ff"><font face="Calibri, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><u>Y.1564</u></span></font></font></font></a></font></font></font></p>
+</ul>
+<p class="western" align="left" style="margin-top: 0in; margin-bottom: 0.14in; line-height: 115%; widows: 2; orphans: 2">
+<font color="#000000"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Wikipedia</span></font></font></font></font></font></font></p>
+<ul>
+	<li/>
+<p align="left" style="margin-top: 0in; margin-bottom: 0.14in; line-height: 115%; widows: 2; orphans: 2">
+	<font color="#000000"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><a class="western" href="https://en.wikipedia.org/wiki/ITU-T_Y.1564"><font color="#0000ff"><font face="Calibri, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><u>Y.1564
+	Article</u></span></font></font></font></a></font></font></font></p>
+</ul>
+<h1 class="western" align="left" style="widows: 0; orphans: 0"><font color="#4f81bd"><font face="Arial, serif"><font size="4" style="font-size: 16pt"><span lang="en-US"><b>Acronyms</b></span></font></font></font></h1>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">CBS		Committed
+Burst Size</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">CIR		Committed
+Information Rate</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">DSCP		Differentiated
+Services Code Point</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">EBS		Expected
+Burst Size</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">EIR		Expected
+Information Rate</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">FDV		Frame
+Delay Variation</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">FLR		Frame
+Loss Ratio</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">FTD		Frame
+Transfer Delay</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">MEF		Metro
+Ethernet Forum</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">SLA		Service
+Level Agreement</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><font color="#000000"><font face="Arial, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">VLAN		Virtual
+Local Area Network</span></font></font></font></p>
+<p class="western" align="left" style="widows: 2; orphans: 2"><br/>
+<br/>
+
+</p>
+</body>
+</html>

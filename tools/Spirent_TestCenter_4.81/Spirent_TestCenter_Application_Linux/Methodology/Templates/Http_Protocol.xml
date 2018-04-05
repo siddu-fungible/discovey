@@ -1,0 +1,462 @@
+<Template>
+<Description>
+Template used to set up HTTP protocols (client and server).
+</Description>
+<Image />
+<DataModelXml>
+<StcSystem id="1" serializationBase="true" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles="http"
+   ConfigurationFileName="C:\Http_Protocol.xml"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Tags id="1215" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation target="1301" type="UserTag" />
+      <Relation target="1302" type="UserTag" />
+      <Relation target="1303" type="UserTag" />
+      <Relation target="1304" type="UserTag" />
+      <Relation target="1305" type="UserTag" />
+      <Relation target="1306" type="UserTag" />
+      <Tag id="1301" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttHttpClientProtocolConfig">
+      </Tag>
+      <Tag id="1302" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttHttpServerProtocolConfig">
+      </Tag>
+      <Tag id="1303" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttClientLoadProfileFlat">
+      </Tag>
+      <Tag id="1304" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttClientLoadProfileDefault">
+      </Tag>
+      <Tag id="1305" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttClientProfileDefault">
+      </Tag>
+      <Tag id="1306" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttServerProfileDefault">
+      </Tag>
+    </Tags>
+    <EmulatedDevice id="2134" 
+     DeviceCount="1"
+     EnablePingResponse="FALSE"
+     RouterId="192.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterId="2000::1"
+     Ipv6RouterIdStep="::1"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Device 1">
+      <Relation type="TopLevelIf" target="2135"/>
+      <Relation type="TopLevelIf" target="2137"/>
+      <Relation type="TopLevelIf" target="2138"/>
+      <Relation type="PrimaryIf" target="2138"/>
+      <Ipv4If id="2135" 
+       Address="192.85.1.3"
+       AddrStep="0.0.0.1"
+       AddrStepMask="255.255.255.255"
+       SkipReserved="TRUE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       PrefixLength="24"
+       UsePortDefaultIpv4Gateway="FALSE"
+       Gateway="192.85.1.1"
+       GatewayStep="0.0.0.0"
+       GatewayRepeatCount="0"
+       GatewayRecycleCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       Ttl="255"
+       TosType="TOS"
+       Tos="192"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 2">
+        <Relation type="StackedOnEndpoint" target="2172"/>
+      </Ipv4If>
+      <EthIIIf id="2136" 
+       SourceMac="00:10:94:00:00:01"
+       SrcMacStep="00:00:00:00:00:01"
+       SrcMacList=""
+       SrcMacStepMask="00:00:ff:ff:ff:ff"
+       SrcMacRepeatCount="0"
+       Authenticator="default"
+       UseDefaultPhyMac="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="EthernetII 2">
+      </EthIIIf>
+      <Ipv6If id="2137" 
+       Address="2001::2"
+       AddrStep="::1"
+       AddrStepMask="ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+       SkipReserved="FALSE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       AllocateEui64LinkLocalAddress="FALSE"
+       PrefixLength="64"
+       UsePortDefaultIpv6Gateway="FALSE"
+       EnableGatewayLearning="FALSE"
+       Gateway="2001::1"
+       GatewayStep="::"
+       GatewayRepeatCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       GatewayRecycleCount="0"
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       HopLimit="255"
+       TrafficClass="0"
+       FlowLabel="7"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv6 3">
+        <Relation type="StackedOnEndpoint" target="2136"/>
+      </Ipv6If>
+      <Ipv6If id="2138" 
+       Address="fe80::1"
+       AddrStep="::1"
+       AddrStepMask="ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+       SkipReserved="FALSE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       AllocateEui64LinkLocalAddress="FALSE"
+       PrefixLength="64"
+       UsePortDefaultIpv6Gateway="FALSE"
+       EnableGatewayLearning="FALSE"
+       Gateway="::"
+       GatewayStep="::"
+       GatewayRepeatCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       GatewayRecycleCount="0"
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       HopLimit="255"
+       TrafficClass="0"
+       FlowLabel="7"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv6 4">
+        <Relation type="StackedOnEndpoint" target="2136"/>
+      </Ipv6If>
+
+      <HttpClientProtocolConfig id="3317" 
+       MaxTransactionsPerServer="10"
+       ClientName=""
+       EndpointConnectionPattern="PAIR"
+       DynamicLoad="30"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="HTTP Client 2">
+        <Relation type="UsesIf" target="2135"/>
+        <Relation type="AffiliatedClientLoadProfile" target="3313"/>
+        <Relation type="ConnectionDestination" target="3318"/>
+        <Relation type="AffiliatedClientProfile" target="3165"/>
+        <Relation target="1301" type="UserTag" />
+      </HttpClientProtocolConfig>
+
+      <HttpServerProtocolConfig id="3318" 
+       MaxSimultaneousClients="4294967295"
+       MaxRequestsPerClient="10"
+       ServerName=""
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="HTTP Server 2">
+        <Relation type="UsesIf" target="2135"/>
+        <Relation type="AffiliatedServerProfile" target="3168"/>
+        <Relation target="1302" type="UserTag" />
+      </HttpServerProtocolConfig>
+     
+    </EmulatedDevice>
+    
+    <ClientLoadProfile id="3313" 
+     ProfileName="ClientLoadProfileFlat"
+     LoadType="BANDWIDTH"
+     UseDynamicLoad="FALSE"
+     RandomizationSeed="123456"
+     MaxConnectionsAttempted="4294967295"
+     MaxOpenConnections="1"
+     MaxTransactionsAttempted="4294967295"
+     IsDefaultProfile="FALSE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="ClientLoadProfile 4">
+      <ClientLoadPhase id="3342" 
+       PhaseName="Label 1"
+       PhaseNum="1"
+       LoadPattern="FLAT"
+       LoadPhaseDurationUnits="SECONDS"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ClientLoadPhase 20">
+        <FlatPatternDescriptor id="3343" 
+         Height="40"
+         RampTime="0"
+         SteadyTime="30"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="FlatPatternDescriptor 12">
+        </FlatPatternDescriptor>
+      </ClientLoadPhase>
+      <Relation target="1303" type="UserTag" />
+    </ClientLoadProfile>
+    
+    <ClientLoadProfile id="3154" 
+     ProfileName="ClientLoadProfileDefault"
+     LoadType="CONNECTIONS"
+     UseDynamicLoad="FALSE"
+     RandomizationSeed="123456"
+     MaxConnectionsAttempted="4294967295"
+     MaxOpenConnections="4096"
+     MaxTransactionsAttempted="4294967295"
+     IsDefaultProfile="TRUE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="ClientLoadProfile 1">
+      <ClientLoadPhase id="3155" 
+       PhaseName="Delay"
+       PhaseNum="1"
+       LoadPattern="FLAT"
+       LoadPhaseDurationUnits="SECONDS"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ClientLoadPhase 1">
+        <FlatPatternDescriptor id="3156" 
+         Height="0"
+         RampTime="0"
+         SteadyTime="30"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="FlatPatternDescriptor 1">
+        </FlatPatternDescriptor>
+      </ClientLoadPhase>
+      <ClientLoadPhase id="3157" 
+       PhaseName="Ramp Up"
+       PhaseNum="2"
+       LoadPattern="STAIR"
+       LoadPhaseDurationUnits="SECONDS"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ClientLoadPhase 2">
+        <StairPatternDescriptor id="3158" 
+         Height="100"
+         Repetitions="1"
+         RampTime="30"
+         SteadyTime="0"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="StairPatternDescriptor 1">
+        </StairPatternDescriptor>
+      </ClientLoadPhase>
+      <ClientLoadPhase id="3159" 
+       PhaseName="Stair Step"
+       PhaseNum="3"
+       LoadPattern="STAIR"
+       LoadPhaseDurationUnits="SECONDS"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ClientLoadPhase 3">
+        <StairPatternDescriptor id="3160" 
+         Height="40"
+         Repetitions="10"
+         RampTime="1"
+         SteadyTime="11"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="StairPatternDescriptor 2">
+        </StairPatternDescriptor>
+      </ClientLoadPhase>
+      <ClientLoadPhase id="3161" 
+       PhaseName="Steady State"
+       PhaseNum="4"
+       LoadPattern="STAIR"
+       LoadPhaseDurationUnits="SECONDS"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ClientLoadPhase 4">
+        <StairPatternDescriptor id="3162" 
+         Height="0"
+         Repetitions="1"
+         RampTime="0"
+         SteadyTime="60"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="StairPatternDescriptor 3">
+        </StairPatternDescriptor>
+      </ClientLoadPhase>
+      <ClientLoadPhase id="3163" 
+       PhaseName="Ramp Down"
+       PhaseNum="5"
+       LoadPattern="FLAT"
+       LoadPhaseDurationUnits="SECONDS"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ClientLoadPhase 5">
+        <FlatPatternDescriptor id="3164" 
+         Height="0"
+         RampTime="0"
+         SteadyTime="60"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="FlatPatternDescriptor 2">
+        </FlatPatternDescriptor>
+      </ClientLoadPhase>
+      <Relation target="1304" type="UserTag" />
+    </ClientLoadProfile>
+
+    <ClientProfile id="3165" 
+     ProfileName="HTTP DefaultClientProfile"
+     TosType="TOS"
+     Ipv4Tos="192"
+     Ipv6TrafficClass="0"
+     RxWindowSizeLimit="32768"
+     EnableDelayedAck="FALSE"
+     IsDefaultProfile="TRUE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="ClientProfile 1">
+      <HttpClientProtocolProfile id="3166" 
+       HttpVersion="VERSION_1_1"
+       EnableKeepAlive="TRUE"
+       UserAgentHeader="Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1;
+.NET CLR 1.1.4322"
+       EnablePipelining="TRUE"
+       MaxPipelineDepth="8"
+       EnableVideoClient="FALSE"
+       VideoClientType="SPIRENT_HLS"
+       VideoClientStartBitrate="PREDEFINE"
+       VideoClientPredefineMethod="MINIMUM"
+       VideoClientUserDefineValue="128"
+       VideoClientVideoType="VOD"
+       VideoClientViewTime="60"
+       VideoClientBitrateAlg="SMART"
+       IsDefaultProfile="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="HttpClientProtocolProfile 1">
+      </HttpClientProtocolProfile>
+      <Relation target="1305" type="UserTag" />
+    </ClientProfile>
+
+    <ServerProfile id="3168" 
+     ProfileName="HTTP DefaultServerProfile"
+     TosType="TOS"
+     Ipv4Tos="192"
+     Ipv6TrafficClass="0"
+     RxWindowSizeLimit="32768"
+     EnableDelayedAck="FALSE"
+     IsDefaultProfile="TRUE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="ServerProfile 1">
+      <HttpServerProtocolProfile id="3169" 
+       HttpVersion="VERSION_1_1"
+       HttpServerTypes="MICROSOFT_IIS"
+       ServerPortNum="80"
+       EnableVideoServer="FALSE"
+       VideoServerType="LIVE_STREAMING"
+       VideoServerStreamType="ADAPTIVE_BITRATE"
+       ServerVideoLength="60"
+       VideoServerVersion="VERSION_1_0"
+       ServerMediaSeqNum="1"
+       ServerTargetDuration="10"
+       ServerSlidingWindowPlaylistSize="8"
+       VideoServerBitrateList=""
+       TosType="TOS"
+       IsDefaultProfile="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="HttpServerProtocolProfile 1">
+        <HttpServerResponseConfig id="3170" 
+         BodySizeType="FIXED"
+         FixedBodySize="64"
+         RandomBodySizeMean="0"
+         RandomBodySizeStdDeviation="0"
+         BodyContentType="ASCII"
+         ResponseTimingType="FIXED"
+         FixedResponseLatency="0"
+         RandomResponseLatencyMean="0"
+         RandomResponseLatencyStdDeviation="0"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="HttpServerResponseConfig 1">
+        </HttpServerResponseConfig>
+        <TextHtmlResponseHeaderConfig id="3171" 
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="TextHtmlResponseHeaderConfig 1">
+        </TextHtmlResponseHeaderConfig>
+        <BinaryResponseHeaderConfig id="3172" 
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="BinaryResponseHeaderConfig 1">
+        </BinaryResponseHeaderConfig>
+      </HttpServerProtocolProfile>
+      <Relation target="1306" type="UserTag" />
+    </ServerProfile>
+    
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

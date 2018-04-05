@@ -1,0 +1,70 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/stc380"  xml:lang="en">
+	 <label>Spirent TestCenter 3.80</label> 
+	 <author>Spirent Communications</author> 
+ <actionDecl name="open"> 
+	 <label>open</label> 
+	 <tooltip>Open STC session</tooltip> 
+	 <parameter name="fileName"> 
+		 <label>File name</label> 
+		 <tooltip>configuration file name</tooltip> 
+		 <datatype>string</datatype> 
+	 </parameter> 
+	 <parameter name="portLocation"> 
+		 <label>chassis's port location</label> 
+		 <tooltip>chassis's port location</tooltip> 
+		 <datatype>string</datatype> 
+		 <allowedCount> 
+			 <min>0</min> 
+			 <max>65535</max> 
+		 </allowedCount> 
+		 <allowedPattern>//[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+/[0-9]+</allowedPattern> 
+		 <mandatory>false</mandatory> 
+	 </parameter> 
+ </actionDecl> 
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/IGMP/MLD</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/802.1x</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/ANCP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/DHCPv4</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/DHCPv6</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/IPv6%20Autoconfiguration</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/L2TP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/PPP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Access/PPPoX</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Application%20Layer%20Protocols/Application%20Layer</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Application%20Layer%20Protocols/SIP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Application%20Layer%20Protocols/StorageIO</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Carrier%20Ethernet/EOAM</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Carrier%20Ethernet/Link-OAM</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Carrier%20Ethernet/SyncE</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Carrier%20Ethernet/TWAMP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/MPLS/LDP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/MPLS/LspPing</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/MPLS/RSVP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/BFD</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/BGP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/Convergence</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/ISIS</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/OSPFv2</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/OSPFv3</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/PIM</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/RIP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/Routing</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Switching/FC</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Switching/FCoE</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Switching/LACP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Switching/LLDP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Switching/PFC</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Switching/STP</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Switching/VIC</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Triple%20Play/IPTV</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Triple%20Play/VQANA</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Admin</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Basic</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/CHANNEL</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Conditional</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/DCB</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Device%20Commander</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Global%20Services</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/L2Test</subharness>
+	 <subharness>http://spirent.com/NTAF/harness/STC/3.80/Learning</subharness>
+</query-harness>

@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCMR" 
+    showName="FC MR"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcsw:MReq"
+    description="FC MR">
+    <pdus>
+      <pdu name="mreq1" pdu="fcsw:MReq" >
+      	<payload>
+		  <MRPayloadChoice>
+		    <basicZoning />
+		  </MRPayloadChoice>
+		</payload>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

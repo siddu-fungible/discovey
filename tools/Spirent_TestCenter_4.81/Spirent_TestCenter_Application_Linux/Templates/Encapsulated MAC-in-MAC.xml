@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="MAC-in-MAC"
+    showName="Encapsulated MAC-in-MAC"
+    version="1.00"
+    category="802.1ah"
+    readonly="true"
+    validate="true"
+    firstPdu="MAC-in-MAC:EncapMAC-in-MAC"
+    description="Encapsulated MAC-in-MAC" >
+
+    <pdus>
+      <pdu name="proto1" pdu="MAC-in-MAC:EncapMAC-in-MAC" />
+    </pdus>
+  </template>
+</frame>

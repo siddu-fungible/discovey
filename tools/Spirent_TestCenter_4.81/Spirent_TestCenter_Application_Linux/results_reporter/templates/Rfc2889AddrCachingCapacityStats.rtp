@@ -1,0 +1,1222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>PASSED</instance>
+      </value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.55.1271.0000</instance>
+      </value>
+      <path>select Version from StcSystem where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2010-07-27 00:45:59</instance>
+      </value>
+      <path>select CreatedTime from DataSet where Id = (select distinct DataSetId from EotResultNodeParam where Name = "@StartDataSetId");</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstEndDate</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select CreatedTime from DataSet where Id = =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>sumOLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>N/A</instance>
+        <instance>N/A</instance>
+      </value>
+      <path>select OfferedLoad from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>sumTrial</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+        <instance>1</instance>
+      </value>
+      <path>select IterationNum from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumTxSig</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select TxSigFrameCount from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumPass</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+        <instance>1</instance>
+      </value>
+      <path>select Passed from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumRxSig</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select RxSigFrameCount from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumILoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0672</instance>
+        <instance>0.1184</instance>
+      </value>
+      <path>select IntendedLoad from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>sumCachCap</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+      </value>
+      <path>select CachingCapacity from Rfc2889AddrCachingTestResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+	    <instance>
+      <name>sumCachCapPerIter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+      </value>
+      <path>select CachingCapacityPerIteration from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumAddrCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select AddrCount from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumRx</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select RxFrameCount from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumRxExpected</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select RxExpectedFrameCount from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumFlood</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <path>select CASE WHEN FloodCount = 18446744073709551615 THEN '' ELSE FloodCount END from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialAddrCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select AddrCount from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialNum</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+      </value>
+      <path>select IterationNum from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+        <instance>Port //12/1</instance>
+        <instance>Port //12/2</instance>
+        <instance>Test</instance>
+      </value>
+      <path>select Port from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialRx</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select RxFrameCount from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialTxSig</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>47</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>47</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+      </value>
+      <path>select TxSigFrameCount from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialRxSig</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select RxSigFrameCount from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialRxExpected</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select RxExpectedFrameCount from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialFlood</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <path>select CASE WHEN FloodCount = 18446744073709551615 THEN '' ELSE FloodCount END from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialExpected</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+        <instance>0</instance>
+        <instance>30</instance>
+        <instance>30</instance>
+        <instance>0</instance>
+        <instance>40</instance>
+        <instance>40</instance>
+        <instance>0</instance>
+        <instance>45</instance>
+        <instance>45</instance>
+        <instance>0</instance>
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select ExpectedFrameCount from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialLost</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <path>select CASE WHEN FrameLoss = 18446744073709551615 THEN '' ELSE FrameLoss END from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialLossPercent</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select Coalesce(PercentLoss, '') from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$; between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialLearnPercent</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+      </value>
+      <path>select PercentLearn from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //12/1</instance>
+      </value>
+      <path>select Port from Rfc2889AddrCachingPerPortResult where PortType = 'Transmit' and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ Group by Port;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>sumExpected</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>47</instance>
+        <instance>47</instance>
+      </value>
+      <path>select ExpectedFrameCount from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumLost</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <path>select CASE WHEN FrameLoss = 18446744073709551615 THEN '' ELSE FrameLoss END from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumLossPercent</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select Coalesce(PercentLoss, '') from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumLearnPercent</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+      </value>
+      <path>select PercentLearn from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialPortType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+        <instance>Transmit</instance>
+        <instance>Learning</instance>
+        <instance>-</instance>
+      </value>
+      <path>select PortType from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialPass</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+      </value>
+      <path>select Passed from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>LPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //12/2</instance>
+      </value>
+      <path>select Port from Rfc2889AddrCachingPerPortResult where PortType = 'Learning' and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ Group by Port;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>MPort</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select Port from Rfc2889AddrCachingPerPortResult where PortType = 'Monitor' and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ Group by Port;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>basic</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Warning : Some modules do not support latency measurement</instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>sumFrameSize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64.0</instance>
+        <instance>128.0</instance>
+      </value>
+      <path>select (case FrameSizeType when 'Random' then 'N/A' else FrameSize end) from Rfc2889AddrCachingPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialFrameSize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>64.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+        <instance>128.0</instance>
+      </value>
+      <path>select (case FrameSizeType when 'Random' then 'N/A' else FrameSize end) from Rfc2889AddrCachingPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnitString</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Mbps</instance>
+      </value>
+      <path>select (case DisplayLoadUnit when "PERCENT_LINE_RATE" then "%" when "FRAMES_PER_SECOND" then "fps" when "INTER_BURST_GAP" then "Inter-burst Gap" when "MEGABITS_PER_SECOND" then "Mbps" when "KILOBITS_PER_SECOND" then "Kbps" when "BITS_PER_SECOND" then "bps" end ) from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2010-07-29 10:50:40 PDT</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String">2010-07-26 17:45:59 PDT</value>
+      <script><![CDATA[# generate the report start time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>sumTestResult</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+      </value>
+      <script><![CDATA[# Set pass/fail according to test passed field&#xa;&#xa;# clear result set&#xa;set result {}&#xa;&#xa; # for some reason the first and last members of the array could be:  "(0.0" or "(1.0" or "0.0)" or "1.0)"&#xa; set index 0&#xa; foreach i ($sumPass) {&#xa;  set val [lindex $sumPass $index]&#xa;  if {$val == 0} {&#xa;    lappend result "Failed"&#xa;  }  elseif {$val == 1} {&#xa;     lappend result "Passed"&#xa;  } else {&#xa;     lappend result "N/A"&#xa;  }&#xa;  incr index&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialTestResult</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+        <instance>Passed</instance>
+      </value>
+      <script><![CDATA[# Set pass/fail according to test passed field&#xa;&#xa;# clear result set&#xa;set result {}&#xa;&#xa; # for some reason the first and last members of the array could be:  "(0.0" or "(1.0" or "0.0)" or "1.0)"&#xa; set index 0&#xa; foreach i ($trialPass) {&#xa;  set val [lindex $trialPass $index]&#xa;  if {$val == 0} {&#xa;    lappend result "Failed"&#xa;  }  elseif {$val == 1}  {&#xa;     lappend result "Passed"&#xa;  } else {&#xa;     lappend result "N/A"&#xa;  }&#xa;  incr index&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>origTrialCode</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Set pas/fail according to test passed field&#xa;&#xa;# check for 1 or more trials, return a value for 1 trial, a list for more than 1 trail&#xa;&#xa;# clear result set&#xa;set result {}&#xa;&#xa;if {$sumTrials==1} {&#xa;  if {$trialPass == 0} {&#xa;  set result "Failed"&#xa; } elseif {$sumPass == 1} {&#xa;  set result "Passed"&#xa; } else {&#xa;  set result "N/A"&#xa; }&#xa;} else {&#xa; # first create a list of the appropriate size, default value to "N/A&#xa; set result [list]&#xa; foreach i ($trialPass) {&#xa;   lappend result "N/A"&#xa; }&#xa;&#xa; # for some reason the first and last members of the array could be:  "(0.0" or "(1.0" or "0.0)" or "1.0)"&#xa; set index 0&#xa; foreach i ($trialPass) {&#xa;  if {($i == 0)||($i == "(0.0")||($i == "0.0)")}  {&#xa;    set result [lreplace $result $index $index "Failed"]&#xa;  }  elseif {($i == 1)||($i == "(1.0")||($i == "1.0)")}  {&#xa;    set result [lreplace $result $index $index "Passed"]&#xa;  }&#xa;# else {&#xa;#    set result [lreplace $result $index $index $i ]&#xa;#  }&#xa;   incr index&#xa; }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestEndDate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# generate the report end time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstEndDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Basic</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1254423221650</value>
+      <script><![CDATA[set result "1280441549691"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Thu Oct 01 11:53:41.650 PDT 2009</value>
+      <script><![CDATA[set result "Thu Jul 29 15:12:29.691 PDT 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>summaryStats</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Trial</td>&#xa;    <td bgcolor="#eeeeee">Frame\nSize</td>&#xa;    <td bgcolor="#eeeeee">Address\nCount</td>&#xa;    <td bgcolor="#eeeeee">Test\nStatus</td>&#xa;    <td bgcolor="#eeeeee">Tx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Flood\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Lost\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa;    <td bgcolor="#eeeeee">Caching\nCapacity</td>&#xa;    <td bgcolor="#eeeeee">Learned\nPercent(%)</td>&#xa;   </tr>&#xa; <tr iterate="=$sumTrial$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$sumTrial$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$sumFrameSize$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$sumAddrCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumTestResult$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumTxSig$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumRxSig$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumRx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumRxExpected$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumFlood$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumExpected$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumLost$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumLossPercent$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumCachCapPerIter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumLearnPercent$</td>&#xa;   </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>trialStats</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Trial</td>&#xa;    <td bgcolor="#eeeeee">Frame\nSize</td>&#xa;    <td bgcolor="#eeeeee">Address\nCount</td>&#xa;    <td bgcolor="#eeeeee">Port</td>&#xa;    <td bgcolor="#eeeeee">Port\nType</td>&#xa;    <td bgcolor="#eeeeee">Status</td>&#xa;    <td bgcolor="#eeeeee">Tx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Flood\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Lost\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa;    <td bgcolor="#eeeeee">Learned\n(%)</td>&#xa;   </tr>&#xa; <tr iterate="=$trialNum$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialNum$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialFrameSize$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialAddrCount$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialPort$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialPortType$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialTestResult$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialTxSig$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialRxSig$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialRx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialRxExpected$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialFlood$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialExpected$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialLost$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialLossPercent$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialLearnPercent$</td>&#xa;   </tr>&#xa;</table>]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>SpiretnLogoTitle</name>
+        <x>200</x>
+        <y>342</y>
+        <width>292</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>449</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>449</y>
+        <width>201</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC2889&amp;nbsp;Address&amp;nbsp;Caching&amp;nbsp;Capacity</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>103</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>logo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSide</name>
+        <x>700</x>
+        <y>100</y>
+        <width>100</width>
+        <height>600</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titlStr</name>
+        <x>280</x>
+        <y>105</y>
+        <width>100</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Test&amp;nbsp;Summary</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>summaryTbl</name>
+        <x>26</x>
+        <y>191</y>
+        <width>612</width>
+        <height>47</height>
+        <value>summaryStats</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>cachCapStr</name>
+        <x>35</x>
+        <y>154</y>
+        <width>151</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Optimal&amp;nbsp;Caching&amp;nbsp;Capacity:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>cachCapVar</name>
+        <x>200</x>
+        <y>155</y>
+        <width>8</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$sumCachCap$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Trial Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titlStr</name>
+        <x>290</x>
+        <y>105</y>
+        <width>110</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Iteration&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>trialTbl</name>
+        <x>21</x>
+        <y>166</y>
+        <width>613</width>
+        <height>234</height>
+        <value>trialStats</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>theoMaxTitleStr</name>
+        <x>200</x>
+        <y>104</y>
+        <width>243</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>versionStr</name>
+        <x>35</x>
+        <y>463</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2C</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputStartIdStr</name>
+        <x>35</x>
+        <y>489</y>
+        <width>127</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>509</y>
+        <width>130</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>520</y>
+        <width>800</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>670</x>
+        <y>100</y>
+        <width>130</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>528</y>
+        <width>142</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>TheoMax</name>
+        <x>17</x>
+        <y>140</y>
+        <width>656</width>
+        <height>256</height>
+        <src>theoMaxPosAtm.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

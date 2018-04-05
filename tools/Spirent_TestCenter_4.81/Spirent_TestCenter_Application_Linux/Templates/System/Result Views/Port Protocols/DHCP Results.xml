@@ -1,0 +1,281 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5535" serializationBase="true" 
+ Identifier="Port Protocols\DHCP Results"
+ PrimaryClass="Port"
+ Description="object://core/Port"
+ Path="Port Protocols"
+ CustomDisplayPath="Access\DHCP"
+ CustomDisplayName="DHCP Port Aggregated Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="DHCP Results">
+  <RealTimeResultColumnDefinition id="5536" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 164">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5537" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 14">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5538" 
+   GroupName="DHCP Results"
+   GroupId="object://customgroup/6850ba03-9012-4c2a-ba2b-293695c2b8f7/Main"
+   ColumnClassName="Dhcpv4PortConfig Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults"
+   ColumnPropertyName="PortState CurrentIdleCount CurrentBoundCount TotalAttemptCount TotalBoundCount TotalFailedCount TotalRetriedCount TotalRenewedCount TotalRebootedCount BindRate AttemptRate SuccessPercent MinSetupTime MaxSetupTime AvgSetupTime TxDiscoverCount RxOfferCount TxRequestCount TxRenewCount TxRebindCount TxRebootCount RxAckCount TxReleaseCount RxNakCount RxForceRenewCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, Dhcpv4PortConfig.PortState AS &apos;State&apos;, Dhcpv4PortResults.CurrentIdleCount AS &apos;Currently Idle&apos;, Dhcpv4PortResults.CurrentBoundCount AS &apos;Currently Bound&apos;, Dhcpv4PortResults.TotalAttemptCount AS &apos;Total Attempted&apos;, Dhcpv4PortResults.TotalBoundCount AS &apos;Total Bound&apos;, Dhcpv4PortResults.TotalFailedCount AS &apos;Total Failed&apos;, Dhcpv4PortResults.TotalRetriedCount AS &apos;Total Retried&apos;, Dhcpv4PortResults.TotalRenewedCount AS &apos;Total Renewed&apos;, Dhcpv4PortResults.TotalRebootedCount AS &apos;Total Init-Rebooted&apos;, Dhcpv4PortResults.BindRate AS &apos;Bind Rate (sessions/sec)&apos;, Dhcpv4PortResults.AttemptRate AS &apos;Attempt Rate (sessions/sec)&apos;, Dhcpv4PortResults.SuccessPercent AS &apos;Success Percentage (%)&apos;, Dhcpv4PortResults.MinSetupTime AS &apos;Minimum Setup Time (sec)&apos;, Dhcpv4PortResults.MaxSetupTime AS &apos;Maximum Setup Time (sec)&apos;, Dhcpv4PortResults.AvgSetupTime AS &apos;Average Setup Time (sec)&apos;, Dhcpv4PortResults.TxDiscoverCount AS &apos;Discover Tx Count&apos;, Dhcpv4PortResults.RxOfferCount AS &apos;Offer Rx Count&apos;, Dhcpv4PortResults.TxRequestCount AS &apos;Request Tx Count&apos;, Dhcpv4PortResults.TxRenewCount AS &apos;Renew Tx Count&apos;, Dhcpv4PortResults.TxRebindCount AS &apos;Rebind Tx Count&apos;, Dhcpv4PortResults.TxRebootCount AS &apos;Init-Reboot Tx Count&apos;, Dhcpv4PortResults.RxAckCount AS &apos;ACK Rx Count&apos;, Dhcpv4PortResults.TxReleaseCount AS &apos;Release Tx Count&apos;, Dhcpv4PortResults.RxNakCount AS &apos;NAK Rx Count&apos;, Dhcpv4PortResults.RxForceRenewCount AS &apos;Force Renew Rx Count&apos; FROM Port, Dhcpv4PortConfig, Dhcpv4PortResults WHERE ( Dhcpv4PortConfig.ParentHnd = Port.Handle AND Dhcpv4PortResults.ParentHnd = Dhcpv4PortConfig.Handle AND Port.DataSetId = @DataSetId AND Dhcpv4PortConfig.DataSetId = @DataSetId AND Dhcpv4PortResults.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 15">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5539" 
+   ConfigClassId="dhcpv4portconfig"
+   ResultClassId="dhcpv4portresults"
+   ResultRootList="20"
+   PropertyIdArray="dhcpv4portresults.currentidlecount dhcpv4portresults.currentboundcount dhcpv4portresults.totalattemptcount dhcpv4portresults.totalboundcount dhcpv4portresults.totalrenewedcount dhcpv4portresults.totalfailedcount dhcpv4portresults.totalretriedcount dhcpv4portresults.bindrate dhcpv4portresults.attemptrate dhcpv4portresults.successpercent dhcpv4portresults.minsetuptime dhcpv4portresults.maxsetuptime dhcpv4portresults.avgsetuptime dhcpv4portresults.txdiscovercount dhcpv4portresults.rxoffercount dhcpv4portresults.txrequestcount dhcpv4portresults.txrenewcount dhcpv4portresults.txrebindcount dhcpv4portresults.rxackcount dhcpv4portresults.txreleasecount dhcpv4portresults.rxnakcount dhcpv4portresults.rxforcerenewcount dhcpv4portresults.totalrebootedcount dhcpv4portresults.txrebootcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 6">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5540" 
+   ColumnClassName="Dhcpv4PortConfig"
+   ColumnPropertyName="PortState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 165">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5541" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="CurrentIdleCount"
+   ColumnDescription=""
+   ColumnWidth="56"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 166">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5542" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="CurrentBoundCount"
+   ColumnDescription=""
+   ColumnWidth="57"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 167">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5543" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalAttemptCount"
+   ColumnDescription=""
+   ColumnWidth="68"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 168">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5544" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalBoundCount"
+   ColumnDescription=""
+   ColumnWidth="43"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 169">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5545" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalFailedCount"
+   ColumnDescription=""
+   ColumnWidth="45"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 170">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5546" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalRetriedCount"
+   ColumnDescription=""
+   ColumnWidth="44"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 171">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5547" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalRenewedCount"
+   ColumnDescription=""
+   ColumnWidth="58"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 172">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5548" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="BindRate"
+   ColumnDescription=""
+   ColumnWidth="82"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 173">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5549" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="AttemptRate"
+   ColumnDescription=""
+   ColumnWidth="81"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 174">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5550" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="SuccessPercent"
+   ColumnDescription=""
+   ColumnWidth="89"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 175">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5551" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="MinSetupTime"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 176">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5552" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="MaxSetupTime"
+   ColumnDescription=""
+   ColumnWidth="92"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 177">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5553" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="AvgSetupTime"
+   ColumnDescription=""
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 178">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5554" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxDiscoverCount"
+   ColumnDescription=""
+   ColumnWidth="67"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 179">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5555" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="RxOfferCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 180">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5556" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxRequestCount"
+   ColumnDescription=""
+   ColumnWidth="68"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 182">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5556" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxRenewCount"
+   ColumnDescription=""
+   ColumnWidth="68"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 183">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5556" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxRebindCount"
+   ColumnDescription=""
+   ColumnWidth="68"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 184">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5557" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="RxAckCount"
+   ColumnDescription=""
+   ColumnWidth="49"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 185">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5558" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxReleaseCount"
+   ColumnDescription=""
+   ColumnWidth="67"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 186">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5559" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="RxNakCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 187">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5559" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="RxForceRenewCount"
+   ColumnDescription=""
+   ColumnWidth="74"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 188">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5560" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalRebootedCount"
+   ColumnDescription=""
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 189">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5561" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxRebootCount"
+   ColumnDescription=""
+   ColumnWidth="72"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 190">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

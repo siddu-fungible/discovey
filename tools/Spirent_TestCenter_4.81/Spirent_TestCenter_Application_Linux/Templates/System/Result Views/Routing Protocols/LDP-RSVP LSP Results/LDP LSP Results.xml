@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5838" serializationBase="true" 
+ Identifier="Router Protocols\LDP-RSVP LSP Results\LDP LSP Results"
+ PrimaryClass="LdpLspResults"
+ Description="object://ldp/LdpLspResults"
+ Path="Router Protocols\LDP-RSVP LSP Results"
+ CustomDisplayPath="Routing and MPLS\LSP Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="LDP LSP Results">
+  <ResultQuery id="5839" 
+   ConfigClassId="ldprouterconfig"
+   ResultClassId="ldplspresults"
+   ResultRootList="17"
+   PropertyIdArray="ldplspresults.lsplabel ldplspresults.lspstate ldplspresults.lsptype ldplspresults.lspmode ldplspresults.cbit ldplspresults.lspfecinfo ldplspresults.lspfectype ldplspresults.preferentialforwardingstatusbit ldplspresults.flowlabelsubtlvfbit"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 58">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5840" 
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1427">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5841" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="LspLabel"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="52"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1428">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5842" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="LspState"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="52"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1429">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5843" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="LspType"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="57"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1430">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5844" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="LspMode"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="61"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1431">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5845" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="Cbit"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="52"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1432">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5846" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="PreferentialForwardingStatusBit"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="119"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1433">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5847" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="FlowLabelSubTlvFBit"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="110"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1434">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5848" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="LspFecInfo"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="58"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1435">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5849" 
+   ColumnClassName="LdpLspResults"
+   ColumnPropertyName="LspFecType"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="63"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 1436">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5850" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 123">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5851" 
+   GroupName="LDP LSP Results"
+   GroupId="object://ldp/LdpLspResults"
+   ColumnClassName="LdpLspResults LdpLspResults LdpLspResults LdpLspResults LdpLspResults LdpLspResults LdpLspResults LdpLspResults LdpLspResults"
+   ColumnPropertyName="LspLabel LspState LspType LspMode Cbit PreferentialForwardingStatusBit FlowLabelSubTlvFBit LspFecInfo LspFecType"
+   SqlString=" SELECT AllDevice.Name AS &apos;Device Name&apos;, LdpLspResults.LspLabel AS &apos;Label&apos;, LdpLspResults.LspState AS &apos;State&apos;, LdpLspResults.LspType AS &apos;Type&apos;, LdpLspResults.LspMode AS &apos;Mode&apos;, LdpLspResults.Cbit AS &apos;C-bit&apos;, LdpLspResults.PreferentialForwardingStatusBit AS &apos;Preferential Forwarding Status Bit&apos;, LdpLspResults.FlowLabelSubTlvFBit AS &apos;Flow Label Sub-TLV F-bit&apos;, LdpLspResults.LspFecInfo AS &apos;Fec Info&apos;, LdpLspResults.LspFecType AS &apos;Fec Type&apos; FROM LdpLspResults, AllDevice, LdpRouterConfig WHERE ( LdpLspResults.ParentHnd = LdpRouterConfig.Handle AND LdpRouterConfig.ParentHnd = AllDevice.Handle AND LdpLspResults.DataSetId = @DataSetId AND AllDevice.DataSetId = @DataSetId AND LdpRouterConfig.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 124">
+  </RealTimeResultGroupDefinition>
+</ResultDataSet>

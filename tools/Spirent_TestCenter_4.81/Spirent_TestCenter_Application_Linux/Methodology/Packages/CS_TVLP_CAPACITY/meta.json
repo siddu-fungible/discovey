@@ -1,0 +1,605 @@
+{
+  "methodology_key": "CS_TVLP_CAPACITY",
+  "display_name": "CloudStress Capacity - Time-Varying Load Profile",
+  "short_display_name": "Capacity Time-Varying Load Profile",
+  "description": "Identify a baseline VM capacity metric of the system under test using a time-varying load profile.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "port_groups": [],
+  "machine_map": {
+    "sides": [
+      {
+        "side": "WEST",
+        "machine_group": "MachineGroupWestMachineGroup"
+      }
+    ]
+  },
+  "machine_groups": [
+    {
+      "property": "MachineGroupWestMachineGroup",
+      "display_name": "Machine Group MachineGroupWestMachineGroup",
+      "machines": [
+        {
+          "machine_ips": [
+            "10.1.1.1",
+            "10.1.1.2"
+          ]
+        }
+      ]
+    }
+  ],
+  "property_groups": [
+    {
+      "display_name": "Global Configuration",
+      "description": "Global Configuration",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "display_name": "Enable CPU Test Criteria",
+          "description": "Enable thresholds on CPU performance.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True",
+          "property": "EnableCpuTestCriteria"
+        },
+        {
+          "display_name": "Enable Memory Test Criteria",
+          "description": "Enable thresholds on memory performance.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True",
+          "property": "EnableMemoryTestCriteria"
+        },
+        {
+          "display_name": "Enable Network Test Criteria",
+          "description": "Enable thresholds on network performance.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True",
+          "property": "EnableNetworkTestCriteria"
+        },
+        {
+          "display_name": "Enable Storage Test Criteria",
+          "description": "Enable thresholds on storage performance.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True",
+          "property": "EnableStorageTestCriteria"
+        },
+        {
+          "display_name": "Iteration Duration",
+          "description": "The minimum time to generate load on the selected agents.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "30.00",
+          "units": "sec",
+          "property": "IterationDuration"
+        },
+        {
+          "display_name": "Initial Instance Count",
+          "description": "Initial instance count per template to apply to the binary search algorithm.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "5",
+          "units": "per template",
+          "property": "InitialInstanceCount"
+        },
+        {
+          "display_name": "Minimum Instance Count",
+          "description": "The minimum instance count per template to apply to the binary search algorithm.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1",
+          "units": "per template",
+          "property": "MinInstanceCount"
+        },
+        {
+          "display_name": "Maximum Instance Count",
+          "description": "The maximum instance count per template to apply to the binary search algorithm.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "10",
+          "units": "per template",
+          "property": "MaxInstanceCount"
+        },
+        {
+          "display_name": "Search Resolution",
+          "description": "If the difference between the highest passing iteration and lowest failing iteration is less than the resolution, the search algorithm will stop.",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "units": "instances",
+          "property": "SearchResolution"
+        },
+        {
+          "display_name": "Wait After Agent Stop",
+          "description": "Time to wait after stopping agents before collecting results and validating the iteration.",
+          "maximum": "2147483647.0",
+          "property_value_type": "FLOAT",
+          "minimum": "0.005",
+          "is_collection": false,
+          "property_value": "10.00",
+          "units": "sec",
+          "property": "WaitAfterStop"
+        },
+        {
+          "display_name": "Time-Varying Load Profile Data File",
+          "description": "JSON file containing the recorded time varying load profile data.  All time varying load profiles referenced by TVLP ID must be defined in this file.",
+          "property_value_type": "TVLP_INPUTFILEPATH",
+          "is_collection": false,
+          "property_value": "tvlp_data.json",
+          "acceptable_values": [
+            "*.json"
+          ],
+          "property": "TvlpJsonFilename"
+        }
+      ]
+    },
+    {
+      "display_name": "Auto-Deployment Configuration",
+      "description": "Auto-Deployment Configuration",
+      "group_type": "TEST",
+      "group_key": "AutoDeployConfig",
+      "test_properties": [
+        {
+          "display_name": "Provider Response Maximum Wait Time",
+          "description": "Maximum amount of time to wait for a response from the provider when a command is issued.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "60",
+          "units": "sec",
+          "property": "ProviderRespMaxWaitTime"
+        },
+        {
+          "display_name": "Provider Response Poll Time",
+          "description": "Amount of time to wait between polls to check for the provider's response to a command.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "ProviderRespPollTime"
+        },
+        {
+          "display_name": "Agent Deployment Maximum Wait Time",
+          "description": "Maximum amount of time to wait for auto-deployed agents to come up.  This maximum applies to agents of a specific Template or a specific batch of agents on a specific Template if BatchSize is non-zero.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "300",
+          "units": "sec",
+          "property": "DeployMaxWaitTime"
+        },
+        {
+          "display_name": "Agent Deployment Poll Time",
+          "description": "Amount of time to wait between polls to check for the number of agents have successfully been deployed for a specific Template or a specific batch of agents on a specific Template if BatchSize is non-zero.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "DeployPollTime"
+        },
+        {
+          "display_name": "Tear Down Maximum Wait Time",
+          "description": "Specifies the maximum time in seconds to wait to for all the deployed agents of the Template to be torn down.  When the BatchSize is non-zero, this parameter corresponds to the maximum wait time per batch of agents per Template.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "300",
+          "units": "sec",
+          "property": "TearDownMaxWaitTime"
+        },
+        {
+          "display_name": "Tear Down Poll Time",
+          "description": "Specifies the time in milliseconds to wait between polls while polling for number of agents that are still up.  Note that each poll for number of agents that are up involves issuing a command to the provider to get the current number of agents that are still up.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "TearDownPollTime"
+        },
+        {
+          "display_name": "Agent Deployment Batch Size",
+          "description": "Maximum number of agents to attempt at any one time.  Note that the Templates are deployed serially; the BatchSize further breaks up the agents in a Template to reduce the load on the server.  Set the BatchSize to zero to deploy all agents on a Template as fast as possible.",
+          "property_value_type": "INTEGER",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "0",
+          "units": "agents",
+          "property": "DeployBatchSize"
+        },
+        {
+          "display_name": "Agent Tear Down Batch Size",
+          "description": "Maximum number of agents to attempt at any one time.  Note that the Templates are deployed serially; the BatchSize further breaks up the agents in a Template to reduce the load on the server.  Set the BatchSize to zero to tear down all agents on a Template as fast as possible.",
+          "property_value_type": "INTEGER",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "0",
+          "units": "agents",
+          "property": "TearDownBatchSize"
+        },
+        {
+          "display_name": "Enable Delete Instances On End Of Test",
+          "description": "Enable deletion of all auto-deployed instances at the end of the test.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property": "EnableEotDeleteInstances",
+          "property_value": "True"
+        }
+      ]
+    },
+    {
+      "display_name": "Load Parameters",
+      "description": "Load parameters for the methodology.",
+      "group_type": "VM",
+      "test_properties": [
+        {
+          "display_name": "TVLP Load Parameters",
+          "description": "The time-varying load profile parameters to apply to all instances.",
+          "column_definitions": [
+            {
+              "display_name": "TVLP ID",
+              "description": "Specifies the ID referencing a time-varying load profile to use for generating load.",
+              "property_value_type": "TVLP_ID",
+              "is_collection": false,
+              "units": "",
+              "property": "TvlpId"
+            },
+            {
+              "display_name": "Template ID",
+              "description": "The resource ID of the template model these parameters are for. An empty string indicates to apply to all template models.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "TemplateId"
+            },
+            {
+              "display_name": "Node ID",
+              "description": "The resource ID of the node within the specified template model these parameters is for. An empty string indicates to apply to all nodes within the template model. If TemplateId is empty string, this is treated as an empty string.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "NodeId"
+            },
+            {
+              "display_name": "Node Name",
+              "description": "The name of the node within the specified template model that this load profile applies to.  When Node ID is an empty string, this field is ignored.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "NodeName"
+            },
+            {
+              "display_name": "Profile Name",
+              "description": "The name of this load profile.",
+              "property_value_type": "STRING",
+              "is_collection": false,
+              "property": "LoadProfileName"
+            }
+          ],
+          "table": [
+            [
+              "",
+              "",
+              "",
+              "",
+              "Default"
+            ]
+          ],
+          "property": "TvlpLoadParams"
+        }
+      ]
+    },
+    {
+      "display_name": "CPU Success Thresholds",
+      "description": "CPU Success Thresholds",
+      "group_type": "RESULTS",
+      "test_properties": [
+        {
+          "display_name": "Acceptable CPU Load Variance",
+          "description": "The maximum acceptable difference between the intended CPU load and actual CPU load for each agent.",
+          "maximum": "99.00",
+          "property_value_type": "FLOAT",
+          "minimum": "0.00",
+          "is_collection": false,
+          "property_value": "1.00",
+          "units": "%",
+          "property": "AcceptableCpuLoadVariance"
+        },
+        {
+          "display_name": "Successful CPU Load Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the actual load is within the allowed variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "maximum": "100.00",
+          "property_value_type": "FLOAT",
+          "minimum": "0.00",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "CpuLoadVarianceSuccessThreshold"
+        }
+      ]
+    },
+    {
+      "display_name": "Memory Success Thresholds",
+      "description": "Memory Success Thresholds",
+      "group_type": "RESULTS",
+      "test_properties": [
+        {
+          "display_name": "Acceptable Memory Read Variance",
+          "description": "The acceptable variance between the intended memory read rate and actual memory read rate.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "1.00",
+          "units": "%",
+          "property": "AcceptableMemoryReadVariance"
+        },
+        {
+          "display_name": "Acceptable Memory Read Latency",
+          "description": "The maximum acceptable latency, in nanoseconds, of memory read operations.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2000.00",
+          "units": "ns",
+          "property": "AcceptableMemoryReadLatency"
+        },
+        {
+          "display_name": "Acceptable Memory Write Variance",
+          "description": "The acceptable variance between the intended memory write rate and actual memory write rate.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "1.00",
+          "units": "%",
+          "property": "AcceptableMemoryWriteVariance"
+        },
+        {
+          "display_name": "Acceptable Memory Write Latency",
+          "description": "The maximum acceptable latency, in nanoseconds, of memory write operations.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2000.00",
+          "units": "ns",
+          "property": "AcceptableMemoryWriteLatency"
+        },
+        {
+          "display_name": "Memory Read Variance Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "MemoryReadVarianceSuccessThreshold"
+        },
+        {
+          "display_name": "Memory Read Latency Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "MemoryReadLatencySuccessThreshold"
+        },
+        {
+          "display_name": "Memory Write Variance Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "MemoryWriteVarianceSuccessThreshold"
+        },
+        {
+          "display_name": "Memory Write Latency Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "MemoryWriteLatencySuccessThreshold"
+        }
+      ]
+    },
+    {
+      "display_name": "Network Success Thresholds",
+      "description": "Network Success Thresholds",
+      "group_type": "RESULTS",
+      "test_properties": [
+        {
+          "display_name": "Acceptable Network Read Variance",
+          "description": "The acceptable variance between the intended network read rate and actual network read rate.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "20.00",
+          "units": "%",
+          "property": "AcceptableNetworkReadVariance"
+        },
+        {
+          "display_name": "Acceptable Network Read Latency",
+          "description": "The maximum acceptable latency, in nanoseconds, of network read operations.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "25000000.00",
+          "units": "ns",
+          "property": "AcceptableNetworkReadLatency"
+        },
+        {
+          "display_name": "Acceptable Network Write Variance",
+          "description": "The acceptable variance between the intended network write rate and actual network write rate.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "20.00",
+          "units": "%",
+          "property": "AcceptableNetworkWriteVariance"
+        },
+        {
+          "display_name": "Acceptable Network Write Latency",
+          "description": "The maximum acceptable latency, in nanoseconds, of network write operations.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "25000000.00",
+          "units": "ns",
+          "property": "AcceptableNetworkWriteLatency"
+        },
+        {
+          "display_name": "Network Read Variance Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "NetworkReadVarianceSuccessThreshold"
+        },
+        {
+          "display_name": "Network Read Latency Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "NetworkReadLatencySuccessThreshold"
+        },
+        {
+          "display_name": "Network Write Variance Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "NetworkWriteVarianceSuccessThreshold"
+        },
+        {
+          "display_name": "Network Write Latency Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "NetworkWriteLatencySuccessThreshold"
+        }
+      ]
+    },
+    {
+      "display_name": "Storage Success Thresholds",
+      "description": "Storage Success Thresholds",
+      "group_type": "RESULTS",
+      "test_properties": [
+        {
+          "display_name": "Acceptable Storage Read Variance",
+          "description": "The acceptable variance between the intended storage read rate and actual storage read rate.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "20.00",
+          "units": "%",
+          "property": "AcceptableStorageReadVariance"
+        },
+        {
+          "display_name": "Acceptable Storage Read Latency",
+          "description": "The maximum acceptable latency, in nanoseconds, of storage read operations.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10000000.00",
+          "units": "ns",
+          "property": "AcceptableStorageReadLatency"
+        },
+        {
+          "display_name": "Acceptable Storage Write Variance",
+          "description": "The acceptable variance between the intended storage write rate and actual storage write rate.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "20.00",
+          "units": "%",
+          "property": "AcceptableStorageWriteVariance"
+        },
+        {
+          "display_name": "Acceptable Storage Write Latency",
+          "description": "The maximum acceptable latency, in nanoseconds, of storage write operations.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10000000.00",
+          "units": "ns",
+          "property": "AcceptableStorageWriteLatency"
+        },
+        {
+          "display_name": "Storage Read Variance Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "StorageReadVarianceSuccessThreshold"
+        },
+        {
+          "display_name": "Storage Read Latency Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "StorageReadLatencySuccessThreshold"
+        },
+        {
+          "display_name": "Storage Write Variance Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the actual load is within the acceptable variance.  Agents are ranked according to how many result samples do not meet acceptable variance.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "StorageWriteVarianceSuccessThreshold"
+        },
+        {
+          "display_name": "Storage Write Latency Success Threshold",
+          "description": "The number of result samples as a percentage of the total result samples from data from up to the five worst performing agents per dimension that show the measured latency is acceptable.  Agents are ranked according to how many result samples do not meet acceptable latency.",
+          "maximum": "100",
+          "property_value_type": "FLOAT",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "95.00",
+          "units": "%",
+          "property": "StorageWriteLatencySuccessThreshold"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGZABAccept" 
+    showName="FC GZAB Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GzabAccept"
+    description="FC GZAB Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GzabAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+								<zoneAttributeBlock>
+										<zoneAttributeEntries>
+												<ZoneAttributeEntry name="ZoneAttributeEntry_0">
+												</ZoneAttributeEntry>
+										</zoneAttributeEntries>
+								</zoneAttributeBlock>
+						</pdu>
+    </pdus>
+  </template>
+</frame>

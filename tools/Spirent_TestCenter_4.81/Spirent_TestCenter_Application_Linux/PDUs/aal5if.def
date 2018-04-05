@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="aal5If"
+  showName="AAL5"
+  version="1.00"
+  description="This is an AAL5 definition file for use by UI's interface editor logic">
+    
+  <TYPE_DEFS>
+      
+    <TYPE_DEF name="clpBoolean" type="INTEGER" bitLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+		<VAL_ENUM uiShowName="False" value="0" />
+        <VAL_ENUM uiShowName="True" value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="ptiValue" type="INTEGER" bitLength="3" unitType="ELEMENT"
+      minValue="0" maxValue="6">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="User Data, Uncongested" value="0" />
+        <VAL_ENUM uiShowName="User Data, Congested" value="2" />
+        <VAL_ENUM uiShowName="Management, Uncongested" value="4" />
+        <VAL_ENUM uiShowName="Management, Congested" value="6" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="vcEncapsulation" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+		<VAL_ENUM uiShowName="VC Multiplexed" value="1" />
+        <VAL_ENUM uiShowName="LLC Encapsulated" value="2" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="uniGfcVpi" type="SEQUENCE" unitType="ELEMENT" uiShowName="UNI">
+      <FIELD name="gfc" type="INTEGER" bitLength="4" defaultValue="0"
+             uiNoShowModifier="Interface,Frame,Filter"
+             uiShowName="GFC" />
+      <FIELD name="vpi" type="INTEGER" bitLength="8" defaultValue="0" 
+             uiShowName="VPI" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="nniVpi" type="SEQUENCE" unitType="ELEMENT"  uiShowName="NNI">
+      <FIELD name="vpi" type="INTEGER" bitLength="12" defaultValue="0"
+             uiShowName="VPI" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="vpiField" type="CHOICE" unitType="ELEMENT" uiShowName="VPI Format">
+      <FIELD name="uni" type="uniGfcVpi" uiShowName="UNI GFC/VPI" />
+      <FIELD name="nni" type="nniVpi" uiShowName="NNI VPI" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Aal5" type="SEQUENCE" unitType="HEADER"
+        level="2" portType="Atm" uiShowName="AAL5" >
+
+      <FIELD name="vpi" type="vpiField"
+        defaultValue="uni"
+        doNotBuild="true"
+        uiShowName="VPI"
+        uiControlState="CALCULATED" />
+      				
+      <FIELD name="vci" type="INTEGER"  bitLength="16"
+        defaultValue="32" 
+        doNotBuild="true" 
+        uiShowName="VCI" />
+
+      <FIELD name="pti" type="ptiValue"
+        defaultValue="0"
+        uiNoShowModifier="Interface,Frame,Filter"
+        minValue="0"
+        maxValue="6"
+        doNotBuild="true" 
+        uiShowName="PTI" />
+
+      <FIELD name="clp" type="clpBoolean"
+        defaultValue="0"
+        uiNoShowModifier="Interface,Frame,Filter"
+        doNotBuild="true"
+        uiShowName="CLP" />
+
+      <FIELD name="encapsulation" type="vcEncapsulation"
+        defaultValue="1"
+        uiNoShowModifier="Interface,Frame,Filter"
+        doNotBuild="true" 
+        uiShowName="VC Encapsulation" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="1" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="2" />
+        <NXT_HDR id="aal5:LlcRoutedSnap" name="AAL5 LLC Routed SNAP" value="3" />
+        <NXT_HDR id="aal5:LlcRoutedNlpid" name="AAL5 LLC Routed NLPID" value="4" />
+        <NXT_HDR id="aal5:LlcBridgedEth8023" name="AAL5 LLC Bridged Ethernet/802.3" value="5" />
+        <NXT_HDR id="aal5:VpnEncap" name="AAL5 VPN Encapsulation" value="6" />
+        <NXT_HDR id="aal5:VcMuxBridgedEth8023" name="AAL5 VC Mux Bridged Ethernet/802.3" value="7" />
+        <NXT_HDR id="ppp:PPP" name="PPP Header" value="8" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="0" />
+      </NEXT_HEADERS>
+			
+    </TYPE_DEF> 
+  </TYPE_DEFS>
+</PDU_LIBRARY>

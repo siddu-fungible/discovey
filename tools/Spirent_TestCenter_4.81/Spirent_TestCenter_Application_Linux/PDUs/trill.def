@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="trill"
+  showName="TRILL"
+  version="2.01"
+  description="This is a sample PDU library for Trill Header as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+    
+    <TYPE_DEF name="TRILL" type="SEQUENCE" unitType="HEADER" uiShowName="Trill header" >
+            
+        <FIELD name="version" type="INTEGER" 
+                              bitLength="2" 
+                              defaultValue="1" 
+                              uiShowName="Version"/>
+        
+        <FIELD name="reserved" type="INTEGER" 
+                               bitLength="2" 
+                               defaultValue="0" 
+                               uiShowName="Reserved"/>
+
+        <FIELD name="multiDestination" type="INTEGER" 
+                                        bitLength="1" 
+                                        defaultValue="0" 
+                                        uiShowName="Multi-Destination"/>
+        
+        <FIELD name="optionLength" type="INTEGER" 
+                               bitLength="5" 
+                               defaultValue="0" 
+                               uiShowName="Option Length"/>
+
+        <FIELD name="hopCount" type="INTEGER" 
+                               bitLength="6" 
+                               defaultValue="1" 
+                               uiShowName="Hop Count"/>
+
+        <FIELD name="egressBridge" type="INTEGER" 
+                                   bitLength="16" 
+                                   defaultValue="0" 
+                                   uiShowName="Egress RBridge Nickname"/>
+
+        <FIELD name="ingressBridge" type="INTEGER" 
+                                    bitLength="16" 
+                                    defaultValue="0" 
+                                    uiShowName="Ingress RBridge Nickname"/>
+                                    
+      <NEXT_HEADERS>
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet Header" value="0800" />
+      </NEXT_HEADERS>
+                                    
+        
+    </TYPE_DEF>
+    
+  </TYPE_DEFS>
+</PDU_LIBRARY>

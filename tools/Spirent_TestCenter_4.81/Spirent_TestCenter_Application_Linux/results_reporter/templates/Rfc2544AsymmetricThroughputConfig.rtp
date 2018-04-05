@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>ThroughputConfigDuration</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>SELECT CASE WHEN DurationMode == 'SECONDS' THEN DurationSeconds||' (seconds)' WHEN DurationMode == 'BURSTS' THEN DurationBursts||' (bursts)' END FROM Rfc2544ThroughputConfig LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') WHERE DataSetId==$@StartDataSetId$ AND Rfc2544ConfigHnd=Handle</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>NumOfTrials</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>SELECT NumOfTrials FROM Rfc2544ThroughputConfig LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') WHERE DataSetId==$@StartDataSetId$ AND Rfc2544ConfigHnd=Handle</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfigCombined</name>
+      <persist>false</persist>
+      <path>SELECT Name||'^'||LoadSpecMode||'^'||LoadUnits||'^'||ST.StreamBlockCount||'^'||SearchMode||'^'||RateLowerLimit||'^'||RateUpperLimit||'^'||RateStep||'^'||RateInitial||'^'||Resolution||'^'||Backoff||'^'||AcceptableFrameLoss||'^'||CASE WHEN EnableMaxLatencyThreshold THEN MaxLatencyThreshold ELSE 'N/A' END||'^'||CASE WHEN EnableOutOfSeqThreshold THEN OutOfSeqThreshold ELSE 'N/A' END FROM (SELECT P.* FROM Rfc2544ThroughputProfile AS P LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') WHERE Rfc2544ConfigHnd=P.ParentHnd) LEFT JOIN (SELECT SourceHnd, count(*) AS StreamBlockCount from RelationTable WHERE Type=='StreamBlockBinding' GROUP BY SourceHnd) AS ST WHERE ST.SourceHnd == Handle</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputConfigFrameSizes</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>SELECT CASE WHEN FrameSizeIterationMode=="CUSTOM" THEN 'Custom - '||CustomFrameSizeList WHEN FrameSizeIterationMode=="STEP" THEN 'Step - Start: '||FrameSizeStart||' End: '||FrameSizeEnd||' Step: '||FrameSizeStep WHEN FrameSizeIterationMode=="RANDOM" THEN 'Random - MIN: '||RandomMinFrameSize||' MAX: '||RandomMaxFrameSize WHEN FrameSizeIterationMode=="IMIX" THEN 'iMIX - '||ImixDistributionString END FROM Rfc2544ThroughputConfig LEFT JOIN (SELECT ParamValue AS 'Rfc2544ConfigHnd' FROM EotResultNodeParam where DataSetId==$@StartDataSetId$ AND Name=='@Rfc2544ConfigHnd') where DataSetId==$@StartDataSetId$ AND Rfc2544ConfigHnd=Handle</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Warning : Some modules do not support latency measurement</instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2544ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>sampleCompStat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>10</instance>
+        <instance>11</instance>
+        <instance>12</instance>
+        <instance>13</instance>
+      </value>
+      <script><![CDATA[# Sample calculation (script must set variable called "result"&#xa;&#xa;lappend x(3) 10 11 12 13&#xa;set result $x(3)&#xa;#set result $ThroughputProfileConfigCombined&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-Name</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Get Profile Config&#xa;set result [list]&#xa;&#xa;catch {unset ProfileConfigData}&#xa;set TblDataCols [list]&#xa;lappend TblDataCols Name LoadSpecMode LoadUnits StreamBlockCount SearchMode RateLowerLimit RateUpperLimit RateStep RateInitial Resolution Backoff AcceptableFrameLoss MaxLatencyThreshold OutOfSeqThreshold&#xa;&#xa;array set LoadSpecModeLut [list \&#xa;       PER_PROFILE "per Profile"\&#xa;       PER_PORT "per Port"\&#xa;       PER_STREAMBLOCK "per Stream Block"\&#xa;       PER_FLOW  "per Flow"\&#xa;]&#xa;&#xa;array set LoadUnitsLut [list \&#xa;       PERCENT_LINE_RATE "Percent (%)" \&#xa;       FRAMES_PER_SECOND "Frames/sec" \&#xa;       MEGABITS_PER_SECOND "Mbps" \&#xa;       KILOBITS_PER_SECOND "Kbps" \&#xa;       BITS_PER_SECOND "bps"\&#xa;]&#xa;&#xa;foreach row $ThroughputProfileConfigCombined {&#xa;    set rowList [split $row "^"]&#xa;    foreach name $TblDataCols value $rowList {&#xa;       switch -- $name {&#xa;             LoadSpecMode {&#xa;                   if {[info exists LoadSpecModeLut($value)]} {&#xa;                       set value $LoadSpecModeLut($value)&#xa;                   }&#xa;             }&#xa;             LoadUnits {&#xa;                   if {[info exists LoadUnitsLut($value)]} {&#xa;                       set value $LoadUnitsLut($value)&#xa;                   }&#xa;             }&#xa;             SearchMode {&#xa;                   set value [string totitle $value]&#xa;             }&#xa;       }&#xa;       lappend ProfileConfigData($name) $value&#xa;    }&#xa;}&#xa;set result $ProfileConfigData(Name)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-LoadSpec</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(LoadSpecMode)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-LoadUnits</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(LoadUnits)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-StreamBlockCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(StreamBlockCount)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-SearchMode</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(SearchMode)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-RateLowerLimit</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(RateLowerLimit)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-RateUpperLimit</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(RateUpperLimit)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-RateStep</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(RateStep)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-RateInitial</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(RateInitial)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-Resolution</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(Resolution)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-Backoff</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(Backoff)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-AcceptableFrameLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(AcceptableFrameLoss)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-MaxLatencyThreshold</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(MaxLatencyThreshold)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ThroughputProfileConfig-OutOfSeqThreshold</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#results already calculated in ThroughputProfileConfig-Name&#xa;set result $ProfileConfigData(OutOfSeqThreshold)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ComputedThroughputConfigDuration</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <script><![CDATA[set result $ThroughputConfigDuration&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ComputedNumOfTrials</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <script><![CDATA[set result $NumOfTrials&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>ComputedThroughputConfigFrameSizes</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <script><![CDATA[if {[string first "Custom - " $ThroughputConfigFrameSizes] == 0} {&#xa;     set frameList [string range $ThroughputConfigFrameSizes 9 end]&#xa;     set result "Custom - [join $frameList ,]"&#xa;} else {&#xa;     set result $ThroughputConfigFrameSizes&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Configuration</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Mon Nov 08 18:55:41.311 PST 2010</value>
+      <script><![CDATA[set result "Fri Dec 17 19:21:55.462 PST 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Contact Details</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1289271341311</value>
+      <script><![CDATA[set result "1292642515462"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>Rfc2544AsymmetricThroughputProfileTable</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Name</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Load Spec\nMode</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Load Units</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Stream Block \nCount</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Search \nMode</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Rate Lower \nLimit</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Rate Upper \nLimit</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Initial \nRate</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Rate Step</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Resolution</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Backoff (%)</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Acceptable Frame \nLoss (%)</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Max Latency \nThreshold (us)</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Out Of  Sequence\nThreshold</td>&#xa;  </tr>&#xa;  <tr iterate="=$ThroughputProfileConfig-Name$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-Name$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-LoadSpec$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-LoadUnits$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-StreamBlockCount$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-SearchMode$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-RateLowerLimit$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-RateUpperLimit$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-RateInitial$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-RateStep$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-Resolution$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-Backoff$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-AcceptableFrameLoss$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-MaxLatencyThreshold$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$ThroughputProfileConfig-OutOfSeqThreshold$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Test Configuration" display="true">
+      <width>1080</width>
+      <height>600</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>Rfc2544AsymmetricThroughputProfileTable</name>
+        <x>14</x>
+        <y>220</y>
+        <width>1104</width>
+        <height>47</height>
+        <value>Rfc2544AsymmetricThroughputProfileTable</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>TitleLabel</name>
+        <x>300</x>
+        <y>33</y>
+        <width>378</width>
+        <height>22</height>
+        <size>18</size>
+        <value xml:space="preserve">Asymmetric&amp;nbsp;Throughput&amp;nbsp;Test&amp;nbsp;Configuration</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>NumTrialsLabel</name>
+        <x>19</x>
+        <y>158</y>
+        <width>102</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Number&amp;nbsp;of&amp;nbsp;Trials:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>NumTrialsText</name>
+        <x>133</x>
+        <y>158</y>
+        <width>8</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ComputedNumOfTrials$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>DurationLabel</name>
+        <x>214</x>
+        <y>158</y>
+        <width>83</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Trial&amp;nbsp;Duration:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>DurationText</name>
+        <x>308</x>
+        <y>158</y>
+        <width>238</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ComputedThroughputConfigDuration$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Profiles</name>
+        <x>17</x>
+        <y>192</y>
+        <width>46</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Throughput&amp;nbsp;Profiles:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>FrameSizes</name>
+        <x>20</x>
+        <y>130</y>
+        <width>73</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Frame&amp;nbsp;Sizes:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>ConfigFrameSizes</name>
+        <x>108</x>
+        <y>130</y>
+        <width>118</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ComputedThroughputConfigFrameSizes$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name></name>
+        <x>6</x>
+        <y>7</y>
+        <width>150</width>
+        <height>77</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>20</x>
+        <y>562</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Contact Details" display="true">
+      <width>1080</width>
+      <height>600</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>35</x>
+        <y>432</y>
+        <width>247</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>LastPgHdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>540</width>
+        <height>75</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>ContactDet</name>
+        <x>379</x>
+        <y>150</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

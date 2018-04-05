@@ -1,0 +1,233 @@
+<Template>
+<!-- Template used to create TWAMP client and server-->
+<Image />
+<DataModelXml>
+
+<StcSystem id="1"
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles="twamp rawtcp"
+   ConfigurationFileName="C:\Users\gofiesh\Desktop\twamp.xml"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="ResultChild" target="3834"/>
+    <Relation type="DefaultSelection" target="3564"/>
+    <Tags id="1776" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1000"/>
+      <Relation type="UserTag" target="1001"/>
+      <Relation type="UserTag" target="2000"/>
+      <Tag id="1000" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttTwampClient">
+      </Tag>
+      <Tag id="1001" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttTwampSession">
+      </Tag>
+      <Tag id="2000" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttTwampServer">
+      </Tag>
+    </Tags>
+    <EmulatedDevice id="3578" 
+     DeviceCount="1"
+     EnablePingResponse="FALSE"
+     RouterId="192.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterId="2000::1"
+     Ipv6RouterIdStep="::1"
+     ReadOnly="FALSE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Device 1">
+      <Relation type="TopLevelIf" target="3831"/>
+      <Relation type="PrimaryIf" target="3831"/>
+      <Ipv4If id="3831" 
+       Address="1.1.1.1"
+       AddrStep="0.0.0.1"
+       AddrStepMask="255.255.255.255"
+       SkipReserved="TRUE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       PrefixLength="24"
+       UsePortDefaultIpv4Gateway="FALSE"
+       Gateway="1.1.1.2"
+       GatewayStep="0.0.0.0"
+       GatewayRepeatCount="0"
+       GatewayRecycleCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       Ttl="255"
+       TosType="TOS"
+       Tos="192"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 33">
+        <Relation type="StackedOnEndpoint" target="3832"/>
+      </Ipv4If>
+      <EthIIIf id="3832" 
+       SourceMac="00:10:94:00:00:01"
+       SrcMacStep="00:00:00:00:00:01"
+       SrcMacList=""
+       SrcMacStepMask="00:00:ff:ff:ff:ff"
+       SrcMacRepeatCount="0"
+       Authenticator="default"
+       UseDefaultPhyMac="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="EthernetII 33">
+      </EthIIIf>
+      <TwampClientConfig id="3833" 
+       ScalabilityMode="NORMAL"
+       PeerIpv4Addr="null"
+       PeerIpv6Addr="null"
+       ConnectionRetryInterval="10"
+       ConnectionRetryCount="100"
+       Mode="UNAUTHENTICATED"
+       IfHandleList="57"
+       IpVersion="IPV4"
+       Ipv6IfType="GLOBAL"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="TWAMP Client 1">
+        <Relation type="UserTag" target="1000"/>
+        <Relation type="UsesIf" target="3831"/>
+        <TwampTestSession id="3923" 
+         SessionSrcUdpPort="5450"
+         SessionDstUdpPort="5450"
+         StartDelay="0"
+         Timeout="5"
+         DurationMode="SECONDS"
+         Duration="11"
+         PacketCount="100"
+         PaddingLength="128"
+         FrameRate="1"
+         DSCP="0"
+         PaddingPattern="RANDOM"
+         PaddingUserDefinedPattern="0x0000"
+         ScalabilityMode="NORMAL"
+         Ttl="255"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="TwampTestSession 1">
+          <Relation type="UserTag" target="1001"/>
+        </TwampTestSession>
+      </TwampClientConfig>
+    </EmulatedDevice>
+    <EmulatedDevice id="3579" 
+     DeviceCount="1"
+     EnablePingResponse="FALSE"
+     RouterId="192.0.0.2"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterId="2000::2"
+     Ipv6RouterIdStep="::1"
+     ReadOnly="FALSE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Device 2">
+      <Relation type="TopLevelIf" target="3835"/>
+      <Relation type="PrimaryIf" target="3835"/>
+      <Ipv4If id="3835" 
+       Address="1.1.1.2"
+       AddrStep="0.0.0.1"
+       AddrStepMask="255.255.255.255"
+       SkipReserved="TRUE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       PrefixLength="24"
+       UsePortDefaultIpv4Gateway="FALSE"
+       Gateway="1.1.1.1"
+       GatewayStep="0.0.0.0"
+       GatewayRepeatCount="0"
+       GatewayRecycleCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       Ttl="255"
+       TosType="TOS"
+       Tos="192"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 34">
+        <Relation type="StackedOnEndpoint" target="3836"/>
+      </Ipv4If>
+      <EthIIIf id="3836" 
+       SourceMac="00:10:94:00:00:02"
+       SrcMacStep="00:00:00:00:00:01"
+       SrcMacList=""
+       SrcMacStepMask="00:00:ff:ff:ff:ff"
+       SrcMacRepeatCount="0"
+       Authenticator="default"
+       UseDefaultPhyMac="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="EthernetII 34">
+      </EthIIIf>
+      <TwampServerConfig id="3837" 
+       ServerWaitTime="900"
+       ReferenceWaitTime="900"
+       WillingToParticipate="TRUE"
+       Mode="UNAUTHENTICATED"
+       IfHandleList="60"
+       IpVersion="IPV4"
+       Ipv6IfType="GLOBAL"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="TWAMP Server 1">
+        <Relation type="UsesIf" target="3835"/>
+        <Relation type="UserTag" target="2000"/>
+      </TwampServerConfig>
+    </EmulatedDevice>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" MadCap:tocPath="Template Editor" MadCap:InPreviewMode="false" MadCap:PreloadImages="false" MadCap:RuntimeFileType="Topic" MadCap:TargetType="WebHelp" lang="en-us" xml:lang="en-us" MadCap:PathToHelpSystem="../" MadCap:HelpSystemFileName="stc_ra.xml" MadCap:SearchType="Stem">
+    <!-- saved from url=(0016)http://localhost -->
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Results Reporter Template Editor Overview</title>
+        <link href="spirent_univ.css" rel="stylesheet" />
+        <script src="SkinSupport/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapAll.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapTopicAll.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <p><span style="font-family: sans-serif; font-size: 8pt;">Results Reporter Online Help <span style="color: #ffffff;">Results Reporter Help</span></span>
+        </p>
+        <h1 id="rr_te_oview.htm" xmlns="http://www.w3.org/1999/xhtml">Results Reporter Template Editor Overview </h1>
+        <p xmlns="http://www.w3.org/1999/xhtml">Spirent TestCenter Results Reporter features templates that incorporate tables and graphs to present test results. Template-based reports can be viewed on the screen and exported to PDF and HTML files. The Template Editor is a tool used to modify existing templates and create new templates. </p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">Starting the Template Editor</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">The Template Edit can be run from a command line or launched inside Results Reporter. </p>
+        <p class="tobegin" xmlns="http://www.w3.org/1999/xhtml">To start the Template Editor from within Results Reporter  </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">You can launch the Template Editor from within Results Reporter through the menu, toolbar or a keyboard shortcut, to edit an existing template or create a new one. </p>
+        <ul xmlns="http://www.w3.org/1999/xhtml">
+            <li value="1">On the Results Reporter <a href="reporter_menus.htm"><strong>Tools</strong></a> menu, select <strong>Show Template Editor</strong>. </li>
+            <li value="2">On the Results Reporter <a href="reporter_menus.htm">toolbar</a>, click the Template Editor button. </li>
+            <li value="3">Use the keyboard shortcut CTRL+E. </li>
+        </ul>
+        <p xmlns="http://www.w3.org/1999/xhtml">The Template Editor opens in the right window of Results Reporter.</p>
+        <ul xmlns="http://www.w3.org/1999/xhtml">
+            <li value="1">To edit an existing template, <a href="opening_a_file.htm">open a database</a> that uses the template, highlight the database node,  <a href="applying_templates.htm">select the template</a> from the dropdown, then launch the Template Editor. </li>
+            <li value="2">To create a new template, launch the Template Editor without selecting a template. </li>
+        </ul>
+        <p class="tobegin" xmlns="http://www.w3.org/1999/xhtml">To start the Template Editor from the command line </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">You can launch the Template editor in standalone mode from the command line. </p>
+        <ul xmlns="http://www.w3.org/1999/xhtml">
+            <li value="1">Command: 
+            <ul><li value="1">Windows: STCTemplateEditor.bat</li><li value="2">Unix/Linux: STCTemplateEditor.sh</li></ul></li>
+            <li value="2">Path:
+            <ul><li value="1">Windows: Spirent Communications\Spirent TestCenter n.nn\Spirent TestCenter Application\Results Reporter </li><li value="2">Unix/Linux: &lt;installed path&gt;/results_reporter </li></ul></li>
+        </ul>
+        <p xmlns="http://www.w3.org/1999/xhtml">The Template Editor opens with a new query and a blank page.</p>
+        <p class="tobegin" xmlns="http://www.w3.org/1999/xhtml">To close a template </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">Highlight the template in the Results Reporter tree and press <strong>DELETE</strong>. </p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">The Template Editor Window</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">The Template Editor window is divided into horizontal zones. </p>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Zone</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td><a href="rr_te_menus.htm">Menu</a>
+                </td>
+                <td>
+                    <p>Available when the Template Editor is started from the command line </p>
+                    <p>Open database, open and save a template, generate PDF and HTML reports, and re-query a database </p>
+                </td>
+            </tr>
+            <tr>
+                <td><a href="rr_te_menus.htm">Toolbar</a>
+                </td>
+                <td>Open databases, open and save templates, generate PDF and HTML reports, and re-query a database </td>
+            </tr>
+            <tr>
+                <td><a name="tabs" id="tabs"></a>Tabs</td>
+                <td>
+                    <p>Configure the page layout, tables, graphs, stats, and view the database </p>
+                    <ul>
+                        <li value="1">When customizing an existing template, the typical working order is to start with the layout tab and work to the right as needed. </li>
+                        <li value="2">When creating a new template, the typical working order is to start with the DB Explorer tab and work to the left. </li>
+                    </ul>
+                    <table width="90%" border="0" class="interior">
+                        <tr>
+                            <th scope="col">Tab</th>
+                            <th scope="col">Description</th>
+                        </tr>
+                        <tr>
+                            <td><a href="rr_te_layout.htm">Layout</a>
+                            </td>
+                            <td>Configure page layout by creating and editing text, images, graphs and tables </td>
+                        </tr>
+                        <tr>
+                            <td><a href="rr_te_tables.htm">Tables</a>
+                            </td>
+                            <td>Create and modify tables based on reported and computed statistics </td>
+                        </tr>
+                        <tr>
+                            <td><a href="rr_te_graphs.htm">Graphs</a>
+                            </td>
+                            <td>Create and modify graphs based on reported and computed statistics </td>
+                        </tr>
+                        <tr>
+                            <td><a href="rr_te_reported.htm">Reported Stats</a>
+                            </td>
+                            <td>Select statistics from the results database </td>
+                        </tr>
+                        <tr>
+                            <td><a href="rr_te_computed.htm">Computed Stats</a>
+                            </td>
+                            <td>Compute statistics from the results database using Tcl code </td>
+                        </tr>
+                        <tr>
+                            <td>DB Explorer</td>
+                            <td>
+                                <p>View database tables </p>
+                                <p>The <strong>Raw</strong> tab shows the contents of the table</p>
+                                <p>The <strong>Joined</strong> tab is a legacy feature that will be deprecated  </p>
+                                <table width="200" border="1" class="notetable">
+                                    <tr>
+                                        <td><strong>Productivity tip:</strong> When you <a href="custom_queries.htm">create a query</a> in Results Reporter, the list of database tables is sorted by table name, making it easier to find a specific table. In addition, a <strong>Query</strong> field allows you to try out different SELECT statements and immediately see the results. Using Results Reporter queries allows you to prototype your queries quickly before creating them in the <strong>Reported Stats</strong> tab. </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>Workspace</td>
+                <td>Configure template elements. The appearance of the workspace varies based on the tab selected. </td>
+            </tr>
+        </table>
+        <hr width="100%" size="0" align="center" xmlns="http://www.w3.org/1999/xhtml" />
+        <p class="related_information" xmlns="http://www.w3.org/1999/xhtml">Related Topics:</p>
+        <p class="relatedtopic" xmlns="http://www.w3.org/1999/xhtml"><a href="rr_welcome.htm">Spirent TestCenter Results Reporter</a>
+        </p>
+        <p style="text-align: right;"><span style="font-family: sans-serif; font-size: 8pt;">© Spirent Communications</span>
+        </p>
+        <script type="text/javascript" src="SkinSupport/MadCapBodyEnd.js">
+        </script>
+    </body>
+</html>

@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="l2tpv2" showName="L2TPv2" version="1.00"
+    description="This is a sample PDU library for L2TPv2 as defined in XML Stream Editor.">
+    
+  <TYPE_DEFS>
+    <TYPE_DEF name="Length" type="SEQUENCE" unitType="ELEMENT" uiShowName="Length" >
+      <FIELD name="value" type="INTEGER" bitLength="16"
+          procfnTarget="TOTALLENGTHWITHPDU" 
+          uiControlState="ALLOW_OVERRIDE" 
+          defaultValue="0" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" uiShowName="Value"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LengthList" type="SET_OF" elementType="Length"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" niMapped="false" />
+
+    <TYPE_DEF name="Ns" type="SEQUENCE" unitType="ELEMENT" uiShowName="Next Message Sequence Number" >
+      <FIELD name="value" type="INTEGER" bitLength="16"
+          defaultValue="0" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" uiShowName="Value"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="NsList" type="SET_OF" elementType="Ns"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" />
+
+    <TYPE_DEF name="Nr" type="SEQUENCE" unitType="ELEMENT" uiShowName="Next Expected Control Sequence Number" >
+      <FIELD name="value" type="INTEGER" bitLength="16"
+          defaultValue="0" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" uiShowName="Value"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="NrList" type="SET_OF" elementType="Nr"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" />
+
+    <TYPE_DEF name="OffsetSize" type="SEQUENCE" unitType="ELEMENT" uiShowName="Offset Size" >
+      <FIELD name="value" type="INTEGER" bitLength="16"
+          defaultValue="0" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" uiShowName="Value"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="OffsetSizeList" type="SET_OF" elementType="OffsetSize"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" />
+
+    <TYPE_DEF name="OffsetPadding" type="SEQUENCE" unitType="ELEMENT" uiShowName="Offset Padding">
+      <FIELD name="value" type="OCTETSTRING"
+			uiShowName="Padding Bytes" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"
+			minByteLength="0" maxByteLength="1500" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="OffsetPaddingList" type="SET_OF" elementType="OffsetPadding"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT"/>
+
+    <TYPE_DEF name="L2TPv2" type="SEQUENCE" unitType="HEADER"
+        level="5" uiShowName="L2TPv2 Header" niMapped="true">
+      <FIELD name="type" type="BITSTRING" bitLength="1"
+          defaultValue="0" uiShowName="Type" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" />
+
+      <FIELD name="useLength" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="UseLength" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+
+      <FIELD name="reserved1" type="BITSTRING" bitLength="2"
+          defaultValue="00"
+          uiShowName="reserved" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" />
+      
+      <FIELD name="useSequence" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="UseSequence" isNiMapped="false" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+
+      <FIELD name="reserved2" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="reserved" uiNoShow="Interface, Filter" uiNoShowModifier="Interface, Filter"  />
+
+      <FIELD name="useOffset" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="UseOffset" isNiMapped="false" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+
+      <FIELD name="usePriority" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiShowName="UsePriority" isNiMapped="false" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+      
+      <FIELD name="reserved3" type="BITSTRING" bitLength="4"
+          defaultValue="0000"
+          uiShowName="reserved" uiNoShow="Interface, Filter" uiNoShowModifier="Interface, Filter"   />
+      
+      <FIELD name="version" type="INTEGER" bitLength="4"
+          defaultValue="2"
+          uiShowName="version" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+
+      <FIELD name="lengths" type="LengthList"
+          uiShowName="Length" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"/>
+
+      <FIELD name="tunnelId" type="INTEGER" bitLength="16" 
+          defaultValue="0" uiShowName="Tunnel ID" isNiMapped="true" isNiPrimaryKey="true" 
+          uiNoShowModifier="Interface"  />
+
+      <FIELD name="sessionId" type="INTEGER" bitLength="16" 
+          defaultValue="0" uiShowName="Session ID" isNiMapped="true" uiNoShowModifier="Interface"  />
+
+      <FIELD name="nsList" type="NsList"
+          uiShowName="Message Sequence Number" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" />
+      
+      <FIELD name="nrList" type="NrList"
+          uiShowName="Next Expected Control Sequence Number" uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+
+      <FIELD name="offset" type="OffsetSizeList"
+          uiShowName="Offset Size" uiNoShow="Filter" uiNoShowModifier="Interface, Filter" />
+
+      <FIELD name="padding" type="OffsetPaddingList"
+          uiShowName="Offset Padding"  uiNoShow="Filter" uiNoShowModifier="Interface, Filter"  />
+      
+      <NEXT_HEADERS>
+        <NXT_HDR id="ppp:PPP" name="PPP Header" value="880B" />  
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

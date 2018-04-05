@@ -1,0 +1,11 @@
+{
+  "methodology_key": "RFC2544LATENCY",
+  "validations": [
+    {
+      "property": "TrafficPattern",
+      "type": "expression",
+      "value": "(%TrafficPattern% != \"PAIR\") && (%TrafficPattern% != \"BACKBONE\") && (%TrafficPattern% != \"FULLY MESHED\")",
+      "message": "Traffic Pattern should be PAIR, BACKBONE or FULLY MESHED"
+    }
+  ]
+}

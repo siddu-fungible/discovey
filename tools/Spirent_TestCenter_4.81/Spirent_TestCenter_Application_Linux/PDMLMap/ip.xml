@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PROTO name="ip" pduDef="ipv4" pduType="IPv4">
+    
+    <FIELD name="ip.version" useShowNameAsValue="true">
+      <PDU_FIELD name="version"/>
+    </FIELD>
+    
+    <FIELD name="ip.hdr_len">
+      <PDU_FIELD name="ihl" />
+    </FIELD>
+
+    <COMPLEX_FIELD name="ip.dsfield">
+      <CREATE name="tosdiffserv">
+      
+	      <CREATE name="diffServ" parent="tosdiffserv">
+	        <FIELD name="ip.dsfield.dscp">
+	          <PDU_FIELD name="dscpHigh" bitLength="3"/>
+	          <PDU_FIELD name="dscpLow" bitLength="3"/>
+	        </FIELD>
+	        <FIELD name="ip.dsfield.ce">
+	          <PDU_FIELD name="reserved"/>
+	        </FIELD>
+	      </CREATE>
+	      
+      </CREATE>
+    </COMPLEX_FIELD>
+
+    <FIELD name="ip.len">
+      <PDU_FIELD name="totalLength"/>
+    </FIELD>
+
+    <FIELD name="ip.id">
+      <PDU_FIELD name="identification"/>
+    </FIELD>
+
+    <COMPLEX_FIELD name="ip.flags">
+  
+      <CREATE name="flags">
+        <FIELD name="ip.flags.rb" useShowNameAsValue="true">
+          <PDU_FIELD name="reserved"/>
+        </FIELD>
+        <FIELD name="ip.flags.df" useShowNameAsValue="true">
+          <PDU_FIELD name="dfBit"/>
+        </FIELD>
+        <FIELD name="ip.flags.mf" useShowNameAsValue="true">
+          <PDU_FIELD name="mfBit"/>
+        </FIELD>        
+      </CREATE>
+      
+    </COMPLEX_FIELD>
+    
+  <FIELD name="ip.frag_offset" >
+      <PDU_FIELD name="fragOffset"/>
+    </FIELD>
+
+    <FIELD name="ip.ttl">
+      <PDU_FIELD name="ttl"/>
+    </FIELD>
+
+    <FIELD name="ip.proto">
+      <PDU_FIELD name="protocol"/>
+    </FIELD>
+
+    <FIELD name="ip.checksum">
+      <PDU_FIELD name="checksum"/>
+    </FIELD>
+
+    <FIELD name="ip.src" useShowNameAsValue="true">
+      <PDU_FIELD name="sourceAddr"/>
+    </FIELD>
+
+    <FIELD name="ip.dst" useShowNameAsValue="true">
+      <PDU_FIELD name="destAddr"/>
+    </FIELD>
+</PROTO>

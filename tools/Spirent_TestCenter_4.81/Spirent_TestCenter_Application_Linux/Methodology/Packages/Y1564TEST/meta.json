@@ -1,0 +1,688 @@
+{
+  "methodology_key": "Y1564TEST",
+  "display_name": "Y.1564 Methodology",
+  "short_display_name": "Y.1564",
+  "description": "Determines if configured services meet their SLAs through CIR, EIR, Traffic Policing, CBS, EBS subtests, and when all run simultaneously.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "port_groups": [
+    {
+      "property": "PortPool",
+      "display_name": "Ports",
+      "description": "The ports selected for this group are used individually by the methodology to specify endpoints for the configured services",
+      "enable_unique_tags": true,
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "West"
+        },
+        {
+          "location": "//(Offline)/1/1",
+          "tag_name": "East"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "GLOBAL",
+      "display_name": "Global Parameters",
+      "description": "Global configuration parameters.",
+      "test_properties": [
+        {
+          "description": "Y.1564 Test Mode",
+          "display_name": "Test Mode",
+          "property": "TestMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "Service Configuration",
+          "acceptable_values": [
+            "Service Configuration",
+            "Service Performance",
+            "Service Configuration and Performance"
+          ]
+        },
+        {
+          "description": "Sets L2 or L3 Learning",
+          "display_name": "Learning Mode",
+          "property": "LearningMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "L2",
+            "L3",
+            "L2/L3"
+          ]
+        },
+        {
+          "description": "When set to true, run the Committed Information Rate Test Phase",
+          "display_name": "CIR Test",
+          "property": "EnableCir",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "When set to true, run the Excess Information Rate Test Phase",
+          "display_name": "EIR Test",
+          "property": "EnableEir",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "When set to true, run the Traffic Policing Test Phase",
+          "display_name": "Policing Test",
+          "property": "EnablePolicing",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "When set to true, run the Committed Burst Size Test Phase",
+          "display_name": "CBS Test",
+          "property": "EnableCbs",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "When set to true, run the Excess Burst Size Test Phase",
+          "display_name": "EBS Test",
+          "property": "EnableEbs",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "CIR Steps (Set to 1 to do a simple CIR test)",
+          "display_name": "CIR Steps",
+          "property": "CirSteps",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "4",
+          "minimum": "1",
+          "maximum": "16"
+        },
+        {
+          "description": "Duration of Each CIR Test Iteration",
+          "display_name": "CIR Test Duration",
+          "property": "CirDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "1",
+          "maximum": "60",
+          "units": "seconds"
+        },
+        {
+          "description": "Duration of EIR Test Step",
+          "display_name": "EIR Test Duration",
+          "property": "EirDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "1",
+          "maximum": "60",
+          "units": "seconds"
+        },
+        {
+          "description": "Duration of Policing Test Step",
+          "display_name": "Policing Test Duration",
+          "property": "PolicingDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "1",
+          "maximum": "60",
+          "units": "seconds"
+        },
+        {
+          "description": "Duration of CBS Test Step",
+          "display_name": "CBS Test Duration",
+          "property": "CbsDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "1",
+          "maximum": "60",
+          "units": "seconds"
+        },
+        {
+          "description": "Duration of EBS Test Step",
+          "display_name": "EBS Test Duration",
+          "property": "EbsDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "1",
+          "maximum": "60",
+          "units": "seconds"
+        },
+        {
+          "description": "Duration of Service Performance Test",
+          "display_name": "Service Performance Test Duration",
+          "property": "PerfDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "1",
+          "maximum": "86400",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "INIT",
+      "display_name": "Set up methodology",
+      "description": "Parameters related to methodology initialization",
+      "test_properties": [
+        {
+          "property": "SvcList",
+          "display_name": "Service Configuration",
+          "description": "Service Configuration",
+          "column_definitions": [
+            {
+              "description": "A name for the service",
+              "display_name": "Service Name",
+              "property": "SvcName",
+              "property_value_type": "STRING",
+              "is_collection": false
+            },
+            {
+              "description": "List of frame sizes",
+              "display_name": "Frame Size List",
+              "property": "SvcFrameSizeList",
+              "property_value_type": "INTEGER",
+              "is_collection": true,
+              "minimum": "64",
+              "maximum": "1518",
+              "units": "bytes"
+            },
+            {
+              "description": "Source port for the service",
+              "display_name": "Source Port",
+              "property": "SvcSrcPortTag",
+              "property_value_type": "PORT_GROUP",
+              "is_collection": false
+            },
+            {
+              "description": "Destination port for the service",
+              "display_name": "Destination Port",
+              "property": "SvcDstPortTag",
+              "property_value_type": "PORT_GROUP",
+              "is_collection": false
+            },
+            {
+              "description": "Committed Information Rate",
+              "display_name": "CIR",
+              "property": "SvcCir",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.00",
+              "maximum": "4294967295.00",
+              "units": "L2 Mbps"
+            },
+            {
+              "description": "Committed Burst Size",
+              "display_name": "CBS",
+              "property": "SvcCbs",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4294967295",
+              "units": "bytes"
+            },
+            {
+              "description": "Excess Information Rate",
+              "display_name": "EIR",
+              "property": "SvcEir",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.00",
+              "maximum": "4294967295.00",
+              "units": "L2 Mbps"
+            },
+            {
+              "description": "Excess Burst Size",
+              "display_name": "EBS",
+              "property": "SvcEbs",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4294967295",
+              "units": "bytes"
+            },
+            {
+              "description": "Frame Loss Ratio",
+              "display_name": "FLR",
+              "property": "SvcFlr",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.0",
+              "maximum": "100.0",
+              "units": "%"
+            },
+            {
+              "description": "Frame Transfer Delay",
+              "display_name": "FTD",
+              "property": "SvcFtd",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.0",
+              "maximum": "4294967295.0",
+              "units": "ms"
+            },
+            {
+              "description": "Frame Delay Variation",
+              "display_name": "FDV",
+              "property": "SvcFdv",
+              "property_value_type": "FLOAT",
+              "is_collection": false,
+              "minimum": "0.0",
+              "maximum": "4294967295.0",
+              "units": "ms"
+            },
+            {
+              "description": "Determines type of VLAN encapsulation",
+              "display_name": "VLAN Mode",
+              "property": "SvcVlanMode",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "None",
+                "VLAN",
+                "Inner VLAN"
+              ]
+            },
+            {
+              "description": "Differentiated Services Code Point",
+              "display_name": "DSCP Type",
+              "property": "SvcDscpType",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "Default Best Effort",
+                "Expedited Forwarding",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43",
+                "CS1",
+                "CS2",
+                "CS3",
+                "CS4",
+                "CS5",
+                "CS6",
+                "CS7"
+              ]
+            },
+            {
+              "description": "Destination MAC address for the service",
+              "display_name": "Destination MAC Address",
+              "property": "SvcDstMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "Step value for the destination MAC address for the service",
+              "display_name": "Destination MAC Address Step",
+              "property": "SvcDstMacAddrStep",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "Source MAC Address for the service",
+              "display_name": "Source MAC Address",
+              "property": "SvcSrcMacAddr",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "Step value for the source MAC address for the service",
+              "display_name": "Source MAC Address Step",
+              "property": "SvcSrcMacAddrStep",
+              "property_value_type": "MAC",
+              "is_collection": false
+            },
+            {
+              "description": "VLAN ID",
+              "display_name": "VLAN ID",
+              "property": "SvcCvlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "VLAN ID Step",
+              "display_name": "VLAN ID Step",
+              "property": "SvcCvlanIdStep",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "VLAN Priority",
+              "display_name": "VLAN Priority",
+              "property": "SvcCvlanPriority",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7"
+              ]
+            },
+            {
+              "description": "Inner VLAN ID",
+              "display_name": "Inner VLAN ID",
+              "property": "SvcSvlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "Inner VLAN ID Step",
+              "display_name": "Inner VLAN ID Step",
+              "property": "SvcSvlanIdStep",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "Inner VLAN Priority",
+              "display_name": "Inner VLAN Priority",
+              "property": "SvcSvlanPriority",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7"
+              ]
+            },
+            {
+              "description": "Destination IPv4 address for the service",
+              "display_name": "Destination IPv4 Address",
+              "property": "SvcDstIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Step value for the destination IPv4 Address for the service",
+              "display_name": "Destination IPv4 Address Step",
+              "property": "SvcDstIpv4AddrStep",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Source IPv4 address for the service",
+              "display_name": "Source IPv4 Address",
+              "property": "SvcSrcIpv4Addr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Step value for the source IPv4 Address for the service",
+              "display_name": "Source IPv4 Address Step",
+              "property": "SvcSrcIpv4AddrStep",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "IPv4 gateway address for the service",
+              "display_name": "IPv4 Gateway Address",
+              "property": "SvcIpv4GwAddr",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Step value for the IPv4 gateway address for the service",
+              "display_name": "IPv4 Gateway Address Step",
+              "property": "SvcIpv4GwAddrStep",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Enable Color Awareness",
+              "display_name": "Color Awareness",
+              "property": "SvcColorAware",
+              "property_value_type": "BOOLEAN",
+              "is_collection": false
+            },
+            {
+              "description": "Field to change for yellow frames to distinguish from green streams",
+              "display_name": "Yellow Frame Identifier",
+              "property": "SvcStreamDisc",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "DSCP Value",
+                "S-VLAN ID",
+                "S-VLAN Priority",
+                "C-VLAN ID",
+                "C-VLAN Priority"
+              ]
+            },
+            {
+              "description": "Yellow Frame Differentiated Services Code Point",
+              "display_name": "Yellow Frame DSCP Type",
+              "property": "SvcDiscDscpType",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "Default Best Effort",
+                "Expedited Forwarding",
+                "AF11",
+                "AF12",
+                "AF13",
+                "AF21",
+                "AF22",
+                "AF23",
+                "AF31",
+                "AF32",
+                "AF33",
+                "AF41",
+                "AF42",
+                "AF43",
+                "CS1",
+                "CS2",
+                "CS3",
+                "CS4",
+                "CS5",
+                "CS6",
+                "CS7"
+              ]
+            },
+            {
+              "description": "VLAN ID Value used for Yellow Frames",
+              "display_name": "Yellow Frame VLAN ID",
+              "property": "SvcDiscVlanId",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "Step Value for VLAN ID Used for Yellow Frames",
+              "display_name": "Yellow Frame VLAN ID Step",
+              "property": "SvcDiscVlanIdStep",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "0",
+              "maximum": "4095"
+            },
+            {
+              "description": "VLAN Priority used for Yellow Frames",
+              "display_name": "Yellow Frame VLAN Priority",
+              "property": "SvcDiscVlanPriority",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7"
+              ]
+            }
+          ],
+          "table": [
+            [
+              "Real-Time Data",
+              [
+                "512"
+              ],
+              "West",
+              "East",
+              "5",
+              "0",
+              "0.0",
+              "0",
+              "0.001",
+              "5.0",
+              "1",
+              "None",
+              "Expedited Forwarding",
+              "00:00:01:00:00:01",
+              "00:00:01:00:00:00",
+              "00:10:94:00:00:02",
+              "00:00:01:00:00:00",
+              "100",
+              "1",
+              "0",
+              "100",
+              "1",
+              "0",
+              "192.0.0.1",
+              "0.1.0.0",
+              "192.85.1.2",
+              "0.1.0.0",
+              "192.85.1.1",
+              "0.1.0.0",
+              "False",
+              "DSCP Value",
+              "Default Best Effort",
+              "100",
+              "1",
+              "0"
+            ],
+            [
+              "High-Priority Data",
+              [
+                "512"
+              ],
+              "West",
+              "East",
+              "10.0",
+              "0",
+              "10.0",
+              "0",
+              "0.05",
+              "5.0",
+              "9999999.0",
+              "None",
+              "AF12",
+              "00:00:01:00:00:01",
+              "00:00:01:00:00:00",
+              "00:10:94:00:00:02",
+              "00:00:01:00:00:00",
+              "100",
+              "1",
+              "0",
+              "100",
+              "1",
+              "0",
+              "192.0.0.1",
+              "0.1.0.0",
+              "192.85.1.2",
+              "0.1.0.0",
+              "192.85.1.1",
+              "0.1.0.0",
+              "True",
+              "DSCP Value",
+              "Default Best Effort",
+              "100",
+              "1",
+              "0"
+            ],
+            [
+              "CBS-EBS Data",
+              [
+                "512"
+              ],
+              "West",
+              "East",
+              "2.5",
+              "30000",
+              "2.0",
+              "10000",
+              "0.05",
+              "30.0",
+              "9999999.0",
+              "None",
+              "AF11",
+              "00:00:01:00:00:01",
+              "00:00:01:00:00:00",
+              "00:10:94:00:00:02",
+              "00:00:01:00:00:00",
+              "100",
+              "1",
+              "0",
+              "100",
+              "1",
+              "0",
+              "192.0.0.1",
+              "0.1.0.0",
+              "192.85.1.2",
+              "0.1.0.0",
+              "192.85.1.1",
+              "0.1.0.0",
+              "True",
+              "DSCP Value",
+              "Default Best Effort",
+              "100",
+              "1",
+              "0"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+    "methodology_key": "CLOUDSTRESS_NETWORKBENCHMARK_FIXEDLOAD",
+    "state_modifiers": [
+        {
+            "property_group": "AutoDeployConfig",
+            "state_type": "hidden",
+            "type": "expression",
+            "value": "has_deployment_config() == false",
+            "message": "Auto-Deployment Configuration is not used when there aren't any templates that need auto-deploying."
+        }
+    ],
+    "validations": [
+        {
+            "property_group": "GlobalConfig",
+            "type": "expression",
+            "value": "get_machine_count('MachineGroupWestMachineGroup') < 2",
+            "message": "The network dimension requires at least two agents."
+        },
+        {
+            "property": "MinInstanceCount",
+            "type": "expression",
+            "value": "(%MinInstanceCount% > %MaxInstanceCount%)",
+            "message": "Minimum Instance Count must be less than or equal to the Maximum Instance Count."
+        },
+        {
+            "property": "InitialInstanceCount",
+            "type": "expression",
+            "value": "(%MinInstanceCount% > %InitialInstanceCount%) || (%InitialInstanceCount% > %MaxInstanceCount%)",
+            "message": "Initial Instance Count must be between the Minimum and Maximum Instance Count inclusive."
+        },
+
+
+        {
+            "property": "FixedNetworkLoadParams.NetworkReadSize",
+            "type": "expression",
+            "value": "(%FixedNetworkLoadParams.NetworkReadSize% & (%FixedNetworkLoadParams.NetworkReadSize% - 1)) != 0",
+            "message": "The network read block size must be a power of 2."
+        },
+        {
+            "property": "FixedNetworkLoadParams.NetworkWriteSize",
+            "type": "expression",
+            "value": "(%FixedNetworkLoadParams.NetworkWriteSize% & (%FixedNetworkLoadParams.NetworkWriteSize% - 1)) != 0",
+            "message": "The network write block size must be a power of 2."
+        }
+    ]
+}

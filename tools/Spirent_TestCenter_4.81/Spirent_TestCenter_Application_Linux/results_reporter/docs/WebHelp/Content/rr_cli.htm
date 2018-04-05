@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" MadCap:tocPath="" MadCap:InPreviewMode="false" MadCap:PreloadImages="false" MadCap:RuntimeFileType="Topic" MadCap:TargetType="WebHelp" lang="en-us" xml:lang="en-us" MadCap:PathToHelpSystem="../" MadCap:HelpSystemFileName="stc_ra.xml" MadCap:SearchType="Stem">
+    <!-- saved from url=(0016)http://localhost -->
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Command Line Interface</title>
+        <link href="spirent_univ.css" rel="stylesheet" />
+        <script src="SkinSupport/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapAll.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapTopicAll.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <p><span style="font-family: sans-serif; font-size: 8pt;">Results Reporter Online Help <span style="color: #ffffff;">Results Reporter Help</span></span>
+        </p>
+        <h1 id="reporter_menus.htm" xmlns="http://www.w3.org/1999/xhtml">Command Line Interface </h1>
+        <p xmlns="http://www.w3.org/1999/xhtml">Results Reporter provides a command-line interface to generate reports without running the GUI.</p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">Command</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">Linux: ResultsReporterCLI.sh</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">Windows: ResultsReporterCLI.bat</p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">Parameters</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">Parameters specify the source file, destination file and format of the report. There are terse and verbose versions of each parameter. Entering the command with no parameters displays the command-line help. </p>
+        <table class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th>Option</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td width="57%" class="code">
+                    <p>-d &lt;file&gt; </p>
+                    <p>--dest &lt;file&gt; </p>
+                </td>
+                <td width="43%">
+                    <p>The target path and file name for the report </p>
+                </td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="">-e &lt;subject&gt;</p>
+                    <p xmlns="">--email &lt;subject&gt;</p>
+                </td>
+                <td>Send the report as an email with the indicated subject</td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p>-f &lt;pdf|pdf-tree|html|csv|csv-tree|jpeg&gt; </p>
+                    <p>--file &lt;pdf|pdf-tree|html|csv|csv-tree|jpeg&gt;</p>
+                </td>
+                <td>
+                    <p>The file format for the report </p>
+                    <p>To export iterations, specify the iteration database file name with -d or --dest option. Specifying the summary database file name will <strong>not</strong> cause iteration databases to be exported. </p>
+                    <p>Tree-based formats (pdf-tree, csv-tree) cannot use templates (the -t or --template options).</p>
+                </td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p>-h </p>
+                    <p>--help</p>
+                </td>
+                <td>Command-line help </td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="http://www.w3.org/1999/xhtml">-i &lt;index&gt;</p>
+                    <p xmlns="http://www.w3.org/1999/xhtml">--StartIndex &lt;index&gt;</p>
+                </td>
+                <td>Starting value of the index value for the table export </td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="">-m &lt;database-list&gt;</p>
+                    <p xmlns="">--merge ,database list&gt;</p>
+                </td>
+                <td>Combine several    databases into one</td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="http://www.w3.org/1999/xhtml">-n &lt;count&gt;</p>
+                    <p xmlns="http://www.w3.org/1999/xhtml">--ExportRowCount &lt;count&gt;</p>
+                </td>
+                <td>Total row count of the exported table</td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p>-o &lt;file&gt; </p>
+                    <p>--open &lt;file&gt; </p>
+                </td>
+                <td>
+                    <p>The source path and file name for the results file (.db) </p>
+                </td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="">-p &lt;smtp-server&gt;</p>
+                    <p xmlns="">--mail-server &lt;smtp-server&gt;</p>
+                </td>
+                <td>Hostname of the mail Server</td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="">-r &lt;recipient-addresses&gt;</p>
+                    <p xmlns="">--recipients &lt;recipient-addresses&gt;</p>
+                </td>
+                <td>Recipients of the email report</td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="">-s &lt;port&gt;</p>
+                    <p xmlns="">--server &lt;port&gt;</p>
+                </td>
+                <td>Start a web  server on the indicated port</td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p>-t &lt;file&gt;</p>
+                    <p>--template &lt;file&gt;  </p>
+                </td>
+                <td>
+                    <p>The source path and file name for a template used to interpret and format the report </p>
+                    <p>Not used for tree based formats (pdf-tree, csv-tree) </p>
+                </td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="">-u &lt;sender-address&gt;</p>
+                    <p xmlns="">--from &lt;sender-address&gt;</p>
+                </td>
+                <td>Sender for the email report</td>
+            </tr>
+            <tr>
+                <td class="code">
+                    <p xmlns="http://www.w3.org/1999/xhtml">-x</p>
+                    <p xmlns="http://www.w3.org/1999/xhtml">--GetTableRowCount</p>
+                </td>
+                <td>Returns the total row count for all template tables</td>
+            </tr>
+        </table>
+        <p class="tobegin" xmlns="http://www.w3.org/1999/xhtml">Example</p>
+        <p xmlns="http://www.w3.org/1999/xhtml">In Linux, to generate a PDF report from <span class="code">MyResults.db</span>, using the template <span class="code">CustomStats.rtp</span>, and write the report to <span class="code">MyResults.pdf</span>:  </p>
+        <p class="code" xmlns="http://www.w3.org/1999/xhtml">./ResultsReporterCLI.sh -o MyResults.db -f pdf -d MyResults.pdf -t templates/CustomStats.rtp </p>
+        <p xmlns="http://www.w3.org/1999/xhtml">In Windows, to generate a PDF report from MyResults.db, using the template CustomStats.rtp, and write the report to MyResults.pdf:  </p>
+        <p class="code" xmlns="http://www.w3.org/1999/xhtml">ResultsReporterCLI.bat -o MyResults.db -f pdf -d MyResults.pdf -t templates/CustomStats.rtp </p>
+        <hr width="100%" size="0" align="center" xmlns="http://www.w3.org/1999/xhtml" />
+        <p class="related_information" xmlns="http://www.w3.org/1999/xhtml">Related Topics:</p>
+        <p class="relatedtopic" xmlns="http://www.w3.org/1999/xhtml"><a href="reporting.htm">Reporting</a>
+        </p>
+        <p style="text-align: right;"><span style="font-family: sans-serif; font-size: 8pt;">© Spirent Communications</span>
+        </p>
+        <script type="text/javascript" src="SkinSupport/MadCapBodyEnd.js">
+        </script>
+    </body>
+</html>

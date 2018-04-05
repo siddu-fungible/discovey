@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCEFPACC" 
+    showName="FC EFP ACC"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcsw:EfpAcc"
+    description="FC EFP ACC">
+    <pdus>
+      <pdu name="efpAcc1" pdu="fcsw:EfpAcc" >
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989">
+    <execution estimatedExecutionTime="3">
+        <parameters version="3.4.0.39989">
+            <parameters>
+                <parameters xmlns:pt="http://www.fnfr.com/schemas/parameterTree">
+                    <p1/>
+                </parameters>
+            </parameters>
+        </parameters>
+    </execution>
+    <procedures>
+        <item name="main">
+            <steps>
+                <item guid="c5bfe725-4792-44a7-8237-ba67f359a9a0" action="open" session="s2">
+                    <command>
+                        <body>project://Spirent/session_profiles/common_telnet_Cisco7600.ffsp</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.OpenStepPropertyGroup">
+                        <stepProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                        <sessionProperties type="com.fnfr.svt.applications.telnet.documents.TelnetSessionProperties"/>
+                    </applicationProperties>
+                </item>
+                <item guid="47b3b8b9-5e77-4635-8363-0f18a8d39dc4" action="command" session="s2">
+                    <command>
+                        <body>spirent</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="c4a48d48-28d7-4a31-91a0-5ee4f63a6fc0" action="command" session="s2">
+                    <command>
+                        <body>spirent</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="0109f1bb-9523-4d64-9314-9122e9c0cec7" action="command" session="s2" normalOffset="4.827" estimatedStepExecutionTime="1.375">
+                    <command>
+                        <body>show interface stats</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>ports_info</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                        <morePaging>
+                            <numPagesToFetch inherit="false">1000</numPagesToFetch>
+                        </morePaging>
+                    </applicationProperties>
+                </item>
+                <item guid="a4869d1c-0341-424d-b67f-23f1923474c9" action="return">
+                    <command>
+                        <body>$ports_info</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                </item>
+            </steps>
+        </item>
+    </procedures>
+</testCase>

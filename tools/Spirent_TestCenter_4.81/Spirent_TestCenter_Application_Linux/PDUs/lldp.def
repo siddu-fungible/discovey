@@ -1,0 +1,1666 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="lldp" showName="LLDP" version="1.00" description="This is a sample PDU library for LLDP as defined in XML Stream Editor.">
+  <TYPE_DEFS>
+    <!-- Chassis ID TLV ===================================================== -->
+    <TYPE_DEF name="ChassisIdTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="Chassis ID TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="1" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="chassisid" type="lldp:ChassisIDSelect" defaultValue="networkAddress4" uiShowName="Chassis ID" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:PortIdTlv" name="Organization-Specific TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!-- Chassis ID -->
+    <TYPE_DEF name="ChassisIDSubTypeValues" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Chassis Component" value="01" />
+        <VAL_ENUM uiShowName="Interface Alias" value="02" />
+        <VAL_ENUM uiShowName="Port Component" value="03" />
+        <VAL_ENUM uiShowName="MAC Address" value="04" />
+        <VAL_ENUM uiShowName="Network Address" value="05" />
+        <VAL_ENUM uiShowName="Interface Name" value="06" />
+        <VAL_ENUM uiShowName="Locally Assigned" value="07" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDChassisComponentFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Chassis Component">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="01" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="64" defaultValue="SPIRENT" uiShowName="Chassis ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDInterfaceAliasFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Interface Alias">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="02" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="128" defaultValue="SPIRENT" uiShowName="Chassis ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDPortComponentFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Component">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="03" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="64" defaultValue="SPIRENT" uiShowName="Chassis ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDMacAddressFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="MAC Address">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="04" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="MACADDR" procfnTarget="LLDPTLVDELEGATE" defaultValue="00:00:00:00:00:00" uiShowName="Chassis ID" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDNetworkAddress4Format" type="SEQUENCE" unitType="ELEMENT" uiShowName="Network Address IPv4">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="05" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="ianaAddrNo" type="INTEGER" bitLength="8" defaultValue="1" uiShowName="IANA Address Family" uiControlState="CALCULATED" />
+      <FIELD name="id" type="IPV4ADDR" defaultValue="192.168.1.1" procfnTarget="LLDPTLVDELEGATE" uiShowName="Chassis ID" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDNetworkAddress6Format" type="SEQUENCE" unitType="ELEMENT" uiShowName="Network Address IPv6">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="05" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="ianaAddrNo" type="INTEGER" bitLength="8" defaultValue="2" uiShowName="IANA Address Family" uiControlState="CALCULATED" />
+      <FIELD name="id" type="IPV6ADDR" defaultValue="2000::" procfnTarget="LLDPTLVDELEGATE" uiShowName="Chassis ID" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDInterfaceNameFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Interface Name">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="06" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="255" defaultValue="SPIRENT" uiShowName="Chassis ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDLocallyAssignedFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Locally Assigned">
+      <FIELD name="subtype" type="ChassisIDSubTypeValues" byteLength="1" defaultValue="07" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="255" defaultValue="0" uiShowName="Chassis ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CIDCustomFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Custom">
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Chassis ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="OCTETSTRING" minByteLength="1" maxByteLength="255" defaultValue="00" uiShowName="Chassis ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="ChassisIDSelect" type="CHOICE" unitType="ELEMENT" uiShowName="Chassis ID">
+      <FIELD name="chassisComponent" type="CIDChassisComponentFormat" uiShowName="Chassis Component" />
+      <FIELD name="interfaceAlias" type="CIDInterfaceAliasFormat" uiShowName="Interface Alias" />
+      <FIELD name="portComponent" type="CIDPortComponentFormat" uiShowName="Port Component" />
+      <FIELD name="macAddress" type="CIDMacAddressFormat" uiShowName="MAC Address" />
+      <FIELD name="networkAddress4" type="CIDNetworkAddress4Format" uiShowName="Network Address IPv4" />
+      <FIELD name="networkAddress6" type="CIDNetworkAddress6Format" uiShowName="Network Address IPv6" />
+      <FIELD name="interfaceName" type="CIDInterfaceNameFormat" uiShowName="Interface Name" />
+      <FIELD name="locallyAssigned" type="CIDLocallyAssignedFormat" uiShowName="Locally Assigned" />
+      <FIELD name="custom" type="CIDCustomFormat" uiShowName="Custom" />
+    </TYPE_DEF>
+    <!--Port ID TLV ===================================================== -->
+    <TYPE_DEF name="PortIdTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="Port ID TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="2" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="portid" type="lldp:PortIDSelect" defaultValue="pidMacAddress" uiShowName="Port ID" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:TimeToLiveTlv" name="Time To Live TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="PortIDSubTypeValues" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Interface Alias" value="01" />
+        <VAL_ENUM uiShowName="Port Component" value="02" />
+        <VAL_ENUM uiShowName="MAC Address" value="03" />
+        <VAL_ENUM uiShowName="Network Address" value="04" />
+        <VAL_ENUM uiShowName="Interface Name" value="05" />
+        <VAL_ENUM uiShowName="Agent Circuit ID" value="06" />
+        <VAL_ENUM uiShowName="Locally Assigned" value="07" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDInterfaceAliasFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Interface Alias">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="01" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="128" defaultValue="SPIRENT" uiShowName="Port ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDPortComponentFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Port Component">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="02" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="64" defaultValue="SPIRENT" uiShowName="Port ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDMacAddressFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="MAC Address">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="03" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="MACADDR" procfnTarget="LLDPTLVDELEGATE" defaultValue="00:00:00:00:00:00" uiShowName="Port ID" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDNetworkAddress4Format" type="SEQUENCE" unitType="ELEMENT" uiShowName="Network Address IPv4">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="04" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="ianaAddrNo" type="INTEGER" bitLength="8" defaultValue="1" uiShowName="IANA Address Family" uiControlState="CALCULATED" />
+      <FIELD name="id" type="IPV4ADDR" procfnTarget="LLDPTLVDELEGATE" defaultValue="192.168.1.1" uiShowName="Port ID" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDNetworkAddress6Format" type="SEQUENCE" unitType="ELEMENT" uiShowName="Network Address IPv6">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="04" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="ianaAddrNo" type="INTEGER" bitLength="8" defaultValue="2" uiShowName="IANA Address Family" uiControlState="CALCULATED" />
+      <FIELD name="id" type="IPV6ADDR" defaultValue="2000::" procfnTarget="LLDPTLVDELEGATE" uiShowName="Port ID" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDInterfaceNameFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Interface Name">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="05" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="255" defaultValue="SPIRENT" uiShowName="Port ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDAgentCircuitIDFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Agent Circuit ID">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="06" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="255" defaultValue="0000" uiShowName="Port ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDLocallyAssignedFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Locally Assigned">
+      <FIELD name="subtype" type="PortIDSubTypeValues" byteLength="1" defaultValue="07" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="ASCII" minByteLength="1" maxByteLength="255" defaultValue="0" uiShowName="Port ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PIDCustomFormat" type="SEQUENCE" unitType="ELEMENT" uiShowName="Custom">
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Port ID Subtype" uiControlState="CALCULATED" />
+      <FIELD name="id" type="OCTETSTRING" minByteLength="1" maxByteLength="255" defaultValue="00" uiShowName="Port ID" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PortIDSelect" type="CHOICE" unitType="ELEMENT" uiShowName="Port ID">
+      <FIELD name="pidInterfaceAlias" type="PIDInterfaceAliasFormat" uiShowName="Interface Alias" />
+      <FIELD name="pidPortComponent" type="PIDPortComponentFormat" uiShowName="Port Component" />
+      <FIELD name="pidMacAddress" type="PIDMacAddressFormat" uiShowName="MAC Address" />
+      <FIELD name="pidNetworkAddress4" type="PIDNetworkAddress4Format" uiShowName="Network Address IPv4" />
+      <FIELD name="pidNetworkAddress6" type="PIDNetworkAddress6Format" uiShowName="Network Address IPv6" />
+      <FIELD name="pidInterfaceName" type="PIDInterfaceNameFormat" uiShowName="Interface Name" />
+      <FIELD name="pidAgentCircuitID" type="PIDAgentCircuitIDFormat" uiShowName="Agent Circuit ID" />
+      <FIELD name="pidLocallyAssigned" type="PIDLocallyAssignedFormat" uiShowName="Locally Assigned" />
+      <FIELD name="pidCustom" type="PIDCustomFormat" uiShowName="Custom" />
+    </TYPE_DEF>
+    <!--Time To Live TLV ================================================== -->
+    <TYPE_DEF name="TimeToLiveTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="Time To Live TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="3" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="2" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="ttl" type="INTEGER" bitLength="16" procfnTarget="LLDPTLVDELEGATE" defaultValue="0" uiShowName="Time To Live" uiControlState="ALLOW_OVERRIDE"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Port Description TLV ================================================== -->
+    <TYPE_DEF name="PortDescriptionTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="Port Description TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="4" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="description" type="ASCII" minByteLength="0" maxByteLength="255" defaultValue="Spirent Port" uiShowName="Port Description"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--System Name TLV ================================================== -->
+    <TYPE_DEF name="SystemNameTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="System Name TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="5" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="name" type="ASCII" minByteLength="0" maxByteLength="255" defaultValue="Spirent Test Center" uiShowName="System Name"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--System Description TLV ================================================== -->
+    <TYPE_DEF name="SystemDescriptionTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="System Description TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="6" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="description" type="ASCII" minByteLength="0" maxByteLength="255" defaultValue="Spirent Test Center" uiShowName="System Description"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--System Capabilities TLV =================================================== -->
+    <TYPE_DEF name="SystemCapabilitiesTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="System Capabilities TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="7" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="systemCapabilities" type="LldpSystemCapabilities" uiShowName="System Capabilites"></FIELD>
+      <FIELD name="enabledCapabilities" type="LldpSystemCapabilities" uiShowName="Enabled Capabilites"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--LldpSystemCapabilities-->
+    <TYPE_DEF name="LldpSystemCapabilities" type="SEQUENCE" unitType="ELEMENT" byteLength="2" uiShowName="Lldp System Capabilities">
+      <FIELD name="reserved" type="OCTETSTRING" byteLength="1" defaultValue="00" uiNoShow="Interface" uiShowCommon="false" uiShowName="Reserved" />
+      <FIELD name="stationOnly" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Station Only" />
+      <FIELD name="docsisCableDevice" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="DOCSIS Cable Device" />
+      <FIELD name="telephone" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Telephone" />
+      <FIELD name="router" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Router" />
+      <FIELD name="wlanAccessPoint" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="WLAN Access Point" />
+      <FIELD name="bridge" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Bridge" />
+      <FIELD name="repeater" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Repeater" />
+      <FIELD name="other" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Other" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Management Address TLV ================================================== -->
+    <TYPE_DEF name="ManagementAddrTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="Management Address TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="8" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="managementAddrLength" type="INTEGER" bitLength="8" procfnTarget="LLDPMANADDRLENGTH" defaultValue="0" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="managementAddr" type="ManagementAddrSelect" defaultValue="ipv4Addr" minByteLength="2" maxByteLength="32" uiShowName="Management Address"></FIELD>
+      <FIELD name="ifNumberingSubtype" type="EnumIfNumberingSubtype" defaultValue="01" uiShowName="Interface Numbering Subtype"></FIELD>
+      <FIELD name="ifNumber" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="Interface Number"></FIELD>
+      <FIELD name="oidLength" type="INTEGER" bitLength="8" procfnTarget="LLDPOIDLENGTH" defaultValue="0" uiShowName="OID Length" uiControlState="ALLOW_OVERRIDE"></FIELD>
+      <FIELD name="oid" type="OCTETSTRING" minByteLength="0" maxByteLength="128" uiShowName="OID"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--ManagementAddr-->
+    <TYPE_DEF name="EnumManagementAddrSubtype" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Other" value="00" />
+        <VAL_ENUM uiShowName="IPv4" value="01" />
+        <VAL_ENUM uiShowName="IPv6" value="02" />
+        <VAL_ENUM uiShowName="nsap" value="03" />
+        <VAL_ENUM uiShowName="hdlc" value="04" />
+        <VAL_ENUM uiShowName="bbn1822" value="05" />
+        <VAL_ENUM uiShowName="All 802" value="06" />
+        <VAL_ENUM uiShowName="e163" value="07" />
+        <VAL_ENUM uiShowName="e164" value="08" />
+        <VAL_ENUM uiShowName="f69" value="09" />
+        <VAL_ENUM uiShowName="x121" value="0A" />
+        <VAL_ENUM uiShowName="IPX" value="0B" />
+        <VAL_ENUM uiShowName="Apple Talk" value="0C" />
+        <VAL_ENUM uiShowName="DEC Net IV" value="0D" />
+        <VAL_ENUM uiShowName="Banyan Vines" value="0E" />
+        <VAL_ENUM uiShowName="E164 with NSAP" value="0F" />
+        <VAL_ENUM uiShowName="DNS" value="10" />
+        <VAL_ENUM uiShowName="Distinguished Name" value="11" />
+        <VAL_ENUM uiShowName="AS Number" value="12" />
+        <VAL_ENUM uiShowName="XTP over IPv4" value="13" />
+        <VAL_ENUM uiShowName="XTP over IPv6" value="14" />
+        <VAL_ENUM uiShowName="XTP native mode XTP" value="15" />
+        <VAL_ENUM uiShowName="Fibre Channel WWPN" value="16" />
+        <VAL_ENUM uiShowName="Fibre Channel WWNN" value="17" />
+        <VAL_ENUM uiShowName="Gateway Identifier" value="18" />
+        <VAL_ENUM uiShowName="AFI" value="19" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <TYPE_DEF name="ManagementIpv4Addr" type="SEQUENCE" unitType="ELEMENT" uiShowName="Management IPv4 Address">
+      <FIELD name="addrSubtype" type="EnumManagementAddrSubtype" byteLength="1" defaultValue="01" uiShowName="Address Subtype" uiControlState="CALCULATED" />
+      <FIELD name="managementAddr" type="IPV4ADDR" procfnTarget="LLDPTLVDELEGATE" uiShowName="Management Address" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="ManagementIpv6Addr" type="SEQUENCE" unitType="ELEMENT" uiShowName="Management IPv6 Address">
+      <FIELD name="addrSubtype" type="EnumManagementAddrSubtype" byteLength="1" defaultValue="02" uiShowName="Address Subtype" uiControlState="CALCULATED" />
+      <FIELD name="managementAddr" type="IPV6ADDR" procfnTarget="LLDPTLVDELEGATE" uiShowName="Management Address" uiControlState="ALLOW_OVERRIDE" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CustomManagementAddr" type="SEQUENCE" unitType="ELEMENT" uiShowName="Custom Management Address">
+      <FIELD name="addrSubtype" type="EnumManagementAddrSubtype" byteLength="1" defaultValue="00" uiShowName="Address Subtype" />
+      <FIELD name="managementAddr" type="OCTETSTRING" minByteLength="1" maxByteLength="31" uiShowName="Management Address" />
+    </TYPE_DEF>
+    <TYPE_DEF name="ManagementAddrSelect" type="CHOICE" unitType="ELEMENT" uiShowName="Management Address List">
+      <FIELD name="ipv4Addr" type="ManagementIpv4Addr" uiShowName="IPv4 Address" />
+      <FIELD name="ipv6Addr" type="ManagementIpv6Addr" uiShowName="IPv6 Address" />
+      <FIELD name="customAddr" type="CustomManagementAddr" uiShowName="Custom Address" />
+    </TYPE_DEF>
+    <!--EnumIfNumberingSubtype-->
+    <TYPE_DEF name="EnumIfNumberingSubtype" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Unknown" value="01" />
+        <VAL_ENUM uiShowName="IfIndex" value="02" />
+        <VAL_ENUM uiShowName="SystemPortNumber" value="03" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <!--End TLV ========================================================== -->
+    <TYPE_DEF name="EndTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="End TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="0" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+    </TYPE_DEF>
+    <!--Custom TLV ========================================================== -->
+    <TYPE_DEF name="CustomTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="Custom TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" defaultValue="9" uiShowName="Type" />
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="511" uiShowName="Value"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Mac/Phy Config/Status TLV ================================================= -->
+    <TYPE_DEF name="MacPhyConfigStatusTlv" type="SEQUENCE" unitType="HEADER" uiShowName="MAC/PHY Configuration/Status TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="00120F" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="01" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="autoNegotiationSupportAndStatus" type="LldpAutoNegotiation" uiShowName="Auto-negotiation Support And Status" />
+      <FIELD name="autoNegotiationAdvertisedCapability" type="EnumAutoNegCap" defaultValue="0E" uiShowName="Auto-negotiation Advertiesed Capability" />
+      <FIELD name="operationalMauType" type="EnumMauType" byteLength="2" defaultValue="0000" uiShowName="Operational MAU Type" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="LldpAutoNegotiation" type="SEQUENCE" unitType="ELEMENT" byteLength="1" uiShowName="Lldp Auto-negotiation">
+      <FIELD name="reserved" type="BITSTRING" bitLength="6" defaultValue="000000" uiNoShow="Interface" uiShowCommon="false" uiShowName="Reserved" />
+      <FIELD name="autoNegotiationEnabled" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Auto-negotiation Enabled" />
+      <FIELD name="autoNegotiationSupported" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Auto-negotiation Supported" />
+    </TYPE_DEF>
+    <TYPE_DEF name="EnumAutoNegCap" type="SEQUENCE" byteLength="2" unitType="ELEMENT">
+      <FIELD name="other" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Other" />
+      <FIELD name="b10baseT" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b10baseT" />
+      <FIELD name="b10baseTFD" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b10baseTFD" />
+      <FIELD name="b100baseT4" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b100baseT4" />
+      <FIELD name="b100baseTX" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="b100baseTX" />
+      <FIELD name="b100baseTXFD" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b100baseTXFD" />
+      <FIELD name="b100baseT2" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b100baseT2" />
+      <FIELD name="b100baseT2FD" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b100baseT2FD" />
+      <FIELD name="bFdxPause" type="BITSTRING" byteLength="1" defaultValue="0" uiShowName="bFdxPause" />
+      <FIELD name="bFdxAPause" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="bFdxAPause" />
+      <FIELD name="bFdxSPause" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="bFdxSPause" />
+      <FIELD name="bFdxBPause" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="bFdxBPause" />
+      <FIELD name="b1000baseX" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b1000baseX" />
+      <FIELD name="b1000baseXFD" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b1000baseXFD" />
+      <FIELD name="b1000baseT" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b1000baseT" />
+      <FIELD name="b1000baseTFD" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="b1000baseTFD" />
+    </TYPE_DEF>
+    <TYPE_DEF name="EnumMauType" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Other" value="0000" />
+        <VAL_ENUM uiShowName="AUI" value="0001" />
+        <VAL_ENUM uiShowName="10Base5" value="0002" />
+        <VAL_ENUM uiShowName="FOIRL" value="0003" />
+        <VAL_ENUM uiShowName="10Base2" value="0004" />
+        <VAL_ENUM uiShowName="10BaseT" value="0005" />
+        <VAL_ENUM uiShowName="10BaseFP" value="0006" />
+        <VAL_ENUM uiShowName="10BaseFB" value="0007" />
+        <VAL_ENUM uiShowName="10BaseFL" value="0008" />
+        <VAL_ENUM uiShowName="10Broad36" value="0009" />
+        <VAL_ENUM uiShowName="10BaseTHD" value="000A" />
+        <VAL_ENUM uiShowName="10BaseTFD" value="000B" />
+        <VAL_ENUM uiShowName="10BaseFLHD" value="000C" />
+        <VAL_ENUM uiShowName="10BaseFLFD" value="000D" />
+        <VAL_ENUM uiShowName="10BaseT4" value="000E" />
+        <VAL_ENUM uiShowName="100BaseTXHD" value="000F" />
+        <VAL_ENUM uiShowName="100BaseTXFD" value="0010" />
+        <VAL_ENUM uiShowName="100BaseFXFD" value="0011" />
+        <VAL_ENUM uiShowName="100BaseFXFD" value="0012" />
+        <VAL_ENUM uiShowName="100BaseT2HD" value="0013" />
+        <VAL_ENUM uiShowName="100BaseT2FD" value="0014" />
+        <VAL_ENUM uiShowName="1000BaseTXHD" value="0015" />
+        <VAL_ENUM uiShowName="1000BaseTXFD" value="0016" />
+        <VAL_ENUM uiShowName="1000BaseLXHD" value="0017" />
+        <VAL_ENUM uiShowName="1000BaseLXFD" value="0018" />
+        <VAL_ENUM uiShowName="1000BaseSXHD" value="0019" />
+        <VAL_ENUM uiShowName="1000BaseSXFD" value="001A" />
+        <VAL_ENUM uiShowName="1000BaseCXHD" value="001B" />
+        <VAL_ENUM uiShowName="1000BaseCXFD" value="001C" />
+        <VAL_ENUM uiShowName="1000BaseTHD" value="001D" />
+        <VAL_ENUM uiShowName="1000BaseTFD" value="001E" />
+        <VAL_ENUM uiShowName="10GigBaseX" value="001F" />
+        <VAL_ENUM uiShowName="10GigBaseLX4" value="0020" />
+        <VAL_ENUM uiShowName="10GigBaseR" value="0021" />
+        <VAL_ENUM uiShowName="10GigBaseER" value="0022" />
+        <VAL_ENUM uiShowName="10GigBaseLR" value="0023" />
+        <VAL_ENUM uiShowName="10GigBaseSR" value="0024" />
+        <VAL_ENUM uiShowName="10GigBaseW" value="0025" />
+        <VAL_ENUM uiShowName="10GigBaseEW" value="0026" />
+        <VAL_ENUM uiShowName="10GigBaseLW" value="0027" />
+        <VAL_ENUM uiShowName="10GigBaseSW" value="0028" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <!--Power Via MDI TLV ================================================= -->
+    <TYPE_DEF name="PowerViaMdiTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Power Via MDI TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="00120F" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="mdiPowerSupport" type="LldpMdiPowerSupport" uiShowName="MDI Power Support" />
+      <FIELD name="psePowerPairs" type="EnumPSEPowerPair" defaultValue="1" uiShowName="PSE Power Pairs" />
+      <FIELD name="psePowerClass" type="EnumPSEPowerClass" defaultValue="1" uiShowName="PSE Power Class" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="LldpMdiPowerSupport" type="SEQUENCE" unitType="ELEMENT" byteLength="1" uiShowName="Lldp MDI Power Support">
+      <FIELD name="reserved" type="BITSTRING" bitLength="4" defaultValue="0000" uiNoShow="Interface" uiShowCommon="false" uiShowName="Reserved" />
+      <FIELD name="psePairsControlAbility" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="PSE Pairs Control Ability" />
+      <FIELD name="pseMdiPowerState" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="PSE MDI Power State" />
+      <FIELD name="pseMdiPowerSupport" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="PSE MDI Power Support" />
+      <FIELD name="portClass" type="BITSTRING" bitLength="1" defaultValue="0" uiShowName="Port Class" />
+    </TYPE_DEF>
+    <TYPE_DEF name="EnumPSEPowerPair" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Signal" value="01" />
+        <VAL_ENUM uiShowName="Spare" value="02" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <TYPE_DEF name="EnumPSEPowerClass" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Class 1" value="01" />
+        <VAL_ENUM uiShowName="Class 2" value="02" />
+        <VAL_ENUM uiShowName="Class 3" value="03" />
+        <VAL_ENUM uiShowName="Class 4" value="04" />
+        <VAL_ENUM uiShowName="Class 5" value="05" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    <!--Link Aggregation TLV ================================================= -->
+    <TYPE_DEF name="LinkAggregationTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Link Aggregation TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="00120F" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="03" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="aggregationStatus" type="LldpAggregationStatus" uiShowName="Aggregation Status" />
+      <FIELD name="aggregatedPortid" type="OCTETSTRING" byteLength="4" defaultValue="0000000E" uiShowName="Aggregated Port ID" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="LldpAggregationStatus" type="SEQUENCE" unitType="ELEMENT" byteLength="1" uiShowName="Lldp Aggregation Status">
+      <FIELD name="reserved" type="BITSTRING" bitLength="6" defaultValue="000000" uiNoShow="Interface" uiShowCommon="false" uiShowName="Reserved" />
+      <FIELD name="aggregationStatus" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Aggregation Status" />
+      <FIELD name="aggregationCapability" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Aggregation Capability" />
+    </TYPE_DEF>
+    <!--Maximum Frame Size TLV ================================================= -->
+    <TYPE_DEF name="MaxFrameSizeTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Maximum Frame Size TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="00120F" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="04" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="frameSize" type="INTEGER" bitLength="16" defaultValue="1518" uiShowName="Maximum Frame Size" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Port Vlan Id TLV ================================================== -->
+    <TYPE_DEF name="PortVlanIdTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Port VLAN ID TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="01" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="portVlanId" type="OCTETSTRING" byteLength="2" defaultValue="0001" uiShowName="Port VLAN ID" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Port And Protocol VLAN ID TLV ================================================== -->
+    <TYPE_DEF name="PortAndProtocolVlanIdTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Port And Protocol VLAN ID TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="flags" type="LldpPortAndProtocolStatus" uiShowName="Flags" />
+      <FIELD name="portAndProtocolVlanId" type="OCTETSTRING" byteLength="2" defaultValue="0000" uiShowName="Port And Protocol VLAN ID" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="LldpPortAndProtocolStatus" type="SEQUENCE" unitType="ELEMENT" byteLength="1" uiShowName="Lldp Port And Protocol Status">
+      <FIELD name="reserved" type="BITSTRING" bitLength="5" defaultValue="00000" uiNoShow="Interface" uiShowCommon="false" uiShowName="Reserved" />
+      <FIELD name="portAndProtocolVlanEnabled" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Port And Protocol VLAN Enabled" />
+      <FIELD name="portAndProtocolVlanSupport" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Port And Protocol VLAN Suppport" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="1" defaultValue="0" uiNoShow="Interface" uiShowCommon="false" uiShowName="Reserved" />
+    </TYPE_DEF>
+    <!--VLAN Name TLV ================================================== -->
+    <TYPE_DEF name="VlanNameTlv" type="SEQUENCE" unitType="HEADER" uiShowName="VLAN Name TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="03" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="vlanid" type="INTEGER" bitLength="16" defaultValue="1" uiShowName="VLAN ID" />
+      <FIELD name="vlanNameLength" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="LLDPVLANLENGTH" uiShowName="VLAN Name Length" uiControlState="CALCULATED" />
+      <FIELD name="vlanName" type="ASCII" minByteLength="1" maxByteLength="32" defaultValue="Vlan1" uiShowName="VLAN Name" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Protocol Identity TLV ================================================== -->
+    <TYPE_DEF name="ProtocolIdentityTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Protocol Identity TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="04" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="protocolIdentityLength" type="INTEGER" bitLength="8" defaultValue="0" procfnTarget="LLDPPIDLENGTH" uiShowName="Protocol Identity Length" uiControlState="CALCULATED" />
+      <FIELD name="protocolIdentity" type="OCTETSTRING" minByteLength="1" maxByteLength="255" defaultValue="0000" uiShowName="Protocol Identity" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Organizationally Specific TLV ================================================== -->
+    <TYPE_DEF name="OrganizationallySpecificTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Organizationally Specific TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="000000" uiShowName="OUI" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="00" uiShowName="Subtype" />
+      <FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="507" defaultValue="00" uiShowName="Value" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--DCBX TLV  Version 1.0  ================================================== -->
+    <TYPE_DEF name="DcbxTlvt1" type="SEQUENCE" unitType="HEADER" uiShowName="DCBX TLV Sub-Type 1">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="001B21" uiShowName="OUI" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="01" uiShowName="Subtype" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="value" type="lldp:DcbxSubTlvListt1" minByteLength="0" maxByteLength="507" uiShowName="Value" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="DcbxSubTlvListt1" type="SEQUENCE_OF" minOccurs="0" maxOccurs="250" elementType="DcbxSubTlvt1" unitType="ELEMENT"></TYPE_DEF>
+    <TYPE_DEF name="DcbxSubTlvt1" type="CHOICE" unitType="ELEMENT" uiShowName="DCBX Sub TLV v1.0">
+      <FIELD name="dcbxCtlTlv" type="DcbxControlTlv" uiShowName="DCBX Control" />
+      <FIELD name="pgTlv" type="PgFeatureTlvt1" uiShowName="Priority Groups" />
+      <FIELD name="pfcTlv" type="PfcFeatureTlvt1" uiShowName="Priority Flow Control" />
+      <FIELD name="bcnTlv" type="BcnFeatureTlvt1" uiShowName="BCN" />
+      <FIELD name="applicatonTlv" type="ApplicationFeatureTlvt1" uiShowName="Application" />
+      <FIELD name="logicLinkDownTlv" type="LogicLinkDownFeatureTlvt1" uiShowName="Logic Link Down" />
+      <FIELD name="nivTlv" type="NivTlv" uiShowName="NIV" />
+      <FIELD name="customTlv" type="CustomFeatureTlv" uiShowName="Custom Feature" />
+    </TYPE_DEF>
+    <!--DCBX TLV  Version 1.03  ================================================== -->
+    <TYPE_DEF name="DcbxTlvt2" type="SEQUENCE" unitType="HEADER" uiShowName="DCBX TLV Sub-Type 2">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="001B21" uiShowName="OUI" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="02" uiShowName="Subtype" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="value" type="lldp:DcbxSubTlvListt2" minByteLength="0" maxByteLength="507" uiShowName="Value" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="DcbxSubTlvListt2" type="SEQUENCE_OF" minOccurs="0" maxOccurs="250" elementType="DcbxSubTlvt2" unitType="ELEMENT"></TYPE_DEF>
+    <TYPE_DEF name="DcbxSubTlvt2" type="CHOICE" unitType="ELEMENT" uiShowName="DCBX Sub TLV v1.03">
+      <FIELD name="dcbxCtlTlv" type="DcbxControlTlv" uiShowName="DCBX Control" />
+      <FIELD name="pgTlv" type="PgFeatureTlvt2" uiShowName="Priority Groups" />
+      <FIELD name="pfcTlv" type="PfcFeatureTlvt2" uiShowName="Priority Flow Control" />
+      <FIELD name="applicatonTlv" type="ApplicationFeatureTlvt2" uiShowName="Application" />
+      <FIELD name="nivTlv" type="NivTlv" uiShowName="NIV" />
+      <FIELD name="customTlv" type="CustomFeatureTlv" uiShowName="Custom Feature" />
+    </TYPE_DEF>
+    <!-- DCBX Control Tlv -->
+    <TYPE_DEF name="DcbxControlTlv" type="SEQUENCE" unitType="ELEMENT" uiShowName="DCBX Control TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="1" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="10" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="seqNo" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="SeqNo" uiControlState="CALCULATED" />
+      <FIELD name="ackNo" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="AckNo" uiControlState="CALCULATED" />
+    </TYPE_DEF>
+    <!-- Custom Feature Tlv -->
+    <TYPE_DEF name="FeatureHeader" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="10" uiShowName="Type"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Willing"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="CustomFeatureTlv" type="SEQUENCE" unitType="ELEMENT" uiShowName="Custom Feature TLV">
+      <FIELD name="header" type="FeatureHeader" uiShowName="Header"></FIELD>
+      <FIELD name="value" type="OCTETSTRING" minByteLength="0" maxByteLength="507" defaultValue="00" uiShowName="Value"></FIELD>
+    </TYPE_DEF>
+    <!-- NIV Tlv -->
+    <TYPE_DEF name="NivHeader" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="7" uiShowName="Type"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="12" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Willing" uiControlState="ALLOW_OVERRIDE"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="NivTlv" type="SEQUENCE" unitType="ELEMENT" uiShowName="NIV TLV">
+      <FIELD name="header" type="NivHeader" uiShowName="Header"></FIELD>
+      <FIELD name="vis" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Virtual Interface Switch" />
+      <FIELD name="vnTagVer" type="INTEGER" bitLength="3" defaultValue="1" uiShowName="VN-Tag Version" />
+      <FIELD name="ctrlVifId" type="INTEGER" bitLength="12" defaultValue="4095" uiShowName="Control Channel VIF-ID" />
+      <FIELD name="ctrlMacAddr" type="MACADDR" procfnTarget="LLDPTLVDELEGATE" defaultValue="00:00:00:00:00:00" uiShowName="Control Channel MAC address" uiControlState="ALLOW_OVERRIDE"/>
+    </TYPE_DEF>
+    <!-- ============================ Feature TLV version 1 ======================================== -->
+    <!-- PG feature t1 -->
+    <TYPE_DEF name="PgHeadert1" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="2" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="28" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Willing"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Sub-Type" />
+    </TYPE_DEF>
+    <TYPE_DEF name="BwgPercentage" type="SEQUENCE" unitType="ELEMENT" uiShowName="BWG Percentage of Link">
+      <FIELD name="bwg_percentage0" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage0"></FIELD>
+      <FIELD name="bwg_percentage1" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage1"></FIELD>
+      <FIELD name="bwg_percentage2" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage2"></FIELD>
+      <FIELD name="bwg_percentage3" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage3"></FIELD>
+      <FIELD name="bwg_percentage4" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage4"></FIELD>
+      <FIELD name="bwg_percentage5" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage5"></FIELD>
+      <FIELD name="bwg_percentage6" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage6"></FIELD>
+      <FIELD name="bwg_percentage7" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="bwg_percentage7"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="UserPriorityAllocation" type="SEQUENCE" unitType="ELEMENT" uiShowName="UserPriorityAllocation">
+      <FIELD name="bwg_id" type="INTEGER" bitLength="3" defaultValue="0" uiShowName="BWG ID"></FIELD>
+      <FIELD name="strict_prio" type="INTEGER" bitLength="2" defaultValue="0" uiShowName="Strict Priority"></FIELD>
+      <FIELD name="reserved0" type="INTEGER" bitLength="3" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="bw_percentage" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="Percentage of BWG bandwidth"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="PgFeatureTlvt1" type="SEQUENCE" unitType="ELEMENT" uiShowName="PG Feature TLV 1.0">
+      <FIELD name="header" type="PgHeadert1" uiShowName="Header"></FIELD>
+      <FIELD name="bwg_percentage" type="BwgPercentage" uiShowName="Percentage of link bandwidth"></FIELD>
+      <FIELD name="priority0Allocation" type="UserPriorityAllocation" uiShowName="Priority 0 allocation"></FIELD>
+      <FIELD name="priority1Allocation" type="UserPriorityAllocation" uiShowName="Priority 1 allocation"></FIELD>
+      <FIELD name="priority2Allocation" type="UserPriorityAllocation" uiShowName="Priority 2 allocation"></FIELD>
+      <FIELD name="priority3Allocation" type="UserPriorityAllocation" uiShowName="Priority 3 allocation"></FIELD>
+      <FIELD name="priority4Allocation" type="UserPriorityAllocation" uiShowName="Priority 4 allocation"></FIELD>
+      <FIELD name="priority5Allocation" type="UserPriorityAllocation" uiShowName="Priority 5 allocation"></FIELD>
+      <FIELD name="priority6Allocation" type="UserPriorityAllocation" uiShowName="Priority 6 allocation"></FIELD>
+      <FIELD name="priority7Allocation" type="UserPriorityAllocation" uiShowName="Priority 7 allocation"></FIELD>
+    </TYPE_DEF>
+    <!-- PFC feature t1 -->
+    <TYPE_DEF name="PfcHeadert1" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="3" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="5" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Willing"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PfcFeatureTlvt1" type="SEQUENCE" unitType="ELEMENT" uiShowName="PFC Feature TLV 1.0">
+      <FIELD name="header" type="PfcHeadert1" uiShowName="Header"></FIELD>
+      <FIELD name="pe7" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE7"></FIELD>
+      <FIELD name="pe6" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE6"></FIELD>
+      <FIELD name="pe5" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE5"></FIELD>
+      <FIELD name="pe4" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE4"></FIELD>
+      <FIELD name="pe3" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE3"></FIELD>
+      <FIELD name="pe2" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE2"></FIELD>
+      <FIELD name="pe1" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE1"></FIELD>
+      <FIELD name="pe0" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE0"></FIELD>
+    </TYPE_DEF>
+    <!-- BCN feature t1 -->
+    <TYPE_DEF name="BcnHeadert1" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="4" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="66" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Willing"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="BcnFeatureTlvt1" type="SEQUENCE" unitType="ELEMENT" uiShowName="BCN Feature TLV 1.0">
+      <FIELD name="header" type="BcnHeadert1" uiShowName="Header"></FIELD>
+      <FIELD name="bcna" type="OCTETSTRING" byteLength="8" defaultValue="0000000000000000" uiShowName="BCNA value"></FIELD>
+      <FIELD name="bcnMode" type="bcnMode" uiShowName="BCN Mode "></FIELD>
+      <FIELD name="rpAlpha" type="DOUBLE" defaultValue="1.1" uiShowName="RP Max Decrease Factor"></FIELD>
+      <FIELD name="rpBelta" type="DOUBLE" defaultValue="1.1" uiShowName="RP Max Increase Factor"></FIELD>
+      <FIELD name="rpGd" type="DOUBLE" defaultValue="1.1" uiShowName="RP Decrease Coefficient"></FIELD>
+      <FIELD name="rpGi" type="DOUBLE" defaultValue="1.1" uiShowName="RP Increase Coefficient"></FIELD>
+      <FIELD name="rpTmax" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="RP Max Time to Backoff"></FIELD>
+      <FIELD name="cpSf" type="INTEGER" bitLength="32" defaultValue="0" uiShowName="CP Sampling Interval Fixed"></FIELD>
+      <FIELD name="rpTd" type="INTEGER" bitLength="16" defaultValue="0" uiShowName="RP Drift Interval"></FIELD>
+      <FIELD name="rpRmin" type="INTEGER" bitLength="16" defaultValue="0" uiShowName="RP Default Rate after 1st BCN0"></FIELD>
+      <FIELD name="rpW" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="RP Derivative Rate"></FIELD>
+      <FIELD name="rpRd" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="RP Drift Factor"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="bcnMode" type="SEQUENCE" unitType="ELEMENT" uiShowName="BCN Mode">
+      <FIELD name="bcnMode0" type="bcnModeElement" uiShowName="BCN Mode on Priority 0"></FIELD>
+      <FIELD name="bcnMode1" type="bcnModeElement" uiShowName="BCN Mode on Priority 1"></FIELD>
+      <FIELD name="bcnMode2" type="bcnModeElement" uiShowName="BCN Mode on Priority 2"></FIELD>
+      <FIELD name="bcnMode3" type="bcnModeElement" uiShowName="BCN Mode on Priority 3"></FIELD>
+      <FIELD name="bcnMode4" type="bcnModeElement" uiShowName="BCN Mode on Priority 4"></FIELD>
+      <FIELD name="bcnMode5" type="bcnModeElement" uiShowName="BCN Mode on Priority 5"></FIELD>
+      <FIELD name="bcnMode6" type="bcnModeElement" uiShowName="BCN Mode on Priority 6"></FIELD>
+      <FIELD name="bcnMode7" type="bcnModeElement" uiShowName="BCN Mode on Priority 7"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="bcnModeElement" type="SEQUENCE" unitType="ELEMENT" uiShowName="BCN Priority Mode">
+      <FIELD name="cpAdmin" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="CP Admin Mode"></FIELD>
+      <FIELD name="rpAdmin" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="RP Admin Mode"></FIELD>
+      <FIELD name="rpOper" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="RP Operational Mode"></FIELD>
+      <FIELD name="remTagOper" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Removed CM Tag Operational Mode"></FIELD>
+      <FIELD name="reserved" type="BITSTRING" bitLength="4" defaultValue="0000" uiShowName="Reserved"></FIELD>
+    </TYPE_DEF>
+    <!-- FcoeFeatureTlv/ Application Feature TLV -->
+    <TYPE_DEF name="AppHeadert1" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="5" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="5" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Willing" uiControlState="ALLOW_OVERRIDE"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="ApplicationFeatureTlvt1" type="SEQUENCE" unitType="ELEMENT" uiShowName="Application Feature TLV 1.0">
+      <FIELD name="header" type="AppHeadert1" uiShowName="Header"></FIELD>
+      <FIELD name="priorityMap" type="BITSTRING" bitLength="8" defaultValue="00001000" uiShowName="Priority Map"></FIELD>
+    </TYPE_DEF>
+    <!-- FcoeLogicFeatureTlv/ Logic link down Tlv -->
+    <TYPE_DEF name="LogicHeadert1" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="6" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="5" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Willing"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="LogicLinkDownFeatureTlvt1" type="SEQUENCE" unitType="ELEMENT" uiShowName="Logic Link Down Feature TLV 1.0">
+      <FIELD name="header" type="LogicHeadert1" uiShowName="Header"></FIELD>
+      <FIELD name="status" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Status"></FIELD>
+      <FIELD name="reserved" type="BITSTRING" bitLength="7" defaultValue="0000000" uiShowName="Reserved"></FIELD>
+    </TYPE_DEF>
+    <!-- ==============================Feature TLV version 1.03 ============================ -->
+    <!-- PG feature -->
+    <TYPE_DEF name="PgHeadert2" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="2" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="17" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Willing"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PgFeatureTlvt2" type="SEQUENCE" unitType="ELEMENT" uiShowName="PG Feature TLV 1.03">
+      <FIELD name="header" type="PgHeadert2" uiShowName="Header"></FIELD>
+      <FIELD name="prioAllocation" type="PriorityAllocation" uiShowName="Priority Allocation"></FIELD>
+      <FIELD name="pgAllocation" type="PgBwAllocation" uiShowName="PG Allocation"></FIELD>
+      <FIELD name="numTCs" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Num TCs Supported" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PriorityAllocation" type="SEQUENCE" unitType="ELEMENT" uiShowName="Priority Allocation">
+      <FIELD name="pgid0" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID0"></FIELD>
+      <FIELD name="pgid1" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID1"></FIELD>
+      <FIELD name="pgid2" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID2"></FIELD>
+      <FIELD name="pgid3" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID3"></FIELD>
+      <FIELD name="pgid4" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID4"></FIELD>
+      <FIELD name="pgid5" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID5"></FIELD>
+      <FIELD name="pgid6" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID6"></FIELD>
+      <FIELD name="pgid7" type="INTEGER" bitLength="4" minValue="0" maxValue="15" defaultValue="0" uiShowName="PGID7"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="PgBwAllocation" type="SEQUENCE" unitType="ELEMENT" uiShowName="PG Allocation">
+      <FIELD name="BW0" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW0 percentage"></FIELD>
+      <FIELD name="BW1" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW1 percentage"></FIELD>
+      <FIELD name="BW2" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW2 percentage"></FIELD>
+      <FIELD name="BW3" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW3 percentage"></FIELD>
+      <FIELD name="BW4" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW4 percentage"></FIELD>
+      <FIELD name="BW5" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW5 percentage"></FIELD>
+      <FIELD name="BW6" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW6 percentage"></FIELD>
+      <FIELD name="BW7" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="BW7 percentage" />
+    </TYPE_DEF>
+    <!-- PFC feature -->
+    <TYPE_DEF name="PfcHeadert2" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="3" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="6" uiShowName="Length" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Willing"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="PfcFeatureTlvt2" type="SEQUENCE" unitType="ELEMENT" uiShowName="PFC Feature TLV 1.03">
+      <FIELD name="header" type="PfcHeadert2" uiShowName="Header"></FIELD>
+      <FIELD name="pe7" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE7"></FIELD>
+      <FIELD name="pe6" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE6"></FIELD>
+      <FIELD name="pe5" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE5"></FIELD>
+      <FIELD name="pe4" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE4"></FIELD>
+      <FIELD name="pe3" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE3"></FIELD>
+      <FIELD name="pe2" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE2"></FIELD>
+      <FIELD name="pe1" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE1"></FIELD>
+      <FIELD name="pe0" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="PE0"></FIELD>
+      <FIELD name="numTCPFCs" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Num TCPFC Supported"></FIELD>
+    </TYPE_DEF>
+    <!-- Application Protocol feature Tlv -->
+    <TYPE_DEF name="AppHeadert2" type="SEQUENCE" unitType="ELEMENT" uiShowName="Header">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="4" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="operVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Operating Version" />
+      <FIELD name="maxVer" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="Maximum Version" />
+      <FIELD name="en" type="INTEGER" bitLength="1" defaultValue="1" uiShowName="Enabled" />
+      <FIELD name="w" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Willing" uiControlState="ALLOW_OVERRIDE"></FIELD>
+      <FIELD name="er" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Error"></FIELD>
+      <FIELD name="reserved" type="INTEGER" bitLength="5" defaultValue="0" uiShowName="Reserved"></FIELD>
+      <FIELD name="subtype" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="SubType" />
+    </TYPE_DEF>
+    <TYPE_DEF name="ApplicationFeatureTlvt2" type="SEQUENCE" unitType="ELEMENT" uiShowName="Application Feature TLV 1.03">
+      <FIELD name="header" type="AppHeadert2" uiShowName="Header"></FIELD>
+      <FIELD name="app" type="AppStructList" uiShowName="Application List"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="AppStructList" type="SEQUENCE_OF" minOccurs="1" maxOccurs="250" elementType="AppStruct" unitType="ELEMENT"></TYPE_DEF>
+    <TYPE_DEF name="AppStruct" type="SEQUENCE" unitType="ELEMENT" uiShowName="Application Protocol">
+      <FIELD name="appId" type="OCTETSTRING" byteLength="2" defaultValue="8906" uiShowName="Application ID"></FIELD>
+      <FIELD name="upperOUI" type="BITSTRING" bitLength="6" defaultValue="000000" uiShowName="Upper 6 bits OUI"></FIELD>
+      <FIELD name="sf" type="BITSTRING" bitLength="2" defaultValue="00" uiShowName="Selector Field"></FIELD>
+      <FIELD name="lowerOUI" type="OCTETSTRING" byteLength="2" defaultValue="1B21" uiShowName="Lower Two Bytes OUI"></FIELD>
+      <FIELD name="priorityMap" type="BITSTRING" bitLength="8" defaultValue="00001000" uiShowName="Priority Map"></FIELD>
+    </TYPE_DEF>
+
+    <!-- ==============================   Support for NIV       ============================ -->
+    <TYPE_DEF name="NivSupportTlv" type="SEQUENCE" unitType="HEADER" uiShowName="NIV Support TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="4" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="000142" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="04" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!-- ==============================   DCBX  version 3        ============================ -->
+    <!-- ====================   Also known as IEEE P802.1Qaz Draft 2.4   ==================== -->
+    <!--Priority-based flow Control TLV-->
+    <TYPE_DEF name="PriorityBasedFlowControlTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Priority Based Flow Control TLV (IEEE P802.1Qaz/D2.4)">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="6" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="0B" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="willing" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Willing" />
+      <FIELD name="mbc" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="MACsec Bypass Capability" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="2" defaultValue="00" uiShowName="Reserved" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="pfcCap" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="PFC Capability" />
+      <FIELD name="pfcEnable" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="PFC Enable [Priority 7..0]"/>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Application Priority TLV-->
+    <TYPE_DEF name="AppPriorityTable" type="SEQUENCE_OF" minOccurs="1" maxOccurs="250" elementType="AppPriority" unitType="ELEMENT"></TYPE_DEF>
+    <TYPE_DEF name="AppPriority" type="SEQUENCE" unitType="ELEMENT" uiShowName="Application Priority">
+      <FIELD name="priority" type="INTEGER" bitLength="3" defaultValue="3" uiShowName="Priority"></FIELD>
+      <FIELD name="reserved" type="BITSTRING" bitLength="2" defaultValue="00" uiShowName="Reserved" uiControlState="ALLOW_OVERRIDE"></FIELD>
+      <FIELD name="sel" type="INTEGER" bitLength="3" defaultValue="0" uiShowName="Selector Field"></FIELD>
+      <FIELD name="protocolId" type="OCTETSTRING" byteLength="2" defaultValue="8906" uiShowName="Protocol ID"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="ApplicationPriorityTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Application Priority TLV (IEEE P802.1Qaz/D2.4)">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="0C" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Reserved" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="appTable" type="AppPriorityTable" uiShowName="Application Priority Table" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--ETS Configuration TLV-->
+    <TYPE_DEF name="PriorityAssignmentTable" type="SEQUENCE" unitType="ELEMENT" uiShowName="Priority Assignment Table">
+      <FIELD name="priority0" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority0"></FIELD>
+      <FIELD name="priority1" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority1"></FIELD>
+      <FIELD name="priority2" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority2"></FIELD>
+      <FIELD name="priority3" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority3"></FIELD>
+      <FIELD name="priority4" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority4"></FIELD>
+      <FIELD name="priority5" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority5"></FIELD>
+      <FIELD name="priority6" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority6"></FIELD>
+      <FIELD name="priority7" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="priority7"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="TCBandwidthTable" type="SEQUENCE" unitType="ELEMENT" uiShowName="Traffic Class Bandwidth Table">
+      <FIELD name="tc_percentage0" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage0"></FIELD>
+      <FIELD name="tc_percentage1" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage1"></FIELD>
+      <FIELD name="tc_percentage2" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage2"></FIELD>
+      <FIELD name="tc_percentage3" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage3"></FIELD>
+      <FIELD name="tc_percentage4" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage4"></FIELD>
+      <FIELD name="tc_percentage5" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage5"></FIELD>
+      <FIELD name="tc_percentage6" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage6"></FIELD>
+      <FIELD name="tc_percentage7" type="INTEGER" bitLength="8" minValue="0" maxValue="100" defaultValue="0" uiShowName="tc_percentage7"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="TSAAssignTable" type="SEQUENCE" unitType="ELEMENT" uiShowName="TSA Assignment Table">
+      <FIELD name="trafficClass0" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass0"></FIELD>
+      <FIELD name="trafficClass1" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass1"></FIELD>
+      <FIELD name="trafficClass2" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass2"></FIELD>
+      <FIELD name="trafficClass3" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass3"></FIELD>
+      <FIELD name="trafficClass4" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass4"></FIELD>
+      <FIELD name="trafficClass5" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass5"></FIELD>
+      <FIELD name="trafficClass6" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass6"></FIELD>
+      <FIELD name="trafficClass7" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="trafficClass7"></FIELD>
+    </TYPE_DEF>
+    <TYPE_DEF name="ETSConfigurationTlv" type="SEQUENCE" unitType="HEADER" uiShowName="ETS Configuration TLV (IEEE P802.1Qaz/D2.4)">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="25" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="09" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="willing" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Willing" />
+      <FIELD name="cbs" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="Credit-based Shaper" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="3" defaultValue="000" uiShowName="Reserved" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="maxTCs" type="INTEGER" bitLength="3" defaultValue="0" uiShowName="Max Traffic Classes" />
+      <FIELD name="priorityAssignment" type="PriorityAssignmentTable" uiShowName="Priority Assignment Table" />
+      <FIELD name="tcBandwidth" type="TCBandwidthTable" uiShowName="Traffic Class Bandwidth Table" />
+      <FIELD name="tsaAssign" type="TSAAssignTable" uiShowName="TSA Assignment Table" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="ETSRecommendationTlv" type="SEQUENCE" unitType="HEADER" uiShowName="ETS Recommendation TLV (IEEE P802.1Qaz/D2.4)">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="25" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="0A" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="reserved" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="Reserved" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="priorityAssignment" type="PriorityAssignmentTable" uiShowName="Priority Assignment Table" />
+      <FIELD name="tcBandwidth" type="TCBandwidthTable" uiShowName="Traffic Class Bandwidth Table" />
+      <FIELD name="tsaAssign" type="TSAAssignTable" uiShowName="TSA Assignment Table" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <TYPE_DEF name="CongestionNotificationTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Congestion Notification TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="6" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="8" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="cnpvCap" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="CNPV Capable" />
+      <FIELD name="cnpvReady" type="BITSTRING" bitLength="8" defaultValue="00000000" uiShowName="CNPV Ready" />
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!--Additional EthernetCapabilities TLV ================================================== -->
+    <TYPE_DEF name="AECTlv" type="SEQUENCE" unitType="HEADER" level="2" portType="Ethernet" uiShowName="AEC TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" defaultValue="127" uiNoShow="Interface" uiShowCommon="false" uiShowName="Type" uiControlState="CALCULATED" />
+      <FIELD name="length" type="INTEGER" bitLength="9" defaultValue="6" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="00120F" uiShowName="OUI" uiControlState="CALCULATED" />
+      <FIELD name="subtype" type="OCTETSTRING" byteLength="1" defaultValue="07" uiShowName="Subtype" uiControlState="CALCULATED" />
+      <FIELD name="Reserved" type="INTEGER" bitLength="11" defaultValue="0" uiShowName="Reserved" uiControlState="CALCULATED"> </FIELD>
+      <FIELD name="AdditionalFragmentSize" type="INTEGER" bitLength="2" defaultValue="0" uiShowName="Additional fragment size"></FIELD>
+      <FIELD name="PreemptionCapabilityActive" type="INTEGER" bitLength="1"  defaultValue="0" uiShowName="Preemption capability active" />
+      <FIELD name="PreemptionCapabilityStatus" type="INTEGER" bitLength="1"  defaultValue="0" uiShowName="Preemption capability status"></FIELD>
+      <FIELD name="PreemptionCapabilitySupport" type="INTEGER" bitLength="1" defaultValue="0" uiShowName="Preemption capability support"></FIELD>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:SystemNameTlv" name="System Name TLV" />
+        <NXT_HDR id="lldp:SystemDescriptionTlv" name="System Description TLV" />
+        <NXT_HDR id="lldp:PortDescriptionTlv" name="Port Description TLV" />
+        <NXT_HDR id="lldp:SystemCapabilitiesTlv" name="System Capabilities TLV" />
+        <NXT_HDR id="lldp:ManagementAddrTlv" name="Management Address TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+        <NXT_HDR id="lldp:CustomTlv" name="Custom TLV"></NXT_HDR>
+        <NXT_HDR id="lldp:MacPhyConfigStatusTlv" name="MAC/PHY Configuration/Status TLV" />
+        <NXT_HDR id="lldp:PowerViaMdiTlv" name="Power Via MDI TLV" />
+        <NXT_HDR id="lldp:LinkAggregationTlv" name="Link Aggregation TLV" />
+        <NXT_HDR id="lldp:MaxFrameSizeTlv" name="Maximum Frame Size TLV" />
+        <NXT_HDR id="lldp:PortVlanIdTlv" name="Port VLAN ID TLV" />
+        <NXT_HDR id="lldp:VlanNameTlv" name="VLAN Name TLV" />
+        <NXT_HDR id="lldp:PortAndProtocolVlanIdTlv" name="Port And Protocol VLAN ID TLV" />
+        <NXT_HDR id="lldp:ProtocolIdentityTlv" name="Protocol Identity TLV" />
+        <NXT_HDR id="lldp:OrganizationallySpecificTlv" name="Organizationally Specific TLV" />
+        <NXT_HDR id="lldp:DcbxTlvt1" name="DCBX TLV Sub-Type 1" />
+        <NXT_HDR id="lldp:DcbxTlvt2" name="DCBX TLV Sub-Type 2" />
+        <NXT_HDR id="lldp:PriorityBasedFlowControlTlv" name="Priority Based Flow Control TLV" />
+        <NXT_HDR id="lldp:ApplicationPriorityTlv" name="Application Priority TLV" />
+        <NXT_HDR id="lldp:ETSConfigurationTlv" name="ETS Configuration TLV" />
+        <NXT_HDR id="lldp:ETSRecommendationTlv" name="ETS Recommendation TLV" />
+        <NXT_HDR id="lldp:CongestionNotificationTlv" name="Congestion Notification TLV" />
+        <NXT_HDR id="lldp:NivSupportTlv" name="NIV Support TLV" />
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:CdcpTlv" name="CDCP TLV" />
+        <NXT_HDR id="lldp:AECTlv" name="AEC TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+    <!-- Edge Virtual Bridging TLV ======================================= -->
+    <TYPE_DEF name="EvbTlv" type="SEQUENCE" unitType="HEADER" uiShowName="EVB TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="subType" type="OCTETSTRING" byteLength="1" defaultValue="0D" uiShowName="Subtype" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="bridgeStatus" type="BridgeStatus" uiShowName="Bridge Status" />
+      <FIELD name="stationStatus" type="StationStatus" uiShowName="Station Status" />
+      <FIELD name="r" type="INTEGER" bitLength="3" defaultValue="3" uiShowName="R"/>
+      <FIELD name="rte" type="INTEGER" bitLength="5" defaultValue="20" uiShowName="Retransmission Exponent"/>
+      <FIELD name="evbMode" type="EvbModes" defaultValue="2" uiShowName="EVB Mode"/>
+      <FIELD name="rolRwd" type="Boolean" defaultValue="0" uiShowName="ROL (RWD)"/>
+      <FIELD name="rwd" type="INTEGER" bitLength="5" defaultValue="20" uiShowName="RWD"/>
+      <FIELD name="reserved" type="BITSTRING" bitLength="2" defaultValue="0" uiShowCommon="false" uiShowName="Reserved" />
+      <FIELD name="rolRka" type="Boolean" defaultValue="0" uiShowName="ROL (RKA)"/>
+      <FIELD name="rka" type="INTEGER" bitLength="5" defaultValue="20" uiShowName="RKA"/>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="BridgeStatus" type="SEQUENCE" unitType="ELEMENT" uiShowName="Bridge Status">
+      <FIELD name="reserved" type="BITSTRING" bitLength="5" defaultValue="0" uiShowCommon="false"
+        uiShowName="Reserved" />
+      <FIELD name="bgid" type="BITSTRING" bitLength="1" defaultValue="0"
+        uiShowName="BGID"/>
+      <FIELD name="rrcap" type="BITSTRING" bitLength="1" defaultValue="0"
+        uiShowName="RRCAP"/>
+      <FIELD name="rrctr" type="BITSTRING" bitLength="1" defaultValue="0"
+        uiShowName="RRCTR"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="StationStatus" type="SEQUENCE" unitType="ELEMENT" uiShowName="Station Status">
+      <FIELD name="reserved" type="BITSTRING" bitLength="4" defaultValue="0" uiShowCommon="false"
+        uiShowName="Reserved" />
+      <FIELD name="sgid" type="BITSTRING" bitLength="1" defaultValue="1"
+        uiShowName="SGID"/>
+      <FIELD name="rrreq" type="BITSTRING" bitLength="1" defaultValue="1"
+        uiShowName="RRREQ"/>
+      <FIELD name="rrstat" type="BITSTRING" bitLength="2" defaultValue="01"
+        uiShowName="RRSTAT"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EvbModes" type="INTEGER" bitLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Not Supported" value="0" />
+        <VAL_ENUM uiShowName="EVB Bridge" value="1" />
+        <VAL_ENUM uiShowName="EVB Station" value="2" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Boolean" type="INTEGER" bitLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="False" value="0"/>
+        <VAL_ENUM uiShowName="True"  value="1"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <!-- S-Channel Discovery and Configuration Protocol (CDCP) TLV ============== -->
+    <TYPE_DEF name="CdcpTlv" type="SEQUENCE" unitType="HEADER" uiShowName="CDCP TLV">
+      <FIELD name="type" type="INTEGER" bitLength="7" uiNoShow="Interface" uiShowCommon="false" defaultValue="127" uiShowName="Type" uiControlState="CALCULATED"></FIELD>
+      <FIELD name="length" type="INTEGER" bitLength="9" procfnTarget="LLDPTLVLENGTH" defaultValue="0" uiShowName="Length" uiControlState="CALCULATED" />
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3" defaultValue="0080C2" uiShowName="OUI" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="subType" type="OCTETSTRING" byteLength="1" defaultValue="0E" uiShowName="Subtype" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="role" type="Roles" defaultValue="1" uiShowName="Role"/>
+      <FIELD name="reserved1" type="BITSTRING" bitLength="3" defaultValue="000" uiShowName="Reserved 1" uiControlState="ALLOW_OVERRIDE" />
+      <FIELD name="sComp" type="BITSTRING" bitLength="1" defaultValue="1" uiShowName="SComp" />
+      <FIELD name="reserved2" type="BITSTRING" bitLength="15" defaultValue="000000000000000" uiShowCommon="false" uiShowName="Reserved 2" />
+      <FIELD name="chnCap" type="INTEGER" bitLength="12" defaultValue="1" uiShowName="Channel Capacity"/>
+      <FIELD name="scidsvids" type="ScidSvidList" uiShowName="SCID/S-VIDs"/>
+      <NEXT_HEADERS>
+        <NXT_HDR id="lldp:EvbTlv" name="EVB TLV" />
+        <NXT_HDR id="lldp:EndTlv" name="End TLV" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Roles" type="INTEGER" bitLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Bridge" value="0" />
+        <VAL_ENUM uiShowName="Station" value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="ScidSvid" type="SEQUENCE" unitType="ELEMENT" uiShowName="SCID/S-VID">
+      <FIELD name="scid" type="INTEGER" bitLength="12" defaultValue="1" uiShowName="SCID"/>
+      <FIELD name="svid" type="INTEGER" bitLength="12" defaultValue="1" uiShowName="S-VID"/>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="ScidSvidList" type="SEQUENCE_OF" minOccurs="1" maxOccurs="167" elementType="ScidSvid" unitType="ELEMENT"/>
+  </TYPE_DEFS>
+</PDU_LIBRARY>

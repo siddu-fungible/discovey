@@ -1,0 +1,2553 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>TableList</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>GeneratorPortResults</instance>
+        <instance>TxCpuPortResults</instance>
+        <instance>AnalyzerPortResults</instance>
+        <instance>RxCpuPortResults</instance>
+        <instance>PortAvgLatencyResults</instance>
+        <instance>OverflowResults</instance>
+        <instance>DiffServResults</instance>
+        <instance>TxEotStreamResults</instance>
+        <instance>RxEotStreamResults</instance>
+        <instance>StcSystem</instance>
+        <instance>ActiveEventManager</instance>
+        <instance>AutomationOptions</instance>
+        <instance>PhysicalChassisManager</instance>
+        <instance>Sequencer</instance>
+        <instance>SequencerGroupCommand</instance>
+        <instance>IfManager</instance>
+        <instance>LinkRegistry</instance>
+        <instance>Project</instance>
+        <instance>FrameLengthDistribution</instance>
+        <instance>FrameLengthDistributionSlot</instance>
+        <instance>Tags</instance>
+        <instance>Tag</instance>
+        <instance>DeviceAddrOptions</instance>
+        <instance>PhyOptions</instance>
+        <instance>TestResultSetting</instance>
+        <instance>PortOptions</instance>
+        <instance>TrafficOptions</instance>
+        <instance>ResultOptions</instance>
+        <instance>L2LearningConfig</instance>
+        <instance>ArpNdConfig</instance>
+        <instance>ResultDataSet</instance>
+        <instance>ResultQuery</instance>
+        <instance>RealTimeResultColumnDefinition</instance>
+        <instance>RealTimeResultGroupDefinition</instance>
+        <instance>Perspective</instance>
+        <instance>PerspectiveNode</instance>
+        <instance>DynamicResultView</instance>
+        <instance>PresentationResultQuery</instance>
+        <instance>ResultViewData</instance>
+        <instance>ColumnDisplayProperties</instance>
+        <instance>Port</instance>
+        <instance>Host</instance>
+        <instance>EthIIIf</instance>
+        <instance>HdlcIf</instance>
+        <instance>PppIf</instance>
+        <instance>Ipv4If</instance>
+        <instance>Ipv6If</instance>
+        <instance>Generator</instance>
+        <instance>GeneratorConfig</instance>
+        <instance>Analyzer</instance>
+        <instance>AnalyzerConfig</instance>
+        <instance>InterarrivalTimeHistogram</instance>
+        <instance>LatencyHistogram</instance>
+        <instance>FrameLengthHistogram</instance>
+        <instance>SeqRunLengthHistogram</instance>
+        <instance>SeqDiffCheckHistogram</instance>
+        <instance>JitterHistogram</instance>
+        <instance>DiffServConfig</instance>
+        <instance>HighResolutionSamplingPortConfig</instance>
+        <instance>Capture</instance>
+        <instance>CaptureFilter</instance>
+        <instance>CaptureFilterStartEvent</instance>
+        <instance>CaptureFilterStopEvent</instance>
+        <instance>CaptureRawPacketTagsInfo</instance>
+        <instance>ArpCache</instance>
+        <instance>ArpNdReport</instance>
+        <instance>PingReport</instance>
+        <instance>EthernetCopper</instance>
+        <instance>Mii</instance>
+        <instance>MiiRegister</instance>
+        <instance>StreamBlock</instance>
+        <instance>EmulatedDevice</instance>
+        <instance>StreamBlockLoadProfile</instance>
+        <instance>GroupCollection</instance>
+        <instance>TrafficGroup</instance>
+        <instance>EotResultNode</instance>
+        <instance>EotResultNodeParam</instance>
+        <instance>EotResultViewDefinition</instance>
+      </value>
+      <path>select TableName from TableIndex;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>iStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2012-01-25 23:00:17</instance>
+      </value>
+      <path>select CreatedTime from DataSet where id = (select min(Id) from DataSet);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select =$@StartDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2147483647</instance>
+      </value>
+      <path>select =$@EndDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FileNameID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>C:\Documents and Settings\RPatel\Desktop\IPS\all_basicmode.db</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where name = '@dsFileName'; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DataSetID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select DataSetId from EotResultNodeParam where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>P1Rx</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>678715</instance>
+        <instance>674915</instance>
+      </value>
+      <path>select AR.TotalFrameCount from AnalyzerPortResults AR, Analyzer A, Port P where AR.DataSetId = A.DataSetId and AR.ParentHnd = A.Handle and A.DataSetId = A.DataSetId and A.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P1RxSig</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>678715</instance>
+        <instance>674915</instance>
+      </value>
+      <path>select AR.SigFrameCount from AnalyzerPortResults AR, Analyzer A, Port P where AR.DataSetId = A.DataSetId and AR.ParentHnd = A.Handle and A.DataSetId = P.DataSetId and A.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P1Tx</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>674915</instance>
+        <instance>678715</instance>
+      </value>
+      <path>select GR.TotalFrameCount from GeneratorPortResults GR, Generator G, Port P where GR.DataSetId = G.DataSetId and GR.ParentHnd = G.Handle and G.DataSetId = P.DataSetId and G.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P1TxSig</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>674915</instance>
+        <instance>678715</instance>
+      </value>
+      <path>select GR.GeneratorSigFrameCount from GeneratorPortResults GR, Generator G, Port P where GR.DataSetId = G.DataSetId and GR.ParentHnd = G.Handle and G.DataSetId = P.DataSetId and G.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P1RxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/1</instance>
+        <instance>Port //11/2</instance>
+      </value>
+      <path>select P.Name from AnalyzerPortResults AR, Analyzer A, Port P where AR.DataSetId = A.DataSetId and AR.ParentHnd = A.Handle and A.DataSetId = A.DataSetId and A.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P1MinLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+      </value>
+      <path>select AR.MinLatency from PortAvgLatencyResults AR, Analyzer A, Port P where AR.DataSetId = A.DataSetId and AR.ParentHnd = A.Handle and A.DataSetId = P.DataSetId and A.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P1MaxLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+      </value>
+      <path>select AR.MaxLatency from PortAvgLatencyResults AR, Analyzer A, Port P where AR.DataSetId = A.DataSetId and AR.ParentHnd = A.Handle and A.DataSetId = P.DataSetId and A.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P1AvgLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+        <instance>0.092</instance>
+      </value>
+      <path>select AR.AvgLatency from PortAvgLatencyResults AR, Analyzer A, Port P where AR.DataSetId = A.DataSetId and AR.ParentHnd = A.Handle and A.DataSetId = P.DataSetId and A.ParentHnd = P.Handle order by P.DataSetId, P.Handle;</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Results</pageName>
+    </instance>
+    <instance>
+      <name>P2Counters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxPort, Rx Port, Tx Sig Frames, Total Rx Frames, Rx Sig Frames, Min Latency(us), Avg Latency(us), Max Latency(us)]</instance>
+        <instance>[Port //11/1, Port //11/2, 674915, 674915, 674915, 0.09, 0.092, 0.1]</instance>
+        <instance>[Port //11/2, Port //11/1, 678715, 678715, 678715, 0.09, 0.1, 0.1]</instance>
+      </value>
+      <path>select sum(TxFrameCount) as 'Tx Sig Frames', coalesce(sum(FrameCount), 0) as 'Total Rx Frames', coalesce(sum(SigFrameCount), 0) as 'Rx Sig Frames', min(MinLatency) as 'Min Latency(us)', coalesce(round(cast(sum(TotalLatency) / 100.0 as double) / sum(SigFrameCount), 3), 0.0) as 'Avg Latency(us)', max(MaxLatency) as 'Max Latency(us)', TxPortName as 'TxPort', PortName as 'Rx Port'  from TxRxEotStreamResults where IsExpectedPort == 1 group by DataSetId, TxParentHnd, ParentHnd order by DataSetId, TxParentHnd, ParentHnd limit 2000</path>
+      <multivalued>true</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>P5Counters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[Port, QoS, IPv4 Frame Count, IPv6 Frame Count]</instance>
+        <instance>[Port //11/1, 0, 339357, 0]</instance>
+        <instance>[Port //11/1, 192, 339358, 0]</instance>
+        <instance>[Port //11/2, 0, 337457, 0]</instance>
+        <instance>[Port //11/2, 192, 337458, 0]</instance>
+      </value>
+      <path>select PortName as 'Port', Qos as 'QoS', Ipv4FrameCount as 'IPv4 Frame Count', Ipv6FrameCount as 'IPv6 Frame Count' from DiffServResults where not (Ipv4FrameCount=0 and Ipv6FrameCount=0) order by DataSetId, ParentHnd, Qos</path>
+      <multivalued>true</multivalued>
+      <pageName>QoS/Diffserv</pageName>
+    </instance>
+    <instance>
+      <name>S4BavgCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, AvgLatency]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0.0922852985713735]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0.0922857362990357]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0.0999867396672541]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0.0999868869656438]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, Round(AvgLatency,3) from TxRxEotStreamResults where SigFrameCount &gt; 0 and Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by AvgLatency asc, Comp32 asc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BmaxCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, MaxLatency]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0.1]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0.1]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0.1]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0.1]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, Round(MaxLatency,3) from TxRxEotStreamResults where SigFrameCount &gt; 0 and Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by MaxLatency asc, Comp32 asc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BminCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, MinLatency]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0.09]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0.09]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0.09]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0.09]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, Round(MinLatency,3) from TxRxEotStreamResults where SigFrameCount &gt; 0 and Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by MinLatency asc, Comp32 asc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BosCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, OutSeqFrameCount]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, OutSeqFrameCount from TxRxEotStreamResults where SigFrameCount &gt; 0 and Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by OutSeqFrameCount asc, Comp32 asc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WavgCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, AvgLatency]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0.0999868869656438]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0.0999867396672541]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0.0922857362990357]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0.0922852985713735]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, Round(AvgLatency,3) from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by AvgLatency desc, Comp32 asc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WmaxCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, MaxLatency]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0.1]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0.1]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0.1]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0.1]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, Round(MaxLatency,3) from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by MaxLatency desc, Comp32 asc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WminCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, MinLatency]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0.09]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0.09]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0.09]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0.09]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, Round(MinLatency,3) from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by MinLatency desc, Comp32 asc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WosCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxStreamBlockName, Comp32, PortName, OutSeqFrameCount]</instance>
+        <instance>[StreamBlock 4, 131073, Port //11/1, 0]</instance>
+        <instance>[StreamBlock 2, 131072, Port //11/1, 0]</instance>
+        <instance>[StreamBlock 3, 65537, Port //11/2, 0]</instance>
+        <instance>[StreamBlock 1, 65536, Port //11/2, 0]</instance>
+      </value>
+      <path>select TxStreamBlockName, Comp32, PortName, OutSeqFrameCount from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 and IsExpectedPort = 1 order by OutSeqFrameCount, Comp32 asc desc limit 10</path>
+      <multivalued>true</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstSub</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>test2</instance>
+      </value>
+      <path>select TG.GroupName from TrafficGroup as TG, GroupCollection as GC, RelationTable as r where TG.ParentHnd=GC.Handle and r.Type = 'AffiliationTrafficGroup' and r.SourceHnd = tg.Handle group by GC.Handle,TG.Handle order by GC.Handle, TG.Handle;</path>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstGrp</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>test1</instance>
+      </value>
+      <path>select GC.GroupName from TrafficGroup TG, GroupCollection GC, RelationTable r where TG.ParentHnd=GC.Handle and r.Type = 'AffiliationTrafficGroup' and r.SourceHnd = TG.Handle group by GC.Handle,TG.Handle order by GC.Handle, TG.Handle;</path>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+        <instance>1353630</instance>
+        <instance>0.09</instance>
+        <instance>0.1</instance>
+        <instance>0.096</instance>
+      </value>
+      <path>select sum(TxFrameCount), sum(RxFrameCount), coalesce(min(RxMinLatency), 0.0) , coalesce(max(RxMaxLatency), 0.0), coalesce(round(cast(sum(RxTotalLatency) / 100.0 as double) / sum(RxSigFrameCount), 3), 0.0) from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select StreamBlockHandle, TxFrameCount, coalesce(sum(RxFrameCount), 0) as RxFrameCount, coalesce(min(RxMinLatency), 0) as RxMinLatency, coalesce(max(RxMaxLatency), 0) as RxMaxLatency, coalesce(sum(RxTotalLatency), 0) as RxTotalLatency, coalesce(sum(RxSigFrameCount), 0) as RxSigFrameCount from (select TxRx.TxStreamId as TxStreamId, TxRx.TxFrameCount as TxFrameCount, TxRx.TxParentStreamBlock as StreamBlockHandle, TxRx.FrameCount as RxFrameCount, TxRx.MinLatency as RxMinLatency, TxRx.MaxLatency as RxMaxLatency, TxRx.TotalLatency as RxTotalLatency, TxRx.SigFrameCount as RxSigFrameCount from TxRxEotStreamResults as TxRx where TxRx.SigFrameCount &gt; 0 and TxRx.IsExpectedPort = 1) group by TxStreamId) where rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = StreamBlockHandle and tg.ParentHnd = gc.Handle and tg.DataSetId = rt.DataSetId and gc.DataSetId = rt.DataSetId group by gc.Handle, tg.Handle order by gc.Handle, tg.Handle</path>
+	  <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>InputStartDataSetId</name>
+      <persist>false</persist>
+      <path>select DataSetId from CustomTestResults where DataSetId = $@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>InputEndDataSetId</name>
+      <persist>false</persist>
+      <path>select DataSetId from CustomTestResults where DataSetId = $@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>NONE</instance>
+      </value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>xxVersion</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Project 1</instance>
+      </value>
+      <path>select Name from Project where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>STxPortName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+      </value>
+      <path>select Tx.PortName from TxEotStreamResults as Tx order by Tx.DataSetId, Tx.ParentHnd, Tx.StreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>STxStreamBlockName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 1</instance>
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 4</instance>
+      </value>
+      <path>select Tx.StreamBlockName from TxEotStreamResults as Tx order by Tx.DataSetId, Tx.ParentHnd, Tx.StreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>STxStreamIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>1</instance>
+        <instance>0</instance>
+        <instance>1</instance>
+      </value>
+      <path>select Tx.StreamIndex from TxEotStreamResults as Tx order by Tx.DataSetId, Tx.ParentHnd, Tx.StreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>STxStreamId</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>65536</instance>
+        <instance>65537</instance>
+        <instance>131072</instance>
+        <instance>131073</instance>
+      </value>
+      <path>select Tx.StreamId from TxEotStreamResults as Tx order by Tx.DataSetId, Tx.ParentHnd, Tx.StreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>STxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>337458</instance>
+        <instance>337457</instance>
+        <instance>339358</instance>
+        <instance>339357</instance>
+      </value>
+      <path>select Tx.FrameCount from TxEotStreamResults as Tx order by Tx.DataSetId, Tx.ParentHnd, Tx.StreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>SExpectedFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>337458</instance>
+        <instance>337457</instance>
+        <instance>339358</instance>
+        <instance>339357</instance>
+      </value>
+      <path>select ExpectedRxFrameCount from TxRxEotStreamResults order by DataSetId, TxParentHnd, TxStreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>SDroppedFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <path>select (case when (ExpectedRxFrameCount - coalesce(sum(FrameCount), 0)) &lt; 0 then 'N/A' else ExpectedRxFrameCount - coalesce(sum(FrameCount), 0) end) from TxRxEotStreamResults group by DataSetId, TxStreamId order by DataSetId, TxParentHnd, TxStreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>SDroppedPercent</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select (case when (ExpectedRxFrameCount - coalesce(sum(FrameCount), 0)) &lt; 0 then 'N/A' else round(cast(ExpectedRxFrameCount - coalesce(sum(FrameCount), 0) as double) * 100.0 / ExpectedRxFrameCount, 5) end) from TxRxEotStreamResults group by DataSetId, TxStreamId order by DataSetId, TxParentHnd, TxStreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>DExpected</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Yes</instance>
+        <instance>Yes</instance>
+        <instance>Yes</instance>
+        <instance>Yes</instance>
+      </value>
+      <path>select (case when IsExpectedPort = 1 then 'Yes' else 'No' end) from TxRxEotStreamResults order by DataSetId, TxParentHnd, TxStreamId, PortName limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>AllTxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+      </value>
+      <path>select coalesce(sum(Tx.FrameCount), 0) from TxEotStreamResults as Tx limit 1000</path>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>AllExpectedFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+      </value>
+      <path>select coalesce(sum(FrameCount * NumOfMulticastExpectedRxPort), 0) from TxEotStreamResults limit 1000</path>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>AllDroppedPercent</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select (case when (Tx.ExpectedRxFrameCount -Rx.FrameCount) &lt; 0 then 'N/A' else round(cast(Tx.ExpectedRxFrameCount - Rx.FrameCount as double) * 100.0 / Tx.ExpectedRxFrameCount, 5) end) from (select coalesce(sum(Rx.FrameCount),0) as FrameCount from RxEotStreamResults as Rx) as Rx left join (select coalesce(sum(FrameCount * NumOfMulticastExpectedRxPort),0) as ExpectedRxFrameCount from TxEotStreamResults) as Tx limit 1000</path>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>AllDroppedFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+      </value>
+      <path>select (case when (Tx.ExpectedRxFrameCount -Rx.FrameCount) &lt; 0 then 'N/A' else Tx.ExpectedRxFrameCount - Rx.FrameCount end) from (select coalesce(sum(Rx.FrameCount),0) as FrameCount from RxEotStreamResults as Rx) as Rx left join (select coalesce(sum(FrameCount * NumOfMulticastExpectedRxPort),0) as ExpectedRxFrameCount from TxEotStreamResults) as Tx limit 1000</path>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>SCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[SRxFrameCount, SAvgLatency, SMinLatency, SMaxLatency, SDuplicateFrameCount, SInOrderFrameCount, SReorderedFrameCount, SOutSeqFrameCount, SLateFrameCount, SPrbsBitErrRatio]</instance>
+        <instance>[337458, 0.092, 0.09, 0.1, 0, 337458, 0, 0, 0, 0.0]</instance>
+        <instance>[337457, 0.092, 0.09, 0.1, 0, 337457, 0, 0, 0, 0.0]</instance>
+        <instance>[339358, 0.1, 0.09, 0.1, 0, 339358, 0, 0, 0, 0.0]</instance>
+        <instance>[339357, 0.1, 0.09, 0.1, 0, 339357, 0, 0, 0, 0.0]</instance>
+      </value>
+      <path>select coalesce(sum(FrameCount), 0) as SRxFrameCount, coalesce(round(cast(sum(TotalLatency) / 100.0 as double) / sum(SigFrameCount), 3), 0.0) as SAvgLatency, coalesce(min(MinLatency), 0.0) as SMinLatency, coalesce(max(MaxLatency), 0.0) as SMaxLatency, coalesce(sum(DuplicateFrameCount), 0) as SDuplicateFrameCount, coalesce(sum(InOrderFrameCount), 0) as SInOrderFrameCount, coalesce(sum(ReorderedFrameCount), 0) as SReorderedFrameCount, coalesce(sum(OutSeqFrameCount), 0) as SOutSeqFrameCount, coalesce(sum(LateFrameCount), 0) as SLateFrameCount, coalesce(cast(sum(PrbsBitErrorCount)*8 as double)/sum(PrbsFillOctetCount), 0.0) as SPrbsBitErrRatio from TxRxEotStreamResults group by DataSetId, TxParentHnd, TxStreamId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>AllCounters</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+        <instance>0.096</instance>
+        <instance>0.09</instance>
+        <instance>0.1</instance>
+        <instance>0</instance>
+        <instance>1353630</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(sum(FrameCount), 0) as SRxFrameCount, coalesce(round(cast(sum(TotalLatency) / 100.0 as double) / sum(SigFrameCount), 3), 0.0) as SAvgLatency, coalesce(min(MinLatency),0) as SMinLatency, coalesce(max(MaxLatency),0) as SMaxLatency, coalesce(sum(DuplicateFrameCount),0) as SDuplicateFrameCount, coalesce(sum(InOrderFrameCount),0), coalesce(sum(ReorderedFrameCount),0) as SReorderedFrameCount, coalesce(sum(OutSeqFrameCount),0) as SOutSeqFrameCount, coalesce(sum(LateFrameCount),0) as SLateFrameCount, coalesce(cast(sum(PrbsBitErrorCount)*8 as double)/sum(PrbsFillOctetCount), 0.0) as SPrbsBitErrRatio from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by DataSetId limit 1000</path>
+      <multivalued>true</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstCountersNoLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+        <instance>1353630</instance>
+        <instance>N/A</instance>
+        <instance>N/A</instance>
+        <instance>N/A</instance>
+      </value>
+      <path>select sum(TxFrameCount), sum(RxFrameCount), 'N/A' , 'N/A', 'N/A' from GroupCollection as gc, TrafficGroup as tg, RelationTable as rt, (select StreamBlockHandle, TxFrameCount, coalesce(sum(RxFrameCount), 0) as RxFrameCount, coalesce(sum(RxSigFrameCount), 0) as RxSigFrameCount from (select TxRx.TxStreamId as TxStreamId, TxRx.TxFrameCount as TxFrameCount, TxRx.TxParentStreamBlock as StreamBlockHandle, TxRx.FrameCount as RxFrameCount, TxRx.SigFrameCount as RxSigFrameCount from TxRxEotStreamResults as TxRx where TxRx.SigFrameCount &gt; 0 and TxRx.IsExpectedPort = 1) group by TxStreamId) where rt.Type = 'AffiliationTrafficGroup' and rt.SourceHnd = tg.Handle and rt.TargetHnd = StreamBlockHandle and tg.ParentHnd = gc.Handle and tg.DataSetId = rt.DataSetId and gc.DataSetId = rt.DataSetId group by gc.Handle, tg.Handle order by gc.Handle, tg.Handle</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>PpStreamWihOutLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[TxPort, Rx Port, Tx Sig Frames, Total Rx Frames, Rx Sig Frames, Min Latency(us), Avg Latency(us), Max Latency(us)]</instance>
+        <instance>[Port //11/1, Port //11/2, 674915, 674915, 674915, N/A, N/A, N/A]</instance>
+        <instance>[Port //11/2, Port //11/1, 678715, 678715, 678715, N/A, N/A, N/A]</instance>
+      </value>
+      <path>select sum(TxFrameCount) as 'Tx Sig Frames', coalesce(sum(FrameCount), 0) as 'Total Rx Frames', coalesce(sum(SigFrameCount), 0) as 'Rx Sig Frames', 'N/A' as 'Min Latency(us)', 'N/A' as 'Avg Latency(us)', 'N/A' as 'Max Latency(us)', TxPortName as 'TxPort', PortName as 'Rx Port'  from TxRxEotStreamResults where IsExpectedPort == 1 group by DataSetId, TxParentHnd, ParentHnd order by DataSetId, TxParentHnd, ParentHnd limit 2000</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RxEotTableInfo</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>[cid, name, type, notnull, dflt_value, pk]</instance>
+        <instance>[0, Id, INTEGER, 0, N/A, 1]</instance>
+        <instance>[1, DataSetId, INTEGER, 0, N/A, 0]</instance>
+        <instance>[2, ParentHnd, INTEGER, 0, N/A, 0]</instance>
+        <instance>[3, PortName, VARCHAR, 0, N/A, 0]</instance>
+        <instance>[4, StreamIndex, INTEGER, 0, N/A, 0]</instance>
+        <instance>[5, Comp32, INTEGER, 0, N/A, 0]</instance>
+        <instance>[6, Comp16_1, INTEGER, 0, N/A, 0]</instance>
+        <instance>[7, Comp16_2, INTEGER, 0, N/A, 0]</instance>
+        <instance>[8, Comp16_3, INTEGER, 0, N/A, 0]</instance>
+        <instance>[9, Comp16_4, INTEGER, 0, N/A, 0]</instance>
+        <instance>[10, FrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[11, OctetCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[12, SigFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[13, L1BitCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[14, FcsErrorFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[15, SeqRunLength, INTEGER, 0, N/A, 0]</instance>
+        <instance>[16, ExpectedSeqNum, INTEGER, 0, N/A, 0]</instance>
+        <instance>[17, DroppedFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[18, InOrderFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[19, ReorderedFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[20, DuplicateFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[21, LateFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[22, MinFrameLength, INTEGER, 0, N/A, 0]</instance>
+        <instance>[23, MaxFrameLength, INTEGER, 0, N/A, 0]</instance>
+        <instance>[24, PrbsFillOctetCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[25, PrbsBitErrorCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[26, Ipv4ChecksumErrorCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[27, TcpUdpChecksumErrorCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[28, CellCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[29, PrbsErrorFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[30, AvgLatency, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[31, MinLatency, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[32, MaxLatency, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[33, TotalLatency, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[34, InSeqFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[35, OutSeqFrameCount, INTEGER, 0, N/A, 0]</instance>
+        <instance>[36, LastSeqNum, INTEGER, 0, N/A, 0]</instance>
+        <instance>[37, TotalJitter, INTEGER, 0, N/A, 0]</instance>
+        <instance>[38, MinJitter, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[39, MaxJitter, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[40, AvgJitter, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[41, TotalInterarrivalTime, INTEGER, 0, N/A, 0]</instance>
+        <instance>[42, AvgInterarrivalTime, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[43, MinInterarrivalTime, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[44, MaxInterarrivalTime, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[45, FirstArrivalTime, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[46, LastArrivalTime, DOUBLE, 0, N/A, 0]</instance>
+        <instance>[47, HistBin1Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[48, HistBin2Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[49, HistBin3Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[50, HistBin4Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[51, HistBin5Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[52, HistBin6Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[53, HistBin7Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[54, HistBin8Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[55, HistBin9Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[56, HistBin10Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[57, HistBin11Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[58, HistBin12Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[59, HistBin13Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[60, HistBin14Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[61, HistBin15Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[62, HistBin16Count, INTEGER, 0, N/A, 0]</instance>
+        <instance>[63, IsExpectedPort, BOOLEAN, 0, N/A, 0]</instance>
+        <instance>[64, ParentStreamBlock, INTEGER, 0, N/A, 0]</instance>
+      </value>
+      <path>PRAGMA table_info( RxEotStreamResults )</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>TestResultColour</name>
+      <persist>false</persist>
+      <value type="String">#ff0000</value>
+      <script><![CDATA[# Set the text colour based on pass/fail&#xa;# In table: <td bgcolor="=$computedVarName$">&#xa;# In graphs: =$computedVarName$ instead of #xxxxxx&#xa;if {($TestStatus == "COMPLETED")||($TestStatus == "PASSED")} {&#xa;set result "#00ff00"&#xa;} else {&#xa;set result "#ff0000"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ColourList</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>#ff0000</instance>
+        <instance>#00ff00</instance>
+        <instance>#ffff00</instance>
+        <instance>#cc66ff</instance>
+        <instance>#aa00ff</instance>
+        <instance>#ff3399</instance>
+        <instance>#00bbbb</instance>
+        <instance>#bbbb80</instance>
+        <instance>#bbbbbb</instance>
+        <instance>#cc9900</instance>
+        <instance>#ff0000</instance>
+        <instance>#00ff00</instance>
+        <instance>#ffff00</instance>
+        <instance>#cc66ff</instance>
+        <instance>#aa00ff</instance>
+        <instance>#ff3399</instance>
+      </value>
+      <script><![CDATA[&#xa;# create a list of colours that can be used in various graphs&#xa;&#xa;set result [list]&#xa;&#xa;#red&#xa;lappend result "#ff0000"&#xa;#green&#xa;lappend result "#00ff00"&#xa;#yellow&#xa;lappend result "#ffff00"&#xa;#light purple&#xa;#lappend result "#ff00ff"&#xa;#medium purple&#xa;lappend result "#cc66ff"&#xa;#dark purple&#xa;lappend result "#aa00ff"&#xa;#pink&#xa;lappend result "#ff3399"&#xa;#turquoise&#xa;lappend result "#00bbbb"&#xa;#light gray&#xa;lappend result "#bbbb80"&#xa;#dark gray&#xa;lappend result "#bbbbbb"&#xa;#brown&#xa;lappend result "#cc9900"&#xa;#red&#xa;lappend result "#ff0000"&#xa;#green&#xa;lappend result "#00ff00"&#xa;#yellow&#xa;lappend result "#ffff00"&#xa;#light purple&#xa;lappend result "#cc66ff"&#xa;#dark purple&#xa;lappend result "#aa00ff"&#xa;#pink&#xa;lappend result "#ff3399"&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DetailStatsEnabled</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Set the Detailed Stats Flag as enabled/disabled&#xa;&#xa;# default to disabled&#xa;set result  {}&#xa;&#xa;# get test type (see "GetTestType" script) - default to N/A if  @StartDataSetId == 1 since template was chosen from pcik list&#xa;if {$PickInputId == 1} {&#xa;  set tstType "None"&#xa;} else {&#xa;  set tstType $TestType&#xa;}&#xa;&#xa;if {$tstType == "Step Test"} {&#xa;  set testFlg $DetailedStepFlg&#xa;} elseif {$tstType == "Throughput Test"} {&#xa;  set testFlg $DetailedThruFlg&#xa;} elseif {$tstType == "Fixed Duration Test"} {&#xa;  set testFlg $DetailedFixedFlg&#xa;} elseif {$tstType == "Continuous Test"} {&#xa;  set testFlg $DetailedContFlg&#xa;} elseif {$tstType == "None"} {&#xa;  set testFlg "N/A"&#xa;} else {&#xa;    set testFlg $tstType&#xa;}&#xa;&#xa;# now translate into enabled/disabled&#xa;if {$testFlg == 1} {&#xa;  set result "Enabled"&#xa;} elseif {$testFlg == 0} {&#xa;  set result "Disabled"&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa; &#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GrpTrafficStats</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# Check if Traffic Group Stats Flag was enabled&#xa;#  $TableList is a list of all tables in this DB&#xa;&#xa;# default to no table&#xa;set result  "No"&#xa;&#xa;set index 0&#xa;# existance of the traffic group table means trafic groups tats were collected&#xa;foreach tmp ($TableList) {&#xa;    set str [lindex $TableList $index]&#xa;    if {($str == "TrafficGroup")}  {&#xa;      set result  ""&#xa;   }&#xa;   incr index&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>QosStatus</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# To compute the R-Factor&#xa;&#xa;set result  [list]&#xa;&#xa;set SLR     8&#xa;set RLR     2&#xa;set STMR    15&#xa;set LSTR    18&#xa;set Ds      3&#xa;set Dr      3&#xa;set TELR    65&#xa;set WEPL    110&#xa;set T       0&#xa;set Tr      0&#xa;set Ta      0&#xa;set qdu     1&#xa;set Ie      0&#xa;set Nc      -70&#xa;set Nfor    -64&#xa;set Ps      35&#xa;set Pr      35&#xa;set A       0&#xa;set Ppl     0&#xa;set BurstR  1&#xa;set Bpl     1&#xa;&#xa;set index 0&#xa;set nbrOfAudioRtpStreamIndex     [llength $AudioRtpStreamIndex]&#xa;set index_video 0&#xa;&#xa;# To store the values of the prev record as we read further&#xa;&#xa;# For each Stream&#xa;foreach tmp ($AudioRtpStreamIndex) {&#xa;    if { $index >= $nbrOfAudioRtpStreamIndex /2 }  {&#xa;        break&#xa;    }&#xa;&#xa;   set   callType      [lindex $CallTypeList    $index]&#xa;   # Read the Stream Block Handle and the User Agent start Number for the current record&#xa;   set  callerAudioLatency         [lindex $AudioRtpAvgLatency $index]   &#xa;   set  calleeAudioLatency        [lindex $AudioRtpAvgLatency [expr $index + $nbrOfAudioRtpStreamIndex/2]]&#xa;   &#xa;   set  callerVideoLatency         0&#xa;   set  calleeVideoLatency        0&#xa;   if { $callType == "AUDIO_VIDEO" } {&#xa;        set nbrOfVideoRtpStreamIndex     [llength $VideoRtpStreamIndex]&#xa;        set  callerVideoLatency         [lindex $VideoRtpAvgLatency $index_video]&#xa;        set  calleeVideoLatency        [lindex $VideoRtpAvgLatency [expr $index_video + $nbrOfVideoRtpStreamIndex/2]]&#xa;    }&#xa;   &#xa;   # Compute T, Ta Tr&#xa;    set  Tr   [expr ($callerAudioLatency + $callerVideoLatency + $calleeAudioLatency + $calleeVideoLatency) / 1000]   &#xa;   set T      [expr $Tr / 2.0]&#xa;   set Ta    $T&#xa;&#xa;   # Compute Ppl  &#xa;   set CallerAudioTxCount     [lindex $AudioRtpTxFrameCount  $index]&#xa;   set CalleeAudioTxCount    [lindex $AudioRtpTxFrameCount [expr $index + $nbrOfAudioRtpStreamIndex/2]]&#xa;   set CallerAudioRxCount    [lindex $AudioRtpRxFrameCount $index]&#xa;   set CalleeAudioRxCount   [lindex $AudioRtpRxFrameCount [expr $index + $nbrOfAudioRtpStreamIndex/2]]&#xa;   &#xa;&#xa;   set CallerVideoTxCount       0&#xa;   set CalleeVideoTxCount      0&#xa;   set CallerVideoRxCount      0&#xa;   set CalleeVideoRxCount     0  &#xa;  &#xa;    if { $callType == "AUDIO_VIDEO" } {&#xa;          set nbrOfVideoRtpStreamIndex     [llength $VideoRtpStreamIndex]&#xa;          set  nbrOfVideoRtpTxFrameCount    [llength $VideoRtpTxFrameCount]&#xa;          set  nbrOfVideoRtpRxFrameCount    [llength $VideoRtpRxFrameCount]&#xa;&#xa;          set CallerVideoTxCount     [lindex $VideoRtpTxFrameCount  $index_video]&#xa;          set CalleeVideoTxCount    [lindex $VideoRtpTxFrameCount [expr $index_video + $nbrOfVideoRtpStreamIndex/2]]&#xa;          set CallerVideoRxCount    [lindex $VideoRtpRxFrameCount $index_video]&#xa;          set CalleeVideoRxCount   [lindex $VideoRtpRxFrameCount [expr $index_video + $nbrOfVideoRtpStreamIndex/2]]&#xa;    }&#xa;   set TotalAudioTxCount [expr $CallerAudioTxCount + $CalleeAudioTxCount]   &#xa;   set TotalAudioRxCount [expr $CallerAudioRxCount + $CalleeAudioRxCount]  &#xa;&#xa;    set TotalVideoTxCount     0&#xa;    set TotalVideoRxCount    0&#xa;     if { $callType == "AUDIO_VIDEO" } {&#xa;         set TotalVideoTxCount [expr $CallerVideoTxCount + $CalleeVideoTxCount]&#xa;         set TotalVideoRxCount [expr $CallerVideoRxCount + $CalleeVideoRxCount]&#xa;     }&#xa;&#xa;    set TotalTxCount      [expr $TotalAudioTxCount + $TotalVideoTxCount]&#xa;    set TotalRxCount     [expr $TotalAudioRxCount + $TotalVideoRxCount]&#xa;&#xa;    set Ppl  [expr ($TotalTxCount - $TotalRxCount)* 100 / $TotalTxCount]&#xa;&#xa;    set Nr1 [expr $Ps - $SLR - $Ds - 100]&#xa;    set tmp [expr $Ps - $SLR - $RLR - $Ds - 14]&#xa;    set Nr1 [expr $Nr1 + 0.004 * ( $tmp * $tmp )]&#xa;    set Pre [expr $Pr + 10 * log(1.0 + pow(10.0, ((10.0 - $LSTR) / 10.0))) / log(10.0)]&#xa;    set Pr1 [expr $Pre + 0.008 * ($Pre - 35) * ($Pre - 35)]&#xa;    set Nor [expr $Pr1 - 121 + $RLR]&#xa;    set Nfo [expr $Nfor + $RLR]&#xa;    set No  [expr 10 * log( pow(10.0,($Nor/10.0)) + pow(10.0,($Nr1/10.0)) + pow(10.0,($Nc/10.0)) + pow(10.0,($Nfo/10.0)) ) / log(10.0)]&#xa;    set Nt  [expr $No - $RLR]&#xa;    set Ro  [expr 15 - 1.5 * ($SLR + $No)]&#xa;&#xa;    set Xolr [expr $SLR + $RLR + 0.2 * (64 + $Nt)]&#xa;    set pow1 [expr pow(($Xolr / 8.0), 8.0)]&#xa;    set pow2 [expr pow(1.0 + $pow1, 0.125)]&#xa;    set Iolr [expr 20 * ( $pow2 - $Xolr / 8)]&#xa;&#xa;&#xa;    set STMRo [expr -10 * log(pow(10.0, -$STMR / 10.0) + pow(10.0, -$TELR / 10.0) * exp(-$T / 4.0))]&#xa;    set Ist [expr 12 * (pow(1 + pow(($STMRo - 13) / 6, 8), 1/8))]&#xa;    set Ist [expr $Ist - 28 * (pow(1 + pow(($STMRo + 1) / 19.4, 35), 1/35))]&#xa;    set Ist [expr $Ist - 13 * (pow(1 + pow(($STMRo - 3) / 33, 13), 1/13)) + 29]&#xa;&#xa;    if { $qdu < 1 } {&#xa;        set qdu  1&#xa;    }&#xa;    set Q  [expr 37 - 15 * log($qdu) / log(10.0)]&#xa;    set G  [expr 1.07 + 0.258 * $Q + 0.0602 * $Q * $Q]&#xa;    set Y  [expr ($Ro - 100) / 15.0 + 46.0 / 8.4 - $G / 9]&#xa;    set Z  [expr 46.0 / 30.0 - $G / 40]&#xa;    set Iq [expr 15.0 * log(1.0 + pow(10.0, $Y/1.0)  + pow(10.0, $Z/1.0)) / log(10.0)]&#xa;&#xa;    set Isyn  [expr $Iolr + $Ist + $Iq]&#xa;&#xa;    set TERV  [expr $TELR + 6 * exp(-0.3 * $T * $T) - 40 * log((1.0 + $T / 10.0) / (1 + $T / 150.0)) / log(10.0)]&#xa;    if { $STMR < 9 } {&#xa;        set TERV [expr $TERV + 0.5 * $Ist]&#xa;     }&#xa;    set Re   [expr 80 + 2.5 * ($TERV - 14)]&#xa;    set Roe  [expr -1.5 * ($No - $RLR)]&#xa;    set Xdt  [expr ($Roe - $Re) / 2]&#xa;    set Idte [expr $Xdt + sqrt($Xdt * $Xdt + 100)]&#xa;    set Idte [expr ($Idte - 1) * (1 - exp(-$T))]&#xa;&#xa;    if { $STMR > 20 } {&#xa;        set Idte [expr sqrt($Idte * $Idte + $Ist * $Ist)]&#xa;    }&#xa;    set Rle  [expr 10.5 * ($WEPL + 7) * pow($Tr/1.0 + 1.0, -1.0 / 4.0)]&#xa;    set Xdl  [expr ($Ro - $Rle) / 2]&#xa;    set Idle [expr $Xdl + sqrt($Xdl * $Xdl + 169)]&#xa;&#xa;    set Idd  0&#xa;    if { $Ta > 100 } {&#xa;        set X    [expr log($Ta / 100.0) / log(2.0)]&#xa;        set Idd  [expr 25 * (pow((1.0 + pow($X/1.0, 6.0)), 1 / 6) - 3 * pow(1.0 + pow($X / 3.0, 6.0), 1.0 / 6.0) + 2)]&#xa;    }&#xa;&#xa;    set Id    [expr $Idte + $Idle + $Idd]&#xa;    set Ieef  [expr $Ie + (95 - $Ie) * ($Ppl * 1.0 / (($Ppl / $BurstR) + $Bpl))]&#xa;    set R     [expr $Ro - $Isyn - $Id - $Ieef + $A]		&#xa;  &#xa;    if { $R < 0 } {&#xa;       set MOS  1&#xa;    } elseif { ($R >= 0)&&($R <= 100) } {&#xa;        set MOS [expr 1 + 0.035*$R + $R*($R-60)*(100-$R)*0.000007]&#xa;    } else {&#xa;        set MOS  4.5&#xa;    }		&#xa;	&#xa;   # Update the appropriate values for the next iteration&#xa;    incr index&#xa;&#xa;    lappend result  $MOS   &#xa;}&#xa;&#xa;puts result&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>QoS/Diffserv</pageName>
+    </instance>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2012-01-26 18:27:16 PST</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>IterStartDate</name>
+      <persist>false</persist>
+      <value type="String">2012-01-25 15:00:17 PST</value>
+      <script><![CDATA[# generate the iteration start date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $iStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>EpochDate</name>
+      <persist>false</persist>
+      <value type="String">1327631236</value>
+      <script><![CDATA[# generate the current date from Tx Stream timestamp&#xa;&#xa;#Note: Tx Stream timestamp is 16 characters long&#xa;#            [clock seconds] returns a 10 character number&#xa;&#xa;set systemTime [clock seconds]&#xa;#set systemTime $EpochSec&#xa;#set systemTime $EpochSecChop&#xa;set result $systemTime&#xa;&#xa;#set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetTestType</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Determine test type&#xa;&#xa;# if test was entered via "pick list" then data set ID will be 1 and test type will likely be found at data set ID =3&#xa;#  otherwise use the input data set ID&#xa;&#xa;if {$PickInputId == 1} {&#xa;  set result $TestTypeID3&#xa;} else {&#xa;  set result $TestType&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestEndDate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# generate the report end date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstEndDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetStartDataSetId</name>
+      <persist>false</persist>
+      <value type="String">1</value>
+      <script><![CDATA[# returnst the start data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists StartID] == 1} {&#xa;  set result $StartID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>GetEndDataSetId</name>
+      <persist>false</persist>
+      <value type="String">2147483647</value>
+      <script><![CDATA[# returnst the end data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists EndID] == 1} {&#xa;  set result $EndID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>GetFileName</name>
+      <persist>false</persist>
+      <value type="String">C:\Documents and Settings\RPatel\Desktop\IPS\all_basicmode.db</value>
+      <script><![CDATA[# returnst the DB file name&#xa;# - note that detailed stats does not have the @StartDataSetId when launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists FileNameID] == 1} {&#xa;  set result $FileNameID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>DetailedStreamResults</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[&#xa;set result "false"&#xa;&#xa;#### generat list with supported stats&#xa;set RxEotStreamColumnNames {}&#xa;set size [llength $RxEotTableInfo]&#xa;&#xa;for {set x 4} {$x < $size} {incr x} { &#xa;   set row [lindex $RxEotTableInfo $x]&#xa;   set rowplain [split [string trim $row "\[\]"] ","] &#xa;   set col [string trim  [lindex $rowplain 1]  " " ]&#xa;   lappend RxEotStreamColumnNames $col&#xa;}&#xa;&#xa;#puts "Column in DbList:$RxEotStreamColumnNames"&#xa;### complete&#xa;&#xa;####### proc for query generation&#xa;&#xa;proc GetQueryString { dbColname queryColName aggrFunc defaultValue resultColName addComma addCoalesce } {&#xa;      global  RxEotStreamColumnNames&#xa;      #puts "length: [llength $RxEotStreamColumnNames]"&#xa;      set retQuery $queryColName&#xa;      if { [lsearch $RxEotStreamColumnNames $dbColname] < 0 } {&#xa;      		#not found&#xa;      		set retQuery $defaultValue&#xa;      } else {&#xa;      	   #found&#xa;      	   if { [string length $aggrFunc ] > 0 } {&#xa;      	   	# add aggregation function&#xa;      	   	set tempString ""&#xa;      	   	append tempString $aggrFunc "(" $queryColName ")"&#xa;      	   	set retQuery $tempString&#xa;      	   }&#xa;      	   &#xa;      	   #add colesac now if required&#xa;      	   if { $addCoalesce > 0 } {&#xa;      	   	# add coalesce function&#xa;      	   	set tempString ""&#xa;      	   	append tempString "coalesce(" $retQuery "," $defaultValue ")"&#xa;      	   	set retQuery $tempString&#xa;      	   } &#xa;      }&#xa;      &#xa;      append retQuery " AS " $resultColName&#xa;      &#xa;      #add comma&#xa;      if { $addComma > 0 } {&#xa;      	  append retQuery ","&#xa;      }&#xa;      append retQuery " "&#xa;      return $retQuery&#xa;}&#xa;&#xa;&#xa;proc GetAvgLatency { dbColname defaultValue resultColName addComma } {&#xa;      global  RxEotStreamColumnNames&#xa;      #puts "length: [llength $RxEotStreamColumnNames]"&#xa;      set retQuery ""&#xa;      if { [lsearch $RxEotStreamColumnNames $dbColname] < 0 } {&#xa;      		#not found&#xa;      		set retQuery $defaultValue&#xa;      } else {&#xa;      		set retQuery "coalesce(round(cast(sum(TotalLatency) / 100.0 as double) / sum(RxSigFrameCount), 3), 'N/A')"&#xa;      }&#xa;      &#xa;      append retQuery " AS " $resultColName&#xa;      &#xa;      #add comma&#xa;      if { $addComma > 0 } {&#xa;      	  append retQuery ","&#xa;      }&#xa;      append retQuery " "&#xa;      return $retQuery&#xa;      &#xa;}&#xa;&#xa;proc GetAvgLatency2 { dbColname defaultValue resultColName addComma } {&#xa;      global  RxEotStreamColumnNames&#xa;      #puts "length: [llength $RxEotStreamColumnNames]"&#xa;      set retQuery ""&#xa;      if { [lsearch $RxEotStreamColumnNames $dbColname] < 0 } {&#xa;      		#not found&#xa;      		set retQuery $defaultValue&#xa;      } else {&#xa;      		set retQuery "COALESCE((case WHEN (SigFrameCount == 0) then 0.0 else COALESCE(round(cast(TotalLatency / 100.0 as double) / SigFrameCount, 3), 0.0)end), 'N/A')"&#xa;      }&#xa;      &#xa;      append retQuery " AS " $resultColName&#xa;      &#xa;      #add comma&#xa;      if { $addComma > 0 } {&#xa;      	  append retQuery ","&#xa;      }&#xa;      append retQuery " "&#xa;      return $retQuery&#xa; }&#xa; &#xa; proc GetPrbs { dbColname defaultValue resultColName addComma } {&#xa;      global  RxEotStreamColumnNames&#xa;      #puts "length: [llength $RxEotStreamColumnNames]"&#xa;      set retQuery ""&#xa;      if { [lsearch $RxEotStreamColumnNames $dbColname] < 0 } {&#xa;      		#not found&#xa;      		set retQuery $defaultValue&#xa;      } else {&#xa;      		set retQuery "COALESCE(cast(PrbsBitErrorCount*8 as double)/PrbsFillOctetCount, 0.0)"&#xa;      }&#xa;      &#xa;      append retQuery " AS " $resultColName&#xa;      &#xa;      #add comma&#xa;      if { $addComma > 0 } {&#xa;      	  append retQuery ","&#xa;      }&#xa;      append retQuery " "&#xa;      return $retQuery&#xa; }&#xa;&#xa;#### end procs&#xa;&#xa;######## generate queries&#xa;set query ""&#xa;set query  "SELECT COALESCE(PortName, 'N/A'), COALESCE(FrameCount, 0), COALESCE(Comp32, 'N/A'), "&#xa;append query [GetAvgLatency2 TotalLatency  "'N/A'" AvgLatency 1]&#xa;append query [GetQueryString MinLatency MinLatency "" "'N/A'" MinLatency 1 1 ]&#xa;append query [GetQueryString MaxLatency MaxLatency "" "'N/A'" MaxLatency 1 1 ]&#xa;append query [GetQueryString DuplicateFrameCount DuplicateFrameCount "" "'N/A'" DuplicateFrameCount 1 1 ]&#xa;append query [GetQueryString InOrderFrameCount InOrderFrameCount "" "'N/A'" InOrderFrameCount 1 1 ]&#xa;append query [GetQueryString ReorderedFrameCount ReorderedFrameCount "" "'N/A'" ReorderedFrameCount 1 1 ]&#xa;append query [GetQueryString OutSeqFrameCount OutSeqFrameCount "" "'N/A'" OutSeqFrameCount 1 1 ]&#xa;append query [GetQueryString LateFrameCount LateFrameCount "" "'N/A'" LateFrameCount 1 1 ]&#xa;append query [GetPrbs PrbsFillOctetCount  "'N/A'" Prbs 0]&#xa;append query " FROM TxRxEotStreamResults  WHERE "  &#xa;set DetailStreamQuery $query&#xa;&#xa;# figure out the first 1000 stream ids. &#xa;package require java&#xa;set ::dbname $dataSource&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;set query "SELECT DISTINCT TxStreamId FROM TxRxEotStreamResults LIMIT 1000"&#xa;set tr [$db query $query]&#xa;set TxRowCnt [java::field $tr nrows]&#xa;set streamIdString "TxStreamId in ("&#xa;for {set index 0} {$index < $TxRowCnt} {incr index} {&#xa;   if {$index !=  0} {&#xa;       set streamIdString [concat $streamIdString ","]&#xa;   }&#xa;   set queryrow [[java::field $tr rows] get $index]&#xa;   set queryrowarray [java::cast {java.lang.Object[]} $queryrow]   &#xa;   set oneIdString [[$queryrowarray get 0] toString]   &#xa;   set streamIdString [concat $streamIdString $oneIdString]&#xa;}&#xa;set streamIdString [concat $streamIdString ")"]&#xa;&#xa;&#xa;&#xa;append DetailStreamQuery $streamIdString&#xa;append DetailStreamQuery  " group by DataSetId, TxStreamId, PortName order by TxParentHnd, TxStreamId"&#xa;#puts "Detail stream query:$DetailStreamQuery"&#xa;&#xa;# Scounters&#xa;set query ""&#xa;set query "select coalesce(sum(FrameCount), 0) as SRxFrameCount, "&#xa;append query [GetAvgLatency2 TotalLatency  "'N/A'" SAvgLatency 1]&#xa;append query [GetQueryString MinLatency MinLatency MIN "'N/A'" SMinLatency 1 1 ]&#xa;append query [GetQueryString MaxLatency MaxLatency MAX "'N/A'" SMaxLatency 1 1 ]&#xa;append query [GetQueryString DuplicateFrameCount DuplicateFrameCount SUM "'N/A'" SDuplicateFrameCount 1 1 ]&#xa;append query [GetQueryString InOrderFrameCount InOrderFrameCount SUM "'N/A'" SInOrderFrameCount 1 1 ]&#xa;append query [GetQueryString ReorderedFrameCount ReorderedFrameCount SUM "'N/A'" SReorderedFrameCount 1 1 ]&#xa;append query [GetQueryString OutSeqFrameCount OutSeqFrameCount SUM "'N/A'" SOutSeqFrameCount 1 1 ]&#xa;append query [GetQueryString LateFrameCount LateFrameCount SUM "'N/A'" SLateFrameCount 1 1 ]&#xa;append query [GetPrbs PrbsFillOctetCount  "'N/A'" SPrbsBitErrRatio 0]&#xa;#Scounter&#xa;set scounterquery $query&#xa;append scounterquery   " from TxRxEotStreamResults group by DataSetId, TxParentHnd, TxStreamId limit 1000"&#xa;#puts "Scounter:$scounterquery"&#xa;&#xa;#Dcounter&#xa;set dquery $query&#xa;append dquery  "  from TxRxEotStreamResults where Comp32 > 0 and ParentHnd > 0 group by DataSetId limit 1000"&#xa;#puts "DCounter:$dquery"&#xa;&#xa;#################### end generate queries&#xa;&#xa;### exex and update AllCounter query&#xa;&#xa;list newAllCounterResults {}&#xa;set allquery $dquery&#xa;#puts "All query to exec:$allquery"&#xa;set allstat [$db query $allquery]&#xa;set allRowCount [java::field $allstat nrows]&#xa;if { $allRowCount == 1 } {&#xa;                      set queryrow [[java::field $allstat rows] get 0]&#xa;                      set queryrowarray [java::cast {java.lang.Object[]} $queryrow]   &#xa;	lappend newAllCounterResults [[$queryrowarray get 0] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 1] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 2] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 3] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 4] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 5] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 6] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 7] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 8] toString]&#xa;	lappend newAllCounterResults [[$queryrowarray get 9] toString]&#xa;}&#xa;&#xa;### complete all counter query&#xa;&#xa;### exex and update SCounter query&#xa;&#xa;list newSCounters {}&#xa;set allSquery  $scounterquery&#xa;set newSstat [$db query $allSquery]&#xa;set srowCount [java::field $newSstat nrows]&#xa;&#xa;if { $srowCount == 1 } {&#xa;        set queryrow [[java::field $newSstat rows] get 0]&#xa;        set queryrowarray [java::cast {java.lang.Object[]} $queryrow]   &#xa;	lappend newSCounters [[$queryrowarray get 0] toString]&#xa;	lappend newSCounters [[$queryrowarray get 1] toString]&#xa;	lappend newSCounters [[$queryrowarray get 2] toString]&#xa;	lappend newSCounters [[$queryrowarray get 3] toString]&#xa;	lappend newSCounters [[$queryrowarray get 4] toString]&#xa;	lappend newSCounters [[$queryrowarray get 5] toString]&#xa;	lappend newSCounters [[$queryrowarray get 6] toString]&#xa;	lappend newSCounters [[$queryrowarray get 7] toString]&#xa;	lappend newSCounters [[$queryrowarray get 8] toString]&#xa;	lappend newSCounters [[$queryrowarray get 9] toString]&#xa;} else {&#xa;       for {set x 0} {$x < $srowCount} {incr x} { &#xa;       	  	set value ""&#xa;       	  	 set queryrow [[java::field $newSstat rows] get 0]&#xa;                 set queryrowarray [java::cast {java.lang.Object[]} $queryrow]   &#xa;       	  	append value [[$queryrowarray get 0] toString] ","&#xa;	  	append value [[$queryrowarray get 1] toString] ","&#xa;	  	append value [[$queryrowarray get 2] toString] ","&#xa;		append value [[$queryrowarray get 3] toString] ","&#xa;		append value [[$queryrowarray get 4] toString] ","&#xa;		append value [[$queryrowarray get 5] toString] ","&#xa;		append value [[$queryrowarray get 6] toString] ","&#xa;		append value [[$queryrowarray get 7] toString] ","&#xa;		append value [[$queryrowarray get 8] toString] ","&#xa;		append value [[$queryrowarray get 9] toString]&#xa;		&#xa;		#append to main&#xa;		lappend newSCounters $value&#xa;       }&#xa;}&#xa;&#xa;set SCounters  $newSCounters&#xa;&#xa;### complete Scounter query&#xa;&#xa;&#xa;# query per Rx port counters&#xa;set query $DetailStreamQuery&#xa;set tr [$db query $query]&#xa;set rowCnt [java::field $tr nrows]&#xa;&#xa;# build summary and detailed stream results counter variables&#xa;set TxPortName1 {""}&#xa;set TxFrameCount1  $AllTxFrameCount&#xa;set TxStreamId1 {""}  &#xa;set TxStreamBlockName1 {""}&#xa;set TxStreamIndex1 {""}&#xa;set RxPortName1 {""}&#xa;set RxFrameCount1 [lindex $newAllCounterResults 0]&#xa;set ExpectedFrameCount1 $AllExpectedFrameCount&#xa;set DroppedFrameCount1 $AllDroppedFrameCount&#xa;set DroppedPercent1 $AllDroppedPercent&#xa;set AvgLatency1 [lindex $newAllCounterResults 1]&#xa;set MinLatency1 [lindex $newAllCounterResults 2]&#xa;set MaxLatency1 [lindex $newAllCounterResults 3]&#xa;set DuplicateFrameCount1 [lindex $newAllCounterResults 4]&#xa;set InOrderFrameCount1 [lindex $newAllCounterResults 5]&#xa;set ReorderedFrameCount1 [lindex $newAllCounterResults 6]&#xa;set OutSeqFrameCount1 [lindex $newAllCounterResults 7]&#xa;set LateFrameCount1 [lindex $newAllCounterResults 8]&#xa;set PrbsBitErrRatio1 [lindex $newAllCounterResults 9]&#xa;set Expected1 {""}&#xa;set Test1 $xxVersion&#xa;&#xa;set lastComp32 'N/A'&#xa;&#xa;set sindex 0&#xa;for {set index 0} {$index < $rowCnt} {incr index} {&#xa;   set queryrow [[java::field $tr rows] get $index]&#xa;   set queryrowarray [java::cast {java.lang.Object[]} $queryrow]   &#xa;   set c32 [ [$queryrowarray get 2] toString]&#xa;   set reg [regexp {.*N/A.*} $c32]&#xa;   if {$reg} {&#xa;      set columnIdx 0&#xa;      set row [lindex $SCounters $sindex]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;&#xa;     #don't need to remove the space from the front&#xa;     #[string trim [sindex $rowplain 0]&#xa;&#xa;      set oldSIdx $sindex&#xa;&#xa;      lappend Test1 ""&#xa;      lappend TxPortName1 [lindex $STxPortName $oldSIdx]&#xa;      lappend TxFrameCount1 [lindex $STxFrameCount $oldSIdx]&#xa;      lappend TxStreamId1 [lindex $STxStreamId $oldSIdx]&#xa;      lappend TxStreamBlockName1 [lindex $STxStreamBlockName $oldSIdx]&#xa;      lappend TxStreamIndex1 [lindex $STxStreamIndex $oldSIdx]&#xa;      lappend ExpectedFrameCount1 [lindex $SExpectedFrameCount $oldSIdx]&#xa;      lappend DroppedFrameCount1 [lindex $SDroppedFrameCount $oldSIdx]&#xa;      lappend DroppedPercent1 [lindex $SDroppedPercent $oldSIdx]&#xa;      lappend Expected1 ""&#xa;      lappend RxPortName1 ""&#xa;      lappend RxFrameCount1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend AvgLatency1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend MinLatency1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend MaxLatency1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend DuplicateFrameCount1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend InOrderFrameCount1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend ReorderedFrameCount1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend OutSeqFrameCount1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend LateFrameCount1 [lindex $rowplain $columnIdx]&#xa;      incr columnIdx 1&#xa;      lappend PrbsBitErrRatio1 [lindex $rowplain $columnIdx]&#xa;&#xa;      incr sindex&#xa;&#xa;   } elseif {$lastComp32 != $c32} {&#xa;&#xa;     set columnIdx 0&#xa;     set oldSIdx $sindex&#xa;&#xa;     #Initialize Tx related counts&#xa;      lappend Test1 ""&#xa;      lappend TxPortName1 [lindex $STxPortName $oldSIdx]&#xa;      lappend TxFrameCount1 [lindex $STxFrameCount $oldSIdx]&#xa;      lappend TxStreamId1 [lindex $STxStreamId $oldSIdx]&#xa;      lappend TxStreamBlockName1 [lindex $STxStreamBlockName $oldSIdx]&#xa;      lappend TxStreamIndex1 [lindex $STxStreamIndex $oldSIdx]&#xa;      lappend ExpectedFrameCount1 [lindex $SExpectedFrameCount $oldSIdx]&#xa;      lappend DroppedFrameCount1 [lindex $SDroppedFrameCount $oldSIdx]&#xa;      lappend DroppedPercent1 [lindex $SDroppedPercent $oldSIdx]&#xa;&#xa;     #if only one row to display then no split required.	&#xa;      if {$TxRowCnt == 1} {&#xa;      &#xa;      	lappend Expected1 ""&#xa;      	lappend RxPortName1 ""&#xa;      	lappend RxFrameCount1 [lindex $SCounters $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend AvgLatency1 [lindex $SCounters $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend MinLatency1 [lindex $SCounters $columnIdx]&#xa;      	incr columnIdx 1&#xa;       	 lappend MaxLatency1 [lindex $SCounters $columnIdx]&#xa;        	incr columnIdx 1&#xa;       	 lappend DuplicateFrameCount1 [lindex $SCounters $columnIdx]&#xa;       	 incr columnIdx 1&#xa;      	  lappend InOrderFrameCount1 [lindex $SCounters $columnIdx]&#xa;      	  incr columnIdx 1&#xa;      	lappend ReorderedFrameCount1 [lindex $SCounters $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend OutSeqFrameCount1 [lindex $SCounters $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend LateFrameCount1 [lindex $SCounters $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend PrbsBitErrRatio1 [lindex $SCounters $columnIdx]&#xa;      	&#xa;      } else {&#xa;      &#xa;      	set row [lindex $SCounters $sindex]&#xa;      	set rowplain [split [string trim $row "\[\]"] ","]&#xa;&#xa;     	#don't need to remove the space from the front&#xa;     	#[string trim [sindex $rowplain 0]&#xa;&#xa;      &#xa;      	lappend Expected1 ""&#xa;      	lappend RxPortName1 ""&#xa;      	lappend RxFrameCount1 [lindex $rowplain $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend AvgLatency1 [lindex $rowplain $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend MinLatency1 [lindex $rowplain $columnIdx]&#xa;      	incr columnIdx 1&#xa;       	 lappend MaxLatency1 [lindex $rowplain $columnIdx]&#xa;       	 incr columnIdx 1&#xa;       	 lappend DuplicateFrameCount1 [lindex $rowplain $columnIdx]&#xa;       	 incr columnIdx 1&#xa;       	 lappend InOrderFrameCount1 [lindex $rowplain $columnIdx]&#xa;      	  incr columnIdx 1&#xa;      	lappend ReorderedFrameCount1 [lindex $rowplain $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend OutSeqFrameCount1 [lindex $rowplain $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend LateFrameCount1 [lindex $rowplain $columnIdx]&#xa;      	incr columnIdx 1&#xa;      	lappend PrbsBitErrRatio1 [lindex $rowplain $columnIdx]&#xa;      	&#xa;      }&#xa;&#xa;      incr sindex&#xa;    	&#xa;      lappend Test1 ""&#xa;      lappend TxPortName1 ""&#xa;      lappend TxFrameCount1 ""&#xa;      lappend TxStreamId1 ""&#xa;      lappend TxStreamBlockName1 ""&#xa;      lappend TxStreamIndex1 ""&#xa;      lappend ExpectedFrameCount1 ""&#xa;      lappend DroppedFrameCount1 ""&#xa;      lappend DroppedPercent1 ""&#xa;      lappend Expected1 [lindex $DExpected $index]&#xa;      set cIdx 0&#xa;      lappend RxPortName1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend RxFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 2&#xa;      lappend AvgLatency1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend MinLatency1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend MaxLatency1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend DuplicateFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend InOrderFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend ReorderedFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend OutSeqFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend LateFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend PrbsBitErrRatio1 [[$queryrowarray get $cIdx] toString]&#xa;      &#xa;      set lastComp32 [[$queryrowarray get 2] toString]&#xa;&#xa;   } else {&#xa;      lappend Test1 ""&#xa;      lappend TxPortName1 ""&#xa;      lappend TxFrameCount1 ""&#xa;      lappend TxStreamId1 ""&#xa;      lappend TxStreamBlockName1 ""&#xa;      lappend TxStreamIndex1 ""&#xa;      lappend ExpectedFrameCount1 ""&#xa;      lappend DroppedFrameCount1 ""&#xa;      lappend DroppedPercent1 ""&#xa;      lappend Expected1 [lindex $DExpected $index]&#xa;      set cIdx 0&#xa;      lappend RxPortName1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend RxFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 2&#xa;      lappend AvgLatency1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend MinLatency1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend MaxLatency1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend DuplicateFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend InOrderFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend ReorderedFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend OutSeqFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend LateFrameCount1 [[$queryrowarray get $cIdx] toString]&#xa;      incr cIdx 1&#xa;      lappend PrbsBitErrRatio1 [[$queryrowarray get $cIdx] toString]&#xa;   }&#xa;}&#xa;&#xa;set result "true"&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>TxPortName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>Port //11/1</instance>
+        <instance></instance>
+        <instance>Port //11/1</instance>
+        <instance></instance>
+        <instance>Port //11/2</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists TxPortName1] == 1} {&#xa;  set result $TxPortName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>TxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>337458</instance>
+        <instance></instance>
+        <instance>337457</instance>
+        <instance></instance>
+        <instance>339358</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists TxFrameCount1] == 1} {&#xa;  set result $TxFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>TxStreamBlockName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>StreamBlock 1</instance>
+        <instance></instance>
+        <instance>StreamBlock 3</instance>
+        <instance></instance>
+        <instance>StreamBlock 2</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists TxStreamBlockName1] == 1} {&#xa;  set result $TxStreamBlockName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>TxStreamIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>0</instance>
+        <instance></instance>
+        <instance>1</instance>
+        <instance></instance>
+        <instance>0</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists TxStreamIndex1] == 1} {&#xa;  set result $TxStreamIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>TxStreamId</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>65536</instance>
+        <instance></instance>
+        <instance>65537</instance>
+        <instance></instance>
+        <instance>131072</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists TxStreamId1] == 1} {&#xa;  set result $TxStreamId1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>RxPortName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+        <instance></instance>
+        <instance>Port //11/2</instance>
+        <instance></instance>
+        <instance>Port //11/2</instance>
+        <instance></instance>
+        <instance>Port //11/1</instance>
+        <instance></instance>
+        <instance>Port //11/1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists RxPortName1] == 1} {&#xa;  set result $RxPortName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>RxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+        <instance>337458</instance>
+        <instance>337458</instance>
+        <instance>337458</instance>
+        <instance>337457</instance>
+        <instance>337458</instance>
+        <instance>339358</instance>
+        <instance>337458</instance>
+        <instance>339357</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists RxFrameCount1] == 1} {&#xa;  set result $RxFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>ExpectedFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>337458</instance>
+        <instance></instance>
+        <instance>337457</instance>
+        <instance></instance>
+        <instance>339358</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists ExpectedFrameCount1] == 1} {&#xa;  set result $ExpectedFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>DroppedFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>0</instance>
+        <instance></instance>
+        <instance>0</instance>
+        <instance></instance>
+        <instance>0</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists DroppedFrameCount1] == 1} {&#xa;  set result $DroppedFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>DroppedPercent</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+        <instance></instance>
+        <instance></instance>
+        <instance>0.0</instance>
+        <instance></instance>
+        <instance>0.0</instance>
+        <instance></instance>
+        <instance>0.0</instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists DroppedPercent1] == 1} {&#xa;  set result $DroppedPercent1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>AvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+        <instance>0.092</instance>
+        <instance>0.092</instance>
+        <instance>0.092</instance>
+        <instance>0.092</instance>
+        <instance>0.092</instance>
+        <instance>0.1</instance>
+        <instance>0.092</instance>
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists AvgLatency1] == 1} {&#xa;  set result $AvgLatency1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>MinLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists MinLatency1] == 1} {&#xa;  set result $MinLatency1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>MaxLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.1</instance>
+        <instance>0.09</instance>
+        <instance>0.1</instance>
+        <instance>0.09</instance>
+        <instance>0.1</instance>
+        <instance>0.09</instance>
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists MaxLatency1] == 1} {&#xa;  set result $MaxLatency1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>DuplicateFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists DuplicateFrameCount1] == 1} {&#xa;  set result $DuplicateFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>InOrderFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+        <instance>337458</instance>
+        <instance>337458</instance>
+        <instance>337458</instance>
+        <instance>337457</instance>
+        <instance>337458</instance>
+        <instance>339358</instance>
+        <instance>337458</instance>
+        <instance>339357</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists InOrderFrameCount1] == 1} {&#xa;  set result $InOrderFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>ReorderedFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists ReorderedFrameCount1] == 1} {&#xa;  set result $ReorderedFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>OutSeqFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists OutSeqFrameCount1] == 1} {&#xa;  set result $OutSeqFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>LateFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists LateFrameCount1] == 1} {&#xa;  set result $LateFrameCount1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>PrbsBitErrRatio</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists PrbsBitErrRatio1] == 1} {&#xa;  set result $PrbsBitErrRatio1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>Expected</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+        <instance></instance>
+        <instance>Yes</instance>
+        <instance></instance>
+        <instance>Yes</instance>
+        <instance></instance>
+        <instance>Yes</instance>
+        <instance></instance>
+        <instance>Yes</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists Expected1] == 1} {&#xa;  set result $Expected1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>Test</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Project</instance>
+        <instance>1</instance>
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+        <instance></instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists Test1] == 1} {&#xa;  set result $Test1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Detail Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1327630437094</value>
+      <script><![CDATA[set result "1327631365698"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Thu Jan 26 18:13:57.094 PST 2012</value>
+      <script><![CDATA[set result "Thu Jan 26 18:29:25.698 PST 2012"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>S4BavgScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[set result {}&#xa;set S4BavgSbName1 {}&#xa;set S4BavgIndex1 {}&#xa;set S4BavgPort1 {}&#xa;set S4Bavg1 {}&#xa;&#xa;if  {[info exists S4BavgCounters] == 1} {&#xa;&#xa;   set count [llength $S4BavgCounters]&#xa;   set firstRow [lindex $S4BavgCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4BavgSbName1 [lindex $S4BavgCounters 0]&#xa;      lappend S4BavgIndex1 [lindex $S4BavgCounters 1]&#xa;      lappend S4BavgPort1 [lindex $S4BavgCounters 2]&#xa;      lappend S4Bavg1 [lindex $S4BavgCounters 3]&#xa;    } else {&#xa;&#xa;   for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4BavgCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4BavgSbName1 [lindex $rowplain 0]&#xa;      lappend S4BavgIndex1 [lindex $rowplain 1]&#xa;      lappend S4BavgPort1 [lindex $rowplain 2]&#xa;      lappend S4Bavg1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BavgSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 1</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 4</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BavgSbName1] == 1} {&#xa;  set result $S4BavgSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BavgIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>65537</instance>
+        <instance>65536</instance>
+        <instance>131072</instance>
+        <instance>131073</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BavgIndex1] == 1} {&#xa;  set result $S4BavgIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BavgPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BavgPort1] == 1} {&#xa;  set result $S4BavgPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Bavg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0922852985713735</instance>
+        <instance>0.0922857362990357</instance>
+        <instance>0.0999867396672541</instance>
+        <instance>0.0999868869656438</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Bavg1] == 1} {&#xa;  set result $S4Bavg1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BmaxScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[&#xa;set result {}&#xa;set S4BmaxSbName1 {}&#xa;set S4BmaxIndex1 {}&#xa;set S4BmaxPort1 {}&#xa;set S4Bmax1 {}&#xa;&#xa;if  {[info exists S4BmaxCounters] == 1} {&#xa;&#xa;   set count [llength $S4BmaxCounters]&#xa;   set firstRow [lindex $S4BmaxCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4BmaxSbName1 [lindex $S4BmaxCounters 0]&#xa;      lappend S4BmaxIndex1 [lindex $S4BmaxCounters 1]&#xa;      lappend S4BmaxPort1 [lindex $S4BmaxCounters 2]&#xa;      lappend S4Bmax1 [lindex $S4BmaxCounters 3]&#xa;   } else {&#xa;&#xa;   for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4BmaxCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4BmaxSbName1 [lindex $rowplain 0]&#xa;      lappend S4BmaxIndex1 [lindex $rowplain 1]&#xa;      lappend S4BmaxPort1 [lindex $rowplain 2]&#xa;      lappend S4Bmax1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BmaxSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 1</instance>
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 4</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BmaxSbName1] == 1} {&#xa;  set result $S4BmaxSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BmaxIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>65536</instance>
+        <instance>65537</instance>
+        <instance>131072</instance>
+        <instance>131073</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BmaxIndex1] == 1} {&#xa;  set result $S4BmaxIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BmaxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BmaxPort1] == 1} {&#xa;  set result $S4BmaxPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Bmax</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Bmax1] == 1} {&#xa;  set result $S4Bmax1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BminScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[set result {}&#xa;set S4BminSbName1 {}&#xa;set S4BminIndex1 {}&#xa;set S4BminPort1 {}&#xa;set S4Bmin1 {}&#xa;&#xa;if  {[info exists S4BminCounters] == 1} {&#xa;&#xa;   set count [llength $S4BminCounters]&#xa;   set firstRow [lindex $S4BminCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4BminSbName1 [lindex $S4BminCounters 0]&#xa;      lappend S4BminIndex1 [lindex $S4BminCounters 1]&#xa;      lappend S4BminPort1 [lindex $S4BminCounters 2]&#xa;      lappend S4Bmin1 [lindex $S4BminCounters 3]&#xa;  } else {&#xa;&#xa;   for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4BminCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4BminSbName1 [lindex $rowplain 0]&#xa;      lappend S4BminIndex1 [lindex $rowplain 1]&#xa;      lappend S4BminPort1 [lindex $rowplain 2]&#xa;      lappend S4Bmin1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BminSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 1</instance>
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 4</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BminSbName1] == 1} {&#xa;  set result $S4BminSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BminIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>65536</instance>
+        <instance>65537</instance>
+        <instance>131072</instance>
+        <instance>131073</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BminIndex1] == 1} {&#xa;  set result $S4BminIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BminPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BminPort1] == 1} {&#xa;  set result $S4BminPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Bmin</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Bmin1] == 1} {&#xa;  set result $S4Bmin1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BosScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[&#xa;set result {}&#xa;set S4BosSbName1 {}&#xa;set S4BosIndex1 {}&#xa;set S4BosPort1 {}&#xa;set S4Bos1 {}&#xa;&#xa;if  {[info exists S4BosCounters] == 1} {&#xa;&#xa;   set count [llength $S4BosCounters]&#xa;   set firstRow [lindex $S4BosCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4BosSbName1 [lindex $S4BosCounters 0]&#xa;      lappend S4BosIndex1 [lindex $S4BosCounters 1]&#xa;      lappend S4BosPort1 [lindex $S4BosCounters 2]&#xa;      lappend S4Bos1 [lindex $S4BosCounters 3]&#xa;&#xa;} else {&#xa;&#xa;   for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4BosCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4BosSbName1 [lindex $rowplain 0]&#xa;      lappend S4BosIndex1 [lindex $rowplain 1]&#xa;      lappend S4BosPort1 [lindex $rowplain 2]&#xa;      lappend S4Bos1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BosSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 1</instance>
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 4</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BosSbName1] == 1} {&#xa;  set result $S4BosSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BosIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>65536</instance>
+        <instance>65537</instance>
+        <instance>131072</instance>
+        <instance>131073</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BosIndex1] == 1} {&#xa;  set result $S4BosIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4BosPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4BosPort1] == 1} {&#xa;  set result $S4BosPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Bos</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Bos1] == 1} {&#xa;  set result $S4Bos1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Best Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WavgScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[set result {}&#xa;set S4WavgSbName1 {}&#xa;set S4WavgIndex1 {}&#xa;set S4WavgPort1 {}&#xa;set S4Wavg1 {}&#xa;&#xa;if  {[info exists S4WavgCounters] == 1} {&#xa;&#xa;   set count [llength $S4WavgCounters]&#xa;   set firstRow [lindex $S4WavgCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4WavgSbName1 [lindex $S4WavgCounters 0]&#xa;      lappend S4WavgIndex1 [lindex $S4WavgCounters 1]&#xa;      lappend S4WavgPort1 [lindex $S4WavgCounters 2]&#xa;      lappend S4Wavg1 [lindex $S4WavgCounters 3]&#xa;   }  else {&#xa;&#xa;   for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4WavgCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4WavgSbName1 [lindex $rowplain 0]&#xa;      lappend S4WavgIndex1 [lindex $rowplain 1]&#xa;      lappend S4WavgPort1 [lindex $rowplain 2]&#xa;      lappend S4Wavg1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WavgSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 4</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 1</instance>
+        <instance>StreamBlock 3</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WavgSbName1] == 1} {&#xa;  set result $S4WavgSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WavgIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>131073</instance>
+        <instance>131072</instance>
+        <instance>65536</instance>
+        <instance>65537</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WavgIndex1] == 1} {&#xa;  set result $S4WavgIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WavgPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WavgPort1] == 1} {&#xa;  set result $S4WavgPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Wavg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0999868869656438</instance>
+        <instance>0.0999867396672541</instance>
+        <instance>0.0922857362990357</instance>
+        <instance>0.0922852985713735</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Wavg1] == 1} {&#xa;  set result $S4Wavg1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WmaxScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[set result {}&#xa;set S4WmaxSbName1 {}&#xa;set S4WmaxIndex1 {}&#xa;set S4WmaxPort1 {}&#xa;set S4Wmax1 {}&#xa;&#xa;if  {[info exists S4WmaxCounters] == 1} {&#xa;&#xa;   set count [llength $S4WmaxCounters]&#xa;   set firstRow [lindex $S4WmaxCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4WmaxSbName1 [lindex $S4WmaxCounters 0]&#xa;      lappend S4WmaxIndex1 [lindex $S4WmaxCounters 1]&#xa;      lappend S4WmaxPort1 [lindex $S4WmaxCounters 2]&#xa;      lappend S4Wmax1 [lindex $S4WmaxCounters 3]&#xa;&#xa; }  else {&#xa;&#xa;   for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4WmaxCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4WmaxSbName1 [lindex $rowplain 0]&#xa;      lappend S4WmaxIndex1 [lindex $rowplain 1]&#xa;      lappend S4WmaxPort1 [lindex $rowplain 2]&#xa;      lappend S4Wmax1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WmaxSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 4</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WmaxSbName1] == 1} {&#xa;  set result $S4WmaxSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WmaxIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>131073</instance>
+        <instance>131072</instance>
+        <instance>65537</instance>
+        <instance>65536</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WmaxIndex1] == 1} {&#xa;  set result $S4WmaxIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WmaxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WmaxPort1] == 1} {&#xa;  set result $S4WmaxPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Wmax</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Wmax1] == 1} {&#xa;  set result $S4Wmax1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WminScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[set result {}&#xa;set S4WminSbName1 {}&#xa;set S4WminIndex1 {}&#xa;set S4WminPort1 {}&#xa;set S4Wmin1 {}&#xa;&#xa;if  {[info exists S4WminCounters] == 1} {&#xa;&#xa;   set count [llength $S4WminCounters]&#xa;   set firstRow [lindex $S4WminCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4WminSbName1 [lindex $S4WminCounters 0]&#xa;      lappend S4WminIndex1 [lindex $S4WminCounters 1]&#xa;      lappend S4WminPort1 [lindex $S4WminCounters 2]&#xa;      lappend S4Wmin1 [lindex $S4WminCounters 3]&#xa;&#xa;   }  else {&#xa;&#xa;   for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4WminCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4WminSbName1 [lindex $rowplain 0]&#xa;      lappend S4WminIndex1 [lindex $rowplain 1]&#xa;      lappend S4WminPort1 [lindex $rowplain 2]&#xa;      lappend S4Wmin1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WminSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 4</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WminSbName1] == 1} {&#xa;  set result $S4WminSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WminIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>131073</instance>
+        <instance>131072</instance>
+        <instance>65537</instance>
+        <instance>65536</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WminIndex1] == 1} {&#xa;  set result $S4WminIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WminPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WminPort1] == 1} {&#xa;  set result $S4WminPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Wmin</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Wmin1] == 1} {&#xa;  set result $S4Wmin1&#xa;&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WosScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[set result {}&#xa;set S4WosSbName1 {}&#xa;set S4WosIndex1 {}&#xa;set S4WosPort1 {}&#xa;set S4Wos1 {}&#xa;&#xa;if  {[info exists S4WosCounters] == 1} {&#xa;&#xa;   set count [llength $S4WosCounters]&#xa;   set firstRow [lindex $S4WosCounters 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;      lappend S4WosSbName1 [lindex $S4WosCounters 0]&#xa;      lappend S4WosIndex1 [lindex $S4WosCounters 1]&#xa;      lappend S4WosPort1 [lindex $S4WosCounters 2]&#xa;      lappend S4Wos1 [lindex $S4WosCounters 3]&#xa;&#xa;   }  else {&#xa;&#xa;    for {set index 1} {$index < $count} {incr index} {&#xa;&#xa;      set row [lindex $S4WosCounters $index]&#xa;      set rowplain [split [string trim $row "\[\]"] ","]&#xa;      lappend S4WosSbName1 [lindex $rowplain 0]&#xa;      lappend S4WosIndex1 [lindex $rowplain 1]&#xa;      lappend S4WosPort1 [lindex $rowplain 2]&#xa;      lappend S4Wos1 [lindex $rowplain 3]&#xa;   }&#xa;}&#xa;   set result "true"&#xa;&#xa;} else {&#xa;   set result "N/A"&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WosSbName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>StreamBlock 4</instance>
+        <instance>StreamBlock 2</instance>
+        <instance>StreamBlock 3</instance>
+        <instance>StreamBlock 1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WosSbName1] == 1} {&#xa;  set result $S4WosSbName1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WosIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>131073</instance>
+        <instance>131072</instance>
+        <instance>65537</instance>
+        <instance>65536</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WosIndex1] == 1} {&#xa;  set result $S4WosIndex1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4WosPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/1</instance>
+        <instance>Port //11/1</instance>
+        <instance>Port //11/2</instance>
+        <instance>Port //11/2</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4WosPort1] == 1} {&#xa;  set result $S4WosPort1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>S4Wos</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+        <instance>0</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists S4Wos1] == 1} {&#xa;  set result $S4Wos1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Worst Stream Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstScript</name>
+      <persist>false</persist>
+      <value type="String">true</value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;set GrpTstTxCnt1 {}&#xa;set GrpTstRxCnt1 {}&#xa;set GrpTstMinLat1 {}&#xa;set GrpTstMaxLat1 {}&#xa;set GrpTstAvgLat1 {}&#xa;&#xa;set localResult {}&#xa;&#xa;if  {[info exists GrpTstCounters] == 1} {&#xa;     set localResult $GrpTstCounters&#xa; } elseif {[info exists GrpTstCountersNoLatency] == 1} {&#xa;     set localResult $GrpTstCountersNoLatency&#xa; } else { &#xa;  	set result "N/A"&#xa;  	return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 1]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend GrpTstTxCnt1 [lindex $localResult 0]&#xa;        lappend GrpTstRxCnt1 [lindex $localResult 1]&#xa;        lappend GrpTstMinLat1 [lindex $localResult 2]&#xa;        lappend GrpTstMaxLat1 [lindex $localResult 3]&#xa;        lappend GrpTstAvgLat1 [lindex $localResult 4]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend GrpTstTxCnt1 [lindex $rowplain 0]&#xa;        lappend GrpTstRxCnt1 [lindex $rowplain 1]&#xa;        lappend GrpTstMinLat1 [lindex $rowplain 2]&#xa;        lappend GrpTstMaxLat1 [lindex $rowplain 3]&#xa;        lappend GrpTstAvgLat1 [lindex $rowplain 4]&#xa;     }&#xa;  }&#xa;set result "true"&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstTxCnt</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists GrpTstTxCnt1] == 1} {&#xa;  set result $GrpTstTxCnt1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstRxCnt</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1353630</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists GrpTstRxCnt1] == 1} {&#xa;  set result $GrpTstRxCnt1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstMinLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.09</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists GrpTstMinLat1] == 1} {&#xa;  set result $GrpTstMinLat1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstMaxLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists GrpTstMaxLat1] == 1} {&#xa;  set result $GrpTstMaxLat1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>GrpTstAvgLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.096</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;&#xa;if  {[info exists GrpTstAvgLat1] == 1} {&#xa;  set result $GrpTstAvgLat1&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Traffic Group Results</pageName>
+    </instance>
+    <instance>
+      <name>ppTxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/1</instance>
+        <instance>Port //11/2</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;     set result "N/A"&#xa;     return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 6]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 6]&#xa;     }&#xa;  }&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>ppRxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //11/2</instance>
+        <instance>Port //11/1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;     set result "N/A"&#xa;     return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 7]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 7]&#xa;     }&#xa;  }&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>ppTxCnt</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>674915</instance>
+        <instance>678715</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;     set result "N/A"&#xa;     return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 0]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 0]&#xa;     }&#xa;  }&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>ppRxCnt</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>674915</instance>
+        <instance>678715</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;    set result "N/A"&#xa;    return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 1]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 1]&#xa;     }&#xa;  }&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>ppRxSigCnt</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>674915</instance>
+        <instance>678715</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;     set result "N/A"&#xa;     return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 2]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 2]&#xa;     }&#xa;  }&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>ppMinL</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.09</instance>
+        <instance>0.09</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;     set result "N/A"&#xa;     return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 3]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 3]&#xa;     }&#xa;  }&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>ppAvgL</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.092</instance>
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;     set result "N/A"&#xa;     return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 4]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 4]&#xa;     }&#xa;  }&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+    <instance>
+      <name>ppMaxL</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+        <instance>0.1</instance>
+      </value>
+      <script><![CDATA[&#xa;set result {}&#xa;set localResult {}&#xa;&#xa;if  {[info exists P2Counters] == 1} {&#xa;     set localResult $P2Counters&#xa; } elseif {[info exists PpStreamWihOutLatency] == 1} {&#xa;     set localResult $PpStreamWihOutLatency&#xa; } else { &#xa;     set result "N/A"&#xa;     return&#xa; }&#xa;      &#xa;   set count [llength $localResult]&#xa;   set firstRow [lindex $localResult 0]&#xa;   set rowCount [llength $firstRow]&#xa;   if {$rowCount ==  1} {&#xa;        lappend result [lindex $localResult 5]&#xa;   } else {&#xa;      for {set index 1} {$index < $count} {incr index} {&#xa;        set row [lindex $localResult $index]&#xa;        set rowplain [split [string trim $row "\[\]"] ","]&#xa;        lappend result [lindex $rowplain 5]&#xa;     }&#xa;  }&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Port Pair Results</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>P1PortStats</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Port</td>&#xa;     <td bgcolor="#eeeeee">Total Tx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Tx Sig\nFrames</td>&#xa;   <td bgcolor="#eeeeee">Total Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Min Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Avg Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Max Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$P1RxPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$P1RxPort$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$P1Tx$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$P1TxSig$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$P1Rx$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$P1RxSig$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$P1MinLat$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$P1AvgLat$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$P1MaxLat$</td>&#xa;   </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>P2PortStats</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">TxPort</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Tx Sig Frames</td>&#xa;    <td bgcolor="#eeeeee">Total Rx Frames</td>&#xa;   <td bgcolor="#eeeeee">Rx Sig Frames</td>&#xa;    <td bgcolor="#eeeeee">Min Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Avg Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Max Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$ppTxPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$ppTxPort$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$ppRxPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ppTxCnt$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ppRxCnt$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ppRxSigCnt$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$ppMinL$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$ppAvgL$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$ppMaxL$</td>&#xa;    </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>P5PortQosStats</name>
+      <script><![CDATA[<table iterate="=$P5Counters$">&#xa;&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4BestAvgLat</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Avg Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$S4BavgPort$">&#xa;    <td  halign="right" bgcolor="#eeeeee">=$S4BavgSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4BavgPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4BavgIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Bavg$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4BestMaxLat</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Max Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$S4BmaxPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4BmaxSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4BmaxPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4BmaxIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Bmax$</td>&#xa;    </tr>&#xa;</table>&#xa;&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4BestMinLat</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Min Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$S4BminPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4BminSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4BminPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4BminIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Bmin$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4BestOutSeq</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Out of\nSeq</td>&#xa;  </tr>&#xa; <tr iterate="=$S4BosPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4BosSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4BosPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4BosIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Bos$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4WostAvglat</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Avg Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$S4WavgPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WavgSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WavgPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4WavgIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Wavg$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4WostMaxLat</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Max Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$S4WmaxPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WmaxSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WmaxPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4WmaxIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Wmax$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4WostMinLat</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Min Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$S4WminPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WminSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WminPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4WminIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Wmin$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4WostOutSeq</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Stream</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Out of\nSeq</td>&#xa;  </tr>&#xa; <tr iterate="=$S4WosPort$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WosSbName$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S4WosPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4WosIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Wos$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>GrpGroupTest</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Traffic Group</td>&#xa;    <td bgcolor="#eeeeee">Sub Group</td>&#xa;    <td bgcolor="#eeeeee">Tx Frames\nTotal</td>&#xa;    <td bgcolor="#eeeeee">Rx Frames\nTotal</td>&#xa;    <td bgcolor="#eeeeee">Min Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Avg Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Max Latency(us)</td>&#xa;  </tr>&#xa; <tr iterate="=$GrpTstGrp$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$GrpTstGrp$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$GrpTstSub$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$GrpTstTxCnt$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$GrpTstRxCnt$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$GrpTstMinLat$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$GrpTstAvgLat$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$GrpTstMaxLat$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>dataSetId</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td colspan="1" rowspan="1" bgcolor="#bbbbbb">Start Data Set ID</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#bbbbbb">End Data Set ID</td>&#xa;  </tr>&#xa; <tr iterate="=$StartDataSetId$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$StartDataSetId$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$EndDataSetId$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>startdataSetId</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td colspan="1" rowspan="1" bgcolor="#bbbbbb">RunTime Start Data Set ID</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#bbbbbb">RunTime End Data Set ID</td>&#xa;  </tr>&#xa; <tr iterate="=$InputStartDataSetId$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$InputStartDataSetId$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$InputEndDataSetId$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>DetailedStreamResults</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Test</td>&#xa;    <td bgcolor="#eeeeee">Tx Port</td>&#xa;    <td bgcolor="#eeeeee">Stream Block</td>&#xa;    <td bgcolor="#eeeeee">Stream Index</td>&#xa;    <td bgcolor="#eeeeee">Stream Id</td>&#xa;    <td bgcolor="#eeeeee">ExpectedFrames</td>&#xa;    <td bgcolor="#eeeeee">Tx Frames</td>&#xa;    <td bgcolor="#eeeeee">Tx-Rx (Frames)</td>&#xa;    <td bgcolor="#eeeeee">Tx-Rx ( % )</td>&#xa;    <td bgcolor="#eeeeee">Expected</td>&#xa;    <td bgcolor="#eeeeee">Rx Port</td>&#xa;    <td bgcolor="#eeeeee">Rx Frame Count</td>&#xa;    <td bgcolor="#eeeeee">Avg Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Min Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Max Latency(us)</td>&#xa;    <td bgcolor="#eeeeee">Duplicate Frame Count</td>&#xa;    <td bgcolor="#eeeeee">In Order Frame Count</td>&#xa;    <td bgcolor="#eeeeee">Reordered Frame Count</td>&#xa;    <td bgcolor="#eeeeee">Out of Seq Frame Count</td>&#xa;    <td bgcolor="#eeeeee">Late Frame Count</td>&#xa;    <td bgcolor="#eeeeee">PRBS Bit Error Ratio</td>&#xa;  </tr>&#xa; <tr iterate="=$TxPortName$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$Test$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TxPortName$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TxStreamBlockName$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TxStreamIndex$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TxStreamId$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ExpectedFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$DroppedFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$DroppedPercent$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$Expected$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$RxPortName$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$RxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$AvgLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$MinLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$MaxLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$DuplicateFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$InOrderFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ReorderedFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$OutSeqFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$LateFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$PrbsBitErrRatio$</td>&#xa;   </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>FileNameStr</name>
+        <x>155</x>
+        <y>450</y>
+        <width>107</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Iteration&amp;nbsp;File&amp;nbsp;Name:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartStr</name>
+        <x>155</x>
+        <y>500</y>
+        <width>75</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Iteration&amp;nbsp;Start:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>155</x>
+        <y>347</y>
+        <width>382</width>
+        <height>33</height>
+        <size>25</size>
+        <value xml:space="preserve">SpirentTestCenter&amp;nbsp;Iteration&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartVar</name>
+        <x>270</x>
+        <y>500</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$IterStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="MultiText">
+        <name>FileNameVar</name>
+        <x>270</x>
+        <y>450</y>
+        <width>350</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$GetFileName$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>upperLeftLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSideLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+    </page>
+    <page name="Port Results" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>StatsByPortTitleStr</name>
+        <x>290</x>
+        <y>99</y>
+        <width>84</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Port&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>StatsByPort</name>
+        <x>100</x>
+        <y>135</y>
+        <width>514</width>
+        <height>64</height>
+        <value>P1PortStats</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Port Pair Results" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>titleStr</name>
+        <x>280</x>
+        <y>100</y>
+        <width>116</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Port&amp;nbsp;Pair&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>pairTbl</name>
+        <x>100</x>
+        <y>135</y>
+        <width>620</width>
+        <height>85</height>
+        <value>P2PortStats</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+    </page>
+    <page name="QoS/Diffserv" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TitleStr</name>
+        <x>320</x>
+        <y>100</y>
+        <width>93</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">=$QosStatus$&amp;nbsp;QoS/Diffserv</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>QosTbl</name>
+        <x>243</x>
+        <y>170</y>
+        <width>279</width>
+        <height>51</height>
+        <value>P5PortQosStats</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>noteStr</name>
+        <x>250</x>
+        <y>135</y>
+        <width>199</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">(Only&amp;nbsp;rows&amp;nbsp;with&amp;nbsp;non-zero&amp;nbsp;counts&amp;nbsp;shown.)</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Best Stream Results" display="true">
+      <width>720</width>
+      <height>1100</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TitleStr</name>
+        <x>289</x>
+        <y>100</y>
+        <width>142</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Best&amp;nbsp;Stream&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr1</name>
+        <x>314</x>
+        <y>124</y>
+        <width>92</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Best&amp;nbsp;Avg&amp;nbsp;Latency</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>AvgTbl</name>
+        <x>233</x>
+        <y>148</y>
+        <width>298</width>
+        <height>187</height>
+        <value>S4BestAvgLat</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr2</name>
+        <x>312</x>
+        <y>358</y>
+        <width>99</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Best&amp;nbsp;Max&amp;nbsp;Latency</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>MaxTbl</name>
+        <x>233</x>
+        <y>381</y>
+        <width>301</width>
+        <height>187</height>
+        <value>S4BestMaxLat</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr3</name>
+        <x>310</x>
+        <y>591</y>
+        <width>95</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Best&amp;nbsp;Min&amp;nbsp;Latency</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>MinTbl</name>
+        <x>233</x>
+        <y>614</y>
+        <width>298</width>
+        <height>187</height>
+        <value>S4BestMinLat</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr4</name>
+        <x>316</x>
+        <y>824</y>
+        <width>88</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Best&amp;nbsp;Out&amp;nbsp;of&amp;nbsp;Seq</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>OsTbl</name>
+        <x>240</x>
+        <y>847</y>
+        <width>236</width>
+        <height>200</height>
+        <value>S4BestOutSeq</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>770</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Worst Stream Results" display="true">
+      <width>720</width>
+      <height>1100</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TitleStr</name>
+        <x>289</x>
+        <y>100</y>
+        <width>142</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Worst&amp;nbsp;Stream&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr1</name>
+        <x>314</x>
+        <y>124</y>
+        <width>92</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Worst&amp;nbsp;Avg&amp;nbsp;Latency</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>avgTbl</name>
+        <x>233</x>
+        <y>148</y>
+        <width>298</width>
+        <height>187</height>
+        <value>S4WostAvglat</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr2</name>
+        <x>312</x>
+        <y>358</y>
+        <width>99</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Worst&amp;nbsp;Max&amp;nbsp;Latency</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>maxTbl</name>
+        <x>233</x>
+        <y>381</y>
+        <width>301</width>
+        <height>187</height>
+        <value>S4WostMaxLat</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr3</name>
+        <x>310</x>
+        <y>591</y>
+        <width>95</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Worst&amp;nbsp;Min&amp;nbsp;Latency</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>minTbl</name>
+        <x>233</x>
+        <y>614</y>
+        <width>298</width>
+        <height>187</height>
+        <value>S4WostMinLat</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Text">
+        <name>subTitleStr4</name>
+        <x>316</x>
+        <y>824</y>
+        <width>88</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Worst&amp;nbsp;Out&amp;nbsp;of&amp;nbsp;Seq</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>osTbl</name>
+        <x>240</x>
+        <y>847</y>
+        <width>236</width>
+        <height>200</height>
+        <value>S4WostOutSeq</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>770</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Traffic Group Results" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TitleStr</name>
+        <x>230</x>
+        <y>99</y>
+        <width>149</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">=$GrpTrafficStats$&amp;nbsp;Traffic&amp;nbsp;Group&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>TestTbl</name>
+        <x>113</x>
+        <y>145</y>
+        <width>450</width>
+        <height>81</height>
+        <value>GrpGroupTest</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Detail Stream Results" display="true">
+      <width>1600</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>multicast1</name>
+        <x>50</x>
+        <y>147</y>
+        <width>1753</width>
+        <height>272</height>
+        <value>DetailedStreamResults</value>
+        <size>10</size>
+        <alternateRowColors>false</alternateRowColors>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>1600</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>TitleStr</name>
+        <x>450</x>
+        <y>109</y>
+        <width>271</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Detailed&amp;nbsp;Stream&amp;nbsp;Results&amp;nbsp;by&amp;nbsp;Rx&amp;nbsp;Port</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Version" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>VerStr</name>
+        <x>35</x>
+        <y>381</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2A</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startIdStr</name>
+        <x>35</x>
+        <y>431</y>
+        <width>125</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$GetStartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>endIdStr</name>
+        <x>35</x>
+        <y>450</y>
+        <width>165</width>
+        <height>12</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$GetEndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>590</x>
+        <y>130</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>470</y>
+        <width>720</width>
+        <height>70</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>dataSetIdStr</name>
+        <x>35</x>
+        <y>411</y>
+        <width>62</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$DataSetID$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TimeStamp</name>
+        <x>35</x>
+        <y>365</y>
+        <width>245</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

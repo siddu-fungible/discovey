@@ -1,0 +1,3990 @@
+{
+  "id": 6,
+  "title": "WindRiver Stats",
+  "originalTitle": "WindRiver Stats",
+  "tags": [],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "hideControls": false,
+  "sharedCrosshair": false,
+  "rows": [
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "decimals": 4,
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 1,
+          "interval": "",
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - $tag_network_name - $tag_if_name - $col",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "network_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "TX"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "rx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "RX"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_if_name - $col",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "host_ip"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "D",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "TX"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "rx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "RX"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Interface Rate (Bytes/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Interface Rate (Bytes/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 2,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name  - $tag_network_name - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "network_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Interface TX Drop Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Interface TX Drop Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 3,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - $tag_network_name - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "network_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Interface RX Drop Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Interface RX Drop Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 4,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - port_id:$tag_port_id - $tag_queue_type",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "queue_type"
+                  ]
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_queue_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_port_name - port_id:$tag_port_id - $tag_queue_type",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "queue_type"
+                  ]
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_queue_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Port Queue Byte Rate  (Bytes/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Queue Byte Rate (Bytes/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 5,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - port_id:$tag_port_id - $tag_queue_type",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "queue_type"
+                  ]
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_queue_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "no_mbuf_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname  - $tag_port_name - port_id:$tag_port_id - $tag_queue_type",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "queue_type"
+                  ]
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_queue_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "no_mbuf_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Port Queue No Mbuf Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Port Queue No Mbuf Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 6,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - port_id:$tag_port_id - $tag_queue_type",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "queue_type"
+                  ]
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_queue_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "errors_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_port_name - port_id:$tag_port_id - $tag_queue_type",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "queue_type"
+                  ]
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_queue_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "errors_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Port Queue Error Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Port Queue Error Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 7,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - port_id:$tag_port_id - $col",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "host_ip"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "TX"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "rx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "RX"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_port_name - port_id:$tag_port_id - $col",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "host_ip"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "TX"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "rx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "RX"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Port Rate  (Bytes/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Port Byte Rate (Bytes/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 8,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name -port_id:$tag_port_id",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_errors_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_port_name - port_id:$tag_port_id",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_errors_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Port TX Error Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Port TX Error Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 9,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - port_id:$tag_port_id",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_errors_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_port_name - port_id:$tag_port_id",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_errors_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Port RX Error Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Port RX Error Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 10,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - port_id:$tag_port_id",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "libvirt_uuid"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_no_mbuf_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_port_name - port_id:$tag_port_id",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "port_id"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_port_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_no_mbuf_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "AVS Port RX No Mbuf Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "AVS Port RX No Mbuf Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "decimals": 4,
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 11,
+          "interval": "",
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - $tag_if_name - $col",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "network_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "TX"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "rx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "RX"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "if_name",
+                  "operator": "=~",
+                  "value": "/^$Ifc$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_if_name - $col",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "host_ip"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "D",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "TX"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "rx_bytes_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "RX"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "if_name",
+                  "operator": "=~",
+                  "value": "/^$Ifc$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Abstract AVS Interface Rate (Bytes/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "Abstract AVS Interface Rate (Bytes/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 12,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name  - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "if_name",
+                  "operator": "=~",
+                  "value": "/^$Ifc$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "tx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "if_name",
+                  "operator": "=~",
+                  "value": "/^$Ifc$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Abstract AVS Interface TX Drop Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "Abstract AVS Interface TX Drop Rate (Packets/Sec)"
+    },
+    {
+      "collapse": true,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$DataSource",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 13,
+          "isNew": true,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_hostname - $tag_instance_name - $tag_network_name - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "instance_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "!~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "if_name",
+                  "operator": "=~",
+                  "value": "/^$Ifc$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_hostname - $tag_if_name",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "hostname"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "if_name"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "none"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "avs_vswitch_interface_metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "rx_discards_rate"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "instance_name",
+                  "operator": "=~",
+                  "value": "/^(|unknown)$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "host_ip",
+                  "operator": "=~",
+                  "value": "/^$HostIp$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "if_name",
+                  "operator": "=~",
+                  "value": "/^$Ifc$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Abstract AVS Interface RX Drop Rate (Packets/Sec)",
+          "tooltip": {
+            "msResolution": true,
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "pps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "title": "Abstract AVS Interface RX Drop Rate (Packets/Sec)"
+    },
+    {
+      "title": "AVS Engine Processing Cycles (%)",
+      "height": "250px",
+      "editable": true,
+      "collapse": true,
+      "panels": [
+        {
+          "title": "AVS Engine Processing Cycles (%)",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "graph",
+          "isNew": true,
+          "id": 14,
+          "targets": [
+            {
+              "refId": "A",
+              "policy": "default",
+              "dsType": "influxdb",
+              "resultFormat": "time_series",
+              "tags": [],
+              "groupBy": [
+                {
+                  "type": "time",
+                  "params": [
+                    "$interval"
+                  ]
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "core_id"
+                  ]
+                },
+                {
+                  "type": "tag",
+                  "params": [
+                    "hostname"
+                  ]
+                },
+                {
+                  "type": "fill",
+                  "params": [
+                    "null"
+                  ]
+                }
+              ],
+              "select": [
+                [
+                  {
+                    "type": "field",
+                    "params": [
+                      "load_avg"
+                    ]
+                  },
+                  {
+                    "type": "mean",
+                    "params": []
+                  }
+                ]
+              ],
+              "measurement": "avs_vswitch_engine_metrics",
+              "alias": "$tag_hostname - core $tag_core_id"
+            }
+          ],
+          "datasource": "metrics",
+          "renderer": "flot",
+          "yaxes": [
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "percent"
+            },
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "short"
+            }
+          ],
+          "xaxis": {
+            "show": true
+          },
+          "grid": {
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "lines": true,
+          "fill": 1,
+          "linewidth": 2,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": false,
+          "percentage": false,
+          "legend": {
+            "show": true,
+            "values": false,
+            "min": false,
+            "max": false,
+            "current": false,
+            "total": false,
+            "avg": false
+          },
+          "nullPointMode": "connected",
+          "steppedLine": false,
+          "tooltip": {
+            "value_type": "cumulative",
+            "shared": true,
+            "msResolution": true
+          },
+          "timeFrom": null,
+          "timeShift": null,
+          "aliasColors": {},
+          "seriesOverrides": [],
+          "links": []
+        }
+      ]
+    }
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "allFormat": "glob",
+        "current": {
+          "text": "metrics",
+          "value": "metrics"
+        },
+        "datasource": null,
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "DataSource",
+        "options": [
+          {
+            "text": "metrics",
+            "value": "metrics",
+            "selected": true
+          },
+          {
+            "text": "metrics_4165e855b45d48988fb15d76de7498b6",
+            "value": "metrics_4165e855b45d48988fb15d76de7498b6",
+            "selected": false
+          },
+          {
+            "text": "metrics_4ee2aefe2e554ac88552f8602bc4f536",
+            "value": "metrics_4ee2aefe2e554ac88552f8602bc4f536",
+            "selected": false
+          },
+          {
+            "text": "metrics_71f3653f3cd941e3bbd0c137a1827bfd",
+            "value": "metrics_71f3653f3cd941e3bbd0c137a1827bfd",
+            "selected": false
+          },
+          {
+            "text": "metrics_b333231d29214cdd81a23b76430ba986",
+            "value": "metrics_b333231d29214cdd81a23b76430ba986",
+            "selected": false
+          }
+        ],
+        "query": "influxdb",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "allFormat": "glob",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$DataSource",
+        "hide": 0,
+        "includeAll": true,
+        "label": "SessionId",
+        "multi": false,
+        "name": "SessionId",
+        "options": [
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          },
+          {
+            "text": "4165e855b45d48988fb15d76de7498b6",
+            "value": "4165e855b45d48988fb15d76de7498b6",
+            "selected": false
+          },
+          {
+            "text": "45fbb9230c994d56a475b1c09dbe787d",
+            "value": "45fbb9230c994d56a475b1c09dbe787d",
+            "selected": false
+          },
+          {
+            "text": "4ee2aefe2e554ac88552f8602bc4f536",
+            "value": "4ee2aefe2e554ac88552f8602bc4f536",
+            "selected": false
+          },
+          {
+            "text": "523552ca66b14614803105f78f258eb2",
+            "value": "523552ca66b14614803105f78f258eb2",
+            "selected": false
+          },
+          {
+            "text": "6b0140a0bedb4b39b2df25a059b0dc8c",
+            "value": "6b0140a0bedb4b39b2df25a059b0dc8c",
+            "selected": false
+          },
+          {
+            "text": "715a99240120421b801cc169f4847bf8",
+            "value": "715a99240120421b801cc169f4847bf8",
+            "selected": false
+          },
+          {
+            "text": "71f3653f3cd941e3bbd0c137a1827bfd",
+            "value": "71f3653f3cd941e3bbd0c137a1827bfd",
+            "selected": false
+          },
+          {
+            "text": "8aeb957e359642e6a97f06b1ecb32a02",
+            "value": "8aeb957e359642e6a97f06b1ecb32a02",
+            "selected": false
+          },
+          {
+            "text": "93b8aab3788b49e6a5f183a73ddf874e",
+            "value": "93b8aab3788b49e6a5f183a73ddf874e",
+            "selected": false
+          },
+          {
+            "text": "a6348f0ebf724089a8175389b3a8b74c",
+            "value": "a6348f0ebf724089a8175389b3a8b74c",
+            "selected": false
+          },
+          {
+            "text": "b333231d29214cdd81a23b76430ba986",
+            "value": "b333231d29214cdd81a23b76430ba986",
+            "selected": false
+          },
+          {
+            "text": "c9e1b78ab4194c1b88d456d66851cc54",
+            "value": "c9e1b78ab4194c1b88d456d66851cc54",
+            "selected": false
+          },
+          {
+            "text": "f0dc23517fce42028772b1c2bb1536bf",
+            "value": "f0dc23517fce42028772b1c2bb1536bf",
+            "selected": false
+          },
+          {
+            "text": "ff0db64dca82453ba123d4af68e3dc57",
+            "value": "ff0db64dca82453ba123d4af68e3dc57",
+            "selected": false
+          }
+        ],
+        "query": "show tag values with key=\"stc_session_token\"",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$DataSource",
+        "hide": 0,
+        "includeAll": true,
+        "label": "HostIp",
+        "multi": true,
+        "name": "HostIp",
+        "options": [
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          },
+          {
+            "text": "10.140.88.19",
+            "value": "10.140.88.19",
+            "selected": false
+          },
+          {
+            "text": "10.6.2.246",
+            "value": "10.6.2.246",
+            "selected": false
+          }
+        ],
+        "query": "show tag values with key=\"host_ip\"",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "allFormat": "glob",
+        "current": {
+          "text": ".*",
+          "value": ".*"
+        },
+        "datasource": null,
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "LibvirtUuidRegEx",
+        "options": [
+          {
+            "selected": true,
+            "text": ".*",
+            "value": ".*"
+          }
+        ],
+        "query": ".*",
+        "refresh": 0,
+        "type": "custom"
+      },
+      {
+        "allFormat": "glob",
+        "current": {
+          "value": [
+            "$__all"
+          ],
+          "text": "$__all"
+        },
+        "datasource": "$DataSource",
+        "hide": 0,
+        "includeAll": true,
+        "label": "LibvirtUuid",
+        "multi": true,
+        "name": "LibvirtUuid",
+        "options": [
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          },
+          {
+            "text": "0d4f92b6-4cfe-4010-8d3b-a771972a4e3a",
+            "value": "0d4f92b6-4cfe-4010-8d3b-a771972a4e3a",
+            "selected": false
+          },
+          {
+            "text": "101e5f7f-f97c-4bc0-8eef-2df18917e3f3",
+            "value": "101e5f7f-f97c-4bc0-8eef-2df18917e3f3",
+            "selected": false
+          },
+          {
+            "text": "16f4ca7c-1415-4698-8c52-2aaf3fcb34ff",
+            "value": "16f4ca7c-1415-4698-8c52-2aaf3fcb34ff",
+            "selected": false
+          },
+          {
+            "text": "196cb86c-6029-490c-8796-8d8bab98999f",
+            "value": "196cb86c-6029-490c-8796-8d8bab98999f",
+            "selected": false
+          },
+          {
+            "text": "5e245d65-43e7-42a3-8e46-4272cb20ff46",
+            "value": "5e245d65-43e7-42a3-8e46-4272cb20ff46",
+            "selected": false
+          },
+          {
+            "text": "6d2f60ff-2597-4708-b707-6732937936c7",
+            "value": "6d2f60ff-2597-4708-b707-6732937936c7",
+            "selected": false
+          },
+          {
+            "text": "ad7ef709-47f9-4964-aad0-d87c534e26a1",
+            "value": "ad7ef709-47f9-4964-aad0-d87c534e26a1",
+            "selected": false
+          },
+          {
+            "text": "na",
+            "value": "na",
+            "selected": false
+          },
+          {
+            "text": "unknown",
+            "value": "unknown",
+            "selected": false
+          }
+        ],
+        "query": "show tag values with key = \"libvirt_uuid\"",
+        "refresh": 1,
+        "regex": "$LibvirtUuidRegEx",
+        "type": "query"
+      },
+      {
+        "current": {
+          "tags": [],
+          "text": ".*",
+          "value": ".*"
+        },
+        "datasource": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": "IfcRegEx",
+        "multi": false,
+        "name": "IfcRegEx",
+        "options": [
+          {
+            "selected": true,
+            "text": ".*",
+            "value": ".*"
+          }
+        ],
+        "query": ".*",
+        "refresh": 0,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "value": [
+            "$__all"
+          ],
+          "text": "$__all"
+        },
+        "datasource": "$DataSource",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "Ifc",
+        "options": [
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          },
+          {
+            "text": "avp516af6f2-d4",
+            "value": "avp516af6f2-d4",
+            "selected": false
+          },
+          {
+            "text": "avp69fab308-80",
+            "value": "avp69fab308-80",
+            "selected": false
+          },
+          {
+            "text": "br-ex",
+            "value": "br-ex",
+            "selected": false
+          },
+          {
+            "text": "br-int",
+            "value": "br-int",
+            "selected": false
+          },
+          {
+            "text": "br-tun",
+            "value": "br-tun",
+            "selected": false
+          },
+          {
+            "text": "enp129s0f0",
+            "value": "enp129s0f0",
+            "selected": false
+          },
+          {
+            "text": "enp129s0f1",
+            "value": "enp129s0f1",
+            "selected": false
+          },
+          {
+            "text": "enp2s0f0",
+            "value": "enp2s0f0",
+            "selected": false
+          },
+          {
+            "text": "enp2s0f1",
+            "value": "enp2s0f1",
+            "selected": false
+          },
+          {
+            "text": "eth0",
+            "value": "eth0",
+            "selected": false
+          },
+          {
+            "text": "eth0.101",
+            "value": "eth0.101",
+            "selected": false
+          },
+          {
+            "text": "eth1",
+            "value": "eth1",
+            "selected": false
+          },
+          {
+            "text": "eth1.102",
+            "value": "eth1.102",
+            "selected": false
+          },
+          {
+            "text": "eth1000",
+            "value": "eth1000",
+            "selected": false
+          },
+          {
+            "text": "eth1001",
+            "value": "eth1001",
+            "selected": false
+          },
+          {
+            "text": "int-br-ex",
+            "value": "int-br-ex",
+            "selected": false
+          },
+          {
+            "text": "lo",
+            "value": "lo",
+            "selected": false
+          },
+          {
+            "text": "ovs-system",
+            "value": "ovs-system",
+            "selected": false
+          },
+          {
+            "text": "patch-int",
+            "value": "patch-int",
+            "selected": false
+          },
+          {
+            "text": "patch-tun",
+            "value": "patch-tun",
+            "selected": false
+          },
+          {
+            "text": "phy-br-ex",
+            "value": "phy-br-ex",
+            "selected": false
+          },
+          {
+            "text": "qbr06ce0cba-99",
+            "value": "qbr06ce0cba-99",
+            "selected": false
+          },
+          {
+            "text": "qbr0d28d47b-81",
+            "value": "qbr0d28d47b-81",
+            "selected": false
+          },
+          {
+            "text": "qbr68df72bb-e7",
+            "value": "qbr68df72bb-e7",
+            "selected": false
+          },
+          {
+            "text": "qbr74bad364-52",
+            "value": "qbr74bad364-52",
+            "selected": false
+          },
+          {
+            "text": "qbr8a6a1652-c1",
+            "value": "qbr8a6a1652-c1",
+            "selected": false
+          },
+          {
+            "text": "qbrb3680093-19",
+            "value": "qbrb3680093-19",
+            "selected": false
+          },
+          {
+            "text": "qbrb80d5592-aa",
+            "value": "qbrb80d5592-aa",
+            "selected": false
+          },
+          {
+            "text": "qbrc3c40ab5-90",
+            "value": "qbrc3c40ab5-90",
+            "selected": false
+          },
+          {
+            "text": "qbrc887b7c9-36",
+            "value": "qbrc887b7c9-36",
+            "selected": false
+          },
+          {
+            "text": "qvb06ce0cba-99",
+            "value": "qvb06ce0cba-99",
+            "selected": false
+          },
+          {
+            "text": "qvb0d28d47b-81",
+            "value": "qvb0d28d47b-81",
+            "selected": false
+          },
+          {
+            "text": "qvb68df72bb-e7",
+            "value": "qvb68df72bb-e7",
+            "selected": false
+          },
+          {
+            "text": "qvb74bad364-52",
+            "value": "qvb74bad364-52",
+            "selected": false
+          },
+          {
+            "text": "qvb8a6a1652-c1",
+            "value": "qvb8a6a1652-c1",
+            "selected": false
+          },
+          {
+            "text": "qvbb3680093-19",
+            "value": "qvbb3680093-19",
+            "selected": false
+          },
+          {
+            "text": "qvbb80d5592-aa",
+            "value": "qvbb80d5592-aa",
+            "selected": false
+          },
+          {
+            "text": "qvbc3c40ab5-90",
+            "value": "qvbc3c40ab5-90",
+            "selected": false
+          },
+          {
+            "text": "qvbc887b7c9-36",
+            "value": "qvbc887b7c9-36",
+            "selected": false
+          },
+          {
+            "text": "qvo06ce0cba-99",
+            "value": "qvo06ce0cba-99",
+            "selected": false
+          },
+          {
+            "text": "qvo0d28d47b-81",
+            "value": "qvo0d28d47b-81",
+            "selected": false
+          },
+          {
+            "text": "qvo68df72bb-e7",
+            "value": "qvo68df72bb-e7",
+            "selected": false
+          },
+          {
+            "text": "qvo74bad364-52",
+            "value": "qvo74bad364-52",
+            "selected": false
+          },
+          {
+            "text": "qvo8a6a1652-c1",
+            "value": "qvo8a6a1652-c1",
+            "selected": false
+          },
+          {
+            "text": "qvob3680093-19",
+            "value": "qvob3680093-19",
+            "selected": false
+          },
+          {
+            "text": "qvob80d5592-aa",
+            "value": "qvob80d5592-aa",
+            "selected": false
+          },
+          {
+            "text": "qvoc3c40ab5-90",
+            "value": "qvoc3c40ab5-90",
+            "selected": false
+          },
+          {
+            "text": "qvoc887b7c9-36",
+            "value": "qvoc887b7c9-36",
+            "selected": false
+          },
+          {
+            "text": "tap06ce0cba-99",
+            "value": "tap06ce0cba-99",
+            "selected": false
+          },
+          {
+            "text": "tap0d28d47b-81",
+            "value": "tap0d28d47b-81",
+            "selected": false
+          },
+          {
+            "text": "tap68df72bb-e7",
+            "value": "tap68df72bb-e7",
+            "selected": false
+          },
+          {
+            "text": "tap74bad364-52",
+            "value": "tap74bad364-52",
+            "selected": false
+          },
+          {
+            "text": "tap8a6a1652-c1",
+            "value": "tap8a6a1652-c1",
+            "selected": false
+          },
+          {
+            "text": "tapb3680093-19",
+            "value": "tapb3680093-19",
+            "selected": false
+          },
+          {
+            "text": "tapb80d5592-aa",
+            "value": "tapb80d5592-aa",
+            "selected": false
+          },
+          {
+            "text": "tapc3c40ab5-90",
+            "value": "tapc3c40ab5-90",
+            "selected": false
+          },
+          {
+            "text": "tapc887b7c9-36",
+            "value": "tapc887b7c9-36",
+            "selected": false
+          },
+          {
+            "text": "vnic45",
+            "value": "vnic45",
+            "selected": false
+          },
+          {
+            "text": "vnic46",
+            "value": "vnic46",
+            "selected": false
+          },
+          {
+            "text": "vxlan-0a8c5810",
+            "value": "vxlan-0a8c5810",
+            "selected": false
+          },
+          {
+            "text": "vxlan-0a8c5811",
+            "value": "vxlan-0a8c5811",
+            "selected": false
+          },
+          {
+            "text": "vxlan-0a8c5812",
+            "value": "vxlan-0a8c5812",
+            "selected": false
+          },
+          {
+            "text": "vxlan_sys_4789",
+            "value": "vxlan_sys_4789",
+            "selected": false
+          }
+        ],
+        "query": "show tag values with key=\"if_name\" where host_ip =~ /^$HostIp$/",
+        "refresh": 2,
+        "regex": "$IfcRegEx",
+        "type": "query"
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(0, 255, 255)",
+        "name": "Start of Test",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^Start.*Test/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(255, 0, 255)",
+        "name": "End of Test",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^End.*Test/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(0, 255, 0)",
+        "name": "Start of Traffic",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^Start.*Traffic/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(255, 0, 0)",
+        "name": "End of Traffic",
+        "query": "select event_title,event_text,event_tag from stm_events where event_title=~ /^(End|Stop).*Traffic/ and stc_session_token=~ /$SessionId$/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      },
+      {
+        "datasource": "$DataSource",
+        "enable": true,
+        "iconColor": "rgb(0, 0, 205)",
+        "name": "Automatic Event",
+        "query": "select event_title,event_text,event_tag from stm_events where stc_session_token=~ /$SessionId$/ and event_tag=~ /AutoInfluxEvent/ and event_title!~ /^(Start|End|Stop).*(Test|Traffic)/",
+        "tagsColumn": "event_tag",
+        "textColumn": "event_text",
+        "titleColumn": "event_title"
+      }
+    ]
+  },
+  "refresh": "10s",
+  "schemaVersion": 12,
+  "version": 3,
+  "links": []
+}

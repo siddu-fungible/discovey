@@ -1,0 +1,642 @@
+<?xml version="1.0" ?>
+<!-- Just copy this line exactly as it is. -->
+<stc:meta package="spirent.vcm" plugin="stakcommands" version="0.0.0-0" xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <!-- Abstract base class for Virtual Deployment Service Command objects -->
+    <stc:class name="BaseCommand"
+        displayName="Virtual Deployment Service Base Command"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Virtual Deployment Service Base Command"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="Server" displayName="Server" type="string" default="" isInternal="false">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual deployment service server IP or DNS name"/>
+        </stc:property>
+
+        <stc:property category="input" name="Port" displayName="Port" type="u16" default="8080" isInternal="false">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual deployment service TCP port number"/>
+        </stc:property>
+
+    </stc:class>
+
+    <!-- Abstract intermediate class for Virtual Deployment Service Command objects -->
+    <stc:class name="CredentialsCommand"
+        baseClass="spirent.vcm.BaseCommand"
+        displayName="Virtual Deployment Service Credentials Command"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true" >
+
+        <stc:property category="input" name="Provider" displayName="Technology Provider" type="string" default="Simulator">
+            <stc:attribute type="framework.PropertyDescription" value="The supporting technology or vendor that implements your virtual environment"/>
+        </stc:property>
+
+        <stc:property category="input" name="ProviderServer" displayName="Provider Server" type="string" default="localhost">
+            <stc:attribute type="framework.PropertyDescription" value="The server IP or name to connect to for your virtual environment"/>
+        </stc:property>
+
+        <stc:property category="input" name="ProviderUser" displayName="Provider User" type="string" default="root">
+            <stc:attribute type="framework.PropertyDescription" value="The user name to supply to your virtual environment"/>
+            <stc:attribute type="framework.HideValue" value="true"/>
+        </stc:property>
+
+        <stc:property category="input" name="ProviderPassword" displayName="Provider Password" type="string" default="password">
+            <stc:attribute type="framework.PropertyDescription" value="The password to supply to your virtual environment"/>
+            <stc:attribute type="framework.HideValue" value="true"/>
+        </stc:property>
+
+        <stc:property category="input" name="ProviderTenant" displayName="Provider Tenant" type="string" default="demo">
+            <stc:attribute type="framework.PropertyDescription" value="The OpenStack tenant or resource group"/>
+        </stc:property>
+
+        <stc:property category="input" name="ProviderUserDomain" displayName="Provider User Domain" type="string" default="default">
+            <stc:attribute type="framework.PropertyDescription" value="The OpenStack user domain for V3 Keystone API"/>
+        </stc:property>
+
+        <stc:property category="input" name="ProviderTenantDomain" displayName="Provider Tenant Domain" type="string" default="default">
+            <stc:attribute type="framework.PropertyDescription" value="The OpenStack tenant domain for V3 Keystone API"/>
+        </stc:property>
+
+    </stc:class>
+
+    <stc:class name="ListVirtualMachinesCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="List Virtual Machines"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="List the virtual machines"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="output" name="VmIdList" displayName="VM Id List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine Ids used in the info and reboot commands, returned from the create command"/>
+        </stc:property>
+
+        <stc:property category="output" name="VmNameList" displayName="VM Name List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine names specified in the create command"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="ListImagesCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="List Images"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="List the available VM images"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="output" name="ImageIdList" displayName="Image Id List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available image Ids"/>
+        </stc:property>
+
+        <stc:property category="output" name="ImageNameList" displayName="Image Name List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available image names used in the create command"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="ListOrchestrationsCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="List Orchestrations"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="List the available orchestrations"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="output" name="OrchestrationIdList" displayName="Orchestration Id List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available orchestration Ids"/>
+        </stc:property>
+
+        <stc:property category="output" name="OrchestrationNameList" displayName="Orchestration Name List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available orchestration names"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="ListNetworksCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="List Networks"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="List the available networks"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="output" name="NetworkIdList" displayName="Network Id List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available network Ids"/>
+        </stc:property>
+
+        <stc:property category="output" name="NetworkNameList" displayName="Network Name List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available network names used in the create command"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="ListSizesCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="List Sizes"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="List the available sizes"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="output" name="SizeIdList" displayName="Size Id List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available size Ids"/>
+        </stc:property>
+
+        <stc:property category="output" name="SizeNameList" displayName="Size Name List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The available size names used in the create command"/>
+        </stc:property>
+
+        <stc:property category="output" name="RamList" displayName="RAM List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The RAM configured for this size"/>
+        </stc:property>
+
+        <stc:property category="output" name="DiskList" displayName="Disk List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The disk configured for this size"/>
+        </stc:property>
+
+        <stc:property category="output" name="VcpusList" displayName="VCPUs List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual CPUs configured for this size"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="VirtualMachineInfoCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Virtual Machine Info"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Retrieve virtual machine configuration information"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="VirtualMachineId" displayName="Virtual Machine Id" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine Id from the list virtual machines command"/>
+        </stc:property>
+
+        <stc:property category="input" name="InfoTimeoutSeconds" displayName="Virtual Machine Get Info Timeout Seconds" type="u16" default="300">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine get info timeout in seconds"/>
+        </stc:property>
+
+        <stc:property category="input" name="InfoIntervalSeconds" displayName="Virtual Machine Get Info Check Interval Seconds" type="u16" default="10">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine get info polling interval in seconds"/>
+        </stc:property>
+
+        <stc:property category="output" name="VirtualMachineFound" displayName="Virtual Machine Found" type="bool" default="false">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the virtual machine was found"/>
+        </stc:property>
+
+        <stc:property category="output" name="AddrList" displayName="IP Address List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The IP Addresses for each network on this virtual machine"/>
+        </stc:property>
+
+        <stc:property category="output" name="NetworkList" displayName="Network List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The networks configured on this virtual machine"/>
+        </stc:property>
+
+    </stc:class>
+
+    <stc:class name="VirtualMachineDestroyCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Virtual Machine Destroy"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Destroy a virtual machine"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="VirtualMachineId" displayName="Virtual Machine Id" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine Id to destroy from the list virtual machines command"/>
+        </stc:property>
+
+        <stc:property category="output" name="VirtualMachinePresent" displayName="Virtual Machine Present" type="bool" default="true">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the virtual machine is present"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="VirtualMachineCreateCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Virtual Machine Create"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Create a virtual machine"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="VirtualMachineName" displayName="Virtual Machine Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The desired virtual machine name"/>
+        </stc:property>
+
+        <stc:property category="input" name="SizeName" displayName="Virtual Machine Size Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name of desired virtual machine size from the list sizes command"/>
+        </stc:property>
+
+        <stc:property category="input" name="ImageName" displayName="Virtual Machine Image Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name of the desired virtual machine image from the list images command"/>
+        </stc:property>
+
+        <stc:property category="input" name="LicenseServer" displayName="License Server" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The license server IP address or hostname"/>
+        </stc:property>
+
+        <stc:property category="input" name="NtpServer" displayName="Ntp Server" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The Ntp server IP address"/>
+        </stc:property>
+
+        <stc:property category="input" name="PortSpeed" displayName="Port Speed" type="string" default="1G">
+            <stc:attribute type="framework.PropertyDescription" value="The desired port speed either 1G or 10G"/>
+        </stc:property>
+
+        <stc:property category="input" name="Driver" displayName="Driver" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The driver mode, either sockets or dpdk"/>
+        </stc:property>
+
+        <stc:property category="input" name="IpAddr" displayName="IP Address" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The IP address if the address mode is static"/>
+        </stc:property>
+
+        <stc:property category="input" name="Netmask" displayName="Netmask" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The netmask if the address mode is static."/>
+        </stc:property>
+
+        <stc:property category="input" name="Gateway" displayName="Gateway" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The gateway if the address mode is static"/>
+        </stc:property>
+
+        <stc:property category="input" name="Telnet" displayName="Telnet" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The telnet mode, either on or off"/>
+        </stc:property>
+
+        <stc:property category="input" name="NetworkList" displayName="Network List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The network list for this virtual machine from the list networks command"/>
+        </stc:property>
+
+        <stc:property category="input" name="BootTimeoutSeconds" displayName="Virtual Machine Boot Timeout Seconds" type="u16" default="120">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine boot timeout in seconds"/>
+        </stc:property>
+
+        <stc:property category="input" name="BootCheckSeconds" displayName="Virtual Machine Boot Check Seconds" type="u16" default="5">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine boot polling interval in seconds"/>
+        </stc:property>
+
+        <stc:property category="input" name="AddFloatingIp" displayName="Add OpenStack Floating IP" type="bool" default="true">
+            <stc:attribute type="framework.PropertyDescription" value="Whether to automatically add an OpenStack floating IP if available"/>
+        </stc:property>
+
+        <stc:property category="input" name="CloudInit" displayName="Add OpenStack Cloud Init Params" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The cloud init parameters to use for OpenStack. Replaces user data params"/>
+        </stc:property>
+
+        <stc:property category="input" name="HostName" displayName="Vsphere Host Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the Vsphere host"/>
+        </stc:property>
+
+        <stc:property category="input" name="DatacenterName" displayName="Vsphere Datacenter Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the Vsphere datacenter"/>
+        </stc:property>
+
+        <stc:property category="input" name="DatastoreName" displayName="Vsphere Datastore Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the desired Vsphere datastore"/>
+        </stc:property>
+
+        <stc:property category="input" name="ResourcePoolName" displayName="Vsphere Resourcepool Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the desired Vsphere resourcepool"/>
+        </stc:property>
+
+        <stc:property category="input" name="VcpuCount" displayName="Vsphere Virtual Machine VCPUs" type="u16" default="1">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine vcpus for Vsphere"/>
+        </stc:property>
+
+        <stc:property category="input" name="RamMb" displayName="Vsphere Virtual Machine RAM in MB" type="u16" default="1024">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine RAM in MB for Vsphere"/>
+        </stc:property>
+
+        <stc:property category="input" name="Count" displayName="Virtual Machine Count" type="u16" default="1">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine count"/>
+        </stc:property>
+
+        <stc:property category="output" name="VirtualMachineRunning" displayName="Virtual Machine Running" type="bool" minOccurs="0" maxOccurs="unbounded" default="false">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the virtual machine is running"/>
+        </stc:property>
+
+        <stc:property category="output" name="VirtualMachineId" displayName="Virtual Machine Id" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine Id"/>
+        </stc:property>
+
+        <stc:property category="output" name="Url" displayName="Virtual Machine Url" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine Url"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="VirtualMachineRebootCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Reboot Virtual Machine"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Reboot a virtual machine"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="VirtualMachineId" displayName="Virtual Machine Id" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine Id from the list virtual machines command"/>
+        </stc:property>
+
+        <stc:property category="input" name="BootTimeoutSeconds" displayName="Virtual Machine Boot Timeout Seconds" type="u16" default="120">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine boot timeout in seconds"/>
+        </stc:property>
+
+        <stc:property category="input" name="BootCheckSeconds" displayName="Virtual Machine Boot Check Seconds" type="u16" default="5">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine boot poll interval in seconds"/>
+        </stc:property>
+
+        <stc:property category="output" name="VirtualMachineRunning" displayName="Virtual Machine Running" type="bool" default="false">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the virtual machine is running"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="ImageDestroyCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Image Destroy"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Destroy a virtual machine image"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="ImageId" displayName="Virtual Machine Image Id" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine image Id to destroy from the list images command"/>
+        </stc:property>
+
+        <stc:property category="output" name="ImagePresent" displayName="Virtual Machine Image Present" type="bool" default="true">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the virtual machine image is present"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="ImageUploadCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Image Upload"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Upload a virtual machine image"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="ImageName" displayName="Virtual Machine Image Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The desired virtual machine image name"/>
+        </stc:property>
+
+        <stc:property category="input" name="ImagePath" displayName="Virtual Machine Image File Path" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The path to the image file (ova/qcow2/raw) to upload"/>
+        </stc:property>
+
+        <stc:property category="input" name="Overwrite" displayName="Overwrite Virtual Machine Image" type="bool" default="false">
+            <stc:attribute type="framework.PropertyDescription" value="Whether to overwrite an existing virtual machine image on upload"/>
+        </stc:property>
+
+        <stc:property category="input" name="UploadTimeoutSeconds" displayName="Virtual Machine Image Upload Timeout Seconds" type="u16" default="120">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine image upload timeout in seconds"/>
+        </stc:property>
+
+        <stc:property category="input" name="UploadCheckSeconds" displayName="Virtual Machine Image Upload Check Seconds" type="u16" default="5">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine image upload polling interval in seconds"/>
+        </stc:property>
+
+        <stc:property category="input" name="HostName" displayName="Vsphere Host Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the Vsphere host"/>
+        </stc:property>
+
+        <stc:property category="input" name="DatacenterName" displayName="Vsphere Datacenter Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the Vsphere datacenter"/>
+        </stc:property>
+
+        <stc:property category="input" name="DatastoreName" displayName="Vsphere Datastore Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the desired Vsphere datastore"/>
+        </stc:property>
+
+        <stc:property category="input" name="ResourcePoolName" displayName="Vsphere Resourcepool Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the desired Vsphere resourcepool"/>
+        </stc:property>
+
+        <stc:property category="input" name="NetworkName" displayName="Vsphere Network Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The name specifying the desired Vsphere network to set NICs to"/>
+        </stc:property>
+
+        <stc:property category="output" name="ImagePresent" displayName="Virtual Machine Image Present" type="bool" default="false">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the virtual machine image is present"/>
+        </stc:property>
+
+        <stc:property category="output" name="ImageId" displayName="Virtual Machine Image Id" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine image Id"/>
+        </stc:property>
+
+        <stc:property category="output" name="Url" displayName="Virtual Machine Image Url" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The virtual machine image Url"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="OrchestrationCreateCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Orchestration Create"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Create an orchestration"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="OrchestrationName" displayName="Orchestration Name" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The desired orchestration name"/>
+        </stc:property>
+
+        <stc:property category="input" name="TemplatePath" displayName="Orchestration Template File Path" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The path to the orchestration template file to upload"/>
+        </stc:property>
+
+        <stc:property category="input" name="Overwrite" displayName="Overwrite Orchestration" type="bool" default="false">
+            <stc:attribute type="framework.PropertyDescription" value="Whether to overwrite an existing orchestration on create"/>
+        </stc:property>
+
+        <stc:property category="input" name="Params" displayName="Additional Orchestration Parameters" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The additional orchestration parameters"/>
+        </stc:property>
+
+        <stc:property category="input" name="CreateTimeoutSeconds" displayName="Orchestration Create Timeout Seconds" type="u16" default="360">
+            <stc:attribute type="framework.PropertyDescription" value="The orchestration create timeout in seconds"/>
+        </stc:property>
+
+        <stc:property category="input" name="CreateIntervalSeconds" displayName="Orchestration Create Check Interval Seconds" type="u16" default="10">
+            <stc:attribute type="framework.PropertyDescription" value="The orchestration creation polling interval in seconds"/>
+        </stc:property>
+
+        <stc:property category="output" name="OrchestrationPresent" displayName="Orchestration Present" type="bool" default="false">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the orchestration is present"/>
+        </stc:property>
+
+        <stc:property category="output" name="OrchestrationId" displayName="Orchestration Id" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The orchestration Id"/>
+        </stc:property>
+
+        <stc:property category="output" name="Url" displayName="Orchestration Url" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The orchestration Url"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="OrchestrationDestroyCommand"
+        baseClass="spirent.vcm.CredentialsCommand"
+        displayName="Orchestration Destroy"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Destroy an orchestration"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="OrchestrationId" displayName="Orchestration Id" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The orchestration Id to destroy from the list orchestrations command"/>
+        </stc:property>
+
+        <stc:property category="output" name="OrchestrationPresent" displayName="Orchestration Present" type="bool" default="true">
+            <stc:attribute type="framework.PropertyDescription" value="Boolean showing if the orchetration is present"/>
+        </stc:property>
+
+    </stc:class>
+
+
+    <stc:class name="ListVersionsCommand"
+        baseClass="spirent.vcm.BaseCommand"
+        displayName="List the API and Product Versions"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Retrieve the API and product versions"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="output" name="StatusList" displayName="Version Status List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The list of version descriptions"/>
+        </stc:property>
+
+        <stc:property category="output" name="VersionList" displayName="Version List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The list of version values"/>
+        </stc:property>
+
+        <stc:property category="output" name="ProductVersion" displayName="Virtual Deployment Service Version" type="string" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The Virtual Deployment Service product version"/>
+        </stc:property>
+
+    </stc:class>
+
+    <stc:class name="ListLogsCommand"
+        baseClass="spirent.vcm.BaseCommand"
+        displayName="List the Log Files"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="List the available log files"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="output" name="UrlList" displayName="Log Url List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The list of log urls"/>
+        </stc:property>
+
+        <stc:property category="output" name="LogSizeList" displayName="Log Size List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The list of log sizes"/>
+        </stc:property>
+
+        <stc:property category="output" name="LogNameList" displayName="Log Name List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+            <stc:attribute type="framework.PropertyDescription" value="The list of log file names used in the get logs command"/>
+        </stc:property>
+
+    </stc:class>
+
+    <stc:class name="GetLogCommand"
+        baseClass="spirent.vcm.BaseCommand"
+        displayName="Retrieve a Log File"
+        packageName="spirent.vcm"
+        bllDirectInterface="true"
+        isInternal="true"
+        pythonVirtualenv="spirent.vcm" >
+
+        <stc:attribute type="core.Sequenceable" value="false"/>
+        <stc:attribute type="framework.CommandDescription" value="Retrieve a log file"/>
+        <stc:attribute type="framework.CommandCategory" value="Virtual Deployment Service"/>
+
+        <stc:property category="input" name="LogFileName" default="" displayName="Log File To Save" type="string">
+            <stc:attribute type="framework.PropertyDescription" value="The log file to retrieve"/>
+        </stc:property>
+
+        <stc:property category="input" name="SavePath" default="" displayName="Saved Log Path" type="outputFilePath">
+            <stc:attribute type="framework.PropertyDescription" value="Where to save the log file"/>
+        </stc:property>
+
+    </stc:class>
+
+</stc:meta>

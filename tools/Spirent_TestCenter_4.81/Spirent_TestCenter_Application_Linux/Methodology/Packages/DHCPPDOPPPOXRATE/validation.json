@@ -1,0 +1,61 @@
+{
+    "methodology_key": "DHCPPDOPPPOXRATE",
+    "state_modifiers": [
+        {
+            "property": "ClientOuterVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "ClientOuterVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "ClientOuterVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% != \"QinQ\")",
+            "message": "Disabled when Client VLAN mode is not QinQ"
+        },
+        {
+            "property": "ClientInnerVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "ClientInnerVlanIdStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "ClientInnerVlanIdPortStep",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%ClientVlanMode% == \"None\")",
+            "message": "Disabled when Client VLAN mode is None"
+        },
+        {
+            "property": "TrafficHostOuterVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%HostVlanMode% != \"QinQ\")",
+            "message": "Disabled when Traffic Host VLAN mode is not QinQ"
+        },
+        {
+            "property": "TrafficHostInnerVlanId",
+            "state_type": "disabled",
+            "type": "expression",
+            "value": "(%HostVlanMode% == \"None\")",
+            "message": "Disabled when Traffic Host VLAN mode is None"
+        }
+    ]
+}

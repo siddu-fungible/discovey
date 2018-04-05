@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="Remote_desktop" type="stream">
+  <MetaData description="Remote_desktop" protocol="Remote_desktop" application="Remote_Desktop" createDate=""/>
+  <Streams>
+    <Stream file="System/Remote_Desktop/Remote_Desktop_Login_And_Browse.xml" name="Login_And_Browse" description="Login_And_Browse" startTime="8953" dataDelay="7" serverPort="3389" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="0"/>
+  </Streams>
+</Playlist>

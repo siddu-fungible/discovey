@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ATM"
+    showName="ATM"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="atm:ATM"
+    description="ATM" >
+
+    <pdus>
+      <pdu name="proto1" pdu="atm:ATM" />
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,216 @@
+{
+  "methodology_key": "PING_TEST",
+  "display_name": "Ping Test",
+  "short_display_name": "PING_TEST",
+  "description": "Sends ping requests from West to East ports and reports successful replies.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "WestPingPorts"
+      },
+      {
+        "side": "EAST",
+        "port_group": "EastPingPorts"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "WestPingPorts",
+      "display_name": "West Ports",
+      "description": "West Ports that send the ping",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "EastPingPorts",
+      "display_name": "East Ports",
+      "description": "Ports that reply to the ping",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "INIT",
+      "display_name": "Ping Iteration Settings",
+      "description": "Properties to configure Ping Port settings",
+      "test_properties": [
+        {
+          "property": "PingConfiguration",
+          "display_name": "Ping Configuration Settings",
+          "description": "Ping Configuration",
+          "column_definitions": [
+            {
+              "description": "Ping Source Address",
+              "display_name": "Ping Source Address",
+              "property": "PingSrcAddrColumn",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Ping Destination Address",
+              "display_name": "Ping Destination Address",
+              "property": "PingDstAddrColumn",
+              "property_value_type": "IPV4",
+              "is_collection": false
+            },
+            {
+              "description": "Interval (seconds) between Ping frames.",
+              "display_name": "Ping Interval",
+              "property": "PingIntervalColumn",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "1",
+              "maximum": "10",
+              "units": "seconds"
+            },
+            {
+              "description": "Number of Ping frames to be sent.",
+              "display_name": "Ping Frame Count",
+              "property": "PingFrameCountColumn",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "1",
+              "maximum": "1000"
+            }
+          ],
+          "table": [
+            [
+              "192.0.0.1",
+              "192.0.0.3",
+              "1",
+              "1"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "West Side configuration",
+      "description": "West side device configurations",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "VLAN ID for West devices.",
+          "display_name": "West VLAN ID",
+          "property": "WestVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "Inner VLAN ID for West devices.",
+          "display_name": "West Inner VLAN ID",
+          "property": "WestInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Enable Ping Response on the West devices.",
+          "display_name": "West Enable Ping Response",
+          "property": "WestEnablePingResponse",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True",
+          "endpoint_profile_property_name": "EnablePingResponse"
+        },
+        {
+          "description": "VLAN Mode for West devices.",
+          "display_name": "West VLAN Mode",
+          "property": "WestVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "East Side configuration",
+      "description": "East side device configurations",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "VLAN ID for East devices.",
+          "display_name": "East VLAN ID",
+          "property": "EastVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "Inner VLAN ID for East devices.",
+          "display_name": "East Inner VLAN ID",
+          "property": "EastInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Enable Ping Response on the East devices.",
+          "display_name": "East Enable Ping Response",
+          "property": "EastEnablePingResponse",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True",
+          "endpoint_profile_property_name": "EnablePingResponse"
+        },
+        {
+          "description": "VLAN Mode for East devices.",
+          "display_name": "East VLAN Mode",
+          "property": "EastVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    }
+  ]
+}

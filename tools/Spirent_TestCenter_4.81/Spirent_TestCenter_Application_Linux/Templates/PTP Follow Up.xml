@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="PTP Follow Up"
+    showName="PTP Follow Up"
+    version="1.00"
+    category="PTP"
+    readonly="true"
+    validate="true"
+    firstPdu="ptp:FollowUp"
+    description="PTP Follow Up" >
+
+    <pdus>
+      <pdu name="FollowUp_1" pdu="ptp:FollowUp">
+        <ptpHeader>
+            <MessageType uiControlState="CALCULATED">8</MessageType>
+            <ControlField uiControlState="CALCULATED">02</ControlField>
+        </ptpHeader>       
+      </pdu>
+    </pdus>
+  </template>
+</frame>

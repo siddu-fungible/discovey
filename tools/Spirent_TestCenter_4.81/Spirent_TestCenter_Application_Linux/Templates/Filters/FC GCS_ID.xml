@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGCS_ID" 
+    showName="FC GCS_ID"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GsRequestWithPortIdentifier"
+    description="FC GCS_ID">
+    <pdus>
+      <pdu name="GpnIdAccept1" pdu="fcgs:GsRequestWithPortIdentifier" >
+      	 <ctIuPreamble>
+         	<commandRespondCode>0114</commandRespondCode>
+         </ctIuPreamble>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

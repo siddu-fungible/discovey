@@ -1,0 +1,32 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FIPFabricLOGOACC"
+    showName="FIP Fabric LOGO ACC"
+    version="1.00"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FIP"
+    description="FIP Fabric LOGO ACC" >
+
+    <pdus>
+      <pdu name="proto1" pdu="fc:FIP" >
+        <fipSubCode>02</fipSubCode>
+        <DL>
+          <DL-Choice name="DL-Choice_0">
+            <fabricLogoAccept>
+              <logoAcc>
+                <fc>
+                </fc>
+              </logoAcc>
+            </fabricLogoAccept>
+          </DL-Choice>
+          <DL-Choice name="DL-Choice_1">
+            <macAddr/>
+          </DL-Choice>
+        </DL>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

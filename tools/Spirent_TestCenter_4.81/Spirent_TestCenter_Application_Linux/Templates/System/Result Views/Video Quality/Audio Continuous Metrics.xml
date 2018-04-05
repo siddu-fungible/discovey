@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5674" serializationBase="true" 
+ Identifier="Video Quality\Audio Continuous Metrics Results"
+ PrimaryClass="VqAudioStreamResults"
+ Description="object://vqana/VqAudioStreamResults"
+ Path="Video Quality"
+ CustomDisplayPath="Triple Play\Video Quality"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="Audio Continuous Metrics">
+  <RealTimeResultColumnDefinition id="5675" 
+   ColumnClassName="VqChannelBlockConfig"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 491">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5676" 
+   ColumnClassName="VqChannelBlockConfig"
+   ColumnPropertyName="ProbeHostName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="119"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 492">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5677" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="VqChannelBlockConfig VqChannelBlockConfig"
+   ColumnPropertyName="PortName ProbeHostName"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 59">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5679" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="DstAddr"
+   ColumnDescription=""
+   ColumnWidth="116"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 493">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5680" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="DstUdpPort"
+   ColumnDescription=""
+   ColumnWidth="122"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 494">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5681" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="AvgStreamAudioBw"
+   ColumnDescription=""
+   ColumnWidth="184"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 495">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5682" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="MinAbsMosA"
+   ColumnDescription=""
+   ColumnWidth="146"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 496">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5683" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="AvgAbsMosA"
+   ColumnDescription=""
+   ColumnWidth="141"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 497">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5684" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="MaxAbsMosA"
+   ColumnDescription=""
+   ColumnWidth="149"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 498">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5685" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="AbsMosABelowThresholdProp"
+   ColumnDescription=""
+   ColumnWidth="239"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 499">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5689" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="PktLossDegradSev"
+   ColumnDescription=""
+   ColumnWidth="183"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 503">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5690" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="CodecTypeDegradSev"
+   ColumnDescription=""
+   ColumnWidth="189"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 504">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5691" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="TransportPktCount"
+   ColumnDescription=""
+   ColumnWidth="155"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 505">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5692" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="TransportPktLostCount"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 506">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5694" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="UncorrLossProp"
+   ColumnDescription=""
+   ColumnWidth="158"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 508">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5695" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="BurstCount"
+   ColumnDescription=""
+   ColumnWidth="76"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 509">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5696" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="BurstLossRate"
+   ColumnDescription=""
+   ColumnWidth="94"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 510">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5697" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="BurstLength"
+   ColumnDescription=""
+   ColumnWidth="81"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 511">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5698" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="GapCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 512">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5699" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="GapLossRate"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 513">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5700" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="GapLength"
+   ColumnDescription=""
+   ColumnWidth="74"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 514">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5701" 
+   ColumnClassName="VqAudioStreamResults"
+   ColumnPropertyName="Ppdv"
+   ColumnDescription=""
+   ColumnWidth="180"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 515">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5702" 
+   GroupName="Bandwidth"
+   GroupId="object://customgroup/aacd26e2-e00c-49e7-9113-c5a4360d7fc9/Bandwidth"
+   ColumnClassName="VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults"
+   ColumnPropertyName="DstAddr DstUdpPort AvgStreamAudioBw"
+   SqlString="SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.AvgStreamAudioBw AS &apos;Average Stream Audio Bandwidth&apos; FROM VqAudioStreamResults, VqProbeChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqProbeChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqProbeChannelBlock.DataSetId = @DataSetId  ) UNION SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.AvgStreamAudioBw AS &apos;Average Stream Audio Bandwidth&apos; FROM VqAudioStreamResults, VqDeviceChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqDeviceChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqDeviceChannelBlock.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 61">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5703" 
+   GroupName="Perceptual Quality"
+   GroupId="object://customgroup/716cc8c9-4635-424f-a201-e7fefad605f5/Perceptual Quality"
+   ColumnClassName="VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults"
+   ColumnPropertyName="DstAddr DstUdpPort MinAbsMosA AvgAbsMosA MaxAbsMosA AbsMosABelowThresholdProp"
+   SqlString="SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.MinAbsMosA AS &apos;Minimum Absolute MOS-A&apos;, VqAudioStreamResults.AvgAbsMosA AS &apos;Average Absolute MOS-A&apos;, VqAudioStreamResults.MaxAbsMosA AS &apos;Maximum Absolute MOS-A&apos;, VqAudioStreamResults.AbsMosABelowThresholdProp AS &apos;Proportion Below Absolute MOS-A Threshold&apos; FROM VqAudioStreamResults, VqProbeChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqProbeChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqProbeChannelBlock.DataSetId = @DataSetId  ) UNION SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.MinAbsMosA AS &apos;Minimum Absolute MOS-A&apos;, VqAudioStreamResults.AvgAbsMosA AS &apos;Average Absolute MOS-A&apos;, VqAudioStreamResults.MaxAbsMosA AS &apos;Maximum Absolute MOS-A&apos;, VqAudioStreamResults.AbsMosABelowThresholdProp AS &apos;Proportion Below Absolute MOS-A Threshold&apos; FROM VqAudioStreamResults, VqDeviceChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqDeviceChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqDeviceChannelBlock.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 62">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5704" 
+   GroupName="Degradation Factors"
+   GroupId="object://customgroup/e859fd6d-2f2d-4881-8f00-4a605423e35c/Degradation Factors"
+   ColumnClassName="VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults"
+   ColumnPropertyName="DstAddr DstUdpPort PktLossDegradSev CodecTypeDegradSev"
+   SqlString="SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.PktLossDegradSev AS &apos;Packet Loss Degradation Severity&apos;, VqAudioStreamResults.CodecTypeDegradSev AS &apos;CODEC Type Degradation Severity&apos; FROM VqAudioStreamResults, VqProbeChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqProbeChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqProbeChannelBlock.DataSetId = @DataSetId  ) UNION SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.PktLossDegradSev AS &apos;Packet Loss Degradation Severity&apos;, VqAudioStreamResults.CodecTypeDegradSev AS &apos;CODEC Type Degradation Severity&apos; FROM VqAudioStreamResults, VqDeviceChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqDeviceChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqDeviceChannelBlock.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 63">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5705" 
+   GroupName="Packet"
+   GroupId="object://customgroup/89c79d4e-cc2f-4253-ae6f-1cf8f28904a0/Packet"
+   ColumnClassName="VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults VqAudioStreamResults"
+   ColumnPropertyName="DstAddr DstUdpPort TransportPktCount TransportPktLostCount UncorrLossProp BurstCount BurstLossRate BurstLength GapCount GapLossRate GapLength Ppdv"
+   SqlString="SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.TransportPktCount AS &apos;Transport Packets Received&apos;, VqAudioStreamResults.TransportPktLostCount AS &apos;Transport Packets Lost&apos;, VqAudioStreamResults.UncorrLossProp AS &apos;Uncorrected Loss Proportion&apos;, VqAudioStreamResults.BurstCount AS &apos;Burst Count&apos;, VqAudioStreamResults.BurstLossRate AS &apos;Burst Loss Rate&apos;, VqAudioStreamResults.BurstLength AS &apos;Burst Length&apos;, VqAudioStreamResults.GapCount AS &apos;Gap Count&apos;, VqAudioStreamResults.GapLossRate AS &apos;Gap Loss Rate&apos;, VqAudioStreamResults.GapLength AS &apos;Gap Length&apos;, VqAudioStreamResults.Ppdv AS &apos;Packet-to-Packet Delay Variation&apos; FROM VqAudioStreamResults, VqProbeChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqProbeChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqProbeChannelBlock.DataSetId = @DataSetId  ) UNION SELECT VqAudioStreamResults.DstAddr AS &apos;Destination Address&apos;, VqAudioStreamResults.DstUdpPort AS &apos;Destination UDP Port&apos;, VqAudioStreamResults.TransportPktCount AS &apos;Transport Packets Received&apos;, VqAudioStreamResults.TransportPktLostCount AS &apos;Transport Packets Lost&apos;, VqAudioStreamResults.UncorrLossProp AS &apos;Uncorrected Loss Proportion&apos;, VqAudioStreamResults.BurstCount AS &apos;Burst Count&apos;, VqAudioStreamResults.BurstLossRate AS &apos;Burst Loss Rate&apos;, VqAudioStreamResults.BurstLength AS &apos;Burst Length&apos;, VqAudioStreamResults.GapCount AS &apos;Gap Count&apos;, VqAudioStreamResults.GapLossRate AS &apos;Gap Loss Rate&apos;, VqAudioStreamResults.GapLength AS &apos;Gap Length&apos;, VqAudioStreamResults.Ppdv AS &apos;Packet-to-Packet Delay Variation&apos; FROM VqAudioStreamResults, VqDeviceChannelBlock WHERE ( VqAudioStreamResults.ParentHnd = VqDeviceChannelBlock.Handle AND VqAudioStreamResults.DataSetId = @DataSetId AND VqDeviceChannelBlock.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 64">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="123" 
+   ConfigClassId="vqanalyzer"
+   ResultClassId="vqaudiostreamresults"
+   ResultRootList="2"
+   PropertyIdArray="vqstreamresults.dstaddr vqstreamresults.dstudpport vqaudiostreamresults.avgstreamaudiobw vqaudiostreamresults.minabsmosa vqaudiostreamresults.avgabsmosa vqaudiostreamresults.maxabsmosa vqaudiostreamresults.absmosabelowthresholdprop vqaudiostreamresults.pktlossdegradsev vqaudiostreamresults.codectypedegradsev vqstreamresults.transportpktcount vqstreamresults.transportpktlostcount vqstreamresults.uncorrlossprop vqstreamresults.burstcount vqstreamresults.burstlossrate vqstreamresults.burstlength vqstreamresults.gapcount vqstreamresults.gaplossrate vqstreamresults.gaplength vqstreamresults.ppdv"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 15">
+  </ResultQuery>
+</ResultDataSet>

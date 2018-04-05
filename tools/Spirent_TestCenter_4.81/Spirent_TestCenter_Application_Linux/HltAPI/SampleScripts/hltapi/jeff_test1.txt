@@ -1,0 +1,4 @@
+just for test of automate python-perforce.
+test Aug 10 for add
+TEst Aug 11 for edit by python
+Test Aug 11 for edit by python -- multiple file submission

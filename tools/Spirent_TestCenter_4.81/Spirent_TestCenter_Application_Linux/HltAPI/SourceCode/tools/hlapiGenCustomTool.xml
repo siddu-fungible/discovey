@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<stc:scriptWizards xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" >
+
+    <stc:customTool
+        name="Save as HLTAPI..."
+        scriptname="hlapiGen/toolMain.tcl"
+        parameters="" >
+    </stc:customTool>
+    
+</stc:scriptWizards>
+

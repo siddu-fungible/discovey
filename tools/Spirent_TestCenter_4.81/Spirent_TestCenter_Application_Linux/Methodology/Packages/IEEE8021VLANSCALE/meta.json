@@ -1,0 +1,952 @@
+{
+  "methodology_key": "IEEE8021VLANSCALE",
+  "display_name": "L2 QoS VLAN Scale",
+  "short_display_name": "IEEE8021VLANSCALE",
+  "description": "Determines the maximum number of VLANs in which a SUT can satisfy its QoS Guarantees (Priority of VLAN Tags - IEEE 802.1Q).",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "portgroup_West_Port_Group"
+      },
+      {
+        "side": "EAST",
+        "port_group": "portgroup_East_Port_Group"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "portgroup_East_Port_Group",
+      "display_name": "East Port Group",
+      "description": "Ports on the east side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "portgroup_West_Port_Group",
+      "display_name": "West Port Group",
+      "description": "Ports on the west side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "display_name": "Test Initialization: Expected SUT Guarantees",
+      "description": "Parameters used in methodology initialization",
+      "group_type": "INIT",
+      "test_properties": [
+        {
+          "description": "Maximum jitter (us) allowed for Priority 1 traffic.",
+          "display_name": "Priority 1 - Max Jitter",
+          "property": "Pri1MaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum latency (us) allowed for Priority 1 traffic.",
+          "display_name": "Priority 1 - Max Latency",
+          "property": "Pri1MaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum loss frames allowed for Priority 1 traffic.",
+          "display_name": "Priority 1 - Max Loss",
+          "property": "Pri1MaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum duplicate frames allowed for Priority 1 traffic.",
+          "display_name": "Priority 1 - Max Duplicate",
+          "property": "Pri1MaxDuplicate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum reordered frames allowed for Priority 1 traffic.",
+          "display_name": "Priority 1 - Max Reordered",
+          "property": "Pri1MaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum late frames allowed for Priority 1 traffic.",
+          "display_name": "Priority 1 - Max Late",
+          "property": "Pri1MaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "2",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum jitter (us) allowed for Priority 2 traffic.",
+          "display_name": "Priority 2 - Max Jitter",
+          "property": "Pri2MaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "3.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum latency (us) allowed for Priority 2 traffic.",
+          "display_name": "Priority 2 - Max Latency",
+          "property": "Pri2MaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum loss frames allowed for Priority 2 traffic.",
+          "display_name": "Priority 2 - Max Loss",
+          "property": "Pri2MaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum duplicate frames allowed for Priority 2 traffic.",
+          "display_name": "Priority 2 - Max Duplicate",
+          "property": "Pri2MaxDuplicate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum reordered frames allowed for Priority 2 traffic.",
+          "display_name": "Priority 2 - Max Reordered",
+          "property": "Pri2MaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum late frames allowed for Priority 2 traffic.",
+          "display_name": "Priority 2 - Max Late",
+          "property": "Pri2MaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum jitter (us) allowed for Priority 3 traffic.",
+          "display_name": "Priority 3 - Max Jitter",
+          "property": "Pri3MaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum latency (us) allowed for Priority 3 traffic.",
+          "display_name": "Priority 3 - Max Latency",
+          "property": "Pri3MaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "5.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum loss frames allowed for Priority 3 traffic.",
+          "display_name": "Priority 3 - Max Loss",
+          "property": "Pri3MaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum duplicate frames allowed for Priority 3 traffic.",
+          "display_name": "Priority 3 - Max Duplicate",
+          "property": "Pri3MaxDuplicate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum reordered frames allowed for Priority 3 traffic.",
+          "display_name": "Priority 3 - Max Reordered",
+          "property": "Pri3MaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum late frames allowed for Priority 3 traffic.",
+          "display_name": "Priority 3 - Max Late",
+          "property": "Pri3MaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum jitter (us) allowed for Priority 4 traffic.",
+          "display_name": "Priority 4 - Max Jitter",
+          "property": "Pri4MaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum latency (us) allowed for Priority 4 traffic.",
+          "display_name": "Priority 4 - Max Latency",
+          "property": "Pri4MaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "3.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum loss frames allowed for Priority 4 traffic.",
+          "display_name": "Priority 4 - Max Loss",
+          "property": "Pri4MaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum duplicate frames allowed for Priority 4 traffic.",
+          "display_name": "Priority 4 - Max Duplicate",
+          "property": "Pri4MaxDuplicate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum reordered frames allowed for Priority 4 traffic.",
+          "display_name": "Priority 4 - Max Reordered",
+          "property": "Pri4MaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum late frames allowed for Priority 4 traffic.",
+          "display_name": "Priority 4 - Max Late",
+          "property": "Pri4MaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum jitter (us) allowed for Priority 5 traffic.",
+          "display_name": "Priority 5 - Max Jitter",
+          "property": "Pri5MaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum latency (us) allowed for Priority 5 traffic.",
+          "display_name": "Priority 5 - Max Latency",
+          "property": "Pri5MaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum loss frames allowed for Priority 5 traffic.",
+          "display_name": "Priority 5 - Max Loss",
+          "property": "Pri5MaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum duplicate frames allowed for Priority 5 traffic.",
+          "display_name": "Priority 5 - Max Duplicate",
+          "property": "Pri5MaxDuplicate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum reordered frames allowed for Priority 5 traffic.",
+          "display_name": "Priority 5 - Max Reordered",
+          "property": "Pri5MaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum late frames allowed for Priority 5 traffic.",
+          "display_name": "Priority 5 - Max Late",
+          "property": "Pri5MaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum jitter (us) allowed for Priority 6 traffic.",
+          "display_name": "Priority 6 - Max Jitter",
+          "property": "Pri6MaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "0.5",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum latency (us) allowed for Priority 6 traffic.",
+          "display_name": "Priority 6 - Max Latency",
+          "property": "Pri6MaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "2.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum loss frames allowed for Priority 6 traffic.",
+          "display_name": "Prioirty 6 - Max Loss",
+          "property": "Pri6MaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum duplicate frames allowed for Priority 6 traffic.",
+          "display_name": "Priority 6 - Max Duplicate",
+          "property": "Pri6MaxDuplicate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum reordered frames allowed for Priority 6 traffic.",
+          "display_name": "Priority 6 - Max Reordered",
+          "property": "Pri6MaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum late frames allowed for Priority 6 traffic.",
+          "display_name": "Priority 6 - Max Late",
+          "property": "Pri6MaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum jitter (us) allowed for Priority 7 traffic.",
+          "display_name": "Priority 7 - Max Jitter",
+          "property": "Pri7MaxJitter",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "0.2",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum latency (us) allowed for Priority 7 traffic.",
+          "display_name": "Priority 7 - Max Latency",
+          "property": "Pri7MaxLatency",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.0",
+          "minimum": "0",
+          "maximum": "2147483647",
+          "units": "us"
+        },
+        {
+          "description": "Maximum loss frames allowed for Priority 7 traffic.",
+          "display_name": "Priority 7 - Max Loss",
+          "property": "Pri7MaxLoss",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum duplicate frames allowed for Priority 7 traffic.",
+          "display_name": "Priority 7 - Max Duplicate",
+          "property": "Pri7MaxDuplicate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum reordered frames allowed for Priority 7 traffic.",
+          "display_name": "Priority 7 - Max Reordered",
+          "property": "Pri7MaxReordered",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        },
+        {
+          "description": "Maximum late frames allowed for Priority 7 traffic.",
+          "display_name": "Priority 7 - Max Late",
+          "property": "Pri7MaxLate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "0",
+          "minimum": "0",
+          "maximum": "65535",
+          "units": "frames"
+        }
+      ]
+    },
+    {
+      "topology_side": "WEST",
+      "display_name": "West Configuration",
+      "description": "Configuration for the ports on the west side of the topology",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "MAC Address for West Priority 1.",
+          "display_name": "Priority 1 - MAC Address",
+          "property": "WestPri1MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:11:01:01:00:01"
+        },
+        {
+          "description": "MAC Address Step for West Priority 1.",
+          "display_name": "Priority 1 - MAC Address Step",
+          "property": "WestPri1MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for West Priority 1.",
+          "display_name": "Priority 1 - MAC Address Port Step",
+          "property": "WestPri1MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for West Priority 2.",
+          "display_name": "Priority 2 - MAC Address",
+          "property": "WestPri2MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:11:01:02:00:01"
+        },
+        {
+          "description": "MAC Address Step for West Priority 2.",
+          "display_name": "Priority 2 - MAC Address Step",
+          "property": "WestPri2MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for West Priority 2.",
+          "display_name": "Priority 2 - MAC Address Port Step",
+          "property": "WestPri2MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for West Priority 3.",
+          "display_name": "Priority 3 - MAC Address",
+          "property": "WestPri3MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:11:01:03:00:01"
+        },
+        {
+          "description": "MAC Address Step for West Priority 3.",
+          "display_name": "Priority 3 - MAC Address Step",
+          "property": "WestPri3MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for West Priority 3.",
+          "display_name": "Priority 3 - MAC Address Port Step",
+          "property": "WestPri3MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for West Priority 4.",
+          "display_name": "Priority 4 - MAC Address",
+          "property": "WestPri4MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:11:01:04:00:01"
+        },
+        {
+          "description": "MAC Address Step for West Priority 4.",
+          "display_name": "Priority 4 - MAC Address Step",
+          "property": "WestPri4MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for West Priority 4.",
+          "display_name": "Priority 4 - MAC Address Port Step",
+          "property": "WestPri4MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for West Priority 5.",
+          "display_name": "Priority 5 - MAC Address",
+          "property": "WestPri5MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:11:01:05:00:01"
+        },
+        {
+          "description": "MAC Address Step for West Priority 5.",
+          "display_name": "Priority 5 - MAC Address Step",
+          "property": "WestPri5MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for West Priority 5.",
+          "display_name": "Priority 5 - MAC Address Port Step",
+          "property": "WestPri5MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for West Priority 6.",
+          "display_name": "Priority 6 - MAC Address",
+          "property": "WestPri6MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:11:01:06:00:01"
+        },
+        {
+          "description": "MAC Address Step for West Priority 6.",
+          "display_name": "Priority 6 - MAC Address Step",
+          "property": "WestPri6MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for West Priority 6.",
+          "display_name": "Priority 6 - MAC Address Port Step",
+          "property": "WestPri6MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for West Priority 7.",
+          "display_name": "Priority 7 - MAC Address",
+          "property": "WestPri7MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:11:01:07:00:01"
+        },
+        {
+          "description": "MAC Address Step for West Priority 7.",
+          "display_name": "Priority 7 - MAC Address Step",
+          "property": "WestPri7MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for West Priority 7.",
+          "display_name": "Priority 7 - MAC Address Port Step",
+          "property": "WestPri7MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        }
+      ]
+    },
+    {
+      "topology_side": "EAST",
+      "display_name": "East Configuration",
+      "description": "Configuration for the ports on the east side of the topology",
+      "group_type": "TOPOLOGY",
+      "test_properties": [
+        {
+          "description": "MAC Address for East Priority 1.",
+          "display_name": "Priority 1 - MAC Address",
+          "property": "EastPri1MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:12:01:01:00:01"
+        },
+        {
+          "description": "MAC Address Step for East Priority 1.",
+          "display_name": "Priority 1 - MAC Address Step",
+          "property": "EastPri1MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for East Priority 1.",
+          "display_name": "Priority 1 - MAC Address Port Step",
+          "property": "EastPri1MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for East Priority 2.",
+          "display_name": "Priority 2 - MAC Address",
+          "property": "EastPri2MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:12:01:02:00:01"
+        },
+        {
+          "description": "MAC Address Step for East Priority 2.",
+          "display_name": "Priority 2 - MAC Address Step",
+          "property": "EastPri2MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for East Priority 2.",
+          "display_name": "Priority 2 - MAC Address Port Step",
+          "property": "EastPri2MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for East Priority 3.",
+          "display_name": "Priority 3 - MAC Address",
+          "property": "EastPri3MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:12:01:03:00:01"
+        },
+        {
+          "description": "MAC Address Step for East Priority 3.",
+          "display_name": "Priority 3 - MAC Address Step",
+          "property": "EastPri3MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for East Priority 3.",
+          "display_name": "Priority 3 - MAC Address Port Step",
+          "property": "EastPri3MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for East Priority 4.",
+          "display_name": "Priority 4 - MAC Address",
+          "property": "EastPri4MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:12:01:04:00:01"
+        },
+        {
+          "description": "MAC Address Step for East Priority 4.",
+          "display_name": "Priority 4 - MAC Address Step",
+          "property": "EastPri4MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for East Priority 4.",
+          "display_name": "Priority 4 - MAC Address Port Step",
+          "property": "EastPri4MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for East Priority 5.",
+          "display_name": "Priority 5 - MAC Address",
+          "property": "EastPri5MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:12:01:05:00:01"
+        },
+        {
+          "description": "MAC Address Step for East Priority 5.",
+          "display_name": "Priority 5 - MAC Address Step",
+          "property": "EastPri5MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for East Priority 5.",
+          "display_name": "Priority 5 - MAC Address Port Step",
+          "property": "EastPri5MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for East Priority 6.",
+          "display_name": "Priority 6 - MAC Address",
+          "property": "EastPri6MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:12:01:06:00:01"
+        },
+        {
+          "description": "MAC Address Step for East Priority 6.",
+          "display_name": "Priority 6 - MAC Address Step",
+          "property": "EastPri6MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for East Priority 6.",
+          "display_name": "Priority 6 - MAC Address Port Step",
+          "property": "EastPri6MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        },
+        {
+          "description": "MAC Address for East Priority 7.",
+          "display_name": "Priority 7 - MAC Address",
+          "property": "EastPri7MacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:12:01:07:00:01"
+        },
+        {
+          "description": "MAC Address Step for East Priority 7.",
+          "display_name": "Priority 7 - MAC Address Step",
+          "property": "EastPri7MacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "MAC Address Step across port for East Priority 7.",
+          "display_name": "Priority 7 - MAC Address Port Step",
+          "property": "EastPri7MacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:01:00:00:00"
+        }
+      ]
+    },
+    {
+      "display_name": "Test Execution",
+      "description": "Execution of the methodology test.",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "description": "Duration of each Iteration (seconds).",
+          "display_name": "Iteration Duration",
+          "property": "IterationDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.005",
+          "maximum": "2147483647.0",
+          "units": "seconds"
+        },
+        {
+          "description": "List of Frame Sizes to iterate over during the test.",
+          "display_name": "Frame Size List",
+          "property": "FrameSizeList",
+          "property_value_type": "STRING",
+          "is_collection": true,
+          "property_value": [
+            "128",
+            "256",
+            "512",
+            "1024"
+          ],
+          "units": "bytes"
+        },
+        {
+          "description": "Number of VLANs to decrement per Priority (NOT Total VLANs) for each iteration.",
+          "display_name": "VLAN Decrement Value",
+          "property": "VlanDecrValue",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "30.00",
+          "minimum": "-2147483648.00",
+          "maximum": "2147483647.00"
+        },
+        {
+          "description": "Number of times to test a possible stable value.  Used in conjunction with the Success Threshold (%) to determine if a stable value has been found.",
+          "display_name": "Stability Repeat Count",
+          "property": "StabilityRepeatCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "trials"
+        },
+        {
+          "description": "Percentage of successful test runs for a possible stable value.  Used in conjunction with the Repeat Count to determine if a stable value has been found.",
+          "display_name": "Stability Success Threshold",
+          "property": "StabilitySuccessPercent",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "-2147483648.00",
+          "maximum": "2147483647.00",
+          "units": "%"
+        },
+        {
+          "description": "Learning Mode: None, L2",
+          "display_name": "Learning Mode",
+          "property": "LearningMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "L2"
+          ]
+        }
+      ]
+    }
+  ]
+}

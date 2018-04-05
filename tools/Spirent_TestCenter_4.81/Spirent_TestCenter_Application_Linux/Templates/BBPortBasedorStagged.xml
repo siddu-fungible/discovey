@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="template_schema.xsd" name="BBPortBasedorStagged" showName="BB Port-based or S-tagged one-to-one – B-TAG, I-TAG" version="1.0" category="802.1ah Backbone Encapsulation" readonly="true" validate="true" firstPdu="MAC-in-MAC:MAC-in-MAC" description="BB Port-based or S-tagged one-to-one – B-TAG, I-TAG">
+      <pdus>
+<pdu name="proto1" pdu="MAC-in-MAC:MAC-in-MAC">
+<bVlanTag>
+<bTag name="bTag_0">
+</bTag></bVlanTag>
+</pdu>
+<pdu name="iTag_1" pdu="MAC-in-MAC:iTag" />
+<pdu name="EthernetII_1" pdu="mimethernet:EncapEthernetII" />
+</pdus>
+</template>
+</frame>

@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<SessionTemplate version="3.4.1.41207">
+    <baseApplication>com.fnfr.svt.applications.telnet</baseApplication>
+    <sessionProperties type="com.fnfr.svt.applications.telnet.documents.TelnetSessionProperties">
+        <ipAddress inherit="false">10.99.0.191</ipAddress>
+        <port inherit="false" defaultValue=""/>
+        <TerminalProperties>
+            <captureProperties>
+                <commandBreakChars inherit="false">
+                    <item>[char CTRL-c]</item>
+                </commandBreakChars>
+                <commandCompletionchars inherit="false">
+                    <item>[char TAB]</item>
+                    <item>?</item>
+                </commandCompletionchars>
+            </captureProperties>
+            <prompts inherit="false">
+                <item name="unprivileged" MatchMethod="WILDCARD">
+                    <Content>*&gt;</Content>
+                </item>
+                <item name="rommon" MatchMethod="WILDCARD">
+                    <Content>rommon*&gt;</Content>
+                </item>
+                <item name="privileged" MatchMethod="WILDCARD">
+                    <Content>*#</Content>
+                </item>
+                <item name="config" MatchMethod="WILDCARD">
+                    <Content>*(config*)#</Content>
+                </item>
+                <item name="confirm" MatchMethod="WILDCARD">
+                    <Content>*[confirm]</Content>
+                </item>
+                <item name="more" MatchMethod="WILDCARD" TypeOfPrompt="MORE">
+                    <Content>*--*More*--*</Content>
+                </item>
+                <item name="switch">
+                    <Content>switch:</Content>
+                </item>
+                <item name="press_return_to_get_started" MatchMethod="WILDCARD">
+                    <Content>Press RETURN to get started*</Content>
+                </item>
+                <item name="login">
+                    <Content>Login:</Content>
+                </item>
+                <item name="username">
+                    <Content>Username:</Content>
+                </item>
+                <item name="password">
+                    <Content>Password:</Content>
+                </item>
+                <item name="yes" MatchMethod="WILDCARD">
+                    <Content>*[yes]*</Content>
+                </item>
+                <item name="y_n" MatchMethod="WILDCARD">
+                    <Content>*y/n*</Content>
+                </item>
+                <item name="yes_no" MatchMethod="WILDCARD">
+                    <Content>*[yes/no]*</Content>
+                </item>
+            </prompts>
+        </TerminalProperties>
+    </sessionProperties>
+</SessionTemplate>

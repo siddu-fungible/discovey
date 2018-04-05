@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989">
+    <execution estimatedExecutionTime="40">
+        <parameters version="3.4.0.39989">
+            <parameters>
+                <parameters xmlns:pt="http://www.fnfr.com/schemas/parameterTree">
+                    <p1/>
+                </parameters>
+            </parameters>
+        </parameters>
+    </execution>
+    <procedures>
+        <item name="main" defaultSessionType="com.fnfr.svt.applications.telnet">
+            <steps>
+                <item guid="2490ff56-8ac8-4119-a49b-4b668102a845" action="open" session="s2">
+                    <command>
+                        <body>project://Spirent/session_profiles/common_telnet_JuniperMx480.ffsp</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.OpenStepPropertyGroup">
+                        <stepProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                        <sessionProperties type="com.fnfr.svt.applications.telnet.documents.TelnetSessionProperties"/>
+                    </applicationProperties>
+                </item>
+                <item guid="2bca97e1-a379-44e1-8086-3e85bdb078f1" action="command" session="s2">
+                    <command>
+                        <body>admin</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="d01fae3b-027a-497a-939a-7f656f8785b8" action="command" session="s2">
+                    <command>
+                        <body>Spirent</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="0109f1bb-9523-4d64-9314-9122e9c0cec7" action="command" session="s2" normalOffset="4.827" estimatedStepExecutionTime="1.375">
+                    <command>
+                        <body>show interface terse | no-more</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>interface_info</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="b58e2a16-bfc2-489f-ac06-cc36ff9cd52c" action="return">
+                    <command>
+                        <body>$interface_info</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session"/>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

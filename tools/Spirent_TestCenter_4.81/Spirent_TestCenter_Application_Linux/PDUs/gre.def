@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="gre" showName="Gre" version="1.00"
+    description="This is a sample PDU library for Gre as defined in XML Stream Editor.">
+    
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="GreChecksum" type="SEQUENCE" unitType="ELEMENT"
+        uiShowName="Gre Checksum" >
+      <FIELD name="value" type="INTEGER" bitLength="16"
+          defaultValue="0" uiShowName="Checksum"
+          isNiMapped="true" 
+          uiNoShowModifier="Interface,Frame,Filter"
+          isNiPrimaryKey="true" />
+      <FIELD name="reserved" type="INTEGER" bitLength="16"
+          defaultValue="0" uiShowName="Reserved"
+          isNiMapped="true"          
+          uiNoShowModifier="Interface,Frame,Filter"
+          isNiPrimaryKey="true" />
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="GreKey" type="SEQUENCE" unitType="ELEMENT"
+        uiShowName="Gre Key" >
+      <FIELD name="value" type="INTEGER" bitLength="32"
+          defaultValue="0" uiShowName="Key"
+          isNiMapped="true" uiNoShowModifier="Interface" isNiPrimaryKey="true" />
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="GreSeqNum" type="SEQUENCE" unitType="ELEMENT"
+        uiShowName="Gre Sequence Number">
+      <FIELD name="value" type="INTEGER" bitLength="32"
+          defaultValue="0" uiNoShowModifier="Interface" uiShowName="Sequence Number"
+          isNiMapped="true" />
+
+    </TYPE_DEF>
+
+
+    <TYPE_DEF name="GreChecksumList" type="SET_OF" elementType="GreChecksum"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" niMapped="true" />
+
+    <TYPE_DEF name="GreKeyList" type="SET_OF" elementType="GreKey"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" niMapped="true" />
+
+    <TYPE_DEF name="GreSeqNumList" type="SET_OF" elementType="GreSeqNum"
+        minOccurs="0" maxOccurs="1"
+        unitType="ELEMENT" niMapped="true" />
+
+
+    <TYPE_DEF name="Gre" type="SEQUENCE" unitType="HEADER"
+        level="3" uiShowName="GRE" niMapped="true" >
+
+      <FIELD name="ckPresent" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          isNiMapped="true"
+		      uiNoShowModifier="Interface,Frame,Filter" 
+          uiShowName="Checksum Present"  />
+      
+      <FIELD name="routingPresent" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          uiNoShow="Interface"
+		  uiNoShowModifier="Interface"
+          uiShowName="Routing Present"  />
+      
+      <FIELD name="keyPresent" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          isNiMapped="true"
+ 		  uiNoShow="Interface"
+          uiShowName="Key Present" />
+      
+      <FIELD name="seqNumPresent" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          isNiMapped="true" 
+          uiShowName="Sequence Number Present" />
+
+      <FIELD name="reserved0" type="INTEGER" bitLength="9"
+          defaultValue="0"
+		  uiNoShow="Interface"
+          uiShowName="Reserved 0" />
+
+      <FIELD name="version" type="INTEGER" bitLength="3"
+          defaultValue="0"
+          uiNoShow="Interface"
+          uiShowName="Version" />
+
+      <FIELD name="protocolType" type="types:EtherTypes"
+          defaultValue="0800"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="NEXTHDR"
+          uiNoShow="Interface"
+          uiShowName="Protocol" />
+
+      <FIELD name="endpointv4" type="IPV4ADDR"
+          defaultValue="192.0.0.1"
+          doNotBuild="true"
+          uiControlState="ALLOW_OVERRIDE" 
+          uiShowName="Remote v4 Endpoint"
+          uiNoShow="Filter,Frame" 
+          uiNoShowModifier="Interface" 
+          isNiMapped="true" 
+          isNiPrimaryKey="true"/>
+
+      <FIELD name="endpointv6" type="IPV6ADDR"
+          defaultValue="2000::2"
+          doNotBuild="true"
+          uiControlState="ALLOW_OVERRIDE" 
+          uiShowName="Remote v6 Endpoint"
+          uiNoShow="Filter,Frame" 
+          uiNoShowModifier="Interface" 
+          isNiMapped="true" 
+          isNiPrimaryKey="true"/>
+
+
+      <FIELD name="checksums" type="GreChecksumList"
+          uiShowName="Checksum" 
+          uiNoShow="Interface"
+          uiNoShowModifier="Interface,Frame,Filter"
+          isNiMapped="true" />
+            
+      <FIELD name="keys" type="GreKeyList"
+          uiShowName="Key" uiNoShowModifier="Interface" isNiMapped="true" />
+            
+      <FIELD name="seqNums" type="GreSeqNumList"
+          uiShowName="Sequence Number" uiNoShow="Interface" isNiMapped="true" />
+
+      <FIELD name="enableKeepAlive" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+          isNiMapped="true"
+		      uiNoShowModifier="Interface,Frame,Filter" doNotBuild="true"
+          uiShowName="Enable KeepAlive"  />
+      
+      <FIELD name="keepAlivePeriod" type="INTEGER" bitLength="16"
+          defaultValue="10"
+          isNiMapped="true"
+		      uiNoShowModifier="Interface,Frame,Filter" doNotBuild="true"
+          uiShowName="KeepAlive Period (seconds)"  />
+      
+      <FIELD name="keepAliveRetries" type="INTEGER" bitLength="8"
+                defaultValue="3"
+                isNiMapped="true"
+                uiNoShowModifier="Interface,Frame,Filter" doNotBuild="true"
+                uiShowName="KeepAlive Retries"  />
+      
+      <NEXT_HEADERS>
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0800" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="86DD" />
+        <NXT_HDR id="mpls:Mpls" name="MPLS Header" value="8847" />
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet II Header" value="6558" />
+
+        <NXT_HDR id="custom:Custom" name="Custom" value="0000" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="0000" />
+
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

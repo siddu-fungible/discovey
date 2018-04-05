@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<SessionTemplate version="3.4.1.41207">
+    <baseApplication>com.fnfr.svt.applications.ssh</baseApplication>
+    <sessionProperties type="com.fnfr.svt.applications.ssh.documents.SSHProperties">
+        <TerminalProperties>
+            <prompts merge="true">
+                <item name="privileged" MatchMethod="WILDCARD">
+                    <Content>*#</Content>
+                </item>
+                <item name="unprivileged" MatchMethod="WILDCARD">
+                    <Content>*&gt;</Content>
+                </item>
+                <item name="config" MatchMethod="WILDCARD">
+                    <Content>*(config*)#</Content>
+                </item>
+                <item name="confirm" MatchMethod="WILDCARD">
+                    <Content>*[confirm]</Content>
+                </item>
+                <item name="login">
+                    <Content>Login:</Content>
+                </item>
+                <item name="username">
+                    <Content>Username:</Content>
+                </item>
+                <item name="password">
+                    <Content>Password:</Content>
+                </item>
+            </prompts>
+        </TerminalProperties>
+        <ipAddress inherit="false">10.99.0.191</ipAddress>
+        <port inherit="false" defaultValue=""/>
+        <user inherit="false">    </user>
+        <version inherit="false" defaultValue=""/>
+        <auth_type inherit="false" defaultValue=""/>
+        <password inherit="false">TWRsFBSrcJWSBReSpgObXMBamp09nCvxCaK+mWSFs84=</password>
+    </sessionProperties>
+</SessionTemplate>

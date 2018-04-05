@@ -1,0 +1,107 @@
+<div ng-controller="resultCtrl">
+    <h2>Test Report Summary</h2>
+    <table class="library-table">
+        <tbody>
+        <tr>
+            <td><font size="4" color="blue">Test Name</font></td>
+            <td>{{data.info.test_name}}</td>
+        </tr>
+        <tr>
+            <td><b>Test Verdict</b></td>
+            <td><span ng-class="verdictLabel(data.status.verdict)"> {{data.status.verdict}} </span></td>
+        </tr>
+        <tr>
+            <td><b>Test Verdict Explanation</b></td>
+            <td>{{data.status.verdict_explanation}}</td>
+        </tr>
+        <tr>
+            <td><b>Verdict Provider</b></td>
+            <td>{{data.status.provider_name}}</td>
+        </tr>
+        <tr>
+            <td><b>Test Execution Status</b></td>
+            <td>{{data.status.exec_status}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <hr>
+    <div ng-repeat="testData in data.data">
+    <h3>Test Statistics</h3>
+    <table class="library-table">
+        <tbody>
+        <tr>
+            <td><b>Provider Name</b></td>
+            <td>{{testData.info.provider_name}}</td>
+        </tr>
+        <tr>
+            <td><b>Included in Summary</b></td>
+            <td>{{testData.info.apply_verdict_to_summary}}</td>
+        </tr>
+        <tr>
+            <td><b>Verdict</b></td>
+            <td><span ng-class="verdictLabel(testData.status.verdict)"> {{data.status.verdict}} </span></td>
+        </tr>
+        <tr>
+            <td><b>Explanation</b></td>
+            <td>{{testData.status.verdict_explanation}}</td>
+        </tr>
+        <tr>
+            <td><b>Execution Status</b></td>
+            <td>{{testData.status.exec_status}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <hr>
+
+    <h4>Iteration Test</h4>
+    <table class="library-table">
+        <tbody>
+        <tr>
+            <td><b>Test Paramter</b></td>
+            <td>{{testData.data.info.param}}</td>
+        </tr>
+        <tr>
+            <td><b>Verdict</b></td>
+            <td><span ng-class="verdictLabel(testData.data.status.verdict)">{{testData.data.status.verdict}}</span></td>
+        </tr>
+        <tr>
+            <td><b>Explanation</b></td>
+            <td>{{testData.data.status.verdict_explanation}}</td>
+        </tr>
+        <tr>
+            <td><b>Execution Status</b></td>
+            <td>{{testData.data.status.exec_status}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <hr>
+
+    <h5 class="pull-left text-primary">Result Count: {{testData.data.data.resultCount}},  <b>Summarization Level: {{testData.data.data.summarizationObject}}</b></h5><br></br>
+        <table class="library-table">
+            <thead>
+                <tr>
+                    <th ng-repeat="columnHeader in testData.data.data.columnDisplayNames">{{columnHeader}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="columnPerRowValue in testData.data.data.data">
+                    <td ng-repeat="drillValue in columnPerRowValue track by $index">{{drillValue}}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h5 style="margin-left:30px" class="pull-left text-primary">Result Count: {{testData.data.data.drilldownResults.resultCount}},  <b>Summarization Level: {{testData.data.data.drilldownResults.summarizationObject}}</b></h5><br></br>
+            <table style="margin-left:30px" class="library-table">
+                <thead>
+                    <tr>
+                        <th ng-repeat="columnHeader in testData.data.data.drilldownResults.columnDisplayNames">{{columnHeader}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="columnPerRowValue in testData.data.data.drilldownResults.data">
+                        <td ng-repeat="drillValue in columnPerRowValue track by $index">{{drillValue}}</td>
+                    </tr>
+                </tbody>
+            </table>
+    </div>
+</div>

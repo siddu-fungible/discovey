@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<Playlist type="attack" name="BEAWeblogic_XSS">
+  <MetaData description="BEA Weblogic XSS"/>
+  <Attacks>
+    <Attack file="System/base_threats/BEAWeblogic_XSS.xml"
+            name="BEAWeblogic_XSS"
+            description="BEA Weblogic XSS"
+            serverPort="80"
+            pktDelay="200"
+            inactivityTimeout="100000" />
+  </Attacks>
+</Playlist>

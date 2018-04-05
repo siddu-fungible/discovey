@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<!-- Disabled until NMS release
+<ResultDataSet id="6328" serializationBase="true" 
+ Identifier="Application Layer Protocols\CSMP Agent Results"
+ PrimaryClass="EmulatedDevice"
+ Description="object://core/EmulatedDevice"
+ Path="Application Layer Protocols"
+ CustomDisplayname="CSMP Agent Results"
+ CustomDisplayPath="Application Layer Protocols\CSMP Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="CSMP Agent Results">
+  <RealTimeResultColumnDefinition id="6329" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 211">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6330" 
+   ColumnClassName="Host"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="72"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 212">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="6331" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port Host"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 21">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="6332" 
+   GroupName="CSMP Agent Results"
+   GroupId="object://customgroup/3fbe1ac1-b979-476c-92dc-fa4d2859e59c/Main"
+   Columnclassname="CsmpAgentProtocolConfig CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults CsmpAgentResults"
+   ColumnPropertyName="CsmpState IdleCount ConnectingCount ConnectedCount TotalConnectedCount TotalConnectAttemptedCount TotalConnectFailedCount TxPostCount RxPostCount TxGetCount RxGetCount MsgRetriedCount MsgConfirmFailedCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, EmulatedDevice.Name AS &apos;Device Name&apos;, CsmpAgentProtocolConfig.CsmpState AS &apos;State&apos;, CsmpAgentResults.IdleCount AS &apos;Idle&apos;, CsmpAgentResults.ConnectingCount AS &apos;Connecting&apos;, CsmpAgentResults.ConnectedCount AS &apos;Connected&apos;, CsmpAgentResults.TotalConnectedCount AS &apos;Total Connected&apos;, CsmpAgentResults.TotalConnectAttemptedCount AS &apos;Total Connections Attempted&apos;, CsmpAgentResults.TotalConnectFailedCount AS &apos;Total Connections Failed&apos;, CsmpAgentResults.TxPostCount AS &apos;Tx POST Count&apos;, CsmpAgentResults.RxPostCount AS &apos;Rx POST Count&apos;, CsmpAgentResults.TxGetCount AS &apos;Tx GET Count&apos;, CsmpAgentResults.RxGetCount AS &apos;Rx GET Count&apos;,  CsmpAgentResults.MsgRetriedCount AS &apos;Messages Retried&apos;,  CsmpAgentResults.MsgConfirmFailedCount AS &apos;Confirmable Messages Failed&apos; FROM EmulatedDevice, Port, CsmpAgentProtocolConfig, CsmpAgentResults, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = EmulatedDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND CsmpAgentResults.ParentProtocolConfig = CsmpAgentProtocolConfig.Handle AND EmulatedDevice.Handle = CsmpAgentProtocolConfig.ParentHnd AND EmulatedDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND CsmpAgentProtocolConfig.DataSetId = @DataSetId AND CsmpAgentResults.DataSetId = @DataSetId AND  RelationTable.DataSetId = @DataSetId  )"
+   UseCustomSqlString="TRUE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 22">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="6333" 
+   ConfigClassId="csmpagentprotocolconfig"
+   ResultClassId="csmpagentresults"
+   ResultRootList="4"
+   PropertyIdArray="csmpagentresults.idlecount csmpagentresults.connectingcount csmpagentresults.connectedcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 10">
+  </ResultQuery>
+
+  <RealTimeResultColumnDefinition id="6334" 
+   ColumnClassName="CsmpAgentProtocolConfig"
+   ColumnPropertyName="CsmpState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 213">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6335" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="IdleCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 214">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6336" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="ConnectingCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 215">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6337" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="ConnectedCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 216">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6338" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="TotalConnectedCount"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 217">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6339" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="TotalConnectAttemptedCount"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 218">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6339" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="TotalConnectFailedCount"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 218">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6340" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="TxPostCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 219">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6341" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="RxPostCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 220">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6342" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="TxGetCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 221">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6343" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="RxGetCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 222">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6344" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="MsgRetriedCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 223">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6345" 
+   ColumnClassName="CsmpAgentResults"
+   ColumnPropertyName="MsgConfirmFailedCount"
+   ColumnDescription=""
+   ColumnWidth="130"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 223">
+  </RealTimeResultColumnDefinition>
+
+</ResultDataSet>
+-->

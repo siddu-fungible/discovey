@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="LTM EOAM"
+    showName="Linktrace Message (LTM)"
+    version="1.00"
+    category="EOAM"
+    readonly="true"
+    validate="true"
+    firstPdu="serviceoam:LTM"
+    description="Ethernet OAM LTM" >
+
+    <pdus>
+      <pdu name="proto1" pdu="serviceoam:LTM" />
+    </pdus>
+  </template>
+</frame>

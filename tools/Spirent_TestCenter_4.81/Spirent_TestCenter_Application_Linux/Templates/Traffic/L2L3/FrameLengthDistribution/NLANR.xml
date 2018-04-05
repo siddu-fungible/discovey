@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<FrameLengthDistribution id="5323" serializationBase="true" 
+ Seed="10900842"
+ Active="TRUE"
+ Name="NLANR">
+  <FrameLengthDistributionSlot id="5324"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="38"
+   MinFrameLength="37"
+   MaxFrameLength="39"
+   Weight="8"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 71">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5325"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="40"
+   MinFrameLength="39"
+   MaxFrameLength="41"
+   Weight="351"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 72">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5326"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="44"
+   MinFrameLength="43"
+   MaxFrameLength="45"
+   Weight="22"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 73">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5327"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="48"
+   MinFrameLength="47"
+   MaxFrameLength="49"
+   Weight="24"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 74">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5328"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="52"
+   MinFrameLength="51"
+   MaxFrameLength="53"
+   Weight="45"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 75">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5329"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="552"
+   MinFrameLength="551"
+   MaxFrameLength="553"
+   Weight="110"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 76">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5330"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="576"
+   MinFrameLength="575"
+   MaxFrameLength="577"
+   Weight="1640"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 77">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5331"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="628"
+   MinFrameLength="627"
+   MaxFrameLength="629"
+   Weight="150"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 78">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5332"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="1420"
+   MinFrameLength="1419"
+   MaxFrameLength="1421"
+   Weight="1050"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 79">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5333"
+   FrameLengthMode="FIXED"
+   FixedFrameLength="1500"
+   MinFrameLength="1499"
+   MaxFrameLength="1501"
+   Weight="3710"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 80">
+  </FrameLengthDistributionSlot>
+  <FrameLengthDistributionSlot id="5334"
+   FrameLengthMode="RANDOM"
+   FixedFrameLength="770"
+   MinFrameLength="40"
+   MaxFrameLength="1500"
+   Weight="2890"
+   Active="TRUE"
+   Name="FrameLengthDistributionSlot 81">
+  </FrameLengthDistributionSlot>
+</FrameLengthDistribution>

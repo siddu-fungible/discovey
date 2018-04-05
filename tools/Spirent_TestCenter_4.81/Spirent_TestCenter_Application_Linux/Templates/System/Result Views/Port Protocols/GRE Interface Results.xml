@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="968" serializationBase="true" 
+ Identifier="Port Protocols\GRE Interface Results"
+ PrimaryClass="GreIfResults"
+ Description="object://core/GreIfResults"
+ Path="Port Protocols"
+ CustomDisplayPath="Port Traffic and Counters"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="GRE Interface Results">
+  <RealTimeResultColumnDefinition id="969" 
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="82"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 126">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="970" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 10">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="971" 
+   GroupName="Main"
+   GroupId="object://customgroup/1fe0ee88-2ea5-429f-b82d-d42fa11bd7a7/Main"
+   ColumnClassName="GreIfResults GreIfResults GreIfResults GreIfResults GreIfResults"
+   ColumnPropertyName="SrcIpAddress RemoteTunnelEndPointV4 KeepAliveState TxCount RxCount"
+   SqlString="SELECT AllDevice.Name AS 'Device Name', GreIfResults.SrcIpAddress AS 'Source IP address', 
+GreIfResults.RemoteTunnelEndPointV4 AS 'Remote IPv4 Tunnel Endpoint Address', 
+GreIfResults.KeepAliveState AS 'Keep Alive State', GreIfResults.TxCount AS 'Tx Count', 
+GreIfResults.RxCount AS 'Rx Count' 
+FROM GreIfResults, AllDevice, Port, GreIf,RelationTable 
+WHERE (GreIfResults.ParentHnd = GreIf.Handle AND 
+GreIf.ParentHnd = AllDevice.Handle AND RelationTable.Type = 'AffiliationPort' AND  
+RelationTable.SourceHnd = AllDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND Port.DataSetId= @DataSetId AND 
+GreIfResults.DataSetId = @DataSetId AND AllDevice.DataSetId = @DataSetId AND GreIf.DataSetId = @DataSetId)"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 11">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="972" 
+   ColumnClassName="GreIfResults"
+   ColumnPropertyName="SrcIpAddress"
+   ColumnDescription=""
+   ColumnWidth="107"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 127">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="973" 
+   ColumnClassName="GreIfResults"
+   ColumnPropertyName="RemoteTunnelEndPointV4"
+   ColumnDescription=""
+   ColumnWidth="209"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 128">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="974" 
+   ColumnClassName="GreIfResults"
+   ColumnPropertyName="KeepAliveState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 129">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="975" 
+   ColumnClassName="GreIfResults"
+   ColumnPropertyName="TxCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 130">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="976" 
+   ColumnClassName="GreIfResults"
+   ColumnPropertyName="RxCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 131">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="83" 
+   ConfigClassId="greif"
+   ResultClassId="greifresults"
+   ResultRootList="2"
+   PropertyIdArray="greifresults.srcipaddress greifresults.remotetunnelendpointv4 greifresults.keepalivestate greifabstractresults.txcount greifabstractresults.rxcount"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 5">
+  </ResultQuery>
+</ResultDataSet>

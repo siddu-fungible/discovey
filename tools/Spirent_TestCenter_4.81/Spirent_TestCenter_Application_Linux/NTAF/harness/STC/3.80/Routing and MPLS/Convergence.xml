@@ -1,0 +1,443 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/3.80/Routing%20and%20MPLS/Convergence"  xml:lang="en">
+<label>Convergence</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    <actionDecl name="RoutingConvergenceSetup">
+    <label>Setup Routing Convergence Command</label>
+    <tooltip>Setup a Convergence Test on Routing Protocols</tooltip>
+    <description>Setup a Convergence Test on Routing Protocols</description>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="TestProtocol">
+            <label>TestProtocol</label>
+            <tooltip>Test Protocol</tooltip>
+            <description>Test Protocol</description>
+            <datatype>string</datatype>
+            <default>BGP</default>
+            <allowedValue label="BGP">BGP</allowedValue>
+            <allowedValue label="OSPFV2">OSPFV2</allowedValue>
+            <allowedValue label="OSPFV3">OSPFV3</allowedValue>
+            <allowedValue label="ISIS">ISIS</allowedValue>
+            <allowedValue label="RIP">RIP</allowedValue>
+        </parameter>
+        <parameter  name="IpVersion">
+            <label>IpVersion</label>
+            <tooltip>IP Version</tooltip>
+            <description>IP Version</description>
+            <datatype>string</datatype>
+            <default>IPV4</default>
+            <allowedValue label="IPV4">IPV4</allowedValue>
+            <allowedValue label="IPV6">IPV6</allowedValue>
+        </parameter>
+        <parameter  name="IngressRouterList">
+            <label>IngressRouterList</label>
+            <tooltip>Ingress Routers</tooltip>
+            <description>Ingress Routers</description>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="EgressRouterList">
+            <label>EgressRouterList</label>
+            <tooltip>Egress Routers</tooltip>
+            <description>Egress Routers</description>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="SecondaryEgressRouterList">
+            <label>SecondaryEgressRouterList</label>
+            <tooltip>Secondary Egress Routers</tooltip>
+            <description>Secondary Egress Routers</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="StreamBlockList">
+            <label>StreamBlockList</label>
+            <tooltip>StreamBlocks associated with this test</tooltip>
+            <description>StreamBlocks associated with this test</description>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="MaxConvergenceTime">
+            <label>MaxConvergenceTime</label>
+            <tooltip>Maximum Convergence Time (secs) </tooltip>
+            <description>Maximum Convergence Time (secs) </description>
+            <datatype>integer</datatype>
+            <default>70</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="RoutingConvergenceInject">
+    <label>Inject Routing Convergence Command</label>
+    <tooltip>Perform a Convergence Test on Routing Protocols</tooltip>
+    <description>Perform a Convergence Test on Routing Protocols</description>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="TestType">
+            <label>TestType</label>
+            <tooltip>Type of Test</tooltip>
+            <description>Type of Test</description>
+            <datatype>string</datatype>
+            <default>COST_CHANGE</default>
+            <allowedValue label="EXTERNAL_SCRIPT">EXTERNAL_SCRIPT</allowedValue>
+            <allowedValue label="LOCAL_INTERFACE_FAILURE">LOCAL_INTERFACE_FAILURE</allowedValue>
+            <allowedValue label="LOCAL_INTERFACE_RESTORE">LOCAL_INTERFACE_RESTORE</allowedValue>
+            <allowedValue label="REMOTE_INTERFACE_FAILURE">REMOTE_INTERFACE_FAILURE</allowedValue>
+            <allowedValue label="REMOTE_INTERFACE_RESTORE">REMOTE_INTERFACE_RESTORE</allowedValue>
+            <allowedValue label="LOSS_OF_ADJACENCY">LOSS_OF_ADJACENCY</allowedValue>
+            <allowedValue label="RESTORE_ADJACENCY">RESTORE_ADJACENCY</allowedValue>
+            <allowedValue label="WITHDRAW_ROUTE">WITHDRAW_ROUTE</allowedValue>
+            <allowedValue label="READVERTISE_ROUTE">READVERTISE_ROUTE</allowedValue>
+            <allowedValue label="COST_CHANGE">COST_CHANGE</allowedValue>
+            <allowedValue label="REVERT_COST">REVERT_COST</allowedValue>
+            <allowedValue label="ECMP_LOCAL_INTERFACE_FAILURE">ECMP_LOCAL_INTERFACE_FAILURE</allowedValue>
+            <allowedValue label="ECMP_LOCAL_INTERFACE_RESTORE">ECMP_LOCAL_INTERFACE_RESTORE</allowedValue>
+            <allowedValue label="ECMP_REMOTE_INTERFACE_FAILURE">ECMP_REMOTE_INTERFACE_FAILURE</allowedValue>
+            <allowedValue label="ECMP_REMOTE_INTERFACE_RESTORE">ECMP_REMOTE_INTERFACE_RESTORE</allowedValue>
+        </parameter>
+        <parameter  name="CommandLine">
+            <label>CommandLine</label>
+            <tooltip>Command-Line</tooltip>
+            <description>Command-Line</description>
+            <datatype>string</datatype>
+            <default></default>
+        </parameter>
+        <parameter  name="CommandWorkingDir">
+            <label>CommandWorkingDir</label>
+            <tooltip>Working Directory</tooltip>
+            <description>Working Directory</description>
+            <datatype>string</datatype>
+            <default></default>
+        </parameter>
+        <parameter  name="CommandArguments">
+            <label>CommandArguments</label>
+            <tooltip>Arguments</tooltip>
+            <description>Arguments</description>
+            <datatype>string</datatype>
+            <default></default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="RoutingConvergenceMeasure">
+    <label>Measure Routing Convergence Command</label>
+    <tooltip>Measure the Convergence of a Routing Convergence Test.</tooltip>
+    <description>Measure the Convergence of a Routing Convergence Test.</description>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="TestResultsFullDbPath">
+            <label>TestResultsFullDbPath</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="WaitForDataPlaneSamples">
+    <label>Wait For Data Plane Samples</label>
+    <tooltip>Waits for buffer in High Resolution Timers to fill.</tooltip>
+    <description>Waits for buffer in High Resolution Timers to fill.</description>
+        <parameter  name="WaitTime">
+            <label>WaitTime</label>
+            <tooltip>Wait Time (secs)</tooltip>
+            <description>Wait Time (secs)</description>
+            <datatype>decimal</datatype>
+            <default>30.0</default>
+        </parameter>
+        <parameter  name="ObjectList">
+            <label>ObjectList</label>
+            <tooltip>Objects to Wait for</tooltip>
+            <description>Objects to Wait for</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+        </parameter>
+        <responseDecl>
+        <item  name="Successful">
+            <label>Successful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="Unsuccessful">
+            <label>Unsuccessful</label>
+            <mandatory>false</mandatory>
+            <default>0</default>
+            <datatype>string</datatype>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </item>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+</query-harness>

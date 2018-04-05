@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoEDIARequest"
+    showName="FCoE DIA Request"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE DIA Request">
+    <pdus>
+      <pdu name="proto1" pdu="fc:FCoEHeader">
+  	    <sof>28</sof>
+        <eof>41</eof>
+      </pdu>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>02</rCtl>
+			  <dId>fffffd</dId>
+			  <sId>fffffd</sId>
+			  <frameControl>290000</frameControl>	
+      </pdu>
+      <pdu name="proto3" pdu="fcsw:DiaReq"/>
+    </pdus>
+  </template>
+</frame>

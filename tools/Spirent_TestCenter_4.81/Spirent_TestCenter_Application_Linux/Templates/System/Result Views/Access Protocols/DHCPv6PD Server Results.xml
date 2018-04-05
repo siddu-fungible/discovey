@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="6328" serializationBase="true" 
+ Identifier="Host Protocols\DHCPv6PD Server Results"
+ PrimaryClass="Host"
+ Description="object://core/Host"
+ Path="Host Protocols"
+ CustomDisplayPath="Access\DHCPv6PD"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="DHCPv6PD Server Results">
+  <RealTimeResultColumnDefinition id="6329" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 211">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6330" 
+   ColumnClassName="Host"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="72"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 212">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="6331" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port Host"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 21">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="6332" 
+   GroupName="DHCPv6PD Server Results"
+   GroupId="object://customgroup/3fbe1ac1-b979-476c-92dc-fa4d2859e59c/Main"
+   ColumnClassName="Dhcpv6ServerConfig Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults Dhcpv6ServerResults"
+   ColumnPropertyName="ServerState CurrentBoundCount TotalBoundCount TotalRenewedCount TotalExpiredCount TotalReleasedCount RxSolicitCount RxRequestCount RxRenewCount RxRebindCount RxReleaseCount TxAdvertiseCount TxReplyCount TxReconfigureCount TxReconfigureRenewCount TxReconfigureRebindCount RxConfirmCount RxDeclineCount RxInfoRequestCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, Host.Name AS &apos;Host Name&apos;, Dhcpv6ServerConfig.ServerState AS &apos;State&apos;, Dhcpv6ServerResults.CurrentBoundCount AS &apos;Currently Bound&apos;, Dhcpv6ServerResults.TotalBoundCount AS &apos;Total Bound&apos;, Dhcpv6ServerResults.TotalRenewedCount AS &apos;Total Renewed&apos;, Dhcpv6ServerResults.TotalExpiredCount AS &apos;Total Expired&apos;, Dhcpv6ServerResults.TotalReleasedCount AS &apos;Total Released&apos;, Dhcpv6ServerResults.RxSolicitCount AS &apos;Rx Solicit&apos;, Dhcpv6ServerResults.RxRequestCount AS &apos;Request Rx Count&apos;, Dhcpv6ServerResults.RxRenewCount AS &apos;Renew Rx Count&apos;, Dhcpv6ServerResults.RxRebindCount AS &apos;Rebind Rx Count&apos;, Dhcpv6ServerResults.RxReleaseCount AS &apos;Release Rx Count&apos;, Dhcpv6ServerResults.TxAdvertiseCount AS &apos;Advertise Tx Count&apos;, Dhcpv6ServerResults.TxReplyCount AS &apos;Reply Tx Count&apos;, Dhcpv6ServerResults.TxReconfigureCount AS &apos;Reconfigure Tx Count&apos;, Dhcpv6ServerResults.TxReconfigureRenewCount AS &apos;Reconfigure Renew Tx Count&apos;, Dhcpv6ServerResults.TxReconfigureRebindCount AS &apos;Reconfigure Rebind Tx Count&apos;, Dhcpv6ServerResults.RxConfirmCount AS &apos;Confirm Rx Count&apos;, Dhcpv6ServerResults.RxDeclineCount AS &apos;Decline Rx Count&apos;, Dhcpv6ServerResults.RxInfoRequestCount AS &apos;Information Request Rx Count&apos; FROM Host, Port, Dhcpv6ServerConfig, Dhcpv6ServerResults, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = Host.Handle AND  RelationTable.TargetHnd = Port.Handle AND Dhcpv6ServerConfig.ParentHnd = Host.Handle AND Dhcpv6ServerResults.ParentHnd = Dhcpv6ServerConfig.Handle AND Host.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND Dhcpv6ServerConfig.DataSetId = @DataSetId AND Dhcpv6ServerResults.DataSetId = @DataSetId AND  RelationTable.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 22">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="6333" 
+   ConfigClassId="dhcpv6serverconfig"
+   ResultClassId="dhcpv6serverresults"
+   ResultRootList="12"
+   PropertyIdArray="dhcpv6serverresults.currentboundcount dhcpv6serverresults.totalboundcount dhcpv6serverresults.totalrenewedcount dhcpv6serverresults.totalexpiredcount dhcpv6serverresults.totalreleasedcount dhcpv6serverresults.rxsolicitcount dhcpv6serverresults.rxrequestcount dhcpv6serverresults.rxrenewcount dhcpv6serverresults.rxrebindcount dhcpv6serverresults.rxreleasecount dhcpv6serverresults.txadvertisecount dhcpv6serverresults.txreplycount dhcpv6serverresults.txreconfigurecount dhcpv6serverresults.txreconfigurerenewcount dhcpv6serverresults.txreconfigurerebindcount dhcpv6serverresults.rxconfirmcount dhcpv6serverresults.rxdeclinecount dhcpv6serverresults.rxinforequestcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 10">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="6334" 
+   ColumnClassName="Dhcpv6ServerConfig"
+   ColumnPropertyName="ServerState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 213">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6335" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="CurrentBoundCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 214">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6336" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TotalBoundCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 215">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6337" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TotalRenewedCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 216">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6338" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TotalExpiredCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 217">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6339" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TotalReleasedCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 218">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6340" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="RxSolicitCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 219">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6341" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="RxRequestCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 220">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6343" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="RxRenewCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 222">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6343" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="RxReleaseCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 222">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6345" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TxAdvertiseCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 224">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6345" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TxReplyCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 225">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6346" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TxReconfigureCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 226">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6347" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TxReconfigureRenewCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 227">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6348" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="TxReconfigureRebindCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 228">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6349" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="RxConfirmCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 229">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6350" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="RxDeclineCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 230">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="6351" 
+   ColumnClassName="Dhcpv6ServerResults"
+   ColumnPropertyName="RxInfoRequestCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 231">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

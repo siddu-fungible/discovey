@@ -1,0 +1,291 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5018" serializationBase="true" 
+ Identifier="Port Protocols\MLD Results"
+ PrimaryClass="Port"
+ Description="object://core/Port"
+ Path="Port Protocols"
+ CustomDisplayPath="Multicast\MLD"
+ CustomDisplayName="MLD Port Aggregated Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="MLD Results">
+  <RealTimeResultColumnDefinition id="5019" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 148">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5020" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 13">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5021" 
+   GroupName="MLD Results"
+   GroupId="object://customgroup/30c23088-3bd9-4bb4-901b-a084d4cba94f/Main"
+   ColumnClassName="MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults"
+   ColumnPropertyName="TxFrameCount RxFrameCount TxV1ReportCount RxV1ReportCount TxStopListenGroupCount TxV2ReportCount RxV2ReportCount TxV2ModeIsIncludeCount TxV2ModeIsExcludeCount TxV2ChangeToIncludeModeCount TxV2ChangeToExcludeModeCount TxV2AllowNewSourcesCount TxV2BlockOldSourcesCount TxV1QueryCount RxV1QueryCount TxV2QueryCount RxV2QueryCount TxGeneralQueryCount RxGeneralQueryCount TxGroupSpecificQueryCount RxGroupSpecificQueryCount TxGroupAndSourceSpecificQueryCount RxGroupAndSourceSpecificQueryCount RxUnknownTypeCount RxMldCheckSumErrorCount RxMldLengthErrorCount"
+   SqlString=" SELECT Port.Name AS 'Port Name', MldPortResults.TxFrameCount AS 'Tx Frames', MldPortResults.RxFrameCount AS 'Rx Frames', MldPortResults.TxV1ReportCount AS 'Tx V1 Reports', MldPortResults.RxV1ReportCount AS 'Rx V1 Reports', MldPortResults.TxStopListenGroupCount AS 'Tx Stop Listen Groups', MldPortResults.TxV2ReportCount AS 'Tx V2 Reports', MldPortResults.RxV2ReportCount AS 'Rx V2 Reports', MldPortResults.TxV2ModeIsIncludeCount AS 'Tx V2 MODE_IS_INCLUDE', MldPortResults.TxV2ModeIsExcludeCount AS 'Tx V2 MODE_IS_EXCLUDE', MldPortResults.TxV2ChangeToIncludeModeCount AS 'Tx V2 CHANGE_TO_INCLUDE_MODE', MldPortResults.TxV2ChangeToExcludeModeCount AS 'Tx V2 CHANGE_TO_EXCLUDE_MODE', MldPortResults.TxV2AllowNewSourcesCount AS 'Tx V2 ALLOW_NEW_SOURCES', MldPortResults.TxV2BlockOldSourcesCount AS 'Tx V2 BLOCK_OLD_SOURCES', MldPortResults.TxV1QueryCount AS 'Tx V1 Queries', MldPortResults.RxV1QueryCount AS 'Rx V1 Queries', MldPortResults.TxV2QueryCount AS 'Tx V2 Queries', MldPortResults.RxV2QueryCount AS 'Rx V2 Queries', MldPortResults.TxGeneralQueryCount AS 'Tx General Queries', MldPortResults.RxGeneralQueryCount AS 'Rx General Queries', MldPortResults.TxGroupSpecificQueryCount AS 'Tx Group Specific Queries', MldPortResults.RxGroupSpecificQueryCount AS 'Rx Group Specific Queries', MldPortResults.TxGroupAndSourceSpecificQueryCount AS 'Tx Group and Source Specific Queries', MldPortResults.RxGroupAndSourceSpecificQueryCount AS 'Rx Group and Source Specific Queries', MldPortResults.RxUnknownTypeCount AS 'Rx Unknown Types', MldPortResults.RxMldCheckSumErrorCount AS 'Rx MLD Checksum Errors', MldPortResults.RxMldLengthErrorCount AS 'Rx MLD Length Errors' FROM Port, MldPortResults, MldPortConfig WHERE ( MldPortConfig.ParentHnd = Port.Handle AND MldPortResults.ParentHnd = MldPortConfig.Handle AND Port.DataSetId = @DataSetId AND MldPortResults.DataSetId = @DataSetId AND MldPortConfig.DataSetId = @DataSetId  )"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 14">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5022" 
+   ConfigClassId="mldportconfig"
+   ResultClassId="mldportresults"
+   ResultRootList="8"
+   PropertyIdArray="multicastportresults.txframecount multicastportresults.txv1reportcount multicastportresults.txv2reportcount mldportresults.txv2modeisincludecount mldportresults.txv2modeisexcludecount mldportresults.txv2changetoincludemodecount mldportresults.txv2changetoexcludemodecount mldportresults.txv2allownewsourcescount mldportresults.txv2blockoldsourcescount mldportresults.txstoplistengroupcount multicastportresults.txv1querycount multicastportresults.txv2querycount multicastportresults.txgeneralquerycount multicastportresults.txgroupspecificquerycount multicastportresults.txgroupandsourcespecificquerycount multicastportresults.rxframecount multicastportresults.rxv1reportcount multicastportresults.rxv2reportcount multicastportresults.rxv1querycount multicastportresults.rxv2querycount multicastportresults.rxgeneralquerycount multicastportresults.rxgroupspecificquerycount multicastportresults.rxgroupandsourcespecificquerycount multicastportresults.rxunknowntypecount mldportresults.rxmldchecksumerrorcount mldportresults.rxmldlengtherrorcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 6">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5023" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 149">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5024" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 150">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5025" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV1ReportCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 151">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5026" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV1ReportCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 152">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5027" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxStopListenGroupCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 153">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5028" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ReportCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 154">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5029" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV2ReportCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 155">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5030" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ModeIsIncludeCount"
+   ColumnDescription=""
+   ColumnWidth="111"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 156">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5031" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ModeIsExcludeCount"
+   ColumnDescription=""
+   ColumnWidth="111"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 157">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5032" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ChangeToIncludeModeCount"
+   ColumnDescription=""
+   ColumnWidth="166"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 158">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5033" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ChangeToExcludeModeCount"
+   ColumnDescription=""
+   ColumnWidth="166"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 159">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5034" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2AllowNewSourcesCount"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 160">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5035" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2BlockOldSourcesCount"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 161">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5036" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV1QueryCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 162">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5037" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV1QueryCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 163">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5038" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2QueryCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 164">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5039" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV2QueryCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 165">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5040" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxGeneralQueryCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 166">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5041" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxGeneralQueryCount"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 167">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5042" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxGroupSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 168">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5043" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxGroupSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 169">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5044" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxGroupAndSourceSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="165"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 170">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5045" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxGroupAndSourceSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="165"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 171">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5046" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxUnknownTypeCount"
+   ColumnDescription=""
+   ColumnWidth="85"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 172">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5047" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxMldCheckSumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="110"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 173">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5048" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxMldLengthErrorCount"
+   ColumnDescription=""
+   ColumnWidth="115"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 174">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

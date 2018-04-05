@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGSReject" 
+    showName="FC GS Reject"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GsReject"
+    description="FC GS Reject">
+    <pdus>
+      <pdu name="gsReject1" pdu="fcgs:GsReject" >
+        
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

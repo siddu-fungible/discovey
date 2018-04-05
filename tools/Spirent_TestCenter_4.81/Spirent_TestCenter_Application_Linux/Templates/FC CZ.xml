@@ -1,0 +1,27 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCCZ" 
+    showName="FC CZ" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:GsRequestZoneMemberEntryForZoneName" 
+    description="FC CZ">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GsRequestZoneMemberEntryForZoneName">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>0225</commandRespondCode>
+        </ctIuPreamble>
+								<zoneType>
+										<EnhancedZoneMemberIdentifierTypes name="EnhancedZoneMemberIdentifierTypes_0">
+												<zoneMemberNPortName />
+										</EnhancedZoneMemberIdentifierTypes>
+								</zoneType>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

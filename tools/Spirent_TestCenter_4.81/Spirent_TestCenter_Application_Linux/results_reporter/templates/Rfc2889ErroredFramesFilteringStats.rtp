@@ -1,0 +1,833 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>FAILED</instance>
+      </value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.80.3990.0002</instance>
+      </value>
+      <path>select Version from StcSystem where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2011-09-01 17:08:00</instance>
+      </value>
+      <path>select CreatedTime from DataSet where Id = =$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstEndDate</name>
+      <persist>false</persist>
+      <path>select CreatedTime from DataSet where Id = =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S3Trial</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select IterationNum from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3Tx</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1488096.0</instance>
+        <instance>81012.0</instance>
+        <instance>1506026.0</instance>
+      </value>
+      <path>select TxFrameCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S3Rx</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1488096.0</instance>
+        <instance>81012.0</instance>
+        <instance>1506026.0</instance>
+      </value>
+      <path>select RxFrameCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S3FR</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>297619.2</instance>
+        <instance>16202.4</instance>
+        <instance>301205.2</instance>
+      </value>
+      <path>select FrameRate from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S3FL</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select FrameLoss from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S3Passed</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select Passed from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3ILoad</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+      </value>
+      <path>select IntendedLoad from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3Over</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>81012.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select OversizeCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3Under</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>1506026.0</instance>
+      </value>
+      <path>select UndersizeCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3Crc</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1488096.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select CrcErrorCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3ErrType</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>2.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select ErrorType from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S2Tx</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1488096.0</instance>
+        <instance>81012.0</instance>
+        <instance>1506026.0</instance>
+      </value>
+      <path>select TxSigFrameCount from Rfc2889ErroredFramesFilteringPerErrorTypeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S2Rx</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1488096.0</instance>
+        <instance>81012.0</instance>
+        <instance>1506026.0</instance>
+      </value>
+      <path>select RxSigFrameCount from Rfc2889ErroredFramesFilteringPerErrorTypeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S2FR</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>297619.2</instance>
+        <instance>16202.4</instance>
+        <instance>301205.2</instance>
+      </value>
+      <path>select FrameRate from Rfc2889ErroredFramesFilteringPerErrorTypeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S2FL</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select FrameLoss from Rfc2889ErroredFramesFilteringPerErrorTypeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S2ErrType</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>2.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select ErrorType from Rfc2889ErroredFramesFilteringPerErrorTypeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S2ILoad</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+        <instance>10.0</instance>
+      </value>
+      <path>select IntendedLoad from Rfc2889ErroredFramesFilteringPerErrorTypeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S4Crc</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64</instance>
+      </value>
+      <path>select Conf.Crc from Rfc2889ErroredFramesFilteringConfig Conf, Rfc2889ErroredFramesFilteringCommand Cmd where Conf.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ and Cmd.Handle=Conf.ParentHnd</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S4Undersize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>63</instance>
+      </value>
+      <path>select Conf.UnderSize from Rfc2889ErroredFramesFilteringConfig Conf, Rfc2889ErroredFramesFilteringCommand Cmd where Conf.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ and Cmd.Handle=Conf.ParentHnd</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S4Oversize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1523</instance>
+      </value>
+      <path>select Conf.OverSize from Rfc2889ErroredFramesFilteringConfig Conf, Rfc2889ErroredFramesFilteringCommand Cmd where Conf.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ and Cmd.Handle=Conf.ParentHnd</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S4EnableCrc</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select Conf.EnableCrc from Rfc2889ErroredFramesFilteringConfig Conf, Rfc2889ErroredFramesFilteringCommand Cmd where Conf.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ and Cmd.Handle=Conf.ParentHnd</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S4EnableUndersize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select Conf.EnableUndersize from Rfc2889ErroredFramesFilteringConfig Conf, Rfc2889ErroredFramesFilteringCommand Cmd where Conf.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ and Cmd.Handle=Conf.ParentHnd</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S4EnableOversize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select Conf.EnableOverSize from Rfc2889ErroredFramesFilteringConfig Conf, Rfc2889ErroredFramesFilteringCommand Cmd where Conf.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ and Cmd.Handle=Conf.ParentHnd</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>basic</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S3TxSigFrameCnt</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1488096.0</instance>
+        <instance>81012.0</instance>
+        <instance>1506026.0</instance>
+      </value>
+      <path>select TxSigFrameCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3RxSigFrameCnt</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1488096.0</instance>
+        <instance>81012.0</instance>
+        <instance>1506026.0</instance>
+      </value>
+      <path>select RxSigFrameCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3TxNonSigFrameCnt</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select TxNonSigFrameCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3RxNonSigFrameCnt</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select RxNonSigFrameCount from Rfc2889ErroredFramesFilteringPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnitString</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>%</instance>
+      </value>
+      <path>select (case DisplayLoadUnit when "PERCENT_LINE_RATE" then "%" when "FRAMES_PER_SECOND" then "fps" when "INTER_BURST_GAP" then "Inter-burst Gap" when "MEGABITS_PER_SECOND" then "Mbps" when "KILOBITS_PER_SECOND" then "Kbps" when "BITS_PER_SECOND" then "bps" end ) from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary,Test Results</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2011-09-01 19:20:26 PDT</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String">2011-09-01 10:08:00 PDT</value>
+      <script><![CDATA[# generate the report start time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>S1TestResultStatus</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Return Passed/Failed based on test status flag&#xa;&#xa;set result {}&#xa;&#xa;if {$S1Passed == 1} {&#xa;  set result "Passed"&#xa;} else {&#xa;  set result "Failed"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S2ErrorType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>CRC</instance>
+        <instance>Oversize</instance>
+        <instance>Undersize</instance>
+      </value>
+      <script><![CDATA[# Return error type based on test status flag&#xa;#  CRC, Undersized or Oversized&#xa;&#xa; # first create a list of the appropriate size, default value to "N/A&#xa; set result {}&#xa; foreach i ($S2ErrType) {&#xa;  lappend result "N/A"&#xa; }&#xa;&#xa;# now fill in the status value&#xa;set index 0&#xa;foreach i ($S2ErrType) {&#xa;  set val [lindex $S2ErrType $index]&#xa;  if {$val == 0}  {&#xa;  set result [lreplace $result $index $index "CRC"]&#xa; } elseif {$val == 1}  {&#xa;  set result [lreplace $result $index $index "Undersize"]&#xa; } elseif {$val == 2}  {&#xa;  set result [lreplace $result $index $index "Oversize"]&#xa; } else {&#xa;  set result [lreplace $result $index $index $i ]&#xa; }&#xa;  incr index&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S2TestResultStatus</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Return Passed/Failed based on test status flag&#xa;&#xa;# clear result set&#xa;set result {}&#xa;&#xa;foreach i ($S2Passed) {&#xa;  if {$i == 1} {&#xa;    lappend result "Passed"&#xa;  } else {&#xa;    lappend result "Failed"&#xa;  }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S3ErrorType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>CRC</instance>
+        <instance>Oversize</instance>
+        <instance>Undersize</instance>
+      </value>
+      <script><![CDATA[# Return error type based on test status flag&#xa;#  CRC, Undersized or Oversized&#xa;&#xa; # first create a list of the appropriate size, default value to "N/A&#xa; set result {}&#xa; foreach i ($S3ErrType) {&#xa;  lappend result "N/A"&#xa; }&#xa;&#xa;# now fill in the status value&#xa;set index 0&#xa;foreach i ($S3ErrType) {&#xa;  set val [lindex $S3ErrType $index]&#xa;  if {$val == 0}  {&#xa;  set result [lreplace $result $index $index "CRC"]&#xa; } elseif {$val == 1}  {&#xa;  set result [lreplace $result $index $index "Undersize"]&#xa; } elseif {$val == 2}  {&#xa;  set result [lreplace $result $index $index "Oversize"]&#xa; } else {&#xa;  set result [lreplace $result $index $index $i ]&#xa; }&#xa;  incr index&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S3TestResultStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Failed</instance>
+        <instance>Failed</instance>
+        <instance>Failed</instance>
+      </value>
+      <script><![CDATA[# Return Passed/Failed based on test status flag&#xa;&#xa;# clear result set&#xa;set result {}&#xa;&#xa;set index 0&#xa;foreach i ($S3Passed) {&#xa;  set val [lindex $S3Passed $index]&#xa;  if {$val == 1} {&#xa;    lappend result "Passed"&#xa;  } else {&#xa;    lappend result "Failed"&#xa;  }&#xa;  incr index&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Results</pageName>
+    </instance>
+    <instance>
+      <name>S4TestType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>CRC</instance>
+        <instance>Undersized</instance>
+        <instance>Oversized</instance>
+      </value>
+      <script><![CDATA[# Return a string for the error types&#xa;#  CRC, Undersized or Oversized&#xa;&#xa; # first clear result set&#xa; set result {}&#xa; &#xa;lappend result "CRC"&#xa;lappend result "Undersized"&#xa;lappend result "Oversized"&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S4Enabled</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Enabled</instance>
+        <instance>Enabled</instance>
+        <instance>Enabled</instance>
+      </value>
+      <script><![CDATA[# Return enabled status for the error types&#xa;#  CRC, Undersized or Oversized&#xa;&#xa; # first clear result set&#xa; set result {}&#xa;&#xa;if {$S4EnableCrc == 1} {&#xa;  lappend result "Enabled"&#xa;} else {&#xa;  lappend result "Disabled"&#xa;}&#xa;&#xa;if {$S4EnableUndersize == 1} {&#xa;  lappend result "Enabled"&#xa;} else {&#xa;  lappend result "Disabled"&#xa;}&#xa;&#xa;if {$S4EnableOversize == 1} {&#xa;  lappend result "Enabled"&#xa;} else {&#xa;  lappend result "Disabled"&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S4FrameSize</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>64.0</instance>
+        <instance>63.0</instance>
+        <instance>1523.0</instance>
+      </value>
+      <script><![CDATA[# Return frame size for the error types&#xa;#  CRC, Undersized or Oversized&#xa;&#xa; # first clear result set&#xa; set result {}&#xa;&#xa;lappend result $S4Crc&#xa;lappend result $S4Undersize&#xa;lappend result $S4Oversize&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>TestEndDate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# generate the report end time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstEndDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Basic</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1314930004997</value>
+      <script><![CDATA[set result "1314930071175"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Thu Sep 01 19:20:04.997 PDT 2011</value>
+      <script><![CDATA[set result "Thu Sep 01 19:21:11.175 PDT 2011"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnit</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>%</instance>
+      </value>
+      <script><![CDATA[if {[info exist DisplayLoadUnitString]} {&#xa;    set result $DisplayLoadUnitString&#xa;} else {&#xa;    set result "%"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>S3LoadSum</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Trial</td>&#xa;    <td bgcolor="#eeeeee">Error\nType</td>&#xa;    <td bgcolor="#eeeeee">Test\nStatus</td>&#xa;    <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">Tx Sig\nFrameCount</td>&#xa;    <td bgcolor="#eeeeee">Rx Sig\nFrame Count</td>&#xa;    <td bgcolor="#eeeeee">Tx Non Sig\nFrame Count</td>&#xa;    <td bgcolor="#eeeeee">Rx Non Sig\nFrame Count</td>&#xa;    <td bgcolor="#eeeeee">Oversize\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Undersize\nFrames</td>&#xa;    <td bgcolor="#eeeeee">CRC Error\nFrames</td>&#xa;  </tr>&#xa; <tr iterate="=$S3Trial$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S3Trial$</td>&#xa;   <td halign="right" bgcolor="#eeeeee">=$S3ErrorType$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S3TestResultStatus$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S3ILoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S3TxSigFrameCnt$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$S3RxSigFrameCnt$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S3TxNonSigFrameCnt$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$S3RxNonSigFrameCnt$</td>  &#xa;    <td halign="right" bgcolor="#ffffff">=$S3Over$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S3Under$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S3Crc$</td>&#xa;   </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S4TestsRun</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Test\nError Type</td>&#xa;    <td bgcolor="#eeeeee">Enabled/\nDisabled</td>&#xa;    <td bgcolor="#eeeeee">Frame\nSize</td>&#xa;  </tr>&#xa; <tr iterate="=$S4TestType$">&#xa;   <td halign="right" bgcolor="#ffffff">=$S4TestType$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S4Enabled$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$S4FrameSize$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>SpiretnLogoTitle</name>
+        <x>200</x>
+        <y>347</y>
+        <width>292</width>
+        <height>33</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>450</y>
+        <width>90</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>450</y>
+        <width>220</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC2889&amp;nbsp;Errored&amp;nbsp;Frames&amp;nbsp;Filtering</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>103</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startTestDateVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSide</name>
+        <x>700</x>
+        <y>100</y>
+        <width>100</width>
+        <height>600</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Results" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titleStr</name>
+        <x>297</x>
+        <y>99</y>
+        <width>160</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Test&amp;nbsp;Summary&amp;nbsp;by&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>LoadTypeTbl</name>
+        <x>30</x>
+        <y>135</y>
+        <width>358</width>
+        <height>336</height>
+        <value>S3LoadSum</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>theoMaxTitleStr</name>
+        <x>200</x>
+        <y>104</y>
+        <width>243</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>versionStr</name>
+        <x>35</x>
+        <y>455</y>
+        <width>104</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R1A</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputStartIdStr</name>
+        <x>35</x>
+        <y>485</y>
+        <width>127</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>505</y>
+        <width>130</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>testTbl</name>
+        <x>340</x>
+        <y>435</y>
+        <width>158</width>
+        <height>81</height>
+        <value>S4TestsRun</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>testTitleStr</name>
+        <x>365</x>
+        <y>400</y>
+        <width>105</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Configuration</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>520</y>
+        <width>800</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>contact</name>
+        <x>670</x>
+        <y>100</y>
+        <width>130</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>528</y>
+        <width>143</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>Theomax</name>
+        <x>17</x>
+        <y>145</y>
+        <width>656</width>
+        <height>256</height>
+        <src>theoMaxPosAtm.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoEFDISCRequest"
+    showName="FCoE FDISC Request"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE FDISC Request">
+    <pdus>
+      <pdu name="proto1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC"/>
+      <pdu name="proto3" pdu="fc:ELSFLOGI">
+        <command filterMinValue="51000000" filterMaxValue="51FFFFFF">51FFFFFF</command>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

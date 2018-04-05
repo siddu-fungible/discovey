@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>FAILED</instance>
+      </value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.80.3990.0002</instance>
+      </value>
+      <path>select Version from StcSystem where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2011-09-01 04:01:37</instance>
+      </value>
+      <path>select CreatedTime from DataSet where Id = (select distinct DataSetId from EotResultNodeParam where Name = "@StartDataSetId");</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstEndDate</name>
+      <persist>false</persist>
+      <path>select CreatedTime from DataSet where Id = =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DetailStatus</name>
+      <persist>false</persist>
+      <path>select Id from RxStreamResults where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>MbpsLineRate</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>10.0</instance>
+        <instance>100.0</instance>
+        <instance>1000.0</instance>
+		<instance>2500.0</instance>
+		<instance>5000.0</instance>
+        <instance>10000.0</instance>		
+		<instance>25000.0</instance>
+		<instance>40000.0</instance>
+		<instance>50000.0</instance>
+		<instance>100000.0</instance>		
+        <instance>2488.32</instance>
+        <instance>9953.28</instance>
+        <instance>155.52</instance>
+        <instance>622.08</instance>
+      </value>
+      <path>select distinct MbpsLineRate from TheoreticalMaxLineRate where DataSetId = (select distinct DataSetId from EotResultNodeParam where Name = "@StartDataSetId") order by Id;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>true</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>InputStartDataSetId</name>
+      <persist>false</persist>
+      <path>select Id from PortAvgLatencyResults where Id==$@StartDataSetId$</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>InputEndDataSetId</name>
+      <persist>false</persist>
+      <path>select Id from PortAvgLatencyResults where Id==$@EndDataSetId$</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>sumTrial</name>
+      <persist>false</persist>
+      <path>select IterationNum from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumTx</name>
+      <persist>false</persist>
+      <path>select TxSigFrameCount from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumPass</name>
+      <persist>false</persist>
+      <path>select Passed from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumLearnRate</name>
+      <persist>false</persist>
+      <path>select LearningRate from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumSigRx</name>
+      <persist>false</persist>
+      <path>select RxSigFrameCount from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumNumAddrs</name>
+      <persist>false</persist>
+      <path>select TxSigFrameCount from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumFlood</name>
+      <persist>false</persist>
+      <path>select CASE WHEN FloodCount = 18446744073709551615 THEN '' ELSE FloodCount END from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumRx</name>
+      <persist>false</persist>
+      <path>select RxFrameCount from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumExpectRx</name>
+      <persist>false</persist>
+      <path>select RxExpectedFrameCount from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumExpect</name>
+      <persist>false</persist>
+      <path>select ExpectedFrameCount from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumFL</name>
+      <persist>false</persist>
+      <path>select CASE WHEN FrameLoss = 18446744073709551615 THEN '' ELSE FrameLoss END from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumPL</name>
+      <persist>false</persist>
+      <path>select Coalesce(PercentLoss, '') from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumILoad</name>
+      <persist>false</persist>
+      <path>select IntendedLoad from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>sumOptLearnRate</name>
+      <persist>false</persist>
+      <path>select OptimalLearningRate from Rfc2889AddrLearningTestResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialNumAddrs</name>
+      <persist>false</persist>
+      <path>select TxSigFrameCount from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialNum</name>
+      <persist>false</persist>
+      <path>select IterationNum from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialPortType</name>
+      <persist>false</persist>
+      <path>select PortType from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialPort</name>
+      <persist>false</persist>
+      <path>select Port from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialPass</name>
+      <persist>false</persist>
+      <path>select Passed from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialSigTx</name>
+      <persist>false</persist>
+      <path>select TxSigFrameCount from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialSigRx</name>
+      <persist>false</persist>
+      <path>select RxSigFrameCount from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialILoad</name>
+      <persist>false</persist>
+      <path>select IntendedLoad from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialFlood</name>
+      <persist>false</persist>
+      <path>select CASE WHEN FloodCount = 18446744073709551615 THEN '' ELSE FloodCount END from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialRxExpect</name>
+      <persist>false</persist>
+      <path>select RxExpectedFrameCount from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialExpect</name>
+      <persist>false</persist>
+      <path>select ExpectedFrameCount from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialFL</name>
+      <persist>false</persist>
+      <path>select CASE WHEN FrameLoss = 18446744073709551615 THEN '' ELSE FrameLoss END from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialPL</name>
+      <persist>false</persist>
+      <path>select Coalesce(PercentLoss, '') from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialLearnRate</name>
+      <persist>false</persist>
+      <path>select LearningRate from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>MPort</name>
+      <persist>false</persist>
+      <path>select distinct P.Name from Relationtable R, Port P where R.Type='MonitorPortBinding' and P.handle=R.TargetHnd and P.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TPort</name>
+      <persist>false</persist>
+      <path>select distinct P.Name from Relationtable R, Port P where R.Type='SrcBinding' and P.handle=R.TargetHnd and P.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>LPort</name>
+      <persist>false</persist>
+      <path>select distinct P.Name from Relationtable R, Port P where R.Type='DstBinding' and P.handle=R.TargetHnd and P.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>jitter</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>sumFrameSize</name>
+      <persist>false</persist>
+      <path>select (case FrameSizeType when 'Random' then 'N/A' else FrameSize end) from Rfc2889AddrLearningPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialFrameSize</name>
+      <persist>false</persist>
+      <path>select (case FrameSizeType when 'Random' then 'N/A' else FrameSize end) from Rfc2889AddrLearningPerPortResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnitString</name>
+      <persist>false</persist>
+      <path>select (case DisplayLoadUnit when "PERCENT_LINE_RATE" then "%" when "FRAMES_PER_SECOND" then "fps" when "INTER_BURST_GAP" then "Inter-burst Gap" when "MEGABITS_PER_SECOND" then "Mbps" when "KILOBITS_PER_SECOND" then "Kbps" when "BITS_PER_SECOND" then "bps" end ) from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2011-08-31 21:12:32 PDT</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String">2011-08-31 21:01:37 PDT</value>
+      <script><![CDATA[# generate the report start time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>sumTestResult</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Set pass/fail according to test passed field&#xa;&#xa;# clear result set&#xa;set result {}&#xa;&#xa; set index 0&#xa; foreach i ($sumPass) {&#xa;  set val [lindex $sumPass $index]&#xa;  if {$val == 0} {&#xa;    lappend result "Failed"&#xa;  }  elseif {$val == 1} {&#xa;     lappend result "Passed"&#xa;  } else {&#xa;     lappend result "N/A"&#xa;  }&#xa;  incr index&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>trialTestResult</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Set pass/fail according to test passed field&#xa;&#xa;# clear result set&#xa;set result {}&#xa;&#xa;set index 0&#xa; foreach i ($trialPass) {&#xa;  set val [lindex $trialPass $index]&#xa;  if {$val == 0} {&#xa;    lappend result "Failed"&#xa;  }  elseif {$val == 1}  {&#xa;     lappend result "Passed"&#xa;  } else {&#xa;     lappend result "N/A"&#xa;  }&#xa;  incr index&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestEndDate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# generate the report end time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstEndDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Jitter</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1280441563769</value>
+      <script><![CDATA[set result "1314850445710"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Thu Jul 29 15:12:43.769 PDT 2010</value>
+      <script><![CDATA[set result "Wed Aug 31 21:14:05.710 PDT 2011"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnit</name>
+      <persist>false</persist>
+      <value type="String">%</value>
+      <script><![CDATA[if {[info exist DisplayLoadUnitString]} {&#xa;    set result $DisplayLoadUnitString&#xa;} else {&#xa;    set result "%"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>summaryStats</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;   <td bgcolor="#eeeeee">Trial</td>&#xa;   <td bgcolor="#eeeeee">Frame\nSize</td>&#xa;   <td bgcolor="#eeeeee">Addr\nCount</td>&#xa;    <td bgcolor="#eeeeee">Test\nStatus</td>&#xa;   <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">Tx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Flood\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Lost\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa;    <td bgcolor="#eeeeee">Learning\nRate (fps)</td>&#xa;   </tr>&#xa; <tr iterate="=$sumTrial$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$sumTrial$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$sumFrameSize$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$sumNumAddrs$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumTestResult$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumILoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumTx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumSigRx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumRx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumExpectRx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumFlood$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumExpect$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumFL$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumPL$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$sumLearnRate$</td>&#xa;   </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>trialStats</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Trial</td>&#xa;    <td bgcolor="#eeeeee">Frame\nSize</td>&#xa;    <td bgcolor="#eeeeee">Port</td>&#xa;    <td bgcolor="#eeeeee">Port\nType</td>&#xa;    <td bgcolor="#eeeeee">Addr\nCount</td>&#xa;    <td bgcolor="#eeeeee">Test\nStatus</td>&#xa;   <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">Tx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Rx Sig\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected Rx\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Flood\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Expected\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Lost\nFrames</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa;    <td bgcolor="#eeeeee">Learning\nRate (fps)</td>&#xa;   </tr>&#xa; <tr iterate="=$trialNum$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialNum$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialFrameSize$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialPort$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialPortType$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$trialNumAddrs$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialTestResult$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialILoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialSigTx$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$trialSigRx$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialRxExpect$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialFlood$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialExpect$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialFL$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialPL$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialLearnRate$</td>&#xa;<!--&#xa;    <td halign="right" bgcolor="#ffffff">=$trialCachCap$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$trialLearnRate$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$trialDummy$</td>&#xa;-->&#xa;   </tr>&#xa;</table>]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>SpiretnLogoTitle</name>
+        <x>200</x>
+        <y>350</y>
+        <width>300</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>449</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>450</y>
+        <width>200</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC2889&amp;nbsp;Address&amp;nbsp;Learning&amp;nbsp;Rate</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>103</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>96</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>logo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSide</name>
+        <x>700</x>
+        <y>100</y>
+        <width>100</width>
+        <height>600</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titlStr</name>
+        <x>280</x>
+        <y>99</y>
+        <width>100</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Test&amp;nbsp;Summary</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>summaryTbl</name>
+        <x>60</x>
+        <y>190</y>
+        <width>583</width>
+        <height>81</height>
+        <value>summaryStats</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>OptRateStr</name>
+        <x>60</x>
+        <y>140</y>
+        <width>132</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Optimal&amp;nbsp;Learning&amp;nbsp;Rate:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>optLearnVar</name>
+        <x>200</x>
+        <y>140</y>
+        <width>32</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$sumOptLearnRate$&amp;nbsp;fps</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Trial Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titlStr</name>
+        <x>270</x>
+        <y>99</y>
+        <width>110</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Iteration&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>trialTbl</name>
+        <x>5</x>
+        <y>135</y>
+        <width>690</width>
+        <height>795</height>
+        <value>trialStats</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>theoMaxTitleStr</name>
+        <x>200</x>
+        <y>100</y>
+        <width>300</width>
+        <height>25</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>versionStr</name>
+        <x>35</x>
+        <y>459</y>
+        <width>103</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2C</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputStartIdStr</name>
+        <x>35</x>
+        <y>485</y>
+        <width>165</width>
+        <height>15</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>505</y>
+        <width>237</width>
+        <height>15</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>520</y>
+        <width>800</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>670</x>
+        <y>100</y>
+        <width>130</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>528</y>
+        <width>143</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>TheoMax</name>
+        <x>17</x>
+        <y>140</y>
+        <width>656</width>
+        <height>256</height>
+        <src>theoMaxPosAtm.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

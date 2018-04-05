@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="ethernetssm"
+  showName="Ethernet Synchronization Status Message"
+  version="1.00"
+  description="This is a sample PDU library for Ethernet Synchronization Status Message as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+   <TYPE_DEF name="QlTlv" type="SEQUENCE" unitType="HEADER" uiShowName="Quality Level Tlv">
+
+      <FIELD name="type" type="OCTETSTRING"
+        byteLength="1"
+        defaultValue="01"
+        uiNoShow="Interface"
+        uiShowCommon="false"
+        uiShowName="Type"/>
+
+      <FIELD name="length" type="OCTETSTRING"
+        byteLength="2"
+        defaultValue="0004"
+        uiNoShow="Interface"
+	      uiShowCommon="false"
+        uiShowName="Length"/>
+
+      <FIELD name="reserved" type="INTEGER"
+        bitLength="4"
+        defaultValue="0"
+        uiNoShow="Interface"
+	      uiShowCommon="false"
+        uiShowName="Reserved"/>
+
+      <FIELD name="ssmCode" type="INTEGER"
+        bitLength="4"
+        defaultValue="11"
+        uiShowName="SSM Code"/>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EventType" type="INTEGER" bitLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Event" value="1" />
+        <VAL_ENUM uiShowName="Information" value="0" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="EthernetSSM" type="SEQUENCE" unitType="HEADER"
+		 uiShowName="Ethernet Synchronization Status Message">
+
+	    <FIELD name="subType" type="OCTETSTRING"
+		    byteLength="1"
+		    defaultValue="0A"
+		    uiNoShow="Interface"
+		    uiShowCommon="false"
+		    uiShowName="SubType" />
+
+	    <FIELD name="ituOui" type="OCTETSTRING" 
+		    byteLength="3"
+		    defaultValue="0019A7"
+		    uiNoShow="Interface"
+		    uiShowCommon="false"
+		    uiShowName="ITU OUI" />
+
+	    <FIELD name="ituSubType" type="OCTETSTRING" 
+		    byteLength="2"
+		    defaultValue="0001"
+		    uiNoShow="Interface"
+		    uiShowCommon="false"
+		    uiShowName="ITU T SubType" />
+
+ 	    <FIELD name="version" type="INTEGER" 
+		    bitLength="4" defaultValue="1"
+        uiShowName="Version" 
+		    uiShowCommon="false"
+		    uiNoShow="Interface" />
+
+	    <FIELD name="event" type="EventType"
+		    defaultValue="0"
+		    uiShowName="Event flag" 
+		    uiNoShow="Interface" />
+
+	    <FIELD name="reservedBits" type="BITSTRING" 
+		    bitLength="3" 
+		    defaultValue="000"
+		    uiShowCommon="false"
+		    uiShowName="Reserved Bits" 
+		    uiNoShow="Interface" />
+
+	    <FIELD name="reservedBytes" type="OCTETSTRING" 
+		    byteLength="3"
+		    defaultValue="000000"
+		    uiShowCommon="false"
+		    uiShowName="Reserved Bytes" 
+		    uiNoShow="Interface" />
+
+    	<NEXT_HEADERS>
+      	<NXT_HDR id="ethernetssm:QlTlv" name="QL TLV" value="0000"/>
+    	</NEXT_HEADERS>
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

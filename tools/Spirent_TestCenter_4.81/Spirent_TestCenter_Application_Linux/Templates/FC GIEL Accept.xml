@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGIELAccept" 
+    showName="FC GIEL Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GielAccept"
+    description="FC GIEL Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GielAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>01</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+        <interconnectElementEntries>
+          <InterconnectElementEntry name="InterconnectElementEntry_0">
+          </InterconnectElementEntry>
+        </interconnectElementEntries>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

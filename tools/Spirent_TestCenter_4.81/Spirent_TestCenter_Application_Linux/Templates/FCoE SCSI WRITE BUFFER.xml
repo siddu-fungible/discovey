@@ -1,0 +1,25 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoESCSIWRITEBUFFER"
+    showName="FCoE SCSI WRITE BUFFER"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE SCSI WRITE BUFFER">
+    <pdus>
+      <pdu name="fcoe" pdu="fc:FCoEHeader"/>
+      <pdu name="fc" pdu="fc:FC">
+        <rCtl>06</rCtl>
+        <type>08</type>
+      </pdu>
+      <pdu name="fcpcmnd" pdu="fcp:FcpCmnd"/>
+      <pdu name="scsiwritebuffer" pdu="scsi:WriteBuffer"/>
+      <pdu name="fcpcmnddl" pdu="fcp:FcpCmndDl">
+        <pad>000000000000</pad>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

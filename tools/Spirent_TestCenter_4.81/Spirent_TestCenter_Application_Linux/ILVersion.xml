@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<StcSystem Version="4.81">
+<Chassis Id="Firmware" Version="2.20.0000" CheckExactVersion="false"/>
+<TestModule Id="Firmware" Version="4.81.2726" CheckExactVersion="true"/>
+<TestPackage Id="l2l3" Version="4.81.2726" CheckExactVersion="true"/>
+<TestPackage Id="stc" Version="4.81.2726" CheckExactVersion="true"/>
+<TestPackage Id="stcv" Version="4.81.2726" CheckExactVersion="true"/>
+<TestPackage Id="l1" Version="4.81.2726" CheckExactVersion="true"/>
+<TestPackage Id="lsVm" Version="4.81.2726" CheckExactVersion="true"/>
+<TestPackage Id="OSE" Version="4.81.2726" CheckExactVersion="true"/>
+</StcSystem>

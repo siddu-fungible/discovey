@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="aal5"
+  showName="AAL5"
+  version="1.00"
+  description="This is a sample PDU library for AAL5 as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="LlcBridgedEth8023PidNumbers" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="with preserved FCS" value="0001" />
+        <VAL_ENUM uiShowName="w/o preserved FCS" value="0007" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="VcMuxBridgedEthFcsCtrl" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="with preserved FCS" value="1" />
+        <VAL_ENUM uiShowName="w/o preserved FCS" value="0" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LlcRoutedSnap" type="SEQUENCE" unitType="HEADER"
+      level="2" portType="Atm" uiShowName="AAL5 LLC Routed SNAP" >
+
+      <FIELD name="llc" type="ethernet:LLC"
+        uiShowName="LLC" />
+
+      <FIELD name="snap" type="ethernet:Snap"
+        procfnTarget="NEXTHDR"
+        uiShowName="SNAP" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0800" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="86DD" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="88B5" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="88B5" />
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LlcRoutedNlpid" type="SEQUENCE" unitType="HEADER"
+      level="2" portType="Atm" uiShowName="AAL5 LLC Routed NLPID" >
+
+      <FIELD name="llc" type="ethernet:LLC"
+        uiShowName="LLC" />
+
+      <FIELD name="nlpid" type="types:NLPIDNumbers"
+        defaultValue="80"
+        uiControlState="ALLOW_OVERRIDE" 
+        uiShowName="NLPID"
+        procfnTarget="NEXTHDR" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ppp:PPP" name="PPP Header" value="CF" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="FF" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="FF" />
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LlcBridgedEth8023" type="SEQUENCE" unitType="HEADER"
+      level="2" portType="Atm" uiShowName="AAL5 LLC Bridged Ethernet/802.3" >
+
+      <FIELD name="llc" type="ethernet:LLC"
+        uiShowName="LLC" />
+
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3"
+        defaultValue="0080C2"
+        uiControlState="CALCULATED"
+        uiShowName="OUI" />
+
+      <FIELD name="pid" type="LlcBridgedEth8023PidNumbers"
+        defaultValue="0007"
+        uiShowName="PID" />
+
+      <FIELD name="pad" type="OCTETSTRING" byteLength="2"
+        defaultValue="0000"
+        uiControlState="CALCULATED"
+        uiShowName="PAD" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet II Header" value="1" />
+        <NXT_HDR id="ethernet:EthernetSnap " name="Ethernet Snap Header"/>
+        <NXT_HDR id="ethernet:Ethernet8022 " name="Ethernet 802.2"/>
+        <NXT_HDR id="ethernet:Ethernet8023Raw" name="Ethernet 802.3 Raw Header" value="2" />
+        <NXT_HDR id="MAC-in-MAC:MAC-in-MAC" name="Backbone Ethernet Header" value="3" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="0" />
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="VcMuxBridgedEth8023" type="SEQUENCE" unitType="HEADER"
+      level="2" portType="Atm" uiShowName="AAL5 VC Mux Bridged Ethernet/802.3" >
+
+      <FIELD name="pad" type="OCTETSTRING" byteLength="2"
+        defaultValue="0000"
+        uiControlState="CALCULATED"
+        uiShowName="PAD" />
+
+      <FIELD name="fcs" type="VcMuxBridgedEthFcsCtrl" defaultValue="0"
+        uiShowName="FCS Control" doNotBuild="true" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ethernet:EthernetII" name="Ethernet II Header" value="1" />
+        <NXT_HDR id="ethernet:Ethernet8023Raw" name="Ethernet 802.3 Raw Header" value="2" />
+        <NXT_HDR id="MAC-in-MAC:MAC-in-MAC" name="Backbone Ethernet Header" value="3" />
+        <NXT_HDR id="ethernet:EthernetSnap " name="Ethernet Snap Header"/>
+        <NXT_HDR id="ethernet:Ethernet8022 " name="Ethernet 802.2"/>
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="0" />
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="LlcSnapIana" type="SEQUENCE" unitType="HEADER"
+      level="2" portType="Atm" uiShowName="AAL5 LLC SNAP (IANA OUI)" >
+
+      <FIELD name="llc" type="ethernet:LLC"
+        uiShowName="LLC" />
+
+      <FIELD name="oui" type="OCTETSTRING" byteLength="3"
+        defaultValue="00005E"
+        uiControlState="CALCULATED"
+        uiShowName="OUI" />
+
+      <FIELD name="pid" type="OCTETSTRING" byteLength="2"
+        defaultValue="0007"
+        uiShowName="PID" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="l2tpv2:L2TPv2" name="L2TPv2" value="1"/>
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+
+</PDU_LIBRARY>

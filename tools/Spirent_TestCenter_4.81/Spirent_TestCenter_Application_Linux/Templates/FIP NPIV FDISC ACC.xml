@@ -1,0 +1,38 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FIPNPIVFDISCACC"
+    showName="FIP NPIV FDISC ACC"
+    version="1.00"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FIP"
+    description="FIP NPIV FDISC ACC" >
+
+    <pdus>
+      <pdu name="proto1" pdu="fc:FIP" >
+        <fipOperationCode>0002</fipOperationCode>
+        <fipSubCode>02</fipSubCode>
+        <DL>
+          <DL-Choice name="DL-Choice_0">
+            <npivFdiscAccept>
+              <fdiscAcc>
+                <fc>
+                  <rCtl>23</rCtl>
+                  <frameControl>980000</frameControl>
+                </fc>
+                <class3SvcParams>
+                  <serviceOptions>8800</serviceOptions>
+                </class3SvcParams>
+              </fdiscAcc>
+            </npivFdiscAccept>
+          </DL-Choice>
+          <DL-Choice name="DL-Choice_1">
+            <macAddr/>
+          </DL-Choice>
+        </DL>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

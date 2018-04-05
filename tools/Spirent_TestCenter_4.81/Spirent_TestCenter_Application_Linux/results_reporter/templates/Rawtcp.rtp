@@ -1,0 +1,1107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>iStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2009-06-18 15:29:15</instance>
+      </value>
+      <path>select CreatedTime from DataSet where id = (select min(Id) from DataSet); -- only on data set ID, grab the first one</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select =$@StartDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2147483647</instance>
+      </value>
+      <path>select =$@EndDataSetId$ from DataSet; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FileNameID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RawTCP_results</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where name = '@dsFileName'; -- DataSet only has 1 entry</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DataSetID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select DataSetId from EotResultNodeParam where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RawTcpClientPortName</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <path>select PortName from RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientResponseCodes,RawTcpClientTransactions,RawTcpClientGoodputRates,RawTcpClientResponseTime,RawTcpClientEotResults,RawTcpClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsElapsedSeconds</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT ElapsedSeconds FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAttemptedTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedTransactions FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientResponseCodes,RawTcpClientTransactions,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsSuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactions FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientTransactions,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsUnsuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactions FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientTransactions,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAbortedTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedTransactions FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientTransactions,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputRxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputRxBytes FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults,RawTcpClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputAvgRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgRxRateBps FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientGoodputRates,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputMaxRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxRxRateBps FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientGoodputRates,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputMinRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinRxRateBps FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientGoodputRates,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputTxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputTxBytes FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults,RawTcpClientGoodputCounters</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputAvgTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgTxRateBps FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientGoodputRates,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputMaxTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxTxRateBps FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientGoodputRates,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsGoodputMinTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinTxRateBps FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientGoodputRates,RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsPortName</name>
+      <persist>true</persist>
+      <value type="String"></value>
+      <path>SELECT PortName FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputRates,RawTcpServerGoodputCounters,RawTcpServerTransactions,RawTcpServerEotResults,RawTcpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsElapsedSeconds</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT ElapsedSeconds FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsTotalConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT TotalConnections FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerTransactions,RawTcpServerEotResults,RawTcpServerResponseCodes</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsSuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactions FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerTransactions,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsUnsuccessfulTransactions</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactions FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerTransactions,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputRxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputRxBytes FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputCounters,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputAvgRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgRxRateBps FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputRates,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputMaxRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxRxRateBps FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputRates,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputMinRxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinRxRateBps FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputRates,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputTxBytes</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputTxBytes FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputCounters,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputAvgTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputAvgTxRateBps FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputRates,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputMaxTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMaxTxRateBps FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputRates,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsGoodputMinTxRateBps</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT GoodputMinTxRateBps FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerGoodputRates,RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAttemptedConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedConnections FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsSuccessfulConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulConnections FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsUnsuccessfulConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulConnections FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAbortedConnections</name>
+      <persist>true</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedConnections FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>ClientPortCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>select count(PortName) from RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ServerPortCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>select count(PortName) from RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RawTcpClientDeviceName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Device 1</instance>
+      </value>
+      <path>select AllDevice.Name from AllDevice, RawTcpClientProtocolConfig where(AllDevice.Handle=RawTcpClientProtocolConfig.ParentHnd )</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>RawTcpServerDeviceName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Device 2</instance>
+      </value>
+      <path>select AllDevice.Name from AllDevice, RawTcpServerProtocolConfig where(AllDevice.Handle=RawTcpServerProtocolConfig.ParentHnd )</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAttemptedTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedTransactionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsUnsuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsSuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAbortedTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedTransactionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsTotalConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT TotalConnectionsPerSecond FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsSuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulTransactionsPerSecond FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpServerEotResultsUnsuccessfulTransactionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulTransactionsPerSecond FROM RawTcpServerEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpServerEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAttemptedConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AttemptedConnectionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsSuccessfulConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT SuccessfulConnectionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsUnsuccessfulConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT UnsuccessfulConnectionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+    <instance>
+      <name>AutoRawTcpClientEotResultsAbortedConnectionsPerSecond</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <path>SELECT AbortedConnectionsPerSecond FROM RawTcpClientEotResults</path>
+      <multivalued>true</multivalued>
+      <pageName>RawTcpClientEotResults</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2009-06-18 11:30:18 EDT</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>IterStartDate</name>
+      <persist>false</persist>
+      <value type="String">2009-06-18 11:29:15 EDT</value>
+      <script><![CDATA[# generate the iteration start date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $iStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>GetStartDataSetId</name>
+      <persist>false</persist>
+      <value type="String">1</value>
+      <script><![CDATA[# returnst the start data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists StartID] == 1} {&#xa;  set result $StartID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetEndDataSetId</name>
+      <persist>false</persist>
+      <value type="String">2147483647</value>
+      <script><![CDATA[# returnst the end data set ID&#xa;# - note that detailed stats does not have the @StartDataSetId and @EndDataSetId unless it is launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists EndID] == 1} {&#xa;  set result $EndID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>GetFileName</name>
+      <persist>false</persist>
+      <value type="String">Y:\STC3.30\1.db</value>
+      <script><![CDATA[# returnst the DB file name&#xa;# - note that detailed stats does not have the @StartDataSetId when launced by the template "pick list"&#xa;&#xa;set result {}&#xa;&#xa;if  {[info exists FileNameID] == 1} {&#xa;  set result $FileNameID&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1245338790296</value>
+      <script><![CDATA[set result "1270150347861"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Thu Jun 18 11:26:30.296 EDT 2009</value>
+      <script><![CDATA[set result "Thu Apr 01 09:32:27.861 HST 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>RawTcpClientStatsPerPort</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;   <td colspan="1" rowspan="1" bgcolor="#eeeeee">Port Name</td>&#xa;   <td bgcolor="#eeeeee">Device Name</td>&#xa;   <td bgcolor="#eeeeee">Elapsed\nSeconds</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Successful\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Successful\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Attempted\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Aborted\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nRx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nTx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Tx Rate\nBps</td>&#xa; </tr>&#xa; <tr iterate="$RawTcpClientPortName$">&#xa;   <td colspan="1" rowspan="1" bgcolor="#ffffff">=$RawTcpClientPortName$</td>&#xa;   <td bgcolor="#ffffff">=$RawTcpClientDeviceName$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsElapsedSeconds$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAttemptedConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsSuccessfulConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsUnsuccessfulConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAbortedConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAttemptedConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsSuccessfulConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsUnsuccessfulConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAbortedConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAttemptedTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsSuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsUnsuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAbortedTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAttemptedTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsSuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsUnsuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsAbortedTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputRxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputAvgRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputMaxRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputMinRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputTxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputAvgTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputMaxTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpClientEotResultsGoodputMinTxRateBps$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>RawTcpServerStatsPerPort</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;   <td bgcolor="#eeeeee">Port Name</td>&#xa;   <td bgcolor="#eeeeee">Device Name</td>&#xa;   <td bgcolor="#eeeeee">Elapsed\nSeconds</td>&#xa;   <td bgcolor="#eeeeee">Total\nConnections</td>&#xa;   <td bgcolor="#eeeeee">Total\nConnections\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions</td>&#xa;   <td bgcolor="#eeeeee">Successful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Unsuccessful\nTransactions\nPer Second</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nRx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Rx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nTx Bytes</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nAvg Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMax Tx Rate\nBps</td>&#xa;   <td bgcolor="#eeeeee">Goodput\nMin Tx Rate\nBps</td>&#xa; </tr>&#xa; <tr iterate="$RawTcpServerDeviceName$">&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsPortName$</td>&#xa;   <td bgcolor="#ffffff">=$RawTcpServerDeviceName$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsElapsedSeconds$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsTotalConnections$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsTotalConnectionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsSuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsUnsuccessfulTransactions$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsSuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsUnsuccessfulTransactionsPerSecond$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputRxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputAvgRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputMaxRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputMinRxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputTxBytes$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputAvgTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputMaxTxRateBps$</td>&#xa;   <td bgcolor="#ffffff">=$AutoRawTcpServerEotResultsGoodputMinTxRateBps$</td>&#xa; </tr>&#xa;</table>&#xa;&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>RawTcpClientEotResults</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsAttemptedTransactions</name>
+        <title>Attempted Transactions</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsSuccessfulTransactions</name>
+        <title>Successful Transactions</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsUnsuccessfulTransactions</name>
+        <title>Unsuccessful Transactions</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsAbortedTransactions</name>
+        <title>Aborted Transactions</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <title>Raw TCP Client Transaction Results</title>
+      <xStatistic>RawTcpClientPortName</xStatistic>
+      <xTitle>Client</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>RawTcpClientGoodputCounters</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputRxBytes</name>
+        <title>Bytes Received</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputTxBytes</name>
+        <title>Bytes Transmitted</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <title>Raw TCP Client Goodput Counters</title>
+      <xStatistic>RawTcpClientPortName</xStatistic>
+      <xTitle></xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>RawTcpClientGoodputRates</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputAvgRxRateBps</name>
+        <title>Goodput Avg Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputMaxRxRateBps</name>
+        <title>Goodput Max Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputMinRxRateBps</name>
+        <title>Goodput Min Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputAvgTxRateBps</name>
+        <title>Goodput Avg Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputMaxTxRateBps</name>
+        <title>Goodput Max Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpClientEotResultsGoodputMinTxRateBps</name>
+        <title>Goodput Min Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <title>Raw TCP Client Goodput Rates</title>
+      <xStatistic>RawTcpClientPortName</xStatistic>
+      <xTitle></xTitle>
+      <yTitle>Rate in Bits per Second</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>RawTcpServerConnections</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsTotalConnections</name>
+        <title>Total Connections</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsSuccessfulTransactions</name>
+        <title>Successful Transactions</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsUnsuccessfulTransactions</name>
+        <title>Unsuccessful Transactions</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <title>Raw TCP Server Transactions</title>
+      <xStatistic>AutoRawTcpServerEotResultsPortName</xStatistic>
+      <xTitle>Port</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>RawTcpServerGoodputCounters</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputRxBytes</name>
+        <title>Goodput Rx Bytes</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputTxBytes</name>
+        <title>Goodput Tx Bytes</title>
+        <color></color>
+        <valueAxis>Count</valueAxis>
+      </statistic>
+      <title>Raw TCP Server Goodput Counters</title>
+      <xStatistic>AutoRawTcpServerEotResultsPortName</xStatistic>
+      <xTitle>Port</xTitle>
+      <yTitle>Count</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>RawTcpServerGoodputRates</name>
+      <ThreeD>true</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputAvgRxRateBps</name>
+        <title>Goodput Avg Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputMaxRxRateBps</name>
+        <title>Goodput Max Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputMinRxRateBps</name>
+        <title>Goodput Min Rx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputAvgTxRateBps</name>
+        <title>Goodput Avg Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputMaxTxRateBps</name>
+        <title>Goodput Max Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AutoRawTcpServerEotResultsGoodputMinTxRateBps</name>
+        <title>Goodput Min Tx</title>
+        <color></color>
+        <valueAxis>Rate in Bits per Second</valueAxis>
+      </statistic>
+      <title>Raw TCP Server Goodput Rates</title>
+      <xStatistic>AutoRawTcpServerEotResultsPortName</xStatistic>
+      <xTitle>Port</xTitle>
+      <yTitle>Rate in Bits per Second</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>TestStartStr</name>
+        <x>155</x>
+        <y>450</y>
+        <width>61</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Created:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>FileNameStr</name>
+        <x>155</x>
+        <y>481</y>
+        <width>50</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">File&amp;nbsp;Name:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>133</x>
+        <y>245</y>
+        <width>305</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Raw&amp;nbsp;TCP&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartVar</name>
+        <x>270</x>
+        <y>451</y>
+        <width>166</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$IterStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>upperLeftLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightSideLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>ConfigStr</name>
+        <x>154</x>
+        <y>419</y>
+        <width>80</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Configuration:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>ConfigVar</name>
+        <x>269</x>
+        <y>420</y>
+        <width>204</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ClientPortCount$&amp;nbsp;Client&amp;nbsp;Port(s)&amp;nbsp;and&amp;nbsp;=$ServerPortCount$&amp;nbsp;Server&amp;nbsp;Port(s)</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="MultiText">
+        <name>FileNameVar</name>
+        <x>270</x>
+        <y>481</y>
+        <width>400</width>
+        <height>100</height>
+        <size>12</size>
+        <value xml:space="preserve">=$GetFileName$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="RawTcpClientEotResults" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>RawTcpClientEotResults</name>
+        <x>5</x>
+        <y>137</y>
+        <width>1893</width>
+        <height>94</height>
+        <value>RawTcpClientStatsPerPort</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>Title</name>
+        <x>262</x>
+        <y>106</y>
+        <width>146</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Raw&amp;nbsp;TCP&amp;nbsp;Client&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="RawTcpClientTransactions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>RawTcpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>RawTcpClientEotResults</value>
+      </instance>
+    </page>
+    <page name="RawTcpClientGoodputCounters" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>RawTcpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>RawTcpClientGoodputCounters</value>
+      </instance>
+    </page>
+    <page name="RawTcpClientGoodputRates" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>RawTcpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>RawTcpClientGoodputRates</value>
+      </instance>
+    </page>
+    <page name="RawTcpServerEotResults" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Table">
+        <name>RawTcpServerEotResults</name>
+        <x>5</x>
+        <y>137</y>
+        <width>1212</width>
+        <height>60</height>
+        <value>RawTcpServerStatsPerPort</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>Title</name>
+        <x>262</x>
+        <y>106</y>
+        <width>156</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Raw&amp;nbsp;TCP&amp;nbsp;Server&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="RawTcpServerTransactions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>RawTcpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>RawTcpServerConnections</value>
+      </instance>
+    </page>
+    <page name="RawTcpServerGoodputCounters" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>RawTcpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>RawTcpServerGoodputCounters</value>
+      </instance>
+    </page>
+    <page name="RawTcpServerGoodputRates" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Graph">
+        <name>RawTcpClientGraph</name>
+        <x>9</x>
+        <y>107</y>
+        <width>700</width>
+        <height>430</height>
+        <value>RawTcpServerGoodputRates</value>
+      </instance>
+    </page>
+    <page name="Version" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>VerStr</name>
+        <x>35</x>
+        <y>450</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R1</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>590</x>
+        <y>130</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>465</y>
+        <width>720</width>
+        <height>70</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>35</x>
+        <y>432</y>
+        <width>266</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

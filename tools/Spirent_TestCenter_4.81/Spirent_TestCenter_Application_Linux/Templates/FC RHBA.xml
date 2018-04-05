@@ -1,0 +1,30 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCRHBA" 
+    showName="FC RHBA" 
+    version="1.0" 
+    category="Fibre Channel" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fcgs:Rhba" 
+    description="FC RHBA">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:Rhba">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>10</gsSubType>
+          <commandRespondCode>0200</commandRespondCode>
+        </ctIuPreamble>
+								<portEntries>
+										<FdmiPortEntry name="FdmiPortEntry_0">
+										</FdmiPortEntry>
+								</portEntries>
+								<hbaAttributeEntries>
+										<HbaAttributeEntry name="HbaAttributeEntry_0">
+										</HbaAttributeEntry>
+								</hbaAttributeEntries>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

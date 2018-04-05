@@ -1,0 +1,21 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Eth_802_1Q_PFC"
+    showName="Ethernet 802.1Q - Priority Flow Control"
+    version="1.00"
+    category="MAC Control"
+    readonly="true"
+    validate="true"
+    firstPdu="ethernetpause:MacControl"
+    description="Ethernet 802.1Q - Priority Flow Control" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ethernetpause:MacControl">
+        <dstMac override="true">01:80:C2:00:00:01</dstMac>
+        <lengthType override="true">8808</lengthType>
+      </pdu>
+      <pdu name="proto2" pdu="ethernetpause:PFC"/>
+    </pdus>
+  </template>
+</frame>

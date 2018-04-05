@@ -1,0 +1,16 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ReportCancelSubscribe"
+    showName="ReportCancelSubscribe TLV"
+    version="1.00"
+    category="CSMP Description TLV"
+    readonly="true"
+    validate="true"
+    firstPdu="csmptlv:ReportCancelSubscribe"
+    description="ReportCancelSubscribe TLV">
+    <pdus>
+       <pdu name="proto1" pdu="csmptlv:ReportCancelSubscribe"/>
+    </pdus>
+  </template>
+</frame>

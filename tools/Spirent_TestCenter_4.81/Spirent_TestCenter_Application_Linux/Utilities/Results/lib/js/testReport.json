@@ -1,0 +1,881 @@
+{
+    "info": {
+        "version": "4.60.7503.0000",
+        "endTime": "2015-03-13 11:23:34",
+        "name": "ACL Performance Test - March 13th Demo",
+        "startTime": "2015-03-13 11:19:29"
+    },
+    "status": {
+        "execStatus": "completed",
+        "verdict": "failed",
+        "verdictExplanation": "Max FTD exceeded the configured threshold of 0.05 us."
+    },
+    "dataFormat": "group",
+    "data": {
+        "tag": "all_groups",
+        "children": [{
+            "info": {
+                "sqlQuery": "SELECT StreamBlockName AS Service, '192.85.1.3' AS Source, '192.85.1.3' AS Destination, 100 AS 'S-Vlan', 100 AS 'C-Vlan', Sb.FixedFrameLength  AS 'Frame Size (bytes)', Lp.Load || CASE Lp.LoadUnit WHEN 'PERCENT_LINE_RATE' THEN '%' WHEN 'BITS_PER_SECOND' THEN 'bps' WHEN 'KILOBITS_PER_SECOND' THEN 'Kbps' WHEN 'MEGABITS_PER_SECOND' THEN 'Mbps' WHEN 'FRAMES_PER_SECOND' THEN 'Fps' ELSE '' END AS 'CIR', TxRes.FrameCount-RxRes.FrameCount AS 'FL Count', ROUND(CAST(TxRes.FrameCount-RxRes.FrameCount AS FLOAT)/TxRes.FrameCount,3) AS 'FLR', ROUND(MinLatency*1e3,3) AS 'Min FTD (ms)', ROUND(AvgLatency*1e3,3) AS 'Mean FTD (ms)', ROUND(MaxLatency*1e3,3) AS 'Max FTD (ms)', ROUND(MinJitter*1e3,3) AS 'Min FDV (ms)', ROUND(AvgJitter*1e3,3) AS 'Mean FDV (ms)', ROUND(MaxJitter*1e3,3) AS 'Max FDV (ms)', OutSeqFrameCount AS 'Out of Sequence Frame Count', LateFrameCount AS 'Late Frame Count' FROM TxEotStreamResults AS TxRes INNER JOIN RxEotStreamResults AS RxRes ON TxRes.ParentStreamBlock == RxRes.ParentStreamBlock INNER JOIN StreamBlock AS Sb ON TxRes.ParentStreamBlock IN (10349,10373,10397)INNER JOIN StreamBlockLoadProfile As Lp ON Sb.Handle||','||Lp.Handle = (SELECT SourceHnd||','||TargetHnd FROM RelationTable WHERE Type='AffiliationStreamBlockLoadProfile') WHERE Sb.Handle IN (10349,10373,10397)",
+                "reportGroup": "SUMMARY",
+                "displayName": "Y.1564 Summary Results"
+            },
+            "status": {
+                "promoteVerdict": false,
+                "execStatus": "completed",
+                "verdict": "passed",
+                "verdictExplanation": "Y.1564 Summary Results"
+            },
+            "dataFormat": "table",
+            "data": {
+                "columnNames": ["Service", "Source", "Destination", "S-Vlan", "C-Vlan", "Frame Size (bytes)", "CIR", "FL Count", "FLR", "Min FTD (ms)", "Mean FTD (ms)", "Max FTD (ms)", "Min FDV (ms)", "Mean FDV (ms)", "Max FDV (ms)", "Out of Sequence Frame Count", "Late Frame Count"],
+                "rows": [
+                    ["EF-1", "192.85.1.3", "192.85.1.3", 100, 100, 128, "20.0%", 0, 0.0, 90.0, 93.591, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["CS1-1", "192.85.1.3", "192.85.1.3", 100, 100, 128, "20.0%", 0, 0.0, 90.0, 95.412, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["AF11-1", "192.85.1.3", "192.85.1.3", 100, 100, 128, "20.0%", 0, 0.0, 90.0, 97.199, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["EF-1", "192.85.1.3", "192.85.1.3", 100, 100, 256, "20.0%", 0, 0.0, 90.0, 97.949, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["CS1-1", "192.85.1.3", "192.85.1.3", 100, 100, 256, "20.0%", 0, 0.0, 90.0, 97.949, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["AF11-1", "192.85.1.3", "192.85.1.3", 100, 100, 256, "20.0%", 0, 0.0, 90.0, 97.951, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["EF-1", "192.85.1.3", "192.85.1.3", 100, 100, 512, "20.0%", 0, 0.0, 90.0, 91.326, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["CS1-1", "192.85.1.3", "192.85.1.3", 100, 100, 512, "20.0%", 0, 0.0, 90.0, 98.865, 100.0, 0.0, 0.0, 10.0, 0, 0],
+                    ["AF11-1", "192.85.1.3", "192.85.1.3", 100, 100, 512, "20.0%", 0, 0.0, 90.0, 93.85, 100.0, 0.0, 0.0, 10.0, 0, 0]
+                ]
+            },
+            "class": "tableDbQuery"
+        }, {
+            "dataFormat": "group",
+            "data": {
+                "tag": "Report Group GROUP_1",
+                "children": [{
+                    "info": {
+                        "reportGroup": "GROUP_1",
+                        "param": "FrameSize"
+                    },
+                    "status": {
+                        "promoteVerdict": true,
+                        "execStatus": "completed",
+                        "verdict": "none",
+                        "verdictExplanation": "Not Defined"
+                    },
+                    "dataFormat": "group",
+                    "data": {
+                        "tag": "all_groups",
+                        "children": [{
+                            "info": {
+                                "startTime": "2015-03-13 11:19:34",
+                                "endTime": "2015-03-13 11:20:34",
+                                "param": "FrameSize",
+                                "value": "128",
+                                "id": 1
+                            },
+                            "status": {
+                                "execStatus": "completed",
+                                "verdict": "none",
+                                "verdictExplanation": "Not Defined"
+                            },
+                            "dataFormat": "group",
+                            "data": {
+                                "tag": "all_groups",
+                                "children": [{
+                                    "info": {
+                                        "reportGroup": "GROUP_1",
+                                        "param": "Non-conformant Streams"
+                                    },
+                                    "status": {
+                                        "execStatus": "completed",
+                                        "verdict": "none",
+                                        "verdictExplanation": "Not Defined"
+                                    },
+                                    "dataFormat": "group",
+                                    "data": {
+                                        "tag": "all_groups",
+                                        "children": [{
+                                            "info": {
+                                                "param": "Non-conformant Streams",
+                                                "value": 1,
+                                                "startTime": "2015-03-13 11:20:27",
+                                                "endTime": "2015-03-13 11:20:34",
+                                                "id": 1,
+                                                "resultFile": "Iteration-FrameSize-128-Non-conformant Streams-1-id-1.json"
+                                            },
+                                            "status": {
+                                                "execStatus": "completed",
+                                                "verdict": "failed",
+                                                "verdictExplanation": "Not Defined"
+                                            },
+                                            "dataFormat": "none",
+                                            "class": "iterationResult"
+                                        }]
+                                    },
+                                    "class": "iteratorResult"
+                                }]
+                            },
+                            "class": "iterationResult"
+                        }, {
+                            "info": {
+                                "startTime": "2015-03-13 11:20:35",
+                                "endTime": "2015-03-13 11:21:34",
+                                "param": "FrameSize",
+                                "value": "256",
+                                "id": 2
+                            },
+                            "status": {
+                                "execStatus": "completed",
+                                "verdict": "none",
+                                "verdictExplanation": "Not Defined"
+                            },
+                            "dataFormat": "group",
+                            "data": {
+                                "tag": "all_groups",
+                                "children": [{
+                                    "info": {
+                                        "reportGroup": "GROUP_1",
+                                        "param": "Non-conformant Streams"
+                                    },
+                                    "status": {
+                                        "execStatus": "completed",
+                                        "verdict": "none",
+                                        "verdictExplanation": "Not Defined"
+                                    },
+                                    "dataFormat": "group",
+                                    "data": {
+                                        "tag": "all_groups",
+                                        "children": [{
+                                            "info": {
+                                                "param": "Non-conformant Streams",
+                                                "value": 1,
+                                                "startTime": "2015-03-13 11:21:27",
+                                                "endTime": "2015-03-13 11:21:34",
+                                                "id": 1,
+                                                "resultFile": "Iteration-FrameSize-256-Non-conformant Streams-1-id-1.json"
+                                            },
+                                            "status": {
+                                                "execStatus": "completed",
+                                                "verdict": "failed",
+                                                "verdictExplanation": "Not Defined"
+                                            },
+                                            "dataFormat": "none",
+                                            "class": "iterationResult"
+                                        }]
+                                    },
+                                    "class": "iteratorResult"
+                                }]
+                            },
+                            "class": "iterationResult"
+                        }, {
+                            "info": {
+                                "startTime": "2015-03-13 11:21:34",
+                                "endTime": "2015-03-13 11:22:35",
+                                "param": "FrameSize",
+                                "value": "512",
+                                "id": 3
+                            },
+                            "status": {
+                                "execStatus": "completed",
+                                "verdict": "none",
+                                "verdictExplanation": "Not Defined"
+                            },
+                            "dataFormat": "group",
+                            "data": {
+                                "tag": "all_groups",
+                                "children": [{
+                                    "info": {
+                                        "reportGroup": "GROUP_1",
+                                        "param": "Non-conformant Streams"
+                                    },
+                                    "status": {
+                                        "execStatus": "completed",
+                                        "verdict": "none",
+                                        "verdictExplanation": "Not Defined"
+                                    },
+                                    "dataFormat": "group",
+                                    "data": {
+                                        "tag": "all_groups",
+                                        "children": [{
+                                            "info": {
+                                                "param": "Non-conformant Streams",
+                                                "value": 1,
+                                                "startTime": "2015-03-13 11:22:26",
+                                                "endTime": "2015-03-13 11:22:35",
+                                                "id": 1,
+                                                "resultFile": "Iteration-FrameSize-512-Non-conformant Streams-1-id-1.json"
+                                            },
+                                            "status": {
+                                                "execStatus": "completed",
+                                                "verdict": "failed",
+                                                "verdictExplanation": "Not Defined"
+                                            },
+                                            "dataFormat": "none",
+                                            "class": "iterationResult"
+                                        }]
+                                    },
+                                    "class": "iteratorResult"
+                                }]
+                            },
+                            "class": "iterationResult"
+                        }, {
+                            "info": {
+                                "startTime": "2015-03-13 11:22:36",
+                                "endTime": "2015-03-13 11:23:33",
+                                "param": "FrameSize",
+                                "value": "1024",
+                                "id": 4
+                            },
+                            "status": {
+                                "execStatus": "completed",
+                                "verdict": "none",
+                                "verdictExplanation": "Not Defined"
+                            },
+                            "dataFormat": "group",
+                            "data": {
+                                "tag": "all_groups",
+                                "children": [{
+                                    "info": {
+                                        "reportGroup": "GROUP_1",
+                                        "param": "Non-conformant Streams"
+                                    },
+                                    "status": {
+                                        "execStatus": "completed",
+                                        "verdict": "none",
+                                        "verdictExplanation": "Not Defined"
+                                    },
+                                    "dataFormat": "group",
+                                    "data": {
+                                        "tag": "all_groups",
+                                        "children": [{
+                                            "info": {
+                                                "param": "Non-conformant Streams",
+                                                "value": 1,
+                                                "startTime": "2015-03-13 11:23:26",
+                                                "endTime": "2015-03-13 11:23:33",
+                                                "id": 1,
+                                                "resultFile": "Iteration-FrameSize-1024-Non-conformant Streams-1-id-1.json"
+                                            },
+                                            "status": {
+                                                "execStatus": "completed",
+                                                "verdict": "failed",
+                                                "verdictExplanation": "Not Defined"
+                                            },
+                                            "dataFormat": "none",
+                                            "class": "iterationResult"
+                                        }]
+                                    },
+                                    "class": "iteratorResult"
+                                }]
+                            },
+                            "class": "iterationResult"
+                        }]
+                    },
+                    "class": "iteratorResult"
+                }, {
+                    "info": {
+                        "reportGroup": "GROUP_1"
+                    },
+                    "status": {
+                        "promoteVerdict": "false",
+                        "execStatus": "completed",
+                        "verdict": "none",
+                        "verdictExplanation": ""
+                    },
+                    "dataFormat": "chart",
+                    "data": {
+                        "title": "",
+                        "x_label": "",
+                        "series": "",
+                        "modifier_list": "",
+                        "base": {
+                            "series": [{
+                                "color": "green",
+                                "type": "column",
+                                "data": [
+                                    844595.0,
+                                    452899.0,
+                                    234962.0,
+                                    119732.0
+                                ],
+                                "name": "Theoretical Max Frame Rate"
+                            }, {
+                                "color": "orange",
+                                "type": "column",
+                                "data": [
+                                    84459.45942567567,
+                                    45289.85505434783,
+                                    23496.240592105263,
+                                    11973.18007183908
+                                ],
+                                "name": "Measured Max Frame Rate"
+                            }],
+                            "title": {
+                                "text": "ACL Performance Frame Rate Results",
+                                "x": -20
+                            },
+                            "xAxis": {
+                                "labels": {
+                                    "rotation": -45
+                                },
+                                "categories": [
+                                    128,
+                                    256,
+                                    512,
+                                    1024
+                                ],
+                                "title": {
+                                    "text": "Frame Size (bytes)"
+                                }
+                            },
+                            "tooltip": {
+                                "valueSuffix": " (fps)"
+                            },
+                            "yAxis": [{
+                                "categories": null,
+                                "title": {
+                                    "text": "Frame Rate (fps)",
+                                    "style": {
+                                        "color": "#434348"
+                                    }
+                                }
+                            }]
+                        },
+                        "x_categories": "",
+                        "y_label": "",
+                        "y_categories": ""
+                    },
+                    "class": "MethodologyChart"
+                }, {
+                    "info": {
+                        "reportGroup": "GROUP_1"
+                    },
+                    "status": {
+                        "promoteVerdict": "false",
+                        "execStatus": "completed",
+                        "verdict": "none",
+                        "verdictExplanation": ""
+                    },
+                    "dataFormat": "chart",
+                    "data": {
+                        "title": "",
+                        "x_label": "",
+                        "series": "",
+                        "modifier_list": "",
+                        "base": {
+                            "series": [{
+                                "color": "#009999",
+                                "type": "column",
+                                "data": [
+                                    1,
+                                    1,
+                                    1,
+                                    1
+                                ],
+                                "name": "Blocking Flows",
+                                "tooltip": {
+                                    "valueSuffix": " flows"
+                                }
+                            }, {
+                                "name": "Min Jitter",
+                                "yAxis": 2,
+                                "color": "#006600",
+                                "type": "column",
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "data": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ]
+                            }, {
+                                "name": "RFC4689 Avg Jitter",
+                                "yAxis": 2,
+                                "color": "#009900",
+                                "type": "column",
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "data": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ]
+                            }, {
+                                "name": "Max Jitter",
+                                "yAxis": 2,
+                                "color": "#00ee00",
+                                "type": "column",
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "data": [
+                                    0.01,
+                                    0.01,
+                                    0.01,
+                                    0.01
+                                ]
+                            }, {
+                                "name": "Min Latency",
+                                "yAxis": 1,
+                                "color": "#660000",
+                                "type": "column",
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "data": [
+                                    0.09,
+                                    0.09,
+                                    0.09,
+                                    0.09
+                                ]
+                            }, {
+                                "name": "Avg Latency",
+                                "yAxis": 1,
+                                "color": "#990000",
+                                "type": "column",
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "data": [
+                                    0.0939024014778325,
+                                    0.09340618791194806,
+                                    0.09233724596994897,
+                                    0.0937263247404225
+                                ]
+                            }, {
+                                "name": "Max latency",
+                                "yAxis": 1,
+                                "color": "#ee0000",
+                                "type": "column",
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "data": [
+                                    0.1,
+                                    0.1,
+                                    0.1,
+                                    0.1
+                                ]
+                            }, {
+                                "dashStyle": "Dot",
+                                "name": "Jitter Limit",
+                                "yAxis": 2,
+                                "color": "#00ee00",
+                                "data": [
+                                    0.05,
+                                    0.05,
+                                    0.05,
+                                    0.05
+                                ],
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "type": "line"
+                            }, {
+                                "dashStyle": "Dot",
+                                "name": "Latency Limit",
+                                "yAxis": 1,
+                                "color": "#ee0000",
+                                "data": [
+                                    0.05,
+                                    0.05,
+                                    0.05,
+                                    0.05
+                                ],
+                                "tooltip": {
+                                    "valueSuffix": " us"
+                                },
+                                "type": "line"
+                            }],
+                            "title": {
+                                "text": "ACL Performance Traffic Results",
+                                "x": -20
+                            },
+                            "xAxis": {
+                                "labels": {
+                                    "rotation": -45
+                                },
+                                "categories": [
+                                    128,
+                                    256,
+                                    512,
+                                    1024
+                                ],
+                                "title": {
+                                    "text": "Frame Size (bytes)"
+                                }
+                            },
+                            "yAxis": [{
+                                "min": 0,
+                                "tickInterval": 1,
+                                "categories": null,
+                                "title": {
+                                    "text": "Blocking Flows",
+                                    "style": {
+                                        "color": "#0000ff"
+                                    }
+                                }
+                            }, {
+                                "title": {
+                                    "text": "Latency (us)",
+                                    "style": {
+                                        "color": "#ff0000"
+                                    }
+                                },
+                                "categories": null,
+                                "opposite": true
+                            }, {
+                                "title": {
+                                    "text": "Jitter (us)",
+                                    "style": {
+                                        "color": "#00ff00"
+                                    }
+                                },
+                                "categories": null,
+                                "opposite": true
+                            }]
+                        },
+                        "x_categories": "",
+                        "y_label": "",
+                        "y_categories": ""
+                    },
+                    "class": "MethodologyChart"
+                }]
+            },
+            "class": "resultGroup"
+        }, {
+            "info": {
+                "reportGroup": "SUMMARY"
+            },
+            "status": {
+                "promoteVerdict": true,
+                "execStatus": "error",
+                "verdict": "failed",
+                "verdictExplanation": "Test execution error"
+            },
+            "dataFormat": "note",
+            "data": {
+                "text": "Verify Result Value 1 command failed.  Condition 1: \"ResultCount is EQUAL 0\" is false.\n",
+                "label": "Test execution error"
+            },
+            "class": "errorMessage"
+        }, {
+            "dataFormat": "group",
+            "data": {
+                "tag": "Report Group GROUP_1",
+                "children": [{
+                    "info": {
+                        "reportGroup": "GROUP_1",
+                        "param": "FrameSize"
+                    },
+                    "status": {
+                        "promoteVerdict": true,
+                        "execStatus": "completed",
+                        "verdict": "none",
+                        "verdictExplanation": "Not Defined"
+                    },
+                    "dataFormat": "group",
+                    "data": {
+                        "tag": "all_groups",
+                        "children": [{
+                            "info": {
+                                "param": "FrameSize",
+                                "id": 1,
+                                "value": "128"
+                            },
+                            "status": {
+                                "execStatus": "completed",
+                                "verdict": "none",
+                                "verdictExplanation": "Not Defined"
+                            },
+                            "dataFormat": "group",
+                            "data": {
+                                "tag": "all_groups",
+                                "children": [{
+                                    "info": {
+                                        "reportGroup": "GROUP_1",
+                                        "param": "Load"
+                                    },
+                                    "status": {
+                                        "execStatus": "completed",
+                                        "verdict": "none",
+                                        "verdictExplanation": "Not Defined"
+                                    },
+                                    "dataFormat": "group",
+                                    "data": {
+                                        "tag": "all_groups",
+                                        "children": [{
+                                            "info": {
+                                                "param": "Load",
+                                                "id": 1,
+                                                "value": "500"
+                                            },
+                                            "status": {
+                                                "execStatus": "completed",
+                                                "verdict": "passed",
+                                                "verdictExplanation": "Not Defined"
+                                            },
+                                            "dataFormat": "none",
+                                            "class": "iterationResult"
+                                        }]
+                                    },
+                                    "class": "iteratorResult"
+                                }]
+                            },
+                            "class": "iterationResult"
+                        }]
+                    },
+                    "class": "iteratorResult"
+                }]
+            },
+            "class": "resultGroup"
+        }, {
+            "info": {
+                "parent_iteration_info": [{
+                    "value": "256",
+                    "id": 2,
+                    "param": "FrameSize"
+                }],
+                "param": "Load",
+                "id": 2,
+                "value": "1000"
+            },
+            "status": {
+                "execStatus": "completed",
+                "verdict": "passed",
+                "verdictExplanation": "Actual result count matches expected result count. Actual count: 8; expected count: greater than or equal to 0."
+            },
+            "dataFormat": "group",
+            "data": {
+                "tag": "all_groups",
+                "children": [{
+                    "dataFormat": "group",
+                    "data": {
+                        "tag": "Report Group GROUP_1",
+                        "children": [{
+                            "info": {
+                                "reportGroup": "GROUP_1",
+                                "displayName": "Verify view 1",
+                                "name": "MyDrvView",
+                                "summarizationObject": "Project.Name"
+                            },
+                            "status": {
+                                "promoteVerdict": true,
+                                "execStatus": "completed",
+                                "verdict": "passed",
+                                "verdictExplanation": "verify view 1 passed"
+                            },
+                            "dataFormat": "table",
+                            "data": {
+                                "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                "rows": [
+                                    ["Project 1", "", "", "PortConfig2 //10.109.125.43/1/1", "494484", "487760"]
+                                ],
+                                "links": [{
+                                    "linkData": {
+                                        "info": {
+                                            "summarizationObject": "Port.Name"
+                                        },
+                                        "dataFormat": "table",
+                                        "data": {
+                                            "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                            "rows": [
+                                                ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "455228", "448277"]
+                                            ],
+                                            "links": [{
+                                                "linkData": {
+                                                    "info": {
+                                                        "summarizationObject": "StreamBlock.Name"
+                                                    },
+                                                    "dataFormat": "table",
+                                                    "data": {
+                                                        "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                                        "rows": [
+                                                            ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "416526", "409144"]
+                                                        ]
+                                                    },
+                                                    "class": "drillDownResults"
+                                                },
+                                                "tag": "StreamBlock.Name"
+                                            }]
+                                        },
+                                        "class": "drillDownResults"
+                                    },
+                                    "tag": "Port.Name"
+                                }]
+                            },
+                            "class": "tableDrvDrilldown"
+                        }, {
+                            "info": {
+                                "reportGroup": "GROUP_1",
+                                "displayName": "verify drv 2",
+                                "name": "MyDrvView",
+                                "summarizationObject": "Project.Name"
+                            },
+                            "status": {
+                                "promoteVerdict": true,
+                                "execStatus": "completed",
+                                "verdict": "failed",
+                                "verdictExplanation": "verify drv 2 fail"
+                            },
+                            "dataFormat": "table",
+                            "data": {
+                                "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                "rows": [
+                                    ["Project 1", "", "", "PortConfig2 //10.109.125.43/1/1", "688854", "682096"]
+                                ],
+                                "links": [{
+                                    "linkData": {
+                                        "info": {
+                                            "summarizationObject": "Port.Name"
+                                        },
+                                        "dataFormat": "table",
+                                        "data": {
+                                            "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                            "rows": [
+                                                ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "650677", "643890"]
+                                            ],
+                                            "links": [{
+                                                "linkData": {
+                                                    "info": {
+                                                        "summarizationObject": "StreamBlock.Name"
+                                                    },
+                                                    "dataFormat": "table",
+                                                    "data": {
+                                                        "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                                        "rows": [
+                                                            ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "613305", "606239"]
+                                                        ]
+                                                    },
+                                                    "class": "drillDownResults"
+                                                },
+                                                "tag": "StreamBlock.Name"
+                                            }]
+                                        },
+                                        "class": "drillDownResults"
+                                    },
+                                    "tag": "Port.Name"
+                                }]
+                            },
+                            "class": "tableDrvDrilldown"
+                        }]
+                    },
+                    "class": "resultGroup"
+                }, {
+                    "dataFormat": "group",
+                    "data": {
+                        "tag": "Report Group GROUP_1",
+                        "children": [{
+                            "info": {
+                                "reportGroup": "GROUP_1",
+                                "displayName": "Verify view 3",
+                                "name": "MyDrvView",
+                                "summarizationObject": "Project.Name"
+                            },
+                            "status": {
+                                "promoteVerdict": true,
+                                "execStatus": "completed",
+                                "verdict": "passed",
+                                "verdictExplanation": "verify view 3 passed"
+                            },
+                            "dataFormat": "table",
+                            "data": {
+                                "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                "rows": [
+                                    ["Project 1", "", "", "PortConfig2 //10.109.125.43/1/1", "494484", "487760"]
+                                ],
+                                "links": [{
+                                    "linkData": {
+                                        "info": {
+                                            "summarizationObject": "Port.Name"
+                                        },
+                                        "dataFormat": "table",
+                                        "data": {
+                                            "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                            "rows": [
+                                                ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "455228", "448277"]
+                                            ],
+                                            "links": [{
+                                                "linkData": {
+                                                    "info": {
+                                                        "summarizationObject": "StreamBlock.Name"
+                                                    },
+                                                    "dataFormat": "table",
+                                                    "data": {
+                                                        "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                                        "rows": [
+                                                            ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "416526", "409144"]
+                                                        ]
+                                                    },
+                                                    "class": "drillDownResults"
+                                                },
+                                                "tag": "StreamBlock.Name"
+                                            }]
+                                        },
+                                        "class": "drillDownResults"
+                                    },
+                                    "tag": "Port.Name"
+                                }]
+                            },
+                            "class": "tableDrvDrilldown"
+                        }, {
+                            "info": {
+                                "reportGroup": "GROUP_1",
+                                "displayName": "verify drv 4",
+                                "name": "MyDrvView",
+                                "summarizationObject": "Project.Name"
+                            },
+                            "status": {
+                                "promoteVerdict": true,
+                                "execStatus": "completed",
+                                "verdict": "failed",
+                                "verdictExplanation": "verify drv 4 fail"
+                            },
+                            "dataFormat": "table",
+                            "data": {
+                                "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                "rows": [
+                                    ["Project 1", "", "", "PortConfig2 //10.109.125.43/1/1", "688854", "682096"]
+                                ],
+                                "links": [{
+                                    "linkData": {
+                                        "info": {
+                                            "summarizationObject": "Port.Name"
+                                        },
+                                        "dataFormat": "table",
+                                        "data": {
+                                            "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                            "rows": [
+                                                ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "650677", "643890"]
+                                            ],
+                                            "links": [{
+                                                "linkData": {
+                                                    "info": {
+                                                        "summarizationObject": "StreamBlock.Name"
+                                                    },
+                                                    "dataFormat": "table",
+                                                    "data": {
+                                                        "columnNames": ["Project Name", "Port Name", "StreamBlock Name", "Actual Rx Port Name", "Tx Count (Frames)", "Rx Sig Count (Frames)"],
+                                                        "rows": [
+                                                            ["Project 1", "PortConfig1 //10.109.123.204/1/1", "Application-1", "PortConfig2 //10.109.125.43/1/1", "613305", "606239"]
+                                                        ]
+                                                    },
+                                                    "class": "drillDownResults"
+                                                },
+                                                "tag": "StreamBlock.Name"
+                                            }]
+                                        },
+                                        "class": "drillDownResults"
+                                    },
+                                    "tag": "Port.Name"
+                                }]
+                            },
+                            "class": "tableDrvDrilldown"
+                        }]
+                    },
+                    "class": "resultGroup"
+                }]
+            },
+            "class": "iterationReport"
+        }]
+    },
+    "class": "testReport"
+}

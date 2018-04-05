@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="customrepeat" showName="Custom with Repeat" version="1.00" 
+    description="This is a sample PDU library for Custom as defined in XML Stream Editor.">
+
+
+    <TYPE_DEFS>
+      <TYPE_DEF name="CustomRepeat" type="SEQUENCE" minOccurs="1" maxOccurs="1"
+        unitType="MESSAGE" uiShowName="Custom with Repeat" >
+	
+		  <FIELD name="pattern" type="REPEATOCTETSTRING"
+			defaultValue="00:C"
+			uiShowName="Byte pattern"
+			uiNoShowModifier="Interface,Frame,Filter"
+			uiOverrideEditor="HexViewEditor"			
+			minByteLength="1" maxByteLength="1500" />
+
+		  <!-- May need to look at the maxByteLength for custom header was 10000 but 1.20 can only support 1500 -->
+
+		<NEXT_HEADERS>
+			<NXT_HDR id="mpls:Mpls" name="MPLS Header" value="8847" />
+			<NXT_HDR id="pppoe:PPPoEDiscovery" name="PPPoE Discovery" value="8863" />
+			<NXT_HDR id="pppoe:PPPoESession" name="PPPoE Session" value="8864" />
+			<NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="4" />
+			<NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="41" />
+			<NXT_HDR id="tcp:Tcp" name="Tcp Header" value="6" />
+			<NXT_HDR id="udp:Udp" name="Udp Header" value="17" />
+			<NXT_HDR id="pim:Pimv4Hello" name="Pim Hello" value="103" />
+			<NXT_HDR id="pim:Pimv4Register" name="Pim Register" value="103" />
+			<NXT_HDR id="pim:Pimv4RegisterStop" name="Pim RegisterStop" value="103" />
+			<NXT_HDR id="pim:Pimv4JoinPrune" name="Pim Join/Prune" value="103" />
+			<NXT_HDR id="pim:Pimv4Assert" name="Pim Assert" value="103" />
+			<NXT_HDR id="arp:ARP" name="ARP Header" value="0806" />
+			<NXT_HDR id="arp:RARP" name="RARP Header" value="8035" />
+			<NXT_HDR id="dhcp:Dhcpclientmsg" name="Dhcpclientmsg" value="67" />
+			<NXT_HDR id="dhcp:Dhcpservermsg" name="Dhcpservermsg" value="68" />
+			<NXT_HDR id="rip:Ripv1" name="Ripv1" value="520" />
+			<NXT_HDR id="rip:Ripv2" name="Ripv2" value="520" />
+			<NXT_HDR id="rip:Ripng" name="Ripng" value="521" />
+			<NXT_HDR id="icmp:IcmpDestUnreach" name="ICMP Destination Unreachable" value="1" />
+			<NXT_HDR id="icmp:IcmpTimeExceeded" name="ICMP Time Exceeded" value="1" />
+			<NXT_HDR id="icmp:IcmpParameterProblem" name="ICMP Parameter Problem" value="1" />
+			<NXT_HDR id="icmp:IcmpSourceQuench" name="ICMP Source Quench" value="1" />
+			<NXT_HDR id="icmp:IcmpRedirect" name="ICMP Redirect" value="1" />
+			<NXT_HDR id="icmp:IcmpEchoRequest" name="ICMP Echo Request" value="1" />
+			<NXT_HDR id="icmp:IcmpEchoReply" name="ICMP Echo Reply" value="1" />
+			<NXT_HDR id="icmp:IcmpTimestampRequest" name="ICMP Timestamp Request" value="1" />
+			<NXT_HDR id="icmp:IcmpTimestampReply" name="ICMP Timestamp Reply" value="1" />
+			<NXT_HDR id="icmp:IcmpInfoRequest" name="ICMP Info Request" value="1" />
+			<NXT_HDR id="icmp:IcmpInfoReply" name="ICMP Info Reply" value="1" />
+			<NXT_HDR id="igmp:Igmpv1" name="IGMPv1" value="2"/>
+			<NXT_HDR id="igmp:Igmpv2" name="IGMPv2" value="2"/>
+			<NXT_HDR id="igmp:Igmpv2Query" name="IGMPv2 Query" value="2"/>
+			<NXT_HDR id="igmp:Igmpv2Report" name="IGMPv2 Report" value="2"/>
+			<NXT_HDR id="igmp:Igmpv3Query" name="IGMPv3 Query" value="2"/>
+			<NXT_HDR id="igmp:Igmpv3Report" name="IGMPv3 Report" value="2"/>
+	        <NXT_HDR id="gre:GreNoKeyNoSeq" name="GRE" value="47" />
+			<NXT_HDR id="gre:GreSeq" name="GRE" value="47" />
+			<NXT_HDR id="gre:GreKey" name="GRE" value="47" />
+			<NXT_HDR id="gre:GreKeySeq" name="GRE" value="47" />
+			<NXT_HDR id="ospfv2:Ospfv2Unknown" name="OSPFv2 Unknown" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2Hello" name="OSPFv2 Hello" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2DatabaseDescription" name="OSPFv2 Database Description" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2LinkStateRequest" name="OSPFv2 Link State Request" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2LinkStateUpdate" name="OSPFv2 Link State Update" value="89" />
+			<NXT_HDR id="ospfv2:Ospfv2LinkStateAcknowledge" name="OSPFv2 Link State Acknowledge" value="89" />
+			<NXT_HDR id="icmpv6:Icmpv6DestUnreach" name="Icmpv6 Destination Unreachable" value="58" />
+			<NXT_HDR id="icmpv6:Icmpv6PacketTooBig" name="Icmpv6 Packet Too Big" value="58" />
+			<NXT_HDR id="icmpv6:Icmpv6TimeExceeded" name="Icmpv6 Time Exceeded" value="58" />
+			<NXT_HDR id="icmpv6:Icmpv6ParameterProblem" name="Icmpv6 Parameter Problem" value="58" />
+			<NXT_HDR id="icmpv6:Icmpv6EchoRequest" name="Icmpv6 Echo Request" value="58" />
+			<NXT_HDR id="icmpv6:Icmpv6EchoReply" name="Icmpv6 Echo Reply" value="58" />
+			<NXT_HDR id="icmpv6:MLDv1" name="MLDv1" value="58" />
+			<NXT_HDR id="icmpv6:MLDv2Query" name="MLDv2 Query" value="58" />
+			<NXT_HDR id="icmpv6:MLDv2Report" name="MLDv2 Report" value="58" />
+			<NXT_HDR id="icmpv6:RouterSolicitation" name="Router Solicitation" value="58" />
+			<NXT_HDR id="icmpv6:RouterAdvertisement" name="Router Advertisement" value="58" />
+			<NXT_HDR id="icmpv6:NeighborSolicitation" name="Neighbor Solicitation" value="58" />
+			<NXT_HDR id="icmpv6:NeighborAdvertisement" name="Neighbor Advertisement" value="58" />
+			<NXT_HDR id="icmpv6:Redirect" name="Redirect" value="58" />
+	        <NXT_HDR id="pim:Pimv6Hello" name="Pim Hello" value="103" />
+		    <NXT_HDR id="pim:Pimv6Register" name="Pim Register" value="103" />
+			<NXT_HDR id="pim:Pimv6RegisterStop" name="Pim RegisterStop" value="103" />
+			<NXT_HDR id="pim:Pimv6JoinPrune" name="Pim Join/Prune" value="103" />
+			<NXT_HDR id="pim:Pimv6Assert" name="Pim Assert" value="103" />
+
+			<NXT_HDR id="custom:Custom" name="Custom" value="0" />
+			<NXT_HDR id="customRepeat:CustomRepeat" name="Custom with Repeat" value="0" />
+
+      </NEXT_HEADERS>
+      </TYPE_DEF>
+    </TYPE_DEFS>
+ </PDU_LIBRARY>
+

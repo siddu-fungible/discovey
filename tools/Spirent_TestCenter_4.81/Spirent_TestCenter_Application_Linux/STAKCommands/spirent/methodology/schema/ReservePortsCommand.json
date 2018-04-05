@@ -1,0 +1,12 @@
+{
+    "ReservePortsCommand": {
+        "title": "Schema for the PortGroupsInfo of spirent.methodology.manager.ReservePortsCommand.",
+        "type": "array",
+        "minItems": 0,
+        "uniqueItems": true,
+        "items": {
+            "type": "object",
+            "$ref": "#/MetaDataSchema/definitions/port_group"
+        }
+    }
+}

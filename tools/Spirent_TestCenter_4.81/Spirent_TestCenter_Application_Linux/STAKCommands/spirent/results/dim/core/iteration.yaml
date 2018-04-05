@@ -1,0 +1,16 @@
+dimension_set:
+  name: iteration
+  description: Attributes of an iteration in a test
+  bll:
+    plugin: core
+  attributes:
+  - name: name
+    display_name: Iteration Name
+    description: Iteration name
+    base_unit: none
+    data_type: string
+  - name: number
+    display_name: Iteration Number
+    description: Iteration number
+    base_unit: none
+    data_type: integer

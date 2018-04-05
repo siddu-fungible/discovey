@@ -1,0 +1,190 @@
+{
+  "methodology_key": "SILVER_PEAK_POC",
+  "display_name": "Silver Peak POC",
+  "short_display_name": "Silver Peak POC",
+  "description": "Silver Peak proof of concept methodology.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "WestPort"
+      },
+      {
+        "side": "EAST",
+        "port_group": "EastPort"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "EastPort",
+      "display_name": "East Port",
+      "description": "Port on the east side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "1",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "WestPort",
+      "display_name": "West Port",
+      "description": "Port on the west side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "1",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "West Configuration",
+      "description": "Configuration for the port on the west side of the topology",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "Specify the IPv4 address of the appliance the port is connected to",
+          "display_name": "Appliance IPv4 Address",
+          "property": "WestApplianceIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "10.0.0.2"
+        },
+        {
+          "description": "Specify the appliance interface name the port is connected to",
+          "display_name": "Appliance Interface Name",
+          "property": "WestApplianceIfName",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "lan0"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "East Configuration",
+      "description": "Configuration for the port on the east side of the topology",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "Specify the IPv4 address of the appliance the port is connected to",
+          "display_name": "Appliance IPv4 Address",
+          "property": "EastApplianceIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "10.0.0.3"
+        },
+        {
+          "description": "Specify the appliance interface name the port is connected to",
+          "display_name": "Appliance Interface Name",
+          "property": "EastApplianceIfName",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "lan0"
+        }
+      ]
+    },
+    {
+      "group_type": "USER",
+      "display_name": "Orchestrator Configuration",
+      "description": "Silver Peak Orchestrator configuration parameters",
+      "test_properties": [
+        {
+          "description": "Specify the Silver Peak Orchestrator IPv4 address to connect to. ",
+          "display_name": "Orchestrator IPv4 Address",
+          "property": "OrchestratorIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "10.0.0.1"
+        },
+        {
+          "description": "Specify the Silver Peak Orchestrator login user name",
+          "display_name": "Orchestrator Login User Name",
+          "property": "OrchestratorLoginUserName",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "admin"
+        },
+        {
+          "description": "Specify the Silver Peak Orchestrator login password",
+          "display_name": "Orchestrator Login Password",
+          "property": "OrchestratorLoginPassword",
+          "property_value_type": "STRING",
+          "is_collection": false,
+          "property_value": "admin"
+        }
+      ]
+    },
+    {
+      "group_type": "USER",
+      "display_name": "Test Configuration",
+      "description": "Methodology configuration parameters",
+      "test_properties": [
+        {
+          "description": "When enabled, the methodology shall fail when any expected traffic stream has a dropped frame count greater than 0. When disabled, dropped frame count is ignored.",
+          "display_name": "Fail Test on Dropped Frames",
+          "property": "FailTestOnDroppedFrames",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        },
+        {
+          "description": "Specify the duration in seconds to run protocols and send traffic",
+          "display_name": "Test Duration",
+          "property": "TestDuration",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "30",
+          "minimum": "1",
+          "maximum": "2147483647",
+          "units": "seconds"
+        },
+        {
+          "description": "Specify the traffic load as a percent of line of rate",
+          "display_name": "Traffic Load",
+          "property": "TrafficLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.01",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Specify the HTTP load in kbps. The load shall be sent for the test duration with no ramp time",
+          "display_name": "HTTP Load",
+          "property": "HttpLoad",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "1",
+          "maximum": "1000000",
+          "units": "kilobits/s"
+        },
+        {
+          "description": "Specify if traffic should be created and sent for the default route policies. The default policies typically match everything and have a priority of 65535",
+          "display_name": "Send Traffic for Default Policies",
+          "property": "SendTrafficDefaultPolicies",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        }
+      ]
+    }
+  ]
+}

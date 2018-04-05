@@ -1,0 +1,11 @@
+{
+    "title": {
+        "text": "Multi-Y-Axis Template"
+    },
+    "xAxis": {
+        "title": {
+            "text": "X Title"
+        }
+    },
+    "yAxis": []
+}

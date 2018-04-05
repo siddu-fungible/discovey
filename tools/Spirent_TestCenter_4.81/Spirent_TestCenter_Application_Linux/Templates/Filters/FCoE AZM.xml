@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoEAZM" 
+    showName="FCoE AZM" 
+    version="1.0" 
+    category="Switching" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE AZM">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+						<pdu name="proto2" pdu="fc:FC"/>
+						<pdu name="proto3" pdu="fcgs:GsRequestWithZoneMembers">
+								<ctIuPreamble>
+										<commandRespondCode>0204</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

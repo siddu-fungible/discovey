@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="ethernet"
+  showName="Ethernet"
+  version="1.00"
+  description="This is a sample PDU library for Ethernet as defined in XML Stream Editor.">
+    
+  <TYPE_DEFS>
+	<TYPE_DEF name="LLCSapNumbers" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="IBM SNA" value="04" />
+        <VAL_ENUM uiShowName="IP" value="06" />
+        <VAL_ENUM uiShowName="3Com" value="80" />
+        <VAL_ENUM uiShowName="Snap" value="AA" />
+        <VAL_ENUM uiShowName="Banyan" value="BC" />
+        <VAL_ENUM uiShowName="Novell" value="E0" />
+        <VAL_ENUM uiShowName="ISO Network Layer Protocol" value="FE" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+   <TYPE_DEF name="VNTag" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="VN Tag" niMapped="false">
+
+      <FIELD name="type" type="OCTETSTRING" byteLength="2"
+        defaultValue="8926"
+        uiShowName="Type"
+        uiControlState="ALLOW_OVERRIDE"
+        isNiMapped="false"/>
+
+      <FIELD name="ver" type="BITSTRING" bitLength="2"
+        defaultValue="00"
+        uiShowName="Version" 
+        uiControlState="ALLOW_OVERRIDE"
+        isNiMapped="false"/>
+
+      <FIELD name="res" type="BITSTRING" bitLength="1"
+        defaultValue="0" 
+        uiShowName="Reserved"
+        uiControlState="CALCULATED"
+        isNiMapped="false"/>
+
+      <FIELD name="dir" type="BITSTRING" bitLength="1" 
+        defaultValue="0"
+        uiShowName="Direction"
+        isNiMapped="false"/>
+
+      <FIELD name="pointer" type="BITSTRING" bitLength="1"
+        defaultValue="0"
+        uiShowName="Pointer"
+        isNiMapped="false"/>
+        
+      <FIELD name="dstVif" type="INTEGER" bitLength="14"
+        defaultValue="0"
+        uiShowName="Dst VIF"
+        isNiMapped="false"/>
+        
+      <FIELD name="srcVif" type="INTEGER" bitLength="12"
+        defaultValue="0"
+        uiShowName="Src VIF"
+        isNiMapped="false"/>
+        
+      <FIELD name="looped" type="BITSTRING" bitLength="1"
+        defaultValue="0"
+        uiShowName="Looped"
+        isNiMapped="false"/>
+        
+    </TYPE_DEF>    
+    
+    <TYPE_DEF name="VNTagList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="1" elementType="VNTag" unitType="ELEMENT" niMapped="false"/>
+    
+    <TYPE_DEF name="Vlan" type="SEQUENCE"
+        unitType="ELEMENT" uiShowName="Vlan" niMapped="true">
+
+      <FIELD name="type" type="OCTETSTRING" byteLength="2"
+        defaultValue="8100"
+		uiNoShowModifier="Interface,Filter"
+	uiNoShow="Filter"
+        uiShowName="Type"
+	isNiMapped="true"/>
+
+      <FIELD name="pri" type="BITSTRING" bitLength="3"
+        defaultValue="000"
+        uiShowName="Priority" 
+		uiNoShowModifier="Interface"
+        isNiMapped="true"/>
+
+      <FIELD name="cfi" type="BITSTRING" bitLength="1"
+        defaultValue="0" 
+        uiShowName="CFI"
+        uiNoShow="Interface"
+		uiNoShowModifier="Interface"
+        isNiMapped="true"/>
+
+      <FIELD name="id" type="INTEGER" bitLength="12" 
+        defaultValue="100"
+        uiShowName="ID"
+        isNiMapped="true"
+        isNiPrimaryKey="true"/>
+
+    </TYPE_DEF>
+        
+    <TYPE_DEF name="VlansList" type="SEQUENCE_OF" minOccurs="0" maxOccurs="4096" elementType="Vlan" unitType="ELEMENT" niMapped="true"/>
+    
+    <TYPE_DEF name="LLC" type="SEQUENCE" unitType="ELEMENT" uiShowName="LLC Header" >
+			
+      <FIELD name="dsap" type="LLCSapNumbers"
+		  defaultValue="AA"
+          uiShowName="DSAP" />
+          
+      <FIELD name="ssap" type="LLCSapNumbers"
+		  defaultValue="AA"
+          uiShowName="SSAP" />
+          
+      <FIELD name="control" type="OCTETSTRING" byteLength="1"
+          defaultValue="03"
+          uiShowName="Control Field" />
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="Snap" type="SEQUENCE" unitType="ELEMENT" uiShowName="Snap Header" >
+			
+      <FIELD name="orgcode" type="OCTETSTRING" byteLength="3"
+		  defaultValue="000000"
+          uiShowName="Organization Code" />
+          
+      <FIELD name="EthernetType" type="types:EtherTypes" byteLength="2"
+		  defaultValue="88B5"
+		  uiControlState="ALLOW_OVERRIDE" 
+          uiShowName="Ethernet Type"
+		  procfnTarget="NEXTHDR" />
+    </TYPE_DEF>
+
+       
+    <TYPE_DEF name="EthernetII" type="SEQUENCE" unitType="HEADER"
+        level="2" portType="Ethernet" uiShowName="EthernetII" niMapped="true" >
+
+      <FIELD name="preamble" type="OCTETSTRING"
+        minByteLength="4" maxByteLength="32"
+        defaultValue="55555555555555d5"
+	      uiNoShow="Interface,Filter"
+		    uiNoShowModifier="Interface"
+		    uiShowCommon="false"  
+			  uiOverrideEditor="PreambleEditor"
+        uiShowName="Preamble" />
+				
+      <FIELD name="dstMac" type="MACADDR"
+        defaultValue="00:00:01:00:00:01"
+		    uiNoShowModifier="Interface"
+		    uiNoShow="Interface"
+        uiShowName="Destination MAC" 
+        isNiMapped="true" />
+				
+      <FIELD name="srcMac" type="MACADDR"
+        defaultValue="00:10:94:00:00:02"
+        uiShowName="Source MAC" 
+        isNiMapped="true"
+        isNiPrimaryKey="true"/> 
+				
+      <FIELD name="vntags" type="VNTagList" uiShowName="VN Tags" uiNoShowModifier="Interface,Frame" isNiMapped="false"/>
+                
+      <FIELD name="vlans" type="VlansList"  uiShowName="Vlans" uiNoShowModifier="Interface,Frame" isNiMapped="true"/>
+            
+      <FIELD name="etherType" type="types:EtherTypes"
+        defaultValue="88B5"
+        uiControlState="ALLOW_OVERRIDE"   
+        procfnTarget="NEXTHDR" 
+		    uiNoShow="Interface"
+		    uiNoShowModifier="Interface"
+        uiShowName="EtherType" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0800" />
+        <NXT_HDR id="avtp:IEC_61883_IIDC" name="AVTP IEC 61883 Format" value="22F0" />
+        <NXT_HDR id="avtp:AvtpAudioFormat" name="AVTP Audio Format" value="22F0" />
+        <NXT_HDR id="avtp:CompressedVideoFormat" name="AVTP Compressed Video Format" value="22F0" />
+        <NXT_HDR id="avtp:TSCF" name="AVTP Time-Synchronous Control Format" value="22F0" />
+        <NXT_HDR id="avtp:NTSCF" name="AVTP Non Time-Synchronous Control Format" value="22F0" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="86DD" />
+        <NXT_HDR id="mpls:Mpls" name="MPLS Header" value="8847" />		
+        <NXT_HDR id="pppoe:PPPoEDiscovery" name="PPPoE Discovery" value="8863" />
+        <NXT_HDR id="pppoe:PPPoESession" name="PPPoE Session" value="8864" />
+        <NXT_HDR id="arp:ARP" name="ARP Header" value="0806" />
+        <NXT_HDR id="arp:RARP" name="RARP Header" value="8035" />
+        <NXT_HDR id="ethernetpause:PFC" name="Priority Flow Control" value="8808" />
+        <NXT_HDR id="lacp:LACP" name="LACP PDU" value="8809" />
+        <NXT_HDR id="lacp:Marker" name="Marker PDU" value="8809" />
+        <NXT_HDR id="ptp:Timestamp" name="PTP Timestamp" value="88F7" />
+        <NXT_HDR id="ptp:Sync" name="PTP Sync" value="88F7" />
+        <NXT_HDR id="ptp:FollowUp" name="PTP Follow up" value="88F7" />
+        <NXT_HDR id="ptp:DelayReq" name="PTP Delay Request" value="88F7" />        
+        <NXT_HDR id="serviceoam:CCM" name="Ethernet OAM CCM" value="8902" />
+        <NXT_HDR id="serviceoam:LBM" name="Ethernet OAM LBM" value="8902" />
+        <NXT_HDR id="serviceoam:LBR" name="Ethernet OAM LBR" value="8902" />
+        <NXT_HDR id="serviceoam:LTM" name="Ethernet OAM LTM" value="8902" />
+        <NXT_HDR id="serviceoam:LTR" name="Ethernet OAM LTR" value="8902" />
+        <NXT_HDR id="serviceoam:DMM" name="Ethernet OAM DMM" value="8902" />
+        <NXT_HDR id="serviceoam:DMR" name="Ethernet OAM DMR" value="8902" />
+        <NXT_HDR id="serviceoam:LMM" name="Ethernet OAM LMM" value="8902" />
+        <NXT_HDR id="serviceoam:LMR" name="Ethernet OAM LMR" value="8902" />
+        <NXT_HDR id="serviceoam:SLM" name="Ethernet OAM SLM" value="8902" />
+        <NXT_HDR id="serviceoam:SLR" name="Ethernet OAM SLR" value="8902" />
+        <NXT_HDR id="serviceoam:CSF" name="Ethernet OAM CSF" value="8902" />
+        <NXT_HDR id="serviceoam:R-APS" name="Ethernet OAM R-APS" value="8902" />
+        <NXT_HDR id="fc:FCoE" name="FCoE Header" value="8906"/>
+        <NXT_HDR id="fc:FIP" name="FIP Header" value="8914"/>
+        <NXT_HDR id="fc:FCoEHeader" name="FCoE Header (simple)" value="8906" />
+        <NXT_HDR id="lldp:ChassisIdTlv" name="Chassis ID TLV" value="88CC" />
+        <NXT_HDR id="ecp:ECP" name="ECP" value="8940" />
+        <NXT_HDR id="ethernetssm:EthernetSSM" name="Ethernet SSM" value="8809" />
+        <NXT_HDR id="trill:TRILL" name="TRILL Header" value="22F3" />
+        <NXT_HDR id="bip:Bip" name="BIP Header" value="8951" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="88B5" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="88B5" />
+        <!-- Next header needed to be defaulted to 88B5 for custom and custom repeat.  -->
+
+      </NEXT_HEADERS>
+			
+    </TYPE_DEF> 
+    
+    <TYPE_DEF name="Ethernet8023Raw" type="SEQUENCE" unitType="HEADER"
+        level="2" portType="Ethernet" uiShowName="802.3 Raw" >
+
+      <FIELD name="preamble" type="OCTETSTRING"
+        minByteLength="4" maxByteLength="32"
+        defaultValue="55555555555555d5"
+		    uiNoShow="Interface,Filter"
+		    uiShowCommon="false"
+        uiOverrideEditor="PreambleEditor"
+        uiShowName="Preamble" />
+				
+      <FIELD name="dstMac" type="MACADDR"
+        defaultValue="00:00:01:00:00:01"
+        uiShowName="Destination MAC" />
+				
+      <FIELD name="srcMac" type="MACADDR"
+        defaultValue="00:10:94:00:00:02"
+        uiShowName="Source MAC" />
+
+      <FIELD name="vntags" type="VNTagList" uiShowName="VN Tags" />
+        
+      <FIELD name="vlans" type="VlansList" uiShowName="Vlans" />
+            
+      <FIELD name="length" type="INTEGER" bitLength="16"
+        uiControlState="CALCULATED" 
+        uiNoShowModifier="Interface,Frame,Filter"
+        uiShowName="Length" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="custom:Custom" name="Custom" value="88B5" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="88B5" />
+        <!-- Next header needed to be defaulted to 88B5 for custom.  -->
+      </NEXT_HEADERS>
+
+    </TYPE_DEF>
+
+    <TYPE_DEF name="Ethernet8022" type="SEQUENCE" unitType="HEADER"
+        level="2" portType="Ethernet" uiShowName="802.2" >
+
+      <FIELD name="preamble" type="OCTETSTRING"
+        minByteLength="4" maxByteLength="32"
+        defaultValue="55555555555555d5"
+		    uiNoShow="Interface,Filter"
+		    uiShowCommon="false"
+        uiOverrideEditor="PreambleEditor"
+        uiShowName="Preamble" />
+
+      <FIELD name="dstMac" type="MACADDR"
+        defaultValue="00:00:01:00:00:01"
+        uiShowName="Destination MAC" />
+
+      <FIELD name="srcMac" type="MACADDR"
+        defaultValue="00:10:94:00:00:02"
+        uiShowName="Source MAC" />
+
+      <FIELD name="vntags" type="VNTagList" uiShowName="VN Tags" />
+        
+      <FIELD name="vlans" type="VlansList" uiShowName="Vlans" />
+
+      <FIELD name="length" type="INTEGER" bitLength="16"
+        uiControlState="CALCULATED" 
+        uiNoShowModifier="Interface,Frame,Filter"
+        uiShowName="Length" />
+        
+      <FIELD name="llcheader" type="LLC"
+         uiShowName="LLC Header" />
+
+      <NEXT_HEADERS>
+		<NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0800" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="88B5" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="88B5" />
+        <!-- Next header needed to be defaulted to 88B5 for custom.  -->
+      </NEXT_HEADERS>
+			
+    </TYPE_DEF> 
+    
+    <TYPE_DEF name="EthernetSnap" type="SEQUENCE" unitType="HEADER"
+        level="2" portType="Ethernet" uiShowName="Ethernet Snap" >
+
+      <FIELD name="preamble" type="OCTETSTRING"
+        minByteLength="4" maxByteLength="32"
+        defaultValue="55555555555555d5"
+        uiNoShow="Interface,Filter"
+		    uiShowCommon="false"
+        uiOverrideEditor="PreambleEditor"
+        uiShowName="Preamble" />
+				
+      <FIELD name="dstMac" type="MACADDR"
+        defaultValue="00:00:01:00:00:01"
+        uiShowName="Destination MAC" />
+				
+      <FIELD name="srcMac" type="MACADDR"
+        defaultValue="00:10:94:00:00:02"
+        uiShowName="Source MAC" />
+
+      <FIELD name="vntags" type="VNTagList" uiShowName="VN Tags" />
+        
+      <FIELD name="vlans" type="VlansList" uiShowName="Vlans" />
+            
+      <FIELD name="length" type="INTEGER" bitLength="16"
+        uiControlState="CALCULATED" 
+        uiNoShowModifier="Interface,Frame,Filter"
+        uiShowName="Length" />
+        
+      <FIELD name="llcheader" type="LLC"
+         uiShowName="LLC Header" />
+         
+      <FIELD name="snapheader" type="Snap"
+		 procfnTarget="NEXTHDR" 
+         uiShowName="Snap Header" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="0800" />
+        <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="86DD" />
+        <NXT_HDR id="mpls:Mpls" name="MPLS Header" value="8847" />
+        <NXT_HDR id="pppoe:PPPoEDiscovery" name="PPPoE Discovery" value="8863" />
+        <NXT_HDR id="pppoe:PPPoESession" name="PPPoE Session" value="8864" />
+        <NXT_HDR id="arp:ARP" name="ARP Header" value="0806" /> 
+        <NXT_HDR id="arp:RARP" name="RARP Header" value="8035" />
+		<NXT_HDR id="ieeeMacControl:MACControl" name="IEEE MAC Control" value="8808" />
+		<NXT_HDR id="lldp:ChassisIdTlv" name="Chassis ID TLV" value="88CC" />
+        <NXT_HDR id="ecp:ECP" name="ECP" value="8940" />
+        <NXT_HDR id="custom:Custom" name="Custom" value="88B5" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="88B5" />
+        <!-- Next header needed to be defaulted to 88B5 for custom.  -->
+      </NEXT_HEADERS>
+			
+    </TYPE_DEF> 
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

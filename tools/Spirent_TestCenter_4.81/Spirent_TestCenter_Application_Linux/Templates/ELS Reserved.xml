@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ELSReserved"
+    showName="ELS Reserved"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:ELSReserved" 
+    description="ELS Reserved">
+
+    <pdus>
+      <pdu name="pdu1" pdu="fc:ELSReserved"/>
+    </pdus>
+  </template>
+</frame>

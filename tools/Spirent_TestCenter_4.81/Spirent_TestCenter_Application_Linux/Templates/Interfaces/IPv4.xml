@@ -1,0 +1,51 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_IPv4"
+    showName="IPv4"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="ipv4:IPv4"
+    description="IPv4" >
+    <modifiers>
+      <modifier name="IPv4 Modifier">
+        <mode>Increment</mode>
+        <count>1</count>
+        <data>192.85.1.2</data>
+        <datatype>Native</datatype>
+        <mask>255.255.255.255</mask>
+        <step>0.0.0.1</step>
+        <offset>0</offset>
+        <stutterCount>0</stutterCount>
+        <forEachModifyList>Mod1,</forEachModifyList>
+        <useStream>false</useStream>
+      </modifier>
+      <modifier name="Mod1">
+        <mode>Increment</mode>
+        <count>1</count>
+        <data>192.85.1.1</data>
+        <datatype>Native</datatype>
+        <mask>255.255.255.255</mask>
+        <step>0.0.0.0</step>
+        <offset>0</offset>
+        <stutterCount>0</stutterCount>
+        <forEachModifyList />
+        <useStream>false</useStream>
+      </modifier>
+    </modifiers>
+    <pdus>
+      <pdu name="proto1" pdu="ipv4:IPv4">
+        <sourceAddr modifier="IPv4 Modifier" override="true">192.85.1.2</sourceAddr>
+        <gateway modifier="Mod1" override="true">192.85.1.1</gateway>
+        <tosDiffserv>
+          <tos>
+            <rBit>1</rBit>
+            <reserved>10</reserved>
+          </tos>
+        </tosDiffserv>
+      </pdu>
+    </pdus>
+  </template>
+</frame> 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+<!-- This Document lists command template information-->
+	<Command type="GET_ALLPORTS" template="./getallports.fftc" />
+	<Command type="LOAD_CONFIG" template="./loadconfig.fftc" />
+	<Command type="WRITE_CONFIG" template="./writeconfig.fftc" />
+	<Command type="RESET" template="./reset.fftc" />
+	<Command type="START_PORTSTATS" template="./getportstats.fftc" />
+    <Command type="GET_PORTSTATUS" template="./getportstatus.fftc"/>
+	<Command type="CUSTOM1" template="./" />
+	<Command type="CUSTOM2" template="./" />
+	<Command type="CUSTOM3" template="./" />
+	<Command type="CUSTOM4" template="./" />
+	<Command type="CUSTOM5" template="./" />
+	<Command type="CUSTOM6" template="./" />
+	<Command type="CUSTOM7" template="./" />
+	<Command type="CUSTOM8" template="./" />
+	<Command type="CUSTOM9" template="./" />
+	<Command type="CUSTOM10" template="./" />
+</Configuration>

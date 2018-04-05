@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="EOAM Port Status TLV"
+    showName="Port Status TLV"
+    version="1.00"
+    category="EOAM TLV"
+    readonly="true"
+    validate="true"
+    firstPdu="EOAMTLV:PrtStat"
+    description="Ethernet OAM Port Status TLV" >
+
+    <pdus>
+      <pdu name="proto1" pdu="EOAMTLV:PrtStat" />
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,257 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5119" serializationBase="true" 
+ Identifier="Router Protocols\BFD Session Results\IPv4 Sessions"
+ PrimaryClass="BfdIpv4SessionResults"
+ Description="object://bfd/BfdIpv4SessionResults"
+ Path="Router Protocols\BFD Session Results"
+ CustomDisplayPath="Routing and MPLS\BFD Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="IPv4 Sessions">
+  <RealTimeResultColumnDefinition id="5120" 
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 347">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5121" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 25">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5122" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="Ipv4SrcAddr"
+   ColumnDescription=""
+   ColumnWidth="120"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 348">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5123" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="Ipv4DstAddr"
+   ColumnDescription=""
+   ColumnWidth="142"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 349">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5124" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="BfdSessionState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 350">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5125" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="MyDiscriminator"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 351">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5126" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="YourDiscriminator"
+   ColumnDescription=""
+   ColumnWidth="109"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 352">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5127" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="BfdDiagnosticCode"
+   ColumnDescription=""
+   ColumnWidth="121"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 353">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5128" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="BfdControlBits"
+   ColumnDescription=""
+   ColumnWidth="98"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 354">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5129" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="RxCount"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 355">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5130" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="TxCount"
+   ColumnDescription=""
+   ColumnWidth="137"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 356">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5131" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="TxInterval"
+   ColumnDescription=""
+   ColumnWidth="146"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 357">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5132" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="RxDesiredMinRxInterval"
+   ColumnDescription=""
+   ColumnWidth="182"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 358">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5133" 
+   GroupName="IPv4 Sessions"
+   GroupId="object://customgroup/db4cc144-c023-4145-b520-a58ca81ebbb0/IPv4 Sessions"
+   ColumnClassName="BfdRouterConfig BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults BfdIpv4SessionResults"
+   ColumnPropertyName="ScaleMode Ipv4SrcAddr Ipv4DstAddr BfdSessionState MyDiscriminator YourDiscriminator BfdDiagnosticCode LastBfdDiagnosticErrorRx BfdControlBits RxCount TxCount TxInterval RxDesiredMinRxInterval RxReqMinEchoRxInterval TimeoutCount FlapCount TxAvgRate TxMinRate TxMaxRate RxAvgRate RxMinRate RxMaxRate"
+   SqlString="SELECT AllDevice.Name AS &apos;Device Name&apos;, BfdRouterConfig.ScaleMode AS &apos;Scale Mode&apos;, BfdIpv4SessionResults.Ipv4SrcAddr AS &apos;IPv4 Source Address&apos;, BfdIpv4SessionResults.Ipv4DstAddr AS &apos;IPv4 Destination Address&apos;, BfdIpv4SessionResults.BfdSessionState AS &apos;BFD State&apos;, BfdIpv4SessionResults.MyDiscriminator AS &apos;My Discriminator&apos;, BfdIpv4SessionResults.YourDiscriminator AS &apos;Your Discriminator&apos;, BfdIpv4SessionResults.BfdDiagnosticCode AS &apos;BFD Diagnostic Code&apos;, BfdIpv4SessionResults.LastBfdDiagnosticErrorRx AS &apos;Last BFD Diagnostic Error Rx&apos;, BfdIpv4SessionResults.BfdControlBits AS &apos;BFD Control Bits&apos;, BfdIpv4SessionResults.RxCount AS &apos;Receive Count&apos;, BfdIpv4SessionResults.TxCount AS &apos;Transmit Count (msecs)&apos;, BfdIpv4SessionResults.TxInterval AS &apos;Transmit Interval (msecs)&apos;, BfdIpv4SessionResults.RxDesiredMinRxInterval AS &apos;Received Desired Min Rx Interval (msecs)&apos;, BfdIpv4SessionResults.RxReqMinEchoRxInterval AS &apos;Received Required Min Echo Rx Interval (msecs)&apos;, BfdIpv4SessionResults.TimeoutCount AS &apos;Timeouts Detected&apos;, BfdIpv4SessionResults.FlapCount AS &apos;Flaps Detected&apos;, BfdIpv4SessionResults.TxAvgRate AS &apos;Tx Avg Rate (packets per second)&apos;, BfdIpv4SessionResults.TxMinRate AS &apos;Tx Min Rate (packets per second)&apos;, BfdIpv4SessionResults.TxMaxRate AS &apos;Tx Max Rate (packets per second)&apos;, BfdIpv4SessionResults.RxAvgRate AS &apos;Rx Avg Rate (packets per second)&apos;, BfdIpv4SessionResults.RxMinRate AS &apos;Rx Min Rate (packets per second)&apos;, BfdIpv4SessionResults.RxMaxRate AS &apos;Rx Max Rate (packets per second)&apos; FROM BfdIpv4SessionResults, AllDevice, BfdRouterConfig WHERE ( BfdIpv4SessionResults.ParentHnd = BfdRouterConfig.Handle AND BfdRouterConfig.ParentHnd = AllDevice.Handle AND BfdIpv4SessionResults.DataSetId = @DataSetId AND AllDevice.DataSetId = @DataSetId AND BfdRouterConfig.DataSetId = @DataSetId  ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 26">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5134" 
+   ConfigClassId="bfdrouterconfig"
+   ResultClassId="bfdipv4sessionresults"
+   ResultRootList="8"
+   PropertyIdArray="bfdipv4sessionresults.BfdSessionState bfdipv4sessionresults.BfdDiagnosticCode bfdipv4sessionresults.MyDiscriminator bfdipv4sessionresults.YourDiscriminator bfdipv4sessionresults.TxInterval bfdipv4sessionresults.TxCount bfdipv4sessionresults.RxCount bfdipv4sessionresults.BfdControlBits bfdipv4sessionresults.RxDesiredMinRxInterval bfdipv4sessionresults.RxReqMinEchoRxInterval bfdipv4sessionresults.ipv4SrcAddr bfdipv4sessionresults.ipv4DstAddr bfdipv4sessionresults.timeoutcount bfdipv4sessionresults.flapcount bfdipv4sessionresults.lastbfddiagnosticerrorrx bfdipv4sessionresults.txavgrate bfdipv4sessionresults.txminrate bfdipv4sessionresults.txmaxrate bfdipv4sessionresults.rxavgrate bfdipv4sessionresults.rxminrate bfdipv4sessionresults.rxmaxrate"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   Name="ResultQuery 17">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5135" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="RxReqMinEchoRxInterval"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 273">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5136" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="TimeoutCount"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 274">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5137" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="FlapCount"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 275">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5138" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="LastBfdDiagnosticErrorRx"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 276">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5139" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="TxAvgRate"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 277">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5140" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="TxMinRate"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 278">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5141" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="TxMaxRate"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 279">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5142" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="RxAvgRate"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 280">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5143" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="RxMinRate"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 281">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5144" 
+   ColumnClassName="BfdIpv4SessionResults"
+   ColumnPropertyName="RxMaxRate"
+   ColumnDescription=""
+   ColumnWidth="216"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 282">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5145" 
+   ColumnClassName="BfdRouterConfig"
+   ColumnPropertyName="ScaleMode"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 283">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

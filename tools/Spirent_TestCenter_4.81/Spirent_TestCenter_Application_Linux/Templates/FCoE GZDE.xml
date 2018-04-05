@@ -1,0 +1,28 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoEGZDE" 
+    showName="FCoE GZDE" 
+    version="1.0" 
+    category="Switching" 
+    readonly="true" 
+    validate="true" 
+    firstPdu="fc:FCoEHeader" 
+    description="FCoE GZDE">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>02</rCtl>
+        <dId>FFFFFA</dId>
+        <frameControl>290000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:GsRequestWithZoneSetName">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>03</gsSubType>
+          <commandRespondCode>0123</commandRespondCode>
+        </ctIuPreamble>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>NONE</instance>
+      </value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.552.0576.0000</instance>
+      </value>
+      <path>select Version from StcSystem where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2010-12-18 02:42:12</instance>
+      </value>
+      <path>select CreatedTime from DataSet where Id = =$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstEndDate</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>select CreatedTime from DataSet where Id = =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DetailStatus</name>
+      <persist>false</persist>
+      <path>select Id from RxStreamResults where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+        <instance>1</instance>
+        <instance>1</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>S2Trial</name>
+      <persist>false</persist>
+      <path>select IterationNum from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>S2MinLat</name>
+      <persist>false</persist>
+      <path>select MinLatency from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>S2AvgLat</name>
+      <persist>false</persist>
+      <path>select AvgLatency from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>S2MaxLat</name>
+      <persist>false</persist>
+      <path>select MaxLatency from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>S2FS</name>
+      <persist>false</persist>
+      <path>select (case FrameSizeType when 'Random' then 'N/A' else FrameSize end) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>S3MaxLat</name>
+      <persist>false</persist>
+      <path>select MaxLatency from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S1FS</name>
+      <persist>false</persist>
+      <path>select distinct (case FrameSizeType when 'Random' then 'N/A' else FrameSize end) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>S1MinLat</name>
+      <persist>false</persist>
+      <path>select min(MinLatency) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>S1AvgLat</name>
+      <persist>false</persist>
+      <path>select ROUND(avg(AvgLatency),3) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>S1MaxLat</name>
+      <persist>false</persist>
+      <path>select max(MaxLatency) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>S1LatenType</name>
+      <persist>false</persist>
+      <path>select C.LatencyType from Rfc2889BroadcastFrameLatencyPerFrameSizeResult L left join Rfc2889BroadcastFrameLatencyConfig C inner join Rfc2889BroadcastFrameLatencyCommand LC on LC.handle = c.parenthnd inner join Sequencer S on LC.parenthnd = s.currentcommand OR LC.handle = s.currentcommand where L.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by L.FrameSize, L.IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>basic</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>S1MinJitter</name>
+      <persist>false</persist>
+      <path>select min(MinJitter) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>S1MaxJitter</name>
+      <persist>false</persist>
+      <path>select max(MaxJitter) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>S1AvgJitter</name>
+      <persist>false</persist>
+      <path>select ROUND(avg(AvgJitter),3) from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>S2MinJitter</name>
+      <persist>false</persist>
+      <path>select MinJitter from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>S2MaxJitter</name>
+      <persist>false</persist>
+      <path>select MaxJitter from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>S2AvgJitter</name>
+      <persist>false</persist>
+      <path>select AvgJitter from Rfc2889BroadcastFrameLatencyPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by DataSetId;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Warning : Some modules do not support latency measurement</instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnitString</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Mbps</instance>
+      </value>
+      <path>select (case DisplayLoadUnit when "PERCENT_LINE_RATE" then "%" when "FRAMES_PER_SECOND" then "fps" when "INTER_BURST_GAP" then "Inter-burst Gap" when "MEGABITS_PER_SECOND" then "Mbps" when "KILOBITS_PER_SECOND" then "Kbps" when "BITS_PER_SECOND" then "bps" end ) from BenchmarkRfc2889ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2010-12-17 19:24:48 PST</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String">2010-12-17 18:42:12 PST</value>
+      <script><![CDATA[# generate the report start time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>TestEndDate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# generate the report end time - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstEndDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Basic</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1289268859824</value>
+      <script><![CDATA[set result "1292642931278"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Mon Nov 08 18:14:19.824 PST 2010</value>
+      <script><![CDATA[set result "Fri Dec 17 19:28:51.278 PST 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnit</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Mbps</instance>
+      </value>
+      <script><![CDATA[if {[info exist DisplayLoadUnitString]} {&#xa;    set result $DisplayLoadUnitString&#xa;} else {&#xa;    set result "%"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>S2TrialSum</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Trial</td>&#xa;    <td bgcolor="#eeeeee">Frame\nSize (Bytes)</td>&#xa;    <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Min\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nJitter\n(uSec)</td>&#xa;  </tr>&#xa; <tr iterate="=$S2Trial$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$S2Trial$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$S2FS$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S2MinLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S2AvgLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S2MaxLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S2MinJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S2AvgJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S2MaxJitter$</td>&#xa;   </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>S1TestSum</name>
+      <script><![CDATA[<!-- min latency:  lowest of min values -->&#xa;<!-- avg latency:  avg of all avg values -->&#xa;<!-- max latency:  higest of max values -->&#xa;&#xa;<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">Frame\nSize (bytes)</td>&#xa;    <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Latency\nType</td>&#xa;     <td bgcolor="#eeeeee">Min\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nJitter\n(uSec)</td>&#xa;  </tr>&#xa; <tr iterate="=$S1FS$">&#xa;   <td halign="right" bgcolor="#eeeeee">=$S1FS$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$S1MinLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S1AvgLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S1MaxLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S1LatenType$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$S1MinJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S1AvgJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$S1MaxJitter$</td>&#xa;    </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>S1TestResults</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>S1MinLat</name>
+        <title>Min Latency</title>
+        <color>#40ff40</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>S1AvgLat</name>
+        <title>Avg Latency</title>
+        <color>#ffff40</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>S1MaxLat</name>
+        <title>Max Latency</title>
+        <color>#ff4040</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>S1FS</xStatistic>
+      <xTitle>Frame Size</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>SpiretnLogoTitle</name>
+        <x>200</x>
+        <y>347</y>
+        <width>292</width>
+        <height>33</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>450</y>
+        <width>80</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>450</y>
+        <width>200</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC2889&amp;nbsp;Broadcast&amp;nbsp;Frame&amp;nbsp;Latency</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>103</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestDateStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdrLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>700</x>
+        <y>100</y>
+        <width>100</width>
+        <height>600</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titleStr</name>
+        <x>255</x>
+        <y>100</y>
+        <width>190</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Test&amp;nbsp;Results&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;Size</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>resultTbl</name>
+        <x>123</x>
+        <y>444</y>
+        <width>472</width>
+        <height>64</height>
+        <value>S1TestSum</value>
+        <size>10</size>
+      </instance>
+      <instance type="Graph">
+        <name>resultsGrph</name>
+        <x>56</x>
+        <y>138</y>
+        <width>600</width>
+        <height>300</height>
+        <value>S1TestResults</value>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Trial Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titlStr</name>
+        <x>290</x>
+        <y>100</y>
+        <width>154</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Test&amp;nbsp;Summary&amp;nbsp;by&amp;nbsp;Trial</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>trialSumTbl</name>
+        <x>125</x>
+        <y>145</y>
+        <width>277</width>
+        <height>183</height>
+        <value>S2TrialSum</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>theoMaxTitleStr</name>
+        <x>200</x>
+        <y>104</y>
+        <width>243</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>versionStr</name>
+        <x>35</x>
+        <y>459</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R1B</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputStartIdStr</name>
+        <x>35</x>
+        <y>485</y>
+        <width>165</width>
+        <height>15</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>505</y>
+        <width>150</width>
+        <height>15</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footer</name>
+        <x>0</x>
+        <y>520</y>
+        <width>800</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Image">
+        <name>contact</name>
+        <x>670</x>
+        <y>100</y>
+        <width>130</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>528</y>
+        <width>288</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>TheoMax</name>
+        <x>17</x>
+        <y>145</y>
+        <width>656</width>
+        <height>256</height>
+        <src>theoMaxPosAtm.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

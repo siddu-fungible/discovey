@@ -1,0 +1,182 @@
+{
+  "methodology_key": "CS_AUTODEPLOY_AGENTS",
+  "display_name": "Prototype Agent Auto-deployment Test",
+  "short_display_name": "Prototype Agent Auto-deployment Test",
+  "description": "Prototype bringing up agents using autodeployment.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "port_groups": [],
+  "machine_map": {
+    "sides": [
+      {
+        "side": "WEST",
+        "machine_group": "MachineGroupWestMachineGroup"
+      }
+    ]
+  },
+  "machine_groups": [
+    {
+      "property": "MachineGroupWestMachineGroup",
+      "display_name": "Machine Group MachineGroupWestMachineGroup",
+      "machines": [
+        {
+          "name": "gk_MachineSet",
+          "machine_id": "UniqueMachineId",
+          "count": "3",
+          "deployment_params": {
+            "specification": {
+              "flavor_id": "e80de754-5e5e-431c-94d0-92d6b720b558",
+              "image_id": "d3db3ad9-e34b-4f85-bcd0-5fe3dd138220",
+              "boot_options": {
+                "create_new_volume": true,
+                "volumne_size": 5
+              },
+              "networks": [
+                {
+                  "id": "313ac65d-dd59-4a9a-8eed-3d2e5f8dea6e"
+                }
+              ],
+              "security_groups": [
+                {
+                  "id": "default"
+                }
+              ]
+            },
+            "location": {
+              "id": "nova"
+            },
+            "credential_key": "Fake_Cred_Key"
+          }
+        }
+      ]
+    }
+  ],
+  "property_groups": [
+    {
+      "display_name": "Global Configuration",
+      "description": "Global Configuration",
+      "group_type": "TEST",
+      "test_properties": [
+        {
+          "display_name": "Provider Response Maximum Wait Time",
+          "description": "Maximum amount of time to wait for a response from the provider when a command is issued.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "60",
+          "units": "sec",
+          "property": "ProviderRespMaxWaitTime"
+        },
+        {
+          "display_name": "Provider Response Poll Time",
+          "description": "Amount of time to wait between polls to check for the provider's response to a command.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "ProviderRespPollTime"
+        },
+        {
+          "display_name": "Agent Deployment Maximum Wait Time",
+          "description": "Maximum amount of time to wait for auto-deployed agents to come up.  This maximum applies to agents of a specific Template or a specific batch of agents on a specific Template if BatchSize is non-zero.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "300",
+          "units": "sec",
+          "property": "DeployMaxWaitTime"
+        },
+        {
+          "display_name": "Agent Deployment Poll Time",
+          "description": "Amount of time to wait between polls to check for the number of agents have successfully been deployed for a specific Template or a specific batch of agents on a specific Template if BatchSize is non-zero.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "DeployPollTime"
+        },
+        {
+          "display_name": "Tear Down Maximum Wait Time",
+          "description": "Specifies the maximum time in seconds to wait to for all the deployed agents of the Template to be torn down.  When the BatchSize is non-zero, this parameter corresponds to the maximum wait time per batch of agents per Template.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "300",
+          "units": "sec",
+          "property": "TearDownMaxWaitTime"
+        },
+        {
+          "display_name": "Tear Down Poll Time",
+          "description": "Specifies the time in milliseconds to wait between polls while polling for number of agents that are still up.  Note that each poll for number of agents that are up involves issuing a command to the provider to get the current number of agents that are still up.",
+          "property_value_type": "INTEGER",
+          "minimum": "1",
+          "is_collection": false,
+          "property_value": "1000",
+          "units": "msec",
+          "property": "TearDownPollTime"
+        },
+        {
+          "display_name": "Agent Deployment Batch Size",
+          "description": "Maximum number of agents to attempt at any one time.  Note that the Templates are deployed serially; the BatchSize further breaks up the agents in a Template to reduce the load on the server.  Set the BatchSize to zero to deploy all agents on a Template as fast as possible.",
+          "property_value_type": "INTEGER",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "0",
+          "units": "agents",
+          "property": "DeployBatchSize"
+        },
+        {
+          "display_name": "Agent Tear Down Batch Size",
+          "description": "Maximum number of agents to attempt at any one time.  Note that the Templates are deployed serially; the BatchSize further breaks up the agents in a Template to reduce the load on the server.  Set the BatchSize to zero to tear down all agents on a Template as fast as possible.",
+          "property_value_type": "INTEGER",
+          "minimum": "0",
+          "is_collection": false,
+          "property_value": "0",
+          "units": "agents",
+          "property": "TearDownBatchSize"
+        },
+        {
+          "display_name": "Enable Delete Instances On End Of Test",
+          "description": "Enable deletion of all auto-deployed instances at the end of the test.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property": "EnableEotDeleteInstances",
+          "property_value": "True"
+        },
+        {
+          "display_name": "Enable CPU Load",
+          "description": "Enable generation of CPU Load on auto-deployed instances.",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property": "EnableCpuLoad",
+          "property_value": "True"
+        },
+        {
+          "display_name": "CPU Load",
+          "description": "CPU Load",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "11.11",
+          "units": "%",
+          "property": "CpuLoad"
+        },
+        {
+          "display_name": "Load Generation Duration",
+          "description": "The minimum time to generate load on the selected agents.",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "30.00",
+          "units": "sec",
+          "property": "LoadGenDuration"
+        }
+      ]
+    }
+  ]
+}

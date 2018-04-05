@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+
+<EquationProvider id="1" serializationBase="true" 
+ ProviderPluginName="event"
+ ResultSource="ConvergenceConfig"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="Protocol Event Manager Equation Provider">
+  <ExternalEquationResultProperty id="1" 
+   ExpressionType="MATH"
+   Equation="ConvergenceConfig.EventStreamRxFirstArrivalTime-ConvergenceConfig.EventTimestamp"
+   StandardGroupingDefinition=""
+   DependedCounters="ConvergenceConfig.EventStreamRxFirstArrivalTime ConvergenceConfig.EventTimestamp"
+   PropertyName="EventStreamConvergenceTime"
+   PropertyDisplayName="Event Stream Convergence Time (us)"
+   IsSelectable="FALSE"
+   PropertyType="DOUBLE"
+   PropertyILType="U64"
+   PropertyEnumValues=""
+   PropertyUnitType=""
+   PropertyGroup="Event Stream Convergence"
+   Precision="2"
+   DisplayFormat="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ExternalEquationResultProperty-EventStreamConvergenceTime">
+  </ExternalEquationResultProperty>
+</EquationProvider>

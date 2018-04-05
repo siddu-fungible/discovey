@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5218" serializationBase="true" 
+ Identifier="Application Layer Protocols\SIP Port Results"
+ PrimaryClass="SipPortResults"
+ Description="object://l4l7/SipPortResults"
+ Path="Application Layer Protocols"
+ CustomDisplayPath="Application Layer Protocols\SIP/TIP"
+ CustomDisplayName="Port Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="SIP Port Results">
+  <RealTimeResultColumnDefinition id="5219" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 131">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5220" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 9">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5221" 
+   GroupName="Main"
+   GroupId="object://customgroup/de98ca93-b938-4aee-8ac4-f6ae2b3fb9ae/Main"
+   ColumnClassName="SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults"
+   ColumnPropertyName="TotalUaCount RegistrationAttemptCount RegistrationSuccessCount RegistrationRetryCount RegistrationFailureCount RegistrationSuccessPercent RegistrationMinTime RegistrationMaxTime RegistrationCumulativeTime RegistrationAvgTime CallAttemptCount CallSuccessCount CallFailureCount CallSuccessPercent CallsAnsweredCount CallMinTime CallMaxTime CallCumulativeTime CallAvgTime SessionRefreshesCount"
+   SqlString="SELECT Port.Name AS &apos;Port Name&apos;, SipPortEotResults.TotalUaCount AS &apos;Total Number Of UAs&apos;, SipPortEotResults.RegistrationAttemptCount AS &apos;Attempted UA Registrations&apos;, SipPortEotResults.RegistrationSuccessCount AS &apos;Successful UA Registrations&apos;, SipPortEotResults.RegistrationRetryCount AS &apos;Number Of UA Registration Retries&apos;, SipPortEotResults.RegistrationFailureCount AS &apos;Failed UA Registrations&apos;, SipPortEotResults.RegistrationSuccessCount / SipPortEotResults.RegistrationAttemptCount * 100 AS &apos;UA Regstration Success Percentage (%)&apos;, SipPortEotResults.RegistrationMinTime AS &apos;Minimum UA Registration Time (msec)&apos;, SipPortEotResults.RegistrationMaxTime AS &apos;Maximum UA Registration Time (msec)&apos;, SipPortEotResults.RegistrationCumulativeTime AS &apos;Cumulative UA Registration Time (msec)&apos;, (SipPortEotResults.RegistrationMaxTime + SipPortEotResults.RegistrationMinTime) / 2 AS &apos;Average UA Registration Time (msec)&apos;, SipPortEotResults.CallAttemptCount AS &apos;Attempted Calls&apos;, SipPortEotResults.CallSuccessCount AS &apos;Successful Calls&apos;, SipPortEotResults.CallFailureCount AS &apos;Failed Calls&apos;, SipPortEotResults.CallSuccessCount / SipPortEotResults.CallAttemptCount * 100 AS &apos;Call Success Percentage (%)&apos;, SipPortEotResults.CallsAnsweredCount AS &apos;Calls Answered Count&apos;, SipPortEotResults.CallMinTime AS &apos;Minimum Call Setup Time (msec)&apos;, SipPortEotResults.CallMaxTime AS &apos;Maximum Call Setup Time (msec)&apos;, SipPortEotResults.CallCumulativeTime AS &apos;Cumulative Call Setup Time (msec)&apos;, (SipPortEotResults.CallMinTime + SipPortEotResults.CallMaxTime) / 2 AS &apos;Average Call Setup Time (msec)&apos;,SipPortEotResults.SessionRefreshesCount AS &apos;Calls Refresh/Update Count&apos; FROM SipPortEotResults, Port WHERE ( SipPortEotResults.ParentHnd = Port.Handle AND SipPortEotResults.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId ) "
+   UseCustomSqlString="TRUE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 10">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5222" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="TotalUaCount"
+   ColumnDescription=""
+   ColumnWidth="121"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 132">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5223" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationAttemptCount"
+   ColumnDescription=""
+   ColumnWidth="152"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 133">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5224" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationSuccessCount"
+   ColumnDescription=""
+   ColumnWidth="151"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 134">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5225" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationRetryCount"
+   ColumnDescription=""
+   ColumnWidth="183"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 135">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5226" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationFailureCount"
+   ColumnDescription=""
+   ColumnWidth="129"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 136">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5227" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationSuccessPercent"
+   ColumnDescription=""
+   ColumnWidth="213"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 137">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5228" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationMinTime"
+   ColumnDescription=""
+   ColumnWidth="204"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 138">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5229" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationMaxTime"
+   ColumnDescription=""
+   ColumnWidth="206"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 139">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5230" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationCumulativeTime"
+   ColumnDescription=""
+   ColumnWidth="214"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 140">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5231" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RegistrationAvgTime"
+   ColumnDescription=""
+   ColumnWidth="199"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 141">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5232" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallAttemptCount"
+   ColumnDescription=""
+   ColumnWidth="94"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 142">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5233" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallSuccessCount"
+   ColumnDescription=""
+   ColumnWidth="93"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 143">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5234" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallFailureCount"
+   ColumnDescription=""
+   ColumnWidth="71"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 144">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5235" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallSuccessPercent"
+   ColumnDescription=""
+   ColumnWidth="159"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 145">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5236" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallsAnsweredCount"
+   ColumnDescription=""
+   ColumnWidth="125"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 146">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5237" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallMinTime"
+   ColumnDescription=""
+   ColumnWidth="177"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 147">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5238" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallMaxTime"
+   ColumnDescription=""
+   ColumnWidth="179"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 148">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5239" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallCumulativeTime"
+   ColumnDescription=""
+   ColumnWidth="186"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 149">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5240" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="CallAvgTime"
+   ColumnDescription=""
+   ColumnWidth="172"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 150">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5241" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="SessionRefreshesCount"
+   ColumnDescription=""
+   ColumnWidth="172"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 151">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="76" 
+   ConfigClassId="port"
+   ResultClassId="sipportresults"
+   ResultRootList="2"
+   PropertyIdArray="sipportresults.totaluacount sipportresults.registrationattemptcount sipportresults.registrationsuccesscount sipportresults.registrationretrycount sipportresults.registrationfailurecount sipportresults.registrationsuccesspercent sipportresults.registrationmintime sipportresults.registrationmaxtime sipportresults.registrationcumulativetime sipportresults.registrationavgtime sipportresults.callattemptcount sipportresults.callsuccesscount sipportresults.callfailurecount sipportresults.callsuccesspercent sipportresults.callsansweredcount sipportresults.callmintime sipportresults.callmaxtime sipportresults.callcumulativetime sipportresults.callavgtime sipportresults.sessionrefreshescount sipportresults.txresponsecode4xxcount sipportresults.rxresponsecode4xxcount sipportresults.txresponsecode5xxcount sipportresults.rxresponsecode5xxcount sipportresults.txresponsecode6xxcount sipportresults.rxresponsecode6xxcount"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 5">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5242" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="TxResponseCode4XXCount"
+   ColumnDescription=""
+   ColumnWidth="65"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 152">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5243" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RxResponseCode4XXCount"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 153">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5244" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="TxResponseCode5XXCount"
+   ColumnDescription=""
+   ColumnWidth="65"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 154">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5245" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RxResponseCode5XXCount"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 155">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5246" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="TxResponseCode6XXCount"
+   ColumnDescription=""
+   ColumnWidth="65"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 156">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5247" 
+   ColumnClassName="SipPortResults"
+   ColumnPropertyName="RxResponseCode6XXCount"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 157">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5248" 
+   GroupName="Error Codes"
+   GroupId="object://customgroup/6f26007a-5a84-4483-a1d6-2d47c21ce9b7/Error Codes"
+   ColumnClassName="SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults SipPortResults"
+   ColumnPropertyName="TxResponseCode4XXCount RxResponseCode4XXCount TxResponseCode5XXCount RxResponseCode5XXCount TxResponseCode6XXCount RxResponseCode6XXCount"
+   SqlString="SELECT Port.Name AS &apos;Port Name&apos;, SipPortEotResults.TxResponseCode4XXCount AS &apos;4xx Sent Count&apos;, SipPortEotResults.RxResponseCode4XXCount AS &apos;4xx Received Count&apos;, SipPortEotResults.TxResponseCode5XXCount AS &apos;5xx Sent Count&apos;, SipPortEotResults.RxResponseCode5XXCount AS &apos;5xx Received Count&apos;, SipPortEotResults.TxResponseCode6XXCount AS &apos;6xx Sent Count&apos;, SipPortEotResults.RxResponseCode6XXCount AS &apos;6xx Received Count&apos; FROM SipPortEotResults, Port WHERE ( SipPortEotResults.ParentHnd = Port.Handle AND SipPortEotResults.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId )"
+   UseCustomSqlString="TRUE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 11">
+  </RealTimeResultGroupDefinition>
+</ResultDataSet>

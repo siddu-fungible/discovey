@@ -1,0 +1,31 @@
+<frame>
+
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+
+    name="FaultMgmtMsg" 
+
+    showName="Fault OAM"
+
+    version="1.0"
+
+    category="MPLS"
+
+    readonly="true"
+
+    validate="true"
+
+    firstPdu="faultOAM:FaultMgmtMsg"
+
+    description="FAULT-OAM">
+
+    <pdus>
+
+      <pdu name="faultoam1" pdu="faultOAM:FaultMgmtMsg" />
+
+    </pdus>    
+
+  </template>
+
+</frame>

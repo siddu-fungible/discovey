@@ -1,0 +1,698 @@
+{
+  "status": {
+    "valid": true, 
+    "validation_explanation": "None."
+  }, 
+  "display_name": "Y.1564 Service Configuration", 
+  "description": "Determines if configured services meet their SLAs through CIR, EIR, Traffic Policing, CBS, and EBS subtests.", 
+  "labels": [], 
+  "version": "1-0-0", 
+  "short_display_name": "Service Configuration", 
+  "port_groups": [
+    {
+      "property": "WestPortGroup", 
+      "display_name": "West Port Group", 
+      "ports": [
+        {
+          "location": "//10.14.16.27/2/3"
+        }
+      ]
+    }, 
+    {
+      "property": "EastPortGroup", 
+      "display_name": "East Port Group", 
+      "ports": [
+        {
+          "location": "//10.14.16.27/2/4"
+        }
+      ]
+    }
+  ], 
+  "property_groups": [
+    {
+      "display_name": "Global Parameters", 
+      "description": "Global configuration parameters.", 
+      "group_type": "GLOBAL", 
+      "test_properties": [
+        {
+          "display_name": "Enable L2 Learning", 
+          "description": "Enable L2 Learning", 
+          "property_value_type": "BOOLEAN", 
+          "is_collection": false, 
+          "property_value": "True", 
+          "property": "EnableL2Learning"
+        }, 
+        {
+          "display_name": "Enable L3 Learning", 
+          "description": "Enable L3 Learning", 
+          "property_value_type": "BOOLEAN", 
+          "is_collection": false, 
+          "property_value": "False", 
+          "property": "EnableL3Learning"
+        }
+      ]
+    }, 
+    {
+      "display_name": "Set up methodology", 
+      "description": "Parameters related to methodology initialization", 
+      "group_type": "INIT", 
+      "test_properties": [
+        {
+          "table": [
+            [
+              "Real-Time Data", 
+              [
+                "512"
+              ], 
+              "West to East", 
+              "5", 
+              "0", 
+              "0", 
+              "0", 
+              "0.001", 
+              "5", 
+              "1", 
+              "Disabled", 
+              "Expedited Forwarding", 
+              "00:00:01:00:00:01", 
+              "00:00:01:00:00:00", 
+              "00:10:94:00:00:02", 
+              "00:00:01:00:00:00", 
+              "100", 
+              "1", 
+              "0", 
+              "100", 
+              "1", 
+              "0", 
+              "192.0.0.1", 
+              "0.1.0.0", 
+              "192.85.1.2", 
+              "0.1.0.0", 
+              "192.85.1.1", 
+              "0.1.0.0", 
+              "False", 
+              "DSCP Value", 
+              "Default Best Effort", 
+              "100", 
+              "1", 
+              "0"
+            ],
+            [
+              "High-Priority Data", 
+              [
+                "512"
+              ], 
+              "West to East", 
+              "10", 
+              "0", 
+              "5", 
+              "0", 
+              "0.05", 
+              "15", 
+              "9999999", 
+              "Disabled", 
+              "AF12", 
+              "00:00:01:00:00:01", 
+              "00:00:01:00:00:00", 
+              "00:10:94:00:00:02", 
+              "00:00:01:00:00:00", 
+              "100", 
+              "1", 
+              "0", 
+              "100", 
+              "1", 
+              "0", 
+              "192.0.0.1", 
+              "0.1.0.0", 
+              "192.85.1.2", 
+              "0.1.0.0", 
+              "192.85.1.1",
+              "0.1.0.0", 
+              "False",
+              "DSCP Value", 
+              "Default Best Effort", 
+              "100",
+              "1", 
+              "0"
+            ],
+            [
+              "Best-Effort Data", 
+              [
+                  "512"
+              ], 
+              "West to East", 
+              "2.5",
+              "0", 
+              "5", 
+              "0", 
+              "0.05", 
+              "30", 
+              "9999999", 
+              "Disabled",
+              "AF11", 
+              "00:00:01:00:00:01", 
+              "00:00:01:00:00:00", 
+              "00:10:94:00:00:02", 
+              "00:00:01:00:00:00", 
+              "100", 
+              "1", 
+              "0", 
+              "100", 
+              "1", 
+              "0", 
+              "192.0.0.1",
+              "0.1.0.0", 
+              "192.85.1.2",
+              "0.1.0.0", 
+              "192.85.1.1",
+              "0.1.0.0", 
+              "False", 
+              "DSCP Value", 
+              "Default Best Effort", 
+              "100", 
+              "1", 
+              "0"
+            ]
+          ], 
+          "property": "ServiceList", 
+          "display_name": "Service Configuration", 
+          "description": "Service Configuration", 
+          "column_definitions": [
+            {
+              "display_name": "Service Name", 
+              "description": "Specifies a name for the service", 
+              "property_value_type": "STRING", 
+              "is_collection": false, 
+              "property": "ServiceName"
+            }, 
+            {
+              "display_name": "Frame Size List", 
+              "description": "List of frame sizes", 
+              "property_value_type": "INTEGER", 
+              "is_collection": true, 
+              "units": "bytes", 
+              "property": "ServiceFrameSizeList"
+            }, 
+            {
+              "acceptable_values": [
+                "West to East", 
+                "East to West"
+              ], 
+              "display_name": "Traffic Direction", 
+              "description": "Traffic Direction", 
+              "property_value_type": "ENUM", 
+              "is_collection": false, 
+              "property": "ServiceTrafDir"
+            }, 
+            {
+              "display_name": "CIR", 
+              "description": "Committed Information Rate", 
+              "property_value_type": "FLOAT", 
+              "is_collection": false, 
+              "units": "L2 megabits/s", 
+              "property": "ServiceCir"
+            }, 
+            {
+              "display_name": "CBS", 
+              "description": "Committed Burst Size", 
+              "property_value_type": "INTEGER", 
+              "is_collection": false, 
+              "units": "bytes", 
+              "property": "ServiceCbs"
+            }, 
+            {
+              "display_name": "EIR", 
+              "description": "Excess Information Rate", 
+              "property_value_type": "FLOAT", 
+              "is_collection": false, 
+              "units": "L2 megabits/s", 
+              "property": "ServiceEir"
+            }, 
+            {
+              "display_name": "EBS", 
+              "description": "Excess Burst Size", 
+              "property_value_type": "INTEGER", 
+              "is_collection": false, 
+              "units": "bytes", 
+              "property": "ServiceEbs"
+            }, 
+            {
+              "display_name": "FLR", 
+              "description": "Frame Loss Ratio", 
+              "maximum": "100", 
+              "property_value_type": "FLOAT", 
+              "minimum": "0", 
+              "is_collection": false, 
+              "units": "percent", 
+              "property": "ServiceFlr"
+            }, 
+            {
+              "display_name": "FTD", 
+              "description": "Frame Transfer Delay", 
+              "property_value_type": "INTEGER", 
+              "is_collection": false, 
+              "units": "ms", 
+              "property": "ServiceFtd"
+            }, 
+            {
+              "display_name": "FDV", 
+              "description": "Frame Delay Variation", 
+              "property_value_type": "FLOAT", 
+              "is_collection": false, 
+              "units": "ms", 
+              "property": "ServiceFdv"
+            }, 
+            {
+              "acceptable_values": [
+                "Disabled", 
+                "C-VLAN Only", 
+                "C-VLAN and S-VLAN"
+              ], 
+              "display_name": "VLAN Mode", 
+              "description": "VLAN Mode", 
+              "property_value_type": "ENUM", 
+              "is_collection": false, 
+              "property": "ServiceVlanMode"
+            }, 
+            {
+              "acceptable_values": [
+                "Default Best Effort", 
+                "Expedited Forwarding", 
+                "AF11", 
+                "AF12", 
+                "AF13", 
+                "AF21", 
+                "AF22", 
+                "AF23", 
+                "AF31", 
+                "AF32", 
+                "AF33", 
+                "AF41", 
+                "AF42", 
+                "AF43", 
+                "CS1", 
+                "CS2", 
+                "CS3", 
+                "CS4", 
+                "CS5", 
+                "CS6", 
+                "CS7"
+              ], 
+              "display_name": "DSCP Type", 
+              "description": "DSCP Type", 
+              "property_value_type": "ENUM", 
+              "is_collection": false, 
+              "property": "ServiceDscpType"
+            }, 
+            {
+              "display_name": "Destination MAC Address", 
+              "description": "Destination MAC Address", 
+              "property_value_type": "MAC", 
+              "is_collection": false, 
+              "property": "ServiceDstMac"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "Destination MAC Address Step", 
+              "description": "Destination Mac Address Step", 
+              "property_value_type": "MAC", 
+              "is_collection": false, 
+              "property": "ServiceDstMacStep"
+            }, 
+            {
+              "display_name": "Source MAC Address", 
+              "description": "Source MAC Address", 
+              "property_value_type": "MAC", 
+              "is_collection": false, 
+              "property": "ServiceSrcMac"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "Source MAC Address Step", 
+              "description": "Source MAC Address Step", 
+              "property_value_type": "MAC", 
+              "is_collection": false, 
+              "property": "ServiceSrcMacStep"
+            }, 
+            {
+              "display_name": "C-VLAN ID", 
+              "description": "Customer VLAN ID", 
+              "maximum": "4095", 
+              "property_value_type": "INTEGER", 
+              "minimum": "0", 
+              "is_collection": false, 
+              "property": "ServiceCVlanId"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "C-VLAN ID Step", 
+              "description": "Customer VLAN ID Step", 
+              "property_value_type": "INTEGER", 
+              "is_collection": false, 
+              "property": "ServiceCvlanIdStep"
+            }, 
+            {
+              "acceptable_values": [
+                "0", 
+                "1", 
+                "2", 
+                "3", 
+                "4", 
+                "5", 
+                "6", 
+                "7"
+              ], 
+              "display_name": "C-VLAN Priority", 
+              "description": "C-VLAN Priority", 
+              "maximum": "7", 
+              "property_value_type": "ENUM", 
+              "minimum": "0", 
+              "is_collection": false, 
+              "property": "ServiceCvlanPriority"
+            }, 
+            {
+              "display_name": "S-VLAN ID", 
+              "description": "Service VLAN ID", 
+              "maximum": "4095", 
+              "property_value_type": "INTEGER", 
+              "minimum": "0", 
+              "is_collection": false, 
+              "property": "ServiceSvlanId"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "S-VLAN ID Step", 
+              "description": "Service VLAN ID Step", 
+              "property_value_type": "INTEGER", 
+              "is_collection": false, 
+              "property": "ServiceSvlanIdStep"
+            }, 
+            {
+              "acceptable_values": [
+                "0", 
+                "1", 
+                "2", 
+                "3", 
+                "4", 
+                "5", 
+                "6", 
+                "7"
+              ], 
+              "display_name": "S-VLAN Priority", 
+              "description": "S-VLAN Priority", 
+              "maximum": "7", 
+              "property_value_type": "ENUM", 
+              "minimum": "0", 
+              "is_collection": false, 
+              "property": "ServiceSvlanPriority"
+            }, 
+            {
+              "display_name": "Destination IPv4 Address", 
+              "description": "Destination IPv4 Address", 
+              "property_value_type": "IPV4", 
+              "is_collection": false, 
+              "property": "ServiceDstIpv4"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "Destination IPv4 Address Step", 
+              "description": "Destination IPv4 Address Step", 
+              "property_value_type": "IPV4", 
+              "is_collection": false, 
+              "property": "ServiceDstIpv4Step"
+            }, 
+            {
+              "display_name": "Source IPv4 Address", 
+              "description": "Source IPv4 Address", 
+              "property_value_type": "IPV4", 
+              "is_collection": false, 
+              "property": "ServiceSrcIpv4"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "Source IPv4 Address Step", 
+              "description": "Source IPv4 Address Step", 
+              "property_value_type": "IPV4", 
+              "is_collection": false, 
+              "property": "ServiceSrcIpv4Step"
+            }, 
+            {
+              "display_name": "Gateway IPv4 Address", 
+              "description": "Gateway IPv4 Address", 
+              "property_value_type": "IPV4", 
+              "is_collection": false, 
+              "property": "ServiceGwIpv4"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "Gateway IPv4 Address Step", 
+              "description": "Gateway IPv4AddressStep", 
+              "property_value_type": "IPV4", 
+              "is_collection": false, 
+              "property": "ServiceGwIpv4Step"
+            }, 
+            {
+              "display_name": "Color Aware Setting", 
+              "description": "Color Aware Setting", 
+              "property_value_type": "BOOLEAN", 
+              "is_collection": false, 
+              "property": "ServiceColorAware"
+            }, 
+            {
+              "acceptable_values": [
+                "DSCP Value", 
+                "S-VLAN ID", 
+                "S-VLAN Priority", 
+                "C-VLAN ID", 
+                "C-VLAN Priority"
+              ], 
+              "display_name": "Yellow Frame Identifier", 
+              "description": "Field to change for yellow frames to distinguish from green streams", 
+              "property_value_type": "ENUM", 
+              "is_collection": false, 
+              "property": "ServiceStreamDisc"
+            }, 
+            {
+              "acceptable_values": [
+                "Default Best Effort", 
+                "Expedited Forwarding", 
+                "AF11", 
+                "AF12", 
+                "AF13", 
+                "AF21", 
+                "AF22", 
+                "AF23", 
+                "AF31", 
+                "AF32", 
+                "AF33", 
+                "AF41", 
+                "AF42", 
+                "AF43", 
+                "CS1", 
+                "CS2", 
+                "CS3", 
+                "CS4", 
+                "CS5", 
+                "CS6", 
+                "CS7"
+              ], 
+              "display_name": "Yellow Frame DSCP Type", 
+              "description": "Yellow Frame DSCP Type", 
+              "property_value_type": "ENUM", 
+              "is_collection": false, 
+              "property": "ServiceDiscDscpType"
+            }, 
+            {
+              "display_name": "Yellow Frame VLAN ID", 
+              "description": "VLAN ID Value used for Yellow Frames", 
+              "maximum": "4095", 
+              "property_value_type": "INTEGER", 
+              "minimum": "0", 
+              "is_collection": false, 
+              "property": "ServiceDiscVlanId"
+            }, 
+            {
+              "acceptable_values": [
+                ""
+              ], 
+              "display_name": "Yellow Frame VLAN ID Step", 
+              "description": "Step Value for VLAN ID Used for Yellow Frames", 
+              "property_value_type": "INTEGER", 
+              "is_collection": false, 
+              "property": "ServiceDiscVlanIdStep"
+            }, 
+            {
+              "acceptable_values": [
+                "0", 
+                "1", 
+                "2", 
+                "3", 
+                "4", 
+                "5", 
+                "6", 
+                "7"
+              ], 
+              "display_name": "Yellow Frame VLAN Priority", 
+              "description": "Yellow Frame VLAN Priority", 
+              "maximum": "7", 
+              "property_value_type": "ENUM", 
+              "minimum": "0", 
+              "is_collection": false, 
+              "property": "ServiceDiscVlanPriority"
+            }
+          ]
+        }, 
+        {
+          "acceptable_values": [
+            ""
+          ], 
+          "display_name": "EBS Test Duration", 
+          "description": "EBS Test Duration", 
+          "maximum": "60", 
+          "property_value_type": "FLOAT", 
+          "minimum": "1", 
+          "is_collection": false, 
+          "property_value": "5.0", 
+          "units": "seconds", 
+          "property": "EbsDuration"
+        }, 
+        {
+          "acceptable_values": [
+            ""
+          ], 
+          "display_name": "CIR Steps", 
+          "description": "CIR Steps (Set to 1 to do a simple CIR test)", 
+          "property_value_type": "INTEGER", 
+          "is_collection": false, 
+          "property_value": "4", 
+          "units": "steps", 
+          "property": "CirSteps"
+        }, 
+        {
+          "acceptable_values": [
+            ""
+          ], 
+          "display_name": "CIR Test Duration", 
+          "description": "CIR Test Duration", 
+          "maximum": "60", 
+          "property_value_type": "FLOAT", 
+          "minimum": "1", 
+          "is_collection": false, 
+          "property_value": "5.0", 
+          "units": "seconds", 
+          "property": "CirDuration"
+        }, 
+        {
+          "acceptable_values": [
+            ""
+          ], 
+          "display_name": "EIR Test Duration", 
+          "description": "EIR Test Duration", 
+          "maximum": "60", 
+          "property_value_type": "FLOAT", 
+          "minimum": "1", 
+          "is_collection": false, 
+          "property_value": "5.0", 
+          "units": "seconds", 
+          "property": "EirDuration"
+        }, 
+        {
+          "acceptable_values": [
+            ""
+          ], 
+          "display_name": "Policing Test Duration", 
+          "description": "Policing Test Duration", 
+          "maximum": "60", 
+          "property_value_type": "FLOAT", 
+          "minimum": "1", 
+          "is_collection": false, 
+          "property_value": "5.0", 
+          "units": "seconds", 
+          "property": "PolicingDuration"
+        }, 
+        {
+          "acceptable_values": [
+            ""
+          ], 
+          "display_name": "CBS Test Duration", 
+          "description": "CBS Test Duration", 
+          "maximum": "60", 
+          "property_value_type": "FLOAT", 
+          "minimum": "1", 
+          "is_collection": false, 
+          "property_value": "5.0", 
+          "units": "seconds", 
+          "property": "CbsDuration"
+        }, 
+        {
+          "display_name": "Enable CIR Test", 
+          "description": "Enable CIR Test", 
+          "property_value_type": "BOOLEAN", 
+          "is_collection": false, 
+          "property_value": "True", 
+          "property": "EnableCir"
+        }, 
+        {
+          "display_name": "Enable EIR Test", 
+          "description": "Enable EIR Test", 
+          "property_value_type": "BOOLEAN", 
+          "is_collection": false, 
+          "property_value": "True", 
+          "property": "EnableEir"
+        }, 
+        {
+          "display_name": "Enable Policing Test", 
+          "description": "Enable Policing Test", 
+          "property_value_type": "BOOLEAN", 
+          "is_collection": false, 
+          "property_value": "True", 
+          "property": "EnablePolicing"
+        }, 
+        {
+          "display_name": "Enable CBS Test", 
+          "description": "Enable CBS Test", 
+          "property_value_type": "BOOLEAN", 
+          "is_collection": false, 
+          "property_value": "True", 
+          "property": "EnableCbs"
+        }, 
+        {
+          "display_name": "Enable EBS Test", 
+          "description": "Enable EBS Test", 
+          "property_value_type": "BOOLEAN", 
+          "is_collection": false, 
+          "property_value": "True", 
+          "property": "EnableEbs"
+        }, 
+        {
+          "acceptable_values": [
+            "Normal", 
+            "Loopback"
+          ], 
+          "display_name": "Test Mode", 
+          "description": "Sets the mode of operation", 
+          "property_value_type": "ENUM", 
+          "is_collection": false, 
+          "property_value": "Normal", 
+          "property": "TestMode"
+        }
+      ]
+    }
+  ], 
+  "methodology_key": "Y1564CONFIG", 
+  "machine_groups": []
+}

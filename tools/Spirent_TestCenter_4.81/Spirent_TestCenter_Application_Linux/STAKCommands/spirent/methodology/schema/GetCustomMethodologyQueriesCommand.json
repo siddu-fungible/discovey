@@ -1,0 +1,214 @@
+{
+    "GetCustomMethodologyQueriesCommand": {
+        "title": "Schema for GetCustomMethodologyQueriesCommand.",
+        "type": "array",
+        "additionalProperties": false,
+        "items": {
+            "$ref": "#/GetCustomMethodologyQueriesCommand/definitions/template_group"
+        },
+        "definitions": {
+            "template_group": {
+                "description": "Group defining a template and questions for configuring a custom methodology",
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                    "questions": {
+                        "description": "Questions to configure the methodology that the user needs to answer based on the loaded configuration",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/GetCustomMethodologyQueriesCommand/definitions/query_group"
+                        }
+                    },
+                    "title": {
+                        "description": "Optional title for displaying questions in a group in the wizard.",
+                        "type": "string"
+                    },
+                    "sequencer": {
+                        "description": "The sequencer portion of the solution based upon the analysis.",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "sequencer_config": {
+                                "description": "The section that contains commands to be inserted into the sequencer and other information about those commands.",
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "template_filename": {
+                                        "description": "Template to load from.",
+                                        "type": "string"
+                                    },
+                                    "template_root_tag": {
+                                        "description": "Tag of template root node to load from.",
+                                        "type": "string"
+                                    },
+                                    "insert_after_command_tag": {
+                                        "description": "Tag name of command to insert sequence after.",
+                                        "type": "string"
+                                    },
+                                    "insert_after_index": {
+                                        "description": "Tag name of command to insert sequence after.",
+                                        "type": "integer"
+                                    },
+                                    "children": {
+                                        "description": "The sequence of commands to insert into the sequencer.",
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/GetCustomMethodologyQueriesCommand/definitions/sequence_item"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "sequence_item": {
+                "description": "An item for the sequencer.",
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "description": "Enable or disable this command.",
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "description": "The name of the command.",
+                        "type": "string"
+                    },
+                    "tags": {
+                        "description": "The tag names of the tags to attach to the command.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "properties": {
+                        "description": "Key is property name, value is property value.",
+                        "type": "object"
+                    },
+                    "children": {
+                        "description": "A list of items to put into this command's command_list.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/GetCustomMethodologyQueriesCommand/definitions/sequence_item"
+                        }
+                    }
+                }
+            },
+            "query_group": {
+                "description": "Group defining a question for configuring a custom methodology",
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "description": "Question to configure the methodology that the user needs to answer based on the loaded configuration",
+                        "type": "string"
+                    },
+                    "answer_type": {
+                        "description": "The answer value type.",
+                        "enum": [
+                            "STRING",
+                            "INTEGER",
+                            "FLOAT",
+                            "BOOLEAN"
+                        ]
+                    },
+                    "answer": {
+                        "description": "The answer to the question.",
+                        "type": [
+                            "string",
+                            "number",
+                            "integer",
+                            "boolean"
+                        ]
+                    },
+                    "minimum": {
+                        "description": "Minimum answer value if type is number or integer",
+                        "type": [
+                            "integer",
+                            "number"
+                        ]
+                    },
+                    "maximum": {
+                        "description": "Maximum answer value if type is number or integer",
+                        "type": [
+                            "integer",
+                            "number"
+                        ]
+                    },
+                    "command_tag": {
+                        "description": "The tag in the template identifying the command whose property this question is related to.",
+                        "type": "string"
+                    },
+                    "property_name": {
+                        "description": "The command property this question is related to.",
+                        "type": "string"
+                    },
+                    "json_key": {
+                        "description": "An optional JSON key (for properties holding JSON data) to identify the JSON property related to the question.",
+                        "type": "string"
+                    },
+                    "acceptable_answers_list": {
+                        "description": "An array of acceptable values and if set (non-zero), will ignore min and max settings.",
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                            "description": "An acceptable answer value for this question",
+                            "type": [
+                                "string",
+                                "integer",
+                                "number"
+                            ]
+                        }
+                    },
+                    "follow_ups": {
+                        "description": "Follow up questions list",
+                        "type": "array",
+                        "items": {
+							"matching_answer": {
+								"description": "If this matches the answer to the question, then show the follow up questions.",
+								"oneOf": [
+									{
+										"type": [
+											"string",
+											"number",
+											"integer",
+											"boolean"
+										]
+									},
+									{
+										"type": "array",
+										"minItems": 2,
+										"uniqueItems": true,
+										"items": {
+											"description": "An acceptable answer value for this question",
+											"type": [
+												"string",
+												"integer",
+												"number"
+											]
+										}
+									}
+								]
+							},
+							"questions": {
+								"description": "Follow up questions to main question if answer matches matching_answer.",
+								"type": "array",
+								"items": {
+									"$ref": "#/GetCustomMethodologyQueriesCommand/definitions/query_group"
+								}
+							}
+                        }
+                    }
+                },
+                "required": [
+                    "question",
+                    "answer",
+                    "command_tag",
+                    "property_name"
+                ]
+            }
+        }
+    }
+}

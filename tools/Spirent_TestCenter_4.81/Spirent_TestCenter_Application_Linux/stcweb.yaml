@@ -1,0 +1,6 @@
+---
+service:
+  addr: :8888
+  log:
+    service_log_level: info
+    

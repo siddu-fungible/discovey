@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989">
+    <execution estimatedExecutionTime="2"/>
+    <procedures>
+        <item name="main" defaultSessionType="com.fnfr.svt.applications.telnet">
+            <steps>
+                <item guid="a3346f7c-e7d0-4c91-ab78-fecf6f5f4939" action="comment">
+                    <command>
+                        <body>&quot;This demo indicate to run reset dut, only make for the test&quot;.</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="3ccf1dac-3a7d-41ce-81c6-05d04f65a35a" action="comment">
+                    <command>
+                        <body>reload</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>reset_result</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="ccf0a6b6-e3b8-45c2-976d-d018297bf68e" action="eval">
+                    <command>
+                        <body>set result &quot;DUT run reload immediately.&quot;</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="81e17c29-47eb-45a7-b02c-867f5a20480a" action="if">
+                    <command>
+                        <body>[regexp {reload} $result dummary d1 ] == 0 </body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="70c74ebe-8173-4d77-818f-b261b0c1526d" action="then">
+                            <nestedSteps>
+                                <item guid="2ac3d275-aee4-4a9d-be95-54d58e288e70" action="eval">
+                                    <command>
+                                        <body>puts &quot;False&quot;</body>
+                                    </command>
+                                    <postProcessing>
+                                        <analysisRules>
+                                            <item>
+                                                <extractorInfo extractorType="contains">
+                                                    <extractorProperties type="com.fnfr.svt.mapping.execution.extractors.ExtractorContainsPropertyGroup">
+                                                        <searchString>False</searchString>
+                                                    </extractorProperties>
+                                                </extractorInfo>
+                                                <processorInfo ruleType="message">
+                                                    <ruleProperties type="com.fnfr.svt.testcase.documents.MessageProcessorPropertyGroup">
+                                                        <message>{auto_message}</message>
+                                                    </ruleProperties>
+                                                </processorInfo>
+                                            </item>
+                                        </analysisRules>
+                                    </postProcessing>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="88fdd4a3-6b22-408a-8c1a-454e5c43e1f7" action="else">
+                            <nestedSteps>
+                                <item guid="2c63bb38-66f2-459e-9129-2b666c1a2f76" action="comment">
+                                    <command>
+                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session"/>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

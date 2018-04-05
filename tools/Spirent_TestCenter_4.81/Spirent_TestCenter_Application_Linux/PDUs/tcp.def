@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="tcp" showName="Tcp" version="1.00"
+    description="This is a sample PDU library for Tcp as defined in XML Stream Editor.">
+    
+  <TYPE_DEFS>
+        
+    <TYPE_DEF name="Tcp" type="SEQUENCE" unitType="HEADER"
+        level="4" uiShowName="TCP Header" >
+        
+      <FIELD name="sourcePort" type="INTEGER" bitLength="16"
+          defaultValue="1024" 
+          uiShowName="Source port" />
+
+      <FIELD name="destPort" type="types:WellKnownPorts"
+          defaultValue="1024"
+          uiShowName="Destination port" />
+
+      <FIELD name="seqNum" type="INTEGER" bitLength="32"
+          defaultValue="123456"
+		  uiShowCommon="false"
+          uiShowName="Sequence number" />
+
+      <FIELD name="ackNum" type="INTEGER" bitLength="32"
+          defaultValue="234567"
+		  uiShowCommon="false"
+          uiShowName="Acknowledgement number" />
+
+      <FIELD name="offset" type="INTEGER" bitLength="4"
+          defaultValue="5" 
+		  uiShowCommon="false"
+          uiShowName="Header length" />
+
+      <FIELD name="reserved" type="BITSTRING" bitLength="4"
+          defaultValue="0000" 
+		  uiShowCommon="false"
+          uiShowName="Reserved" />
+          
+      <FIELD name="cwrBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+		  uiShowCommon="false"
+          uiShowName="Congestion Window Reduced" />
+          
+      <FIELD name="ecnBit" type="BITSTRING" bitLength="1"
+          defaultValue="0" 
+		  uiShowCommon="false" 
+          uiShowName="ECN-Echo" />
+
+      <FIELD name="urgBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+		  uiShowCommon="false"
+          uiShowName="Urgent Pointer" />
+
+      <FIELD name="ackBit" type="BITSTRING" bitLength="1"
+          defaultValue="1"
+		  uiShowCommon="false"
+          uiShowName="Acknowledgement" />
+
+      <FIELD name="pshBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+		  uiShowCommon="false"
+          uiShowName="Push Function" />
+
+      <FIELD name="rstBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+		  uiShowCommon="false"
+          uiShowName="Reset Connection" />
+
+      <FIELD name="synBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+		  uiShowCommon="false"
+          uiShowName="Synchronize" />
+
+      <FIELD name="finBit" type="BITSTRING" bitLength="1"
+          defaultValue="0"
+		  uiShowCommon="false"
+          uiShowName="No More Data" />
+
+      <FIELD name="window" type="INTEGER" bitLength="16"
+          defaultValue="4096"
+		  uiShowCommon="false"
+          uiShowName="Window size" />
+
+      <FIELD name="checksum" type="INTEGER" bitLength="16"
+          defaultValue="0"
+          uiControlState="ALLOW_OVERRIDE"
+          procfnTarget="PSEUDOCHECKSUM" 
+          uiNoShowModifier="Interface,Frame,Filter"
+          uiGenerateError="true"
+          uiShowName="Checksum" />
+
+      <FIELD name="urgentPtr" type="INTEGER" bitLength="16"
+          defaultValue="0"
+		  uiShowCommon="false"
+          uiShowName="Urgent pointer" />
+
+      <NEXT_HEADERS>
+
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+        <NXT_HDR id="oncrpcv2:RpcMsg" name="ONC RPCv2" value="1" />
+        <NXT_HDR id="gtpv1:GTPv1" name="GTPv1" value="3386" />
+        <NXT_HDR id="gtpf:GTPf" name="GTPf" value="3386" />
+        <NXT_HDR id="twamp:TwampServerGreeting" name="TwampServerGreeting" value="862" />
+        <NXT_HDR id="twamp:TwampSetupResponse" name="TwampSetupResponse" value="862" />
+        <NXT_HDR id="twamp:TwampServerStart" name="TwampServerStart" value="862" />
+        <NXT_HDR id="twamp:TwampRequestSession" name="TwampRequestSession" value="862" />
+        <NXT_HDR id="twamp:TwampAcceptSession" name="TwampAcceptSession" value="862" />
+        <NXT_HDR id="twamp:TwampStartSession" name="TwampStartSession" value="862" />
+        <NXT_HDR id="twamp:TwampStartSessionAcknowledge" name="TwampStartSessionAcknowledge" value="862" />
+        <NXT_HDR id="twamp:TwampStopSession" name="TwampStopSession" value="862" />
+        <NXT_HDR id="ancp_rfc6230:AncpOamLoopback" name="AncpOamLoopback" value="6068" />
+
+      </NEXT_HEADERS>
+
+
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Dimension set schema",
+  "description": "Schema file that describes the attributes of a dimension set",
+  "type": "object",
+  "properties": {
+    "dimension_set": {
+      "description": "Dimension set root",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the dimension set",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "description": {
+          "description": "Description of the dimension set",
+          "type": "string"
+        },
+        "test": {
+          "description": "Use as a test dimension set",
+          "type": "boolean",
+          "default": "false"
+        },
+        "bll": {
+          "description": "BLL properties of the dimesion set",
+          "type": "object",
+          "properties": {
+            "group": {
+              "description": "Group the dimension set belongs",
+              "type": "string",
+              "examples": [
+                "stream",
+                "port"
+              ]
+            },
+            "plugin": {
+              "description": "Plugin the dimension set belongs to",
+              "type": "string",
+              "examples": [
+                "l2l3",
+                "datacenter"
+              ]
+            }
+          },
+          "required": [
+            "plugin"
+          ]
+        },
+        "attributes": {
+          "description": "Array of dimension set attributes",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Name of the dimension attribute",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              },
+              "display_name": {
+                "description": "Display name of the dimension attribute",
+                "type": "string"
+              },
+              "description": {
+                "description": "Description of the dimension attribute",
+                "type": "string"
+              },
+              "base_unit": {
+                "description": "Base unit of the attribute",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "bits",
+                  "bits_per_sec",
+                  "bytes",
+                  "bytes_per_sec",
+                  "secs",
+                  "msecs",
+                  "usecs",
+                  "frames",
+                  "frames_per_sec",
+                  "cells",
+                  "cells_per_sec",
+                  "quanta",
+                  "codewords",
+                  "codewords_per_sec"
+                ]
+              },
+              "data_type": {
+                "description": "Data type of the attribute used in database",
+                "type": "string",
+                "enum": [
+                  "integer",
+                  "number",
+                  "boolean",
+                  "string",
+                  "inet"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "display_name",
+              "description",
+              "base_unit",
+              "data_type"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "bll",
+        "attributes"
+      ]
+    }
+  },
+  "required": [
+    "dimension_set"
+  ]
+}

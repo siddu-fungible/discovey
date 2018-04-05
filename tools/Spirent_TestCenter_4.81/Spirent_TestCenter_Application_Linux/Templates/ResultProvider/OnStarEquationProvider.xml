@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<EquationProvider id="595" serializationBase="true" 
+ ProviderPluginName="cars"
+ ResultSource="OnStarConfig"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="EquationProvider 2">
+  <ExternalEquationResultProperty id="596" 
+   Equation="MATH:Col::OnStarConfig.ExpectedRxFrames-Col::OnStarConfig.RxFrames"
+   StandardGroupingDefinition=""
+   DependedCounters="OnStarConfig.ExpectedRxFrames OnStarConfig.RxFrames"
+   PropertyName="FrameLoss"
+   PropertyDisplayName="Frame Loss"
+   PropertyType="U64"
+   PropertyUnitType="FRAMES"
+   PropertyGroup="OnStar"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ExternalEquationResultProperty 2">
+  </ExternalEquationResultProperty>
+</EquationProvider>

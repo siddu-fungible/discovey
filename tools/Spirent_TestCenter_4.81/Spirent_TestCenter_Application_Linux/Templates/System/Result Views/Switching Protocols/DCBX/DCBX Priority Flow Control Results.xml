@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="886" serializationBase="true" 
+ Identifier="Switching Protocols\DCBX\DCBX Priority Flow Control Results"
+ PrimaryClass="DcbxPriorityFlowControlResult"
+ Description="object://lldp/DcbxPriorityFlowControlResult"
+ Path="Switching Protocols\DCBX"
+ CustomDisplayPath="Switching\DCBX"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ IsDeprecated="FALSE"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="DCBX Priority Flow Control Results">
+  <RealTimeResultColumnDefinition id="887" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 79">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="888" 
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="82"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 80">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="889" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port EmulatedDevice"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 15">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="890" 
+   GroupName="Main"
+   GroupId="object://customgroup/18dcff9c-802f-4c62-884a-a4b5de68a605/Main"
+   ColumnClassName="DcbxPriorityFlowControlResult DcbxPriorityFlowControlResult DcbxPriorityFlowControlResult DcbxPriorityFlowControlResult"
+   ColumnPropertyName="Priority Status PeerStatus DesiredStatus"
+   SqlString="SELECT Port.Name AS &apos;Port Name&apos;, EmulatedDevice.Name AS &apos;Device Name&apos;, DcbxPriorityFlowControlResult.Priority AS &apos;Priority&apos;, DcbxPriorityFlowControlResult.Status AS &apos;Status&apos;, DcbxPriorityFlowControlResult.PeerStatus AS &apos;Peer Status&apos;, DcbxPriorityFlowControlResult.DesiredStatus AS &apos;Desired Status&apos; FROM AllDevice AS EmulatedDevice, Port, DcbxPriorityFlowControlResult, LldpNodeConfig, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = EmulatedDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND LldpNodeConfig.ParentHnd = EmulatedDevice.Handle AND DcbxPriorityFlowControlResult.ParentHnd = LldpNodeConfig.Handle AND EmulatedDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND DcbxPriorityFlowControlResult.DataSetId = @DataSetId AND LldpNodeConfig.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) UNION SELECT ExternalDevicePort.Name AS &apos;Port Name&apos;, EmulatedDevice.Name AS &apos;Device Name&apos;, DcbxPriorityFlowControlResult.Priority AS &apos;Priority&apos;, DcbxPriorityFlowControlResult.Status AS &apos;Status&apos;, DcbxPriorityFlowControlResult.PeerStatus AS &apos;Peer Status&apos;, DcbxPriorityFlowControlResult.DesiredStatus AS &apos;Desired Status&apos; FROM AllDevice AS EmulatedDevice, ExternalDevicePort, DcbxPriorityFlowControlResult, Port, LldpNodeConfig, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = EmulatedDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND LldpNodeConfig.ParentHnd = EmulatedDevice.Handle AND DcbxPriorityFlowControlResult.ParentHnd = LldpNodeConfig.Handle AND EmulatedDevice.DataSetId = @DataSetId AND ExternalDevicePort.DataSetId = @DataSetId AND DcbxPriorityFlowControlResult.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND LldpNodeConfig.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 16">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="891" 
+   ColumnClassName="DcbxPriorityFlowControlResult"
+   ColumnPropertyName="Priority"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 81">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="892" 
+   ColumnClassName="DcbxPriorityFlowControlResult"
+   ColumnPropertyName="Status"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 82">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="893" 
+   ColumnClassName="DcbxPriorityFlowControlResult"
+   ColumnPropertyName="PeerStatus"
+   ColumnDescription=""
+   ColumnWidth="74"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 83">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="894" 
+   ColumnClassName="DcbxPriorityFlowControlResult"
+   ColumnPropertyName="DesiredStatus"
+   ColumnDescription=""
+   ColumnWidth="89"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 84">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="145" 
+   ConfigClassId="lldpnodeconfig"
+   ResultClassId="dcbxpriorityflowcontrolresult"
+   ResultRootList="2"
+   PropertyIdArray="dcbxpriorityflowcontrolresult.priority dcbxpriorityflowcontrolresult.status dcbxpriorityflowcontrolresult.peerstatus dcbxpriorityflowcontrolresult.desiredstatus"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 9">
+  </ResultQuery>
+</ResultDataSet>

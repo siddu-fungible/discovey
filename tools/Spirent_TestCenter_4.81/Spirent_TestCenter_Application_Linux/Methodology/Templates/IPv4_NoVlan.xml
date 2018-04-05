@@ -1,0 +1,117 @@
+<Template>
+<Description>
+Template used to create an IPv4 Emulated Device.
+</Description>
+<Image />
+<DataModelXml>
+<StcSystem id="1" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName="Untitled.tcc"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="3961"/>
+    <Tags id="1203" serializationBase="true" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1551"/>
+      <Relation type="UserTag" target="1554"/>
+      <Relation type="UserTag" target="1557"/>
+      <Tag id="1551" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttEmulatedDevice">
+      </Tag>
+      <Tag id="1554" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv4If">
+      </Tag>
+      <Tag id="1557" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttEthIIIf">
+      </Tag>
+    </Tags>
+    <EmulatedDevice id="4242" serializationBase="true" 
+     DeviceCount="1"
+     EnablePingResponse="FALSE"
+     RouterId="192.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterId="2000::1"
+     Ipv6RouterIdStep="::1"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Device 1">
+      <Relation type="UserTag" target="1551"/>
+      <Relation type="TopLevelIf" target="4243"/>
+      <Relation type="PrimaryIf" target="4243"/>
+      <Ipv4If id="4243" 
+       Address="192.85.1.3"
+       AddrStep="0.0.0.1"
+       AddrStepMask="255.255.255.255"
+       SkipReserved="TRUE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       PrefixLength="24"
+       UsePortDefaultIpv4Gateway="FALSE"
+       Gateway="192.85.1.1"
+       GatewayStep="0.0.0.0"
+       GatewayRepeatCount="0"
+       GatewayRecycleCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       Ttl="255"
+       TosType="TOS"
+       Tos="192"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv4 28">
+        <Relation type="StackedOnEndpoint" target="4244"/>
+        <Relation type="UserTag" target="1554"/>
+      </Ipv4If>
+      <EthIIIf id="4244" 
+       SourceMac="00:10:94:00:00:01"
+       SrcMacStep="00:00:00:00:00:01"
+       SrcMacList=""
+       SrcMacStepMask="00:00:ff:ff:ff:ff"
+       SrcMacRepeatCount="0"
+       Authenticator="default"
+       UseDefaultPhyMac="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="EthernetII 28">
+        <Relation type="UserTag" target="1557"/>
+      </EthIIIf>
+    </EmulatedDevice>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

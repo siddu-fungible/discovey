@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="Skype_TCP" type="stream">
+  <MetaData description="Skype_TCP" protocol="Skype" application="Skype" createDate=""/>
+  <Streams>
+    <Stream file="System/Skype/Skype_SSL_Connection_with_Supernode.xml" name="SSL_Connection_with_Supernode" description="SSL_Connection_with_Supernode" startTime="0" dataDelay="6" serverPort="443" sapeeServerIp="71.143.189.131" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/Skype/Skype_Connection_to_Login_Server.xml" name="Connection_to_Login_Server" description="Connection_to_Login_Server" startTime="716" dataDelay="152" serverPort="61555" sapeeServerIp="24.13.172.173" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/Skype/Skype_GetLatestVersion_Query.xml" name="GetLatestVersion_Query" description="GetLatestVersion_Query" startTime="1053" dataDelay="122" serverPort="80" sapeeServerIp="204.9.163.158" minDelay="0" maxDelay="4294967295"/>
+    <Stream file="System/Skype/Skype_Chat_with_Other_user.xml" name="Chat_with_Other_user" description="Chat_with_Other_user" startTime="1767" dataDelay="188" serverPort="12350" sapeeServerIp="130.117.72.100" minDelay="0" maxDelay="4294967295"/>
+  </Streams>
+</Playlist>

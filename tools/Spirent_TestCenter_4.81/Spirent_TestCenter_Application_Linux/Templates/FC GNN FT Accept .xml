@@ -1,0 +1,25 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGNN_FTAccept" 
+    showName="FC GNN_FT Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GnnFtAccept"
+    description="FC GNN_FT Accept">
+    <pdus>
+      <pdu name="gnnFtAccept1" pdu="fcgs:GnnFtAccept" >
+        <ctIuPreamble>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+        <nodeNames>
+          <NodeName name="NodeName">
+            <control>10000000</control>
+          </NodeName>
+        </nodeNames>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

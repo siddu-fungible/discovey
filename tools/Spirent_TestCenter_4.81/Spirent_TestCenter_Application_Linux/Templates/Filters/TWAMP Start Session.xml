@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="TwampStartSession"
+    showName="TWAMP Start Session"
+    version="1.00"
+    category="TWAMP"
+    readonly="true"
+    validate="true"
+    firstPdu="twamp:TwampStartSession"
+    description="TWAMP Start Session" >
+
+    <pdus>
+      <pdu name="protocol" pdu="twamp:TwampStartSession" />
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,1713 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>IterStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2009-12-02 06:14:20</instance>
+      </value>
+      <path>select CreatedTime from DataSet where id = (select min(Id) from DataSet); -- only on data set ID, grab the first one</path>
+      <multivalued>true</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>FileNameID</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>C:\Documents and Settings\jxu\Desktop\SIP_DB\1Call_With_Audio_Video.db</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where name = '@dsFileName'; -- DataSet only has 1 entry</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+      </value>
+      <path>select Tx.PortName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>RxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+      </value>
+      <path>select Tx.RxPortName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>StreamBlock</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 9</instance>
+        <instance>RTCP_StreamBlock 10</instance>
+        <instance>RTP_StreamBlock 11</instance>
+        <instance>RTCP_StreamBlock 12</instance>
+        <instance>RTP_StreamBlock 13</instance>
+        <instance>RTCP_StreamBlock 14</instance>
+        <instance>RTP_StreamBlock 15</instance>
+        <instance>RTCP_StreamBlock 16</instance>
+      </value>
+      <path>select Tx.StreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>StreamId</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>65536.0</instance>
+        <instance>65537.0</instance>
+        <instance>65538.0</instance>
+        <instance>65539.0</instance>
+        <instance>131072.0</instance>
+        <instance>131073.0</instance>
+        <instance>131074.0</instance>
+        <instance>131075.0</instance>
+      </value>
+      <path>select Tx.StreamId from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StreamIndex</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>1.0</instance>
+        <instance>2.0</instance>
+        <instance>3.0</instance>
+        <instance>0.0</instance>
+        <instance>1.0</instance>
+        <instance>2.0</instance>
+        <instance>3.0</instance>
+      </value>
+      <path>select Tx.StreamIndex from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>TxFrameCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>360.0</instance>
+        <instance>8.0</instance>
+        <instance>238.0</instance>
+        <instance>8.0</instance>
+        <instance>363.0</instance>
+        <instance>8.0</instance>
+        <instance>240.0</instance>
+        <instance>8.0</instance>
+      </value>
+      <path>select Tx.FrameCount from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>RxFrameCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>360.0</instance>
+        <instance>8.0</instance>
+        <instance>238.0</instance>
+        <instance>8.0</instance>
+        <instance>363.0</instance>
+        <instance>8.0</instance>
+        <instance>240.0</instance>
+        <instance>8.0</instance>
+      </value>
+      <path>select coalesce(sum(Rx.FrameCount), 0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>TxOctetCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>78480.0</instance>
+        <instance>1040.0</instance>
+        <instance>50694.0</instance>
+        <instance>1040.0</instance>
+        <instance>79134.0</instance>
+        <instance>1040.0</instance>
+        <instance>51120.0</instance>
+        <instance>1040.0</instance>
+      </value>
+      <path>select Tx.OctetCount from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>RxOctetCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>78480.0</instance>
+        <instance>1040.0</instance>
+        <instance>50694.0</instance>
+        <instance>1040.0</instance>
+        <instance>79134.0</instance>
+        <instance>1040.0</instance>
+        <instance>51120.0</instance>
+        <instance>1040.0</instance>
+      </value>
+      <path>select coalesce(sum(Rx.OctetCount), 0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>SigFrameCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>360.0</instance>
+        <instance>8.0</instance>
+        <instance>238.0</instance>
+        <instance>8.0</instance>
+        <instance>363.0</instance>
+        <instance>8.0</instance>
+        <instance>240.0</instance>
+        <instance>8.0</instance>
+      </value>
+      <path>select coalesce(sum(Rx.SigFrameCount), 0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>AvgLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>6.211</instance>
+        <instance>5.5</instance>
+        <instance>6.176</instance>
+        <instance>5.5</instance>
+        <instance>6.207</instance>
+        <instance>5.5</instance>
+        <instance>6.171</instance>
+        <instance>5.5</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalLatency) / 100 as double) / sum(Rx.SigFrameCount), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>MinLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>6.19</instance>
+        <instance>5.53</instance>
+        <instance>6.15</instance>
+        <instance>5.53</instance>
+        <instance>6.17</instance>
+        <instance>5.53</instance>
+        <instance>6.14</instance>
+        <instance>5.52</instance>
+      </value>
+      <path>select coalesce(min(Rx.MinLatency), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>MaxLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>6.29</instance>
+        <instance>5.55</instance>
+        <instance>6.24</instance>
+        <instance>5.54</instance>
+        <instance>6.29</instance>
+        <instance>5.56</instance>
+        <instance>6.24</instance>
+        <instance>5.56</instance>
+      </value>
+      <path>select coalesce(max(Rx.MaxLatency), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>AvgJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalJitter) / 100 as double) /sum (Rx.InSeqFrameCount - 1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>MinJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(min(Rx.MinJitter), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>MaxJitter</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(max(Rx.MaxJitter), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>AvgInterarrivalTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalInterarrivalTime) / 100 as double) / sum(Rx.FrameCount-1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>MinInterarrivalTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(min(Rx.MinInterarrivalTime), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>MaxInterarrivalTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(max(Rx.MaxInterarrivalTime), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival</pageName>
+    </instance>
+    <instance>
+      <name>StreamBlockHnd</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>12733.0</instance>
+        <instance>12736.0</instance>
+        <instance>12739.0</instance>
+        <instance>12742.0</instance>
+        <instance>12745.0</instance>
+        <instance>12748.0</instance>
+        <instance>12751.0</instance>
+        <instance>12754.0</instance>
+      </value>
+      <path>select Tx.ParentStreamBlock from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>PortName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //1/1</instance>
+        <instance>Port //1/3</instance>
+      </value>
+      <path>select p.Name from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>DeviceName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Device 1</instance>
+        <instance>Device 2</instance>
+      </value>
+      <path>select d.Name from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>AttemptedUARegistration</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select uaResults.RegistrationAttemptCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>SuccessfulUARegistration</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select uaResults.RegistrationSuccessCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>FailedUARegistration</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.RegistrationFailureCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>AvgUARegistrationTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>3.0</instance>
+        <instance>3.0</instance>
+      </value>
+      <path>select uaResults.RegistrationAvgTime from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>MinUARegistrationTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>3.0</instance>
+        <instance>3.0</instance>
+      </value>
+      <path>select uaResults.RegistrationMinTime from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>MaxUARegistrationTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>3.0</instance>
+        <instance>3.0</instance>
+      </value>
+      <path>select uaResults.RegistrationMaxTime from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>AttemptedCalls</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.CallAttemptCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>SuccessfulCalls</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.CallSuccessCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>FailedCalls</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.CallFailureCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>AvgCallSetupTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>15.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.CallAvgTime from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>MinCallSetupTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>15.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.CallMinTime from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>MaxCallSetupTime</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>15.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.CallMaxTime from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>TotalUA</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select uaResults.TotalUaCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary,SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>RtpCodec</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>G_711</instance>
+        <instance>G_711</instance>
+      </value>
+      <path>select SipInfo.sipAudioCodec from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select profile.AudioCodec AS sipAudioCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd))AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentHnd, SipInfo.sipUaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RtpStreamBlock</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 9</instance>
+        <instance>RTP_StreamBlock 13</instance>
+      </value>
+      <path>select Tx.StreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd where (R.type='AudioStreamBlock') group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RtpStreamId</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>65536.0</instance>
+        <instance>131072.0</instance>
+      </value>
+      <path>select Tx.StreamId from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd where (R.type="AudioStreamBlock" Or R.type="AudioStreamBlock") group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RtpStreamIndex</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>2.0</instance>
+        <instance>0.0</instance>
+        <instance>2.0</instance>
+      </value>
+      <path>select Tx.StreamIndex from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd where (R.type="AudioStreamBlock" or R.Type="VideoStreamBlock") group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RtpTxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+      </value>
+      <path>select Tx.PortName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd where (R.type="AudioStreamBlock" or R.Type="VideoStreamBlock") group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RtpRxPort</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Port //1/3</instance>
+        <instance>Port //1/3</instance>
+        <instance>Port //1/1</instance>
+        <instance>Port //1/1</instance>
+      </value>
+      <path>select Tx.RxPortName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd where (R.type="AudioStreamBlock" or R.Type="VideoStreamBlock") group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RtpAvgLatency</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>6.211</instance>
+        <instance>6.176</instance>
+        <instance>6.207</instance>
+        <instance>6.171</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalLatency) / 100 as double) / sum(Rx.SigFrameCount), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd where (R.type="AudioStreamBlock" or R.Type="VideoStreamBlock") group by Tx.StreamId order by Tx.ParentHnd, Ua.UaNumStart, Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoCodec</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>H_263</instance>
+      </value>
+      <path>select SipInfo.sipVideoCodec from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoCodec</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>H_263</instance>
+      </value>
+      <path>select SipInfo.sipVideoCodec from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioCodec</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>G_711</instance>
+      </value>
+      <path>select SipInfo.sipAudioCodec from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.AudioCodec AS sipAudioCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioCodec</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>G_711</instance>
+      </value>
+      <path>select SipInfo.sipAudioCodec from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.AudioCodec AS sipAudioCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerUaStartNum</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>11111</instance>
+      </value>
+      <path>select SipInfo.sipUaNumStart from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, Ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolConfig Ua left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeUaStartNum</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>22222</instance>
+      </value>
+      <path>select SipInfo.sipUaNumStart from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, Ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolConfig Ua left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerUaNumStep</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select SipInfo.sipUaNumStep from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, Ua.UaNumStep AS sipUaNumStep, ua.Handle AS sipHandle from SipUaProtocolConfig Ua left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeUaNumStep</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select SipInfo.sipUaNumStep from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, Ua.UaNumStep AS sipUaNumStep, ua.Handle AS sipHandle from SipUaProtocolConfig Ua left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerCallType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>AUDIO_VIDEO</instance>
+      </value>
+      <path>select SipInfo.sipCallType from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.CallType AS sipCallType, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeCallType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>AUDIO_VIDEO</instance>
+      </value>
+      <path>select SipInfo.sipCallType from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.CallType AS sipCallType, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioStreamIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+      </value>
+      <path>select Tx.StreamIndex from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioStreamIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+      </value>
+      <path>select Tx.StreamIndex from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoStreamIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2</instance>
+      </value>
+      <path>select Tx.StreamIndex from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoStreamIndex</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2</instance>
+      </value>
+      <path>select Tx.StreamIndex from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioRtpStreamBlockHnd</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>12733</instance>
+      </value>
+      <path>select Tx.ParentStreamBlock from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoRtpStreamBlockHnd</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>12739</instance>
+      </value>
+      <path>select Tx.ParentStreamBlock from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioRtpTxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>360</instance>
+      </value>
+      <path>select Tx.FrameCount from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoRtpTxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>238</instance>
+      </value>
+      <path>select Tx.FrameCount from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioRtpRxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>360</instance>
+      </value>
+      <path>select coalesce(sum(Rx.FrameCount), 0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoRtpRxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>238</instance>
+      </value>
+      <path>select coalesce(sum(Rx.FrameCount), 0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioRtpStreamBlockHnd</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>12745</instance>
+      </value>
+      <path>select Tx.ParentStreamBlock from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoRtpStreamBlockHnd</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>12751</instance>
+      </value>
+      <path>select Tx.ParentStreamBlock from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioRtpTxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>363</instance>
+      </value>
+      <path>select Tx.FrameCount from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoRtpTxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>240</instance>
+      </value>
+      <path>select Tx.FrameCount from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioRtpRxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>363</instance>
+      </value>
+      <path>select coalesce(sum(Rx.FrameCount), 0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoRtpRxFrameCount</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>240</instance>
+      </value>
+      <path>select coalesce(sum(Rx.FrameCount), 0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioRtpStreamBlock</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 9</instance>
+      </value>
+      <path>select Tx.StreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoRtpStreamBlock</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 11</instance>
+      </value>
+      <path>select Tx.StreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioRtpStreamBlock</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 13</instance>
+      </value>
+      <path>select Tx.StreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoRtpStreamBlock</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 15</instance>
+      </value>
+      <path>select Tx.StreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="VideoStreamBlock" left join(select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="VideoStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioAvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>6.211</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalLatency) / 100 as double) / sum(Rx.SigFrameCount), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoAvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>6.176</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalLatency) / 100 as double) / sum(Rx.SigFrameCount), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="VideoStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioAvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalJitter) / 100 as double) /sum (Rx.InSeqFrameCount - 1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoAvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalJitter) / 100 as double) /sum (Rx.InSeqFrameCount - 1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="VideoStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioAvgInterarrivalTime</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalInterarrivalTime) / 100 as double) / sum(Rx.FrameCount-1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" ) left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoAvgInterarrivalTime</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalInterarrivalTime) / 100 as double) / sum(Rx.FrameCount-1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="VideoStreamBlock" ) left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioAvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>6.207</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalLatency) / 100 as double) / sum(Rx.SigFrameCount), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoAvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>6.171</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalLatency) / 100 as double) / sum(Rx.SigFrameCount), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="VideoStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioAvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalJitter) / 100 as double) /sum (Rx.InSeqFrameCount - 1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoAvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalJitter) / 100 as double) /sum (Rx.InSeqFrameCount - 1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="VideoStreamBlock") left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioAvgInterarrivalTime</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalInterarrivalTime) / 100 as double) / sum(Rx.FrameCount-1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" ) left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoAvgInterarrivalTime</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select coalesce(round(cast(sum(Rx.TotalInterarrivalTime) / 100 as double) / sum(Rx.FrameCount-1), 3), 0.0) from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx ) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="VideoStreamBlock" ) left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.VideoCodec AS sipVideoCodec, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>UaStartNumber</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>11111.0</instance>
+        <instance>11111.0</instance>
+        <instance>11111.0</instance>
+        <instance>11111.0</instance>
+        <instance>22222.0</instance>
+        <instance>22222.0</instance>
+        <instance>22222.0</instance>
+        <instance>22222.0</instance>
+      </value>
+      <path>select Ua.UaNumStart from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>UaStepValue</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select Ua.UaNumStep from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - R-Factor/MOS,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>SipUaEotResultsTable</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>SipUaEotResults</instance>
+      </value>
+      <path>select tn.TableName from TableIndex tn where tn.TableName = 'SipUaEotResults'</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>UaNumberFormat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Caller_%5u</instance>
+        <instance>Caller_%5u</instance>
+        <instance>Caller_%5u</instance>
+        <instance>Caller_%5u</instance>
+        <instance>Callee_%5u</instance>
+        <instance>Callee_%5u</instance>
+        <instance>Callee_%5u</instance>
+        <instance>Callee_%5u</instance>
+      </value>
+      <path>select Ua.UaNumFormat from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and (R.type="AudioStreamBlock" or R.type="AudioRtcpStreamBlock" or R.Type="VideoStreamBlock" or R.Type="VideoRtcpStreamBlock") left join SipUaProtocolConfig Ua on Ua.Handle = R.SourceHnd group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>CallerUaNumFormat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Caller_%5u</instance>
+      </value>
+      <path>select SipInfo.sipUaNumFormat from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, Ua.UaNumFormat AS sipUaNumFormat, ua.Handle AS sipHandle from SipUaProtocolConfig Ua left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeUaNumFormat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Callee_%5u</instance>
+      </value>
+      <path>select SipInfo.sipUaNumFormat from (select Tx.*, Sbtt.RxPort as RxPort, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, Ua.UaNumFormat AS sipUaNumFormat, ua.Handle AS sipHandle from SipUaProtocolConfig Ua left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerStreamName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 9</instance>
+      </value>
+      <path>select Tx.sipStreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Tx.StreamBlockName as sipStreamBlockName, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.CallType AS sipCallType, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRSourceHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeStreamName</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 13</instance>
+      </value>
+      <path>select Tx.sipStreamBlockName from (select Tx.*, Sbtt.RxPort as RxPort, Tx.StreamBlockName as sipStreamBlockName, Sbtt.RxPortName as RxPortName from StreamBlockTrafficTable as Sbtt, TxEotStreamResults as Tx where Sbtt.DataSetId = Tx.DataSetId and Sbtt.StreamBlockHandle = Tx.ParentStreamBlock and Tx.OffsetInStreamBlock Between Sbtt.StartIdx and Sbtt.EndIdx) as Tx left join RxEotStreamResults as Rx on Rx.FrameCount &gt; 0 and Tx.DataSetId = Rx.DataSetId and Tx.StreamId = Rx.Comp32 and (Tx.RxPort = 0 or Tx.RxPort like '%'||Rx.ParentHnd||'%') left join relationTable R on R.TargetHnd = Tx.ParentStreamBlock and R.type="AudioStreamBlock" left join (select RR.SourceHnd AS sipRRSourceHnd, RR.TargetHnd AS sipRRTargetHnd, profile.CallType AS sipCallType, ua.UaNumStart AS sipUaNumStart, ua.Handle AS sipHandle from SipUaProtocolProfile profile left join ClientProfile cProfile on cProfile.Handle=profile.ParentHnd left join RelationTable R on R.Type="AffiliatedClientProfile" left join SipUaProtocolConfig Ua on (Ua.Handle = R.SourceHnd AND cProfile.Handle=R.TargetHnd) left join RelationTable RR on RR.Type="ConnectionDestination") AS SipInfo where (R.type="AudioStreamBlock" AND R.SourceHnd=SipInfo.sipHandle AND SipInfo.sipRRTargetHnd=SipInfo.sipHandle) group by Tx.StreamId order by Tx.ParentStreamBlock, Tx.StreamIndex</path>
+      <multivalued>true</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>UpdateCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <path>select uaResults.sessionRefreshesCount from AllDevice d, Port p, SipUaEotResults uaResults, SipUaProtocolConfig uaConfig, RelationTable rt WHERE ( rt.Type = 'AffiliationPort' AND rt.SourceHnd = d.Handle AND rt.TargetHnd = p.Handle AND uaConfig.ParentHnd = d.Handle AND uaResults.ParentProtocolConfig = uaConfig.Handle ) order by p.name, d.name</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>R-Factor</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>93.2072282404</instance>
+      </value>
+      <script><![CDATA[# To calculate R-Factor&#xa;&#xa;set result  [list]&#xa;&#xa;set SLR     8&#xa;set RLR     2&#xa;set STMR    15&#xa;set LSTR    18&#xa;set Ds      3&#xa;set Dr      3&#xa;set TELR    65&#xa;set WEPL    110&#xa;set T       0&#xa;set Tr      0&#xa;set Ta      0&#xa;set qdu     1&#xa;set Ie      0&#xa;set Nc      -70&#xa;set Nfor    -64&#xa;set Ps      35&#xa;set Pr      35&#xa;set A       0&#xa;set Ppl     0&#xa;set BurstR  1&#xa;set Bpl     1&#xa; set W      0&#xa;&#xa;set index      0&#xa;set index_v  0&#xa;set length [llength $CallerAudioStreamIndex]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} {    &#xa;&#xa;   set   callType      [lindex $CallerCallType    $index]&#xa;   # Read the Stream Block Handle and the User Agent start Number for the current record&#xa;   set  callerAudioLatency         [lindex $CallerAudioAvgLatency $index]   &#xa;   set  calleeAudioLatency        [lindex $CalleeAudioAvgLatency $index]&#xa;   &#xa;   set  callerVideoLatency         0&#xa;   set  calleeVideoLatency        0&#xa;   if { $callType == "AUDIO_VIDEO" } {        &#xa;        set  callerVideoLatency         [lindex $CallerVideoAvgLatency $index_v]&#xa;        set  calleeVideoLatency        [lindex $CallerVideoAvgLatency $index_v]&#xa;    }&#xa;   &#xa;   # Compute T, Ta Tr&#xa;    set  Tr   [expr ($callerAudioLatency + $callerVideoLatency + $calleeAudioLatency + $calleeVideoLatency) / 1000]   &#xa;   set T      [expr $Tr / 2.0]&#xa;   set Ta    $T&#xa;&#xa;   # Compute Ppl  &#xa;   set CallerAudioTxCount     [lindex $CallerAudioRtpTxFrameCount  $index]&#xa;   set CalleeAudioTxCount    [lindex $CalleeAudioRtpTxFrameCount $index]&#xa;   set CallerAudioRxCount    [lindex $CallerAudioRtpRxFrameCount $index]&#xa;   set CalleeAudioRxCount   [lindex $CalleeAudioRtpRxFrameCount $index]&#xa;   &#xa;&#xa;   set CallerVideoTxCount       0&#xa;   set CalleeVideoTxCount      0&#xa;   set CallerVideoRxCount      0&#xa;   set CalleeVideoRxCount     0  &#xa;  &#xa;    if { $callType == "AUDIO_VIDEO" } {   &#xa;          set CallerVideoTxCount     [lindex $CallerVideoRtpTxFrameCount $index_v]&#xa;          set CalleeVideoTxCount    [lindex $CalleeVideoRtpTxFrameCount $index_v]&#xa;          set CallerVideoRxCount    [lindex $CallerVideoRtpTxFrameCount $index_v]&#xa;          set CalleeVideoRxCount   [lindex $CalleeVideoRtpTxFrameCount $index_v]&#xa;    }&#xa;&#xa;   set TotalAudioTxCount [expr $CallerAudioTxCount + $CalleeAudioTxCount]   &#xa;   set TotalAudioRxCount [expr $CallerAudioRxCount + $CalleeAudioRxCount]  &#xa;&#xa;    set TotalVideoTxCount     0&#xa;    set TotalVideoRxCount    0&#xa;     if { $callType == "AUDIO_VIDEO" } {&#xa;         set TotalVideoTxCount [expr $CallerVideoTxCount + $CalleeVideoTxCount]&#xa;         set TotalVideoRxCount [expr $CallerVideoRxCount + $CalleeVideoRxCount]&#xa;     }&#xa;&#xa;    set TotalTxCount      [expr $TotalAudioTxCount + $TotalVideoTxCount]&#xa;    set TotalRxCount     [expr $TotalAudioRxCount + $TotalVideoRxCount]&#xa;&#xa;    if { $TotalTxCount < $TotalRxCount } {&#xa;        set Ppl  0&#xa;    } else {&#xa;        set Ppl  [expr ($TotalTxCount - $TotalRxCount)* 100 / $TotalTxCount]&#xa;    }&#xa;     &#xa;    set Nr1 [expr $Ps - $SLR - $Ds - 100]&#xa;    set tmp [expr $Ps - $SLR - $RLR - $Ds - 14]&#xa;    set Nr1 [expr $Nr1 + 0.004 * ( $tmp * $tmp )]&#xa;    set Pre [expr $Pr + 10 * log(1.0 + pow(10.0, ((10.0 - $LSTR) / 10.0))) / log(10.0)]&#xa;    set Pr1 [expr $Pre + 0.008 * ($Pre - 35) * ($Pre - 35)]&#xa;    set Nor [expr $Pr1 - 121 + $RLR]&#xa;    set Nfo [expr $Nfor + $RLR]&#xa;    set No  [expr 10 * log( pow(10.0,($Nor/10.0)) + pow(10.0,($Nr1/10.0)) + pow(10.0,($Nc/10.0)) + pow(10.0,($Nfo/10.0)) ) / log(10.0)]&#xa;    set Nt  [expr $No - $RLR]&#xa;    set Ro  [expr 15 - 1.5 * ($SLR + $No)]&#xa;&#xa;    set Xolr [expr $SLR + $RLR + 0.2 * (64 + $Nt)]&#xa;    set pow1 [expr pow(($Xolr / 8.0), 8.0)]&#xa;    set pow2 [expr pow(1.0 + $pow1, 0.125)]&#xa;    set Iolr [expr 20 * ( $pow2 - $Xolr / 8)]&#xa;&#xa;&#xa;    set STMRo [expr -10 * log(pow(10.0, -$STMR / 10.0) + pow(10.0, -$TELR / 10.0) * exp(-$T / 4.0))]&#xa;    set Ist [expr 12 * (pow(1 + pow(($STMRo - 13) / 6, 8), 1/8))]&#xa;    set Ist [expr $Ist - 28 * (pow(1 + pow(($STMRo + 1) / 19.4, 35), 1/35))]&#xa;    set Ist [expr $Ist - 13 * (pow(1 + pow(($STMRo - 3) / 33, 13), 1/13)) + 29]&#xa;&#xa;    if { $qdu < 1 } {&#xa;        set qdu  1&#xa;    }&#xa;    set Q  [expr 37 - 15 * log($qdu) / log(10.0)]&#xa;    set G  [expr 1.07 + 0.258 * $Q + 0.0602 * $Q * $Q]&#xa;    set Y  [expr ($Ro - 100) / 15.0 + 46.0 / 8.4 - $G / 9]&#xa;    set Z  [expr 46.0 / 30.0 - $G / 40]&#xa;    set Iq [expr 15.0 * log(1.0 + pow(10.0, $Y/1.0)  + pow(10.0, $Z/1.0)) / log(10.0)]&#xa;&#xa;    set Isyn  [expr $Iolr + $Ist + $Iq]&#xa;&#xa;    set TERV  [expr $TELR + 6 * exp(-0.3 * $T * $T) - 40 * log((1.0 + $T / 10.0) / (1 + $T / 150.0)) / log(10.0)]&#xa;    if { $STMR < 9 } {&#xa;        set TERV [expr $TERV + 0.5 * $Ist]&#xa;     }&#xa;    set Re   [expr 80 + 2.5 * ($TERV - 14)]&#xa;    set Roe  [expr -1.5 * ($No - $RLR)]&#xa;    set Xdt  [expr ($Roe - $Re) / 2]&#xa;    set Idte [expr $Xdt + sqrt($Xdt * $Xdt + 100)]&#xa;    set Idte [expr ($Idte - 1) * (1 - exp(-$T))]&#xa;&#xa;    if { $STMR > 20 } {&#xa;        set Idte [expr sqrt($Idte * $Idte + $Ist * $Ist)]&#xa;    }&#xa;    set Rle  [expr 10.5 * ($WEPL + 7) * pow($Tr/1.0 + 1.0, -1.0 / 4.0)]&#xa;    set Xdl  [expr ($Ro - $Rle) / 2]&#xa;    set Idle [expr $Xdl + sqrt($Xdl * $Xdl + 169)]&#xa;&#xa;    set Idd  0&#xa;    if { $Ta > 100 } {&#xa;        set X    [expr log($Ta / 100.0) / log(2.0)]&#xa;        set Idd  [expr 25 * (pow((1.0 + pow($X/1.0, 6.0)), 1.0 / 6.0) - 3 * pow(1.0 + pow($X / 3.0, 6.0), 1.0 / 6.0) + 2)]&#xa;    }&#xa;&#xa;    set  audioCodec    [lindex $CallerAudioCodec $index] &#xa;    if { ($audioCodec == "G_729")||($audioCodec == "G_729_A")||($audioCodec == "G_729_B")||($audioCodec == "G_729_AB") } {&#xa;        set Ie  11&#xa;    } elseif { $audioCodec == "G_723_1" } {&#xa;        set Ie  15&#xa;    } elseif { $audioCodec == "G_723_1_5_3" } {&#xa;        set Ie  19&#xa;    } elseif { $audioCodec == "G_726_32" } {&#xa;        set Ie  7&#xa;   } elseif {( $audioCodec == "AMRNB_0_OA_475") || ( $audioCodec == "AMRNB_0_BE_475") } {&#xa;        set Ie  20&#xa;   } elseif {( $audioCodec == "AMRNB_1_OA_515") || ( $audioCodec == "AMRNB_1_BE_515") } {&#xa;        set Ie  18&#xa;   } elseif {( $audioCodec == "AMRNB_2_OA_590") || ( $audioCodec == "AMRNB_2_BE_590") } {&#xa;        set Ie  15&#xa;   } elseif {( $audioCodec == "AMRNB_3_OA_670") || ( $audioCodec == "AMRNB_3_BE_670") } {&#xa;        set Ie  12&#xa;   } elseif {( $audioCodec == "AMRNB_4_OA_740") || ( $audioCodec == "AMRNB_4_BE_740") } {&#xa;        set Ie  11&#xa;   } elseif {( $audioCodec == "AMRNB_5_OA_795") || ( $audioCodec == "AMRNB_5_BE_795") } {&#xa;        set Ie  9&#xa;   } elseif {( $audioCodec == "AMRNB_6_OA_102") || ( $audioCodec == "AMRNB_6_BE_102") } {&#xa;        set Ie  6&#xa;   } elseif {( $audioCodec == "AMRNB_7_OA_122") || ( $audioCodec == "AMRNB_7_BE_122") } {&#xa;        set Ie  3&#xa;   } elseif {( $audioCodec == "AMRWB_0_OA_660") || ( $audioCodec == "AMRWB_0_BE_660") } {&#xa;        set Ie  29&#xa;   } elseif {( $audioCodec == "AMRWB_1_OA_885") || ( $audioCodec == "AMRWB_1_BE_885") } {&#xa;        set Ie  18&#xa;   } elseif {( $audioCodec == "AMRWB_2_OA_1265") || ( $audioCodec == "AMRWB_2_BE_1265") } {&#xa;        set Ie  10&#xa;   } elseif {( $audioCodec == "AMRWB_3_OA_1425") || ( $audioCodec == "AMRWB_3_BE_1425") } {&#xa;        set Ie  7&#xa;   } elseif {( $audioCodec == "AMRWB_4_OA_1585") || ( $audioCodec == "AMRWB_4_BE_1585") } {&#xa;        set Ie  6&#xa;   } elseif {( $audioCodec == "AMRWB_5_OA_1825") || ( $audioCodec == "AMRWB_5_BE_1825") } {&#xa;        set Ie  5&#xa;   } elseif {( $audioCodec == "AMRWB_6_OA_1985") || ( $audioCodec == "AMRWB_6_BE_1985") } {&#xa;        set Ie  2&#xa;   } elseif {( $audioCodec == "AMRWB_7_OA_2305") || ( $audioCodec == "AMRWB_7_BE_2305") } {&#xa;        set Ie  2&#xa;   } elseif {( $audioCodec == "AMRWB_8_OA_2385") || ( $audioCodec == "AMRWB_8_BE_2385") } {&#xa;        set Ie  2  &#xa;   } else {&#xa;        set Ie   0&#xa;    }&#xa;    &#xa;  if { ($audioCodec == "G_711_1_MU_LAW_96") || ($audioCodec == "G_711_1_A_LAW_96")&#xa;   || ( $audioCodec == "AMRWB_0_OA_660") || ( $audioCodec == "AMRWB_0_BE_660")&#xa;   || ( $audioCodec == "AMRWB_1_OA_885") || ( $audioCodec == "AMRWB_1_BE_885")&#xa;   || ( $audioCodec == "AMRWB_2_OA_1265") || ( $audioCodec == "AMRWB_2_BE_1265")&#xa;   || ( $audioCodec == "AMRWB_3_OA_1425") || ( $audioCodec == "AMRWB_3_BE_1425")&#xa;   || ( $audioCodec == "AMRWB_4_OA_1585") || ( $audioCodec == "AMRWB_4_BE_1585")&#xa;   || ( $audioCodec == "AMRWB_5_OA_1825") || ( $audioCodec == "AMRWB_5_BE_1825")&#xa;   || ( $audioCodec == "AMRWB_6_OA_1985") || ( $audioCodec == "AMRWB_6_BE_1985")&#xa;   || ( $audioCodec == "AMRWB_7_OA_2305") || ( $audioCodec == "AMRWB_7_BE_2305")&#xa;   || ( $audioCodec == "AMRWB_8_OA_2385") || ( $audioCodec == "AMRWB_8_BE_2385")   } {&#xa;          set W   15&#xa; }  else {&#xa;        set W   0&#xa;    }&#xa;    &#xa;    set Id    [expr $Idte + $Idle + $Idd]&#xa;    set Ieef  [expr $Ie + (95 - $Ie) * ($Ppl * 1.0 / (($Ppl / $BurstR) + $Bpl))]&#xa;    set R     [expr $Ro - $Isyn - $Id - $Ieef + $A + $W]	&#xa;	&#xa;    if { $R < 0 } {&#xa;        set R    0&#xa;    }&#xa;&#xa;    lappend result  $R &#xa;&#xa;    if { $callType == "AUDIO_VIDEO" } {&#xa;        incr index_v&#xa;    }&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>MOS</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>4.40942569702</instance>
+      </value>
+      <script><![CDATA[# To calculate MOS&#xa;&#xa;set result [list]&#xa;set index 0&#xa;set length [llength ${R-Factor}]&#xa;&#xa;for {} {$index < $length} {incr index} {&#xa;   set R [lindex ${R-Factor} $index]&#xa;   set  audioCodec    [lindex $CallerAudioCodec $index]  &#xa; if { ($audioCodec == "G_711_1_MU_LAW_96") || ($audioCodec == "G_711_1_A_LAW_96")&#xa;|| ( $audioCodec == "AMRWB_0_OA_660") || ( $audioCodec == "AMRWB_0_BE_660")&#xa;   || ( $audioCodec == "AMRWB_1_OA_885") || ( $audioCodec == "AMRWB_1_BE_885")&#xa;   || ( $audioCodec == "AMRWB_2_OA_1265") || ( $audioCodec == "AMRWB_2_BE_1265")&#xa;   || ( $audioCodec == "AMRWB_3_OA_1425") || ( $audioCodec == "AMRWB_3_BE_1425")&#xa;   || ( $audioCodec == "AMRWB_4_OA_1585") || ( $audioCodec == "AMRWB_4_BE_1585")&#xa;   || ( $audioCodec == "AMRWB_5_OA_1825") || ( $audioCodec == "AMRWB_5_BE_1825")&#xa;   || ( $audioCodec == "AMRWB_6_OA_1985") || ( $audioCodec == "AMRWB_6_BE_1985")&#xa;   || ( $audioCodec == "AMRWB_7_OA_2305") || ( $audioCodec == "AMRWB_7_BE_2305")&#xa;   || ( $audioCodec == "AMRWB_8_OA_2385") || ( $audioCodec == "AMRWB_8_BE_2385") } {&#xa;        set R1 [lindex ${R-Factor} $index]&#xa;        set R  [expr $R1*95.0 /110.0]&#xa;    }&#xa;&#xa; &#xa;   if { $R < 0 } {&#xa;       set MOS  1&#xa;    } elseif { ($R >= 0)&&($R <= 100) } {&#xa;        set MOS [expr 1 + 0.035*$R + $R*($R-60)*(100-$R)*0.000007]&#xa;    } else {&#xa;        set MOS  4.5&#xa;    }&#xa;&#xa;     lappend result  $MOS &#xa;}&#xa;&#xa;puts result&#xa;&#xa;   ]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerNumber</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>11111.0</instance>
+      </value>
+      <script><![CDATA[# To compute the Caller UaStartNumber for MOS and R-Factor&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index 0&#xa;set length [llength $CallerAudioStreamIndex]&#xa;&#xa;# To store the values of the prev record as we read further&#xa;set sbPrev [lindex $CallerAudioRtpStreamBlockHnd $index]&#xa;set uaPrev [lindex $CallerUaStartNum $index]&#xa;set uaForPrev [lindex $CallerUaNumFormat $index]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} {&#xa;   # Read the Stream Block Handle and the User Agent start Number for the current record&#xa;   set sbCurr [lindex $CallerAudioRtpStreamBlockHnd $index]&#xa;   set uaCurr [lindex $CallerUaStartNum $index]&#xa;   set uaForCurr [lindex $CallerUaNumFormat $index]&#xa;   &#xa;    # Skip comparison for the first record&#xa;    if {$index  == 0} {&#xa;       set value $uaCurr&#xa;       set uaPrev $value  &#xa;       regexp {(.*)%0([0-9]*)u(.*)} $uaForCurr match uaPreFormat int uaSufFormat&#xa;       set value [lindex [split $value "."] 0]&#xa;&#xa;       if { [info exists uaPreFormat] == "1"} {&#xa;           set value $uaPreFormat$value&#xa;       }&#xa;       if { [info exists uaSufFormat] == "1"} {&#xa;           set value $value$uaSufFormat&#xa;       }&#xa;       if { [info exists int] == "1"} {&#xa;           set dValue [expr $int - [string length $value]]&#xa;           if {$dValue > 0} {&#xa;              for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                    set value 0$value&#xa;              }&#xa;            }&#xa;       }   &#xa;&#xa;    } else { &#xa;        if {$sbCurr == $sbPrev}  {&#xa;             set value  [expr $uaPrev + [lindex $UaStepValue $index]]&#xa;             set uaPrev $value  &#xa;             regexp {(.*)%0([0-9]*)u(.*)} $uaForPrev match uaPreFormat int uaSufFormat&#xa;             set value [lindex [split $value "."] 0]&#xa;&#xa;            if { [info exists uaPreFormat] =="1"} {&#xa;                set value $uaPreFormat$value&#xa;&#xa;            }&#xa;            if { [info exists uaSufFormat] == "1"} {&#xa;              set value $value$uaSufFormat&#xa;            }&#xa;            if { [info exists int] == "1"} {&#xa;               set dValue [expr $int - [string length $value]]&#xa;               if {$dValue > 0} {&#xa;                   for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                         set value 0$value&#xa;                  }&#xa;               }&#xa;          } &#xa;&#xa;        } else {&#xa;             set value $uaCurr&#xa;             set uaPrev $value  &#xa;             regexp {(.*)%0([0-9]*)u(.*)} $uaForCurr match uaPreFormat int uaSufFormat&#xa;             set value [lindex [split $value "."] 0]&#xa;&#xa;            if { [info exists uaPreFormat] == "1"} {&#xa;                  set value $uaPreFormat$value&#xa;&#xa;            }&#xa;            if { [info exists uaSufFormat] == "1"} {&#xa;                 set value $value$uaSufFormat&#xa;            }&#xa;            if { [info exists int] == "1"} {&#xa;                    set dValue [expr $int - [string length $value]]&#xa;                    if {$dValue > 0} {&#xa;                             for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                                   set value 0$value&#xa;                            }&#xa;                    }&#xa;            }   &#xa;         }&#xa;    }&#xa;   &#xa;   # Update the appropriate values for the next iteration&#xa;   set sbPrev  $sbCurr&#xa;   set uaForPrev $uaForCurr &#xa;&#xa;   lappend noSortResult  $value&#xa;&#xa;}&#xa;&#xa;# To calculate caller stream number from StreamBlockName&#xa;set CallerStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CallerRtpName [lindex $CallerStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CallerRtpName match number&#xa;     lappend CallerStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CallerStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CallerStreamNumList  $index]&#xa;    set callerNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $callerNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $callerNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $callerNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeNumber</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>22222.0</instance>
+      </value>
+      <script><![CDATA[# To compute the Callee UaStartNumber for MOS and R-Factor&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index 0&#xa;set length [llength $CalleeAudioStreamIndex]&#xa;&#xa;# To store the values of the prev record as we read further&#xa;set sbPrev [lindex $CalleeAudioRtpStreamBlockHnd $index]&#xa;set uaPrev [lindex $CalleeUaStartNum $index]&#xa;set uaForPrev [lindex $CalleeUaNumFormat $index]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} {&#xa;   # Read the Stream Block Handle and the User Agent start Number for the current record&#xa;   set sbCurr [lindex $CalleeAudioRtpStreamBlockHnd $index]&#xa;   set uaCurr [lindex $CalleeUaStartNum $index]&#xa;   set uaForCurr [lindex $CalleeUaNumFormat $index]&#xa;   &#xa;    # Skip comparison for the first record&#xa;    if {$index  == 0} {&#xa;       set value $uaCurr&#xa;       set uaPrev $value  &#xa;       regexp {(.*)%0([0-9]*)u(.*)} $uaForCurr match uaPreFormat int uaSufFormat&#xa;       set value [lindex [split $value "."] 0]&#xa;       &#xa;       if { [info exists uaPreFormat] == "1"} {&#xa;           set value $uaPreFormat$value&#xa;       }&#xa;       if { [info exists uaSufFormat] == "1"} {&#xa;           set value $value$uaSufFormat&#xa;       }&#xa;       if { [info exists int] == "1"} {&#xa;           set dValue [expr $int - [string length $value]]&#xa;           if {$dValue > 0} {&#xa;              for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                    set value 0$value&#xa;              }&#xa;            }&#xa;       }   &#xa;&#xa;    } else { &#xa;        if {$sbCurr == $sbPrev}  {&#xa;             set value  [expr $uaPrev + [lindex $UaStepValue $index]]&#xa;             set uaPrev $value  &#xa;             regexp {(.*)%0([0-9]*)u(.*)} $uaForPrev match uaPreFormat int uaSufFormat&#xa;             set value [lindex [split $value "."] 0]&#xa;&#xa;            if { [info exists uaPreFormat] =="1"} {&#xa;                set value $uaPreFormat$value&#xa;&#xa;            }&#xa;            if { [info exists uaSufFormat] == "1"} {&#xa;              set value $value$uaSufFormat&#xa;            }&#xa;            if { [info exists int] == "1"} {&#xa;               set dValue [expr $int - [string length $value]]&#xa;               if {$dValue > 0} {&#xa;                   for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                         set value 0$value&#xa;                  }&#xa;               }&#xa;          } &#xa;&#xa;        } else {&#xa;             set value $uaCurr&#xa;             set uaPrev $value  &#xa;             regexp {(.*)%0([0-9]*)u(.*)} $uaForCurr match uaPreFormat int uaSufFormat&#xa;             set value [lindex [split $value "."] 0]&#xa;&#xa;            if { [info exists uaPreFormat] == "1"} {&#xa;                  set value $uaPreFormat$value&#xa;&#xa;            }&#xa;            if { [info exists uaSufFormat] == "1"} {&#xa;                 set value $value$uaSufFormat&#xa;            }&#xa;            if { [info exists int] == "1"} {&#xa;                    set dValue [expr $int - [string length $value]]&#xa;                    if {$dValue > 0} {&#xa;                             for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                                   set value 0$value&#xa;                            }&#xa;                    }&#xa;            }   &#xa;         }&#xa;    }&#xa;   &#xa;   # Update the appropriate values for the next iteration&#xa;   set sbPrev  $sbCurr&#xa;   set uaForPrev $uaForCurr &#xa;&#xa;   lappend noSortResult  $value&#xa;&#xa;}&#xa;&#xa;# To calculate callee stream number from StreamBlockName&#xa;set CalleeStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CalleeRtpName [lindex $CalleeStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CalleeRtpName match number&#xa;     lappend CalleeStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CalleeStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CalleeStreamNumList  $index]&#xa;    set calleeNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $calleeNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $calleeNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $calleeNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>AudioRtpCodec</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>G_711</instance>
+      </value>
+      <script><![CDATA[# To compute the caller Audio Rtp Stream Codec for MOS and R-Factor&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index 0&#xa;set length  [llength $CallerAudioCodec]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} {    &#xa;    set value [lindex $CallerAudioCodec  $index]&#xa;    lappend noSortResult  $value                &#xa;    &#xa;}&#xa;&#xa;# To calculate caller stream number from StreamBlockName&#xa;set CallerStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CallerRtpName [lindex $CallerStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CallerRtpName match number&#xa;     lappend CallerStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CallerStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CallerStreamNumList  $index]&#xa;    set callerNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $callerNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $callerNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $callerNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;&#xa;puts result&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>VideoRtpCodec</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>H_263</instance>
+      </value>
+      <script><![CDATA[# To compute the Caller Video RTP Stream Codec for MOS and R-Factor&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index 0&#xa;set length  [llength $CallerVideoCodec]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} { &#xa;&#xa;    set   callType  [lindex $CallerCallType   $index]    &#xa;     if { $callType == "AUDIO_VIDEO"} { &#xa;        set value [lindex $CallerVideoCodec  $index]&#xa;        lappend noSortResult  $value  &#xa;    } else {&#xa;        lappend noSortResult   -&#xa;    }&#xa;}&#xa;&#xa;# To calculate caller stream number from StreamBlockName&#xa;set CallerStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CallerRtpName [lindex $CallerStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CallerRtpName match number&#xa;     lappend CallerStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CallerStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CallerStreamNumList  $index]&#xa;    set callerNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $callerNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $callerNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $callerNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CallerVideoRtpStream</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 11</instance>
+      </value>
+      <script><![CDATA[# To compute the Caller Video RTP StreamName for MOS and R-Factor&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index 0&#xa;set index_v  0&#xa;set length  [llength $CallerAudioStreamIndex]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} { &#xa;        &#xa;    set   callType      [lindex $CallerCallType    $index]    &#xa;     if { $callType == "AUDIO_VIDEO" } {&#xa;         set value [lindex $CallerVideoRtpStreamBlock  $index_v]         &#xa;        incr index_v&#xa;    } else {   &#xa;         set value  "-"&#xa;    }  &#xa;    lappend noSortResult  $value &#xa;}&#xa;&#xa;# To calculate caller stream number from StreamBlockName&#xa;set CallerStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CallerRtpName [lindex $CallerStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CallerRtpName match number&#xa;     lappend CallerStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CallerStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CallerStreamNumList  $index]&#xa;    set callerNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $callerNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $callerNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $callerNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;puts result&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeVideoRtpStream</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 15</instance>
+      </value>
+      <script><![CDATA[# To compute the Caller RTP StreamName for MOS and R-Factor&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index      0&#xa;set index_v  0&#xa;set length  [llength $CalleeAudioStreamIndex]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index}  { &#xa;        &#xa;    set   callType      [lindex $CalleeCallType    $index]         &#xa;    if { $callType == "AUDIO_VIDEO" } {&#xa;        set value [lindex $CalleeVideoRtpStreamBlock  $index_v]&#xa;        incr index_v         &#xa;    } else {   &#xa;        set value  "-"&#xa;    }    &#xa;    lappend noSortResult  $value  &#xa;}&#xa;&#xa;# To calculate callee stream number from StreamBlockName&#xa;set CalleeStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CalleeRtpName [lindex $CalleeStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CalleeRtpName match number&#xa;     lappend CalleeStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CalleeStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CalleeStreamNumList  $index]&#xa;    set calleeNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $calleeNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $calleeNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $calleeNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;&#xa;puts result&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1255312552096</value>
+      <script><![CDATA[set result "1270155348805"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Mon Oct 12 09:55:52.096 CST 2009</value>
+      <script><![CDATA[set result "Thu Apr 01 10:55:48.805 HST 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Version</pageName>
+    </instance>
+    <instance>
+      <name>CallerAudioRtpStream</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 9</instance>
+      </value>
+      <script><![CDATA[# To compute the Caller Audio RTP StreamName&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index 0&#xa;set length  [llength $CallerAudioStreamIndex]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} { &#xa;&#xa;    set value [lindex $CallerAudioRtpStreamBlock  $index]&#xa;    lappend noSortResult  $value          &#xa;      &#xa;}&#xa;&#xa;# To calculate caller stream number from StreamBlockName&#xa;set CallerStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CallerRtpName [lindex $CallerStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CallerRtpName match number&#xa;     lappend CallerStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CallerStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CallerStreamNumList  $index]&#xa;    set callerNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $callerNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $callerNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $callerNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;&#xa;puts result&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>CalleeAudioRtpStream</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>RTP_StreamBlock 13</instance>
+      </value>
+      <script><![CDATA[# To compute the Callee Audio RTP StreamName&#xa;&#xa;set result  [list]&#xa;set noSortResult [list]&#xa;set index 0&#xa;set length  [llength $CalleeAudioStreamIndex]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} { &#xa;&#xa;    set value [lindex $CalleeAudioRtpStreamBlock  $index]&#xa;    lappend noSortResult  $value          &#xa;      &#xa;}&#xa;&#xa;# To calculate callee stream number from StreamBlockName&#xa;set CalleeStreamNumList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;     set CalleeRtpName [lindex $CalleeStreamName $index]&#xa;     regexp {.* ([0-9]*)} $CalleeRtpName match number&#xa;     lappend CalleeStreamNumList $number &#xa;}&#xa;# To setup map&#xa;set preNum [lindex $CalleeStreamNumList  0]&#xa;set increaseIndex 0&#xa;set mapIndexList [list]&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;    set curNum [lindex $CalleeStreamNumList  $index]&#xa;    set calleeNum [lindex $noSortResult $index]&#xa;    if {$index == 0} {&#xa;        lappend mapIndexList [expr 1000 * $curNum]&#xa;        set map([lindex $mapIndexList $index]) $calleeNum&#xa;    } else {&#xa;               if {$preNum == $curNum} {&#xa;                   incr increaseIndex &#xa;                   lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                   set map([lindex $mapIndexList $index]) $calleeNum&#xa;               } else {&#xa;                  set increaseIndex 0&#xa;                  lappend mapIndexList [expr 1000 * $curNum + $increaseIndex]&#xa;                  set map([lindex $mapIndexList $index]) $calleeNum&#xa;              }&#xa;  }&#xa;  set preNum $curNum  &#xa;}&#xa;&#xa;set mapIndexList [lsort -integer $mapIndexList]&#xa;for {set index 0} {$index < $length} {incr index} { &#xa;    lappend result $map([lindex $mapIndexList $index])&#xa;}&#xa;&#xa;puts result&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - R-Factor/MOS</pageName>
+    </instance>
+    <instance>
+      <name>UaNumberModified</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>11111.0</instance>
+        <instance>11111.0</instance>
+        <instance>11111.0</instance>
+        <instance>11111.0</instance>
+        <instance>22222.0</instance>
+        <instance>22222.0</instance>
+        <instance>22222.0</instance>
+        <instance>22222.0</instance>
+      </value>
+      <script><![CDATA[# To compute the RTP and RTCP related with UaStartNumber&#xa;&#xa;set result  [list]&#xa;set index 0&#xa;set length [llength $StreamIndex]&#xa;&#xa;# To store the values of the prev record as we read further&#xa;set sbPrev [lindex $StreamBlockHnd $index]&#xa;set uaPrev [lindex $UaStartNumber $index]&#xa;set uaForPrev [lindex $UaNumberFormat $index]&#xa;&#xa;# For each Stream&#xa;for {} {$index < $length} {incr index} {&#xa;   # Read the Stream Block Handle and the User Agent start Number for the current record&#xa;   set sbCurr [lindex $StreamBlockHnd $index]&#xa;   set uaCurr [lindex $UaStartNumber $index]&#xa;   set uaForCurr [lindex $UaNumberFormat $index]&#xa;   &#xa;    # Skip comparison for the first record&#xa;    if {$index  == 0} {&#xa;       set value $uaCurr&#xa;       set uaPrev $value  &#xa;       regexp {(.*)%0([0-9]*)u(.*)} $uaForCurr match uaPreFormat int uaSufFormat&#xa;       regexp {(.*).0} $value match value&#xa;&#xa;       if { [info exists uaPreFormat] == "1"} {&#xa;           set value $uaPreFormat$value&#xa;       }&#xa;       if { [info exists uaSufFormat] == "1"} {&#xa;           set value $value$uaSufFormat&#xa;       }&#xa;       if { [info exists int] == "1"} {&#xa;           set dValue [expr $int - [string length $value]]&#xa;           if {$dValue > 0} {&#xa;              for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                    set value 0$value&#xa;              }&#xa;            }&#xa;       }   &#xa;&#xa;    } else { &#xa;        if {$sbCurr == $sbPrev}  {&#xa;             set value  [expr $uaPrev + [lindex $UaStepValue $index]]&#xa;             set uaPrev $value  &#xa;             regexp {(.*)%0([0-9]*)u(.*)} $uaForPrev match uaPreFormat int uaSufFormat&#xa;             regexp {(.*).0} $value match value&#xa;&#xa;            if { [info exists uaPreFormat] =="1"} {&#xa;                set value $uaPreFormat$value&#xa;&#xa;            }&#xa;            if { [info exists uaSufFormat] == "1"} {&#xa;              set value $value$uaSufFormat&#xa;            }&#xa;            if { [info exists int] == "1"} {&#xa;               set dValue [expr $int - [string length $value]]&#xa;               if {$dValue > 0} {&#xa;                   for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                         set value 0$value&#xa;                  }&#xa;               }&#xa;          } &#xa;&#xa;        } else {&#xa;             set value $uaCurr&#xa;             set uaPrev $value  &#xa;             regexp {(.*)%0([0-9]*)u(.*)} $uaForCurr match uaPreFormat int uaSufFormat&#xa;             regexp {(.*).0} $value match value&#xa;&#xa;            if { [info exists uaPreFormat] == "1"} {&#xa;                  set value $uaPreFormat$value&#xa;&#xa;            }&#xa;            if { [info exists uaSufFormat] == "1"} {&#xa;                 set value $value$uaSufFormat&#xa;            }&#xa;            if { [info exists int] == "1"} {&#xa;                    set dValue [expr $int - [string length $value]]&#xa;                    if {$dValue > 0} {&#xa;                             for {set tmp 0} {$tmp < $dValue} {incr tmp} {&#xa;                                   set value 0$value&#xa;                            }&#xa;                    }&#xa;            }   &#xa;         }&#xa;    }&#xa;   &#xa;   # Update the appropriate values for the next iteration&#xa;   set sbPrev  $sbCurr&#xa;   set uaForPrev $uaForCurr &#xa;&#xa;   lappend result  $value&#xa;&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Result - Latency/Jitter/Interarrival,Stream Result - Frame Count</pageName>
+    </instance>
+    <instance>
+      <name>CallSuccessPercent</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>100.0</instance>
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate CallSuccessPercent&#xa;&#xa;set result [list]&#xa;set length [llength $AttemptedCalls]&#xa;&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;&#xa;      set attemptedCall [lindex $AttemptedCalls $index]&#xa;      set successfullCall [lindex $SuccessfulCalls $index]&#xa;      if { $attemptedCall > "0"} {&#xa;           set callSuccessPercent [expr $successfullCall / $attemptedCall * 100]&#xa;           set value  $callSuccessPercent&#xa;      } else {&#xa;           set value 0&#xa;      }&#xa;&#xa;     lappend result $value&#xa;&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>UARegistrationSuccessPercent</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>100.0</instance>
+        <instance>100.0</instance>
+      </value>
+      <script><![CDATA[#Calculate UARegistrationSuccessPercent&#xa;&#xa;set result [list]&#xa;set length [llength $AttemptedUARegistration]&#xa;&#xa;for {set index 0} {$index < $length} {incr index} {&#xa;      set attemptedRegistration [lindex $AttemptedUARegistration $index]&#xa;      set successfullRegistration [lindex $SuccessfulUARegistration $index]&#xa;      if { $attemptedRegistration > "0"} {&#xa;           set registrationSuccessPercent [expr $successfullRegistration / $attemptedRegistration * 100]&#xa;           set value $registrationSuccessPercent&#xa;      } else {&#xa;           set value 0&#xa;      }&#xa;&#xa;      lappend result $value&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>SIP Detailed Result</pageName>
+    </instance>
+    <instance>
+      <name>ErrorFlag</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# If user save SIP result without "Save Detailed Results" checking, ErrorFlag set&#xa;&#xa;set result [list]&#xa;if {[info exists SipUaEotResultsTable] != "1"} {&#xa;   set result "Warning:"&#xa;} else {&#xa;   set result ""&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>ErrorMessage</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[# If user save SIP result without "Save Detailed Results" checking, ErrorMessage set&#xa;&#xa;set result [list]&#xa;if {[info exists SipUaEotResultsTable] != "1"} {&#xa;   set result "No SIP EOT Result created, please save again with detailed results. "&#xa;} else {&#xa;   set result ""&#xa;}&#xa;&#xa;puts result]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>GetFileName</name>
+      <persist>false</persist>
+      <value type="String">C:\Documents and Settings\jxu\Desktop\SIP_DB\1Call_With_Audio_Video.db</value>
+      <script><![CDATA[# return the DB file name, we always get the last one customer save&#xa;# - note that detailed stats does not have the @StartDataSetId when launced by the template "pick list"&#xa;&#xa;set result [list]&#xa;&#xa;if  {[info exists FileNameID] == "1"} {&#xa;  set result [lindex $FileNameID end]&#xa;} else {&#xa;  set result "N/A"&#xa;}&#xa;&#xa;puts result&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>SipSummary</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Port\nName</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Device\nName</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Total\nUAs</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Number of Registration(s)</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Number of Call(s)</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Calls Refresh/Update Count</td>&#xa; </tr>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Attempted</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Successful</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Failed</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Attempted</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Successful</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Failed</td>&#xa;  </tr>&#xa; <tr iterate="=$DeviceName$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$PortName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$DeviceName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TotalUA$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AttemptedUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$SuccessfulUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$FailedUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AttemptedCalls$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$SuccessfulCalls$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$FailedCalls$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$UpdateCount$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>SipRegistrationSummary</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Port Name</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Device Name</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Total UAs</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Attempted UA Reg.</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Successful UA Reg.</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Failed UA Reg.</td>&#xa; </tr>&#xa; <tr iterate="=$DeviceName$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$PortName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$DeviceName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TotalUA$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AttemptedUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$SuccessfulUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$FailedUARegistration$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>SipStreamResult_FrameCount</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Tx\nPort</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Rx\nPort</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Stream\nBlock</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Stream\nIndex</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">UA\nNumber</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Frame Count</td>&#xa;    <td colspan="2" rowspan="1" bgcolor="#eeeeee">Octet Count</td>&#xa; </tr>&#xa; <tr>    &#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Tx </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Rx </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Sig </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Tx </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Rx </td>&#xa; </tr>&#xa; <tr iterate="=$StreamIndex$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TxPort$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$RxPort$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$StreamBlock$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$StreamIndex$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$UaNumberModified$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TxFrameCount$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$RxFrameCount$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$SigFrameCount$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TxOctetCount$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$RxOctetCount$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>SipStreamResult_LatencyJitterInterarrival</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Tx\nPort</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Rx\nPort</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Stream\nBlock</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Stream\nIndex</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">UA\nNumber</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Latency(us)</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Jitter(us)</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Interarrival Time(us)</td>&#xa;  </tr>&#xa;  <tr> &#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Avg </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Min </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Max </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Avg </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Min </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Max </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Avg </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Min </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Max </td>&#xa;  </tr>&#xa; <tr iterate="=$StreamIndex$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TxPort$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$RxPort$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$StreamBlock$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$StreamIndex$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$UaNumberModified$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AvgLatency$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MinLatency$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MaxLatency$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AvgJitter$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MinJitter$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MaxJitter$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AvgInterarrivalTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MinInterarrivalTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MaxInterarrivalTime$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>SipStreamResult_RFactorMOS</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Caller\nNum</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Callee\nNum</td>&#xa;    <td colspan="2" rowspan="1" bgcolor="#eeeeee">Caller Stream Block</td> &#xa;    <td colspan="2" rowspan="1" bgcolor="#eeeeee">Callee Stream Block</td>  &#xa;    <td colspan="2" rowspan="1" bgcolor="#eeeeee">Rtp Codec</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">R-Factor</td>&#xa;   <td colspan="1" rowspan="2" bgcolor="#eeeeee">MOS</td>&#xa;  </tr>&#xa;  <tr>    &#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Audio</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Video </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Audio</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Video </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Audio</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Video</td>&#xa;  </tr>&#xa;  <tr iterate="=$CallerAudioRtpStreamBlock$">   &#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$CallerNumber$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$CalleeNumber$</td>     &#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$CallerAudioRtpStream$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$CallerVideoRtpStream$</td> &#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$CalleeAudioRtpStream$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$CalleeVideoRtpStream$</td>      &#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AudioRtpCodec$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$VideoRtpCodec$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$R-Factor$</td>&#xa;   <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MOS$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>SipRegistrationAndCallsDetails</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Port\nName</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Device\nName</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Total\nUAs</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Number of Registrations</td>                                  &#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Registration\nSuccess %</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee"> Registration Time(msec)</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Number of Call(s)</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Call\nSuccess %</td>&#xa;    <td colspan="3" rowspan="1" bgcolor="#eeeeee">Call Setup Time (msec)</td>&#xa;    <td colspan="1" rowspan="2" bgcolor="#eeeeee">Calls Refresh/Update Count</td>&#xa; </tr>&#xa; <tr>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Attempted</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Successful</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Failed</td> &#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Avg </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Min </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Max </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Attempted </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Successful </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Failed </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Avg </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Min </td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#eeeeee">Max </td>&#xa;</tr>&#xa; <tr iterate="=$DeviceName$">&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$PortName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$DeviceName$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$TotalUA$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AttemptedUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$SuccessfulUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$FailedUARegistration$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$UARegistrationSuccessPercent$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AvgUARegistrationTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MinUARegistrationTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MaxUARegistrationTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AttemptedCalls$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$SuccessfulCalls$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$FailedCalls$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$CallSuccessPercent$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$AvgCallSetupTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MinCallSetupTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$MaxCallSetupTime$</td>&#xa;    <td colspan="1" rowspan="1" bgcolor="#ffffff">=$UpdateCount$</td>&#xa; </tr>&#xa;</table>]]></script>
+    </instance>
+  </tables>
+  <graphs/>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>200</x>
+        <y>350</y>
+        <width>292</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>upperLeftLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>150</x>
+        <y>400</y>
+        <width>60</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>250</x>
+        <y>400</y>
+        <width>100</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">SIP&amp;nbsp;UA&amp;nbsp;Emulation&amp;nbsp;Test</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartStr</name>
+        <x>150</x>
+        <y>430</y>
+        <width>60</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Created:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestStartVar</name>
+        <x>250</x>
+        <y>430</y>
+        <width>166</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$IterStartDate$&amp;nbsp;</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>FileNameStr</name>
+        <x>150</x>
+        <y>460</y>
+        <width>60</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">File&amp;nbsp;Name:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>ErrorStr</name>
+        <x>150</x>
+        <y>575</y>
+        <width>61</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ErrorFlag$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Text">
+        <name>ErrorVar</name>
+        <x>250</x>
+        <y>575</y>
+        <width>100</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">=$ErrorMessage$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="MultiText">
+        <name>FileNameVar</name>
+        <x>250</x>
+        <y>460</y>
+        <width>400</width>
+        <height>100</height>
+        <size>12</size>
+        <value xml:space="preserve">=$GetFileName$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>SipResultSummTxt</name>
+        <x>250</x>
+        <y>170</y>
+        <width>140</width>
+        <height>20</height>
+        <size>12</size>
+        <value xml:space="preserve">SIP&amp;nbsp;RESULT&amp;nbsp;SUMMARY</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>SipResultSumm</name>
+        <x>50</x>
+        <y>200</y>
+        <width>536</width>
+        <height>76</height>
+        <value>SipSummary</value>
+        <size>12</size>
+      </instance>
+    </page>
+    <page name="SIP Detailed Result" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>SipRegistrationAndCallsDetailsTxt</name>
+        <x>350</x>
+        <y>170</y>
+        <width>140</width>
+        <height>20</height>
+        <size>12</size>
+        <value xml:space="preserve">SIP&amp;nbsp;REGISTRATION&amp;nbsp;And&amp;nbsp;Calls&amp;nbsp;DETAILS</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>SipRegistrationAndCallsDetails</name>
+        <x>50</x>
+        <y>200</y>
+        <width>971</width>
+        <height>76</height>
+        <value>SipRegistrationAndCallsDetails</value>
+        <size>12</size>
+      </instance>
+    </page>
+    <page name="Stream Result - Frame Count" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>SipStreamResult1</name>
+        <x>50</x>
+        <y>200</y>
+        <width>577</width>
+        <height>190</height>
+        <value>SipStreamResult_FrameCount</value>
+        <size>12</size>
+      </instance>
+      <instance type="Text">
+        <name>SipStreamResultTxt</name>
+        <x>250</x>
+        <y>170</y>
+        <width>140</width>
+        <height>20</height>
+        <size>12</size>
+        <value xml:space="preserve">SIP&amp;nbsp;DETAILED&amp;nbsp;STREAM&amp;nbsp;RESULT&amp;nbsp;-&amp;nbsp;FRAME&amp;nbsp;COUNT</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Stream Result - Latency/Jitter/Interarrival" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>SipStreamResult2</name>
+        <x>30</x>
+        <y>200</y>
+        <width>729</width>
+        <height>190</height>
+        <value>SipStreamResult_LatencyJitterInterarrival</value>
+        <size>12</size>
+      </instance>
+      <instance type="Text">
+        <name>SipStreamResultTxt</name>
+        <x>250</x>
+        <y>170</y>
+        <width>140</width>
+        <height>20</height>
+        <size>12</size>
+        <value xml:space="preserve">SIP&amp;nbsp;DETAILED&amp;nbsp;STREAM&amp;nbsp;RESULT&amp;nbsp;-&amp;nbsp;LATENCY/JITTER/INTERARRIVAL</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Stream Result - R-Factor/MOS" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>SipStreamResult3</name>
+        <x>10</x>
+        <y>200</y>
+        <width>1076</width>
+        <height>57</height>
+        <value>SipStreamResult_RFactorMOS</value>
+        <size>12</size>
+      </instance>
+      <instance type="Text">
+        <name>SipStreamResultTxt</name>
+        <x>250</x>
+        <y>170</y>
+        <width>140</width>
+        <height>20</height>
+        <size>12</size>
+        <value xml:space="preserve">SIP&amp;nbsp;DETAILED&amp;nbsp;STREAM&amp;nbsp;RESULT&amp;nbsp;-&amp;nbsp;R-Factor/MOS</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Version" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>580</x>
+        <y>120</y>
+        <width>130</width>
+        <height>300</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>5</x>
+        <y>470</y>
+        <width>700</width>
+        <height>70</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>40</x>
+        <y>430</y>
+        <width>94</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

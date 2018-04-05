@@ -1,0 +1,25 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGID_PTAccept" 
+    showName="FC GID_PT Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GidPtAccept"
+    description="FC GID_PT Accept">
+    <pdus>
+      <pdu name="gidPtAccept1" pdu="fcgs:GidPtAccept" >
+      	<ctIuPreamble>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+        <portIdentifiers>
+          <PortIdentifier name="PortIdentifier">
+            <control>10000000</control>
+          </PortIdentifier>
+        </portIdentifiers>
+      </pdu>
+    </pdus>    
+  </template>
+</frame>

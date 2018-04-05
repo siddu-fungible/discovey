@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="ANCP Actual Net Data Rate Downstream TLV"
+    showName="Actual Net Data Rate Downstream TLV"
+    version="1.00"
+    category="ANCP DSL Line Attributes (draft-ietf-ancp-protocol-02)"
+    readonly="true"
+    validate="true"
+    firstPdu="ancp_draft2:ActualNetDataRateDownstreamTlv"
+    description="ANCP DSL Line Attributes Actual Net Data Rate Downstream TLV" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ancp_draft2:ActualNetDataRateDownstreamTlv" />
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="fcIf"
+  showName="Fibre Channel"
+  version="1.00"
+  description="This is a Fibre Channel definition file for use by UI's interface editor logic.">
+
+  <TYPE_DEFS>
+    <TYPE_DEF name="FC" type="SEQUENCE" unitType="HEADER" level="2" uiShowName="Fibre Channel">
+
+      <FIELD name="wwpn" type="WWN" defaultValue="20:00:10:94:00:00:00:01"
+           uiShowName="World Wide Port Name" doNotBuild="true"
+           uiNoShow="Filter,Frame" uiNoShowModifier="Frame,Filter"/>
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

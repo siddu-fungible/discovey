@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_IcmpInfoReply"
+    showName="ICMP Info Reply"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="icmp:IcmpInfoReply"
+    description="ICMP Info Reply" >
+
+    <pdus>
+      <pdu name="proto1" pdu="icmp:IcmpInfoReply" />
+    </pdus>
+  </template>
+</frame>

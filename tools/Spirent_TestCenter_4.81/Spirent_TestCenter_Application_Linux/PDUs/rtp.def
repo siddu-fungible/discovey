@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+  name="rtp"
+  showName="RTP"
+  version="1.00"
+  description="This is a sample PDU library for RTP as defined in XML Stream Editor.">
+
+  <TYPE_DEFS>
+
+    <TYPE_DEF name="rtpBoolean" type="INTEGER" bitLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="False" value="0" />
+        <VAL_ENUM uiShowName="True"  value="1" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="CSRC" type="SEQUENCE" unitType="ELEMENT" uiShowName="CSRC" >
+      <FIELD name="csrc" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="CSRC" />
+    </TYPE_DEF>
+
+    <TYPE_DEF name="CsrcSequence" type="SEQUENCE_OF" minOccurs="0" maxOccurs="15" elementType="CSRC" unitType="ELEMENT" />
+
+    <TYPE_DEF name="RtpHeader" type="SEQUENCE" unitType="HEADER" portType="Ethernet" uiShowName="RTP Header" >
+      <FIELD name="version" type="INTEGER" bitLength="2" defaultValue="2" uiControlState="CALCULATED" uiShowName="Version" />
+      <FIELD name="padding" type="rtpBoolean" bitLength="1" defaultValue="0" uiShowName="Padding" />
+      <FIELD name="extension" type="rtpBoolean" bitLength="1" defaultValue="0" uiShowName="Extension" />
+      <FIELD name="csrcCount" type="INTEGER" bitLength="4" defaultValue="0" uiShowName="CSRC Count" />
+      <FIELD name="marker" type="rtpBoolean" bitLength="1" defaultValue="0" uiShowName="Marker" />
+      <FIELD name="payloadType" type="INTEGER" bitLength="7" defaultValue="0" uiShowName="Payload Type" />
+      <FIELD name="sequenceNumber" type="INTEGER" bitLength="16" defaultValue ="0" uiShowName="Sequence Number" />
+      <FIELD name="timestamp" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="Timestamp" />
+      <FIELD name="ssrc" type="OCTETSTRING" byteLength="4" defaultValue="00000000" uiShowName="SSRC" />
+      <FIELD name="csrc" type="CsrcSequence" uiShowName="CSRC" />
+
+      <NEXT_HEADERS>
+        <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+		<NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+      </NEXT_HEADERS>
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

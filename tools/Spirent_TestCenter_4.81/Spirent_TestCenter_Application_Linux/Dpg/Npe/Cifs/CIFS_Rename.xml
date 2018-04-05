@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="CIFS_Rename" type="stream" layer="tcp" closeType="client_fin">
+  <MetaData description="CIFS_Rename" protocol="CIFS" application="CIFS" createDate=""/>
+  <Packets>
+    <Packet name="Rename_Request" pktDelay="0" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>00000080ff534d4207000000000803c8000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Tree_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>fa7a</pattern>
+            </pdu>
+            <pdu name="User_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>09000100005b0004</pattern>
+            </pdu>
+            <pdu name="Old_File_Name" pdu="custom:Custom">
+              <pattern>5c007400650073007400720065006e0061006d0065005c00740065007300740031002e007400780074000000</pattern>
+            </pdu>
+            <pdu name="Payload_Part3" pdu="custom:Custom">
+              <pattern>0400</pattern>
+            </pdu>
+            <pdu name="File_Name" pdu="custom:Custom">
+              <pattern>5c007400650073007400720065006e0061006d0065005c00740065007300740032002e007400780074000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="Rename_Response" pktDelay="900" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload_Part1" pdu="custom:Custom">
+              <pattern>00000023ff534d4207430000c08803c8000000000000000000000000</pattern>
+            </pdu>
+            <pdu name="Tree_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Process_Id" pdu="custom:Custom">
+              <pattern>fa7a</pattern>
+            </pdu>
+            <pdu name="User_Id" pdu="custom:Custom">
+              <pattern>0008</pattern>
+            </pdu>
+            <pdu name="Payload_Part2" pdu="custom:Custom">
+              <pattern>0900000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables>
+    <Variable name="tree_id"
+              targets="Rename_Request/Tree_Id/pattern Rename_Response/Tree_Id/pattern"
+              value="0008" endian="little"
+              description="Tree ID"/>
+    <Variable name="process_id"
+              targets="Rename_Request/Process_Id/pattern Rename_Response/Process_Id/pattern"
+              value="fa7a" endian="little"
+              description="Process ID"/>
+    <Variable name="user_id"
+              targets="Rename_Request/User_Id/pattern Rename_Response/User_Id/pattern"
+              value="0008" endian="little"
+              description="User ID"/>
+    <Variable name="old_file_name"
+              targets="Rename_Request/Old_File_Name/pattern"
+              value="5c007400650073007400720065006e0061006d0065005c00740065007300740031002e007400780074000000"
+              description="Old File Name"/>
+    <Variable name="file_name"
+              targets="Rename_Request/File_Name/pattern"
+              value="5c007400650073007400720065006e0061006d0065005c00740065007300740032002e007400780074000000"
+              description="File Name"/>
+  </Variables>
+  <Modifiers/>
+</Flow>

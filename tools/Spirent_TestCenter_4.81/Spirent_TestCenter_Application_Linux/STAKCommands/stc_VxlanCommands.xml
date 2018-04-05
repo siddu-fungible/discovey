@@ -1,0 +1,66 @@
+<?xml version="1.0" ?>
+<stc:meta plugin="stakcommands" version="0.0.0-0" package="spirent.switching.vxlan" xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <!-- 
+   This class needs to be moved to spirent.core. This is here now because of a problem in external package inheritance
+   -->
+   <stc:class name="WaitOnScriptablesCommand" packageName="spirent.switching.vxlan" isInternal="true" bllDirectInterface="true" canCreate="false" >
+        <stc:property name="ObjectList" type="handle" default="0"
+                      minOccurs="0" maxOccurs="unbounded" category="input"
+                      displayName="Object List">
+          <stc:attribute type="framework.PropertyDescription"
+                         value="Object list to wait for"
+                         internalType="string"/>
+          <stc:attribute type="core.ValidHandleTypes" value="Project,Port,EmulatedDevice" internalType="string" />
+        </stc:property>
+        <stc:property name="WaitTime" type="double" default="30.0" category="input"
+           displayName="Wait Time (secs)" >
+          <stc:attribute type="framework.PropertyDescription"
+                         value="Amount of time in seconds to wait for."
+                         internalType="string"/>
+          <stc:numericValidation maxInclusive="2147483647" minInclusive="0.005"/> 
+        </stc:property>
+ 
+        <stc:property name="Successful" type="handle" default="0"
+                      minOccurs="0" maxOccurs="unbounded" category="output"
+           displayName="Successful Objects" >
+          <stc:attribute type="framework.PropertyDescription"
+                         value="Objects that wait was successful for."
+                         internalType="string"/>
+        </stc:property>
+        <stc:property name="Unsuccessful" type="handle" default="0"
+                      minOccurs="0" maxOccurs="unbounded" category="output"
+           displayName="Unsuccessful Objects" >
+          <stc:attribute type="framework.PropertyDescription"
+                         value="Objects that wait was unsuccessful for."
+                         internalType="string"/>
+        </stc:property>
+
+    </stc:class>
+
+	<stc:class name="VxlanWaitForVtepDeviceStateCommand" packageName="spirent.switching.vxlan" displayName="Wait For VTEP Protocol State" 
+    baseClass="spirent.switching.vxlan.WaitOnScriptablesCommand"
+    bllDirectInterface="true">
+
+		<stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="true"/>
+		<stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandDescription" value="Waits for a specified VTEP device state for a specified wait time."/>
+		<stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="Switching//VXLAN"/>
+		
+		<stc:enumeration name="EnumVtepState">
+			<stc:enum name="STOPPED"  value="0" displayName="STOPPED" />
+			<stc:enum name="STARTED"  value="1" displayName="STARTED" />
+		</stc:enumeration>
+        
+		<stc:property category="input" name="WaitState" displayName="Wait State" type="u16" default="STOPPED">
+			<stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="State to wait on"/>
+			<stc:enumerationRef ref="EnumVtepState"/>
+		</stc:property>
+ 	</stc:class>
+
+	<stc:class name="VxlanWaitForVtepLearningCompletedCommand" packageName="spirent.switching.vxlan" displayName="Wait For VTEP Learning Completed" bllDirectInterface="true"
+    baseClass="spirent.switching.vxlan.WaitOnScriptablesCommand">
+
+		<stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="true"/>
+		<stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandDescription" value="Waits for VTEP learning completed state for a specified wait time"/>
+		<stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="Switching//VXLAN"/>
+	</stc:class>
+</stc:meta>

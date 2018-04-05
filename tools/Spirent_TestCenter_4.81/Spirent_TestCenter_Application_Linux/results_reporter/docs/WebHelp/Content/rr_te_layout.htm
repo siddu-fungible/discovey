@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" MadCap:tocPath="Template Editor" MadCap:InPreviewMode="false" MadCap:PreloadImages="false" MadCap:RuntimeFileType="Topic" MadCap:TargetType="WebHelp" lang="en-us" xml:lang="en-us" MadCap:PathToHelpSystem="../" MadCap:HelpSystemFileName="stc_ra.xml" MadCap:SearchType="Stem">
+    <!-- saved from url=(0016)http://localhost -->
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Template Editor Layout Tab</title>
+        <link href="spirent_univ.css" rel="stylesheet" />
+        <script src="SkinSupport/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapAll.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapTopicAll.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <p><span style="font-family: sans-serif; font-size: 8pt;">Results Reporter Online Help <span style="color: #ffffff;">Results Reporter Help</span></span>
+        </p>
+        <h1 id="rr_te_layout.htm" xmlns="http://www.w3.org/1999/xhtml">Template Editor Layout Tab </h1>
+        <p xmlns="http://www.w3.org/1999/xhtml">Use the Layout tab to arrange elements on a page. The window is divided into three sections, the <strong>Pages</strong> tree, the <strong>Properties</strong> window, and the page view, where the page is rendered. </p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">Pages Tree </h2>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Button</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Insert Front Page</td>
+                <td>
+                    <p xmlns="">Create a standardized, customizable, front page for the report</p>
+                    <p xmlns="">By default, the front page contains a MultiText field that displays the contents of the computed stat RRFrontPageText. This variable combines information that may be saved in the results database, such as test duration, test state and user notes.</p>
+                    <p xmlns="">To include information in the results database to be displayed in this field, use the Spirent TestCenter <b>File Properties</b> window (File menu, Properties item) to create name-value pairs.</p>
+                </td>
+            </tr>
+            <tr>
+                <td>Add Page </td>
+                <td>Add a blank page to the end of the template. Right-click a page to move it up or down in the list. </td>
+            </tr>
+            <tr>
+                <td>Add Content </td>
+                <td>
+                    <p>Add a text box, a MultiText field, an image, a graphic or a table to the highlighted page</p>
+                    <p xmlns="">Enter a name to identify the element under the <strong>Contents</strong> node in the <strong>Pages</strong> tree </p>
+                    <p xmlns="">A table can also be added to a page by dragging it from the Results Reporter tree onto the page</p>
+                    <table style="width: 100%;" class="notetable" xmlns="">
+                        <tbody>
+                            <tr>
+                                <td><b>Note:</b>&#160;Only a table grid with a single query can be added.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>Remove</td>
+                <td>
+                    <p>Remove the highlighted page </p>
+                </td>
+            </tr>
+        </table>
+        <h2 xmlns="">Properties Window </h2>
+        <p xmlns="">Highlight a page element to view the properties. Highlight a page node to see the page properties.</p>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">Position</h3>
+        <p xmlns="http://www.w3.org/1999/xhtml">All page elements have position properties expressed in pixels. (Pages do not have position properties.) When an item is selected, rectangles appear on the corners. The element can be positioned by dragging it, which changes the X and Y values. However, the rectangles are not handles and cannot be used to resize the element. Resize an element by setting the values in the <strong>Width</strong> and <strong>Height</strong> fields. </p>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>X</td>
+                <td>Vertical distance from the top of the page</td>
+            </tr>
+            <tr>
+                <td>Y</td>
+                <td>Horizontal distance from the left of the page</td>
+            </tr>
+            <tr>
+                <td>Width</td>
+                <td>Width of the page</td>
+            </tr>
+            <tr>
+                <td>Height</td>
+                <td>Height of the page</td>
+            </tr>
+        </table>
+        <h3 xmlns="">Link</h3>
+        <p xmlns="">A link connects a page element to another template page. Links can be created from a Text, MultiText, Image or Graph element. Template page names are case-sensitive, as is the content of the Link field. A link can also be a <a href="rr_te_computed.htm">computed statistic</a>. To link to a page name that will be computed reference the computed statistics in the Link field in the form =$NameOfStatistic$. The value of NameOfStatistic is evaluated at runtime and rendered in the path in the Location field.</p>
+        <h3 xmlns="">Page</h3>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Display</td>
+                <td>
+                    <p xmlns="">Select to display this page in the <b>Pages</b> dropdown list.</p>
+                    <p xmlns="">Clear to create a hidden page. When viewing the template, you may navigate to a hidden page by typing the path in the <b>Location</b> text box or through a link created from an element in another template page.</p>
+                </td>
+            </tr>
+            <tr>
+                <td>Page size</td>
+                <td>Custom, Letter, A4 or Legal</td>
+            </tr>
+            <tr>
+                <td>Orientation</td>
+                <td>Portrait or Landscape</td>
+            </tr>
+            <tr>
+                <td>Width</td>
+                <td>Width of the page</td>
+            </tr>
+            <tr>
+                <td>Height</td>
+                <td>Height of the page</td>
+            </tr>
+            <tr>
+                <td>Iterate</td>
+                <td>Select to include multiple graphs per page</td>
+            </tr>
+            <tr>
+                <td>Iterate Type</td>
+                <td>Duplicate or Grid</td>
+            </tr>
+            <tr>
+                <td>Grid Rows</td>
+                <td>Maximum number of rows per page</td>
+            </tr>
+            <tr>
+                <td>Grid Columns</td>
+                <td>Maximum number of columns per page</td>
+            </tr>
+        </table>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">Text </h3>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Size</td>
+                <td>Size of text, in points </td>
+            </tr>
+            <tr>
+                <td>Color </td>
+                <td>
+                    <p><a href="rr_te_color.htm">Color of text</a>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Text</td>
+                <td>
+                    <p>Text to display on the page </p>
+                </td>
+            </tr>
+        </table>
+        <h3 xmlns="http://www.w3.org/1999/xhtml"> Image </h3>
+        <p xmlns="http://www.w3.org/1999/xhtml">Click <strong>Load</strong> to select the image to display on the page. Images are embedded into the template instead of referenced by pointer, making the template file (.rtp) self-contained. As a result, there is no need to package up the original image file with the template. </p>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">Graph </h3>
+        <p xmlns="http://www.w3.org/1999/xhtml">Select a graph from the <strong>Graph</strong> dropdown field. </p>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">Table  </h3>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Table</td>
+                <td>Table to display </td>
+            </tr>
+            <tr>
+                <td>Font Size </td>
+                <td>
+                    <p>Size of table text, in points </p>
+                </td>
+            </tr>
+            <tr MadCap:conditions="">
+                <td>Alternate Row Colors</td>
+                <td>Select to alternate the colors of adjacent rows for readability</td>
+            </tr>
+        </table>
+        <h3 xmlns="">MultiText </h3>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Size</td>
+                <td>Size of text, in points</td>
+            </tr>
+            <tr>
+                <td>Color</td>
+                <td>
+                    <p><a href="rr_te_color.htm" xmlns="">Color of text</a>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Multiple Line Text</td>
+                <td>Text to display on the page</td>
+            </tr>
+        </table>
+        <hr width="100%" size="0" align="center" xmlns="http://www.w3.org/1999/xhtml" />
+        <p class="related_information" xmlns="http://www.w3.org/1999/xhtml">Related Topics:</p>
+        <p class="relatedtopic" xmlns="http://www.w3.org/1999/xhtml"><a href="rr_te_oview.htm">Results Reporter Template Editor Overview </a>
+        </p>
+        <p style="text-align: right;"><span style="font-family: sans-serif; font-size: 8pt;">© Spirent Communications</span>
+        </p>
+        <script type="text/javascript" src="SkinSupport/MadCapBodyEnd.js">
+        </script>
+    </body>
+</html>

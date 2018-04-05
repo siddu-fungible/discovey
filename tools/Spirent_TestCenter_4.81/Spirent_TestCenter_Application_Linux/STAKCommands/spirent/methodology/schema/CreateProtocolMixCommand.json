@@ -1,0 +1,56 @@
+{
+  "CreateProtocolMixCommand": {
+    "title":"Schema for the MixInfo of the spirent.methodology.CreateProtocolMixCommand.",
+    "description": "allOf doesn't inherit, but indepdently validates JSON (http://stackoverflow.com/questions/22689900/json-schema-allof-with-additionalproperties) using referenced schemas. Switched to use multiple references to keep additionalProperties false",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enable": {
+        "description":"A flag indicating if this object should be merged into the template configuration.",
+        "type":"boolean"
+      },
+      "deviceCount": {
+        "description": "Total Device Count for StmTemplateMix distribution.",
+        "type": "number"
+      },
+      "table": {
+        "description": "A list of table rows that make up the mixture.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "weight": {
+              "description": "If value is followed by %, this is the percent weight of the total deviceCount to assign to this component. Otherwise, this becomes a static deviceCount value.",
+              "type": "string"
+            },
+            "devicesPerBlock": {
+              "description": "Number that indicates how many device will be assigned per device block.  If 0, devicesPerBlock indicates all deviceCount is assigned to one block. If 1, devicesPerBlock = # of device blocks with a device count of 1. If devicesPerBlock > device count of component (after weight is applied), all devices go into one block.  Otherwise, blocks are greedily created until we run out of device count (ie. deviceCount = 17, devicesPerBlock = 5, blocks created with 5, 5, 5, 2 devices).",
+              "type": "number"
+            },
+            "appliedValue": {
+              "description": "Load actually assigned to this component.  Autocalculated, do not set.",
+              "type": "number"
+            },
+            "enable": {
+              "$ref":"#/CreateTemplateConfigCommand/properties/enable"
+            },
+            "tagPrefix": {
+              "$ref":"#/CreateTemplateConfigCommand/properties/tagPrefix"
+            },
+            "baseTemplateFile": {
+              "$ref":"#/CreateTemplateConfigCommand/properties/baseTemplateFile"
+            },
+            "modifyList": {
+              "$ref":"#/CreateTemplateConfigCommand/properties/modifyList"
+            }
+          }
+        }
+      }
+    },
+    "required": [
+      "deviceCount",
+      "table"
+    ]
+  }
+}

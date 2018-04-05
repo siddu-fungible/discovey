@@ -1,0 +1,269 @@
+<Template>
+<Description />
+<Image />
+<DataModelXml>
+<StcSystem id="1" serializationBase="true" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName="Multicast_Mld.xml"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="17"/>
+    <Tags id="3" serializationBase="true"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1234"/>
+      <Relation type="UserTag" target="1235"/>
+      <Relation type="UserTag" target="1236"/>
+      <Relation type="UserTag" target="1237"/>
+      <Relation type="UserTag" target="1238"/>
+      <Relation type="UserTag" target="1239"/>
+      <Relation type="UserTag" target="1240"/>
+      <Relation type="UserTag" target="1241"/>
+      <Relation type="UserTag" target="1242"/>
+      <Tag id="1234"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttEmulatedDevice">
+      </Tag>
+      <Tag id="1235"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttEthIIIf">
+      </Tag>
+      <Tag id="1236"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv6If">
+      </Tag>
+      <Tag id="1237" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttLinkLocalIf">
+      </Tag>
+      <Tag id="1238"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttMldHostConfig">
+      </Tag>
+      <Tag id="1239"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttMldGroupMembership">
+      </Tag>
+      <Tag id="1240"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv6Group">
+      </Tag>
+      <Tag id="1241"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv6NetworkBlock">
+      </Tag>
+      <Tag id="1242"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttMldHostConfigMembership">
+      </Tag>
+    </Tags>
+    <EmulatedDevice id="2792" 
+     DeviceCount="1"
+     EnablePingResponse="FALSE"
+     RouterId="192.0.0.1"
+     RouterIdStep="0.0.0.1"
+     Ipv6RouterId="2000::1"
+     Ipv6RouterIdStep="::1"
+     ReadOnly="FALSE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Device 1">
+      <Relation type="TopLevelIf" target="2004"/>
+      <Relation type="TopLevelIf" target="2795"/>
+      <Relation type="PrimaryIf" target="2795"/>
+      <Relation type="UserTag" target="1234"/>
+      <EthIIIf id="2794" 
+       SourceMac="00:10:94:00:00:01"
+       SrcMacStep="00:00:00:00:00:01"
+       SrcMacList=""
+       SrcMacStepMask="00:00:ff:ff:ff:ff"
+       SrcMacRepeatCount="0"
+       Authenticator="default"
+       UseDefaultPhyMac="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="EthernetII 2">
+        <Relation type="UserTag" target="1235"/>
+      </EthIIIf>
+      <Ipv6If id="2004" 
+       Address="fe80::1"
+       AddrStep="::1"
+       AddrStepMask="ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+       SkipReserved="FALSE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       AllocateEui64LinkLocalAddress="FALSE"
+       PrefixLength="128"
+       UsePortDefaultIpv6Gateway="FALSE"
+       EnableGatewayLearning="FALSE"
+       Gateway="::"
+       GatewayStep="::"
+       GatewayRepeatCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       GatewayRecycleCount="0"
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       HopLimit="255"
+       TrafficClass="0"
+       FlowLabel="7"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv6 3">
+        <Relation type="StackedOnEndpoint" target="2794"/>
+        <Relation type="UserTag" target="1237"/>
+      </Ipv6If>
+      <Ipv6If id="2795" 
+       Address="2000::2"
+       AddrStep="::1"
+       AddrStepMask="ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+       SkipReserved="FALSE"
+       AddrList=""
+       AddrRepeatCount="0"
+       AddrResolver="default"
+       AllocateEui64LinkLocalAddress="FALSE"
+       PrefixLength="64"
+       UsePortDefaultIpv6Gateway="FALSE"
+       EnableGatewayLearning="FALSE"
+       Gateway="::"
+       GatewayStep="::"
+       GatewayRepeatCount="0"
+       UseIpAddrRangeSettingsForGateway="FALSE"
+       GatewayList=""
+       GatewayRecycleCount="0"
+       ResolveGatewayMac="TRUE"
+       GatewayMac="00:00:01:00:00:01"
+       GatewayMacResolver="default"
+       HopLimit="255"
+       TrafficClass="0"
+       FlowLabel="7"
+       NeedsAuthentication="FALSE"
+       IfCountPerLowerIf="1"
+       IfRecycleCount="0"
+       IsDecorated="FALSE"
+       IsLoopbackIf="FALSE"
+       IsRange="TRUE"
+       IsDirectlyConnected="TRUE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="IPv6 4">
+        <Relation type="StackedOnEndpoint" target="2794"/>
+        <Relation type="UserTag" target="1236"/>
+      </Ipv6If>
+      <MldHostConfig id="2796" 
+       Ipv6TrafficClass="0"
+       Version="MLD_V1"
+       ForceRobustJoin="FALSE"
+       ForceLeave="FALSE"
+       ForceSimpleJoin="FALSE"
+       PackReports="FALSE"
+       InsertLengthErrors="FALSE"
+       InsertCheckSumErrors="FALSE"
+       RobustnessVariable="2"
+       UnsolicitedReportInterval="10"
+       AllowNoMemberships="FALSE"
+       IfHandle="0"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="MldHostConfig 1">
+        <Relation type="UsesIf" target="2004"/>
+        <Relation type="UserTag" target="1238"/>
+      </MldHostConfig>
+      <MldHostConfig id="2796" 
+       Ipv6TrafficClass="0"
+       Version="MLD_V1"
+       ForceRobustJoin="FALSE"
+       ForceLeave="FALSE"
+       ForceSimpleJoin="FALSE"
+       PackReports="FALSE"
+       InsertLengthErrors="FALSE"
+       InsertCheckSumErrors="FALSE"
+       RobustnessVariable="2"
+       UnsolicitedReportInterval="10"
+       AllowNoMemberships="FALSE"
+       IfHandle="0"
+       UsePartialBlockState="FALSE"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="MldHostConfig 1">
+        <Relation type="UsesIf" target="2004"/>
+        <Relation type="UserTag" target="1242"/>
+        <MldGroupMembership id="2801" 
+         FilterMode="EXCLUDE"
+         UserDefinedSources="FALSE"
+         IsSourceList="FALSE"
+         CalculateLatency="FALSE"
+         DeviceGroupMapping="MANY_TO_MANY"
+         Active="TRUE"
+         LocalActive="TRUE"
+         Name="MldGroupMembership 1">
+          <Relation type="SubscribedGroups" target="2798"/>
+          <Relation type="UserTag" target="1239"/>
+          <Ipv6NetworkBlock id="2802" 
+           StartIpList="2000::1"
+           PrefixLength="128"
+           NetworkCount="1"
+           AddrIncrement="1"
+           Active="TRUE"
+           LocalActive="TRUE"
+           Name="Ipv6 Network Block 2">
+          </Ipv6NetworkBlock>
+        </MldGroupMembership>
+      </MldHostConfig>
+    </EmulatedDevice>
+    <Ipv6Group id="2798" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Ipv6Group 1">
+      <Ipv6NetworkBlock id="2799" 
+       StartIpList="ff1e::1"
+       PrefixLength="128"
+       NetworkCount="1"
+       AddrIncrement="1"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Ipv6 Network Block 1">
+        <Relation type="UserTag" target="1241"/>
+      </Ipv6NetworkBlock>
+        <Relation type="UserTag" target="1240"/>
+    </Ipv6Group>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

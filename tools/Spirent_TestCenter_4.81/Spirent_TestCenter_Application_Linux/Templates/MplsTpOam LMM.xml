@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="LMM MPLSTPOAM"
+    showName="Loss Measurement Message (LMM)"
+    version="1.00"
+    category="MPLS"
+    readonly="true"
+    validate="true"
+    firstPdu="serviceoam:MplsTpOAMLMM"
+    description="MPLS-TP OAM LMM" >
+
+    <pdus>
+      <pdu name="proto1" pdu="serviceoam:MplsTpOAMLMM" />
+    </pdus>
+  </template>
+</frame>

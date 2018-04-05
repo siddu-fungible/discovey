@@ -1,0 +1,57 @@
+<Template>
+<Description />
+<Image />
+<DataModelXml>
+<StcSystem id="1" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles="bgp ospfv2 isis ospfv3 pppoe igmpmld"
+   ConfigurationFileName="Untitled.tcc"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="3860"/>
+    <Tags id="3" serializationBase="true"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="6"/>
+      <Relation type="UserTag" target="7"/>
+      <Tag id="6"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv6Group">
+      </Tag>
+      <Tag id="7"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttIpv6NetworkBlock">
+      </Tag>
+    </Tags>
+    <Ipv6Group id="2722" serializationBase="true"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Ipv6Group 1">
+      <Relation type="UserTag" target="6"/>
+      <Ipv6NetworkBlock id="2723" 
+       StartIpList="ff1e::1"
+       PrefixLength="128"
+       NetworkCount="1"
+       AddrIncrement="1"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="Ipv6 Network Block 1">
+       <Relation type="UserTag" target="7"/>
+      </Ipv6NetworkBlock>
+    </Ipv6Group>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

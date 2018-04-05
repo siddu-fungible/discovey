@@ -1,0 +1,421 @@
+{
+    "SqlCommand": {
+        "SqlStatementOperations": {
+            "dynamic": {
+                "additionalProperties": false,
+                "description": "Dynamic SQL code that will be added dependent upon its properties.",
+                "properties": {
+                    "enable": {
+                        "description": "A flag indicating if this operation should be used.",
+                        "type": "boolean"
+                    },
+                    "no_trailing_space": {
+                        "description": "When true, do not append spaces between components",
+                        "type": "boolean"
+                    },
+                    "value": {
+                        "oneOf": [
+                            {
+                                "description": "Static value.",
+                                "type": "string"
+                            },
+                            {
+                                "description": "Dynamic value.",
+                                "items": {
+                                    "oneOf": [
+                                        {
+                                            "static": {
+                                                "$ref": "#/SqlCommand/SqlStatementOperations/static"
+                                            }
+                                        },
+                                        {
+                                            "dynamic": {
+                                                "$ref": "#/SqlCommand/SqlStatementOperations/dynamic"
+                                            }
+                                        }
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "static": {
+                "description": "Static SQL code that will be added to the SQL string without modification.",
+                "type": "string"
+            }
+        },
+        "SqlVerdictParameters": {
+            "apply_test_verdict": {
+                "description": "A flag indicating whether the verdict of the operation should be applied to the overall test verdict.",
+                "type": "boolean"
+            },
+            "failed_verdict_explanation": {
+                "description": "Explanation if verdict is FAIL.",
+                "type": "string"
+            },
+            "passed_verdict_explanation": {
+                "description": "Explanation if verdict is PASS.",
+                "type": "string"
+            },
+            "sql_statement": {
+                "description": "A list of SQL substrings which build up a SQL Query.",
+                "items": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/SqlCommand/SqlStatementOperations"
+                        }
+                    ],
+                    "type": "object"
+                },
+                "minItems": 0,
+                "type": "array"
+            },
+            "db_name": {
+                "description": "Source DB name (what the query will be run on).",
+                "enum": [
+                    "SUMMARY",
+                    "LAST_ITERATION"
+                ]
+            }
+        },
+        "additionalProperites": false,
+        "description": "Schema to serve as both input and output for SQL DB Operations.",
+        "properties": {
+            "enable": {
+                "description": "A flag indicating if this command should run to create the SQL operations.",
+                "type": "boolean"
+            },
+            "command_return_value": {
+                "description": "SQL statement and source database for determining the return value to be used by the command.  This deprecates sql_for_command_verdict.",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enable": {
+                        "description": "A flag indicating if this section applies (ie setting the command's return value will be skipped if this is set to false).",
+                        "type": "boolean"
+                    },
+                    "db_name": {
+                        "description": "Source DB name (what the query will be run on).",
+                        "enum": [
+                            "SUMMARY",
+                            "LAST_ITERATION"
+                        ]
+                    },
+                    "sql_statement": {
+                        "description": "A list of SQL substrings which build up an SQL query.  This statement should return 0 to set the command's return value to False and 1 to set the command's return value to True.",
+                        "type": "array",
+                        "minItems": 0,
+                        "items": [
+                            {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/SqlCommand/SqlStatementOperations"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "sql_for_command_verdict": {
+                "description": "A list of SQL substrings which build up a SQL Query.  This is deprecated, use command_return_value instead.",
+                "items": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/SqlCommand/SqlStatementOperations"
+                        }
+                    ],
+                    "type": "object"
+                },
+                "minItems": 0,
+                "type": "array"
+            },
+            "sql_operations": {
+                "additionalProperties": false,
+                "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "db_information": {
+                            "additionalProperties": false,
+                            "description": "Contains source and destination db, table, and column information.",
+                            "properties": {
+                                "columns": {
+                                    "description": "A list of column names.",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "minItems": 0,
+                                    "type": "array"
+                                },
+                                "db_name": {
+                                    "description": "Source DB name (what the query will be run on).",
+                                    "enum": [
+                                        "SUMMARY",
+                                        "ALL_ITERATION",
+                                        "LAST_ITERATION",
+                                        "CUSTOM"
+                                    ]
+                                },
+                                "dest_db": {
+                                    "additionalProperties": false,
+                                    "description": "Contains destination db and table names.",
+                                    "properties": {
+                                        "dest_db_name": {
+                                            "description": "Destination DB name.",
+                                            "enum": [
+                                                "SUMMARY",
+                                                "LAST_ITERATION",
+                                                "CUSTOM"
+                                            ]
+                                        },
+                                        "dest_table_name": {
+                                            "description": "Name of the table within the destination DB.",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "dest_table_name"
+                                    ],
+                                    "type": "object"
+                                },
+                                "table_name": {
+                                    "description": "Name of the table within the selected source DB.",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "db_name"
+                            ],
+                            "type": "object"
+                        },
+                        "temp_table_name": {
+                            "description": "This property has been DEPRECATED, but is still available so that older methodologies may use this key. Property is the name of the temporary table to build in SUMMARY based on sql_statement's output.",
+                            "type": "string"
+                        },
+                        "enable": {
+                            "description": "A flag indicating if this operation should be used.",
+                            "type": "boolean"
+                        },
+                        "report": {
+                            "additionalProperties": false,
+                            "description": "When present, data is added as a table to the results page.",
+                            "properties": {
+                                "display_name": {
+                                    "description": "Title for the table being added to the results page.",
+                                    "type": "string"
+                                },
+                                "explanation": {
+                                    "description": "Explanation of the table or its verdict.",
+                                    "type": "string"
+                                },
+                                "insert_into_summary_context": {
+                                    "description": "When set to true, will insert the provided result directly into the summary report even if the test is in the context of one or more nested iterations.",
+                                    "type": "boolean"
+                                },
+                                "report_group": {
+                                    "description": "Placement priority which determines the location the results will be displayed on the results page.",
+                                    "enum": [
+                                        "SUMMARY",
+                                        "GROUP_1",
+                                        "GROUP_2",
+                                        "GROUP_3",
+                                        "GROUP_4",
+                                        "GROUP_5"
+                                    ]
+                                },
+                                "report_verdict": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "apply_test_verdict": {
+                                            "$ref": "#/SqlCommand/SqlVerdictParameters/apply_test_verdict"
+                                        },
+                                        "failed_verdict_explanation": {
+                                            "$ref": "#/SqlCommand/SqlVerdictParameters/failed_verdict_explanation"
+                                        },
+                                        "passed_verdict_explanation": {
+                                            "$ref": "#/SqlCommand/SqlVerdictParameters/passed_verdict_explanation"
+                                        },
+                                        "sql_for_verdict": {
+                                            "$ref": "#/SqlCommand/SqlVerdictParameters/sql_statement"
+                                        },
+					"db_name": {
+					    "$ref": "#/SqlCommand/SqlVerdictParameters/db_name"
+					}
+                                    },
+                                    "required": [
+                                        "apply_test_verdict",
+                                        "passed_verdict_explanation",
+                                        "failed_verdict_explanation",
+                                        "sql_for_verdict"
+                                    ],
+                                    "type": "object"
+                                }
+                            },
+                            "required": [
+                                "report_group",
+                                "display_name"
+                            ],
+                            "type": "object"
+                        },
+                        "sql_statement": {
+                            "description": "A list of SQL substrings which build up a SQL Query.",
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/SqlCommand/SqlStatementOperations"
+                                    }
+                                ],
+                                "type": "object"
+                            },
+                            "minItems": 0,
+                            "type": "array"
+                        },
+                        "table": {
+                            "description": "A list of records.",
+                            "items": {
+                                "items": {
+                                    "oneOf": [
+                                        {
+                                            "description": "static string",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "description": "An array of strings",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        }
+                                    ]
+                                },
+                                "minItems": 1,
+                                "type": "array"
+                            },
+                            "minItems": 0,
+                            "type": "array"
+                        }
+                    },
+                    "required": [
+                        "db_information"
+                    ],
+                    "type": "object"
+                },
+                "minItems": 0,
+                "type": "array"
+            }
+        },
+        "required": [
+            "sql_operations"
+        ],
+        "title": "Schema for SQL DB operations of the spirent.methodology.AddToDbTableCommand and spirent.methodology.RunSqlCommand",
+        "type": "object"
+    },
+    "SqlSetCommand": {
+        "additionalProperties": false,
+        "description": "Schema to serve as input for SetPropertyFromQuery",
+        "properties": {
+            "enable": {
+                "description": "A flag indicating if this command should run to create the SQL operations.",
+                "type": "boolean"
+            },
+            "sql_operations": {
+                "additionalProperties": false,
+                "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "db_information": {
+                            "$ref": "#/SqlCommand/properties/sql_operations/items/properties/db_information"
+                        },
+                        "enable": {
+                            "description": "A flag indicating if this operation should be used.",
+                            "type": "boolean"
+                        },
+                        "set_property": {
+                            "description": "A list of set expressions to consume the query data.",
+                            "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                    "class_name": {
+                                        "description": "Fully-qualified class name for objects to set",
+                                        "type": "string"
+                                    },
+                                    "conversion": {
+                                        "description": "Type of output formatting for consumed data",
+                                        "enum": [
+                                            "NORMAL",
+                                            "JSON",
+                                            "DICT"
+                                        ]
+                                    },
+                                    "enable": {
+                                        "description": "A flag indicating if this operation should be used.",
+                                        "type": "boolean"
+                                    },
+                                    "json_key": {
+                                        "description": "Optional JSON Key for modification of a JSON string property",
+                                        "type": "string"
+                                    },
+                                    "property_name": {
+                                        "description": "Property name to be set by operation",
+                                        "type": "string"
+                                    },
+                                    "relation_list": {
+                                        "description": "A list of relations to traverse. Default is ParentChild and AffiliationPort-sources.",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "minItems": 0,
+                                        "type": "array"
+                                    },
+                                    "replace": {
+                                        "description": "Substitution expression where contents are placed within {}",
+                                        "type": "string"
+                                    },
+                                    "tag_list": {
+                                        "description": "A list of tags to obtain list of objects",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "minItems": 0,
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "minItems": 0,
+                            "type": "array"
+                        },
+                        "sql_statement": {
+                            "description": "A list of SQL substrings which build up a SQL Query.",
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/SqlCommand/SqlStatementOperations"
+                                    }
+                                ],
+                                "type": "object"
+                            },
+                            "minItems": 0,
+                            "type": "array"
+                        }
+                    },
+                    "required": [
+                        "db_information"
+                    ],
+                    "type": "object"
+                },
+                "minItems": 0,
+                "type": "array"
+            }
+        },
+        "required": [
+            "sql_operations"
+        ],
+        "title": "Schema for SQL DB operations of the spirent.methodology.SetPropertyFromQueryCommand",
+        "type": "object"
+    }
+}

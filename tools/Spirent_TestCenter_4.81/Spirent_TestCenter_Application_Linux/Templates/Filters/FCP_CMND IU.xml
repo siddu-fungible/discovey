@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="fcpcmnd"
+    showName="FCP_CMND IU"
+    version="1.00"
+    category="FCP"
+    readonly="true"
+    validate="true"
+    firstPdu="fcp:FcpCmnd"
+    description="FCP_CMND IU" >
+
+    <pdus>
+      <pdu name="fcpcmnd" pdu="fcp:FcpCmnd" />
+    </pdus>
+  </template>
+</frame>

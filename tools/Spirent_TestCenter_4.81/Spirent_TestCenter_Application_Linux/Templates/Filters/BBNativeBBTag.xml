@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+   <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="template_schema.xsd" name="BBNativeBBTAG" showName="BB Native  B-BTAG" version="1.0" category="802.1ah Backbone Encapsulation" readonly="false" validate="true" firstPdu="MAC-in-MAC:MAC-in-MAC" description="BB Native - B-BTAG">
+      <pdus>
+<pdu name="proto1" pdu="MAC-in-MAC:MAC-in-MAC">
+<bVlanTag>
+<bTag name="bTag_0">
+</bTag></bVlanTag>
+</pdu>
+</pdus>
+</template>
+</frame>

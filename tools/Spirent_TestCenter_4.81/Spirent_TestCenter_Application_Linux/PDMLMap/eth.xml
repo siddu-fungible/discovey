@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PROTO name="eth" pduDef="ethernet" pduType="EthernetII">
+    <FIELD name="eth.dst" useShowNameAsValue="true">
+      <PDU_FIELD name="dstMac"/>
+    </FIELD>
+    <FIELD name="eth.src" useShowNameAsValue="true">
+      <PDU_FIELD name="srcMac"/>
+    </FIELD>
+    <FIELD name="eth.type" convertToInt="false">
+      <PDU_FIELD name="etherType"/>
+    </FIELD>
+
+</PROTO>

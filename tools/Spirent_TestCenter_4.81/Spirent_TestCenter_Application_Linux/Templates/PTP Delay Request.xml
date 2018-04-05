@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="PTP Delay Request"
+    showName="PTP Delay Request"
+    version="1.00"
+    category="PTP"
+    readonly="true"
+    validate="true"
+    firstPdu="ptp:DelayReq"
+    description="PTP Delay Request" >
+
+    <pdus>
+      <pdu name="DelayReq_1" pdu="ptp:DelayReq">
+        <ptpHeader>
+            <MessageType uiControlState="CALCULATED">1</MessageType>
+            <ControlField uiControlState="CALCULATED">01</ControlField>            
+        </ptpHeader>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

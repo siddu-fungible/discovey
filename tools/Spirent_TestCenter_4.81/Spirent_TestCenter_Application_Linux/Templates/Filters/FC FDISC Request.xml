@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCFDISCRequest"
+    showName="FC FDISC Request"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:ELSFLOGI" 
+    description="FC FDISC Request">
+    <pdus>
+     <pdu name="proto3" pdu="fc:ELSFLOGI">
+      </pdu>
+    </pdus>
+  </template>
+</frame>

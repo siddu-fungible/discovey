@@ -1,0 +1,397 @@
+[
+    {
+        "enable": true,
+        "result_id": "vsw_nfvi_agg",
+        "type": "grafana",
+        "source_type": "NFVI_INFLUX_DB",
+        "definition": {
+            "input_file": "NFVi_Node_Stats.json",
+            "linked_input_files": [
+                "NFVi_Cache_Stats.json",
+                "Openvswitch_Stats.json",
+                "WindRiver_Stats.json",
+                "Vpp_Stats.json"
+            ],
+            "import_type": "ALL",
+            "title": "Node\/Hypervisor Statistics",
+            "parameters": [
+                {
+                    "property": "SessionId",
+                    "display_name": "SessionId",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "BLL_TOKEN"
+                },
+                {
+                    "property": "HostIp",
+                    "display_name": "IP",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "VNF_HOSTIP",
+                    "hide": false
+                },
+                {
+                    "property": "LibvirtUuidRegEx",
+                    "display_name": "LibvirtUuidRegEx",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "VNF_UUID_REGEX",
+                    "hide": true
+                },
+                {
+                    "property": "IfcRegEx",
+                    "display_name": "IfcRegEx",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "NFVI_ABSTRACT_TOPOLOGY_IFC_REGEX",
+                    "hide": true
+                },
+                {
+                    "property": "HypervisorStat",
+                    "display_name": "View",
+                    "description": "Hypervisor View",
+                    "property_value_type": "ENUM",
+                    "property_value": "CPU Utilization",
+                    "acceptable_values": [
+                    ],
+                    "categorize_values": true
+                }
+            ],
+            "frames": [
+                {
+                    "view_property": "HypervisorStat",
+                    "view_mapping": [
+                        {
+                            "name": "System> CPU Utilization",
+                            "dashboard": "nfvi-node-stats",
+                            "panel_id": "1"
+                        },
+                        {
+                            "name": "System> Information",
+                            "dashboard": "nfvi-node-stats",
+                            "panel_id": "2"
+                        },
+                        {
+                            "name": "Intel PCM> Cache Hits",
+                            "dashboard": "nfvi-cache-stats",
+                            "panel_id": "1",
+                            "cond": {"type": "influx", "measurement": "intel_pcm_core_metrics"}
+                        },
+                        {
+                            "name": "Intel PCM> Cache Misses",
+                            "dashboard": "nfvi-cache-stats",
+                            "panel_id": "2",
+                            "cond": {"type": "influx", "measurement": "intel_pcm_core_metrics"}
+                        },
+                        {
+                            "name": "Intel PCM> L3 Cache Misses Per CPU",
+                            "dashboard": "nfvi-cache-stats",
+                            "panel_id": "4",
+                            "cond": {"type": "influx", "measurement": "intel_pcm_core_metrics"}
+                        },
+                        {
+                            "name": "Intel PCM> Cycles Per Instruction (CPI)",
+                            "dashboard": "nfvi-cache-stats",
+                            "panel_id": "3",
+                            "cond": {"type": "influx", "measurement": "intel_pcm_core_metrics"}
+                        },
+                        {
+                            "name": "OVS DPDK PMD> Processing Cycles",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "1",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_pmd_metrics"}
+                        },
+                        {
+                            "name": "OVS DPDK PMD> Polling Cycles",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "2",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_pmd_metrics"}
+                        },
+                        {
+                            "name": "OVS DPDK PMD> Average Cycles Per Packet",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "3",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_pmd_metrics"}
+                        },
+                        {
+                            "name": "OVS DPDK PMD> Packet Statistics",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "4",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_pmd_metrics"}
+                        },
+                        {
+                            "name": "OVS DPDK PMD> Packet Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "16",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_pmd_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Abstract> Byte Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "13",
+                            "cond": {"type": "influx", "measurement": "vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Abstract> TX Drop Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "14",
+                            "cond": {"type": "influx", "measurement": "vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Abstract> RX Drop Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "15",
+                            "cond": {"type": "influx", "measurement": "vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Detailed> DPDK> Byte Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "5",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Detailed> DPDK> TX Drop Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "6",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Detailed> DPDK> RX Drop Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "7",
+                            "cond": {"type": "influx", "measurement": "vswitch_dpdk_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Detailed> Kernel> Byte Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "9",
+                            "cond": {"type": "influx", "measurement": "vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Detailed> Kernel> TX Drop Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "10",
+                            "cond": {"type": "influx", "measurement": "vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Detailed> Kernel> RX Drop Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "11",
+                            "cond": {"type": "influx", "measurement": "vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "OVS Interface> Detailed> Patch> Byte Rate",
+                            "dashboard": "openvswitch-stats",
+                            "panel_id": "12",
+                            "cond": {"type": "influx", "measurement": "vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "AVS Interface> Abstract> Byte Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "11",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "AVS Interface> Abstract> TX Drop Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "12",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "AVS Interface> Abstract> RX Drop Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "13",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "AVS Interface> Detailed> Byte Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "1",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "AVS Interface> Detailed> TX Drop Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "2",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "AVS Interface> Detailed> RX Drop Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "3",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "AVS Port Queue> Byte Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "4",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_port_queue_metrics"}
+                        },
+                        {
+                            "name": "AVS Port Queue> No Mbuf Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "5",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_port_queue_metrics"}
+                        },
+                        {
+                            "name": "AVS Port Queue> Error Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "6",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_port_queue_metrics"}
+                        },
+                        {
+                            "name": "AVS Port> Byte Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "7",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_port_metrics"}
+                        },
+                        {
+                            "name": "AVS Port> TX Error Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "8",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_port_metrics"}
+                        },
+                        {
+                            "name": "AVS Port> RX Error Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "9",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_port_metrics"}
+                        },
+                        {
+                            "name": "AVS Port> RX No Mbuf Rate",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "10",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_port_metrics"}
+                        },
+                        {
+                            "name": "AVS Engine> Processing Cycles",
+                            "dashboard": "windriver-stats",
+                            "panel_id": "14",
+                            "cond": {"type": "influx", "measurement": "avs_vswitch_engine_metrics"}
+                        },
+                        {
+                            "name": "VPP Interface> Detailed> Byte Rate",
+                            "dashboard": "vpp-stats",
+                            "panel_id": "1",
+                            "cond": {"type": "influx", "measurement": "vpp_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "VPP Interface> Detailed> TX Error Rate",
+                            "dashboard": "vpp-stats",
+                            "panel_id": "2",
+                            "cond": {"type": "influx", "measurement": "vpp_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "VPP Interface> Detailed> RX Error Rate",
+                            "dashboard": "vpp-stats",
+                            "panel_id": "3",
+                            "cond": {"type": "influx", "measurement": "vpp_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "VPP Interface> Detailed> Drop Rate",
+                            "dashboard": "vpp-stats",
+                            "panel_id": "4",
+                            "cond": {"type": "influx", "measurement": "vpp_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "VPP Interface> Detailed> Punt Rate",
+                            "dashboard": "vpp-stats",
+                            "panel_id": "5",
+                            "cond": {"type": "influx", "measurement": "vpp_vswitch_interface_metrics"}
+                        },
+                        {
+                            "name": "VPP Interface> Detailed> RX No Mbuf Rate",
+                            "dashboard": "vpp-stats",
+                            "panel_id": "6",
+                            "cond": {"type": "influx", "measurement": "vpp_vswitch_interface_metrics"}
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "enable": true,
+        "result_id": "vsw_nfvi_libvirt",
+        "type": "grafana",
+        "source_type": "NFVI_INFLUX_DB",
+        "definition": {
+            "input_file": "NFVi_Libvirt_Stats.json",
+            "title": "VNF\/Instance Statistics",
+            "parameters": [
+                {
+                    "property": "SessionId",
+                    "display_name": "SessionId",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "BLL_TOKEN"
+                },
+                {
+                    "property": "LibvirtUuidRegEx",
+                    "display_name": "LibvirtUuidRegEx",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "VNF_UUID_REGEX"
+                },
+                {
+                    "property": "InstanceName",
+                    "display_name": "Instance Name",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "VNF_INSTANCE_NAME",
+                    "hide": false
+                },
+                {
+                    "property": "LibvirtStat",
+                    "display_name": "View",
+                    "description": "Libvirt View",
+                    "property_value_type": "ENUM",
+                    "property_value": "CPU Utilization",
+                    "acceptable_values": [
+                    ]
+                }
+            ],
+            "frames": [
+                {
+                    "max_views": 3,
+                    "view_property": "LibvirtStat",
+                    "view_mapping": [
+                        {
+                            "name": "CPU Utilization",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "1"
+                        },
+                        {
+                            "name": "Memory",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "2"
+                        },
+                        {
+                            "name": "Interface Traffic Rate",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "3"
+                        },
+                        {
+                            "name": "Interface TX Drop Rate",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "4"
+                        },
+                        {
+                            "name": "Interface RX Drop Rate",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "5"
+                        },
+                        {
+                            "name": "Disk I/O Rate",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "6"
+                        },
+                        {
+                            "name": "Memory Major Page Fault Rate",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "7"
+                        },
+                        {
+                            "name": "Memory Minor Page Fault Rate",
+                            "dashboard": "nfvi-libvirt-stats",
+                            "panel_id": "8"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]

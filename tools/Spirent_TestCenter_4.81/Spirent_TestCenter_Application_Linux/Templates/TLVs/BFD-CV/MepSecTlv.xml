@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="frame_schema.xsd" name="BFD-CV MEP Sec TLV" showName="MEP Section TLV" version="1.00" category="BFD CV TLV" readonly="true" validate="true" firstPdu="bfdcv:MepSectionTlv" description="BFD MEP Section TLV">
+    <pdus>
+      <pdu name="proto1" pdu="bfdcv:MepSectionTlv" />
+    </pdus>
+  </template>
+</frame>
+

@@ -1,0 +1,40 @@
+<div style="margin-left:30px;">
+<div ng-controller="toggle">
+    <table class="library-table">
+        <tbody>
+        <tr>
+            <td width="60" halign="left"><button ng-click="drill = !drill">{{drillText}}</button></td>
+            <td colspan="2"><h5 class="pull-left text-primary"><b>Iteration: {{data.info.param}}:{{data.info.value}}</b></h5></td>
+        </tr>
+        </tbody>
+    </table>
+    <div ng-show="drill" ng-controller="toggleView">
+    <table class="library-table">
+        <tbody>
+        <tr>
+            <td width="60"/>
+            <td><b>Explanation</b></td>
+            <td>{{data.status.verdictExplanation}}</td>
+        </tr>
+        <tr>
+            <td/>
+            <td><b>Execution Status</b></td>
+            <td>{{data.status.execStatus}}</td>
+        </tr>
+        <!-- FIXME: Hide and replace with actual result file content -->
+        <tr>
+            <td><button ng-click="docView=!docView">{{viewText}}</button></td>
+            <td><b>Result File</b></td>
+            <td>{{data.info.resultFile}}</td>
+        </tr>
+        <tr ng-if="data.info.resultFile" ng-show="docView">
+            <td colspan="3">
+                <!-- Something that gets expanded -->
+                <iteration-view-base file-name="{{data.info.resultFile}}"/>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>

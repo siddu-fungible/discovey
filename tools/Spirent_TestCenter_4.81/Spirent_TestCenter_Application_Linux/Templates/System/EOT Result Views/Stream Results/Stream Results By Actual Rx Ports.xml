@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5340" serializationBase="true" 
+ Identifier="Stream Results\Stream Results By Actual Rx Ports"
+ PrimaryClass="TxStreamResults"
+ Description="object://l2l3/TxStreamResults"
+ Path="Stream Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ TotalPageCount="0"
+ RecordsPerPage="25"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="Stream Results By Actual Rx Ports">
+   <RealTimeResultGroupDefinition id="5423" 
+   GroupName="Basic Counters"
+   GroupId="object://customgroup/a7d38eca-b341-4d2f-9c5b-400e46180ad0/Basic Counters" 
+	UseCustomSqlString="TRUE"
+	SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index ', (case when (coalesce(IsExpectedPort,1) = 0 and FrameCount > 0) then 'YES' else 'NO' end) as 'Port Stray Frames', TxFrameCount as 'Tx Count (Frames) ', coalesce(sum(FrameCount), 0) as 'Rx Count (Frames) ', coalesce(sum(SigFrameCount), 0) as 'Sig Count (Frames)', (TxOctetCount * 8) as 'Tx Count (bits)', coalesce(sum(OctetCount * 8), 0) as 'Rx Count (bits)', TxL1BitCount as 'Tx L1 Count (bits)', coalesce(sum(L1BitCount), 0) as 'Rx L1 Count (bits)', coalesce(round(sum(TotalLatency) / 100.0 / sum(SigFrameCount), 3), '') as 'Avg Latency (us)', coalesce(min(MinLatency), 0.0) as 'Min Latency (us)', coalesce(max(MaxLatency), 0.0) as 'Max Latency (us)', (case when (sum(TotalJitter) &lt; 0.001 and coalesce(avg(AvgJitter), 0) &gt; 0) then round(avg(AvgJitter), 3) when ((InJitterModeRfc3393 and ModInSeqFrameCount &lt; 1) or (not InJitterModeRfc3393 and ModSigFrameCount &lt; 1)) then '' when (InJitterModeRfc3393) then coalesce(round(TotalJitter / 100.0 / ModInSeqFrameCount, 3), '') else coalesce(round(TotalJitter / 100.0 / ModSigFrameCount, 3), '') end) as 'Avg Jitter (us)', coalesce(min(MinJitter), 0.0) as 'Min Jitter (us)', coalesce(max(MaxJitter), 0.0) as 'Max Jitter (us)', coalesce(round(sum(TotalInterarrivalTime) / 100.0 / sum(ModFrameCount), 3), '') as 'Avg Inter-arrival Time (us)', coalesce(min(MinInterarrivalTime), 0.0) as 'Min Inter-arrival Time (us)', coalesce(max(MaxInterarrivalTime), 0.0) as 'Max Inter-arrival Time (us)', TxCellCount as 'Tx Count (Cells)', coalesce(sum(CellCount), 0) as 'Rx Count (Cells)' from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd"
+	CountQuery="select count (*) from (select Comp32 from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd)"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 17">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5424" 
+   GroupName="Errors"
+   GroupId="object://customgroup/1334ba8f-a144-4069-8cb7-116333341490/Errors"
+	UseCustomSqlString="TRUE"
+	SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index', TxFrameCount as 'Tx Count (Frames)', coalesce(sum(FrameCount), 0) as 'Rx Count (Frames)', coalesce(sum(Ipv4ChecksumErrorCount), 0) as 'Rx IPv4 Checksum Error Count', coalesce(sum(TcpUdpChecksumErrorCount), 0) as 'Rx TCP/UDP Checksum Error Count', coalesce(sum(PrbsBitErrorCount), 0) as 'PRBS Bit Error Count', coalesce(cast(sum(PrbsBitErrorCount)*8 as double)/sum(PrbsFillOctetCount), 0.0) as 'PRBS Bit Error Ratio', coalesce(sum(FcsErrorFrameCount), 0) as 'Rx FCS Error Count (Frames)', coalesce(sum(PrbsErrorFrameCount), 0) as 'PRBS Error Frame Count' from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd"
+	CountQuery="select count (*) from (select Comp32 from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd)"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 18">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5425" 
+   GroupName="Basic Sequencing"
+   GroupId="object://customgroup/e652f0ae-e04e-4f5b-922e-f6a0a21e9340/Basic Sequencing"
+	UseCustomSqlString="TRUE"
+   SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index', TxFrameCount as 'Tx Count (Frames)', coalesce(sum(FrameCount), 0) as 'Rx Count (Frames)', TxOctetCount as 'Tx Octet Count', coalesce(sum(SeqRunLength), 0) as 'Sequence Run Length', coalesce(sum(InSeqFrameCount), 0) as 'In Seq Count (Frames)', coalesce(sum(OutSeqFrameCount), 0) as 'Out of Seq Count (Frames)' from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd"
+   CountQuery="select count (*) from (select Comp32 from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd)"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 19">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5426" 
+   GroupName="Advanced Sequencing"
+   GroupId="object://customgroup/3d3639f4-a55b-4466-8e16-2e7c6a70afa0/Advanced Sequencing"
+	UseCustomSqlString="TRUE"
+	SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as 'Stream Id', TxStreamIndex as 'Stream Index', TxFrameCount as 'Tx Count (Frames)', coalesce(sum(FrameCount), 0) as 'Rx Count (Frames)', TxOctetCount as 'Tx Octet Count', (case when (TxFrameCount - coalesce(sum(FrameCount), 0)) &lt; 0 then '' else TxFrameCount - coalesce(sum(FrameCount),0) end) as 'Tx-Rx (Frames)', (case when (TxFrameCount - coalesce(sum(FrameCount), 0)) &lt; 0 then '' else round(cast(TxFrameCount - coalesce(sum(FrameCount), 0) as double) * 100.0 / TxFrameCount, 5) end) as 'Tx-Rx (%)', coalesce(sum(DroppedFrameCount), 0) as 'Dropped Frame Count', round(cast(coalesce(sum(DroppedFrameCount), 0) as double) * 100.0 / TxFrameCount, 5) as 'Dropped Frame (%)', coalesce(sum(InOrderFrameCount), 0) as 'In-order Count (Frames)', coalesce(sum(ReorderedFrameCount), 0) as 'Reordered Count (Frames)', coalesce(sum(DuplicateFrameCount), 0) as 'Duplicate Count (Frames)', coalesce(sum(LateFrameCount), 0) as 'Late Count(Frames)' from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd"
+	CountQuery="select count (*) from (select Comp32 from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd)"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 20">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5427" 
+   GroupName="Histograms"
+   GroupId="object://customgroup/a3fa4141-b6c7-4c1b-935b-df51d6118250/Histograms"
+   UseCustomSqlString="TRUE"
+   SqlString="select TxPortName as 'Tx Port', ActualRxPortName as 'Rx Port', TxStreamBlockName as 'Stream Block', TxStreamId as  'Stream Id', TxStreamIndex as 'Stream Index', TxFrameCount as 'Tx Count (Frames)', coalesce(sum(FrameCount), 0) as 'Rx Count (Frames)', TxOctetCount as 'Tx Octet Count', coalesce(sum(HistBin1Count), 0) as 'Bucket 1', coalesce(sum(HistBin2Count), 0) as 'Bucket 2', coalesce(sum(HistBin3Count), 0) as 'Bucket 3', coalesce(sum(HistBin4Count), 0) as 'Bucket 4', coalesce(sum(HistBin5Count), 0) as 'Bucket 5', coalesce(sum(HistBin6Count), 0) as 'Bucket 6', coalesce(sum(HistBin7Count), 0) as 'Bucket 7', coalesce(sum(HistBin8Count), 0) as 'Bucket 8', coalesce(sum(HistBin9Count), 0) as 'Bucket 9', coalesce(sum(HistBin10Count), 0) as 'Bucket 10', coalesce(sum(HistBin11Count), 0) as 'Bucket 11', coalesce(sum(HistBin12Count), 0) as 'Bucket 12', coalesce(sum(HistBin13Count), 0) as 'Bucket 13', coalesce(sum(HistBin14Count), 0) as 'Bucket 14', coalesce(sum(HistBin15Count), 0) as 'Bucket 15', coalesce(sum(HistBin16Count), 0) as 'Bucket 16' from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd"
+   CountQuery="select count (*) from (select Comp32 from TxRxEotStreamResults where Comp32 &gt; 0 and ParentHnd &gt; 0 group by Comp32, ParentHnd)"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 21">
+  </RealTimeResultGroupDefinition>
+</ResultDataSet>

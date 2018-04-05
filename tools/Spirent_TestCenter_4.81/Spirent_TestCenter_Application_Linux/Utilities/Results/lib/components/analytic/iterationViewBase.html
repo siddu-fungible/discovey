@@ -1,0 +1,30 @@
+<div ng-controller="resultCtrl">
+    <!-- Test Report Summary Info -->
+    <table class="library-table">
+        <tbody>
+        <tr>
+            <td><h3>Test Iteration Summary: {{test.info.name}}</h3></td>
+            <td><h3><div ng-class="verdictLabel(test.status.verdict)">{{verdictFormat(test.status.verdict)}}</div></h3></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Test Report Summary Table -->
+    <table class="library-table">
+        <tbody>
+        <tr>
+            <td><b>Explanation</b></td>
+            <td>{{test.status.verdictExplanation}}</td>
+        </tr>
+        <tr>
+            <td><b>Execution Status</b></td>
+            <td>{{test.status.execStatus}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <!-- Detailed test 
+    <div ng-repeat="test in test.data.children" >
+        <div ng-include="'lib/components/analytic/groupBase.html'"></div>
+
+    </div>-->
+</div>

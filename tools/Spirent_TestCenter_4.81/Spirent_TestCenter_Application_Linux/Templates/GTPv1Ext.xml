@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_GTPv1Ext"
+    showName="GTPv1 Opt Fields and Ext Hdr"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="gtpv1_ext:GTPv1Ext"
+    description="GTPv1Ext" >
+
+    <pdus>
+      <pdu name="proto1" pdu="gtpv1_ext:GTPv1Ext" />
+    </pdus>
+  </template>
+</frame>

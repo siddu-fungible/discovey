@@ -1,0 +1,27 @@
+dimension_set: 
+  name: stream_block
+  description: Attributes of a stream block
+  bll:
+    plugin: l2l3
+    group: stream
+  attributes:
+  - name: name
+    display_name: Stream Block Name
+    description: Stream Block name
+    base_unit: none
+    data_type: string
+  - name: handle
+    display_name: Stream Block Handle
+    description: BLL handle of the stream block
+    base_unit: none
+    data_type: integer
+  - name: stream_count
+    display_name: Stream Count
+    description: Number of streams in the stream block
+    base_unit: none
+    data_type: integer
+  - name: tx_status
+    display_name: Status
+    description: Status of the stream block
+    base_unit: none
+    data_type: boolean

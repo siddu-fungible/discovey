@@ -1,0 +1,5 @@
+#!/table/table/aramani_py/lastOne/64bitPybsd/spirent_linux_libs/bin/python2.7
+
+from idlelib.PyShell import main
+if __name__ == '__main__':
+    main()

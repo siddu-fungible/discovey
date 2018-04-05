@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Pimv4Hello"
+    showName="PIMv4 Hello"
+    version="1.00"
+    category="Routing"
+    readonly="true"
+    validate="true"
+    firstPdu="pim:Pimv4Hello"
+    description="PIMv4 Hello" >
+
+    <pdus>
+      <pdu name="proto1" pdu="pim:Pimv4Hello" />
+    </pdus>
+  </template>
+</frame>

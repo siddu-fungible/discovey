@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="OncRpcv2RpcMsg"
+    showName="ONC RPCv2 rpc_msg"
+    version="1.00"
+    category="ONC RPCv2"
+    readonly="true"
+    validate="true"
+    firstPdu="oncrpcv2:RpcMsg"
+    description="ONC RPCv2 rpc_msg" >
+
+    <pdus>
+      <pdu name="proto1" pdu="oncrpcv2:RpcMsg" />
+    </pdus>
+  </template>
+</frame>

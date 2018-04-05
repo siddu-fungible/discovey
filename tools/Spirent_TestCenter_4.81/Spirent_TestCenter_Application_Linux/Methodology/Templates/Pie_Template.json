@@ -1,0 +1,24 @@
+{
+    "title": {
+        "text": "Pie Template"
+    },
+    "series": [
+        {
+            "type": "pie",
+            "data": [
+                [
+                    "Slice 1",
+                    2
+                ],
+                [
+                    "Slice 2",
+                    2
+                ],
+                [
+                    "Slice 3",
+                    2
+                ]
+            ]
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+<frame>
+		<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCGZAAccept"
+    showName="FC GZA Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GzaAccept"
+    description="FC GZA Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GzaAccept">
+        <ctIuPreamble>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+						</pdu>
+    </pdus>
+  </template>
+</frame>

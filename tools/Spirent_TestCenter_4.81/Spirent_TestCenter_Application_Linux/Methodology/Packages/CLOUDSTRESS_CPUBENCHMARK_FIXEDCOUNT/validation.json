@@ -1,0 +1,20 @@
+{
+    "methodology_key": "CLOUDSTRESS_CPUBENCHMARK_FIXEDCOUNT",
+    "state_modifiers": [
+        {
+            "property_group": "AutoDeployConfig",
+            "state_type": "hidden",
+            "type": "expression",
+            "value": "has_deployment_config() == false",
+            "message": "Auto-Deployment Configuration is not used when there aren't any templates that need auto-deploying."
+        }
+    ],
+    "validations": [
+        {
+            "property": "MinMaxCpuLoadParam.MinCpuLoad",
+            "type": "expression",
+            "value": "%MinMaxCpuLoadParam.MinCpuLoad% > %MinMaxCpuLoadParam.MaxCpuLoad%",
+            "message": "The Minimum CPU Load must be less than or equal to the Maximum CPU Load."
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+var xmlSkinData = "";
+xmlSkinData += '<?xml version=\"1.0\" encoding=\"utf-8\"?>';
+xmlSkinData += '<CatapultSkin Version=\"1\" Comment=\"Silver theme skin\" Anchors=\"Width,Height\" Width=\"1170px\" Height=\"737px\" Top=\"177px\" Left=\"208px\" Bottom=\"102px\" Right=\"302px\" Tabs=\"TOC,Search,Favorites\" DefaultTab=\"TOC\" AutoSyncTOC=\"False\">';
+xmlSkinData += '    <!-- saved from url=(0016)http://localhost -->';
+xmlSkinData += '    <Index BinaryStorage=\"True\" />';
+xmlSkinData += '    <HtmlHelpOptions ShowMenuBar=\"False\" TopmostWindowStyle=\"False\" Buttons=\"Hide,Locate,Back,Forward,Stop,Refresh,Home,Font,Print,Next,Previous\" EnableButtonCaptions=\"True\" />';
+xmlSkinData += '    <Stylesheet Link=\"Stylesheet.xml\">';
+xmlSkinData += '    </Stylesheet>';
+xmlSkinData += '    <Toolbar EnableCustomLayout=\"True\" Buttons=\"ToggleNavigationPane|Separator|Back|Forward|Separator|AddTopicToFavorites|Separator|RemoveHighlight|Separator|Print\" />';
+xmlSkinData += '</CatapultSkin>';
+CMCXmlParser._FilePathToXmlStringMap.Add('Skin', xmlSkinData);

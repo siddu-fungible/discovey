@@ -1,0 +1,252 @@
+<tapi:meta xmlns:tapi="urn:www.spirentcom.com:XMLSchema.xsd" id="0x95000000" package="routing" plugin="pcep" version="0.0.0-0">
+ <tapi:class name="PcepActiveStatefulCommandConfig" disable="TRUE">
+ </tapi:class>
+ <tapi:class name="StartDeviceInitiateCommandConfig">
+	<tapi:condition operator="equal" property="PceLspConfig.Characteristic" type="applicable" value="EnumPceCharacteristic.ENABLE_INIT" />
+ </tapi:class>
+ <tapi:class name="StartDeviceReplyCommandConfig">
+	<tapi:condition operator="equal" property="PceLspConfig.Characteristic" type="applicable" value="EnumPceCharacteristic.ENABLE_REPLY" />
+ </tapi:class>
+ <tapi:class name="StartDeviceSyncCommandConfig">
+	<tapi:condition operator="equal" property="PccLspConfig.Characteristic" type="applicable" value="EnumPccCharacteristic.ENABLE_SYNCHRONIZATION" />
+ </tapi:class>
+ <tapi:class name="StartDeviceRequestCommandConfig">
+	<tapi:condition operator="equal" property="PccLspConfig.Characteristic" type="applicable" value="EnumPccCharacteristic.ENABLE_REQUEST" />
+ </tapi:class>
+ 
+ <tapi:interface APIName="::sth::emulation_pcep_config" from_object="PcepProtocolConfig">
+	<tapi:retval name="return format b">
+		<tapi:retkey name="pcep_handle" object="PcepProtocolConfig"/>
+		<tapi:retkey name="pce_lsp_hnd" object="PceLspConfig"/>
+		<tapi:retkey name="pcc_lsp_hnd" object="PccLspConfig"/>
+		<tapi:retkey name="ero_hnd" object="PcepBaseEroObject"/>
+		<tapi:retkey name="ipv4_ero_hnd" object="PcepIpv4EroObject"/>
+		<tapi:retkey name="ipv4_ero_hnd" object="PcepIpv4EroToUpdateObject"/>
+		<tapi:retkey name="ipv6_ero_hnd" object="PcepIpv6EroObject"/>
+		<tapi:retkey name="ipv6_ero_hnd" object="PcepIpv6EroToUpdateObject"/>
+		<tapi:retkey name="sr_ero_hnd" object="PcepSREroObject"/>
+		<tapi:retkey name="rro_hnd" object="PcepBaseRroObject"/>
+		<tapi:retkey name="ipv4_rro_hnd" object="PcepIpv4RroObject"/>
+		<tapi:retkey name="ipv6_rro_hnd" object="PcepIpv6RroObject"/>
+		<tapi:retkey name="metric_hnd" object="PcepBaseMetricListObject"/>
+		<tapi:retkey name="lspa_hnd" object="PcepBaseLspaObject"/>
+		<tapi:retkey name="bw_hnd" object="PcepBaseBwObject"/>
+		<tapi:retkey name="startcommand_hnd" object="PcepBaseActiveStatefulCommandConfig"/>
+		<tapi:retkey name="start_initcommand_hnd" object="StartDeviceInitiateCommandConfig"/>
+		<tapi:retkey name="start_replycommand_hnd" object="StartDeviceReplyCommandConfig"/>
+		<tapi:retkey name="start_synccommand_hnd" object="StartDeviceSyncCommandConfig"/>
+		<tapi:retkey name="start_requestcommand_hnd" object="StartDeviceRequestCommandConfig"/>
+		<tapi:retkey name="start_delegatecommand_hnd" object="StartDeviceDelegateCommandConfig"/>
+		<tapi:retkey name="start_updatecommand_hnd" object="StartDeviceUpdateCommandConfig"/>
+		<tapi:retkey name="customtlv_hnd" object="PcepCustomTlv"/>
+		<tapi:retkey name="lsp_hnd" object="PcepLspObject"/>
+		<tapi:retkey name="srp_hnd" object="PcepSrpObject"/>
+		<tapi:retkey name="rp_hnd" object="PcepRPObject"/>
+		<tapi:retkey name="customobj_hnd" object="PcepCustomObject"/>
+		<tapi:retkey name="ipv4_reported_route_hnd" object="PcepIpv4ReportedRouteParams"/>
+		<tapi:retkey name="ipv6_reported_route_hnd" object="PcepIpv6ReportedRouteParams"/>
+		<tapi:retkey name="ipv4_explicit_route_hnd" object="PcepIpv4ExplicitRouteParams"/>
+		<tapi:retkey name="ipv6_explicit_route_hnd" object="PcepIpv6ExplicitRouteParams"/>
+		<tapi:retkey name="ipv6network_hnd" object="Ipv6NetworkBlock"/>
+		<tapi:retkey name="ipv4network_hnd" object="Ipv4NetworkBlock"/>
+		<tapi:retkey name="custompdu_hnd" object="PcepCustomPdu"/>
+		<tapi:retkey name="open_msg_hnd" object="PcepOpenMessageConfig"/>
+		<tapi:retkey name="keep_alive_msg_hnd" object="PcepKeepaliveMessageConfig"/>
+		
+		
+	</tapi:retval>
+	
+	<tapi:param name="mode" alias="mode" choice="enable modify add"/>
+	<tapi:param name="handle" alias="handle" 
+			object="EmulatedDevice PcepProtocolConfig PccLspConfig PceLspConfig PcepBaseEroObject PcepBaseRroObject 
+			PcepBaseMetricListObject PcepBaseLspaObject PcepBaseBwObject PcepBaseActiveStatefulCommandConfig PcepLspMessageConfig"/>
+	
+	<tapi:param name="PcepBaseActiveStatefulCommandConfig.IncludedEro-targets" alias="included_ero_handle"/>
+	<tapi:param name="PcepBaseActiveStatefulCommandConfig.IncludedRro-targets" alias="included_rro_handle"/>
+	<tapi:param name="PcepBaseActiveStatefulCommandConfig.IncludedBw-targets" alias="included_bw_handle"/>
+	<tapi:param name="PcepBaseActiveStatefulCommandConfig.IncludedMetric-targets" alias="included_metric_handle"/>
+	<tapi:param name="PcepBaseActiveStatefulCommandConfig.IncludedLspa-targets" alias="included_lspa_handle"/>
+	
+	<tapi:param name="PcepBaseActiveStatefulCommandConfig.IncludeEndpoints" alias="include_endpoints"/>
+	<tapi:param name="PcepBaseActiveStatefulCommandConfig.UseCustomMessage" alias="cmd_use_custom_message"/>
+			
+	<tapi:param name="PcepLspObject.LspCustomTlv-sources" alias="customtlv_handle"/>
+	<tapi:param name="PcepSrpObject.SrpCustomTlv-sources" alias="customtlv_handle"/>
+	<tapi:param name="PcepBaseLspaObject.LspaCustomTlv-sources" alias="customtlv_handle"/>
+	<tapi:param name="PcepRPObject.RpCustomTlv-sources" alias="customtlv_handle"/>
+	
+	<tapi:map object="PcepLspObject PcepSrpObject PcepBaseLspaObject PcepRPObject" prefix="lsp srp lspa rp">
+		<tapi:param name="$object$.LspCustomTlv-sources" alias="customtlv_handle"/>
+		<tapi:param name="$object$.SrpCustomTlv-sources" alias="customtlv_handle"/>
+		<tapi:param name="$object$.LspaCustomTlv-sources" alias="customtlv_handle"/>
+		<tapi:param name="$object$.RpCustomTlv-sources" alias="customtlv_handle"/>
+	</tapi:map>
+	
+	<tapi:param name="PcepProtocolConfig.IpVersion" alias="ip_version">
+		<tapi:process procName="::sth::pcep::process_Usesif"/>
+	</tapi:param>
+	
+	<tapi:param name="PcepCustomTlv.Value" alias="tlv_value">
+		<tapi:process procName="::sth::pcep::process_Customtlv_Value"/>
+	</tapi:param>
+	
+	<tapi:param name="PcepProtocolConfig.PcepDeviceRole" alias="pcep_device_role" isParamKey="true">
+		<tapi:process procName="::sth::pcep::process_key_role"/>
+		<tapi:switch value="pce" 
+			object="PcepProtocolConfig PceLspConfig PcepLspObject PcepEndPointObject PcepSrpObject PcepIpv4EroToUpdateObject PcepIpv6EroToUpdateObject PcepIpv4ExplicitRouteParams 
+					PcepIpv6ExplicitRouteParams PcepSREroObject PcepSRExplicitRouteParams PcepMetricListToUpdateObject PcepMetricObject 
+					PcepBwToUpdateObject PcepLspaToUpdateObject Ipv4NetworkBlock Ipv6NetworkBlock 
+                    StartDeviceInitiateCommandConfig StartDeviceUpdateCommandConfig StartDeviceReplyCommandConfig PcepCustomPdu PcepLspMessageConfig PcepOpenMessageConfig PcepKeepaliveMessageConfig">
+		</tapi:switch>
+		<tapi:switch value="pcc" 
+			object="PcepProtocolConfig PccLspConfig PcepLspObject PcepEndPointObject PcepRPObject PcepIpv4EroObject PcepIpv6EroObject PcepIpv4ExplicitRouteParams 
+                PcepIpv6ExplicitRouteParams PcepIpv4RroObject PcepIpv4ReportedRouteParams PcepIpv6RroObject 
+                PcepIpv6ReportedRouteParams PcepSRRroObject PcepSRReportedRouteParams PcepSREroObject 
+                PcepSRExplicitRouteParams PcepMetricListObject PcepMetricObject PcepBwObject PcepLspaObject Ipv4NetworkBlock Ipv6NetworkBlock 
+                StartDeviceSyncCommandConfig StartDeviceDelegateCommandConfig StartDeviceRequestCommandConfig PcepCustomPdu PcepLspMessageConfig PcepOpenMessageConfig PcepKeepaliveMessageConfig">
+		</tapi:switch>
+	</tapi:param>
+
+	<tapi:map object="PccLspConfig PceLspConfig" prefix="pcc pce">
+		<tapi:param name="$object$.LspCount" alias="lsp_count"/>	
+		<tapi:param name="$object$.SymbolicName" alias="symbolic_name"/>
+		<tapi:param name="$object$.Characteristic" alias="characteristic">
+			<tapi:value input="REPORT" output="NONE"/>
+		</tapi:param>
+		<tapi:param name="$object$.SrcIpv4Addr" alias="src_ipv4_addr"/>
+		<tapi:param name="$object$.SrcIpv4AddrStep" alias="src_ipv4_addr_step"/>
+		<tapi:param name="$object$.DstIpv4Addr" alias="dst_ipv4_addr"/>
+		<tapi:param name="$object$.DstIpv4AddrStep" alias="dst_ipv4_addr_step"/>
+		<tapi:param name="$object$.SrcIpv6Addr" alias="src_ipv6_addr"/>
+		<tapi:param name="$object$.SrcIpv6AddrStep" alias="src_ipv6_addr_step"/>
+		<tapi:param name="$object$.DstIpv6Addr" alias="dst_ipv6_addr"/>
+		<tapi:param name="$object$.DstIpv6AddrStep" alias="dst_ipv6_addr_step"/>
+	</tapi:map>	
+	
+	<tapi:map object="PcepCustomObject" prefix="custom">
+		<tapi:param name="$object$.ObjectType" alias="obj_type"/>
+	</tapi:map>
+		
+	<tapi:map object="PcepOpenMessageConfig PcepKeepaliveMessageConfig PcepLspMessageConfig" prefix="open_msg keepalive_msg lsp_msg">
+		<tapi:param name="$object$.ObjectType" alias="obj_category"/>
+		<tapi:param name="$object$.ObjectHandle" alias="obj_handle"/>
+	</tapi:map>
+	
+	<tapi:map object="PceLspConfig.PcepLspObject PccLspConfig.PcepLspObject" prefix="pce ">
+		<tapi:param name="$object$.InitLspState" alias="init_lsp_state"/>
+		<tapi:param name="$object$.Aflag" alias="aflag"/>
+	</tapi:map>
+	
+	<tapi:map object="PceLspConfig.PcepLspObject" prefix=" ">
+		<tapi:param name="$object$.InitLspState" alias="init_lsp_state"/>
+		<tapi:param name="$object$.Aflag" alias="aflag"/>
+	</tapi:map>
+	
+	<tapi:map object="PccLspConfig.PcepLspObject" prefix=" ">
+		<tapi:param name="$object$.Ipv6TunnelAddrStep" alias = "ipv6_tunnel_addr_step"/>
+		<tapi:param name="$object$.Ipv4TunnelAddrStep" alias = "ipv4_tunnel_addr_step"/>
+		<tapi:param name="$object$.AutoGenId" alias="lsp_auto_gen_id"/>
+		<tapi:param name="$object$.LspId" alias="lsp_id"/>
+		<tapi:param name="$object$.PlspId" alias="plsp_id"/>
+		<tapi:param name="$object$.TunnelId" alias="tunnel_id"/>
+		<tapi:param name="$object$.TunnelIdStep" alias="tunnel_id_step"/>
+		<tapi:param name="$object$.Ipv4ExTunnelIdStep" alias="ipv4_ex_tunnel_id_step"/>
+		<tapi:param name="$object$.Ipv4ExTunnelId" alias="ipv4_ex_tunnel_id"/>
+		<tapi:param name="$object$.Ipv4TunnelAddr" alias="ipv4_tunnel_addr"/>
+		<tapi:param name="$object$.PlspIdStep" alias="plsp_id_step"/>
+		<tapi:param name="$object$.Ipv4TunnelEndAddr" alias="ipv4_tunnel_end_addr"/>
+		<tapi:param name="$object$.Ipv4TunnelEndAddrStep" alias="ipv4_tunnel_end_addr_step"/>
+		<tapi:param name="$object$.Ipv6TunnelEndAddr" alias="ipv6_tunnel_end_addr"/>
+		<tapi:param name="$object$.Ipv6TunnelAddr" alias="ipv6_tunnel_addr"/>	
+		<tapi:param name="$object$.Ipv6TunnelEndAddrStep" alias="ipv6_tunnel_end_addr_step"/>
+		<tapi:param name="$object$.Ipv6ExTunnelId" alias="ipv6_ex_tunnel_id"/>
+		<tapi:param name="$object$.Ipv6ExTunnelIdStep" alias="ipv6_ex_tunnel_id_step"/>
+		<tapi:param name="$object$.LspIdStep" alias="lsp_id_step"/>
+		<tapi:param name="$object$.LspCustomTlv-sources" alias="customtlv_handle"/>
+	</tapi:map>
+	
+	<tapi:param name="PcepIpv4EroObject.EroType" disable="TRUE"/>
+	<tapi:param name="PcepIpv4EroToUpdateObject.EroType" disable="TRUE"/>
+	<tapi:param name="PcepIpv6EroObject.EroType" disable="TRUE"/>
+	<tapi:param name="PcepIpv6EroToUpdateObject.EroType" disable="TRUE"/>
+	<tapi:param name="PcepBwObject.ObjectType" disable="TRUE"/>
+	<tapi:param name="PcepBwToUpdateObject.ObjectType" disable="TRUE"/>
+	
+	<tapi:map object="PcepIpv4EroObject PcepIpv4EroToUpdateObject PcepIpv6EroObject PcepIpv6EroToUpdateObject PcepSREroObject" prefix="ipv4 ipv4_update ipv6 ipv6_update sr">
+		<tapi:param name="$object$.EroPflag" alias="ero_pflag"/>
+		<tapi:param name="$object$.EroIflag" alias="ero_iflag"/>
+	</tapi:map>
+	<tapi:map object="PcepIpv4RroObject PcepIpv6RroObject PcepSRRroObject" prefix="ipv4 ipv6 sr">
+		<tapi:param name="$object$.RroPflag" alias="rro_pflag"/>
+		<tapi:param name="$object$.RroIflag" alias="rro_iflag"/>
+	</tapi:map>
+
+	<tapi:map object="PcepIpv4ExplicitRouteParams PcepIpv6ExplicitRouteParams PcepSRExplicitRouteParams" prefix="ipv4_explicit ipv6_explicit sr">
+		<tapi:param name="$object$.RouteType" alias="route_type"/>
+	</tapi:map>
+		
+	<tapi:map object="PcepIpv4ReportedRouteParams PcepIpv6ReportedRouteParams" prefix="ipv4_reported ipv6_reported">
+		<tapi:param name="$object$.RroFlags" alias="rro_flags"/>
+	</tapi:map>
+	
+	<tapi:map object="PcepIpv4ExplicitRouteParams.Ipv4NetworkBlock PcepIpv4ReportedRouteParams.Ipv4NetworkBlock" prefix="ipv4_explicit ipv4_reported">
+		<tapi:param name="$object$.StartIpList" alias="start_ip_list"/>
+		<tapi:param name="$object$.PrefixLength" alias="prefix_length"/>
+	</tapi:map>
+
+	<tapi:map object="PcepIpv6ExplicitRouteParams.Ipv6NetworkBlock PcepIpv6ReportedRouteParams.Ipv6NetworkBlock" prefix="ipv6_explicit ipv6_reported">
+		<tapi:param name="$object$.StartIpList" alias="start_ip_list"/>
+		<tapi:param name="$object$.PrefixLength" alias="prefix_length"/>
+	</tapi:map>
+	
+	<tapi:map object="PcepLspaToUpdateObject PcepLspaObject" prefix="lspa_update lspa">
+			<tapi:param name="$object$.lspaExcludeAny" alias="exclude_any"/>
+			<tapi:param name="$object$.LspaIncludeAny" alias="include_any"/>
+			<tapi:param name="$object$.LspaIncludeAll" alias="include_all"/>
+			<tapi:param name="$object$.LspaSetupPrio" alias="setup_prio"/>
+			<tapi:param name="$object$.LspaHoldingPrio" alias="holding_prio"/>
+			<tapi:param name="$object$.LspaLflag" alias="lflag"/>
+			<tapi:param name="$object$.AffinitiesFlag" alias="affinities_flag"/>
+	</tapi:map>
+	
+	<tapi:map object="PcepLspObject PcepSrpObject PcepRPObject" prefix="lsp srp rp">
+		<tapi:param name="$object$.AutoGenId" alias="auto_gen_id"/>
+	</tapi:map>	
+	
+	<tapi:map object="PcepSRExplicitRouteParams PcepSRReportedRouteParams" prefix="explicit reported">
+		<tapi:param name="$object$.MFlag" alias="mflag"/>
+	</tapi:map>	
+	<tapi:map object="PcepSRExplicitRouteParams PcepNoPathObject PcepSRReportedRouteParams" prefix="explicit nopath reported">
+		<tapi:param name="$object$.CFlag" alias="cflag"/>
+	</tapi:map>	
+	
+	<tapi:param name="PcepNoPathObject.Included" alias="nopath_included"/>
+	<tapi:map object="PcepBwObject PcepBwToUpdateObject" prefix="bw bw_update">
+		<tapi:param name="$object$.bandwidth" alias="bandwidth"/>
+	</tapi:map>
+	
+	<tapi:map object="PcepCustomObject PcepEndPointObject PcepRPObject PcepBwObject PcepBwToUpdateObject PcepMetricListObject PcepMetricListToUpdateObject PcepLspaObject PcepLspaToUpdateObject" prefix="custom endpoint rp bw bw_update metriclist metriclist_update lspa lspa_update">
+		<tapi:param name="$object$.PFlag" alias="pflag"/>
+		<tapi:param name="$object$.iFlag" alias="iflag"/>
+	</tapi:map>	
+	<tapi:map object="PcepSRExplicitRouteParams PcepSRReportedRouteParams" prefix="explicit reported">
+		<tapi:param name="$object$.SIDType" alias="sid_type"/>
+		<tapi:param name="$object$.SFlag" alias="sflag"/>
+		<tapi:param name="$object$.FFlag" alias="fflag"/>
+		<tapi:param name="$object$.SIDLabel" alias="sid_label"/>
+		<tapi:param name="$object$.SIDTc" alias="sid_tc"/>
+		<tapi:param name="$object$.SIDSFlag" alias="sid_sflag"/>
+		<tapi:param name="$object$.SIDTtl" alias="sid_ttl"/>
+		<tapi:param name="$object$.IPv4Address" alias="ipv4_address"/>
+		<tapi:param name="$object$.IPv6Address" alias="ipv6_address"/>
+		<tapi:param name="$object$.LocalIPv4Address" alias="local_ipv4_address"/>
+		<tapi:param name="$object$.RemoteIPv4Address" alias="remote_ipv4_address"/>
+		<tapi:param name="$object$.LocalIPv6Address" alias="local_ipv6_address"/>
+		<tapi:param name="$object$.RemoteIPv6Address" alias="remote_ipv6_address"/>
+		<tapi:param name="$object$.LocalNodeId" alias="local_node_id"/>
+		<tapi:param name="$object$.LocalInterfaceId" alias="local_interface_id"/>
+		<tapi:param name="$object$.RemoteNodeId" alias="remote_node_id"/>
+		<tapi:param name="$object$.RemoteInterfaceId" alias="remote_interface_id"/>
+	</tapi:map>
+  </tapi:interface>
+</tapi:meta>

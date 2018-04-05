@@ -1,0 +1,303 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/3.80/Switching/PFC"  xml:lang="en">
+<label>PFC</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    <actionDecl name="PfcMeasureResponseTime">
+    <label>PFC Measure Response Time</label>
+    <tooltip>Measure DUT Priority-based Flow Control Response and Pause time.</tooltip>
+    <description>Measure DUT Priority-based Flow Control Response and Pause time.</description>
+        <parameter  name="ExecuteSynchronous">
+            <label>ExecuteSynchronous</label>
+            <tooltip>Execute Synchronous</tooltip>
+            <description>Execute Synchronous</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="ProgressCancelled">
+            <label>ProgressCancelled</label>
+            <tooltip>Progress was Cancelled</tooltip>
+            <description>Progress was Cancelled</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="PortList">
+            <label>PortList</label>
+            <tooltip>Port List</tooltip>
+            <description>Port List</description>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <responseDecl>
+        <item  name="State">
+            <label>State</label>
+            <default>INIT</default>
+            <datatype>string</datatype>
+            <allowedValue label="INIT">INIT</allowedValue>
+            <allowedValue label="START">START</allowedValue>
+            <allowedValue label="RUNNING">RUNNING</allowedValue>
+            <allowedValue label="PAUSED">PAUSED</allowedValue>
+            <allowedValue label="PRECOMPLETE">PRECOMPLETE</allowedValue>
+            <allowedValue label="COMPLETED">COMPLETED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+            <allowedValue label="VALIDATION_ERROR">VALIDATION_ERROR</allowedValue>
+        </item>
+        <item  name="Status">
+            <label>Status</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="StartTime">
+            <label>StartTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="EndTime">
+            <label>EndTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ElapsedTime">
+            <label>ElapsedTime</label>
+            <default>0</default>
+            <datatype>decimal</datatype>
+        </item>
+        <item  name="ProgressDisplayCounter">
+            <label>ProgressDisplayCounter</label>
+            <default>true</default>
+            <datatype>boolean</datatype>
+        </item>
+        <item  name="ProgressStepsCount">
+            <label>ProgressStepsCount</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStep">
+            <label>ProgressCurrentStep</label>
+            <default>1</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentStepName">
+            <label>ProgressCurrentStepName</label>
+            <default></default>
+            <datatype>string</datatype>
+        </item>
+        <item  name="ProgressMaxValue">
+            <label>ProgressMaxValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        <item  name="ProgressCurrentValue">
+            <label>ProgressCurrentValue</label>
+            <default>0</default>
+            <datatype>integer</datatype>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+    <actionDecl name="DcbIteratePfcPauseTime">
+    <label>Iterate PFC Pause Command</label>
+    <tooltip>This command iterates PFC Pause Time values on the specified ports.</tooltip>
+    <description>This command iterates PFC Pause Time values on the specified ports.</description>
+        <parameter  name="DeviceList">
+            <label>DeviceList</label>
+            <tooltip>Device List</tooltip>
+            <description>Device List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="PriorityFlowControlArray">
+            <label>PriorityFlowControlArray</label>
+            <tooltip>Specify on which queues to send pause frames</tooltip>
+            <description>Specify on which queues to send pause frames</description>
+            <datatype>boolean</datatype>
+            <default>true</default>
+            <allowedCount>
+                <min>0</min>
+                <max>8</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="EnableXonXoffFlowControl">
+            <label>EnableXonXoffFlowControl</label>
+            <tooltip>Send XOFF/XON PFC frame pairs</tooltip>
+            <description>Send XOFF/XON PFC frame pairs</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="QuantaOverlap">
+            <label>QuantaOverlap</label>
+            <tooltip>Percentage of overlap of pause time for sequential XOFF frames</tooltip>
+            <description>Percentage of overlap of pause time for sequential XOFF frames</description>
+            <datatype>decimal</datatype>
+            <default>50</default>
+        </parameter>
+        <parameter  name="PauseTimeIterationMode">
+            <label>PauseTimeIterationMode</label>
+            <tooltip>Pause Time Iteration Mode</tooltip>
+            <description>Pause Time Iteration Mode</description>
+            <datatype>string</datatype>
+            <default>FIXED</default>
+            <allowedValue label="CUSTOM">CUSTOM</allowedValue>
+            <allowedValue label="FIXED">FIXED</allowedValue>
+            <allowedValue label="STEP">STEP</allowedValue>
+        </parameter>
+        <parameter  name="PauseTimeUnit">
+            <label>PauseTimeUnit</label>
+            <tooltip>Pause Time Units</tooltip>
+            <description>Pause Time Units</description>
+            <datatype>string</datatype>
+            <default>QUANTA</default>
+            <allowedValue label="QUANTA">QUANTA</allowedValue>
+            <allowedValue label="BYTES">BYTES</allowedValue>
+        </parameter>
+        <parameter  name="CustomPauseTimeList">
+            <label>CustomPauseTimeList</label>
+            <tooltip>Custom Pause Time List</tooltip>
+            <description>Custom Pause Time List</description>
+            <mandatory>false</mandatory>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="FixedPauseTime">
+            <label>FixedPauseTime</label>
+            <tooltip>Fixed Pause Time</tooltip>
+            <description>Fixed Pause Time</description>
+            <datatype>integer</datatype>
+            <default>1024</default>
+        </parameter>
+        <parameter  name="StepPauseTimeStart">
+            <label>StepPauseTimeStart</label>
+            <tooltip>Step Pause Time Start</tooltip>
+            <description>Step Pause Time Start</description>
+            <datatype>integer</datatype>
+            <default>1024</default>
+        </parameter>
+        <parameter  name="StepPauseTimeEnd">
+            <label>StepPauseTimeEnd</label>
+            <tooltip>Step Pause Time End</tooltip>
+            <description>Step Pause Time End</description>
+            <datatype>integer</datatype>
+            <default>32768</default>
+        </parameter>
+        <parameter  name="StepPauseTimeStep">
+            <label>StepPauseTimeStep</label>
+            <tooltip>Step Pause Time Step</tooltip>
+            <description>Step Pause Time Step</description>
+            <datatype>integer</datatype>
+            <default>1024</default>
+        </parameter>
+        <parameter  name="QuantaIterationMode">
+            <label>QuantaIterationMode</label>
+            <tooltip>Quanta Iteration Mode</tooltip>
+            <description>Quanta Iteration Mode</description>
+            <datatype>string</datatype>
+            <default>FIXED</default>
+            <allowedValue label="CUSTOM">CUSTOM</allowedValue>
+            <allowedValue label="FIXED">FIXED</allowedValue>
+            <allowedValue label="STEP">STEP</allowedValue>
+        </parameter>
+        <parameter  name="CustomQuantaList">
+            <label>CustomQuantaList</label>
+            <tooltip>Custom Quanta Value List</tooltip>
+            <description>Custom Quanta Value List</description>
+            <mandatory>false</mandatory>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="FixedQuanta">
+            <label>FixedQuanta</label>
+            <tooltip>Fixed Quanta Value</tooltip>
+            <description>Fixed Quanta Value</description>
+            <datatype>integer</datatype>
+            <default>65535</default>
+        </parameter>
+        <parameter  name="StepQuantaStart">
+            <label>StepQuantaStart</label>
+            <tooltip>Step Quanta Start</tooltip>
+            <description>Step Quanta Start</description>
+            <datatype>integer</datatype>
+            <default>0</default>
+        </parameter>
+        <parameter  name="StepQuantaEnd">
+            <label>StepQuantaEnd</label>
+            <tooltip>Step Quanta End</tooltip>
+            <description>Step Quanta End</description>
+            <datatype>integer</datatype>
+            <default>1024</default>
+        </parameter>
+        <parameter  name="StepQuantaStep">
+            <label>StepQuantaStep</label>
+            <tooltip>Step Quanta Step</tooltip>
+            <description>Step Quanta Step</description>
+            <datatype>integer</datatype>
+            <default>128</default>
+        </parameter>
+        <parameter  name="PauseRateIterationMode">
+            <label>PauseRateIterationMode</label>
+            <tooltip>Pause Rate Iteration Mode</tooltip>
+            <description>Pause Rate Iteration Mode</description>
+            <datatype>string</datatype>
+            <default>FIXED</default>
+            <allowedValue label="CUSTOM">CUSTOM</allowedValue>
+            <allowedValue label="FIXED">FIXED</allowedValue>
+            <allowedValue label="STEP">STEP</allowedValue>
+        </parameter>
+        <parameter  name="CustomPauseRateList">
+            <label>CustomPauseRateList</label>
+            <tooltip>Custom Pause Rate List</tooltip>
+            <description>Custom Pause Rate List</description>
+            <mandatory>false</mandatory>
+            <datatype>integer</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="FixedPauseRate">
+            <label>FixedPauseRate</label>
+            <tooltip>Fixed Pause Rate</tooltip>
+            <description>Fixed Pause Rate</description>
+            <datatype>integer</datatype>
+            <default>100</default>
+        </parameter>
+        <parameter  name="StepPauseRateStart">
+            <label>StepPauseRateStart</label>
+            <tooltip>Step Pause Rate Start</tooltip>
+            <description>Step Pause Rate Start</description>
+            <datatype>integer</datatype>
+            <default>50</default>
+        </parameter>
+        <parameter  name="StepPauseRateEnd">
+            <label>StepPauseRateEnd</label>
+            <tooltip>Step Pause Rate End</tooltip>
+            <description>Step Pause Rate End</description>
+            <datatype>integer</datatype>
+            <default>200</default>
+        </parameter>
+        <parameter  name="StepPauseRateStep">
+            <label>StepPauseRateStep</label>
+            <tooltip>Step Pause Rate Step</tooltip>
+            <description>Step Pause Rate Step</description>
+            <datatype>integer</datatype>
+            <default>50</default>
+        </parameter>
+    </actionDecl>
+
+</query-harness>

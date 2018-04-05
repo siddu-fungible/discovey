@@ -1,0 +1,74 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/4.20/Learning"  xml:lang="en">
+<label>Learning</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    
+<actionDecl name="PingVerifyConnectivity">
+    <label>Verify Ping Status</label>
+    <tooltip>Verify if Host is pingable.</tooltip>
+    <description>Verify if Host is pingable.</description>
+        <parameter  name="ErrorOnFailure">
+            <label>ErrorOnFailure</label>
+            <tooltip>Error on Failure</tooltip>
+            <description>Error on Failure</description>
+            <datatype>boolean</datatype>
+            <default>false</default>
+        </parameter>
+        <parameter  name="DeviceList">
+            <label>DeviceList</label>
+            <tooltip>Host or Router Handle List</tooltip>
+            <description>Host or Router Handle List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="TimeInterval">
+            <label>TimeInterval</label>
+            <tooltip>Time Interval(Sec)</tooltip>
+            <description>Time Interval(Sec)</description>
+            <datatype>integer</datatype>
+            <default>1</default>
+        </parameter>
+        <parameter  name="FrameCount">
+            <label>FrameCount</label>
+            <tooltip>Frame Count</tooltip>
+            <description>Frame Count</description>
+            <datatype>integer</datatype>
+            <default>1</default>
+        </parameter>
+        <parameter  name="PingAddress">
+            <label>PingAddress</label>
+            <tooltip>Ping Address</tooltip>
+            <description>Ping Address</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>Ping Gateway</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <responseDecl>
+        <item  name="PassFailState">
+            <label>PassFailState</label>
+            <default>NONE</default>
+            <datatype>string</datatype>
+            <allowedValue label="NONE">NONE</allowedValue>
+            <allowedValue label="PASSED">PASSED</allowedValue>
+            <allowedValue label="FAILED">FAILED</allowedValue>
+        </item>
+        </responseDecl>
+    </actionDecl>
+
+
+
+	<supercedes>http://spirent.com/NTAF/harness/STC/3.80/Learning</supercedes>
+	<subharness>http://spirent.com/NTAF/harness/STC/3.80/Learning</subharness>
+
+
+</query-harness>
+

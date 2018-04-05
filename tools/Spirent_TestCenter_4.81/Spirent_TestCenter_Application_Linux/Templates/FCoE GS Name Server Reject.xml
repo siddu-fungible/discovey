@@ -1,0 +1,22 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoEGSNameServerReject" 
+    showName="FCoE GS Name Server Reject"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE GS Name Server Reject">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>03</rCtl>
+        <sId>FFFFFC</sId>
+        <frameControl>980000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:GsReject"/>
+    </pdus>
+  </template>
+</frame>

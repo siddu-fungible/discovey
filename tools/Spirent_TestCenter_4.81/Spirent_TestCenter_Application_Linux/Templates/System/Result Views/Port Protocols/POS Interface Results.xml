@@ -1,0 +1,182 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5058" serializationBase="true" 
+ Identifier="Port Protocols\POS Interface Results"
+ PrimaryClass="Port"
+ Description="object://core/Port"
+ Path="Port Protocols"
+ CustomDisplayPath="Port Traffic and Counters"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ TotalPageCount="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="POS Interface Results">
+  <RealTimeResultColumnDefinition id="5059" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 25">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5060" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 5">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5061" 
+   GroupName="POS Interface Results"
+   GroupId="object://customgroup/fdb9d7cb-e90a-4186-a50e-9901ee1b19ff/Main"
+   ColumnClassName="PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults PppProtocolResults"
+   ColumnPropertyName="PosPortState PosLcpOrNcpState PosChapAuthState PosPapAuthState Ipv4CpState Ipv4LocalAddr Ipv4PeerAddr Ipv6CpState Ipv6LocalAddr Ipv6PeerAddr MplsCpState OsiNlcpState TxMruSize RxMruSize"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, PppProtocolResults.PosPortState AS &apos;POS Port State&apos;, PppProtocolResults.PosLcpOrNcpState AS &apos;POS LCP or NCP State&apos;, PppProtocolResults.PosChapAuthState AS &apos;POS CHAP Authentication State&apos;, PppProtocolResults.PosPapAuthState AS &apos;POS PAP Auth State&apos;, PppProtocolResults.Ipv4CpState AS &apos;POS IPv4 CP State&apos;, PppProtocolResults.Ipv4LocalAddr AS &apos;IPv4 Local Address&apos;, PppProtocolResults.Ipv4PeerAddr AS &apos;IPv4 Peer Address&apos;, PppProtocolResults.Ipv6CpState AS &apos;POS IPv6 CP State&apos;, PppProtocolResults.Ipv6LocalAddr AS &apos;IPv6 Local Address&apos;, PppProtocolResults.Ipv6PeerAddr AS &apos;IPv6 Peer Address&apos;, PppProtocolResults.MplsCpState AS &apos;POS MPLS CP State&apos;, PppProtocolResults.OsiNlcpState AS &apos;POS OSI NLCP State&apos;, PppProtocolResults.TxMruSize AS &apos;TX MRU Size (bytes)&apos;, PppProtocolResults.RxMruSize AS &apos;RX MRU Size (bytes)&apos; FROM Port, PppProtocolResults, PppProtocolConfig WHERE ( PppProtocolConfig.ParentHnd = Port.Handle AND PppProtocolResults.ParentHnd = PppProtocolConfig.Handle AND Port.DataSetId = @DataSetId AND PppProtocolResults.DataSetId = @DataSetId AND PppProtocolConfig.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 6">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5063" 
+   ConfigClassId="pppprotocolconfig"
+   ResultClassId="pppprotocolresults"
+   ResultRootList="8"
+   PropertyIdArray="pppprotocolresults.poslcporncpstate pppprotocolresults.poschapauthstate pppprotocolresults.pospapauthstate pppprotocolresults.ipv4cpstate pppprotocolresults.ipv4localaddr pppprotocolresults.ipv4peeraddr pppprotocolresults.ipv6cpstate pppprotocolresults.ipv6localaddr pppprotocolresults.ipv6peeraddr pppprotocolresults.mplscpstate pppprotocolresults.osinlcpstate pppprotocolresults.txmrusize pppprotocolresults.rxmrusize"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 3">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5064" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="PosPortState"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 26">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5065" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="PosLcpOrNcpState"
+   ColumnDescription=""
+   ColumnWidth="127"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 27">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5066" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="PosChapAuthState"
+   ColumnDescription=""
+   ColumnWidth="124"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 28">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5067" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="PosPapAuthState"
+   ColumnDescription=""
+   ColumnWidth="116"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 29">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5068" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="Ipv4CpState"
+   ColumnDescription=""
+   ColumnWidth="109"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 30">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5069" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="Ipv4LocalAddr"
+   ColumnDescription=""
+   ColumnWidth="111"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 31">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5070" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="Ipv4PeerAddr"
+   ColumnDescription=""
+   ColumnWidth="108"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 32">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5071" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="Ipv6CpState"
+   ColumnDescription=""
+   ColumnWidth="109"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 33">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5072" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="Ipv6LocalAddr"
+   ColumnDescription=""
+   ColumnWidth="111"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 34">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5073" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="Ipv6PeerAddr"
+   ColumnDescription=""
+   ColumnWidth="108"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 35">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5074" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="MplsCpState"
+   ColumnDescription=""
+   ColumnWidth="114"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 36">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5075" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="OsiNlcpState"
+   ColumnDescription=""
+   ColumnWidth="119"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 37">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5076" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="TxMruSize"
+   ColumnDescription=""
+   ColumnWidth="119"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 38">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5077" 
+   ColumnClassName="PppProtocolResults"
+   ColumnPropertyName="RxMruSize"
+   ColumnDescription=""
+   ColumnWidth="119"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 39">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

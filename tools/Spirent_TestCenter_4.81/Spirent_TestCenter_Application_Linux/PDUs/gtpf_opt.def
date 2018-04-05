@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd"
+    name="gtpf_opt"
+    showName="GTPf_opt"
+    version="1.00"
+    description="This is a sample PDU library for GTPf as defined in XML Stream Editor.">
+
+    <!-- ==============================================================================================
+    = This template is used when Extended Header Flag is disabled.
+    = So the sequence number and N-PDU Number can be added seperately.
+    ==============================================================================================  -->
+
+    <TYPE_DEFS>
+        <TYPE_DEF name="SequenceNumber" type="SEQUENCE" unitType="ELEMENT" uiShowName="Sequence Number Type">
+            <FIELD name="seqno" type="INTEGER" bitLength="16" defaultValue="0" uiShowName="value" />
+        </TYPE_DEF>
+
+        <TYPE_DEF name="NpduNumber" type="SEQUENCE" unitType="ELEMENT" uiShowName="N-PDU Number">
+            <FIELD name="Npdu" type="INTEGER" bitLength="8" defaultValue="0" uiShowName="value" />
+        </TYPE_DEF>
+
+        <TYPE_DEF name="GTPfOpt" type="CHOICE" unitType="ELEMENT" uiShowName="GTPf Optional Fields">
+            <FIELD name="seqno" type="SequenceNumber" uiShowName="Sequence Number" />
+            <FIELD name="Npdu" type="NpduNumber" uiShowName="N-PDU Number" />
+        </TYPE_DEF>
+
+        <TYPE_DEF name="GTPfOptFields" type="SEQUENCE_OF" minOccurs="0" maxOccurs="2" elementType="GTPfOpt" unitType="ELEMENT"/>
+
+        <TYPE_DEF name="GTPfOptOnly" type="SEQUENCE" unitType="HEADER" portType="Ethernet" uiShowName="GTPf Optional Fields" >
+            <FIELD name="optFields" type="GTPfOptFields" uiShowName="GTPf Optional Field List"/>
+
+            <NEXT_HEADERS>
+                <NXT_HDR id="custom:Custom" name="Custom" value="0" />
+                <NXT_HDR id="customrepeat:CustomRepeat" name="CustomRepeat" value="00" />
+                <NXT_HDR id="ipv4:IPv4" name="IPv4 Header" value="4" />
+                <NXT_HDR id="ipv6:IPv6" name="IPv6 Header" value="41" />
+            </NEXT_HEADERS>
+
+        </TYPE_DEF>
+    </TYPE_DEFS>
+</PDU_LIBRARY>
+

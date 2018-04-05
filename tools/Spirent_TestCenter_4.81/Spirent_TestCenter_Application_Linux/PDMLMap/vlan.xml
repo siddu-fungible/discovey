@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PROTO  name="vlan" pduDef="ethernet" pduType="Vlan">
+    <FIELD name="vlan.priority">
+      <PDU_FIELD name="pri"/>
+    </FIELD>
+    <FIELD name="vlan.cfi">
+      <PDU_FIELD name="cfi"/>
+    </FIELD>
+    <FIELD name="vlan.id">
+      <PDU_FIELD name="id"/>
+    </FIELD>
+    <FIELD name="vlan.etype" convertToInt="false">
+      <PDU_FIELD name="type"/>
+    </FIELD>    
+</PROTO>

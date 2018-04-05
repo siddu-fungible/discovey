@@ -1,0 +1,112 @@
+{
+    "ValidateSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "Schema for the validate JSON used by methodology center configuration validation",
+        "type": "object",
+        "properties": {
+            "methodology_key": {
+                "description": "Unique identifier of the methodology for this json",
+                "type": "string"
+            },
+            "state_modifiers": {
+                "description": "A list properties whose state changes based on the value of another property",
+                "type": "array",
+                "items": {
+                    "$ref": "#/ValidateSchema/definitions/state_modifier"
+                }
+            },
+            "validations": {
+                "description": "An ordered list of properties whose values require validation",
+                "type": "array",
+                "items": {
+                    "$ref": "#/ValidateSchema/definitions/validation"
+                }
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "methodology_key"
+        ],
+        "definitions": {
+            "state_modifier": {
+                "description": "Modifiers that determine the disabled state of front end properties",
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "description": "An author provided description of this state modifier",
+                        "type": "string"
+                    },
+                    "property": {
+                        "description": "Target property of the state change",
+                        "type": "string"
+                    },
+                    "state_type": {
+                        "description": "Type of state change based on the output of the expression in the value key",
+                        "enum": [
+                            "disabled",
+                            "hidden"
+                        ]
+                    },
+                    "type": {
+                        "description": "Type of information in the value key",
+                        "enum": [
+                            "expression"
+                        ]
+                    },
+                    "value": {
+                        "description": "JavaScript expression to use in determining the state of the target property. Evaluating to True will execute the state_type setting.",
+                        "type": "string"
+                    },
+                    "message": {
+                        "description": "Message for the front end on why the state changed to the state_type",
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "property",
+                    "state_type",
+                    "type",
+                    "value",
+                    "message"
+                ]
+            },
+            "validation": {
+                "description": "Validation rules for formatting, value entries, and any 'run' invalidations",
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "description": "An author provided description for this validator",
+                        "type": "string"
+                    },
+                    "property": {
+                        "description": "Target property for the validation",
+                        "type": "string"
+                    },
+                    "type": {
+                        "description": "Type of information in the value key",
+                        "enum": [
+                            "regex",
+                            "expression"
+                        ]
+                    },
+                    "value": {
+                        "description": "JavaScript expression or RegEx to use in validating the target property. Evaluating to False is a failed validation.",
+                        "type": "string"
+                    },
+                    "message": {
+                        "description": "Message to display on the front end if the validation fails.",
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "property",
+                    "type",
+                    "value",
+                    "message"
+                ]
+            }
+        }
+    }
+}

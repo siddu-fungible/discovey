@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5132" serializationBase="true" 
+ Identifier="Carrier Ethernet\EOAM Results\LB Results"
+ PrimaryClass="EoamMaintenancePointConfig"
+ Description="object://eoam/EoamMaintenancePointConfig"
+ Path="Carrier Ethernet\EOAM Results"
+ CustomDisplayPath="Carrier Ethernet\EOAM"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="LB Results">
+  <RealTimeResultGroupDefinition id="5133" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName=""
+   ColumnPropertyName=""
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 8">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5134" 
+   GroupName="EOAM Loopback Results"
+   GroupId="object://customgroup/6741a033-f9bc-4662-a89f-62514a34daff/Main"
+   ColumnClassName="EoamLoopbackResults EoamLoopbackResults EoamLoopbackResults EoamLoopbackResults EoamLoopbackResults EoamLoopbackResults EoamLoopbackResults EoamLoopbackResults"
+   ColumnPropertyName="MaintenancePointName LoopbackMsgRxCount LoopbackResponseTxCount LoopbackResponseRxCount LoopbackMsgTxCount NumOfTimeouts NumOfTransactionIdMismatches DroppedPktCount"
+   SqlString=" SELECT EoamLoopbackResults.MaintenancePointName AS &apos;MP Name&apos;, EoamLoopbackResults.LoopbackMsgRxCount AS &apos;LB Message RX Count&apos;, EoamLoopbackResults.LoopbackResponseTxCount AS &apos;LB Response TX Count&apos;, EoamLoopbackResults.LoopbackResponseRxCount AS &apos;LB Response RX Count&apos;, EoamLoopbackResults.LoopbackMsgTxCount AS &apos;LB Message TX Count&apos;, EoamLoopbackResults.NumOfTimeouts AS &apos;# Timeouts&apos;, EoamLoopbackResults.NumOfTransactionIdMismatches AS &apos;# Transaction ID Mismatches&apos;, EoamLoopbackResults.DroppedPktCount AS &apos;Dropped Packet Count&apos; FROM EoamMaintenancePointConfig, EoamLoopbackResults WHERE ( EoamLoopbackResults.ParentHnd = EoamMaintenancePointConfig.Handle AND EoamMaintenancePointConfig.DataSetId = @DataSetId AND EoamLoopbackResults.DataSetId = @DataSetId  )"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 9">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5136" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="MaintenancePointName"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 96">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5137" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="LoopbackMsgRxCount"
+   ColumnDescription=""
+   ColumnWidth="126"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 97">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5138" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="LoopbackResponseTxCount"
+   ColumnDescription=""
+   ColumnWidth="130"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 98">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5139" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="LoopbackResponseRxCount"
+   ColumnDescription=""
+   ColumnWidth="130"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 99">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5140" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="LoopbackMsgTxCount"
+   ColumnDescription=""
+   ColumnWidth="125"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 100">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5141" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="NumOfTimeouts"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 101">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5142" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="NumOfTransactionIdMismatches"
+   ColumnDescription=""
+   ColumnWidth="164"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 102">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5143" 
+   ColumnClassName="EoamLoopbackResults"
+   ColumnPropertyName="DroppedPktCount"
+   ColumnDescription=""
+   ColumnWidth="129"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 103">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="16" 
+   ConfigClassId="eoammaintenancepointconfig"
+   ResultClassId="eoamloopbackresults"
+   ResultRootList="8"
+   PropertyIdArray=""
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   Name="ResultQuery 4">
+  </ResultQuery>
+</ResultDataSet>

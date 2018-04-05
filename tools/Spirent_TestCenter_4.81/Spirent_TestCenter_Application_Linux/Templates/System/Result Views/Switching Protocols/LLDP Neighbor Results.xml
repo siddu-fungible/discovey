@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="611" serializationBase="true" 
+ Identifier="Switching Protocols\LLDP Neighbor Results"
+ PrimaryClass="EmulatedDevice"
+ Description="object://lldp/LldpNeighborResults"
+ Path="Switching Protocols"
+ CustomDisplayPath="Switching\LLDP"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ IsDeprecated="FALSE"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="LLDP Neighbor Results">
+  <Relation type="ResultChild" target="1373"/>
+  <Relation type="ResultChild" target="1374"/>
+  <Relation type="ResultChild" target="1375"/>
+  <Relation type="ResultChild" target="1376"/>
+  <ResultQuery id="856" 
+   ConfigClassId="lldpnodeconfig"
+   ResultClassId="lldpneighborresults"
+   ResultRootList="2"
+   PropertyIdArray="lldpneighborresults.chassisid lldpneighborresults.chassisidsubtype lldpneighborresults.portid lldpneighborresults.portidsubtype lldpneighborresults.timetolive"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 5">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="857" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 127">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="858" 
+   ColumnClassName="EmulatedDevice"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="82"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 128">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="859" 
+   ColumnClassName="LldpNeighborResults"
+   ColumnPropertyName="ChassisIdSubtype"
+   ColumnDescription=""
+   ColumnWidth="113"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 129">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="860" 
+   ColumnClassName="LldpNeighborResults"
+   ColumnPropertyName="ChassisId"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 130">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="861" 
+   ColumnClassName="LldpNeighborResults"
+   ColumnPropertyName="PortIdSubtype"
+   ColumnDescription=""
+   ColumnWidth="97"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 131">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="862" 
+   ColumnClassName="LldpNeighborResults"
+   ColumnPropertyName="PortId"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 132">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="863" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port EmulatedDevice"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 11">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="864" 
+   GroupName="Main"
+   GroupId="object://customgroup/19e2a7a6-b589-4f77-8207-3cddee9c45c7/Main"
+   ColumnClassName="LldpNeighborResults LldpNeighborResults LldpNeighborResults LldpNeighborResults LldpNeighborResults"
+   ColumnPropertyName="ChassisIdSubtype ChassisId PortIdSubtype PortId TimeToLive"
+   SqlString="SELECT Port.Name AS &apos;Port Name&apos;, EmulatedDevice.Name AS &apos;Device Name&apos;, LldpNeighborResults.ChassisIdSubtype AS &apos;Chassis ID Subtype&apos;, LldpNeighborResults.ChassisId AS &apos;Chassis ID&apos;, LldpNeighborResults.PortIdSubtype AS &apos;Port ID Subtype&apos;, LldpNeighborResults.PortId AS &apos;Port ID&apos;, LldpNeighborResults.TimeToLive AS &apos;Time To Live&apos; FROM AllDevice AS EmulatedDevice, Port, LldpNeighborResults, LldpNodeConfig, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = EmulatedDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND LldpNodeConfig.ParentHnd = EmulatedDevice.Handle AND LldpNeighborResults.ParentHnd = LldpNodeConfig.Handle AND EmulatedDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND LldpNeighborResults.DataSetId = @DataSetId AND LldpNodeConfig.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 12">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="1369" 
+   ColumnClassName="LldpNeighborResults"
+   ColumnPropertyName="TimeToLive"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 155">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

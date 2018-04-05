@@ -1,0 +1,1223 @@
+result_set:
+  bll:
+    group: port
+    plugin: l2l3
+  derived_facts:
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+      query: total_octet_rate*8
+    description: Total Rx Rate(bits per sec)
+    display_name: Total Rx Rate
+    name: total_bit_rate
+    referred_facts:
+    - total_octet_rate
+  - db:
+      base_unit: bits
+      data_type: integer
+      query: total_octet_count*8
+    description: Total Rx Count(bits)
+    display_name: Total Rx Count
+    name: total_bit_count
+    referred_facts:
+    - total_octet_count
+  description: Basic stats for RX port
+  dimension_sets:
+  - iteration
+  - port
+  facts:
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Total Rx Count(frames)
+    display_name: Total Rx Count
+    il:
+      column_def: FrameCount
+      data_type: U64
+    name: total_frame_count
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Total Rx Count(bytes)
+    display_name: Total Rx Count
+    il:
+      column_def: ByteCount
+      data_type: U64
+    name: total_octet_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx Sig Count
+    display_name: Rx Sig Count
+    il:
+      column_def: SigCount
+      data_type: U64
+    name: sig_frame_count
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Rx Min Frame Length
+    display_name: Rx Min Frame Length
+    il:
+      column_def: MinFrameLength
+      data_type: U64
+    name: min_frame_length
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Rx Max Frame Length
+    display_name: Rx Max Frame Length
+    il:
+      column_def: MaxFrameLength
+      data_type: U64
+    name: max_frame_length
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Rx PRBS Fill Count
+    display_name: Rx PRBS Fill Count
+    il:
+      column_def: PRBSFillByteCount
+      data_type: U64
+    name: prbs_fill_octet_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx Jumbo Frame Count
+    display_name: Rx Jumbo Frame Count
+    il:
+      column_def: JumboFrameCount
+      data_type: U64
+    name: jumbo_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx Pause Frame Count
+    display_name: Rx Pause Frame Count
+    il:
+      column_def: PauseFrameCount
+      data_type: U64
+    name: pause_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx IPv4 Frame Count
+    display_name: Rx IPv4 Frame Count
+    il:
+      column_def: IPv4FrameCount
+      data_type: U64
+    name: ipv4_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx IPv6 Frame Count
+    display_name: Rx IPv6 Frame Count
+    il:
+      column_def: IPv6FrameCount
+      data_type: U64
+    name: ipv6_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx IPv6 over IPv4 Frame Count
+    display_name: Rx IPv6 over IPv4 Frame Count
+    il:
+      column_def: IPv6OverIPv4FrameCount
+      data_type: U64
+    name: ipv6_over_ipv4_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx TCP Frame Count
+    display_name: Rx TCP Frame Count
+    il:
+      column_def: TCPFrameCount
+      data_type: U64
+    name: tcp_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx UDP Frame Count
+    display_name: Rx UDP Frame Count
+    il:
+      column_def: UDPFrameCount
+      data_type: U64
+    name: udp_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx ICMP Frame Count
+    display_name: Rx ICMP Frame Count
+    il:
+      column_def: ICMPFrameCount
+      data_type: U64
+    name: icmp_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx VLAN Frame Count
+    display_name: Rx VLAN Frame Count
+    il:
+      column_def: VLANFrameCount
+      data_type: U64
+    name: vlan_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx MPLS Frame Count
+    display_name: Rx MPLS Frame Count
+    il:
+      column_def: MPLSFrameCount
+      data_type: U64
+    name: mpls_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx FCS Error Frame Count
+    display_name: Rx FCS Error Frame Count
+    il:
+      column_def: FCSErrCount
+      data_type: U64
+    name: fcs_error_frame_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx IPv4 Checksum Error Count
+    display_name: Rx IPv4 Checksum Error Count
+    il:
+      column_def: IPHdrXSumErrCount
+      data_type: U64
+    name: ipv4_checksum_error_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx TCP Checksum Error Count
+    display_name: Rx TCP Checksum Error Count
+    il:
+      column_def: TCPXSumErrCount
+      data_type: U64
+    name: tcp_checksum_error_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx UDP Checksum Error Count
+    display_name: Rx UDP Checksum Error Count
+    il:
+      column_def: UDPXSumErrCount
+      data_type: U64
+    name: udp_checksum_error_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx Undersize Frame Count
+    display_name: Rx Undersize Frame Count
+    il:
+      column_def: UndersizeFrameCount
+      data_type: U64
+    name: undersize_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx Oversize Frame Count
+    display_name: Rx Oversize Frame Count
+    il:
+      column_def: OversizeFrameCount
+      data_type: U64
+    name: oversize_frame_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PRBS Bit Error Count
+    display_name: Rx PRBS Bit Error Count
+    il:
+      column_def: PRBSBitErrCount
+      data_type: U64
+    name: prbs_bit_error_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx Hardware Count Previous Second
+    display_name: Rx Hardware Count Previous Second
+    il:
+      column_def: HwFrameRate
+      data_type: U64
+    name: hw_frame_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 1
+    display_name: Trigger 1
+    il:
+      column_def: Trigger0Count
+      data_type: U64
+    name: trigger1_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 2
+    display_name: Trigger 2
+    il:
+      column_def: Trigger1Count
+      data_type: U64
+    name: trigger2_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 3
+    display_name: Trigger 3
+    il:
+      column_def: Trigger2Count
+      data_type: U64
+    name: trigger3_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 4
+    display_name: Trigger 4
+    il:
+      column_def: Trigger3Count
+      data_type: U64
+    name: trigger4_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 5
+    display_name: Trigger 5
+    il:
+      column_def: Trigger4Count
+      data_type: U64
+    name: trigger5_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 6
+    display_name: Trigger 6
+    il:
+      column_def: Trigger5Count
+      data_type: U64
+    name: trigger6_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 7
+    display_name: Trigger 7
+    il:
+      column_def: Trigger6Count
+      data_type: U64
+    name: trigger7_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 8
+    display_name: Trigger 8
+    il:
+      column_def: Trigger7Count
+      data_type: U64
+    name: trigger8_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: ComboTrigger
+    display_name: ComboTrigger
+    il:
+      column_def: ComboTriggerCount
+      data_type: U64
+    name: combo_trigger_count
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Total Rx Rate(frames per sec)
+    display_name: Total Rx Rate
+    il:
+      column_def: FrameRate
+      data_type: U64
+    name: total_frame_rate
+  - db:
+      base_unit: bytes_per_sec
+      data_type: integer
+    description: Total Rx Rate(bytes per sec)
+    display_name: Total Rx Rate
+    il:
+      column_def: ByteRate
+      data_type: U64
+    name: total_octet_rate
+  - db:
+      base_unit: bits
+      data_type: integer
+    description: Rx L1 Count
+    display_name: Rx L1 Count
+    il:
+      column_def: L1BitCount
+      data_type: U64
+    name: l1_bit_count
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+    description: Rx L1 Rate
+    display_name: Rx L1 Rate
+    il:
+      column_def: L1BitRate
+      data_type: U64
+    name: l1_bit_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx Sig Rate
+    display_name: Rx Sig Rate
+    il:
+      column_def: SigRate
+      data_type: U64
+    name: sig_frame_rate
+  - db:
+      base_unit: bytes_per_sec
+      data_type: integer
+    description: Rx PRBS Fill Rate
+    display_name: Rx PRBS Fill Rate
+    il:
+      column_def: PRBSFillByteRate
+      data_type: U64
+    name: prbs_fill_octet_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx Jumbo Rate
+    display_name: Rx Jumbo Rate
+    il:
+      column_def: JumboFrameRate
+      data_type: U64
+    name: jumbo_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx Pause Rate
+    display_name: Rx Pause Rate
+    il:
+      column_def: PauseFrameRate
+      data_type: U64
+    name: pause_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx IPv4 Frame Rate
+    display_name: Rx IPv4 Frame Rate
+    il:
+      column_def: IPv4FrameRate
+      data_type: U64
+    name: ipv4_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx IPv6 Rate
+    display_name: Rx IPv6 Rate
+    il:
+      column_def: IPv6FrameRate
+      data_type: U64
+    name: ipv6_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx IPv6 over IPv4 Rate
+    display_name: Rx IPv6 over IPv4 Rate
+    il:
+      column_def: IPv6OverIPv4FrameRate
+      data_type: U64
+    name: ipv6_over_ipv4_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx TCP Rate
+    display_name: Rx TCP Rate
+    il:
+      column_def: TCPFrameRate
+      data_type: U64
+    name: tcp_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx UDP Rate
+    display_name: Rx UDP Rate
+    il:
+      column_def: UDPFrameRate
+      data_type: U64
+    name: udp_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx ICMP Rate
+    display_name: Rx ICMP Rate
+    il:
+      column_def: ICMPFrameRate
+      data_type: U64
+    name: icmp_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx VLAN Rate
+    display_name: Rx VLAN Rate
+    il:
+      column_def: VLANFrameRate
+      data_type: U64
+    name: vlan_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx MPLS Rate
+    display_name: Rx MPLS Rate
+    il:
+      column_def: MPLSFrameRate
+      data_type: U64
+    name: mpls_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx FCS Error Rate
+    display_name: Rx FCS Error Rate
+    il:
+      column_def: FCSErrRate
+      data_type: U64
+    name: fcs_error_frame_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx IPv4 Checksum Error Rate
+    display_name: Rx IPv4 Checksum Error Rate
+    il:
+      column_def: IPHdrXSumErrRate
+      data_type: U64
+    name: ipv4_checksum_error_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx TCP Checksum Error Rate
+    display_name: Rx TCP Checksum Error Rate
+    il:
+      column_def: TCPXSumErrRate
+      data_type: U64
+    name: tcp_checksum_error_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx UDP Checksum Error Rate
+    display_name: Rx UDP Checksum Error Rate
+    il:
+      column_def: UDPXSumErrRate
+      data_type: U64
+    name: udp_checksum_error_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx Undersize Rate
+    display_name: Rx Undersize Rate
+    il:
+      column_def: UndersizeFrameRate
+      data_type: U64
+    name: undersize_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx Oversize Rate
+    display_name: Rx Oversize Rate
+    il:
+      column_def: OversizeFrameRate
+      data_type: U64
+    name: oversize_frame_rate
+  - db:
+      base_unit: bits_per_sec
+      data_type: integer
+    description: Rx PRBS Bit Error Rate
+    display_name: Rx PRBS Bit Error Rate
+    il:
+      column_def: PRBSBitErrRate
+      data_type: U64
+    name: prbs_bit_error_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 1 Rate
+    display_name: Trigger 1 Rate
+    il:
+      column_def: Trigger0Rate
+      data_type: U64
+    name: trigger1_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 2 Rate
+    display_name: Trigger 2 Rate
+    il:
+      column_def: Trigger1Rate
+      data_type: U64
+    name: trigger2_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 3 Rate
+    display_name: Trigger 3 Rate
+    il:
+      column_def: Trigger2Rate
+      data_type: U64
+    name: trigger3_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 4 Rate
+    display_name: Trigger 4 Rate
+    il:
+      column_def: Trigger3Rate
+      data_type: U64
+    name: trigger4_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 5 Rate
+    display_name: Trigger 5 Rate
+    il:
+      column_def: Trigger4Rate
+      data_type: U64
+    name: trigger5_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 6 Rate
+    display_name: Trigger 6 Rate
+    il:
+      column_def: Trigger5Rate
+      data_type: U64
+    name: trigger6_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 7 Rate
+    display_name: Trigger 7 Rate
+    il:
+      column_def: Trigger6Rate
+      data_type: U64
+    name: trigger7_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Trigger 8 Rate
+    display_name: Trigger 8 Rate
+    il:
+      column_def: Trigger7Rate
+      data_type: U64
+    name: trigger8_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: ComboTrigger Rate
+    display_name: ComboTrigger Rate
+    il:
+      column_def: ComboTriggerRate
+      data_type: U64
+    name: combo_trigger_rate
+  - db:
+      base_unit: cells
+      data_type: integer
+    description: Total Rx Count(cells)
+    display_name: Total Rx Count
+    il:
+      column_def: CellCount
+      data_type: U64
+    name: total_cell_count
+  - db:
+      base_unit: cells_per_sec
+      data_type: integer
+    description: Total Rx Rate(cells per sec)
+    display_name: Total Rx Rate
+    il:
+      column_def: CellRate
+      data_type: U64
+    name: total_cell_rate
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Count
+    display_name: Rx PFC Count
+    il:
+      column_def: PrioPauseFrameCount
+      data_type: U64
+    name: pfc_frame_count
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Rate
+    display_name: Rx PFC Rate
+    il:
+      column_def: PrioPauseFrameRate
+      data_type: U64
+    name: pfc_frame_rate
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx FCoE Count
+    display_name: Rx FCoE Count
+    il:
+      column_def: FCoEFrameCount
+      data_type: U64
+    name: fcoe_frame_count
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx FCoE Rate
+    display_name: Rx FCoE Rate
+    il:
+      column_def: FCoEFrameRate
+      data_type: U64
+    name: fcoe_frame_rate
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority0 Count
+    display_name: Rx PFC Priority0 Count
+    il:
+      column_def: Prio0PauseFrameCount
+      data_type: U64
+    name: pfc_pri0_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority1 Count
+    display_name: Rx PFC Priority1 Count
+    il:
+      column_def: Prio1PauseFrameCount
+      data_type: U64
+    name: pfc_pri1_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority2 Count
+    display_name: Rx PFC Priority2 Count
+    il:
+      column_def: Prio2PauseFrameCount
+      data_type: U64
+    name: pfc_pri2_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority3 Count
+    display_name: Rx PFC Priority3 Count
+    il:
+      column_def: Prio3PauseFrameCount
+      data_type: U64
+    name: pfc_pri3_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority4 Count
+    display_name: Rx PFC Priority4 Count
+    il:
+      column_def: Prio4PauseFrameCount
+      data_type: U64
+    name: pfc_pri4_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority5 Count
+    display_name: Rx PFC Priority5 Count
+    il:
+      column_def: Prio5PauseFrameCount
+      data_type: U64
+    name: pfc_pri5_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority6 Count
+    display_name: Rx PFC Priority6 Count
+    il:
+      column_def: Prio6PauseFrameCount
+      data_type: U64
+    name: pfc_pri6_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PFC Priority7 Count
+    display_name: Rx PFC Priority7 Count
+    il:
+      column_def: Prio7PauseFrameCount
+      data_type: U64
+    name: pfc_pri7_frame_count
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority0 Rate
+    display_name: Rx PFC Priority0 Rate
+    il:
+      column_def: Prio0PauseFrameRate
+      data_type: U64
+    name: pfc_pri0_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority1 Rate
+    display_name: Rx PFC Priority1 Rate
+    il:
+      column_def: Prio1PauseFrameRate
+      data_type: U64
+    name: pfc_pri1_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority2 Rate
+    display_name: Rx PFC Priority2 Rate
+    il:
+      column_def: Prio2PauseFrameRate
+      data_type: U64
+    name: pfc_pri2_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority3 Rate
+    display_name: Rx PFC Priority3 Rate
+    il:
+      column_def: Prio3PauseFrameRate
+      data_type: U64
+    name: pfc_pri3_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority4 Rate
+    display_name: Rx PFC Priority4 Rate
+    il:
+      column_def: Prio4PauseFrameRate
+      data_type: U64
+    name: pfc_pri4_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority5 Rate
+    display_name: Rx PFC Priority5 Rate
+    il:
+      column_def: Prio5PauseFrameRate
+      data_type: U64
+    name: pfc_pri5_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority6 Rate
+    display_name: Rx PFC Priority6 Rate
+    il:
+      column_def: Prio6PauseFrameRate
+      data_type: U64
+    name: pfc_pri6_frame_rate
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PFC Priority7 Rate
+    display_name: Rx PFC Priority7 Rate
+    il:
+      column_def: Prio7PauseFrameRate
+      data_type: U64
+    name: pfc_pri7_frame_rate
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority0 Quanta
+    display_name: Rx PFC Priority0 Quanta
+    il:
+      column_def: Prio0PauseQuanta
+      data_type: U64
+    name: pfc_pri0_quanta
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority1 Quanta
+    display_name: Rx PFC Priority1 Quanta
+    il:
+      column_def: Prio1PauseQuanta
+      data_type: U64
+    name: pfc_pri1_quanta
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority2 Quanta
+    display_name: Rx PFC Priority2 Quanta
+    il:
+      column_def: Prio2PauseQuanta
+      data_type: U64
+    name: pfc_pri2_quanta
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority3 Quanta
+    display_name: Rx PFC Priority3 Quanta
+    il:
+      column_def: Prio3PauseQuanta
+      data_type: U64
+    name: pfc_pri3_quanta
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority4 Quanta
+    display_name: Rx PFC Priority4 Quanta
+    il:
+      column_def: Prio4PauseQuanta
+      data_type: U64
+    name: pfc_pri4_quanta
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority5 Quanta
+    display_name: Rx PFC Priority5 Quanta
+    il:
+      column_def: Prio5PauseQuanta
+      data_type: U64
+    name: pfc_pri5_quanta
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority6 Quanta
+    display_name: Rx PFC Priority6 Quanta
+    il:
+      column_def: Prio6PauseQuanta
+      data_type: U64
+    name: pfc_pri6_quanta
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Rx PFC Priority7 Quanta
+    display_name: Rx PFC Priority7 Quanta
+    il:
+      column_def: Prio7PauseQuanta
+      data_type: U64
+    name: pfc_pri7_quanta
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Rx PRBS Error Count
+    display_name: Rx PRBS Error Count
+    il:
+      column_def: PRBSErrFrameCount
+      data_type: U64
+    name: prbs_error_frame_count
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: Rx PRBS Error Rate
+    display_name: Rx PRBS Error Rate
+    il:
+      column_def: PRBSErrFrameRate
+      data_type: U64
+    name: prbs_error_frame_rate
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: User Defined Capture Counter 1
+    display_name: User Defined Capture Counter 1
+    il:
+      column_def: UserDefinedCounter1Count
+      data_type: U64
+    name: user_defined_frame_count1
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: User Defined Capture Rate 1
+    display_name: User Defined Capture Rate 1
+    il:
+      column_def: UserDefinedCounter1Rate
+      data_type: U64
+    name: user_defined_frame_rate1
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: User Defined Capture Counter 2
+    display_name: User Defined Capture Counter 2
+    il:
+      column_def: UserDefinedCounter2Count
+      data_type: U64
+    name: user_defined_frame_count2
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: User Defined Capture Rate 2
+    display_name: User Defined Capture Rate 2
+    il:
+      column_def: UserDefinedCounter2Rate
+      data_type: U64
+    name: user_defined_frame_rate2
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: User Defined Capture Counter 3
+    display_name: User Defined Capture Counter 3
+    il:
+      column_def: UserDefinedCounter3Count
+      data_type: U64
+    name: user_defined_frame_count3
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: User Defined Capture Rate 3
+    display_name: User Defined Capture Rate 3
+    il:
+      column_def: UserDefinedCounter3Rate
+      data_type: U64
+    name: user_defined_frame_rate3
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: User Defined Capture Counter 4
+    display_name: User Defined Capture Counter 4
+    il:
+      column_def: UserDefinedCounter4Count
+      data_type: U64
+    name: user_defined_frame_count4
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: User Defined Capture Rate 4
+    display_name: User Defined Capture Rate 4
+    il:
+      column_def: UserDefinedCounter4Rate
+      data_type: U64
+    name: user_defined_frame_rate4
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: User Defined Capture Counter 5
+    display_name: User Defined Capture Counter 5
+    il:
+      column_def: UserDefinedCounter5Count
+      data_type: U64
+    name: user_defined_frame_count5
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: User Defined Capture Rate 5
+    display_name: User Defined Capture Rate 5
+    il:
+      column_def: UserDefinedCounter5Rate
+      data_type: U64
+    name: user_defined_frame_rate5
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: User Defined Capture Counter 6
+    display_name: User Defined Capture Counter 6
+    il:
+      column_def: UserDefinedCounter6Count
+      data_type: U64
+    name: user_defined_frame_count6
+  - db:
+      base_unit: frames_per_sec
+      data_type: integer
+    description: User Defined Capture Rate 6
+    display_name: User Defined Capture Rate 6
+    il:
+      column_def: UserDefinedCounter6Rate
+      data_type: U64
+    name: user_defined_frame_rate6
+  - db:
+      base_unit: usecs
+      data_type: number
+    description: Avg Latency
+    display_name: Avg Latency
+    il:
+      column_def: CAST(AvgXFerDelay AS DOUBLE)/100
+      data_type: U64
+    name: avg_latency
+  - db:
+      base_unit: usecs
+      data_type: number
+    description: Min Latency
+    display_name: Min Latency
+    il:
+      column_def: CAST(MinXFerDelay AS DOUBLE)/100
+      data_type: U64
+    name: min_latency
+  - db:
+      base_unit: usecs
+      data_type: number
+    description: Max Latency
+    display_name: Max Latency
+    il:
+      column_def: CAST(MaxXFerDelay AS DOUBLE)/100
+      data_type: U64
+    name: max_latency
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Out of Sequence Frame Count
+    display_name: Out of Sequence Frame Count
+    il:
+      column_def: OutSeqCount
+      data_type: U64
+    name: out_seq_frame_count
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Preamble Total Bytes
+    display_name: Preamble Total Bytes
+    il:
+      column_def: PreambleBytes
+      data_type: U64
+    name: preamble_total_bytes
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Preamble Minimum Length
+    display_name: Preamble Minimum Length
+    il:
+      column_def: PreambleBytesMinLen
+      data_type: U64
+    name: preamble_min_length
+  - db:
+      base_unit: bytes
+      data_type: integer
+    description: Preamble Maximum Length
+    display_name: Preamble Maximum Length
+    il:
+      column_def: PreambleBytesMaxLen
+      data_type: U64
+    name: preamble_max_length
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Dropped Count
+    display_name: Dropped Count
+    il:
+      column_def: LostPacketCount
+      data_type: U64
+    name: dropped_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: In-order Count
+    display_name: In-order Count
+    il:
+      column_def: InOrderPacketCount
+      data_type: U64
+    name: in_order_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Reordered Count
+    display_name: Reordered Count
+    il:
+      column_def: ReorderedPacketCount
+      data_type: U64
+    name: reordered_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Duplicate Count
+    display_name: Duplicate Count
+    il:
+      column_def: DuplicatePacketCount
+      data_type: U64
+    name: duplicate_frame_count
+  - db:
+      base_unit: frames
+      data_type: integer
+    description: Late Count
+    display_name: Late Count
+    il:
+      column_def: LatePacketCount
+      data_type: U64
+    name: late_frame_count
+  - db:
+      base_unit: usecs
+      data_type: number
+    description: First Arrival Time
+    display_name: First Arrival Time
+    il:
+      column_def: CAST(FirstArrivalTime AS DOUBLE)/100
+      data_type: U64
+    name: first_arrival_time
+  - db:
+      base_unit: usecs
+      data_type: number
+    description: Last Arrival Time
+    display_name: Last Arrival Time
+    il:
+      column_def: CAST(LastArrivalTime AS DOUBLE)/100
+      data_type: U64
+    name: last_arrival_time
+  - db:
+      base_unit: codewords
+      data_type: integer
+    description: Corrected RS FEC Errors Count
+    display_name: Corrected RS FEC Errors Count
+    il:
+      column_def: CorrectedRsFecErrorCount
+      data_type: U64
+    name: corrected_rs_fec_error_count
+  - db:
+      base_unit: codewords
+      data_type: integer
+    description: Uncorrected RS FEC Errors Count
+    display_name: Uncorrected RS FEC Errors Count
+    il:
+      column_def: UncorrectedRsFecErrorCount
+      data_type: U64
+    name: uncorrected_rs_fec_error_count
+  - db:
+      base_unit: codewords
+      data_type: integer
+    description: Corrected BaseR FEC Errors Count
+    display_name: Corrected BaseR FEC Errors Count
+    il:
+      column_def: CorrectedBaseRFecErrorCount
+      data_type: U64
+    name: corrected_base_r_fec_error_count
+  - db:
+      base_unit: codewords
+      data_type: integer
+    description: Uncorrected BaseR FEC Errors Count
+    display_name: Uncorrected BaseR FEC Errors Count
+    il:
+      column_def: UncorrectedBaseRFecErrorCount
+      data_type: U64
+    name: uncorrected_base_r_fec_error_count
+  - db:
+      base_unit: none
+      data_type: integer
+    description: Corrected RS FEC Symbols
+    display_name: Corrected RS FEC Symbols
+    il:
+      column_def: CorrectedRsFecSymbols
+      data_type: U64
+    name: corrected_rs_fec_symbols
+  - db:
+      base_unit: codewords_per_sec
+      data_type: number
+    description: Pre RS FEC Error Rate
+    display_name: Pre RS FEC Error Rate
+    il:
+      column_def: PreRsFecSerRate
+      data_type: U64
+    name: pre_rs_fec_ser_rate
+  - db:
+      base_unit: codewords_per_sec
+      data_type: number
+    description: Post RS FEC Error Rate
+    display_name: Post RS FEC Error Rate
+    il:
+      column_def: PostRsFecSerRate
+      data_type: U64
+    name: post_rs_fec_ser_rate
+  - db:
+      base_unit: codewords_per_sec
+      data_type: number
+    description: Pre Base-R FEC Error Rate
+    display_name: Pre Base-R FEC Error Rate
+    il:
+      column_def: PreBaseRFecSerRate
+      data_type: U64
+    name: pre_base_r_fec_ser_rate
+  - db:
+      base_unit: codewords_per_sec
+      data_type: number
+    description: Post Base-R FEC Error Rate
+    display_name: Post Base-R FEC Error Rate
+    il:
+      column_def: PostBaseRFecSerRate
+      data_type: U64
+    name: post_base_r_fec_ser_rate
+  il:
+    default_subscription_facts: []
+    message_set: Analyzer_2
+    table_name: PortStats
+  name: rx_port_basic_stats
+  primary_dimension_set: port
+  test: false

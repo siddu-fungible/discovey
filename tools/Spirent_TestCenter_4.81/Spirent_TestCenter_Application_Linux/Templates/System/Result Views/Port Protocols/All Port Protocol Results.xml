@@ -1,0 +1,2029 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5299" serializationBase="true" 
+ Identifier="Port Protocols\All Port Protocol Results"
+ PrimaryClass="Port"
+ Description="object://core/Port"
+ Path="Port Protocols"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ PageNumber="1"
+ TotalPageCount="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ IsDeprecated="TRUE"
+ Name="All Port Protocol Results">
+  <RealTimeResultColumnDefinition id="5300" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 238">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5301" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   SqlString=""
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 16">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5302" 
+   GroupName="ARP/ND Results"
+   GroupId="object://customgroup/bb3e7163-0b6b-41a7-94da-78ce3581ef03/ARP/ND Results"
+   ColumnClassName="ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults ArpNdResults"
+   ColumnPropertyName="RxArpReplyCount TxArpReplyCount RxArpRequestCount TxArpRequestCount TxNeighborAdvertisementCount TxNeighborSolicitationCount RxGratuitousArpCount RxIcmpV6ChecksumErrorCount RxIcmpV6CodeErrorCount RxIcmpV6LengthErrorCount RxIpV6HopLimitErrorCount RxIpV6PayloadLengthErrorCount RxNdDestAddrErrorCount RxNdOptionErrorCount RxNdTargetAddrErrorCount RxNeighborAdvertisementCount RxNeighborSolicitationCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, ArpNdResults.RxArpReplyCount AS &apos;ARP Replies Received&apos;, ArpNdResults.TxArpReplyCount AS &apos;ARP Replies Sent&apos;, ArpNdResults.RxArpRequestCount AS &apos;ARP Requests Received&apos;, ArpNdResults.TxArpRequestCount AS &apos;ARP Requests Sent&apos;, ArpNdResults.TxNeighborAdvertisementCount AS &apos;Neighbor Advertisements Sent&apos;, ArpNdResults.TxNeighborSolicitationCount AS &apos;Neighbor Solicitations Sent&apos;, ArpNdResults.RxGratuitousArpCount AS &apos;Gratuitous ARP Received&apos;, ArpNdResults.RxIcmpV6ChecksumErrorCount AS &apos;ICMPV6 Checksum Errors Received&apos;, ArpNdResults.RxIcmpV6CodeErrorCount AS &apos;ICMPV6 Code Errors Received&apos;, ArpNdResults.RxIcmpV6LengthErrorCount AS &apos;ICMPV6 Length Errors Received&apos;, ArpNdResults.RxIpV6HopLimitErrorCount AS &apos;Ipv6 Hop Limit Errors Received&apos;, ArpNdResults.RxIpV6PayloadLengthErrorCount AS &apos;IPv6 Payload Length Errors Received&apos;, ArpNdResults.RxNdDestAddrErrorCount AS &apos;Neighbor Discovery Dest Address Errors Received&apos;, ArpNdResults.RxNdOptionErrorCount AS &apos;Neighbor Options Errors Received&apos;, ArpNdResults.RxNdTargetAddrErrorCount AS &apos;Neighbor Discovery Target Address Errors Received&apos;, ArpNdResults.RxNeighborAdvertisementCount AS &apos;Neighbor Advertisements Received&apos;, ArpNdResults.RxNeighborSolicitationCount AS &apos;Neighbor Solicitations Received&apos; FROM Port, ArpNdResults WHERE ( ArpNdResults.ParentHnd = Port.Handle AND Port.DataSetId = @DataSetId AND ArpNdResults.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 17">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5304" 
+   ConfigClassId="port"
+   ResultClassId="arpndresults"
+   ResultRootList="8"
+   PropertyIdArray="arpndresults.rxarpreplycount arpndresults.txarpreplycount arpndresults.rxarprequestcount arpndresults.txarprequestcount arpndresults.txneighboradvertisementcount arpndresults.txneighborsolicitationcount arpndresults.rxgratuitousarpcount arpndresults.rxicmpv6checksumerrorcount arpndresults.rxicmpv6codeerrorcount arpndresults.rxicmpv6lengtherrorcount arpndresults.rxipv6hoplimiterrorcount arpndresults.rxipv6payloadlengtherrorcount arpndresults.rxnddestaddrerrorcount arpndresults.rxndoptionerrorcount arpndresults.rxndtargetaddrerrorcount arpndresults.rxneighboradvertisementcount arpndresults.rxneighborsolicitationcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 9">
+  </ResultQuery>
+  <ResultQuery id="5305" 
+   ConfigClassId="lacpportconfig"
+   ResultClassId="lacpportresults"
+   ResultRootList="8"
+   PropertyIdArray="lacpportresults.actoroperationalkey lacpportresults.actorsystemid lacpportresults.actorport lacpportresults.partneroperationalkey lacpportresults.partnersystemid lacpportresults.partnerport lacpportresults.partnersystempriority lacpportresults.partnerportpriority lacpportresults.partnercollectormaxdelay lacpportresults.txlacppducount lacpportresults.rxlacppducount lacpportresults.txmarkerpducount lacpportresults.rxmarkerpducount lacpportresults.txmarkerresponsepducount lacpportresults.rxmarkerresponsepducount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 10">
+  </ResultQuery>
+  <ResultQuery id="5306" 
+   ConfigClassId="pppoxportconfig"
+   ResultClassId="pppoeportresults"
+   ResultRootList="8"
+   PropertyIdArray="pppoeportresults.sessions pppoeportresults.attemptedcount pppoeportresults.sessionsup pppoeportresults.failedconnectcount pppoeportresults.connectedsuccesscount pppoeportresults.avgsuccesstransactioncount pppoeportresults.retrycount pppoeportresults.disconnectedsuccesscount pppoeportresults.faileddisconnectcount pppoeportresults.minsetuptime pppoeportresults.maxsetuptime pppoeportresults.avgsetuptime pppoeportresults.succsetuprate pppoeportresults.txlcpconfigrequestcount pppoeportresults.rxlcpconfigrequestcount pppoeportresults.txlcpconfigrejectcount pppoeportresults.rxlcpconfigrejectcount pppoeportresults.txlcpconfigackcount pppoeportresults.rxlcpconfigackcount pppoeportresults.txlcpconfignakcount pppoeportresults.rxlcpconfignakcount pppoeportresults.txlcptermrequestcount pppoeportresults.rxlcptermrequestcount pppoeportresults.txlcptermackcount pppoeportresults.rxlcptermackcount pppoeportresults.txlcpechoreplycount pppoeportresults.rxlcpechoreplycount pppoeportresults.txlcpechorequestcount pppoeportresults.rxlcpechorequestcount pppoeportresults.txpadicount pppoeportresults.rxpadicount pppoeportresults.txpadocount pppoeportresults.rxpadocount pppoeportresults.txpadrcount pppoeportresults.rxpadrcount pppoeportresults.txpadscount pppoeportresults.rxpadscount pppoeportresults.txpadtcount pppoeportresults.rxpadtcount pppoeportresults.txipcpcount pppoeportresults.rxipcpcount pppoeportresults.txipv6cpcount pppoeportresults.rxipv6cpcount pppoeportresults.txpapcount pppoeportresults.rxpapcount pppoeportresults.txchapcount pppoeportresults.rxchapcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 11">
+  </ResultQuery>
+  <ResultQuery id="5307" 
+   ConfigClassId="dhcpv4portconfig"
+   ResultClassId="dhcpv4portresults"
+   ResultRootList="8"
+   PropertyIdArray="dhcpv4portresults.currentidlecount dhcpv4portresults.currentboundcount dhcpv4portresults.totalattemptcount dhcpv4portresults.totalboundcount dhcpv4portresults.totalrenewedcount dhcpv4portresults.totalfailedcount dhcpv4portresults.totalretriedcount dhcpv4portresults.bindrate dhcpv4portresults.attemptrate dhcpv4portresults.successpercent dhcpv4portresults.minsetuptime dhcpv4portresults.maxsetuptime dhcpv4portresults.avgsetuptime dhcpv4portresults.txdiscovercount dhcpv4portresults.rxoffercount dhcpv4portresults.txrequestcount dhcpv4portresults.rxackcount dhcpv4portresults.txreleasecount dhcpv4portresults.rxnakcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 12">
+  </ResultQuery>
+  <ResultQuery id="5308" 
+   ConfigClassId="dhcpv6portconfig"
+   ResultClassId="dhcpv6portresults"
+   ResultRootList="8"
+   PropertyIdArray="dhcpv6portresults.currentidlecount dhcpv6portresults.currentattemptcount dhcpv6portresults.currentboundcount dhcpv6portresults.totalattemptcount dhcpv6portresults.totalboundcount dhcpv6portresults.totalreboundcount dhcpv6portresults.totalreleasedcount dhcpv6portresults.totalrenewedcount dhcpv6portresults.totalfailedcount dhcpv6portresults.totalretriedcount dhcpv6portresults.totalreleaseretriedcount dhcpv6portresults.totalrenewretriedcount dhcpv6portresults.bindrate dhcpv6portresults.attemptrate dhcpv6portresults.releaserate dhcpv6portresults.successpercent dhcpv6portresults.minsetuptime dhcpv6portresults.maxsetuptime dhcpv6portresults.avgsetuptime dhcpv6portresults.txsolicitcount dhcpv6portresults.txrequestcount dhcpv6portresults.txrenewcount dhcpv6portresults.txrebindcount dhcpv6portresults.txreleasecount dhcpv6portresults.rxadvertisecount dhcpv6portresults.rxreplycount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 13">
+  </ResultQuery>
+  <ResultQuery id="5309" 
+   ConfigClassId="igmpportconfig"
+   ResultClassId="igmpportresults"
+   ResultRootList="8"
+   PropertyIdArray="multicastportresults.txframecount multicastportresults.txv1reportcount multicastportresults.txv2reportcount igmpportresults.txv3reportcount igmpportresults.txv3modeisincludecount igmpportresults.txv3modeisexcludecount igmpportresults.txv3changetoincludemodecount igmpportresults.txv3changetoexcludemodecount igmpportresults.txv3allownewsourcescount igmpportresults.txv3blockoldsourcescount igmpportresults.txleavegroupcount multicastportresults.txv1querycount multicastportresults.txv2querycount igmpportresults.txv3querycount multicastportresults.txgeneralquerycount multicastportresults.txgroupspecificquerycount multicastportresults.txgroupandsourcespecificquerycount multicastportresults.rxframecount multicastportresults.rxv1reportcount multicastportresults.rxv2reportcount igmpportresults.rxv3reportcount multicastportresults.rxv1querycount multicastportresults.rxv2querycount igmpportresults.rxv3querycount multicastportresults.rxgeneralquerycount multicastportresults.rxgroupspecificquerycount multicastportresults.rxgroupandsourcespecificquerycount multicastportresults.rxunknowntypecount igmpportresults.rxigmpchecksumerrorcount igmpportresults.rxigmplengtherrorcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 14">
+  </ResultQuery>
+  <ResultQuery id="5310" 
+   ConfigClassId="mldportconfig"
+   ResultClassId="mldportresults"
+   ResultRootList="8"
+   PropertyIdArray="multicastportresults.txframecount multicastportresults.txv1reportcount multicastportresults.txv2reportcount mldportresults.txv2modeisincludecount mldportresults.txv2modeisexcludecount mldportresults.txv2changetoincludemodecount mldportresults.txv2changetoexcludemodecount mldportresults.txv2allownewsourcescount mldportresults.txv2blockoldsourcescount mldportresults.txstoplistengroupcount multicastportresults.txv1querycount multicastportresults.txv2querycount multicastportresults.txgeneralquerycount multicastportresults.txgroupspecificquerycount multicastportresults.txgroupandsourcespecificquerycount multicastportresults.rxframecount multicastportresults.rxv1reportcount multicastportresults.rxv2reportcount multicastportresults.rxv1querycount multicastportresults.rxv2querycount multicastportresults.rxgeneralquerycount multicastportresults.rxgroupspecificquerycount multicastportresults.rxgroupandsourcespecificquerycount multicastportresults.rxunknowntypecount mldportresults.rxmldchecksumerrorcount mldportresults.rxmldlengtherrorcount"
+   ResultOptions=""
+   Active="TRUE"
+   Name="ResultQuery 15">
+  </ResultQuery>
+  <ResultQuery id="27" 
+   ConfigClassId="l2tpportconfig"
+   ResultClassId="l2tpportresults"
+   ResultRootList="5164"
+   PropertyIdArray=""
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   Name="ResultQuery 18">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5311" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxArpReplyCount"
+   ColumnDescription=""
+   ColumnWidth="124"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 239">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5312" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="TxArpReplyCount"
+   ColumnDescription=""
+   ColumnWidth="102"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 240">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5313" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxArpRequestCount"
+   ColumnDescription=""
+   ColumnWidth="134"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 241">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5314" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="TxArpRequestCount"
+   ColumnDescription=""
+   ColumnWidth="112"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 242">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5315" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="TxNeighborAdvertisementCount"
+   ColumnDescription=""
+   ColumnWidth="168"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 243">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5316" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="TxNeighborSolicitationCount"
+   ColumnDescription=""
+   ColumnWidth="150"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 244">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5317" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxGratuitousArpCount"
+   ColumnDescription=""
+   ColumnWidth="140"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 245">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5318" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxIcmpV6ChecksumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="192"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 246">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5319" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxIcmpV6CodeErrorCount"
+   ColumnDescription=""
+   ColumnWidth="166"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 247">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5320" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxIcmpV6LengthErrorCount"
+   ColumnDescription=""
+   ColumnWidth="175"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 248">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5321" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxIpV6HopLimitErrorCount"
+   ColumnDescription=""
+   ColumnWidth="172"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 249">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5322" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxIpV6PayloadLengthErrorCount"
+   ColumnDescription=""
+   ColumnWidth="201"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 250">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5323" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxNdDestAddrErrorCount"
+   ColumnDescription=""
+   ColumnWidth="264"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 251">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5324" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxNdOptionErrorCount"
+   ColumnDescription=""
+   ColumnWidth="185"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 252">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5325" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxNdTargetAddrErrorCount"
+   ColumnDescription=""
+   ColumnWidth="274"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 253">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5326" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxNeighborAdvertisementCount"
+   ColumnDescription=""
+   ColumnWidth="190"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 254">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5327" 
+   ColumnClassName="ArpNdResults"
+   ColumnPropertyName="RxNeighborSolicitationCount"
+   ColumnDescription=""
+   ColumnWidth="173"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 255">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5328" 
+   ColumnClassName="LacpPortConfig"
+   ColumnPropertyName="ActorState"
+   ColumnDescription=""
+   ColumnWidth="72"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 256">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5329" 
+   ColumnClassName="LacpPortConfig"
+   ColumnPropertyName="PartnerState"
+   ColumnDescription=""
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 257">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5330" 
+   ColumnClassName="LacpPortConfig"
+   ColumnPropertyName="LacpState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 258">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5331" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="ActorOperationalKey"
+   ColumnDescription=""
+   ColumnWidth="126"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 259">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5332" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="ActorSystemId"
+   ColumnDescription=""
+   ColumnWidth="97"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 260">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5333" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="ActorPort"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 261">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5334" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="PartnerOperationalKey"
+   ColumnDescription=""
+   ColumnWidth="136"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 262">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5335" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="PartnerSystemId"
+   ColumnDescription=""
+   ColumnWidth="107"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 263">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5336" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="PartnerPort"
+   ColumnDescription=""
+   ColumnWidth="77"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 264">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5337" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="PartnerSystemPriority"
+   ColumnDescription=""
+   ColumnWidth="132"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 265">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5338" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="PartnerPortPriority"
+   ColumnDescription=""
+   ColumnWidth="116"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 266">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5339" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="PartnerCollectorMaxDelay"
+   ColumnDescription=""
+   ColumnWidth="155"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 267">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5340" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="TxLacpPduCount"
+   ColumnDescription=""
+   ColumnWidth="93"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 268">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5341" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="RxLacpPduCount"
+   ColumnDescription=""
+   ColumnWidth="115"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 269">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5342" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="TxMarkerPduCount"
+   ColumnDescription=""
+   ColumnWidth="105"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 270">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5343" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="RxMarkerPduCount"
+   ColumnDescription=""
+   ColumnWidth="127"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 271">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5344" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="TxMarkerResponsePduCount"
+   ColumnDescription=""
+   ColumnWidth="156"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 272">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5345" 
+   ColumnClassName="LacpPortResults"
+   ColumnPropertyName="RxMarkerResponsePduCount"
+   ColumnDescription=""
+   ColumnWidth="178"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 273">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5346" 
+   ColumnClassName="PppoxPortConfig"
+   ColumnPropertyName="PortState"
+   ColumnDescription=""
+   ColumnWidth="66"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 274">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5347" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="Sessions"
+   ColumnDescription=""
+   ColumnWidth="57"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 275">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5348" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="AttemptedCount"
+   ColumnDescription=""
+   ColumnWidth="67"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 276">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5349" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="SessionsUp"
+   ColumnDescription=""
+   ColumnWidth="57"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 277">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5350" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="FailedConnectCount"
+   ColumnDescription=""
+   ColumnWidth="57"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 278">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5351" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="ConnectedSuccessCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 279">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5352" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="AvgSuccessTransactionCount"
+   ColumnDescription=""
+   ColumnWidth="130"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 280">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5353" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RetryCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 281">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5354" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="DisconnectedSuccessCount"
+   ColumnDescription=""
+   ColumnWidth="79"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 282">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5355" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="FailedDisconnectCount"
+   ColumnDescription=""
+   ColumnWidth="71"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 283">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5356" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="MinSetupTime"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 284">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5357" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="MaxSetupTime"
+   ColumnDescription=""
+   ColumnWidth="93"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 285">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5358" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="AvgSetupTime"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 286">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5359" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="SuccSetupRate"
+   ColumnDescription=""
+   ColumnWidth="123"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 287">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5360" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpConfigRequestCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 288">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5361" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpConfigRequestCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 289">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5362" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpConfigRejectCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 290">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5363" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpConfigRejectCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 291">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5364" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpConfigAckCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 292">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5365" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpConfigAckCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 293">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5366" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpConfigNakCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 294">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5367" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpConfigNakCount"
+   ColumnDescription=""
+   ColumnWidth="96"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 295">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5368" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpTermRequestCount"
+   ColumnDescription=""
+   ColumnWidth="97"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 296">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5369" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpTermRequestCount"
+   ColumnDescription=""
+   ColumnWidth="97"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 297">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5370" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpTermAckCount"
+   ColumnDescription=""
+   ColumnWidth="97"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 298">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5371" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpTermAckCount"
+   ColumnDescription=""
+   ColumnWidth="97"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 299">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5372" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpEchoReplyCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 300">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5373" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpEchoReplyCount"
+   ColumnDescription=""
+   ColumnWidth="64"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 301">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5374" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxLcpEchoRequestCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 302">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5375" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxLcpEchoRequestCount"
+   ColumnDescription=""
+   ColumnWidth="71"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 303">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5376" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxPadiCount"
+   ColumnDescription=""
+   ColumnWidth="50"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 304">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5377" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxPadiCount"
+   ColumnDescription=""
+   ColumnWidth="50"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 305">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5378" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxPadoCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 306">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5379" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxPadoCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 307">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5380" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxPadrCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 308">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5381" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxPadrCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 309">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5382" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxPadsCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 310">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5383" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxPadsCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 311">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5384" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxPadtCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 312">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5385" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxPadtCount"
+   ColumnDescription=""
+   ColumnWidth="54"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 313">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5386" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxIpcpCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 314">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5387" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxIpcpCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 315">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5388" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxIpv6cpCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 316">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5389" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxIpv6cpCount"
+   ColumnDescription=""
+   ColumnWidth="60"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 317">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5390" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxPapCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 318">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5391" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxPapCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 319">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5392" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="TxChapCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 320">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5393" 
+   ColumnClassName="PppoePortResults"
+   ColumnPropertyName="RxChapCount"
+   ColumnDescription=""
+   ColumnWidth="59"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 321">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5394" 
+   ColumnClassName="Dhcpv4PortConfig"
+   ColumnPropertyName="PortState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 322">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5395" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="CurrentIdleCount"
+   ColumnDescription=""
+   ColumnWidth="85"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 323">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5396" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="CurrentBoundCount"
+   ColumnDescription=""
+   ColumnWidth="98"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 324">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5397" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalAttemptCount"
+   ColumnDescription=""
+   ColumnWidth="98"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 325">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5398" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalBoundCount"
+   ColumnDescription=""
+   ColumnWidth="77"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 326">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5399" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalRenewedCount"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 327">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5400" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalFailedCount"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 328">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5401" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TotalRetriedCount"
+   ColumnDescription=""
+   ColumnWidth="81"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 329">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5402" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="BindRate"
+   ColumnDescription=""
+   ColumnWidth="139"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 330">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5403" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="AttemptRate"
+   ColumnDescription=""
+   ColumnWidth="157"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 331">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5404" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="SuccessPercent"
+   ColumnDescription=""
+   ColumnWidth="138"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 332">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5405" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="MinSetupTime"
+   ColumnDescription=""
+   ColumnWidth="161"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 333">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5406" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="MaxSetupTime"
+   ColumnDescription=""
+   ColumnWidth="163"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 334">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5407" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="AvgSetupTime"
+   ColumnDescription=""
+   ColumnWidth="156"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 335">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5408" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxDiscoverCount"
+   ColumnDescription=""
+   ColumnWidth="108"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 336">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5409" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="RxOfferCount"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 337">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5410" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxRequestCount"
+   ColumnDescription=""
+   ColumnWidth="106"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 338">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5411" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="RxAckCount"
+   ColumnDescription=""
+   ColumnWidth="86"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 339">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5412" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="TxReleaseCount"
+   ColumnDescription=""
+   ColumnWidth="104"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 340">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5413" 
+   ColumnClassName="Dhcpv4PortResults"
+   ColumnPropertyName="RxNakCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 341">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5414" 
+   ColumnClassName="Dhcpv6PortConfig"
+   ColumnPropertyName="PortState"
+   ColumnDescription=""
+   ColumnWidth="80"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 342">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5415" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="CurrentIdleCount"
+   ColumnDescription=""
+   ColumnWidth="85"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 343">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5416" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="CurrentAttemptCount"
+   ColumnDescription=""
+   ColumnWidth="121"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 344">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5417" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="CurrentBoundCount"
+   ColumnDescription=""
+   ColumnWidth="98"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 345">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5418" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalAttemptCount"
+   ColumnDescription=""
+   ColumnWidth="98"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 346">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5419" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalBoundCount"
+   ColumnDescription=""
+   ColumnWidth="77"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 347">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5420" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalReboundCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 348">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5421" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalReleasedCount"
+   ColumnDescription=""
+   ColumnWidth="90"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 349">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5422" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalRenewedCount"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 350">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5423" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalFailedCount"
+   ColumnDescription=""
+   ColumnWidth="75"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 351">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5424" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalRetriedCount"
+   ColumnDescription=""
+   ColumnWidth="81"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 352">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5425" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalReleaseRetriedCount"
+   ColumnDescription=""
+   ColumnWidth="123"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 353">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5426" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TotalRenewRetriedCount"
+   ColumnDescription=""
+   ColumnWidth="118"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 354">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5427" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="BindRate"
+   ColumnDescription=""
+   ColumnWidth="139"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 355">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5428" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="AttemptRate"
+   ColumnDescription=""
+   ColumnWidth="157"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 356">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5429" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="ReleaseRate"
+   ColumnDescription=""
+   ColumnWidth="156"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 357">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5430" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="SuccessPercent"
+   ColumnDescription=""
+   ColumnWidth="138"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 358">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5431" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="MinSetupTime"
+   ColumnDescription=""
+   ColumnWidth="161"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 359">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5432" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="MaxSetupTime"
+   ColumnDescription=""
+   ColumnWidth="163"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 360">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5433" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="AvgSetupTime"
+   ColumnDescription=""
+   ColumnWidth="156"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 361">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5434" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TxSolicitCount"
+   ColumnDescription=""
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 362">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5435" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TxRequestCount"
+   ColumnDescription=""
+   ColumnWidth="106"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 363">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5436" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TxRenewCount"
+   ColumnDescription=""
+   ColumnWidth="99"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 364">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5437" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TxRebindCount"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 365">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5438" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="TxReleaseCount"
+   ColumnDescription=""
+   ColumnWidth="104"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 366">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5439" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="RxAdvertiseCount"
+   ColumnDescription=""
+   ColumnWidth="112"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 367">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5440" 
+   ColumnClassName="Dhcpv6PortResults"
+   ColumnPropertyName="RxReplyCount"
+   ColumnDescription=""
+   ColumnWidth="93"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 368">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5441" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 369">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5442" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV1ReportCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 370">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5443" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV2ReportCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 371">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5444" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3ReportCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 372">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5445" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3ModeIsIncludeCount"
+   ColumnDescription=""
+   ColumnWidth="148"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 373">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5446" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3ModeIsExcludeCount"
+   ColumnDescription=""
+   ColumnWidth="150"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 374">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5447" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3ChangeToIncludeModeCount"
+   ColumnDescription=""
+   ColumnWidth="201"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 375">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5448" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3ChangeToExcludeModeCount"
+   ColumnDescription=""
+   ColumnWidth="203"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 376">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5449" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3AllowNewSourcesCount"
+   ColumnDescription=""
+   ColumnWidth="170"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 377">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5450" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3BlockOldSourcesCount"
+   ColumnDescription=""
+   ColumnWidth="165"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 378">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5451" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxLeaveGroupCount"
+   ColumnDescription=""
+   ColumnWidth="101"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 379">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5452" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV1QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 380">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5453" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV2QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 381">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5454" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxV3QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 382">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5455" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxGeneralQueryCount"
+   ColumnDescription=""
+   ColumnWidth="112"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 383">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5456" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxGroupSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="146"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 384">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5457" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="TxGroupAndSourceSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="205"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 385">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5458" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 386">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5459" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxV1ReportCount"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 387">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5460" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxV2ReportCount"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 388">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5461" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxV3ReportCount"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 389">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5462" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxV1QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 390">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5463" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxV2QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 391">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5464" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxV3QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 392">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5465" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxGeneralQueryCount"
+   ColumnDescription=""
+   ColumnWidth="113"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 393">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5466" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxGroupSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="146"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 394">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5467" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxGroupAndSourceSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="206"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 395">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5468" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxUnknownTypeCount"
+   ColumnDescription=""
+   ColumnWidth="113"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 396">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5469" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxIgmpCheckSumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="147"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 397">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5470" 
+   ColumnClassName="IgmpPortResults"
+   ColumnPropertyName="RxIgmpLengthErrorCount"
+   ColumnDescription=""
+   ColumnWidth="131"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 398">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5471" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 399">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5472" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV1ReportCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 400">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5473" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ReportCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 401">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5474" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ModeIsIncludeCount"
+   ColumnDescription=""
+   ColumnWidth="148"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 402">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5475" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ModeIsExcludeCount"
+   ColumnDescription=""
+   ColumnWidth="150"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 403">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5476" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ChangeToIncludeModeCount"
+   ColumnDescription=""
+   ColumnWidth="201"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 404">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5477" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2ChangeToExcludeModeCount"
+   ColumnDescription=""
+   ColumnWidth="203"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 405">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5478" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2AllowNewSourcesCount"
+   ColumnDescription=""
+   ColumnWidth="170"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 406">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5479" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2BlockOldSourcesCount"
+   ColumnDescription=""
+   ColumnWidth="165"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 407">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5480" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxStopListenGroupCount"
+   ColumnDescription=""
+   ColumnWidth="127"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 408">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5481" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV1QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 409">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5482" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxV2QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 410">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5483" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxGeneralQueryCount"
+   ColumnDescription=""
+   ColumnWidth="112"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 411">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5484" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxGroupSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="146"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 412">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5485" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="TxGroupAndSourceSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="205"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 413">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5486" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxFrameCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 414">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5487" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV1ReportCount"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 415">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5488" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV2ReportCount"
+   ColumnDescription=""
+   ColumnWidth="88"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 416">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5489" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV1QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 417">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5490" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxV2QueryCount"
+   ColumnDescription=""
+   ColumnWidth="87"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 418">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5491" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxGeneralQueryCount"
+   ColumnDescription=""
+   ColumnWidth="113"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 419">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5492" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxGroupSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="146"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 420">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5493" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxGroupAndSourceSpecificQueryCount"
+   ColumnDescription=""
+   ColumnWidth="206"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 421">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5494" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxUnknownTypeCount"
+   ColumnDescription=""
+   ColumnWidth="113"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 422">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5495" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxMldCheckSumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="143"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 423">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5496" 
+   ColumnClassName="MldPortResults"
+   ColumnPropertyName="RxMldLengthErrorCount"
+   ColumnDescription=""
+   ColumnWidth="126"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 424">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5845" 
+   ColumnClassName="L2tpPortConfig"
+   ColumnPropertyName="PortState"
+   ColumnDescription=""
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 490">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5846" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="LacCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 491">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5847" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="LnsCount"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 492">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5849" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="TunnelUpCount"
+   ColumnDescription=""
+   ColumnWidth="73"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 494">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5850" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="TunnelPendingUpCount"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 495">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5851" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="TunnelPendingDownCount"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 496">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5852" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="TunnelDownCount"
+   ColumnDescription=""
+   ColumnWidth="79"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 497">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5854" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="SessionUpCount"
+   ColumnDescription=""
+   ColumnWidth="76"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 499">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5855" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="SessionPendingUpCount"
+   ColumnDescription=""
+   ColumnWidth="94"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 500">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5856" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="SessionPendingDownCount"
+   ColumnDescription=""
+   ColumnWidth="94"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 501">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5857" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="SessionDownCount"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 502">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5858" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="TunnelSetupRate"
+   ColumnDescription=""
+   ColumnWidth="101"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 503">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5859" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="MinTunnelSetupTime"
+   ColumnDescription=""
+   ColumnWidth="103"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 504">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5860" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="MaxTunnelSetupTime"
+   ColumnDescription=""
+   ColumnWidth="103"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 505">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5861" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="AvgTunnelSetupTime"
+   ColumnDescription=""
+   ColumnWidth="104"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 506">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5862" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="SessionSetupRate"
+   ColumnDescription=""
+   ColumnWidth="105"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 507">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5863" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="MinSessionSetupTime"
+   ColumnDescription=""
+   ColumnWidth="103"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 508">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5864" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="MaxSessionSetupTime"
+   ColumnDescription=""
+   ColumnWidth="103"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 509">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5865" 
+   ColumnClassName="L2tpPortResults"
+   ColumnPropertyName="AvgSessionSetupTime"
+   ColumnDescription=""
+   ColumnWidth="103"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 510">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5868" 
+   GroupName="L2TP Results"
+   GroupId="object://customgroup/db567228-6666-45be-97ef-ed72b70009c7/L2TP Results"
+   ColumnClassName="L2tpPortConfig L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults L2tpPortResults"
+   ColumnPropertyName="PortState LacCount LnsCount TunnelUpCount TunnelPendingUpCount TunnelPendingDownCount TunnelDownCount SessionUpCount SessionPendingUpCount SessionPendingDownCount SessionDownCount TunnelSetupRate MinTunnelSetupTime MaxTunnelSetupTime AvgTunnelSetupTime SessionSetupRate MinSessionSetupTime MaxSessionSetupTime AvgSessionSetupTime"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, L2tpPortConfig.PortState AS &apos;L2TP Port State&apos;, L2tpPortResults.LacCount AS &apos;LAC Count&apos;, L2tpPortResults.LnsCount AS &apos;LNS Count&apos;, L2tpPortResults.TunnelUpCount AS &apos;Tunnels Up&apos;, L2tpPortResults.TunnelPendingUpCount AS &apos;Tunnels Pending Coming Up&apos;, L2tpPortResults.TunnelPendingDownCount AS &apos;Tunnels Pending Coming Down&apos;, L2tpPortResults.TunnelDownCount AS &apos;Tunnels Down&apos;, L2tpPortResults.SessionUpCount AS &apos;Sessions Up&apos;, L2tpPortResults.SessionPendingUpCount AS &apos;Sessions Pending Coming Up&apos;, L2tpPortResults.SessionPendingDownCount AS &apos;Sessions Pending Coming Down&apos;, L2tpPortResults.SessionDownCount AS &apos;Sessions Down&apos;, L2tpPortResults.TunnelSetupRate AS &apos;Tunnel Setup Rate (tunnels/sec)&apos;, L2tpPortResults.MinTunnelSetupTime AS &apos;Minimum Tunnel Setup Time (msec)&apos;, L2tpPortResults.MaxTunnelSetupTime AS &apos;Maximum Tunnel Setup Time (msec)&apos;, L2tpPortResults.AvgTunnelSetupTime AS &apos;Average Tunnel Setup Time (msec)&apos;, L2tpPortResults.SessionSetupRate AS &apos;Session Setup Rate (sessions/sec)&apos;, L2tpPortResults.MinSessionSetupTime AS &apos;Minimum Session Setup Time (msec)&apos;, L2tpPortResults.MaxSessionSetupTime AS &apos;Maximum Session Setup Time (msec)&apos;, L2tpPortResults.AvgSessionSetupTime AS &apos;Average Session Setup Time (msec)&apos; FROM Port, L2tpPortConfig, L2tpPortResults WHERE ( L2tpPortConfig.ParentHnd = Port.Handle AND L2tpPortResults.ParentHnd = L2tpPortConfig.Handle AND Port.DataSetId = @DataSetId AND L2tpPortConfig.DataSetId = @DataSetId AND L2tpPortResults.DataSetId = @DataSetId  )"
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 31">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5497" 
+   GroupName="LACP Results"
+   GroupId="object://customgroup/b95da738-fd74-4737-8cdf-a714c3198197/LACP Results"
+   ColumnClassName="LacpPortConfig LacpPortConfig LacpPortConfig LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults LacpPortResults"
+   ColumnPropertyName="ActorState PartnerState LacpState ActorOperationalKey ActorSystemId ActorPort PartnerOperationalKey PartnerSystemId PartnerPort PartnerSystemPriority PartnerPortPriority PartnerCollectorMaxDelay TxLacpPduCount RxLacpPduCount TxMarkerPduCount RxMarkerPduCount TxMarkerResponsePduCount RxMarkerResponsePduCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, LacpPortConfig.ActorState AS &apos;Actor State&apos;, LacpPortConfig.PartnerState AS &apos;Partner State&apos;, LacpPortConfig.LacpState AS &apos;Lacp State&apos;, LacpPortResults.ActorOperationalKey AS &apos;Actor Operational Key&apos;, LacpPortResults.ActorSystemId AS &apos;Actor System Id&apos;, LacpPortResults.ActorPort AS &apos;Actor Port&apos;, LacpPortResults.PartnerOperationalKey AS &apos;Partner Operational Key&apos;, LacpPortResults.PartnerSystemId AS &apos;Partner System Id&apos;, LacpPortResults.PartnerPort AS &apos;Partner Port&apos;, LacpPortResults.PartnerSystemPriority AS &apos;Partner System Priority&apos;, LacpPortResults.PartnerPortPriority AS &apos;Partner Port Priority&apos;, LacpPortResults.PartnerCollectorMaxDelay AS &apos;Partner Collector Max Delay&apos;, LacpPortResults.TxLacpPduCount AS &apos;Lacp Pdus Sent&apos;, LacpPortResults.RxLacpPduCount AS &apos;Lacp Pdus Received&apos;, LacpPortResults.TxMarkerPduCount AS &apos;Marker Pdus Sent&apos;, LacpPortResults.RxMarkerPduCount AS &apos;Marker Pdus Received&apos;, LacpPortResults.TxMarkerResponsePduCount AS &apos;Marker Response Pdus Sent&apos;, LacpPortResults.RxMarkerResponsePduCount AS &apos;Marker Response Pdus Received&apos; FROM Port, LacpPortConfig, LacpPortResults WHERE ( LacpPortConfig.ParentHnd = Port.Handle AND LacpPortResults.ParentHnd = LacpPortConfig.Handle AND Port.DataSetId = @DataSetId AND LacpPortConfig.DataSetId = @DataSetId AND LacpPortResults.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 18">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5498" 
+   GroupName="PPPoX Results"
+   GroupId="object://customgroup/4e1923e6-61a8-48f3-8769-883e95fa79f7/PPPoX Results"
+   ColumnClassName="PppoxPortConfig PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults PppoePortResults"
+   ColumnPropertyName="PortState Sessions AttemptedCount SessionsUp FailedConnectCount ConnectedSuccessCount AvgSuccessTransactionCount RetryCount DisconnectedSuccessCount FailedDisconnectCount MinSetupTime MaxSetupTime AvgSetupTime SuccSetupRate TxLcpConfigRequestCount RxLcpConfigRequestCount TxLcpConfigRejectCount RxLcpConfigRejectCount TxLcpConfigAckCount RxLcpConfigAckCount TxLcpConfigNakCount RxLcpConfigNakCount TxLcpTermRequestCount RxLcpTermRequestCount TxLcpTermAckCount RxLcpTermAckCount TxLcpEchoReplyCount RxLcpEchoReplyCount TxLcpEchoRequestCount RxLcpEchoRequestCount TxPadiCount RxPadiCount TxPadoCount RxPadoCount TxPadrCount RxPadrCount TxPadsCount RxPadsCount TxPadtCount RxPadtCount TxIpcpCount RxIpcpCount TxIpv6cpCount RxIpv6cpCount TxPapCount RxPapCount TxChapCount RxChapCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, PppoxPortConfig.PortState AS &apos;PPPoX Port State&apos;, PppoePortResults.Sessions AS &apos;Sessions&apos;, PppoePortResults.AttemptedCount AS &apos;Attempted&apos;, PppoePortResults.SessionsUp AS &apos;Sessions Up&apos;, PppoePortResults.FailedConnectCount AS &apos;Failed Connects&apos;, PppoePortResults.ConnectedSuccessCount AS &apos;Connected Successfully&apos;, PppoePortResults.AvgSuccessTransactionCount AS &apos;Average Successful Transactions to Connect&apos;, PppoePortResults.RetryCount AS &apos;Sessions Retried&apos;, PppoePortResults.DisconnectedSuccessCount AS &apos;Disconnected Successfully&apos;, PppoePortResults.FailedDisconnectCount AS &apos;Failed Disconnects&apos;, PppoePortResults.MinSetupTime AS &apos;Minimum Setup Time (msec)&apos;, PppoePortResults.MaxSetupTime AS &apos;Maximum Setup Time (msec)&apos;, PppoePortResults.AvgSetupTime AS &apos;Average Setup Time (msec)&apos;, PppoePortResults.SuccSetupRate AS &apos;Successful Setup Rate (sessions/sec)&apos;, PppoePortResults.TxLcpConfigRequestCount AS &apos;TX LCP Configure Request&apos;, PppoePortResults.RxLcpConfigRequestCount AS &apos;RX LCP Configure Request&apos;, PppoePortResults.TxLcpConfigRejectCount AS &apos;TX LCP Configure Reject&apos;, PppoePortResults.RxLcpConfigRejectCount AS &apos;RX LCP Configure Reject&apos;, PppoePortResults.TxLcpConfigAckCount AS &apos;TX LCP Configure Ack&apos;, PppoePortResults.RxLcpConfigAckCount AS &apos;RX LCP Configure Ack&apos;, PppoePortResults.TxLcpConfigNakCount AS &apos;TX LCP Configure Nak&apos;, PppoePortResults.RxLcpConfigNakCount AS &apos;RX LCP Configure Nak&apos;, PppoePortResults.TxLcpTermRequestCount AS &apos;TX LCP Terminate Request&apos;, PppoePortResults.RxLcpTermRequestCount AS &apos;RX LCP Terminate Request&apos;, PppoePortResults.TxLcpTermAckCount AS &apos;TX LCP Terminate Ack&apos;, PppoePortResults.RxLcpTermAckCount AS &apos;RX LCP Terminate Ack&apos;, PppoePortResults.TxLcpEchoReplyCount AS &apos;TX LCP Echo Reply&apos;, PppoePortResults.RxLcpEchoReplyCount AS &apos;RX LCP Echo Reply&apos;, PppoePortResults.TxLcpEchoRequestCount AS &apos;TX LCP Echo Request&apos;, PppoePortResults.RxLcpEchoRequestCount AS &apos;RX LCP Echo Request&apos;, PppoePortResults.TxPadiCount AS &apos;TX PADI&apos;, PppoePortResults.RxPadiCount AS &apos;RX PADI&apos;, PppoePortResults.TxPadoCount AS &apos;TX PADO&apos;, PppoePortResults.RxPadoCount AS &apos;RX PADO&apos;, PppoePortResults.TxPadrCount AS &apos;TX PADR&apos;, PppoePortResults.RxPadrCount AS &apos;RX PADR&apos;, PppoePortResults.TxPadsCount AS &apos;TX PADS&apos;, PppoePortResults.RxPadsCount AS &apos;RX PADS&apos;, PppoePortResults.TxPadtCount AS &apos;TX PADT&apos;, PppoePortResults.RxPadtCount AS &apos;RX PADT&apos;, PppoePortResults.TxIpcpCount AS &apos;TX IPCP&apos;, PppoePortResults.RxIpcpCount AS &apos;RX IPCP&apos;, PppoePortResults.TxIpv6cpCount AS &apos;TX IPCPv6&apos;, PppoePortResults.RxIpv6cpCount AS &apos;RX IPCPv6&apos;, PppoePortResults.TxPapCount AS &apos;TX PAP&apos;, PppoePortResults.RxPapCount AS &apos;RX PAP&apos;, PppoePortResults.TxChapCount AS &apos;TX CHAP&apos;, PppoePortResults.RxChapCount AS &apos;RX CHAP&apos; FROM Port, PppoxPortConfig, PppoePortResults WHERE ( PppoxPortConfig.ParentHnd = Port.Handle AND PppoePortResults.ParentHnd = PppoxPortConfig.Handle AND Port.DataSetId = @DataSetId AND PppoxPortConfig.DataSetId = @DataSetId AND PppoePortResults.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 19">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5499" 
+   GroupName="DHCP Results"
+   GroupId="object://customgroup/5ac75288-8fd8-43f9-a600-8ad8ce28852f/DHCP Results"
+   ColumnClassName="Dhcpv4PortConfig Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults Dhcpv4PortResults"
+   ColumnPropertyName="PortState CurrentIdleCount CurrentBoundCount TotalAttemptCount TotalBoundCount TotalRenewedCount TotalFailedCount TotalRetriedCount BindRate AttemptRate SuccessPercent MinSetupTime MaxSetupTime AvgSetupTime TxDiscoverCount RxOfferCount TxRequestCount RxAckCount TxReleaseCount RxNakCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, Dhcpv4PortConfig.PortState AS &apos;State&apos;, Dhcpv4PortResults.CurrentIdleCount AS &apos;Currently Idle&apos;, Dhcpv4PortResults.CurrentBoundCount AS &apos;Currently Bound&apos;, Dhcpv4PortResults.TotalAttemptCount AS &apos;Total Attempted&apos;, Dhcpv4PortResults.TotalBoundCount AS &apos;Total Bound&apos;, Dhcpv4PortResults.TotalRenewedCount AS &apos;Total Renewed&apos;, Dhcpv4PortResults.TotalFailedCount AS &apos;Total Failed&apos;, Dhcpv4PortResults.TotalRetriedCount AS &apos;Total Retried&apos;, Dhcpv4PortResults.BindRate AS &apos;Bind Rate (sessions/sec)&apos;, Dhcpv4PortResults.AttemptRate AS &apos;Attempt Rate (sessions/sec)&apos;, Dhcpv4PortResults.SuccessPercent AS &apos;Success Percentage (%)&apos;, Dhcpv4PortResults.MinSetupTime AS &apos;Minimum Setup Time (sec)&apos;, Dhcpv4PortResults.MaxSetupTime AS &apos;Maximum Setup Time (sec)&apos;, Dhcpv4PortResults.AvgSetupTime AS &apos;Average Setup Time (sec)&apos;, Dhcpv4PortResults.TxDiscoverCount AS &apos;Discover Tx Count&apos;, Dhcpv4PortResults.RxOfferCount AS &apos;Offer Rx Count&apos;, Dhcpv4PortResults.TxRequestCount AS &apos;Request Tx Count&apos;, Dhcpv4PortResults.RxAckCount AS &apos;ACK Rx Count&apos;, Dhcpv4PortResults.TxReleaseCount AS &apos;Release Tx Count&apos;, Dhcpv4PortResults.RxNakCount AS &apos;NAK Rx Count&apos; FROM Port, Dhcpv4PortConfig, Dhcpv4PortResults WHERE ( Dhcpv4PortConfig.ParentHnd = Port.Handle AND Dhcpv4PortResults.ParentHnd = Dhcpv4PortConfig.Handle AND Port.DataSetId = @DataSetId AND Dhcpv4PortConfig.DataSetId = @DataSetId AND Dhcpv4PortResults.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 20">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5500" 
+   GroupName="DHCPv6/PD Results"
+   GroupId="object://customgroup/e1b11a96-19e9-4b0b-a684-465e74ef76b3/DHCPv6/PD Results"
+   ColumnClassName="Dhcpv6PortConfig Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults Dhcpv6PortResults"
+   ColumnPropertyName="PortState CurrentIdleCount CurrentAttemptCount CurrentBoundCount TotalAttemptCount TotalBoundCount TotalReboundCount TotalReleasedCount TotalRenewedCount TotalFailedCount TotalRetriedCount TotalReleaseRetriedCount TotalRenewRetriedCount BindRate AttemptRate ReleaseRate SuccessPercent MinSetupTime MaxSetupTime AvgSetupTime TxSolicitCount TxRequestCount TxRenewCount TxRebindCount TxReleaseCount RxAdvertiseCount RxReplyCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, Dhcpv6PortConfig.PortState AS &apos;State&apos;, Dhcpv6PortResults.CurrentIdleCount AS &apos;Currently Idle&apos;, Dhcpv6PortResults.CurrentAttemptCount AS &apos;Currently Attempting&apos;, Dhcpv6PortResults.CurrentBoundCount AS &apos;Currently Bound&apos;, Dhcpv6PortResults.TotalAttemptCount AS &apos;Total Attempted&apos;, Dhcpv6PortResults.TotalBoundCount AS &apos;Total Bound&apos;, Dhcpv6PortResults.TotalReboundCount AS &apos;Total Rebound&apos;, Dhcpv6PortResults.TotalReleasedCount AS &apos;Total Released&apos;, Dhcpv6PortResults.TotalRenewedCount AS &apos;Total Renewed&apos;, Dhcpv6PortResults.TotalFailedCount AS &apos;Total Failed&apos;, Dhcpv6PortResults.TotalRetriedCount AS &apos;Total Retried&apos;, Dhcpv6PortResults.TotalReleaseRetriedCount AS &apos;Total Release Retried&apos;, Dhcpv6PortResults.TotalRenewRetriedCount AS &apos;Total Renew Retried&apos;, Dhcpv6PortResults.BindRate AS &apos;Bind Rate (sessions/sec)&apos;, Dhcpv6PortResults.AttemptRate AS &apos;Attempt Rate (sessions/sec)&apos;, Dhcpv6PortResults.ReleaseRate AS &apos;Release Rate (sessions/sec)&apos;, Dhcpv6PortResults.SuccessPercent AS &apos;Success Percentage (%)&apos;, Dhcpv6PortResults.MinSetupTime AS &apos;Minimum Setup Time (msec)&apos;, Dhcpv6PortResults.MaxSetupTime AS &apos;Maximum Setup Time (msec)&apos;, Dhcpv6PortResults.AvgSetupTime AS &apos;Average Setup Time (msec)&apos;, Dhcpv6PortResults.TxSolicitCount AS &apos;Solicit Tx Count&apos;, Dhcpv6PortResults.TxRequestCount AS &apos;Request Tx Count&apos;, Dhcpv6PortResults.TxRenewCount AS &apos;Renew Tx Count&apos;, Dhcpv6PortResults.TxRebindCount AS &apos;Rebind Tx Count&apos;, Dhcpv6PortResults.TxReleaseCount AS &apos;Release Tx Count&apos;, Dhcpv6PortResults.RxAdvertiseCount AS &apos;Advertise Rx Count&apos;, Dhcpv6PortResults.RxReplyCount AS &apos;Reply Rx Count&apos; FROM Port, Dhcpv6PortConfig, Dhcpv6PortResults WHERE ( Dhcpv6PortConfig.ParentHnd = Port.Handle AND Dhcpv6PortResults.ParentHnd = Dhcpv6PortConfig.Handle AND Port.DataSetId = @DataSetId AND Dhcpv6PortConfig.DataSetId = @DataSetId AND Dhcpv6PortResults.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 21">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5501" 
+   GroupName="IGMP Results"
+   GroupId="object://customgroup/35db8e99-9750-4196-871b-4b37d2745195/IGMP Results"
+   ColumnClassName="IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults IgmpPortResults"
+   ColumnPropertyName="TxFrameCount TxV1ReportCount TxV2ReportCount TxV3ReportCount TxV3ModeIsIncludeCount TxV3ModeIsExcludeCount TxV3ChangeToIncludeModeCount TxV3ChangeToExcludeModeCount TxV3AllowNewSourcesCount TxV3BlockOldSourcesCount TxLeaveGroupCount TxV1QueryCount TxV2QueryCount TxV3QueryCount TxGeneralQueryCount TxGroupSpecificQueryCount TxGroupAndSourceSpecificQueryCount RxFrameCount RxV1ReportCount RxV2ReportCount RxV3ReportCount RxV1QueryCount RxV2QueryCount RxV3QueryCount RxGeneralQueryCount RxGroupSpecificQueryCount RxGroupAndSourceSpecificQueryCount RxUnknownTypeCount RxIgmpCheckSumErrorCount RxIgmpLengthErrorCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, IgmpPortResults.TxFrameCount AS &apos;Tx Frames&apos;, IgmpPortResults.TxV1ReportCount AS &apos;Tx V1 Reports&apos;, IgmpPortResults.TxV2ReportCount AS &apos;Tx V2 Reports&apos;, IgmpPortResults.TxV3ReportCount AS &apos;Tx V3 Reports&apos;, IgmpPortResults.TxV3ModeIsIncludeCount AS &apos;Tx V3 MODE_IS_INCLUDE&apos;, IgmpPortResults.TxV3ModeIsExcludeCount AS &apos;Tx V3 MODE_IS_EXCLUDE&apos;, IgmpPortResults.TxV3ChangeToIncludeModeCount AS &apos;Tx V3 CHANGE_TO_INCLUDE_MODE&apos;, IgmpPortResults.TxV3ChangeToExcludeModeCount AS &apos;Tx V3 CHANGE_TO_EXCLUDE_MODE&apos;, IgmpPortResults.TxV3AllowNewSourcesCount AS &apos;Tx V3 ALLOW_NEW_SOURCES&apos;, IgmpPortResults.TxV3BlockOldSourcesCount AS &apos;Tx V3 BLOCK_OLD_SOURCES&apos;, IgmpPortResults.TxLeaveGroupCount AS &apos;Tx Leave Groups&apos;, IgmpPortResults.TxV1QueryCount AS &apos;Tx V1 Queries&apos;, IgmpPortResults.TxV2QueryCount AS &apos;Tx V2 Queries&apos;, IgmpPortResults.TxV3QueryCount AS &apos;Tx V3 Queries&apos;, IgmpPortResults.TxGeneralQueryCount AS &apos;Tx General Queries&apos;, IgmpPortResults.TxGroupSpecificQueryCount AS &apos;Tx Group Specific Queries&apos;, IgmpPortResults.TxGroupAndSourceSpecificQueryCount AS &apos;Tx Group and Source Specific Queries&apos;, IgmpPortResults.RxFrameCount AS &apos;Rx Frames&apos;, IgmpPortResults.RxV1ReportCount AS &apos;Rx V1 Reports&apos;, IgmpPortResults.RxV2ReportCount AS &apos;Rx V2 Reports&apos;, IgmpPortResults.RxV3ReportCount AS &apos;Rx V3 Reports&apos;, IgmpPortResults.RxV1QueryCount AS &apos;Rx V1 Queries&apos;, IgmpPortResults.RxV2QueryCount AS &apos;Rx V2 Queries&apos;, IgmpPortResults.RxV3QueryCount AS &apos;Rx V3 Queries&apos;, IgmpPortResults.RxGeneralQueryCount AS &apos;Rx General Queries&apos;, IgmpPortResults.RxGroupSpecificQueryCount AS &apos;Rx Group Specific Queries&apos;, IgmpPortResults.RxGroupAndSourceSpecificQueryCount AS &apos;Rx Group and Source Specific Queries&apos;, IgmpPortResults.RxUnknownTypeCount AS &apos;Rx Unknown Types&apos;, IgmpPortResults.RxIgmpCheckSumErrorCount AS &apos;Rx IGMP Checksum Errors&apos;, IgmpPortResults.RxIgmpLengthErrorCount AS &apos;Rx IGMP Length Errors&apos; FROM Port, IgmpPortResults, IgmpPortConfig WHERE ( IgmpPortConfig.ParentHnd = Port.Handle AND IgmpPortResults.ParentHnd = IgmpPortConfig.Handle AND Port.DataSetId = @DataSetId AND IgmpPortResults.DataSetId = @DataSetId AND IgmpPortConfig.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 22">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5502" 
+   GroupName="MLD Results"
+   GroupId="object://customgroup/61e0c338-0458-4e64-836f-7b66b9be29b4/MLD Results"
+   ColumnClassName="MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults MldPortResults"
+   ColumnPropertyName="TxFrameCount TxV1ReportCount TxV2ReportCount TxV2ModeIsIncludeCount TxV2ModeIsExcludeCount TxV2ChangeToIncludeModeCount TxV2ChangeToExcludeModeCount TxV2AllowNewSourcesCount TxV2BlockOldSourcesCount TxStopListenGroupCount TxV1QueryCount TxV2QueryCount TxGeneralQueryCount TxGroupSpecificQueryCount TxGroupAndSourceSpecificQueryCount RxFrameCount RxV1ReportCount RxV2ReportCount RxV1QueryCount RxV2QueryCount RxGeneralQueryCount RxGroupSpecificQueryCount RxGroupAndSourceSpecificQueryCount RxUnknownTypeCount RxMldCheckSumErrorCount RxMldLengthErrorCount"
+   SqlString=" SELECT Port.Name AS &apos;Port Name&apos;, MldPortResults.TxFrameCount AS &apos;Tx Frames&apos;, MldPortResults.TxV1ReportCount AS &apos;Tx V1 Reports&apos;, MldPortResults.TxV2ReportCount AS &apos;Tx V2 Reports&apos;, MldPortResults.TxV2ModeIsIncludeCount AS &apos;Tx V2 MODE_IS_INCLUDE&apos;, MldPortResults.TxV2ModeIsExcludeCount AS &apos;Tx V2 MODE_IS_EXCLUDE&apos;, MldPortResults.TxV2ChangeToIncludeModeCount AS &apos;Tx V2 CHANGE_TO_INCLUDE_MODE&apos;, MldPortResults.TxV2ChangeToExcludeModeCount AS &apos;Tx V2 CHANGE_TO_EXCLUDE_MODE&apos;, MldPortResults.TxV2AllowNewSourcesCount AS &apos;Tx V2 ALLOW_NEW_SOURCES&apos;, MldPortResults.TxV2BlockOldSourcesCount AS &apos;Tx V2 BLOCK_OLD_SOURCES&apos;, MldPortResults.TxStopListenGroupCount AS &apos;Tx Stop Listen Groups&apos;, MldPortResults.TxV1QueryCount AS &apos;Tx V1 Queries&apos;, MldPortResults.TxV2QueryCount AS &apos;Tx V2 Queries&apos;, MldPortResults.TxGeneralQueryCount AS &apos;Tx General Queries&apos;, MldPortResults.TxGroupSpecificQueryCount AS &apos;Tx Group Specific Queries&apos;, MldPortResults.TxGroupAndSourceSpecificQueryCount AS &apos;Tx Group and Source Specific Queries&apos;, MldPortResults.RxFrameCount AS &apos;Rx Frames&apos;, MldPortResults.RxV1ReportCount AS &apos;Rx V1 Reports&apos;, MldPortResults.RxV2ReportCount AS &apos;Rx V2 Reports&apos;, MldPortResults.RxV1QueryCount AS &apos;Rx V1 Queries&apos;, MldPortResults.RxV2QueryCount AS &apos;Rx V2 Queries&apos;, MldPortResults.RxGeneralQueryCount AS &apos;Rx General Queries&apos;, MldPortResults.RxGroupSpecificQueryCount AS &apos;Rx Group Specific Queries&apos;, MldPortResults.RxGroupAndSourceSpecificQueryCount AS &apos;Rx Group and Source Specific Queries&apos;, MldPortResults.RxUnknownTypeCount AS &apos;Rx Unknown Types&apos;, MldPortResults.RxMldCheckSumErrorCount AS &apos;Rx MLD Checksum Errors&apos;, MldPortResults.RxMldLengthErrorCount AS &apos;Rx MLD Length Errors&apos; FROM Port, MldPortResults, MldPortConfig WHERE ( MldPortConfig.ParentHnd = Port.Handle AND MldPortResults.ParentHnd = MldPortConfig.Handle AND Port.DataSetId = @DataSetId AND MldPortResults.DataSetId = @DataSetId AND MldPortConfig.DataSetId = @DataSetId  )"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 23">
+  </RealTimeResultGroupDefinition>
+</ResultDataSet>

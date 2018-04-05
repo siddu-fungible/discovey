@@ -1,0 +1,16 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="EchoRequest"
+    showName="EchoRequest TLV"
+    version="1.00"
+    category="CSMP Firmware Update TLV"
+    readonly="true"
+    validate="true"
+    firstPdu="csmptlv:EchoRequest"
+    description="EchoRequest TLV">
+    <pdus>
+       <pdu name="proto1" pdu="csmptlv:EchoRequest"/>
+    </pdus>
+  </template>
+</frame>

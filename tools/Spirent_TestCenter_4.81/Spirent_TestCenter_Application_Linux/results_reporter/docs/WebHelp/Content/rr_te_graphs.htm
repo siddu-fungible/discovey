@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" MadCap:tocPath="Template Editor" MadCap:InPreviewMode="false" MadCap:PreloadImages="false" MadCap:RuntimeFileType="Topic" MadCap:TargetType="WebHelp" lang="en-us" xml:lang="en-us" MadCap:PathToHelpSystem="../" MadCap:HelpSystemFileName="stc_ra.xml" MadCap:SearchType="Stem">
+    <!-- saved from url=(0016)http://localhost -->
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Template Editor Graphs Tab</title>
+        <link href="spirent_univ.css" rel="stylesheet" />
+        <script src="SkinSupport/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapAll.js" type="text/javascript">
+        </script>
+        <script src="SkinSupport/MadCapTopicAll.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <p><span style="font-family: sans-serif; font-size: 8pt;">Results Reporter Online Help <span style="color: #ffffff;">Results Reporter Help</span></span>
+        </p>
+        <h1 id="rr_te_graphs.htm" xmlns="http://www.w3.org/1999/xhtml">Template Editor Graphs Tab </h1>
+        <p xmlns="http://www.w3.org/1999/xhtml">Use the Graphs tab to create 2D and 3D line, bar and pie graphs. Use the <strong>Render</strong> button at the bottom of the window to view the graph after you configure the values. Right-click the X or Y axis on the graph to see the <a href="reporter_menus.htm#graph">Graph Shortcut menu</a>. </p>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">Graphs</h2>
+        <p xmlns="http://www.w3.org/1999/xhtml">The top section of the window shows the currently defined graphs. Use the <strong>Add</strong> and <strong>Remove</strong> buttons to add a graph to the bottom of the list or remove the highlighted graph from the list. Double-click a field in the list to change the value. </p>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Name</td>
+                <td>User-defined name for the graph </td>
+            </tr>
+            <tr>
+                <td>Type</td>
+                <td>
+                    <p>Type of graph </p>
+                    <p>Line, bar or pie </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Logarithmic</td>
+                <td>
+                    <p xmlns="">Select a log scale type to create a logarithmic axis</p>
+                    <p xmlns="">Selecting a log base value other than <b>None</b> will 
+
+deactivate the Multiple Y axis feature</p>
+                </td>
+            </tr>
+            <tr>
+                <td>3D</td>
+                <td>
+                    <p>Clear to create a 2D graph</p>
+                    <p>Select to create a 3D graph  </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Title</td>
+                <td>Title that appears at the top of the graph </td>
+            </tr>
+            <tr>
+                <td>Background Color </td>
+                <td><a href="rr_te_color.htm">Color</a> of the area outside the graphed values </td>
+            </tr>
+            <tr>
+                <td>Plot Color </td>
+                <td>
+                    <p><a href="rr_te_color.htm">Color</a> of the background in the area where values are graphed </p>
+                    <p><a href="#plotcolor">Set the color of the plotted values</a> in the <strong>Graph Properties</strong> window. </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Iterate</td>
+                <td>Select to include multiple graphs per page</td>
+            </tr>
+        </table>
+        <h2 xmlns="http://www.w3.org/1999/xhtml">Graph Properties </h2>
+        <h3 xmlns="http://www.w3.org/1999/xhtml">Bar and Line </h3>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Option</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>X Values </td>
+                <td>
+                    <p>Statistic that determines the X axis scale and tick marks </p>
+                    <p>The list is populated from the <strong>Reported Stats</strong> and <strong>Computed Stats</strong> tabs </p>
+                </td>
+            </tr>
+            <tr>
+                <td>X Axis Label </td>
+                <td>Text that identifies the X axis </td>
+            </tr>
+        </table>
+        <p xmlns="http://www.w3.org/1999/xhtml">Statistics available to graph are displayed in the list.   </p>
+        <table width="90%" border="0" class="standard" xmlns="http://www.w3.org/1999/xhtml">
+            <tr>
+                <th scope="col">Option</th>
+                <th scope="col">Description</th>
+            </tr>
+            <tr>
+                <td>Include</td>
+                <td>
+                    <p>Select to plot this value</p>
+                </td>
+            </tr>
+            <tr>
+                <td>Statistic Name </td>
+                <td>
+                    <p>The list is populated from the <strong>Reported Stats</strong> and <strong>Computed Stats</strong> tabs </p>
+                </td>
+            </tr>
+            <tr>
+                <td>Description in Graph </td>
+                <td>
+                    <p>Text that identifies this series in the legend </p>
+                </td>
+            </tr>
+            <tr>
+                <td><a name="plotcolor" id="plotcolor"></a>Color</td>
+                <td><a href="rr_te_color.htm">Color</a> to use when plotting this value </td>
+            </tr>
+            <tr>
+                <td>Value Axis</td>
+                <td>Label value for the Y axis this value will be plotted against. Multiple value axes are possible. To create an axis, type the name of the new axis in the dropdown box.</td>
+            </tr>
+        </table>
+        <hr width="100%" size="0" align="center" xmlns="http://www.w3.org/1999/xhtml" />
+        <p class="related_information" xmlns="http://www.w3.org/1999/xhtml">Related Topics:</p>
+        <p class="relatedtopic" xmlns="http://www.w3.org/1999/xhtml"><a href="rr_te_oview.htm">Results Reporter Template Editor Overview </a>
+        </p>
+        <p style="text-align: right;"><span style="font-family: sans-serif; font-size: 8pt;">© Spirent Communications</span>
+        </p>
+        <script type="text/javascript" src="SkinSupport/MadCapBodyEnd.js">
+        </script>
+    </body>
+</html>

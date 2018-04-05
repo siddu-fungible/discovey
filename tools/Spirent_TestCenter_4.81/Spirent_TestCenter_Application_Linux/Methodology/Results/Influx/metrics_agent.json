@@ -1,0 +1,172 @@
+[
+    {
+        "measurements": ["host_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_HOSTIP_REGEX",
+                    "dbkey": "host_ip"
+                }
+            }
+        ],
+        "required_fields": [
+            ["cpu_all_user_pct", "float"],
+            ["cpu_all_system_pct", "float"]
+        ]
+    },
+    {
+        "measurements": ["vswitch_dpdk_pmd_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_HOSTIP_REGEX",
+                    "dbkey": "host_ip"
+                }
+            }
+        ],
+        "required_fields": [
+            ["processing_cycles_pct", "float"],
+            ["processing_cycles_per_packet_avg_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["vswitch_dpdk_interface_metrics", "vswitch_interface_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_HOSTIP_REGEX",
+                    "dbkey": "host_ip"
+                }
+            }
+        ],
+        "required_fields": [
+            ["tx_packets_rate", "float"],
+            ["rx_packets_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["avs_vswitch_interface_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_HOSTIP_REGEX",
+                    "dbkey": "host_ip"
+                }
+            }
+        ],
+        "required_fields": [
+            ["tx_packets_rate", "float"],
+            ["rx_packets_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["avs_vswitch_port_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_HOSTIP_REGEX",
+                    "dbkey": "host_ip"
+                }
+            }
+        ],
+        "required_fields": [
+            ["tx_packets_rate", "float"],
+            ["rx_packets_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["avs_vswitch_port_queue_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_HOSTIP_REGEX",
+                    "dbkey": "host_ip"
+                }
+            }
+        ],
+        "required_fields": [
+            ["packets_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["vpp_vswitch_interface_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+        ],
+        "required_fields": [
+            ["tx_packets_rate", "float"],
+            ["rx_packets_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["libvirt_domain_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_UUID_REGEX",
+                    "dbkey": "libvirt_uuid"
+                }
+            }
+        ],
+        "required_fields": [
+            ["cpu_all_user_pct", "float"],
+            ["cpu_all_system_pct", "float"]
+        ]
+    },
+    {
+        "measurements": ["libvirt_domain_interface_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_UUID_REGEX",
+                    "dbkey": "libvirt_uuid"
+                }
+            }
+        ],
+        "required_fields": [
+            ["tx_packets_rate", "float"],
+            ["rx_packets_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["libvirt_domain_block_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_UUID_REGEX",
+                    "dbkey": "libvirt_uuid"
+                }
+            }
+        ],
+        "required_fields": [
+            ["wr_bytes_rate", "float"],
+            ["rd_bytes_rate", "float"]
+        ]
+    },
+    {
+        "measurements": ["intel_pcm_system_metrics", "intel_pcm_core_metrics"],
+        "allow_downsample": true,
+        "additional_where": [
+            {
+                "methodology_var": {
+                    "id": "VNF_HOSTIP_REGEX",
+                    "dbkey": "host_ip"
+                }
+            }
+        ],
+        "check_fields": false,
+        "required_fields": [
+            ["ipc", "float"],
+            ["l3miss", "float"]
+        ]
+    }
+]

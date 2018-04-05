@@ -1,0 +1,66 @@
+[
+    {
+        "enable": true,
+        "result_id": "drv_port_stats",
+        "source_type": "DRV",
+        "destination_db": "INFLUX_DB",
+        "drv": {
+            "name": "drv_traffic_results_view",
+            "filename": "drv_traffic_results_view.xml",
+            "columns_to_tag_in_influx": ["Port Name"]
+        },
+        "type": "NONE",
+        "definition": {}
+    },
+    {
+        "enable": true,
+        "result_id": "port_stats_view",
+        "source_type": "INFLUX_DB",
+        "type": "grafana",
+        "definition": {
+            "input_file": "STC_DRV_Traffic_Stats.json",
+            "import_type": "ALL",
+            "title": "TestCenter DRV Statistics",
+            "parameters": [
+                {
+                    "property": "SessionId",
+                    "display_name": "SessionId",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "BLL_TOKEN"
+                },
+                {
+                    "property": "ViewStat",
+                    "display_name": "View",
+                    "description": "View",
+                    "property_value_type": "ENUM",
+                    "property_value": "Test Center> Traffic Rate",
+                    "acceptable_values": [
+                    ],
+                    "categorize_values": true
+                }
+            ],
+            "frames": [
+                {
+                    "view_property": "ViewStat",
+                    "view_mapping": [
+                        {
+                            "name": "Test Center> Traffic Rate",
+                            "dashboard": "stc-drv-traffic-stats",
+                            "panel_id": "1"
+                        },
+                        {
+                            "name": "Test Center> Drop Count",
+                            "dashboard": "stc-drv-traffic-stats",
+                            "panel_id": "2"
+                        },
+                        {
+                            "name": "Test Center> Latency",
+                            "dashboard": "stc-drv-traffic-stats",
+                            "panel_id": "3"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]

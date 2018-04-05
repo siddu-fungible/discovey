@@ -1,0 +1,93 @@
+[
+    {
+        "enable": true,
+        "result_id": "drv_sb_traffic_stats",
+        "source_type": "DRV",
+        "destination_db": "INFLUX_DB",
+        "drv": {
+            "name": "drv_sb_traffic_results_view",
+            "filename": "drv_sb_traffic_results_view.xml",
+            "columns_to_tag_in_influx": ["StreamBlock Name"],
+            "column_type_list": [
+                {
+                    "description": "Dropped Frame Percent Rate DRV results has a column unit of 0 and type of NONE. We'll force it to type FLOAT.",
+                    "property_id": "StreamBlock.DroppedFramePercentRate",
+                    "type": "FLOAT"
+                }
+            ]
+        },
+        "type": "NONE",
+        "definition": {}
+    },
+    {
+        "enable": true,
+        "result_id": "drv_sb_traffic_stats_view",
+        "source_type": "INFLUX_DB",
+        "type": "grafana",
+        "definition": {
+            "input_file": "STC_DRV_SB_Traffic_Stats.json",
+            "import_type": "ALL",
+            "title": "TestCenter Traffic Statistics",
+            "parameters": [
+                {
+                    "property": "SessionId",
+                    "display_name": "SessionId",
+                    "property_value_type": "METHODOLOGY_VAR",
+                    "property_value": "BLL_TOKEN"
+                },
+                {
+                    "property": "ViewStat",
+                    "display_name": "View",
+                    "description": "View",
+                    "property_value_type": "ENUM",
+                    "property_value": "TestCenter> Traffic Rate (bits/sec)",
+                    "acceptable_values": [
+                    ],
+                    "categorize_values": true
+                }
+            ],
+            "frames": [
+                {
+                    "view_property": "ViewStat",
+                    "view_mapping": [
+                        {
+                            "name": "TestCenter> Traffic Rate (bits/sec)",
+                            "dashboard": "stc-drv-sb-traffic-stats",
+                            "panel_id": "1"
+                        },
+                        {
+                            "name": "TestCenter> Traffic Rate (packets/sec)",
+                            "dashboard": "stc-drv-sb-traffic-stats",
+                            "panel_id": "2"
+                        },
+                        {
+                            "name": "TestCenter> Traffic Count",
+                            "dashboard": "stc-drv-sb-traffic-stats",
+                            "panel_id": "3"
+                        },
+                        {
+                            "name": "TestCenter> Drop Rate",
+                            "dashboard": "stc-drv-sb-traffic-stats",
+                            "panel_id": "4"
+                        },
+                        {
+                            "name": "TestCenter> Drop Count",
+                            "dashboard": "stc-drv-sb-traffic-stats",
+                            "panel_id": "5"
+                        },
+                        {
+                            "name": "TestCenter> Latency",
+                            "dashboard": "stc-drv-sb-traffic-stats",
+                            "panel_id": "6"
+                        },
+                        {
+                            "name": "TestCenter> Jitter",
+                            "dashboard": "stc-drv-sb-traffic-stats",
+                            "panel_id": "7"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]

@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="RTP Header"
+    showName="Real-Time Protocol (RTP) Header"
+    version="1.00"
+    category="RTP"
+    readonly="true"
+    validate="true"
+    firstPdu="rtp:RtpHeader"
+    description="RTP Header" >
+
+    <pdus>
+      <pdu name="proto1" pdu="rtp:RtpHeader" />
+    </pdus>
+  </template>
+</frame>

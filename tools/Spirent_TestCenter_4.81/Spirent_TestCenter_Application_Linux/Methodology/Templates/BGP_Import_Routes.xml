@@ -1,0 +1,48 @@
+<Template>
+<Description />
+<Image />
+<DataModelXml>
+<StcSystem id="1" 
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2" 
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Tags id="1210" serializationBase="true" 
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1216"/>
+      <Tag id="1216" 
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttBgpImportRouteTableParams">
+      </Tag>
+    </Tags>
+    <BgpImportRouteTableParams id="2197" serializationBase="true" 
+     RouterType="CISCO_VERSION_ONE"
+     FileName="C:\dev\TestCenter\integration\bin\Debug\Methodology\Packages\BGPRRCON\bgp_fullroute.txt"
+     AddTesterAsn="TRUE"
+     UseTesterIpAsNextHop="TRUE"
+     MaxRouteBlks="0"
+     MaxRoutesPerBlock="0"
+     MaxRoutes="0"
+     DisableTraffic="FALSE"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="BgpImportRouteTableParams 1">
+      <Relation target="1216" type="UserTag" />
+    </BgpImportRouteTableParams>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

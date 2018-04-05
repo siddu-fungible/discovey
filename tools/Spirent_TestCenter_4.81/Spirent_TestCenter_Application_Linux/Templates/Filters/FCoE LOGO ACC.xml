@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCoELOGOACC"
+    showName="FCoE LOGO ACC"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE LOGO ACC">
+    <pdus>
+      <pdu name="proto1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC"/>
+      <pdu name="proto3" pdu="fc:ELSLOGOLSACC"/>
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,197 @@
+<?xml version="1.0"?>
+<testCase version="3.4.0.39989">
+    <execution estimatedExecutionTime="6"/>
+    <procedures>
+        <item name="main">
+            <steps>
+                <item guid="0694384a-8571-46b7-abbe-2108feeb34bb" action="open" session="t1">
+                    <command>
+                        <body>project://Spirent/session_profiles/common_telnet_JuniperMx480.ffsp</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.OpenStepPropertyGroup">
+                        <stepProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                        <sessionProperties type="com.fnfr.svt.applications.telnet.documents.TelnetSessionProperties"/>
+                    </applicationProperties>
+                </item>
+                <item guid="1a6ed97e-85ed-490a-9f2d-6c5edc3d789b" action="command" session="t1" normalOffset="4.281">
+                    <command>
+                        <body>admin</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                        <completionProperties expectedIdleTime="0.422" expectedIdleTime.inherit="false"/>
+                    </applicationProperties>
+                </item>
+                <item guid="e556cf80-92a9-4710-bd0e-4a4adddac6bf" action="command" session="t1" normalOffset="2.703">
+                    <command>
+                        <body>Spirent</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="6cf5904c-4d7d-4f5a-a980-be1cdbfa713f" action="command" session="t1">
+                    <command>
+                        <body>configure</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="85d3b047-1cfc-497e-ba0c-adbb5010cab5" action="command" session="t1" normalOffset="11.969">
+                    <command>
+                        <body>save $file</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>write_result</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                        <promptProperties>
+                            <alsoUseSessionPrompts inherit="false" defaultValue=""/>
+                        </promptProperties>
+                        <completionProperties expectedIdleTime="3.406" expectedIdleTime.inherit="false"/>
+                    </applicationProperties>
+                </item>
+                <item guid="17c07976-88de-43da-97f0-eee5b180a9d0" action="command" session="t1">
+                    <command>
+                        <body>quit</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>quit_result</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                        <promptProperties>
+                            <stepPrompts>
+                                <item name="prompt1" MatchMethod="REGULAR_EXPRESSION">
+                                    <Content>.*</Content>
+                                </item>
+                            </stepPrompts>
+                        </promptProperties>
+                    </applicationProperties>
+                </item>
+                <item guid="55f18e03-4a6b-4f27-bac9-5f571514998b" action="if">
+                    <command>
+                        <body>[regexp {changed} $quit_result dum1 ]  == 1</body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="32bd35f0-8a1c-4a6d-8a7b-e331f174ba9f" action="then">
+                            <nestedSteps>
+                                <item guid="5b2db687-45a8-4a1c-9d95-126285e5b7d4" action="command" session="t1" normalOffset="1.187" estimatedStepExecutionTime="1.922">
+                                    <postProcessing>
+                                        <storeResponseAt>load_result</storeResponseAt>
+                                    </postProcessing>
+                                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties">
+                                        <promptProperties>
+                                            <alsoUseSessionPrompts inherit="false" defaultValue=""/>
+                                        </promptProperties>
+                                        <completionProperties expectedIdleTime="1.047" expectedIdleTime.inherit="false"/>
+                                    </applicationProperties>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="6146d039-de25-40ea-a4ad-a01996a2056e" action="else">
+                            <nestedSteps>
+                                <item guid="3a383400-8bc5-479e-9322-dbfd1468b5b4" action="comment">
+                                    <command>
+                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="b8d5f5af-efd7-4adc-b4bc-91b72206ce59" action="command" session="t1">
+                    <command>
+                        <body>file copy $file ftp://spirent:spirent@$host</body>
+                    </command>
+                    <postProcessing>
+                        <storeResponseAt>ftp_result</storeResponseAt>
+                    </postProcessing>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="1bf578fe-3c62-41ac-9781-4212867163e3" action="command" session="t1">
+                    <command>
+                        <body> file delete $file</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="1be7265c-fc8c-491d-b093-e18a2941349e" action="close" session="t1">
+                    <applicationProperties type="com.fnfr.svt.editors.terminal.documents.StepDefaultProperties"/>
+                </item>
+                <item guid="0353e568-9a9e-4a69-8f6b-3377c28dd0ea" action="eval">
+                    <command>
+                        <body>set result [ response ftp_result {.*100%.*} ]</body>
+                    </command>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+                <item guid="e52fe5e1-9dce-4b95-ba2c-e58c2a62a431" action="if">
+                    <command>
+                        <body>[regexp {100%} $result dummary d1 ] == 0 </body>
+                    </command>
+                    <nestedSteps>
+                        <item guid="3b2c6b54-3dff-42a2-9654-505531e3e6c5" action="then">
+                            <nestedSteps>
+                                <item guid="3ad87406-bc62-4b96-9308-1592dbd9d210" action="eval">
+                                    <command>
+                                        <body>puts &quot;False&quot;</body>
+                                    </command>
+                                    <postProcessing>
+                                        <analysisRules>
+                                            <item>
+                                                <extractorInfo extractorType="contains">
+                                                    <extractorProperties type="com.fnfr.svt.mapping.execution.extractors.ExtractorContainsPropertyGroup">
+                                                        <searchString>False</searchString>
+                                                    </extractorProperties>
+                                                </extractorInfo>
+                                                <processorInfo ruleType="message">
+                                                    <ruleProperties type="com.fnfr.svt.testcase.documents.MessageProcessorPropertyGroup">
+                                                        <message>{auto_message}</message>
+                                                    </ruleProperties>
+                                                </processorInfo>
+                                            </item>
+                                        </analysisRules>
+                                    </postProcessing>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                        <item guid="ff7df235-2425-4f8a-8e77-93250e4c6134" action="else">
+                            <nestedSteps>
+                                <item guid="9378dca4-3459-4361-be95-cee9edd3ad32" action="comment">
+                                    <command>
+                                        <body>Insert steps here for when the expression evaluates to false</body>
+                                    </command>
+                                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                                    <useFieldsInCommand>false</useFieldsInCommand>
+                                </item>
+                            </nestedSteps>
+                            <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                            <useFieldsInCommand>false</useFieldsInCommand>
+                        </item>
+                    </nestedSteps>
+                    <applicationProperties type="com.fnfr.svt.documents.EmptyPropertyGroup"/>
+                    <useFieldsInCommand>false</useFieldsInCommand>
+                </item>
+            </steps>
+            <arguments>
+                <item name="session"/>
+                <item name="backupcfg">
+                    <defaultValue>running-config</defaultValue>
+                </item>
+                <item name="file">
+                    <defaultValue>swj</defaultValue>
+                </item>
+                <item name="host">
+                    <defaultValue>10.61.18.105</defaultValue>
+                </item>
+            </arguments>
+        </item>
+    </procedures>
+</testCase>

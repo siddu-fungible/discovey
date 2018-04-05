@@ -1,0 +1,31 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCoEGPN_FFAccept" 
+    showName="FCoE GPN_FF Accept"
+    version="1.0"
+    category="Switching"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:FCoEHeader"
+    description="FCoE GPN_FF Accept">
+    <pdus>
+      <pdu name="fcoe1" pdu="fc:FCoEHeader"/>
+      <pdu name="proto2" pdu="fc:FC">
+        <rCtl>03</rCtl>
+        <sId>FFFFFC</sId>
+        <frameControl>980000</frameControl>
+      </pdu>
+      <pdu name="proto3" pdu="fcgs:GpnFfAccept">
+        <ctIuPreamble>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+        <portNames>
+          <PortName name="PortName">
+            <control>10000000</control>
+          </PortName>
+        </portNames>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

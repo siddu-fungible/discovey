@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="CSF EOAM"
+    showName="Client Signal Fail (CSF)"
+    version="1.00"
+    category="EOAM"
+    readonly="true"
+    validate="true"
+    firstPdu="serviceoam:CSF"
+    description="Ethernet OAM CSF" >
+
+    <pdus>
+      <pdu name="proto1" pdu="serviceoam:CSF" />
+    </pdus>
+  </template>
+</frame>

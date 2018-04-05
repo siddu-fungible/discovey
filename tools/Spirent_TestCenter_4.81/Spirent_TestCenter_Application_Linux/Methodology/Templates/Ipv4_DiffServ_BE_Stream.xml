@@ -1,0 +1,137 @@
+<Template>
+<Description />
+<Image />
+<DataModelXml>
+<StcSystem id="1"
+ InSimulationMode="FALSE"
+ UseSmbMessaging="FALSE"
+ ApplicationName="TestCenter"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="StcSystem 1">
+  <Project id="2"
+   TableViewData=""
+   TestMode="L2L3"
+   SelectedTechnologyProfiles=""
+   ConfigurationFileName="Untitled.tcc"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="Project 1">
+    <Relation type="DefaultSelection" target="325876"/>
+    <FrameLengthDistribution id="325876" serializationBase="true"
+     Seed="10900842"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Spirent">
+      <FrameLengthDistributionSlot id="22"
+       FrameLengthMode="FIXED"
+       FixedFrameLength="40"
+       MinFrameLength="40"
+       MaxFrameLength="41"
+       Weight="5867"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="FrameLengthDistributionSlot 13">
+      </FrameLengthDistributionSlot>
+      <FrameLengthDistributionSlot id="23"
+       FrameLengthMode="FIXED"
+       FixedFrameLength="44"
+       MinFrameLength="43"
+       MaxFrameLength="45"
+       Weight="200"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="FrameLengthDistributionSlot 14">
+      </FrameLengthDistributionSlot>
+      <FrameLengthDistributionSlot id="24"
+       FrameLengthMode="FIXED"
+       FixedFrameLength="576"
+       MinFrameLength="575"
+       MaxFrameLength="577"
+       Weight="2366"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="FrameLengthDistributionSlot 15">
+      </FrameLengthDistributionSlot>
+      <FrameLengthDistributionSlot id="25"
+       FrameLengthMode="FIXED"
+       FixedFrameLength="1500"
+       MinFrameLength="1499"
+       MaxFrameLength="1500"
+       Weight="1567"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="FrameLengthDistributionSlot 16">
+      </FrameLengthDistributionSlot>
+    </FrameLengthDistribution>
+    <Tags id="1208" serializationBase="true"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="Tags 1">
+      <Relation type="UserTag" target="1400"/>
+      <Relation type="UserTag" target="1401"/>
+      <Tag id="1400"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamBlock">
+      </Tag>
+      <Tag id="1401"
+       Active="TRUE"
+       LocalActive="TRUE"
+       Name="ttStreamBlockLoadProfile">
+      </Tag>
+    </Tags>
+    <StreamBlock id="2111" serializationBase="true"
+     IsControlledByGenerator="TRUE"
+     ControlledBy="generator"
+     TrafficPattern="PAIR"
+     EndpointMapping="ONE_TO_ONE"
+     EnableStreamOnlyGeneration="TRUE"
+     EnableBidirectionalTraffic="FALSE"
+     EqualRxPortDistribution="TRUE"
+     EnableTxPortSendingTrafficToSelf="FALSE"
+     EnableControlPlane="FALSE"
+     InsertSig="TRUE"
+     FrameLengthMode="IMIX"
+     FixedFrameLength="128"
+     MinFrameLength="128"
+     MaxFrameLength="256"
+     StepFrameLength="1"
+     FillType="CONSTANT"
+     ConstantFillPattern="0"
+     EnableFcsErrorInsertion="FALSE"
+     Filter=""
+     ShowAllHeaders="FALSE"
+     AllowInvalidHeaders="FALSE"
+     AutoSelectTunnel="FALSE"
+     ByPassSimpleIpSubnetChecking="FALSE"
+     EnableHighSpeedResultAnalysis="TRUE"
+     EnableBackBoneTrafficSendToSelf="TRUE"
+     EnableResolveDestMacAddress="TRUE"
+     AdvancedInterleavingGroup="0"
+     DisableTunnelBinding="FALSE"
+     FrameConfig="&lt;frame&gt;&lt;config&gt;&lt;pdus&gt;&lt;pdu name=&quot;eth1&quot; pdu=&quot;ethernet:EthernetII&quot;&gt;&lt;/pdu&gt;&lt;pdu name=&quot;ip_1&quot; pdu=&quot;ipv4:IPv4&quot;&gt;&lt;tosDiffserv name=&quot;anon_25472&quot;&gt;&lt;diffServ name=&quot;anon_25473&quot;&gt;&lt;dscpHigh&gt;0&lt;/dscpHigh&gt;&lt;dscpLow&gt;0&lt;/dscpLow&gt;&lt;reserved&gt;0&lt;/reserved&gt;&lt;/diffServ&gt;&lt;/tosDiffserv&gt;&lt;/pdu&gt;&lt;/pdus&gt;&lt;/config&gt;&lt;/frame&gt;"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="BE">
+      <Relation type="UserTag" target="1400"/>
+      <Relation type="AffiliationFrameLengthDistribution" target="325876"/>
+      <Relation type="AffiliationStreamBlockLoadProfile" target="2112"/>
+    </StreamBlock>
+    <StreamBlockLoadProfile id="2112" serializationBase="true"
+     Load="10"
+     LoadUnit="PERCENT_LINE_RATE"
+     BurstSize="1"
+     InterFrameGap="12"
+     InterFrameGapUnit="BYTES"
+     StartDelay="0"
+     Priority="0"
+     Active="TRUE"
+     LocalActive="TRUE"
+     Name="StreamBlockLoadProfile 1">
+      <Relation type="UserTag" target="1401"/>
+    </StreamBlockLoadProfile>
+  </Project>
+</StcSystem>
+</DataModelXml>
+</Template>

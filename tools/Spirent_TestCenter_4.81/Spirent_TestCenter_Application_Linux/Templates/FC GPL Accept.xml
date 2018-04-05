@@ -1,0 +1,26 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd" 
+    name="FCGPLAccept" 
+    showName="FC GPL Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fcgs:GplAccept"
+    description="FC GPL Accept">
+    <pdus>
+      <pdu name="proto3" pdu="fcgs:GplAccept">
+        <ctIuPreamble>
+          <gsType>FA</gsType>
+          <gsSubType>01</gsSubType>
+          <commandRespondCode>8002</commandRespondCode>
+        </ctIuPreamble>
+        <portEntries>
+          <PortEntry name="PortEntry_0">
+          </PortEntry>
+        </portEntries>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

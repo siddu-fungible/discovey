@@ -1,0 +1,83 @@
+{
+    "ExecuteWithTagsCommand": {
+        "description": "Schema to define ExecuteWithTagsCommand input.",
+        "title": "Schema for the spirent.methodology.ExecuteWithTagsCommand",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+            "enable": {
+                "type": "boolean",
+                "description": "A flag indicating if these commands will be executed."
+            },
+            "description": {
+                "type": "string",
+                "description": "Description for this set of commands."
+            },
+            "command_list": {
+                "type": "array",
+                "description": "List of commands to execute with tags.",
+                "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "enable": {
+                            "type": "boolean",
+                            "description": "A flag indicating if this command will be executed."
+                        },
+                        "command_name": {
+                            "type": "string",
+                            "description": "Name of the command to execute."
+                        },
+                        "property_value": {
+                            "type": "object",
+                            "description": "Property-value pairs to configure for the command."
+                        },
+                        "handle_property_list": {
+                            "type": "array",
+                            "description": "A list of properties to fill with object handles from tags.",
+                            "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                    "property_name": {
+                                        "type": "string",
+                                        "description": "Name of the property to assign handles to."
+                                    },
+                                    "tag_name_list": {
+                                        "type": "array",
+                                        "description": "List of tags to get object handles from.",
+                                        "items": {
+                                            "type": "string",
+                                            "description": "Tag name."
+                                        }
+                                    },
+                                    "class_name_list": {
+                                        "type": "array",
+                                        "description": "List of BLL object class names to filter tags on.",
+                                        "items": {
+                                            "type": "string",
+                                            "description": "BLL Object class name."
+                                        }
+                                    },
+                                    "enable_recur_search": {
+                                        "type": "boolean",
+                                        "description": "Enable recursive search when looking for tagged objects.  Default is true."
+                                    }
+                                },
+                                "required": [
+                                    "property_name",
+                                    "tag_name_list"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "command_name"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "command_list",
+            "description"
+        ]
+    }
+}

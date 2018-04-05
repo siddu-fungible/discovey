@@ -1,0 +1,1327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>Tbl1FsAv</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64</instance>
+      </value>
+      <path>select distinct (case when FrameSizeType = "Random" then "Random" when FrameSize == ConfiguredFrameSize then FrameSize else "Configured-" || ConfiguredFrameSize || " Avg-" || FrameSize end) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>Tbl1FdAv</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>N/A</instance>
+      </value>
+      <path>select distinct FrameLengthDistribution from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ order by FrameLengthDistribution;</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>Tbl1FrameSize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64.0</instance>
+      </value>
+      <path>select FrameSize from Rfc2544Back2BackPerFrameSizeResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstStartDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2011-08-31 21:03:53</instance>
+      </value>
+      <path>select CreatedTime from DataSet where Id = (select distinct DataSetId from EotResultNodeParam where Name = "@StartDataSetId");</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstEndDate</name>
+      <persist>false</persist>
+      <path>select CreatedTime from DataSet where Id = =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.80.3990.0002</instance>
+      </value>
+      <path>select Version from StcSystem where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestStatus</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>NONE</instance>
+      </value>
+      <path>select ResultState from EotResultNode where Id = (select max(Id) from EotResultNode);</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64.0</instance>
+      </value>
+      <path>select (case when FrameSizeType = "Random" then "Random" when FrameSizeType = 'iMIX' then FrameLengthDistribution when ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize then 'Configured-' || Round(ConfiguredFrameSize) || ' Avg-' || Round(FrameSize,3) else FrameSize end) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialFD</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>N/A</instance>
+      </value>
+      <path>select FrameLengthDistribution from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2000.0</instance>
+      </value>
+      <path>select IntendedLoad from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialRxFrames</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>29761906</instance>
+      </value>
+      <path>select RxFrameCount from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialTxFrames</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>29761906</instance>
+      </value>
+      <path>select TxFrameCount from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialFrameLoss</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0</instance>
+      </value>
+      <path>select case when FrameLoss = 18446744073709551615 then "" else FrameLoss end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialIter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+      </value>
+      <path>select IterationNum from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialMaxLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.11</instance>
+      </value>
+      <path>select MaxLatency from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialMinLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+      </value>
+      <path>select MinLatency from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialAvgLat</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.105</instance>
+      </value>
+      <path>select AvgLatency from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialFR</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2976190.6</instance>
+      </value>
+      <path>select CAST(FrameRate AS INT) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+        <instance>1.0</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <path>select ParamValue from EotResultNodeParam where Name='@EndDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>TrialOfferedLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2000.0</instance>
+      </value>
+      <path>select case when OfferedLoad == "1.#QNAN" then "N/A" else round(OfferedLoad,3) end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>basic</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select case when MaxJitter ='1.#QNAN' then 'N/A' else round(max(MaxJitter)*1000)/1000 end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMinJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select case when MinJitter ='1.#QNAN' then 'N/A' else round(min(MinJitter)*1000)/1000 end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgJitter</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select case when AvgJitter ='1.#QNAN' then 'N/A' else round(avg(AvgJitter)*1000)/1000 end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.11</instance>
+      </value>
+      <path>select round(max(MaxLatency)*1000)/1000 from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMinLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+      </value>
+      <path>select round(min(MinLatency)*1000)/1000 from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgLatency</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.105</instance>
+      </value>
+      <path>select round(avg(AvgLatency)*1000)/1000 from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxJitterFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select case when MaxJitter ='1.#QNAN' then 0 else round(max(MaxJitter),3) end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggMinJitterFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select case when MinJitter ='1.#QNAN' then 0 else round(min(MinJitter),3) end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgJitterFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select case when AvgJitter ='1.#QNAN' then 0 else round(avg(AvgJitter),3) end from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggMaxLatencyFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.11</instance>
+      </value>
+      <path>select round(max(MaxLatency),3) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggMinLatencyFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.1</instance>
+      </value>
+      <path>select round(min(MinLatency),3) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggAvgLatencyFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.105</instance>
+      </value>
+      <path>select round(avg(AvgLatency),3) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggFS</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64</instance>
+      </value>
+      <path>select (case when FrameSizeType = "Random" then "Random" when FrameSizeType = 'iMIX' then FrameLengthDistribution when ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize then 'Configured-' || Round(ConfiguredFrameSize) || ' Avg-' || Round(FrameSize,3) else FrameSize end) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggFD</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>N/A</instance>
+      </value>
+      <path>select FrameLengthDistribution from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameLengthDistribution, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggLoad</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2000.0</instance>
+      </value>
+      <path>select IntendedLoad from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>true</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggFsAv</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64.0</instance>
+      </value>
+      <path>select (case FrameSizeType when "Random" then "Random" else FrameSize end) from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameSize;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>AggFdAv</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>N/A</instance>
+      </value>
+      <path>select FrameLengthDistribution from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by FrameLengthDistribution;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ResultViewMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>BASIC</instance>
+      </value>
+      <path>select distinct upper(ResultViewMode) from ResultOptions</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeType</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Fixed</instance>
+      </value>
+      <path>select distinct FrameSizeType from Rfc2544Back2BackPerLoadResult;</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions,Advanced Test Summary,Trial Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistName</name>
+      <persist>false</persist>
+      <path>select fd.name AS 'iMIX Distribution' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544Back2BackPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSMode</name>
+      <persist>false</persist>
+      <path>select fds.frameLengthMode AS 'Frame Length Mode' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544Back2BackPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLen</name>
+      <persist>false</persist>
+      <path>select coalesce((case when fds.frameLengthMode = 'FIXED' then CAST(fds.fixedFrameLength AS varchar(10)) else CAST(fds.minFrameLength AS varchar(10)) || '-' || CAST(fds.maxFrameLength AS varchar(10)) end),'-') AS 'IP Frame Length' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544Back2BackPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeight</name>
+      <persist>false</persist>
+      <path>select fds.weight AS 'Weight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544Back2BackPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWt</name>
+      <persist>false</persist>
+      <path>select round((case when TotalWt.totalWeight=0 then 0 else ((fds.weight * 100.0) /totalWeight) end),2) AS 'Percentage(%)' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544Back2BackPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd left join (select fd.handle AS 'Handle', coalesce(sum(fds.weight),0) AS 'TotalWeight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544Back2BackPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fds.parenthnd = fd.handle group by fd.handle) AS TotalWt ON TotalWt.handle = fd.handle order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>Tbl1BurstSize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>29761906</instance>
+      </value>
+      <path>Select case R1.B2BFrameSize when R2.B2BFrameSize then R2.BurstSize else 0 end from (Select distinct (CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END) AS B2BFrameSize from Rfc2544Back2BackPerLoadResult WHERE DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ ) R1 LEFT JOIN (select (CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END) AS B2BFrameSize ,max(BurstSize) BurstSize from Rfc2544Back2BackPerLoadResult where Frameloss=0 and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by B2BFrameSize) R2 ON R1.B2BFrameSize=R2.B2BFrameSize</path>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>Tbl1Duration</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>10.0</instance>
+      </value>
+      <path>Select case R1.B2BFrameSize when R2.B2BFrameSize then R2.DurationInSec else 0 end from (Select distinct (CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END) AS B2BFrameSize from Rfc2544Back2BackPerLoadResult WHERE DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ ) R1 LEFT JOIN (select (CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END) AS B2BFrameSize ,max(DurationInSec) DurationInSec from Rfc2544Back2BackPerLoadResult where Frameloss=0 and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by B2BFrameSize) R2 ON R1.B2BFrameSize=R2.B2BFrameSize</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>DurationMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>SECONDS</instance>
+      </value>
+      <path>select DurationMode from Rfc2544BackToBackFramesConfig where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ and Id =1;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Tbl1Iload</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2000.0</instance>
+      </value>
+      <path>Select case R1.B2BFrameSize when R2.B2BFrameSize then R2.ILoad else 0 end from (Select distinct (CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END) AS B2BFrameSize from Rfc2544Back2BackPerLoadResult WHERE DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ ) R1 LEFT JOIN ( Select (CASE WHEN c.FrameSizeType = 'Fixed' THEN c.FrameSize WHEN c.FrameSizeType = 'Random' THEN 'Random' WHEN c.FrameSizeType = 'iMIX' THEN c.FrameLengthDistribution ELSE c.FrameSize END) AS B2BFrameSize ,c.intendedload ILoad from Rfc2544Back2BackPerLoadResult c , (select (CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END) AS B2BFrameSize ,max(BurstSize) BurstSize,max(DurationInSec) DurationInSec from Rfc2544Back2BackPerLoadResult where Frameloss=0 and DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by B2BFrameSize) t where B2BFrameSize=t.B2BFrameSize and c.DurationInSec=t.DurationInSec and c.BurstSize=t.BurstSize and c.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by B2BFrameSize ) R2 ON R1.B2BFrameSize=R2.B2BFrameSize</path>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggLoss</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>0.0</instance>
+      </value>
+      <path>select CASE WHEN FrameLoss = 18446744073709551615 then "" ELSE min((FrameLoss*100.0)/TxFramecount) END from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by CASE WHEN FrameSizeType = 'Fixed' THEN FrameSize WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution ELSE FrameSize END, IntendedLoad;</path>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialBurstSize</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>29761906</instance>
+      </value>
+      <path>select BurstSize from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialDuration</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>10.0</instance>
+      </value>
+      <path>select DurationInSec from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$</path>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>64^10.0^29761906^2000.0^2976190.6^29761906.0^29761906.0^0.0</instance>
+      </value>
+      <path>SELECT B2BFrameSize ||'^'|| Duration ||'^'|| BS ||'^'|| IL ||'^'|| CAST(FR AS INT) ||'^'|| TxCount ||'^'|| RxCount ||'^'|| FL FROM ( Select (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN 'Configured-' || Round(ConfiguredFrameSize) || ' Avg-' || Round(FrameSize,3) ELSE FrameSize END) AS B2BFrameSize ,R2.FS, Coalesce(MaxDuration,0) Duration, Coalesce(MaxBurstSize,0) BS,Coalesce(ILoad,'N/A') IL , Coalesce(AvgFR,'N/A') FR, Coalesce(AvgTxFrameCount,'N/A') TxCount , Coalesce(AvgRxFrameCount,'N/A') RxCount , Coalesce(AvgFrameLoss,'') FL from Rfc2544Back2BackPerLoadResult R1 LEFT JOIN ( SELECT (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN 'Configured-' || Round(ConfiguredFrameSize) || ' Avg-' || Round(FrameSize,3) ELSE FrameSize END) AS FS,MaxDuration, MaxBurstSize,ILoad, ROUND(AVG(FrameRate),5) AvgFR, ROUND(AVG(TxFrameCount),5) AvgTxFrameCount , ROUND(AVG(RxFrameCount),5) AvgRxFrameCount, Coalesce(ROUND(AVG(FrameLoss),5), '') AvgFrameLoss FROM Rfc2544Back2BackPerLoadResult DataTbl JOIN ( Select (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN 'Configured-' || Round(ConfiguredFrameSize) || ' Avg-' || Round(FrameSize,3) ELSE FrameSize END) AS ILFrameSize , MAX(c.intendedload) ILoad, t.BurstSize MaxBurstSize, t.DurationInSec MaxDuration from Rfc2544Back2BackPerLoadResult c JOIN ( select (CASE WHEN FrameSizeType = 'Random' THEN 'Random' WHEN FrameSizeType = 'iMIX' THEN FrameLengthDistribution WHEN ConfiguredFrameSize &lt;&gt; 0 AND FrameSize &lt;&gt; ConfiguredFrameSize THEN 'Configured-' || Round(ConfiguredFrameSize) || ' Avg-' || Round(FrameSize,3) ELSE FrameSize END) AS B2BFrameSize ,max(BurstSize) BurstSize,max(DurationInSec) DurationInSec from Rfc2544Back2BackPerLoadResult where DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by B2BFrameSize ) t ON ILFrameSize=t.B2BFrameSize and c.DurationInSec=t.DurationInSec and c.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ group by ILFrameSize ) DurationTbl ON DataTbl.DurationInSec=DurationTbl.MaxDuration AND DataTbl.IntendedLoad=DurationTbl.ILoad AND FS=DurationTbl.ILFrameSize GROUP BY FS,DataTbl.IntendedLoad ) R2 ON B2BFrameSize=R2.FS WHERE R1.DataSetId between =$@StartDataSetId$ and =$@EndDataSetId$ GROUP BY B2BFrameSize ORDER BY B2BFrameSize)</path>
+      <multivalued>true</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance></instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2544ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnitString</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Mbps</instance>
+      </value>
+      <path>select (case DisplayLoadUnit when "PERCENT_LINE_RATE" then "%" when "FRAMES_PER_SECOND" then "fps" when "INTER_BURST_GAP" then "Inter-burst Gap" when "MEGABITS_PER_SECOND" then "Mbps" when "KILOBITS_PER_SECOND" then "Kbps" when "BITS_PER_SECOND" then "bps" end ) from BenchmarkRfc2544ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>TestStartDate</name>
+      <persist>false</persist>
+      <value type="String">2011-08-31 14:03:53 PDT</value>
+      <script><![CDATA[# generate the report start date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set result {}&#xa;set  dateSplit [split $tstStartDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Basic</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>NoteResultViewMode</name>
+      <persist>false</persist>
+      <value type="String">Note: Jitter measurements are only available when the test is run in the 'Jitter' mode.</value>
+      <script><![CDATA[# Sets the 'Note' variable  to be displayed on the template page layout&#xa;&#xa;if {([string toupper $ResultViewMode] == "JITTER")} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Jitter measurements are only available when the test is run in the 'Jitter' mode."&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeTitle</name>
+      <persist>false</persist>
+      <value type="String">Frame Size (bytes)</value>
+      <script><![CDATA[#Derive the Framesize title based on the frame size type&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result "iMIX \n Distribution"&#xa;} else {&#xa;set result "Frame Size\n(bytes)"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary,Trial Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixNote</name>
+      <persist>false</persist>
+      <value type="String">Note: Imix Distributions are only available for the 'iMIX' Frame Size Type</value>
+      <script><![CDATA[#Display Note when frame size type is not iMIX&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Imix Distributions are only available for the 'iMIX' Frame Size Type "&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistNameVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSDistName&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSModeVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSMode&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLenVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSIPLen&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeightVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSWeight&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWtVal</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSPercentWt&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixDefaultEthernet</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Calculate Default Ethernet frame length for frame sizes in iMIX Distributions&#xa;&#xa;# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;&#xa;set etherlen "-"&#xa;if {$fmode != "RANDOM"}  {&#xa;   set fsize [expr int($fsize)]&#xa;   set etherlen [expr $fsize + 18]      &#xa;    if {$etherlen < 64} {&#xa;         set etherlen 64&#xa;     }&#xa;} else {&#xa;   set flist [split $fsize "-"]&#xa;   set minlen [expr [lindex $flist 0] + 18]&#xa;   set maxlen [expr [lindex $flist 1] + 18]&#xa;   if { $minlen < 64}  {&#xa;        set minlen 64&#xa;   }&#xa;   if { $maxlen < 64}  {&#xa;        set maxlen 64&#xa;   }&#xa;   set etherlen "$minlen-$maxlen"&#xa;}&#xa;lappend result $etherlen&#xa;}&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixPosLen</name>
+      <persist>false</persist>
+      <value type="String">N/A</value>
+      <script><![CDATA[# Calculate POS Length&#xa;&#xa;# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;&#xa;set poslen "-"&#xa;&#xa;if {$fmode != "RANDOM"}  {&#xa;    &#xa;    set fsize [expr int($fsize)]&#xa;    set poslen [expr $fsize + 8]      &#xa;&#xa;} else {&#xa;    set flist [split $fsize "-"]&#xa;    &#xa;    set minlen [expr [lindex $flist 0] + 8]&#xa;    set maxlen [expr [lindex $flist 1] + 8]&#xa;    &#xa;    set poslen "$minlen-$maxlen"&#xa;}&#xa;    lappend result $poslen&#xa;&#xa;}&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1314827497632</value>
+      <script><![CDATA[set result "1314840363442"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Wed Aug 31 14:51:37.632 PDT 2011</value>
+      <script><![CDATA[set result "Wed Aug 31 18:26:03.442 PDT 2011"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>Tbl1FsAvToDisplay</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>64.0</instance>
+      </value>
+      <script><![CDATA[# Display frame size or frame length distribution depending on the frame size mode&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result $Tbl1FsAv&#xa;} else {&#xa;set result $Tbl1FdAv&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggFsAvToDisplay</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>FS:64 Load:2000.0</instance>
+      </value>
+      <script><![CDATA[# Display frame size or frame length distribution depending on the frame size mode&#xa;set tempFS [list]&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set tempFS $AggFS&#xa;} else {&#xa;set tempFS $AggFD&#xa;}&#xa;set result [list]&#xa;&#xa;foreach fsize $tempFS fload $AggLoad {&#xa;set temp {}&#xa;append temp "FS:"&#xa;append temp $fsize&#xa;append temp " Load:"&#xa;append temp $fload&#xa;lappend result $temp&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>AggFsToDisplay</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>64.0</instance>
+      </value>
+      <script><![CDATA[# Display frame size or frame length distribution depending on the frame size mode&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result $AggFS&#xa;} else {&#xa;set result $AggFD&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Advanced Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TrialFsToDisplay</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>64.0</instance>
+      </value>
+      <script><![CDATA[# Display frame size or frame length distribution depending on the frame size mode&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result $TrialFS&#xa;} else {&#xa;set result $TrialFD&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>GraphUnit</name>
+      <persist>false</persist>
+      <value type="String">Duration is measured in SECONDS</value>
+      <script><![CDATA[# Set graph y-axis based on duration type&#xa;set result {}&#xa;if {$DurationMode != "SECONDS"} {&#xa;set result "Duration is measured in BURSTS (frames)"&#xa;} else {&#xa;set result "Duration is measured in SECONDS"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>GraphDuration</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>10.0</instance>
+      </value>
+      <script><![CDATA[# Set graph y-axis based on duration type&#xa;set result {}&#xa;if {$DurationMode != "SECONDS"} {&#xa;foreach fval $Tbl1BurstSize {&#xa;lappend result $fval&#xa;}&#xa;} else {&#xa;foreach fval $Tbl1Duration {&#xa;lappend result $fval&#xa;}&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.FS</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>64.0</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results frame size values&#xa;set result [list]&#xa;&#xa;catch { array unset TestSumData }&#xa;set cols [list FS  Duration  BS  IL  FR  TxCount  RxCount  FL]&#xa;&#xa;foreach col $cols {&#xa;   set TestSumData($col) [list]&#xa;}&#xa;&#xa;foreach row $TestSum {&#xa;   set rowList [split $row "^"]&#xa;   foreach col $cols value $rowList {&#xa;      lappend TestSumData($col) $value&#xa;   }&#xa;}&#xa;&#xa;set result $TestSumData(FS)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.Duration</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>10.0</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results duration&#xa;set result $TestSumData(Duration)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.BS</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>2.9761906E7</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results burst size&#xa;set result $TestSumData(BS)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.IL</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>2000.0</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results Intended&#xa;set result $TestSumData(IL)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.FR</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>2976190.6</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results frame rate&#xa;set result $TestSumData(FR)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.TxCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>2.9761906E7</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results tx count&#xa;set result $TestSumData(TxCount)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.RxCount</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>2.9761906E7</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results rx count&#xa;set result $TestSumData(RxCount)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>TestSum.FL</name>
+      <persist>false</persist>
+      <value type="doubles">
+        <instance>0.0</instance>
+      </value>
+      <script><![CDATA[# Calculate test summary results frame loss&#xa;set result $TestSumData(FL)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>DisplayLoadUnit</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Mbps</instance>
+      </value>
+      <script><![CDATA[if {[info exist DisplayLoadUnitString]} {&#xa;    set result $DisplayLoadUnitString&#xa;} else {&#xa;    set result "%"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>TrialSummary</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;    <td bgcolor="#eeeeee">Trial</td>&#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;    <td bgcolor="#eeeeee">Intended\nLoad (=$DisplayLoadUnit$)</td>&#xa;    <td bgcolor="#eeeeee">Offered\nLoad (=$DisplayLoadUnit$)</td>&#xa;     <td bgcolor="#eeeeee">Offered\nLoad (fps)</td>&#xa;    <td bgcolor="#eeeeee">Tx Frames</td>&#xa;    <td bgcolor="#eeeeee">Rx Frames</td>&#xa;    <td bgcolor="#eeeeee">Frames\nLost</td>&#xa;    <td bgcolor="#eeeeee">Burst\nSize</td>&#xa;    <td bgcolor="#eeeeee">Duration\n(Sec)</td>&#xa;    <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;   </tr>&#xa; <tr iterate="=$TrialIter$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$TrialIter$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TrialFsToDisplay$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$TrialLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialOfferedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialFR$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialTxFrames$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialRxFrames$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TrialFrameLoss$</td>&#xa; <td halign="right" bgcolor="#ffffff">=$TrialBurstSize$</td>&#xa; <td halign="right" bgcolor="#ffffff">=$TrialDuration$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$TrialMinLat$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$TrialAvgLat$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$TrialMaxLat$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>TestSummary</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;      <td bgcolor="#eeeeee">Back-to-Back\nBurst(frames)</td>&#xa;     <td bgcolor="#eeeeee">Back-to-Back\nTime(sec)</td>&#xa;   <td bgcolor="#eeeeee">Intended\nLoad(=$DisplayLoadUnit$)</td>&#xa;   <td bgcolor="#eeeeee"> Average Frame\nRate (fps)</td>&#xa;    <td bgcolor="#eeeeee">Average\nTx Frames</td>&#xa;    <td bgcolor="#eeeeee">Average\nRx Frames</td>&#xa;    <td bgcolor="#eeeeee">Average\nLost Frames</td>&#xa;   </tr>&#xa; <tr iterate="=$Tbl1FsAvToDisplay$">&#xa;     <td halign="right" bgcolor="#eeeeee">=$TestSum.FS$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$TestSum.BS$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.Duration$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.IL$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$TestSum.FR$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$TestSum.TxCount$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$TestSum.RxCount$</td>&#xa;     <td halign="right" bgcolor="#ffffff">=$TestSum.FL$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>AggLatencyJitter</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;      <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;      <td bgcolor="#eeeeee">Load\n(=$DisplayLoadUnit$)</td>&#xa;      <td bgcolor="#eeeeee">Frame\nLoss\n(%)</td>&#xa;     <td bgcolor="#eeeeee">Min\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nLatency\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Min\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Avg\nJitter\n(uSec)</td>&#xa;     <td bgcolor="#eeeeee">Max\nJitter\n(uSec)</td>&#xa;  </tr>&#xa; <tr iterate="=$AggFsToDisplay$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$AggFsToDisplay$</td>&#xa;    <td halign="right" bgcolor="#eeeeee">=$AggLoad$</td>&#xa; <td halign="right" bgcolor="#ffffff">=$AggLoss$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$AggMinLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$AggAvgLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$AggMaxLatency$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$AggMinJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$AggAvgJitter$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$AggMaxJitter$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>FrameSizeImixDistribution</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">iMIX\nDistribution</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLength Mode</td>&#xa;     <td bgcolor="#eeeeee">IP Total\nLength</td>&#xa;     <td bgcolor="#eeeeee">Default\nEthernet</td>&#xa;     <td bgcolor="#eeeeee">POS\nLength</td>&#xa;     <td bgcolor="#eeeeee">Weight</td>&#xa;     <td bgcolor="#eeeeee">Percentage\n(%)</td>&#xa;  </tr>&#xa; <tr iterate="=$ImixFSDistNameVal$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$ImixFSDistNameVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSModeVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSIPLenVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixDefaultEthernet$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixPosLen$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSWeightVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSPercentWtVal$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>ThruLoadBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>GraphDuration</name>
+        <title>Traffic Duration</title>
+        <color></color>
+        <valueAxis>Traffic Duration</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>Tbl1FsAvToDisplay</xStatistic>
+      <xTitle>Frame Size</xTitle>
+      <yTitle>Traffic Duration</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>LatencyBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AggMinLatency</name>
+        <title>Min Latency</title>
+        <color></color>
+        <valueAxis>Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggAvgLatency</name>
+        <title>Avg Latency</title>
+        <color></color>
+        <valueAxis>Latency (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggMaxLatency</name>
+        <title>Max Latency</title>
+        <color></color>
+        <valueAxis>Latency (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>AggFsAvToDisplay</xStatistic>
+      <xTitle>Frame Size and Load(%)</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>JitterBar</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>AggMinJitter</name>
+        <title>Min Jitter</title>
+        <color></color>
+        <valueAxis>Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggAvgJitter</name>
+        <title>Avg Jitter</title>
+        <color></color>
+        <valueAxis>Jitter (uSec)</valueAxis>
+      </statistic>
+      <statistic>
+        <name>AggMaxJitter</name>
+        <title>Max Jitter</title>
+        <color></color>
+        <valueAxis>Jitter (uSec)</valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>AggFsAvToDisplay</xStatistic>
+      <xTitle>Frame Size and Load(%)</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>testStartStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>200</x>
+        <y>350</y>
+        <width>292</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>450</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>450</y>
+        <width>126</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC2544&amp;nbsp;Back&amp;nbsp;to&amp;nbsp;Back</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>103</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>testStartVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestStartDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>upperLeftLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Graph">
+        <name>Back 2 Back Duration per Frame size</name>
+        <x>90</x>
+        <y>140</y>
+        <width>510</width>
+        <height>250</height>
+        <value>ThruLoadBar</value>
+      </instance>
+      <instance type="Text">
+        <name>Test Summary Title</name>
+        <x>167</x>
+        <y>98</y>
+        <width>307</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Back-to-Back&amp;nbsp;Burst&amp;nbsp;Duration&amp;nbsp;per&amp;nbsp;Frame&amp;nbsp;size</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>Back 2 Back Test Summary</name>
+        <x>90</x>
+        <y>440</y>
+        <width>581</width>
+        <height>47</height>
+        <value>TestSummary</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>Units for Graph</name>
+        <x>90</x>
+        <y>395</y>
+        <width>159</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">*=$GraphUnit$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Advanced Test Summary" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>LatencyTitle</name>
+        <x>256</x>
+        <y>121</y>
+        <width>225</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Latency&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;size&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>JitterTitle</name>
+        <x>260</x>
+        <y>386</y>
+        <width>207</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Jitter&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;size&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Graph">
+        <name>LatvsFSGr</name>
+        <x>32</x>
+        <y>150</y>
+        <width>661</width>
+        <height>230</height>
+        <value>LatencyBar</value>
+      </instance>
+      <instance type="Graph">
+        <name>JittervsFSGr</name>
+        <x>32</x>
+        <y>422</y>
+        <width>666</width>
+        <height>230</height>
+        <value>JitterBar</value>
+      </instance>
+      <instance type="Table">
+        <name>LatJitterSummTbl</name>
+        <x>107</x>
+        <y>669</y>
+        <width>522</width>
+        <height>47</height>
+        <value>AggLatencyJitter</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>NoteTxt</name>
+        <x>172</x>
+        <y>104</y>
+        <width>406</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">=$NoteResultViewMode$</value>
+        <color>#FF0000</color>
+      </instance>
+    </page>
+    <page name="Trial Summary" display="true">
+      <width>800</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>StatsByIterTitleStr</name>
+        <x>260</x>
+        <y>110</y>
+        <width>188</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Summary&amp;nbsp;Statistics&amp;nbsp;by&amp;nbsp;Trial</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>StatsByIter</name>
+        <x>3</x>
+        <y>155</y>
+        <width>712</width>
+        <height>98</height>
+        <value>TrialSummary</value>
+        <size>10</size>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>80</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="iMIX Distributions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>ImixDistTitle</name>
+        <x>259</x>
+        <y>106</y>
+        <width>234</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;sizes&amp;nbsp;for&amp;nbsp;iMIX&amp;nbsp;Distributions</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>ImixDistFSTbl</name>
+        <x>178</x>
+        <y>156</y>
+        <width>1016</width>
+        <height>47</height>
+        <value>FrameSizeImixDistribution</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>ImixNoteTxt</name>
+        <x>202</x>
+        <y>132</y>
+        <width>0</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">=$ImixNote$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titleStr</name>
+        <x>200</x>
+        <y>104</y>
+        <width>243</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>VersionStr</name>
+        <x>35</x>
+        <y>459</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2C</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>InputStartIdStr</name>
+        <x>35</x>
+        <y>485</y>
+        <width>165</width>
+        <height>15</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>509</y>
+        <width>136</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>670</x>
+        <y>100</y>
+        <width>130</width>
+        <height>400</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>520</y>
+        <width>800</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>528</y>
+        <width>308</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>TheoMax</name>
+        <x>17</x>
+        <y>140</y>
+        <width>656</width>
+        <height>256</height>
+        <src>theoMaxPosAtm.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

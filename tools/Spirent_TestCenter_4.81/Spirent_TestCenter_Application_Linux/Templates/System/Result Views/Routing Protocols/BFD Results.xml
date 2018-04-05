@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5379" serializationBase="true" 
+ Identifier="Router Protocols\BFD Results"
+ PrimaryClass="Router"
+ Description="object://core/Router"
+ Path="Router Protocols"
+ CustomDisplayPath="Routing and MPLS\BFD Results"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ Name="BFD Results">
+  <RealTimeResultColumnDefinition id="5380" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="70"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 131">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5381" 
+   ColumnClassName="Router"
+   ColumnPropertyName="Name"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="83"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 132">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5382" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port Router"
+   ColumnPropertyName="PortName Name"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 9">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5383" 
+   GroupName="BFD"
+   GroupId="object://customgroup/cc31a58b-16f9-4364-9033-d5bd99940e97/Main"
+   ColumnClassName="BfdRouterConfig BfdRouterConfig BfdRouterConfig BfdRouterResults BfdRouterResults BfdRouterResults BfdRouterResults"
+   ColumnPropertyName="ScaleMode SessionsUpCount SessionsDownCount TxCount RxCount TimeoutCount FlapCount"
+   SqlString="SELECT Port.Name AS &apos;Port Name&apos;, AllDevice.Name AS &apos;Device Name&apos;, BfdRouterConfig.ScaleMode AS &apos;Scale Mode&apos;, BfdRouterConfig.SessionsUpCount AS &apos;Sessions Up&apos;, BfdRouterConfig.SessionsDownCount AS &apos;Sessions Down&apos;, BfdRouterResults.TxCount AS &apos;Tx BFD Packets&apos;, BfdRouterResults.RxCount AS &apos;Rx BFD Packets&apos;, BfdRouterResults.TimeoutCount AS &apos;Timeouts Detected&apos;, BfdRouterResults.FlapCount AS &apos;Flaps Detected&apos; FROM AllDevice, Port, BfdRouterConfig, BfdRouterResults, RelationTable  WHERE (  RelationTable.Type = &apos;AffiliationPort&apos; AND  RelationTable.SourceHnd = AllDevice.Handle AND  RelationTable.TargetHnd = Port.Handle AND BfdRouterConfig.ParentHnd = AllDevice.Handle AND BfdRouterResults.ParentHnd = BfdRouterConfig.Handle AND AllDevice.DataSetId = @DataSetId AND Port.DataSetId = @DataSetId AND BfdRouterConfig.DataSetId = @DataSetId AND BfdRouterResults.DataSetId = @DataSetId  AND RelationTable.DataSetId = @DataSetId ) "
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   Name="RealTimeResultGroupDefinition 10">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5385" 
+   ColumnClassName="BfdRouterConfig"
+   ColumnPropertyName="SessionsUpCount"
+   ColumnDescription=""
+   ColumnWidth="76"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 133">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5386" 
+   ColumnClassName="BfdRouterConfig"
+   ColumnPropertyName="SessionsDownCount"
+   ColumnDescription=""
+   ColumnWidth="91"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 134">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5387" 
+   ColumnClassName="BfdRouterResults"
+   ColumnPropertyName="TxCount"
+   ColumnDescription=""
+   ColumnWidth="94"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 135">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5388" 
+   ColumnClassName="BfdRouterResults"
+   ColumnPropertyName="RxCount"
+   ColumnDescription=""
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 136">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5389" 
+   ColumnClassName="BfdRouterResults"
+   ColumnPropertyName="TimeoutCount"
+   ColumnDescription=""
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 137">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5390" 
+   ColumnClassName="BfdRouterResults"
+   ColumnPropertyName="FlapCount"
+   ColumnDescription=""
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 138">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5391" 
+   ColumnClassName="BfdRouterConfig"
+   ColumnPropertyName="ScaleMode"
+   ColumnDescription=""
+   ColumnWidth="95"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   Name="RealTimeResultColumnDefinition 139">
+  </RealTimeResultColumnDefinition>
+  <ResultQuery id="21" 
+   ConfigClassId="bfdrouterconfig"
+   ResultClassId="bfdrouterresults"
+   ResultRootList="8"
+   PropertyIdArray="bfdrouterresults.txcount bfdrouterresults.rxcount bfdrouterresults.timeoutcount bfdrouterresults.flapcount"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   Name="ResultQuery 5">
+  </ResultQuery>
+</ResultDataSet>

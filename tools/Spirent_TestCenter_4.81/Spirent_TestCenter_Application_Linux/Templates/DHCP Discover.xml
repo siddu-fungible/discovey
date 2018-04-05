@@ -1,0 +1,33 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_Dhcpdiscover"
+    showName="DHCP Discover"
+    version="1.00"
+    category="Access"
+    readonly="true"
+    validate="true"
+    firstPdu="dhcp:Dhcpclientmsg"
+    description="DHCP Discover" >
+
+    <pdus>
+      <pdu name="dhcpDiscover" pdu="dhcp:Dhcpclientmsg">
+        <clientAddr override="true">0.0.0.0</clientAddr>
+        <options>
+          <DHCPOption name="DHCPOption1">
+            <messageType><code>1</code></messageType></DHCPOption>
+          <DHCPOption name="DHCPOption2">
+            <messageSize /></DHCPOption>
+          <DHCPOption name="DHCPOption3">
+            <clientIdHW /></DHCPOption>
+          <DHCPOption name="DHCPOption4">
+            <hostName /></DHCPOption>
+          <DHCPOption name="DHCPOption5">
+            <paramReqList /></DHCPOption>
+          <DHCPOption name="DHCPOption6">
+            <endOfOptions /></DHCPOption>
+        </options>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

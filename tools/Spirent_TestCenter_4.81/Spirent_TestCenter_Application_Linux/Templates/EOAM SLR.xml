@@ -1,0 +1,17 @@
+﻿<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="SLR EOAM"
+    showName="Synthetic Loss Measurement Reply (SLR)"
+    version="1.00"
+    category="EOAM"
+    readonly="true"
+    validate="true"
+    firstPdu="serviceoam:SLR"
+    description="Ethernet OAM SLR" >
+
+    <pdus>
+      <pdu name="proto1" pdu="serviceoam:SLR" />
+    </pdus>
+  </template>
+</frame>

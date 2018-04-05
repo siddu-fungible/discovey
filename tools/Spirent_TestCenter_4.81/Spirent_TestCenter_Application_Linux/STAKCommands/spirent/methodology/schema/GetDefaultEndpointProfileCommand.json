@@ -1,0 +1,58 @@
+{
+    "GetDefaultEndpointProfileCommand": {
+        "title": "Schema for GetDefaultEndpointProfileCommand.",
+        "type": "array",
+        "minItems": 1,
+        "additionalProperties": false,
+        "items": {
+            "description": "Endpoint profile group definition.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "display_name": {
+                    "description": "Unique ID to identify group.",
+                    "type": "string"
+                },
+                "values": {
+                    "description": "List of endpoint profiles that belong to this group",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "description": "Endpoint profile property definition",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "display_name": {
+                                "description": "The display name for the endpoint profile widget in the Methodology Center UI.",
+                                "type": "string"
+                            },
+                            "property": {
+                                "description": "Endpoint profile property name",
+                                "type": "string"
+                            },
+                            "default_value": {
+                                "description": "Property default value",
+                                "oneOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "number"
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "property",
+                            "default_value"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "display_name",
+                "values"
+            ]
+        }
+    }
+}

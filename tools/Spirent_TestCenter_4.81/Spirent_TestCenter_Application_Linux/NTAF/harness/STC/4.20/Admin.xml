@@ -1,0 +1,45 @@
+<query-harness xmlns="http://ntaforum.org/2011/harness" harness="http://spirent.com/NTAF/harness/STC/4.20/Admin"  xml:lang="en">
+<label>Admin</label>
+<helpURI>http://com.fnfr.svt.help/popups/testcenteraction.html</helpURI>
+<author>spirent</author>
+    
+<actionDecl name="GetEquipmentLogs">
+    <label>Get Equipment Logs</label>
+    <tooltip>Get equipment logs.</tooltip>
+    <description>Get equipment logs.</description>
+        <parameter  name="EquipmentList">
+            <label>EquipmentList</label>
+            <tooltip>Equipment List</tooltip>
+            <description>Equipment List</description>
+            <mandatory>false</mandatory>
+            <datatype>string</datatype>
+            <default>0</default>
+            <allowedCount>
+                <min>0</min>
+                <max>65535</max>
+            </allowedCount>
+        </parameter>
+        <parameter  name="WaitTimeOutInSec">
+            <label>WaitTimeOutInSec</label>
+            <tooltip>Wait Time (second)</tooltip>
+            <description>Wait Time (second)</description>
+            <datatype>integer</datatype>
+            <default>600</default>
+        </parameter>
+        <parameter  name="DstDir">
+            <label>DstDir</label>
+            <tooltip>Destination Directory</tooltip>
+            <description>Destination Directory</description>
+            <datatype>string</datatype>
+            <default></default>
+        </parameter>
+    </actionDecl>
+
+
+
+	<supercedes>http://spirent.com/NTAF/harness/STC/3.80/Admin</supercedes>
+	<subharness>http://spirent.com/NTAF/harness/STC/3.80/Admin</subharness>
+
+
+</query-harness>
+

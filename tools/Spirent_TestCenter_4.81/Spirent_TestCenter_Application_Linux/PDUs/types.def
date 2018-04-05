@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PDU_LIBRARY xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="pdu_schema.xsd" name="types" showName="Types" version="1.00"
+    description="This is a sample PDU library for common types and enumerations.">
+    
+  <TYPE_DEFS>
+    <TYPE_DEF name="AddressFamilies" type="INTEGER" bitLength="16" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="IPv4" value="1" />
+        <VAL_ENUM uiShowName="IPv6" value="2" />
+        <VAL_ENUM uiShowName="NSAP" value="3" />
+        <VAL_ENUM uiShowName="HDLC" value="4" />
+        <VAL_ENUM uiShowName="BBN 1822" value="5" />
+        <VAL_ENUM uiShowName="802" value="6" />
+        <VAL_ENUM uiShowName="E.163" value="7" />
+        <VAL_ENUM uiShowName="E.164" value="8" />
+        <VAL_ENUM uiShowName="F.69" value="9" />
+        <VAL_ENUM uiShowName="X.121" value="10" />
+        <VAL_ENUM uiShowName="IPX" value="11" />
+        <VAL_ENUM uiShowName="AppleTalk" value="12" />
+        <VAL_ENUM uiShowName="Decnet IV" value="13" />
+        <VAL_ENUM uiShowName="Banyan Vines" value="14" />
+        <VAL_ENUM uiShowName="E.164 with NSAP format subaddress" value="15" />
+        <VAL_ENUM uiShowName="DNS" value="16" />
+        <VAL_ENUM uiShowName="Distinguished Name" value="17" />
+        <VAL_ENUM uiShowName="AS Number" value="18" />
+        <VAL_ENUM uiShowName="XTP over IPv4" value="19" />
+        <VAL_ENUM uiShowName="XTP over IPv6" value="20" /> 
+        <VAL_ENUM uiShowName="XTP native mode" value="21" />
+        <VAL_ENUM uiShowName="Fiber Channel World-Wide Port Name" value="22" />
+        <VAL_ENUM uiShowName="Fiber Channel World-Wide Node Name" value="23" />
+        <VAL_ENUM uiShowName="GWID" value="24" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+	
+    <TYPE_DEF name="AddressFamilies8Bit" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="IPv4" value="1" />
+        <VAL_ENUM uiShowName="IPv6" value="2" />
+        <VAL_ENUM uiShowName="NSAP" value="3" />
+        <VAL_ENUM uiShowName="HDLC" value="4" />
+        <VAL_ENUM uiShowName="BBN 1822" value="5" />
+        <VAL_ENUM uiShowName="802" value="6" />
+        <VAL_ENUM uiShowName="E.163" value="7" />
+        <VAL_ENUM uiShowName="E.164" value="8" />
+        <VAL_ENUM uiShowName="F.69" value="9" />
+        <VAL_ENUM uiShowName="X.121" value="10" />
+        <VAL_ENUM uiShowName="IPX" value="11" />
+        <VAL_ENUM uiShowName="AppleTalk" value="12" />
+        <VAL_ENUM uiShowName="Decnet IV" value="13" />
+        <VAL_ENUM uiShowName="Banyan Vines" value="14" />
+        <VAL_ENUM uiShowName="E.164 with NSAP format subaddress" value="15" />
+        <VAL_ENUM uiShowName="DNS" value="16" />
+        <VAL_ENUM uiShowName="Distinguished Name" value="17" />
+        <VAL_ENUM uiShowName="AS Number" value="18" />
+        <VAL_ENUM uiShowName="XTP over IPv4" value="19" />
+        <VAL_ENUM uiShowName="XTP over IPv6" value="20" /> 
+        <VAL_ENUM uiShowName="XTP native mode" value="21" />
+        <VAL_ENUM uiShowName="Fiber Channel World-Wide Port Name" value="22" />
+        <VAL_ENUM uiShowName="Fiber Channel World-Wide Node Name" value="23" />
+        <VAL_ENUM uiShowName="GWID" value="24" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="EtherTypes" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="XEROX PUP" value="0200" />
+        <VAL_ENUM uiShowName="PUP Addr Trans" value="0201" />
+        <VAL_ENUM uiShowName="Nixdorf" value="0400" />
+        <VAL_ENUM uiShowName="XEROX NS IDP" value="0600" />
+        <VAL_ENUM uiShowName="DLOG" value="0660" />
+        <VAL_ENUM uiShowName="DLOG2" value="0661" />
+        <VAL_ENUM uiShowName="Internet IP" value="0800" />
+        <VAL_ENUM uiShowName="X.75 Internet" value="0801" />
+        <VAL_ENUM uiShowName="NBS Internet" value="0802" />
+        <VAL_ENUM uiShowName="ECMA Internet" value="0803" />
+        <VAL_ENUM uiShowName="Chaosnet" value="0804" />
+        <VAL_ENUM uiShowName="X.25 Level 3" value="0805" />
+        <VAL_ENUM uiShowName="ARP" value="0806" />
+        <VAL_ENUM uiShowName="XNS Compatibility" value="0807" />
+        <VAL_ENUM uiShowName="Frame Relay ARP" value="0808" />
+        <VAL_ENUM uiShowName="RARP" value="8035" />
+        <VAL_ENUM uiShowName="IPv6" value="86DD" />
+        <VAL_ENUM uiShowName="PPP" value="880B" />
+		<VAL_ENUM uiShowName="Slow Protocol" value="8809" />
+        <VAL_ENUM uiShowName="MPLS Unicast" value="8847" />
+        <VAL_ENUM uiShowName="MPLS Multicast" value="8848" />
+        <VAL_ENUM uiShowName="PPPoE Discovery" value="8863" />
+        <VAL_ENUM uiShowName="PPPoE Session" value="8864" />
+		<VAL_ENUM uiShowName="PBB" value="88E7" />
+        <VAL_ENUM uiShowName="FCoE" value="8906"/>
+        <VAL_ENUM uiShowName="FIP" value="8914"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="WellKnownPorts" type="INTEGER" bitLength="16" unitType="ELEMENT">
+      <!-- http://www.iana.org/assignments/arp-parameters -->
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="TCPMUX" value="1" />
+        <VAL_ENUM uiShowName="CompressNet" value="2" />
+        <VAL_ENUM uiShowName="CompressProcess" value="3" />
+        <VAL_ENUM uiShowName="RJE" value="5" />
+        <VAL_ENUM uiShowName="ECHO" value="7" />
+        <VAL_ENUM uiShowName="DISCARD" value="9" />
+        <VAL_ENUM uiShowName="SYSTAT" value="11" />
+        <VAL_ENUM uiShowName="DAYTIME" value="13" />
+        <VAL_ENUM uiShowName="QOTD" value="17" />
+        <VAL_ENUM uiShowName="MSP" value="18" />
+        <VAL_ENUM uiShowName="CHARGEN" value="19" />
+        <VAL_ENUM uiShowName="FTPDATA" value="20" />
+        <VAL_ENUM uiShowName="FTP" value="21" />
+        <VAL_ENUM uiShowName="SSH" value="22" />
+        <VAL_ENUM uiShowName="Telnet" value="23" />
+        <VAL_ENUM uiShowName="SMTP" value="25" />
+        <VAL_ENUM uiShowName="NSW" value="27" />
+        <VAL_ENUM uiShowName="MSG-ICP" value="29" />
+        <VAL_ENUM uiShowName="MSG-AUTH" value="31" />
+        <VAL_ENUM uiShowName="DSP" value="33" />
+        <VAL_ENUM uiShowName="TIME" value="37" />
+        <VAL_ENUM uiShowName="RAP" value="38" />
+        <VAL_ENUM uiShowName="RLP" value="39" />
+        <VAL_ENUM uiShowName="Graphics" value="41" />
+        <VAL_ENUM uiShowName="Nameserver" value="42" />
+        <VAL_ENUM uiShowName="WHOIS" value="43" />
+        <VAL_ENUM uiShowName="MPM-flags" value="44" />
+        <VAL_ENUM uiShowName="MPM" value="45" />
+        <VAL_ENUM uiShowName="MPM-send" value="46" />
+        <VAL_ENUM uiShowName="NI FTP" value="47" />
+        <VAL_ENUM uiShowName="AUDIT" value="48" />
+        <VAL_ENUM uiShowName="TACACS" value="49" />
+        <VAL_ENUM uiShowName="RE-MAIL" value="50" />
+        <VAL_ENUM uiShowName="LA-MAINT" value="51" />
+        <VAL_ENUM uiShowName="XNS-time" value="52" />
+        <VAL_ENUM uiShowName="DNS" value="53" />
+        <VAL_ENUM uiShowName="XNS" value="54" />
+        <VAL_ENUM uiShowName="ISI-GL" value="55" />
+        <VAL_ENUM uiShowName="XNS-auth" value="56" />   
+        <VAL_ENUM uiShowName="TFTP" value="69" />
+        <VAL_ENUM uiShowName="GOPHER" value="70" />
+        <VAL_ENUM uiShowName="FINGER" value="79" />
+        <VAL_ENUM uiShowName="HTTP" value="80" />
+        <VAL_ENUM uiShowName="KERBEROS" value="88" />
+        <VAL_ENUM uiShowName="NNTP" value="119" />
+        <VAL_ENUM uiShowName="NTP" value="123" />
+        <VAL_ENUM uiShowName="SNMP" value="161" />
+        <VAL_ENUM uiShowName="SNMPTRAP" value="162" />
+        <VAL_ENUM uiShowName="BGP" value="179" />
+        <VAL_ENUM uiShowName="IRC" value="194" />
+        <VAL_ENUM uiShowName="RIP" value="520" />
+        <VAL_ENUM uiShowName="RIPNG" value="521" />
+        <VAL_ENUM uiShowName="BFD" value="3784"/>
+        <VAL_ENUM uiShowName="ANCP" value="6068"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="HardwareTypes" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="Ethernet (10mb)" value="1" />
+        <VAL_ENUM uiShowName="Experimental Ethernet (3mb)" value="2" />
+        <VAL_ENUM uiShowName="Amateur Radio" value="3" />
+        <VAL_ENUM uiShowName="Proteon ProNET Token Ring" value="4" />
+        <VAL_ENUM uiShowName="Chaos" value="5" />
+        <VAL_ENUM uiShowName="IEEE 802 Networks" value="6" />
+        <VAL_ENUM uiShowName="ARCNET" value="7" />
+        <VAL_ENUM uiShowName="Hyperchannel" value="8" />
+        <VAL_ENUM uiShowName="Lanstar" value="9" />
+        <VAL_ENUM uiShowName="Autonet Short Address" value="10" />
+        <VAL_ENUM uiShowName="Localtalk" value="11" />
+        <VAL_ENUM uiShowName="LocalNet" value="12" />
+        <VAL_ENUM uiShowName="Ultra link" value="13" />
+        <VAL_ENUM uiShowName="SMDS" value="14" />
+        <VAL_ENUM uiShowName="Frame Relay" value="15" />
+        <VAL_ENUM uiShowName="ATM" value="16" />
+        <VAL_ENUM uiShowName="HDLC" value="17" />
+        <VAL_ENUM uiShowName="Fibre Channel" value="18" />
+        <VAL_ENUM uiShowName="ATM" value="19" />
+        <VAL_ENUM uiShowName="Serial Line" value="20" />
+        <VAL_ENUM uiShowName="ATM" value="21" />
+        <VAL_ENUM uiShowName="MIL-STD-188-220" value="22" />
+        <VAL_ENUM uiShowName="Metricom" value="23" />
+        <VAL_ENUM uiShowName="IEEE 1394.1995" value="24" />
+        <VAL_ENUM uiShowName="MAPOS" value="25" />
+        <VAL_ENUM uiShowName="Twinaxial" value="26" />
+        <VAL_ENUM uiShowName="EUI-64" value="27" />
+        <VAL_ENUM uiShowName="HIPARP" value="28" />
+        <VAL_ENUM uiShowName="IP and ARP over ISO 7816-3" value="29" />
+        <VAL_ENUM uiShowName="ARPSec" value="30" />
+        <VAL_ENUM uiShowName="IPsec tunnel" value="31" />
+        <VAL_ENUM uiShowName="InfiniBand" value="32" />
+        <VAL_ENUM uiShowName="TIA-102" value="33" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF> 
+	    
+    <TYPE_DEF name="IpProtocolNumbers" type="INTEGER" bitLength="8" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="HOPOPT" value="0" />
+        <VAL_ENUM uiShowName="ICMP" value="1" />
+        <VAL_ENUM uiShowName="IGMP" value="2" />
+        <VAL_ENUM uiShowName="GGP" value="3" />
+        <VAL_ENUM uiShowName="IP" value="4" />
+        <VAL_ENUM uiShowName="ST" value="5" />
+        <VAL_ENUM uiShowName="TCP" value="6" />
+        <VAL_ENUM uiShowName="CBT" value="7" />
+        <VAL_ENUM uiShowName="EGP" value="8" />
+        <VAL_ENUM uiShowName="IGP" value="9" />
+        <VAL_ENUM uiShowName="BBN-RCC-MON" value="10" />
+        <VAL_ENUM uiShowName="NVP-II" value="11" />
+        <VAL_ENUM uiShowName="PUP" value="12" />
+        <VAL_ENUM uiShowName="ARGUS" value="13" />
+        <VAL_ENUM uiShowName="EMCON" value="14" />
+        <VAL_ENUM uiShowName="XNET" value="15" />
+        <VAL_ENUM uiShowName="CHAOS" value="16" />
+        <VAL_ENUM uiShowName="UDP" value="17" />
+        <VAL_ENUM uiShowName="MUX" value="18" />
+        <VAL_ENUM uiShowName="DCN-MEAS" value="19" />
+        <VAL_ENUM uiShowName="HMP" value="20" />
+        <VAL_ENUM uiShowName="PRM" value="21" />
+        <VAL_ENUM uiShowName="XNS-IDP" value="22" />
+        <VAL_ENUM uiShowName="TRUNK-1" value="23" />
+        <VAL_ENUM uiShowName="TRUNK-2" value="24" />
+        <VAL_ENUM uiShowName="LEAF-1" value="25" />
+        <VAL_ENUM uiShowName="LEAF-2" value="26" />
+        <VAL_ENUM uiShowName="RDP" value="27" />
+        <VAL_ENUM uiShowName="IRTP" value="28" />
+        <VAL_ENUM uiShowName="ISO-TP4" value="29" />
+        <VAL_ENUM uiShowName="NETBLT" value="30" />
+        <VAL_ENUM uiShowName="MFE-NSP" value="31" />
+        <VAL_ENUM uiShowName="MERIT-INP" value="32" />
+        <VAL_ENUM uiShowName="SEP" value="33" />
+        <VAL_ENUM uiShowName="3PC" value="34" />
+        <VAL_ENUM uiShowName="IDPR" value="35" />
+        <VAL_ENUM uiShowName="XTP" value="36" />
+        <VAL_ENUM uiShowName="DDP" value="37" />
+        <VAL_ENUM uiShowName="IDPR-CMTP" value="38" />
+        <VAL_ENUM uiShowName="TP++" value="39" />
+        <VAL_ENUM uiShowName="IL" value="40" />
+        <VAL_ENUM uiShowName="IPv6" value="41" />
+        <VAL_ENUM uiShowName="SDRP" value="42" />
+        <VAL_ENUM uiShowName="IPv6-Route" value="43" />
+        <VAL_ENUM uiShowName="IPv6-Frag" value="44" />
+        <VAL_ENUM uiShowName="IDRP" value="45" />
+        <VAL_ENUM uiShowName="RSVP" value="46" />
+        <VAL_ENUM uiShowName="GRE" value="47" />
+        <VAL_ENUM uiShowName="MHRP" value="48" />
+        <VAL_ENUM uiShowName="BNA" value="49" />
+        <VAL_ENUM uiShowName="ESP" value="50" />
+        <VAL_ENUM uiShowName="AH" value="51" />
+        <VAL_ENUM uiShowName="I-NLSP" value="52" />
+        <VAL_ENUM uiShowName="SWIPE" value="53" />
+        <VAL_ENUM uiShowName="NARP" value="54" />
+        <VAL_ENUM uiShowName="MOBILE" value="55" />
+        <VAL_ENUM uiShowName="TLSP" value="56" />
+        <VAL_ENUM uiShowName="SKIP" value="57" />
+        <VAL_ENUM uiShowName="IPv6-ICMP" value="58" />
+        <VAL_ENUM uiShowName="IPv6-NoNxt" value="59" />
+        <VAL_ENUM uiShowName="IPv6-Opts" value="60" />
+        <VAL_ENUM uiShowName="CFTP" value="62" />
+        <VAL_ENUM uiShowName="SAT-EXPAK" value="64" />
+        <VAL_ENUM uiShowName="KRYPTOLAN" value="65" />
+        <VAL_ENUM uiShowName="RVD" value="66" />
+        <VAL_ENUM uiShowName="IPPC" value="67" />
+        <VAL_ENUM uiShowName="SAT-MON" value="69" />
+        <VAL_ENUM uiShowName="VISA" value="70" />
+        <VAL_ENUM uiShowName="IPCV" value="71" />
+        <VAL_ENUM uiShowName="CPNX" value="72" />
+        <VAL_ENUM uiShowName="CPHB" value="73" />
+        <VAL_ENUM uiShowName="WSN" value="74" />
+        <VAL_ENUM uiShowName="PVP" value="75" />
+        <VAL_ENUM uiShowName="BR-SAT-MON" value="76" />
+        <VAL_ENUM uiShowName="SUN-ND" value="77" />
+        <VAL_ENUM uiShowName="WB-MON" value="78" />
+        <VAL_ENUM uiShowName="WB-EXPAK" value="79" />
+        <VAL_ENUM uiShowName="ISO-IP" value="80" />
+        <VAL_ENUM uiShowName="VMTP" value="81" />
+        <VAL_ENUM uiShowName="SECURE-VMTP" value="82" />
+        <VAL_ENUM uiShowName="VINES" value="83" />
+        <VAL_ENUM uiShowName="TTP" value="84" />
+        <VAL_ENUM uiShowName="NSFNET-IGP" value="85" />
+        <VAL_ENUM uiShowName="DGP" value="86" />
+        <VAL_ENUM uiShowName="TCF" value="87" />
+        <VAL_ENUM uiShowName="EIGRP" value="88" />
+        <VAL_ENUM uiShowName="OSPFIGP" value="89" />
+        <VAL_ENUM uiShowName="Sprite-RPC" value="90" />
+        <VAL_ENUM uiShowName="LARP" value="91" />
+        <VAL_ENUM uiShowName="MTP" value="92" />
+        <VAL_ENUM uiShowName="AX.25" value="93" />
+        <VAL_ENUM uiShowName="IPIP" value="94" />
+        <VAL_ENUM uiShowName="MICP" value="95" />
+        <VAL_ENUM uiShowName="SCC-SP" value="96" />
+        <VAL_ENUM uiShowName="ETHERIP" value="97" />
+        <VAL_ENUM uiShowName="ENCAP" value="98" />
+        <VAL_ENUM uiShowName="GMTP" value="100" />
+        <VAL_ENUM uiShowName="IFMP" value="101" />
+        <VAL_ENUM uiShowName="PNNI" value="102" />
+        <VAL_ENUM uiShowName="PIM" value="103" />
+        <VAL_ENUM uiShowName="ARIS" value="104" />
+        <VAL_ENUM uiShowName="SCPS" value="105" />
+        <VAL_ENUM uiShowName="QNX" value="106" />
+        <VAL_ENUM uiShowName="A/N" value="107" />
+        <VAL_ENUM uiShowName="IPComp" value="108" />
+        <VAL_ENUM uiShowName="SNP" value="109" />
+        <VAL_ENUM uiShowName="Compaq-Peer" value="110" />
+        <VAL_ENUM uiShowName="IPX-in-IP" value="111" />
+        <VAL_ENUM uiShowName="VRRP" value="112" />
+        <VAL_ENUM uiShowName="PGM" value="113" />
+        <VAL_ENUM uiShowName="L2TP" value="115" />
+        <VAL_ENUM uiShowName="DDX" value="116" />
+        <VAL_ENUM uiShowName="IATP" value="117" />
+        <VAL_ENUM uiShowName="STP" value="118" />
+        <VAL_ENUM uiShowName="SRP" value="119" />
+        <VAL_ENUM uiShowName="UTI" value="120" />
+        <VAL_ENUM uiShowName="SMP" value="121" />
+        <VAL_ENUM uiShowName="SM" value="122" />
+        <VAL_ENUM uiShowName="PTP" value="123" />
+        <VAL_ENUM uiShowName="ISIS over IPv4" value="124" />
+        <VAL_ENUM uiShowName="FIRE" value="125" />
+        <VAL_ENUM uiShowName="CRTP" value="126" />
+        <VAL_ENUM uiShowName="CRUDP" value="127" />
+        <VAL_ENUM uiShowName="SSCOPMCE" value="128" />
+        <VAL_ENUM uiShowName="IPLT" value="129" />
+        <VAL_ENUM uiShowName="SPS" value="130" />
+        <VAL_ENUM uiShowName="PIPE" value="131" />
+        <VAL_ENUM uiShowName="SCTP" value="132" />
+        <VAL_ENUM uiShowName="FC" value="133" />
+        <VAL_ENUM uiShowName="RSVP-E2E-IGNORE" value="134" />
+        <VAL_ENUM uiShowName="Mobility Header" value="135" />
+        <VAL_ENUM uiShowName="UDPLite" value="136" />
+        <VAL_ENUM uiShowName="MPLS-in-IP" value="137" />
+        <VAL_ENUM uiShowName="Experimental" value="253" />
+        <VAL_ENUM uiShowName="Reserved" value="255" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+   
+    <TYPE_DEF name="PPPTypes" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="IPv4" value="0021" />
+        <VAL_ENUM uiShowName="IPv6" value="0057" />
+        <VAL_ENUM uiShowName="MPLS" value="0281" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="GTPTypes" type="OCTETSTRING" byteLength="2" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="GTPv1" value="3386" />
+        <VAL_ENUM uiShowName="GTPv1-Ext" value="3387" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+    <TYPE_DEF name="NLPIDNumbers" type="OCTETSTRING" byteLength="1" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="NULL" value="00" />
+        <VAL_ENUM uiShowName="SNAP" value="80" />
+        <VAL_ENUM uiShowName="ISO CLNP" value="81" />
+        <VAL_ENUM uiShowName="ISO ESIS" value="82" />
+        <VAL_ENUM uiShowName="ISO ISIS" value="83" />
+        <VAL_ENUM uiShowName="IPv6" value="8E" />
+        <VAL_ENUM uiShowName="IPv4" value="CC" />
+        <VAL_ENUM uiShowName="PPP" value="CF" />
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+    
+    <TYPE_DEF name="VFTTypes" type="INTEGER" bitLength="4" unitType="ELEMENT">
+      <VALUE_ENUMERATION>
+        <VAL_ENUM uiShowName="FC" value="0"/>
+        <VAL_ENUM uiShowName="Custom" value="1"/>
+      </VALUE_ENUMERATION>
+    </TYPE_DEF>
+
+  </TYPE_DEFS>
+</PDU_LIBRARY>

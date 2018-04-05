@@ -1,0 +1,729 @@
+{
+  "methodology_key": "VSW_TPUT_LATENCY_EXP",
+  "display_name": "vSwitch Benchmarking Throughput and Latency Profile (Experimental)",
+  "short_display_name": "VSW_TPUT_LATENCY_EXP",
+  "description": "Determines how throughput and latency degrades as the rate is varied in the region of a DUT's maximum forwarding rate.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "EAST",
+        "port_group": "EastPortGroup"
+      },
+      {
+        "side": "WEST",
+        "port_group": "WestPortGroup"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "WestPortGroup",
+      "display_name": "West Port Group",
+      "description": "Group of ports on the west side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "EastPortGroup",
+      "display_name": "East Port Group",
+      "description": "Group of ports on the east side of the topology.",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "property_groups": [
+    {
+      "group_type": "GLOBAL",
+      "display_name": "Global Parameters",
+      "description": "Global configuration parameters.",
+      "test_properties": [
+        {
+          "description": "IP version to use",
+          "display_name": "IP Version",
+          "property": "IpVersion",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "IPv4",
+          "acceptable_values": [
+            "IPv4",
+            "IPv6"
+          ]
+        },
+        {
+          "description": "Direction of Traffic between port groups",
+          "display_name": "Traffic Direction",
+          "property": "TrafficDirection",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "Bidirectional",
+          "acceptable_values": [
+            "Bidirectional",
+            "West to East",
+            "East to West"
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "East-side Configuration",
+      "description": "Configuration for the ports on the east side of the topology",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "Starting IPv4 address of east devices",
+          "display_name": "East IPv4 Address",
+          "property": "EastIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.18.1.2",
+          "endpoint_profile_property_name": "Ipv4Addr"
+        },
+        {
+          "description": "Step of IPv4 address across multiple east ports",
+          "display_name": "East IPv4 Address Port Step",
+          "property": "EastIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4AddrPortStep"
+        },
+        {
+          "description": "Starting IPv4 gateway address of east devices",
+          "display_name": "East IPv4 Gateway Address",
+          "property": "EastIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.18.1.1",
+          "endpoint_profile_property_name": "Ipv4GwAddr"
+        },
+        {
+          "description": "Step of IPv4 gateway address across multiple east ports",
+          "display_name": "East IPv4 Gateway Address Port Step",
+          "property": "EastIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4GwAddrPortStep"
+        },
+        {
+          "description": "Prefix length of the IPv4 address on east devices",
+          "display_name": "East IPv4 Prefix Length",
+          "property": "EastIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv4PrefixLength"
+        },
+        {
+          "description": "Starting IPv6 address of east devices",
+          "display_name": "East IPv6 Address",
+          "property": "EastIpv6Addr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::2",
+          "endpoint_profile_property_name": "Ipv6Addr"
+        },
+        {
+          "description": "Step of IPv6 address across multiple east ports",
+          "display_name": "East IPv6 Address Port Step",
+          "property": "EastIpv6AddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0",
+          "endpoint_profile_property_name": "Ipv6AddrPortStep"
+        },
+        {
+          "description": "Starting IPv6 gateway address of east devices",
+          "display_name": "East IPv6 Gateway Address",
+          "property": "EastIpv6GwAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::1",
+          "endpoint_profile_property_name": "Ipv6GwAddr"
+        },
+        {
+          "description": "Step of IPv6 gateway address across multiple east ports",
+          "display_name": "East IPv6 Gateway Address Port Step",
+          "property": "EastIpv6GwAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0",
+          "endpoint_profile_property_name": "Ipv6GwAddrPortStep"
+        },
+        {
+          "description": "Starting Link-local address of east devices",
+          "display_name": "East Link-Local Address",
+          "property": "EastLinkLocalAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "FE80::1:1",
+          "endpoint_profile_property_name": "LinkLocalAddr"
+        },
+        {
+          "description": "Step of Link-local address across multiple east ports",
+          "display_name": "East Link-Local Address Port Step",
+          "property": "EastLinkLocalAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "LinkLocalAddrPortStep"
+        },
+        {
+          "description": "Prefix length of the IPv6 address on east devices",
+          "display_name": "East IPv6 Prefix Length",
+          "property": "EastIpv6PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64",
+          "minimum": "0",
+          "maximum": "128",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv6PrefixLength"
+        },
+        {
+          "description": "Starting MAC address of east devices",
+          "display_name": "East MAC Address",
+          "property": "EastMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:11:00:02",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "Step of MAC address across multiple east ports",
+          "display_name": "East MAC Address Port Step",
+          "property": "EastMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        },
+        {
+          "description": "Starting VLAN ID of east devices",
+          "display_name": "East VLAN ID",
+          "property": "EastVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "Step of VLAN ID across multiple east ports",
+          "display_name": "East VLAN ID Port Step",
+          "property": "EastVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdPortStep"
+        },
+        {
+          "description": "Starting inner VLAN ID of east devices",
+          "display_name": "East Inner VLAN ID",
+          "property": "EastInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Step of inner VLAN ID across multiple east ports",
+          "display_name": "East Inner VLAN ID Port Step",
+          "property": "EastInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdPortStep"
+        },
+        {
+          "description": "Determines how many VLAN headers to use for east devices",
+          "display_name": "East VLAN Type",
+          "property": "EastVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "West-side Configuration",
+      "description": "Configuration for the ports on the west side of the topology",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "Starting IPv4 address of west devices",
+          "display_name": "West IPv4 Address",
+          "property": "WestIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.19.1.2",
+          "endpoint_profile_property_name": "Ipv4Addr"
+        },
+        {
+          "description": "Step of IPv4 address across multiple west ports",
+          "display_name": "West IPv4 Address Port Step",
+          "property": "WestIpv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4AddrPortStep"
+        },
+        {
+          "description": "Starting IPv4 gateway address of west devices",
+          "display_name": "West IPv4 Gateway Address",
+          "property": "WestIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "192.19.1.1",
+          "endpoint_profile_property_name": "Ipv4GwAddr"
+        },
+        {
+          "description": "Step of IPv4 gateway address across multiple west ports",
+          "display_name": "West IPv4 Gateway Address Port Step",
+          "property": "WestIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0",
+          "endpoint_profile_property_name": "Ipv4GwAddrPortStep"
+        },
+        {
+          "description": "Prefix length of the IPv4 address on west devices",
+          "display_name": "West IPv4 Prefix Length",
+          "property": "WestIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "24",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv4PrefixLength"
+        },
+        {
+          "description": "Starting IPv6 address of west devices",
+          "display_name": "West IPv6 Address",
+          "property": "WestIpv6Addr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2001::2",
+          "endpoint_profile_property_name": "Ipv6Addr"
+        },
+        {
+          "description": "Step of IPv6 address across multiple west ports",
+          "display_name": "West IPv6 Address Port Step",
+          "property": "WestIpv6AddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0",
+          "endpoint_profile_property_name": "Ipv6AddrPortStep"
+        },
+        {
+          "description": "Starting IPv6 gateway address of west devices",
+          "display_name": "West IPv6 Gateway Address",
+          "property": "WestIpv6GwAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2001::1",
+          "endpoint_profile_property_name": "Ipv6GwAddr"
+        },
+        {
+          "description": "Step of IPv6 gateway address across multiple west ports",
+          "display_name": "West IPv6 Gateway Address Port Step",
+          "property": "WestIpv6GwAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0",
+          "endpoint_profile_property_name": "Ipv6GwAddrPortStep"
+        },
+        {
+          "description": "Starting Link-local address of west devices",
+          "display_name": "West Link-Local Address",
+          "property": "WestLinkLocalAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "FE80::1",
+          "endpoint_profile_property_name": "LinkLocalAddr"
+        },
+        {
+          "description": "Step of Link-local address across multiple west ports",
+          "display_name": "West Link-Local Address Port Step",
+          "property": "WestLinkLocalAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0",
+          "endpoint_profile_property_name": "LinkLocalAddrPortStep"
+        },
+        {
+          "description": "Prefix length of the IPv6 address on west devices",
+          "display_name": "West IPv6 Prefix Length",
+          "property": "WestIpv6PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64",
+          "minimum": "0",
+          "maximum": "128",
+          "units": "bits",
+          "endpoint_profile_property_name": "Ipv6PrefixLength"
+        },
+        {
+          "description": "Starting MAC address of west devices",
+          "display_name": "West MAC Address",
+          "property": "WestMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:02",
+          "endpoint_profile_property_name": "MacAddr"
+        },
+        {
+          "description": "Step of MAC address across multiple west ports",
+          "display_name": "West MAC Address Port Step",
+          "property": "WestMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00",
+          "endpoint_profile_property_name": "MacAddrPortStep"
+        },
+        {
+          "description": "Starting VLAN ID of west devices",
+          "display_name": "West VLAN ID",
+          "property": "WestVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanId"
+        },
+        {
+          "description": "Step of VLAN ID across multiple west ports",
+          "display_name": "West VLAN ID Port Step",
+          "property": "WestVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "VlanIdPortStep"
+        },
+        {
+          "description": "Starting inner VLAN ID of west devices",
+          "display_name": "West Inner VLAN ID",
+          "property": "WestInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanId"
+        },
+        {
+          "description": "Step of inner VLAN ID across multiple west ports",
+          "display_name": "West Inner VLAN ID Port Step",
+          "property": "WestInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095",
+          "endpoint_profile_property_name": "InnerVlanIdPortStep"
+        },
+        {
+          "description": "Determines how many VLAN headers to use for west devices",
+          "display_name": "West VLAN Type",
+          "property": "WestVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ],
+          "endpoint_profile_property_name": "VlanMode"
+        }
+      ]
+    },
+    {
+      "group_type": "TRAFFIC",
+      "display_name": "Traffic Configuration",
+      "description": "Configuration for traffic set up",
+      "test_properties": [
+        {
+          "property": "ImixSlotTable",
+          "display_name": "iMIX Distribution Definition",
+          "description": "List of slots for iMIX distribution",
+          "column_definitions": [
+            {
+              "description": "Specifies the frame length mode for the frame length distribution slot",
+              "display_name": "iMIX Frame Length mode",
+              "property": "ImixSlotFrameLengthMode",
+              "property_value_type": "ENUM",
+              "is_collection": false,
+              "acceptable_values": [
+                "Fixed",
+                "Random"
+              ]
+            },
+            {
+              "description": "Specifies Fixed IP Packet Length for iMIX Distribution Slot",
+              "display_name": "iMIX IP Total Length",
+              "property": "ImixSlotFixedFrameLength",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "64",
+              "maximum": "16352",
+              "units": "bytes"
+            },
+            {
+              "description": "Specifies minimum IP frame length when frame length mode is random",
+              "display_name": "iMIX Slot Minimum IP Total Length",
+              "property": "ImixSlotMinFrameLength",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "64",
+              "maximum": "16352",
+              "units": "bytes"
+            },
+            {
+              "description": "Specifies maximum IP frame length when frame length mode is random",
+              "display_name": "iMIX Slot Maximum IP Total Length",
+              "property": "ImixSlotMaxFrameLength",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "64",
+              "maximum": "16352",
+              "units": "bytes"
+            },
+            {
+              "description": "Specifies a weight value for the distribution slot",
+              "display_name": "iMIX Slot Weight",
+              "property": "ImixSlotWeight",
+              "property_value_type": "INTEGER",
+              "is_collection": false,
+              "minimum": "1",
+              "maximum": "65535"
+            }
+          ],
+          "table": [
+            [
+              "Fixed",
+              "64",
+              "64",
+              "1518",
+              "1"
+            ]
+          ]
+        },
+        {
+          "description": "Traffic Pattern",
+          "display_name": "Traffic Pattern",
+          "property": "TrafficPattern",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "PAIR",
+          "acceptable_values": [
+            "PAIR",
+            "BACKBONE",
+            "MESH"
+          ]
+        },
+        {
+          "description": "Flag to enable addition of UDP header to packets (per RFC2544 spec)",
+          "display_name": "Enable UDP Echo Packets",
+          "property": "EnableUdpEchoPackets",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Frame Size Configuration",
+      "description": "Group for Frame Size Test phase",
+      "test_properties": [
+        {
+          "description": "List of frame sizes used in test",
+          "display_name": "Frame Size List",
+          "property": "FrameSizeList",
+          "property_value_type": "INTEGER",
+          "is_collection": true,
+          "property_value": [
+            "64",
+            "128",
+            "256",
+            "512",
+            "1024",
+            "1280",
+            "1518"
+          ],
+          "minimum": "64",
+          "maximum": "16352",
+          "units": "bytes"
+        },
+        {
+          "description": "Adds specified iMIX distribution to end of frame size list",
+          "display_name": "Add iMIX distribution to frame size list",
+          "property": "EnableImixDist",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Throughput Rate Search",
+      "description": "Group for Throughput Rate Search phase",
+      "test_properties": [
+        {
+          "description": "Minimum rate used in binary search to find maximum throughput",
+          "display_name": "Minimum Rate",
+          "property": "ThroughputSearchMinRate",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.00",
+          "minimum": "0.001",
+          "maximum": "100.0",
+          "units": "%"
+        },
+        {
+          "description": "Maximum value used for maximum throughput rate search",
+          "display_name": "Maximum Rate",
+          "property": "ThroughputSearchMaxRate",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "0.001",
+          "maximum": "100.0",
+          "units": "%"
+        },
+        {
+          "description": "Specifies the starting value for the rate search.  Value must be between the min and max values",
+          "display_name": "Starting Rate",
+          "property": "ThroughputSearchStartRate",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "50.00",
+          "minimum": "0.001",
+          "maximum": "100.0",
+          "units": "%"
+        },
+        {
+          "description": "Resolution used when searching for maximum throughput",
+          "display_name": "Rate Resolution",
+          "property": "ThroughputSearchRateRes",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "1.00",
+          "minimum": "0.001",
+          "maximum": "100.0",
+          "units": "%"
+        },
+        {
+          "description": "Duration between start and stop traffic for Throughput Search phase",
+          "display_name": "Throughput Search Traffic Duration",
+          "property": "ThroughputSearchDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "120.00",
+          "minimum": "1.0",
+          "maximum": "600.0",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Delta Load Profiling",
+      "description": "Group for Delta Load Profiling phase",
+      "test_properties": [
+        {
+          "description": "List of delta load percentage used to calculate rates for profiling phase",
+          "display_name": "Delta Load List",
+          "property": "DeltaLoadList",
+          "property_value_type": "FLOAT",
+          "is_collection": true,
+          "property_value": [
+            "-50",
+            "-10",
+            "0",
+            "10",
+            "50"
+          ],
+          "minimum": "-100.0",
+          "maximum": "100.0",
+          "units": "%"
+        },
+        {
+          "description": "Duration between start and stop traffic for profiling phase",
+          "display_name": "Profiling Traffic Duration",
+          "property": "ProfilingDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "120.00",
+          "minimum": "1.0",
+          "maximum": "600.0",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Learning Configuration",
+      "description": "Parameters to configure L2/L3 learning",
+      "test_properties": [
+        {
+          "description": "Sets L2 or L3 Learning",
+          "display_name": "Learning Mode",
+          "property": "LearningMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "L2",
+            "L3",
+            "L2/L3"
+          ]
+        }
+      ]
+    }
+  ]
+}

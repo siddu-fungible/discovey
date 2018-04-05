@@ -1,0 +1,20 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCFLOGIAcc"
+    showName="FC FLOGI ACC"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:ELSFLOGILSACC"
+    description="FC FLOGI ACC">
+    <pdus>
+      <pdu name="proto3" pdu="fc:ELSFLOGILSACC">
+        <class3SvcParams>
+          <options>8800</options>
+        </class3SvcParams>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

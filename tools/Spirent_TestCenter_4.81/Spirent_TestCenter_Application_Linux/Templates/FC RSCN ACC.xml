@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="FCRSCNAcc"
+    showName="FC RSCN Accept"
+    version="1.0"
+    category="Fibre Channel"
+    readonly="true"
+    validate="true"
+    firstPdu="fc:ELSLSACC" 
+    description="FC RSCN Accept">
+    <pdus>
+      <pdu name="lsacc1" pdu="fc:ELSLSACC">
+        <command>02000000</command>
+      </pdu>
+    </pdus>
+  </template>
+</frame>

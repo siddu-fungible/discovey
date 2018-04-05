@@ -1,0 +1,1159 @@
+{
+  "methodology_key": "DHCPRATE",
+  "display_name": "DHCP Setup Rate",
+  "short_display_name": "DHCPRATE",
+  "description": "Determines the maximum DHCP subscriber setup rate supported by DUT for a given number of max DHCP sessions.",
+  "version": "1.0.0",
+  "dependencies": {},
+  "status": {
+    "valid": true,
+    "validation_explanation": "None."
+  },
+  "labels": [],
+  "topology_map": {
+    "type": "WEST_EAST",
+    "sides": [
+      {
+        "side": "WEST",
+        "port_group": "ClientPortGroup"
+      },
+      {
+        "side": "EAST",
+        "port_group": "ServerPortGroup"
+      }
+    ]
+  },
+  "port_groups": [
+    {
+      "property": "ClientPortGroup",
+      "display_name": "Client Port Group",
+      "description": "Group of ports on the client side of the topology",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    },
+    {
+      "property": "ServerPortGroup",
+      "display_name": "Server/Traffic Port Group",
+      "description": "Group of ports on the server side of the topology",
+      "min_occurs": "1",
+      "max_occurs": "unbounded",
+      "ports": [
+        {
+          "location": "//(Offline)/1/1"
+        }
+      ]
+    }
+  ],
+  "machine_groups": [],
+  "resource_groups": [
+    {
+      "property": "MetricsService",
+      "display_name": "Metrics Services",
+      "description": "List of Metrics to use for the methodology.",
+      "type": "METRICS",
+      "resource_list": []
+    }
+  ],
+  "property_groups": [
+    {
+      "group_type": "GLOBAL",
+      "display_name": "Global Parameters",
+      "description": "Global configuration parameters.",
+      "test_properties": [
+        {
+          "description": "Selection to set up DHCPv4 or DHCPv6/PD for the test",
+          "display_name": "IP Version",
+          "property": "DhcpEncapsulation",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "IPv4",
+          "acceptable_values": [
+            "IPv4",
+            "IPv6",
+            "IPv4 and IPv6"
+          ]
+        },
+        {
+          "description": "Option to run traffic streamblocks",
+          "display_name": "Enable Traffic",
+          "property": "EnableTraffic",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Number of DHCP sessions to configure for rate test",
+          "display_name": "Session Count",
+          "property": "DhcpSessionCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "10000",
+          "minimum": "0",
+          "maximum": "4294967295"
+        }
+      ]
+    },
+    {
+      "group_type": "INIT",
+      "display_name": "DHCP Port Level Parameters",
+      "description": "Properties to configure DHCP Port settings",
+      "test_properties": [
+        {
+          "description": "Maximum number of DHCP sessions allowed to be in progress at any time",
+          "display_name": "DHCPv4 Outstanding Session Count",
+          "property": "Dhcpv4OutstandingSessionCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "1",
+          "maximum": "65535"
+        },
+        {
+          "description": "Maximum number of DHCPv6 sessions allowed to be in progress at any time",
+          "display_name": "DHCPv6 Outstanding Session Count",
+          "property": "Dhcpv6OutstandingSessionCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "1",
+          "maximum": "65535"
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "DHCP Client",
+      "description": "Configuration for the ports on the left (client) side of the topology",
+      "topology_side": "WEST",
+      "test_properties": [
+        {
+          "description": "Starting IPv4 Gateway Address for client devices",
+          "display_name": "IPv4 Gateway Address",
+          "property": "ClientIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.2"
+        },
+        {
+          "description": "Step of IPv4 Gateway Address for client devices within a device block",
+          "display_name": "IPv4 Gateway Address Step",
+          "property": "ClientIpv4GwAddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0"
+        },
+        {
+          "description": "Step for IPv4 Gateway Address between multiple client device blocks",
+          "display_name": "IPv4 Gateway Address Block Step",
+          "property": "ClientIpv4GwAddrBlockStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0"
+        },
+        {
+          "description": "Step for IPv4 Gateway Address between multiple client ports",
+          "display_name": "IPv4 Gateway Address Port Step",
+          "property": "ClientIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.1.0.0"
+        },
+        {
+          "description": "Starting source MAC Address for DHCPv4 client devices",
+          "display_name": "DHCPv4 MAC Address",
+          "property": "Dhcpv4ClientMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:94:00:00:01"
+        },
+        {
+          "description": "Step of source MAC Address for DHCPv4 client devices within a device block",
+          "display_name": "DHCPv4 MAC Address Step",
+          "property": "Dhcpv4ClientMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Step for source MAC Address between multiple DHCPv4 client device blocks",
+          "display_name": "DHCPv4 MAC Address Block Step",
+          "property": "Dhcpv4ClientMacAddrBlockStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:01:00"
+        },
+        {
+          "description": "Step for source MAC Address between multiple DHCPv4 client ports",
+          "display_name": "DHCPv4 MAC Address Port Step",
+          "property": "Dhcpv4ClientMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00"
+        },
+        {
+          "description": "Determines type of VLAN headers to configure on Client ports",
+          "display_name": "Client VLAN Mode",
+          "property": "ClientVlanMode",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ]
+        },
+        {
+          "description": "Starting ID for outer VLAN of DHCPv4 Client devices",
+          "display_name": "DHCPv4 Outer VLAN ID",
+          "property": "Dhcpv4ClientOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID for DHCPv4 client devices within a device block",
+          "display_name": "DHCPv4 Outer VLAN ID Step",
+          "property": "Dhcpv4ClientOuterVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID between multiple DHCPv4 client device blocks",
+          "display_name": "DHCPv4 Outer VLAN ID Block Step",
+          "property": "Dhcpv4ClientOuterVlanIdBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID between multiple DHCPv4 client ports",
+          "display_name": "DHCPv4 Outer VLAN ID Port Step",
+          "property": "Dhcpv4ClientOuterVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Starting ID for VLAN of DHCPv4 client devices",
+          "display_name": "DHCPv4 VLAN ID",
+          "property": "Dhcpv4ClientInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID for DHCPv4 client devices within a device block",
+          "display_name": "DHCPv4 VLAN ID Step",
+          "property": "Dhcpv4ClientInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step for VLAN ID between multiple DHCPv4 client device blocks",
+          "display_name": "DHCPv4 VLAN ID Block Step",
+          "property": "Dhcpv4ClientInnerVlanIdBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step for VLAN ID between multiple DHCPv4 client ports",
+          "display_name": "DHCPv4 VLAN ID Port Step",
+          "property": "Dhcpv4ClientInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Address sent in IA options to give the server a hint about the address the DHCPv6 client would like to receive",
+          "display_name": "DHCPv6 Client Requested Starting Address",
+          "property": "Dhcpv6ClientRequestedStartingAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::3"
+        },
+        {
+          "description": "Starting IPv6 Gateway Address for client devices",
+          "display_name": "IPv6 Gateway Address",
+          "property": "ClientIpv6GwAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::1"
+        },
+        {
+          "description": "Step of IPv6 Gateway Address for client devices within a device block",
+          "display_name": "IPv6 Gateway Address Step",
+          "property": "ClientIpv6GwAddrStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::"
+        },
+        {
+          "description": "Step for IPv6 Gateway Address between multiple client device blocks",
+          "display_name": "IPv6 Gateway Address Block Step",
+          "property": "ClientIpv6GwAddrBlockStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0"
+        },
+        {
+          "description": "Step for IPv6 Gateway Address between multiple client ports",
+          "display_name": "IPv6 Gateway Address Port Step",
+          "property": "ClientIpv6GwAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0"
+        },
+        {
+          "description": "Starting MAC Address for DHCPv6/PD client devices",
+          "display_name": "DHCPv6/PD MAC Address",
+          "property": "Dhcpv6PdClientMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:95:00:01:01"
+        },
+        {
+          "description": "Step of source MAC Address for DHCPv6/PD client devices within a device block",
+          "display_name": "DHCPv6/PD MAC Address Step",
+          "property": "Dhcpv6PdClientMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Step for source MAC Address between DHCPv6/PD Client device blocks",
+          "display_name": "DHCPv6/PD MAC Address Block Step",
+          "property": "Dhcpv6pdClientMacAddrBlockStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:01:00"
+        },
+        {
+          "description": "Step for source MAC Address between DHCPv6/PD client ports",
+          "display_name": "DHCPv6/PD MAC Address Port Step",
+          "property": "Dhcpv6pdClientMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00"
+        },
+        {
+          "description": "Starting ID of outer VLAN for DHCPv6/PD client devices",
+          "display_name": "DHCPv6/PD Outer VLAN ID",
+          "property": "Dhcpv6PdClientOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID for DHCPv6/PD client devices within a device block",
+          "display_name": "DHCPv6/PD Outer VLAN ID Step",
+          "property": "Dhcpv6PdClientOuterVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step for outer VLAN ID between multiple DHCPv6/PD client device blocks",
+          "display_name": "DHCPv6/PD Outer VLAN ID Block Step",
+          "property": "Dhcpv6PdClientOuterVlanIdBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step for outer VLAN ID between multiple DHCPv6/PD client ports",
+          "display_name": "DHCPv6/PD Outer VLAN ID Port Step",
+          "property": "Dhcpv6PdClientOuterVlanPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Starting ID of VLAN for DHCPv6/PD Client devices",
+          "display_name": "DHCPv6/PD VLAN ID",
+          "property": "Dhcpv6PdClientInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID for DHCPv6/PD client devices within a device block",
+          "display_name": "DHCPv6/PD VLAN ID Step",
+          "property": "Dhcpv6PdClientInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step for VLAN ID between multiple DHCPv6/PD client device blocks",
+          "display_name": "DHCPv6/PD VLAN ID Block Step",
+          "property": "Dhcpv6PdClientInnerVlanBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step for VLAN ID between multiple DHCPv6/PD client ports",
+          "display_name": "DHCPv6/PD VLAN ID Port Step",
+          "property": "Dhcpv6PdClientInnerVlanPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Enable duplicate address detection",
+          "display_name": "Enable Duplicate Address Detection (DAD)",
+          "property": "EnableDad",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "FALSE"
+        },
+        {
+          "description": "Mode for running DHCPv6 Client (DHCPv6, DHCPv6/Pd)",
+          "display_name": "DHCPv6 Client Emulation Mode",
+          "property": "Dhcpv6ClientEmulationModeFrontEnd",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "DHCPv6",
+          "acceptable_values": [
+            "DHCPv6",
+            "DHCPv6/PD"
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TOPOLOGY",
+      "display_name": "DHCP Server/Traffic Hosts",
+      "description": "Configuration for the ports on the right (server) side of the topology",
+      "topology_side": "EAST",
+      "test_properties": [
+        {
+          "description": "Prefix length (in bits) of the IPv4 address",
+          "display_name": "Server IPv4 Prefix Length",
+          "property": "ServerIpv4PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "16",
+          "minimum": "0",
+          "maximum": "32",
+          "units": "bits"
+        },
+        {
+          "description": "Starting IPv4 Address for Server devices",
+          "display_name": "Server IPv4 Address",
+          "property": "ServerIpv4Addr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.2"
+        },
+        {
+          "description": "Step of IPv4 Address for server devices within a device block",
+          "display_name": "Server IPv4 Address Step",
+          "property": "ServerIpv4AddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.1"
+        },
+        {
+          "description": "Step for IPv4 Address between multiple server device blocks",
+          "display_name": "Server IPv4 Address Block Step",
+          "property": "ServerIpv4AddrBlockStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0"
+        },
+        {
+          "description": "Step for IPv4 Address between multiple server ports",
+          "display_name": "Server IPv4 Address Port Step",
+          "property": "ServerIPv4AddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.1.0.0"
+        },
+        {
+          "description": "Starting IPv4 Gatway Address of server devices",
+          "display_name": "Server IPv4 Gateway Address",
+          "property": "ServerIpv4GwAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.3"
+        },
+        {
+          "description": "Step of IPv4 Gateway Address for server devices within a device block",
+          "display_name": "Server IPv4 Gateway Address Step",
+          "property": "ServerIpv4GwAddrStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.0.0"
+        },
+        {
+          "description": "Step for IPv4 Gateway Address between multiple server device blocks",
+          "display_name": "Server IPv4 Gateway Address Block Step",
+          "property": "ServerIpv4GwAddrBlockStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.0.1.0"
+        },
+        {
+          "description": "Step for IPv4 Gateway Address between multiple server ports",
+          "display_name": "Server IPv4 Gateway Address Port Step",
+          "property": "ServerIpv4GwAddrPortStep",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "0.1.0.0"
+        },
+        {
+          "description": "Starting source MAC Address start for DHCPv4 Server devices",
+          "display_name": "DHCPv4 Server MAC Address",
+          "property": "Dhcpv4ServerMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:96:00:00:01"
+        },
+        {
+          "description": "Step of source MAC Address for DHCPv4 Server devices within a device block",
+          "display_name": "DHCPv4 Server MAC Address Step",
+          "property": "Dhcpv4ServerMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Step for source MAC Address between multiple DHCPv4 server device blocks",
+          "display_name": "DHCPv4 Server MAC Address Block Step",
+          "property": "Dhcpv4ServerMacAddrBlockStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:01:00"
+        },
+        {
+          "description": "Step for source MAC Address between multiple DHCPv4 server ports",
+          "display_name": "DHCPv4 Server MAC Address Port Step",
+          "property": "Dhcpv4ServerMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00"
+        },
+        {
+          "description": "Determines type of VLAN headers to configure on Server/Host ports",
+          "display_name": "VLAN Mode",
+          "property": "ServerHostVlanType",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "VLAN",
+            "QinQ"
+          ]
+        },
+        {
+          "description": "Starting ID of the outer VLAN for DHCPv4 server devices",
+          "display_name": "DHCPv4 Server Outer VLAN ID",
+          "property": "Dhcpv4ServerOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID for DHCPv4 server devices within a device block",
+          "display_name": "DHCPv4 Server Outer VLAN ID Step",
+          "property": "Dhcpv4ServerOuterVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID between DHCPv4 server device blocks",
+          "display_name": "DHCPv4 Server Outer VLAN ID Block Step",
+          "property": "Dhcpv4ServerOuterVlanIdBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID between DHCPv4 server ports",
+          "display_name": "DHCPv4 Server Outer VLAN ID Port Step",
+          "property": "Dhcpv4ServerOuterVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Starting ID of the VLAN for DHCPv4 server devices",
+          "display_name": "DHCPv4 Server VLAN ID",
+          "property": "Dhcpv4ServerInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID for DHCPv4 server devices within a device block",
+          "display_name": "Dhcpv4 Server VLAN ID Step",
+          "property": "Dhcpv4ServerInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID between DHCPv4 server device blocks",
+          "display_name": "DHCPv4 Server VLAN ID Block Step",
+          "property": "Dhcpv4ServerInnerVlanIdBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID between DHCPv4 server ports",
+          "display_name": "DHCPv4 Server VLAN ID Port Step",
+          "property": "Dhcpv4ServerInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Starting IPv6 Address for server devices",
+          "display_name": "Server IPv6 Address",
+          "property": "ServerIpv6Addr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::1"
+        },
+        {
+          "description": "Prefix length (in bits) of the IPv6 address",
+          "display_name": "Server IPv6 Prefix Length",
+          "property": "ServerIpv6PrefixLength",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "64",
+          "minimum": "0",
+          "maximum": "128",
+          "units": "bits"
+        },
+        {
+          "description": "Step of IPv6 Address for server devices within a device block",
+          "display_name": "Server IPv6 Address Step",
+          "property": "ServerIpv6AddrStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0"
+        },
+        {
+          "description": "Step for IPv6 Address between multiple server device blocks",
+          "display_name": "Server IPv6 Address Block Step",
+          "property": "ServerIpv6AddrBlockStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::"
+        },
+        {
+          "description": "Step for IPv6 Address between multiple server ports",
+          "display_name": "Server IPv6 Address Port Step",
+          "property": "ServerIpv6AddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0"
+        },
+        {
+          "description": "Starting IPv6 Address for server devices",
+          "display_name": "Server IPv6 Gateway Address",
+          "property": "ServerIpv6GwAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::2"
+        },
+        {
+          "description": "Step of IPv6 Gateway Address for server devices within a device block",
+          "display_name": "Server IPv6 Gateway Address Step",
+          "property": "ServerIpv6GwAddrStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::"
+        },
+        {
+          "description": "Step for IPv6 Gateway Address between multiple server device blocks",
+          "display_name": "Server IPv6 Gateway Address Block Step",
+          "property": "ServerIpv6GwAddrBlockStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::"
+        },
+        {
+          "description": "Step for IPv6 Gateway Address between multiple server ports",
+          "display_name": "Server IPv6 Gateway Address Port Step",
+          "property": "ServerIpv6GwAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0"
+        },
+        {
+          "description": "Starting MAC Address of DHCPv6/PD server devices",
+          "display_name": "DHCPv6/PD Server MAC Address",
+          "property": "Dhcpv6PdServerMacAddr",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:10:97:00:00:01"
+        },
+        {
+          "description": "Step of source MAC Address for DHCPv6/PD server devices within a device block",
+          "display_name": "DHCPv6/PD Server MAC Address Step",
+          "property": "Dhcpv6PdServerMacAddrStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:00:01"
+        },
+        {
+          "description": "Step for source MAC Address between multiple DHCPv6/PD server device blocks",
+          "display_name": "DHCPv6/PD Server MAC Address Block Step",
+          "property": "Dhcpv6PdServerMacAddrBlockStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:00:01:00"
+        },
+        {
+          "description": "Step for source MAC Address between multiple DHCPv6/PD server ports",
+          "display_name": "DHCPv6/PD Server MAC Address Port Step",
+          "property": "Dhcpv6PdServerMacAddrPortStep",
+          "property_value_type": "MAC",
+          "is_collection": false,
+          "property_value": "00:00:00:01:00:00"
+        },
+        {
+          "description": "Starting Address of IPv6 Link-Local for server devices",
+          "display_name": "Server IPv6 Link-Local Address",
+          "property": "ServerIpv6LinkLocalAddr",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "fe80::1"
+        },
+        {
+          "description": "Step of IPv6 Link-Local Address for server devices within a device block",
+          "display_name": "Server IPv6 Link-Local Address Step",
+          "property": "ServerIpv6LinkLocalAddrStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "::1:0"
+        },
+        {
+          "description": "Step for IPv6 Link-Local Address between multiple server device blocks",
+          "display_name": "Server IPv6 Link-Local Address Block Step",
+          "property": "ServerIpv6LinkLocalAddrBlockStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0"
+        },
+        {
+          "description": "Step for IPv6 Link-Local Address between multiple server ports",
+          "display_name": "Server IPv6 Link-Local Address Port Step",
+          "property": "ServerIPv6LinkLocalAddrPortStep",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "1::0"
+        },
+        {
+          "description": "Starting ID of the outer VLAN for DHCPv6/PD server devices",
+          "display_name": "DHCPv6/PD Server Outer VLAN ID",
+          "property": "Dhcpv6PdServerOuterVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID for DHCPv6/PD server devices within a device block",
+          "display_name": "DHCPv6/PD Server Outer VLAN ID Step",
+          "property": "Dhcpv6PdServerOuterVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID between DHCPv6/PD server device blocks",
+          "display_name": "DHCPv6/PD Server Outer VLAN ID Block Step",
+          "property": "Dhcpv6PdServerOuterVlanIdBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of outer VLAN ID between DHCPv6/PD server ports",
+          "display_name": "DHCPv6/PD Server Outer VLAN ID Port Step",
+          "property": "Dhcpv6PdServerOuterVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Starting ID of the VLAN for DHCPv6/PD server devices",
+          "display_name": "DHCPv6/PD Server VLAN ID",
+          "property": "Dhcpv6PdServerInnerVlanId",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "200",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID for DHCPv6/PD server devices within a device block",
+          "display_name": "DHCPv6/PD Server VLAN ID Step",
+          "property": "Dhcpv6PdServerInnerVlanIdStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID between DHCPv6/PD server device blocks",
+          "display_name": "DHCPv6/PD Server VLAN ID Block Step",
+          "property": "Dhcpv6PdServerInnerVlanIdBlockStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Step of VLAN ID between DHCPv6/PD server ports",
+          "display_name": "DHCPv6/PD Server VLAN ID Port Step",
+          "property": "Dhcpv6PdServerInnerVlanIdPortStep",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "4095"
+        },
+        {
+          "description": "Starting Host Address of DHCPv4 Server Default Pool",
+          "display_name": "DHCPv4 Server Default Pool Host Address Start",
+          "property": "Dhcpv4ServerDefaultPoolHostAddr",
+          "property_value_type": "IPV4",
+          "is_collection": false,
+          "property_value": "1.1.1.5"
+        },
+        {
+          "description": "Specifies the starting network address assigned to clients.  Must be on same network as the IPv6 interface",
+          "display_name": "DHCPv6 Server Default Prefix Pool Start",
+          "property": "Dhcpv6ServerDefaultPrefixPoolStart",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000:0:0:1::5"
+        },
+        {
+          "description": "Specifies the starting network address. Must be on same network as the IPv6 interface",
+          "display_name": "DHCPv6 Server Default Address Pool Start",
+          "property": "Dhcpv6ServerDefaultAddrPool",
+          "property_value_type": "IPV6",
+          "is_collection": false,
+          "property_value": "2000::5"
+        },
+        {
+          "description": "Mode for running DHCPv6 Server (DHCPv6 or DHCPv6/Pd)",
+          "display_name": "DHCPv6 Server Emulation Mode",
+          "property": "Dhcpv6ServerEmulationModeFrontEnd",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "DHCPv6",
+          "acceptable_values": [
+            "DHCPv6",
+            "DHCPv6/PD"
+          ]
+        },
+        {
+          "description": "Flag to enable addition of DHCP Server Emulation on the east port for the rate test",
+          "display_name": "Enable DHCP Server",
+          "property": "EnableDhcpServerEmulation",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        }
+      ]
+    },
+    {
+      "group_type": "TRAFFIC",
+      "display_name": "Traffic",
+      "description": "Parameters for traffic configuration",
+      "test_properties": [
+        {
+          "description": "Time (in seconds) to run Traffic",
+          "display_name": "Traffic Duration",
+          "property": "TrafficDuration",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "30",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Traffic Load to be set for IPv4 and IPv6 Traffic",
+          "display_name": "Traffic Load",
+          "property": "TrafficLoad",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.00",
+          "maximum": "4294967295.00"
+        },
+        {
+          "description": "Load Units for IPv4 and IPv6 Traffic load",
+          "display_name": "TrafficLoadUnit",
+          "property": "TrafficLoadUnit",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "Percent (%)",
+          "acceptable_values": [
+            "Percent (%)",
+            "Frames/sec (fps)",
+            "bps",
+            "Kbps",
+            "Mbps",
+            "L2 Rate (bps)"
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "DHCP Setup Rate Test",
+      "description": "Configuration for the setup rate search space",
+      "test_properties": [
+        {
+          "description": "Option to run Stability check for Rate test.  If True, test is executed at the current iteration value based on repeat count set",
+          "display_name": "Enable Stability Backoff",
+          "property": "EnableStabilityBackoff",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "False"
+        },
+        {
+          "description": "Number of times to repeat the test value when searching for a stable value. Not used if Enable Stability Backoff is false",
+          "display_name": "Stability Repeat Count",
+          "property": "BenchmarkStabilityIteratorBackoffRepeatCount",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "3",
+          "minimum": "0",
+          "maximum": "4294967295"
+        },
+        {
+          "description": "Percentage of times a repeated test value must pass to be considered stable",
+          "display_name": "Stability Backoff Success",
+          "property": "BenchmarkStabilityIteratorBackoffSuccessPercent",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Minimum Request Rate (sessions/s) used in benchmarking iterator settings",
+          "display_name": "Minimum Request Rate",
+          "property": "MinRequestRate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1",
+          "minimum": "1",
+          "maximum": "10000",
+          "units": "sessions/s"
+        },
+        {
+          "description": "Step used for setting iteration current value",
+          "display_name": "Request Rate Step",
+          "property": "BenchmarkStabilityIteratorStepValue",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "100",
+          "minimum": "0",
+          "maximum": "10000",
+          "units": "sessions/s"
+        },
+        {
+          "description": "Maximum Request Rate (sessions/s) used in benchmarking iterator settings",
+          "display_name": "Maximum Request Rate",
+          "property": "MaxRequestRate",
+          "property_value_type": "INTEGER",
+          "is_collection": false,
+          "property_value": "1000",
+          "minimum": "1",
+          "maximum": "10000",
+          "units": "sessions/s"
+        },
+        {
+          "description": "Maximum amount of time in seconds to wait for sessions to go into bound state",
+          "display_name": "Bind Wait Time",
+          "property": "BindWaitTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "300",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        },
+        {
+          "description": "Maximum amount of time in seconds to wait for sessions to go into idle state",
+          "display_name": "Release Wait Time",
+          "property": "ReleaseWaitTime",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "300",
+          "minimum": "0",
+          "maximum": "4294967295",
+          "units": "seconds"
+        }
+      ]
+    },
+    {
+      "group_type": "TEST",
+      "display_name": "Learning",
+      "description": "Parameters to configure Learning",
+      "test_properties": [
+        {
+          "description": "Specifies whether the L2 Learning Option takes place on Tx, or Rx, or both Tx and Rx.",
+          "display_name": "L2 Learning Option",
+          "property": "L2LearningOption",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "TX_RX",
+          "acceptable_values": [
+            "TX_ONLY",
+            "RX_ONLY",
+            "TX_RX"
+          ]
+        },
+        {
+          "description": "Indicates if command should wait for all Arp/Nds to finish.",
+          "display_name": "Enable Wait For Arp To Finish",
+          "property": "EnableWaitForArpToFinish",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Enable to execute ARP even if ARP is not required",
+          "display_name": "Enable Force Arp",
+          "property": "EnableForceArpOption",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Enable to verify if ARP resolved",
+          "display_name": "Enable Verify Arp",
+          "property": "EnableVerifyArp",
+          "property_value_type": "BOOLEAN",
+          "is_collection": false,
+          "property_value": "True"
+        },
+        {
+          "description": "Configures properties for L2/L3 Learning",
+          "display_name": "Learning Mode",
+          "property": "LearningConfiguration",
+          "property_value_type": "ENUM",
+          "is_collection": false,
+          "property_value": "None",
+          "acceptable_values": [
+            "None",
+            "L2",
+            "L3",
+            "L2/L3"
+          ]
+        }
+      ]
+    },
+    {
+      "group_type": "RESULTS",
+      "display_name": "Result Validation Criteria",
+      "description": "Configure parameters that affect methodology summary results",
+      "test_properties": [
+        {
+          "description": "Percent tolerance used for results verification between the configured Request Rate and measured Bind Rate",
+          "display_name": "Bind Rate Tolerance",
+          "property": "ConfiguredBindRateToleranceForResults",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "10.00",
+          "minimum": "0.00",
+          "maximum": "100.00",
+          "units": "%"
+        },
+        {
+          "description": "Expected session rate the test must at least converge on for the overall test to pass",
+          "display_name": "Session Rate Threshold",
+          "property": "ExpectedSessionRate",
+          "property_value_type": "FLOAT",
+          "is_collection": false,
+          "property_value": "100.00",
+          "minimum": "1",
+          "maximum": "10000",
+          "units": "sessions/s"
+        }
+      ]
+    }
+  ]
+}

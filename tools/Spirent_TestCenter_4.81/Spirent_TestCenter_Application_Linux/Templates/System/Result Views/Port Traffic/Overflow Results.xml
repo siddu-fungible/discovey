@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- This is a machine-generated file. -->
+<!-- Please do not edit it. -->
+
+<ResultDataSet id="5641" serializationBase="true" 
+ Identifier="Port Traffic\Overflow Results"
+ PrimaryClass="Port"
+ Description="object://core/Port"
+ Path="Port Traffic"
+ CustomDisplayPath="Port Traffic and Counters"
+ ResultViewOwner="SYSTEM"
+ InternalXmlFormatString=""
+ ResultFilterMode="1"
+ Persistent="TRUE"
+ CreatorId=""
+ PageNumber="1"
+ RecordsPerPage="100"
+ NotifyInterval="1000"
+ Active="TRUE"
+ LocalActive="TRUE"
+ Name="Overflow Results">
+  <Relation type="ResultChild" target="5664"/>
+  <Relation type="ResultChild" target="5665"/>
+  <Relation type="ResultChild" target="5666"/>
+  <RealTimeResultColumnDefinition id="5642" 
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   ColumnDescription="DescribeMe"
+   ColumnWidth="86"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 136">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5643" 
+   GroupName="All Groups"
+   GroupId="core://allgroups/"
+   ColumnClassName="Port"
+   ColumnPropertyName="PortName"
+   SqlString=""
+   UseCustomSqlString="FALSE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 11">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultGroupDefinition id="5644" 
+   GroupName="Basic Counters"
+   GroupId="object://customgroup/88d1a192-2552-4770-91e6-b36d82324614/Basic Counters"
+   ColumnClassName="OverflowResults OverflowResults OverflowResults OverflowResults OverflowResults OverflowResults OverflowResults"
+   ColumnPropertyName="FrameCount OctetCount SigFrameCount FrameRate OctetRate BitRate SigFrameRate"
+   SqlString=" SELECT Port.Name AS &apos;Rx Port Name&apos;, OverflowResults.FrameCount AS &apos;Frame Count&apos;, OverflowResults.OctetCount AS &apos;Octet Count&apos;, OverflowResults.SigFrameCount AS &apos;Sig Frame Count&apos;, OverflowResults.FrameRate AS &apos;Frame Rate&apos;, OverflowResults.OctetRate AS &apos;Octet Rate&apos;, OverflowResults.SigFrameRate AS &apos;Sig Frame Rate&apos; FROM Port, OverflowResults, Analyzer WHERE ( Analyzer.ParentHnd = Port.Handle AND OverflowResults.ParentHnd = Analyzer.Handle AND Port.DataSetId = @DataSetId AND OverflowResults.DataSetId = @DataSetId AND Analyzer.DataSetId = @DataSetId  )"
+   UseCustomSqlString="TRUE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 12">
+  </RealTimeResultGroupDefinition>
+  <ResultQuery id="5645" 
+   ConfigClassId="analyzer"
+   ResultClassId="overflowresults"
+   ResultRootList="2"
+   PropertyIdArray="overflowresults.framecount overflowresults.octetcount overflowresults.sigframecount overflowresults.framerate overflowresults.octetrate overflowresults.sigframerate overflowresults.ipv4checksumerrorcount overflowresults.tcpudpchecksumerrorcount overflowresults.fcserrorframecount overflowresults.ipv4checksumerrorrate overflowresults.tcpudpchecksumerrorrate overflowresults.fcserrorframerate overflowresults.bitrate"
+   ResultOptions=""
+   InternalCookie=""
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="ResultQuery 6">
+  </ResultQuery>
+  <RealTimeResultColumnDefinition id="5646" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="FrameCount"
+   ColumnDescription=""
+   ColumnWidth="76"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 137">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5647" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="OctetCount"
+   ColumnDescription=""
+   ColumnWidth="55"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 138">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5648" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="SigFrameCount"
+   ColumnDescription=""
+   ColumnWidth="100"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 139">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5649" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="FrameRate"
+   ColumnDescription=""
+   ColumnWidth="74"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 140">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5650" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="OctetRate"
+   ColumnDescription=""
+   ColumnWidth="70"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 141">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5651" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="BitRate"
+   ColumnDescription=""
+   ColumnWidth="125"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 142">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5652" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="SigFrameRate"
+   ColumnDescription=""
+   ColumnWidth="93"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 143">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5653" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="Ipv4ChecksumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="155"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 144">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5654" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="TcpUdpChecksumErrorCount"
+   ColumnDescription=""
+   ColumnWidth="178"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 145">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5655" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="FcsErrorFrameCount"
+   ColumnDescription=""
+   ColumnWidth="132"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 146">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5656" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="Ipv4ChecksumErrorRate"
+   ColumnDescription=""
+   ColumnWidth="148"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 147">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultColumnDefinition id="5657" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="TcpUdpChecksumErrorRate"
+   ColumnDescription=""
+   ColumnWidth="171"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 148">
+  </RealTimeResultColumnDefinition>
+  <RealTimeResultGroupDefinition id="5658" 
+   GroupName="Errors"
+   GroupId="object://customgroup/c3793367-0399-4158-b70c-1ecbe8126453/Errors"
+   ColumnClassName="OverflowResults OverflowResults OverflowResults OverflowResults OverflowResults OverflowResults OverflowResults"
+   ColumnPropertyName="FrameCount Ipv4ChecksumErrorCount TcpUdpChecksumErrorCount FcsErrorFrameCount Ipv4ChecksumErrorRate TcpUdpChecksumErrorRate FcsErrorFrameRate"
+   SqlString=" SELECT Port.Name AS &apos;Rx Port Name&apos;, OverflowResults.FrameCount AS &apos;Frame Count&apos;, OverflowResults.Ipv4ChecksumErrorCount AS &apos;IPv4 Checksum Error Count&apos;, OverflowResults.TcpUdpChecksumErrorCount AS &apos;TCP/UDP Checksum Error Count&apos;, OverflowResults.FcsErrorFrameCount AS &apos;FCS Error Frame Count&apos;, OverflowResults.Ipv4ChecksumErrorRate AS &apos;IPv4 Checksum Error Rate&apos;, OverflowResults.TcpUdpChecksumErrorRate AS &apos;TCP/UDP Checksum Error Rate&apos;, OverflowResults.FcsErrorFrameRate AS &apos;FCS Error Frame Rate&apos; FROM Port, OverflowResults, Analyzer WHERE ( Analyzer.ParentHnd = Port.Handle AND OverflowResults.ParentHnd = Analyzer.Handle AND Port.DataSetId = @DataSetId AND OverflowResults.DataSetId = @DataSetId AND Analyzer.DataSetId = @DataSetId  )"
+   UseCustomSqlString="TRUE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultGroupDefinition 13">
+  </RealTimeResultGroupDefinition>
+  <RealTimeResultColumnDefinition id="5659" 
+   ColumnClassName="OverflowResults"
+   ColumnPropertyName="FcsErrorFrameRate"
+   ColumnDescription=""
+   ColumnWidth="125"
+   ColumnUnits="0"
+   ColumnPrecision="2"
+   ColumnSortType="NONE"
+   Active="TRUE"
+   LocalActive="TRUE"
+   Name="RealTimeResultColumnDefinition 148">
+  </RealTimeResultColumnDefinition>
+</ResultDataSet>

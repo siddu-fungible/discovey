@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Playlist name="GTALK_XMPP_Only" type="stream">
+  <MetaData description="GTALK_XMPP_Only" protocol="Google talk" application="Gtalk" createDate=""/>
+  <Streams>
+    <Stream file="System/Gtalk/Gtalk_XMPP_Conversation.xml" name="XMPP_Conversation" description="XMPP_Conversation" startTime="3067" dataDelay="58" serverPort="5222" sapeeServerIp="192.168.1.1" minDelay="0" maxDelay="0"/>
+  </Streams>
+</Playlist>

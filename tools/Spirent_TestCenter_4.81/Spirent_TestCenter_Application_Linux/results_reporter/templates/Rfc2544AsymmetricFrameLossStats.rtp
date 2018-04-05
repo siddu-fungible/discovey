@@ -1,0 +1,2796 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template name="" type="stc">
+  <reported>
+    <instance>
+      <name>DetailStatus</name>
+      <persist>false</persist>
+      <path>select Id from RxStreamSummaryResults where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>Version</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>3.552.0576.0000</instance>
+      </value>
+      <path>select Version from StcSystem where Id = 1;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>tstDate</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>2010-12-18 00:33:15</instance>
+      </value>
+      <path>select CreatedTime from DataSet where Id = =$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>MbpsLineRate</name>
+      <persist>false</persist>
+      <path>select distinct MbpsLineRate from TheoreticalMaxLineRate where DataSetId==$@StartDataSetId$ order by Id;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>MediaType</name>
+      <persist>false</persist>
+      <path>select MediaType from TheoreticalMaxLineRate group by MbpsLinerate order by Id;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameRate64Octet</name>
+      <persist>false</persist>
+      <path>select FrameRate from TheoreticalMaxLineRate where FrameSize = 64 and DataSetId==$@StartDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameRate128Octet</name>
+      <persist>false</persist>
+      <path>select FrameRate from TheoreticalMaxLineRate where FrameSize = 128 and DataSetId==$@StartDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameRate256Octet</name>
+      <persist>false</persist>
+      <path>select FrameRate from TheoreticalMaxLineRate where FrameSize = 256 and DataSetId==$@StartDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameRate512Octet</name>
+      <persist>false</persist>
+      <path>select FrameRate from TheoreticalMaxLineRate where FrameSize = 512 and DataSetId==$@StartDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameRate1024Octet</name>
+      <persist>false</persist>
+      <path>select FrameRate from TheoreticalMaxLineRate where FrameSize = 1024 and DataSetId==$@StartDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameRate1280Octet</name>
+      <persist>false</persist>
+      <path>select FrameRate from TheoreticalMaxLineRate where FrameSize = 1280 and DataSetId==$@StartDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameRate1518Octet</name>
+      <persist>false</persist>
+      <path>select FrameRate from TheoreticalMaxLineRate where FrameSize = 1518 and DataSetId==$@StartDataSetId$;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>StartDataSetId</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>1</instance>
+        <instance>1</instance>
+      </value>
+      <path>select ParamValue from EotResultNodeParam where Name='@StartDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>EndDataSetId</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>select ParamValue from EotResultNodeParam where Name='@endDataSetId';</path>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>InputStartDataSetId</name>
+      <persist>false</persist>
+      <path>select Id from PortAvgLatencyResults where Id ==$@StartDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>InputEndDataSetId</name>
+      <persist>false</persist>
+      <path>select Id from PortAvgLatencyResults where Id ==$@EndDataSetId$;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DistinctFrameSize</name>
+      <persist>false</persist>
+      <path>select distinct (case FrameSizeType when "Random" then "Random" else FrameSize end) from Rfc2544FrameLossPerLoadResult;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DistinctFrameLengthDistribution</name>
+      <persist>false</persist>
+      <path>select distinct FrameLengthDistribution from Rfc2544FrameLossPerLoadResult;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>interarrivaltime</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ResultViewMode</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>interarrivaltime</instance>
+      </value>
+      <path>select distinct lower(ResultViewMode) from ResultOptions;</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeType</name>
+      <persist>false</persist>
+      <path>select distinct FrameSizeType from Rfc2544FrameLossPerLoadResult;</path>
+      <multivalued>true</multivalued>
+      <pageName>Latency,Jitter,iMIX Distributions,Trial Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistName</name>
+      <persist>false</persist>
+      <path>select fd.name AS 'iMIX Distribution' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544FrameLossPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSMode</name>
+      <persist>false</persist>
+      <path>select fds.frameLengthMode AS 'Frame Length Mode' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544FrameLossPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLen</name>
+      <persist>false</persist>
+      <path>select coalesce((case when fds.frameLengthMode = 'FIXED' then CAST(fds.fixedFrameLength AS varchar(10)) else CAST(fds.minFrameLength AS varchar(10)) || '-' || CAST(fds.maxFrameLength AS varchar(10)) end),'-') AS 'IP Frame Length' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544FrameLossPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeight</name>
+      <persist>false</persist>
+      <path>select fds.weight AS 'Weight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544FrameLossPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWt</name>
+      <persist>false</persist>
+      <path>select round((case when TotalWt.totalWeight=0 then 0 else ((fds.weight * 100.0) /totalWeight) end),2) AS 'Percentage(%)' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544FrameLossPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fd.handle=fds.parentHnd left join (select fd.handle AS 'Handle', coalesce(sum(fds.weight),0) AS 'TotalWeight' from FrameLengthDistribution fd inner join (select distinct framelengthDistribution from Rfc2544FrameLossPerLoadResult) test ON fd.name=test.frameLengthDistribution left join FrameLengthDistributionSlot fds ON fds.parenthnd = fd.handle group by fd.handle) AS TotalWt ON TotalWt.handle = fd.handle order by fd.handle, fds.handle</path>
+      <multivalued>true</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum</name>
+      <persist>false</persist>
+      <path>SELECT FrameSizeType ||'^'|| FrameSize ||'^'|| FrameLengthDistribution ||'^'|| GroupName ||'^'|| PortGroupHnd ||'^'|| PortLineRate ||'^'|| IntendedLoad ||'^'|| OfferedLoad ||'^'|| TxFrameCount ||'^'|| RxFrameCount ||'^'|| CASE WHEN FrameLoss  = 18446744073709551615 THEN '' ELSE FrameLoss END ||'^'|| Coalesce(PercentLoss, '') FROM ( SELECT DataSetId, LoadIterationNum, IterationNum, FrameSizeType, FrameSize, FrameLengthDistribution, GroupName, PortGroupHnd, PortLineRate, ROUND (AVG (IntendedLoad),4) AS IntendedLoad, ROUND (AVG (OfferedLoad),4) AS OfferedLoad, ROUND (AVG (TxFrameCount),4) AS TxFrameCount, ROUND (AVG (RxFrameCount),4) AS RxFrameCount, ROUND (AVG (FrameLoss),4) AS FrameLoss, Coalesce(ROUND (AVG(PercentLoss),4), '') AS PercentLoss FROM ( SELECT DataSetId, LoadIterationNum, IterationNum, FrameSizeType, FrameSize, FrameLengthDistribution, GroupName, PortGroupHnd, PortLineRate, AVG (IntendedLoad) AS IntendedLoad, AVG (OfferedLoad) AS OfferedLoad, SUM (TxFrameCount) AS TxFrameCount, SUM (RxFrameCount) AS RxFrameCount, SUM(FrameLoss) AS FrameLoss, Coalesce(AVG(PercentLoss), '') AS PercentLoss FROM ( SELECT DataSetId AS DataSetId, LoadIterationNum AS LoadIterationNum, IterationNum AS IterationNum, FrameSizeType AS FrameSizeType, ROUND (FrameSize,4) AS FrameSize, FrameLengthDistribution AS FrameLengthDistribution, GroupName AS GroupName, PortGroupHnd AS PortGroupHnd, PortLineRate AS PortLineRate, SUM (IntendedLoad) AS IntendedLoad, SUM (OfferedLoad) AS OfferedLoad, SUM (TxFrameCount) AS TxFrameCount, SUM (RxFrameCount) AS RxFrameCount, SUM (FrameLoss) AS FrameLoss, Coalesce(AVG(PercentLoss), '') AS PercentLoss FROM ( SELECT FPG.DataSetId AS DataSetId, FPG.LoadIterationNum AS LoadIterationNum, FPG.IterationNum AS IterationNum, FPG.FrameSizeType AS FrameSizeType, T.FrameSize AS FrameSize, FPG.FrameLengthDistribution AS FrameLengthDistribution, FPG.GroupName AS GroupName, FPG.PortGroupHnd AS PortGroupHnd, FPG.TxPort AS TxPort, FPG.PortHandle AS PortHandle, T.MbpsLineRate AS PortLineRate, FPG.IntendedLoad AS IntendedLoad, FPG.OfferedLoad AS OfferedLoad, FPG.TxFrameCount AS TxFrameCount, FPG.RxFrameCount AS RxFrameCount, FPG.FrameLoss AS FrameLoss, Coalesce(FPG.PercentLoss, '') AS PercentLoss FROM ( SELECT F.DataSetId AS DataSetId, F.LoadIterationNum AS LoadIterationNum, F.IterationNum AS IterationNum, F.FrameSizeType AS FrameSizeType, F.FrameSize AS FrameSize, F.FrameLengthDistribution AS FrameLengthDistribution, PG.GroupName AS GroupName, PG.PortGroupHnd AS PortGroupHnd, F.TxPort AS TxPort, F.PortHandle AS PortHandle, PG.PortHnd AS PortHnd, F.IntendedLoad AS IntendedLoad, F.OfferedLoad AS OfferedLoad, F.TxFrameCount AS TxFrameCount, F.RxFrameCount AS RxFrameCount, F.FrameLoss AS FrameLoss, Coalesce(F.PercentLoss, '') AS PercentLoss FROM Rfc2544AsymmetricFrameLossPerLoadResult AS F LEFT JOIN ( SELECT M.PortHnd AS PortHnd, M.PortName AS PortName, CASE WHEN G.GroupName=="" THEN G.Name ELSE G.GroupName END AS GroupName, G.Handle AS PortGroupHnd FROM ( SELECT R.SourceHnd AS SourceHnd, R.TargetHnd AS PortHnd, P.Name AS PortName FROM RelationTable AS R LEFT JOIN Port AS P WHERE Type=="GroupMembership" AND R.TargetHnd == P.Handle ) AS M LEFT JOIN PortGroup AS G ON G.Handle == M.SourceHnd ) AS PG ON F.PortHandle == PG.PortHnd ) AS FPG LEFT JOIN TheoreticalMaxLineRatePerPort AS T ON FPG.PortHnd == T.PortHnd AND CASE WHEN T.FrameSizeType=="IMIX" THEN T.FrameLengthDistribution== FPG.FrameLengthDistribution WHEN T.FrameSizeType=="RANDOM" THEN (T.RandomMinFrameSize == ( SELECT RTC.RandomMinFrameSize FROM Rfc2544FrameLossConfig AS RTC WHERE Handle= '=$@Rfc2544ConfigHnd$') AND T.RandomMaxFrameSize == ( SELECT RTC.RandomMaxFrameSize FROM Rfc2544FrameLossConfig AS RTC WHERE Handle= '=$@Rfc2544ConfigHnd$')) ELSE T.FrameSize == FPG.FrameSize END ) GROUP BY IterationNum, DataSetId, CASE WHEN FrameSizeType=="iMIX" THEN FrameLengthDistribution ELSE FrameSize END, PortGroupHnd, PortHandle, LoadIterationNum, PortLineRate ) GROUP BY IterationNum, DataSetId, CASE WHEN FrameSizeType=="iMIX" THEN FrameLengthDistribution ELSE FrameSize END, PortGroupHnd, LoadIterationNum, PortLineRate ) GROUP BY CASE WHEN FrameSizeType=="iMIX" THEN FrameLengthDistribution ELSE FrameSize END, PortGroupHnd, LoadIterationNum, PortLineRate )</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatJitSum</name>
+      <persist>false</persist>
+      <path>SELECT GroupName ||'^'|| PortGroupHandle ||'^'|| FrameSize ||'^'|| FrameLengthDistribution ||'^'|| FrameSizeType ||'^'|| TheoreticalMaxMbpsLineRate ||'^'|| IntendedLoad ||'^'|| MinLatency ||'^'|| MaxLatency ||'^'|| AvgLatency ||'^'|| MinJitter ||'^'|| MaxJitter ||'^'|| AvgJitter ||'^'|| Coalesce(PercentLoss, '') FROM ( SELECT DataSetId, IterationNum, LoadIterationNum, GroupName, PortGroupHandle, ROUND (FrameSize,4) AS FrameSize, FrameLengthDistribution, FrameSizeType, TheoreticalMaxMbpsLineRate, ROUND (AVG (IntendedLoad),4) AS IntendedLoad, MIN (MinLatency) AS MinLatency, MAX (MaxLatency) AS MaxLatency, ROUND (AVG (AvgLatency),4) AS AvgLatency, MIN (MinJitter) AS MinJitter, MAX (MaxJitter) AS MaxJitter, ROUND (AVG (AvgJitter),4) AS AvgJitter, Coalesce(ROUND (AVG (PercentLoss),4), '') AS PercentLoss FROM ( SELECT DataSetId, IterationNum, LoadIterationNum, GroupName, PortGroupHandle, FrameSize, FrameLengthDistribution, FrameSizeType, TheoreticalMaxMbpsLineRate, AVG (IntendedLoad) AS IntendedLoad, MIN (MinLatency) AS MinLatency, MAX (MaxLatency) AS MaxLatency, ROUND(AVG(AvgLatency),3) AS AvgLatency, MIN (MinJitter) AS MinJitter, MAX (MaxJitter) AS MaxJitter, AVG (AvgJitter) AS AvgJitter, Coalesce(AVG (PercentLoss), '') AS PercentLoss FROM ( SELECT DataSetId, IterationNum, LoadIterationNum, GroupName, PortGroupHandle, FrameSize, FrameLengthDistribution, FrameSizeType, TheoreticalMaxMbpsLineRate, SUM (IntendedLoad) AS IntendedLoad, MIN (MinLatency) AS MinLatency, MAX (MaxLatency) AS MaxLatency, ROUND(AVG(AvgLatency),3) AS AvgLatency, MIN (MinJitter) AS MinJitter, MAX (MaxJitter) AS MaxJitter, AVG (AvgJitter) AS AvgJitter, Coalesce(AVG (PercentLoss), '') AS PercentLoss FROM ( SELECT LPG.DataSetId AS DataSetId, LPG.IterationNum AS IterationNum, LPG.LoadIterationNum AS LoadIterationNum, LPG.GroupName AS GroupName, LPG.PortGroupHandle AS PortGroupHandle, LPG.PortHnd AS PortHnd, T.MbpsLineRate AS TheoreticalMaxMbpsLineRate, T.PortHnd AS PortHnd, LPG.FrameSize AS FrameSize, LPG.FrameLengthDistribution AS FrameLengthDistribution, LPG.FrameSizeType AS FrameSizeType, LPG.StreamBlock AS StreamBlock, LPG.IntendedLoad AS IntendedLoad, LPG.MinLatency AS MinLatency, LPG.MaxLatency AS MaxLatency, LPG.AvgLatency AS AvgLatency, LPG.MinJitter AS MinJitter, LPG.MaxJitter AS MaxJitter, LPG.AvgJitter AS AvgJitter, Coalesce(LPG.PercentLoss, '') AS PercentLoss FROM ( SELECT L.DataSetId AS DataSetId, L.IterationNum AS IterationNum, L.LoadIterationNum AS LoadIterationNum, PG.GroupName AS GroupName, PG.PortGroupHandle AS PortGroupHandle, PG.PortHnd AS PortHnd, L.FrameSize AS FrameSize, L.FrameLengthDistribution AS FrameLengthDistribution, L.FrameSizeType AS FrameSizeType, L.StreamBlock AS StreamBlock, L.IntendedLoad AS IntendedLoad, L.MinLatency AS MinLatency, L.MaxLatency AS MaxLatency, L.AvgLatency AS AvgLatency, L.MinJitter AS MinJitter, L.MaxJitter AS MaxJitter, L.AvgJitter AS AvgJitter, Coalesce(L.PercentLoss, '') AS PercentLoss FROM Rfc2544AsymmetricFrameLossPerLoadResult AS L LEFT JOIN ( SELECT M.PortHnd AS PortHnd, M.PortName AS PortName, CASE WHEN G.GroupName=="" THEN G.Name ELSE G.GroupName END AS GroupName, G.Handle AS PortGroupHandle FROM ( SELECT R.SourceHnd AS SourceHnd, R.TargetHnd AS PortHnd, P.Name AS PortName FROM RelationTable AS R LEFT JOIN Port AS P WHERE Type=="GroupMembership" AND R.TargetHnd == P.Handle ) AS M LEFT JOIN PortGroup AS G ON G.Handle == M.SourceHnd ) AS PG ON L.PortHandle == PG.PortHnd ) AS LPG LEFT JOIN TheoreticalMaxLineRatePerPort AS T ON LPG.PortHnd == T.PortHnd AND CASE WHEN T.FrameSizeType=="IMIX" THEN T.FrameLengthDistribution== LPG.FrameLengthDistribution WHEN T.FrameSizeType=="RANDOM" THEN (T.RandomMinFrameSize == ( SELECT RTC.RandomMinFrameSize FROM Rfc2544FrameLossConfig AS RTC WHERE Handle= '=$@Rfc2544ConfigHnd$') AND T.RandomMaxFrameSize == ( SELECT RTC.RandomMaxFrameSize FROM Rfc2544FrameLossConfig AS RTC WHERE Handle= '=$@Rfc2544ConfigHnd$')) ELSE T.FrameSize == LPG.FrameSize END ) GROUP BY IterationNum, DataSetId, CASE WHEN FrameSizeType=="iMIX" THEN FrameLengthDistribution ELSE FrameSize END, PortGroupHandle, PortHnd, LoadIterationNum, TheoreticalMaxMbpsLineRate ) GROUP BY IterationNum, DataSetId, CASE WHEN FrameSizeType=="iMIX" THEN FrameLengthDistribution ELSE FrameSize END, PortGroupHandle, LoadIterationNum, TheoreticalMaxMbpsLineRate ) GROUP BY CASE WHEN FrameSizeType=="iMIX" THEN FrameLengthDistribution ELSE FrameSize END, PortGroupHandle, LoadIterationNum, TheoreticalMaxMbpsLineRate )</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrialSum</name>
+      <persist>false</persist>
+      <path>SELECT DataSetId ||'^'|| IterationNum ||'^'|| LoadIterationNum ||'^'|| FrameSize ||'^'|| FrameLengthDistribution ||'^'|| FrameSizeType ||'^'|| GroupName ||'^'|| TxPort ||'^'|| MbpsLineRate ||'^'|| StreamBlockName ||'^'|| LoadResult ||'^'|| RxFrameCount ||'^'|| TxFrameCount ||'^'|| IntendedLoad ||'^'|| OfferedLoad ||'^'|| TheoMaxFps ||'^'|| CASE WHEN FrameLoss = 18446744073709551615 THEN '' ELSE FrameLoss END ||'^'|| Coalesce(PercentLoss, '') FROM ( SELECT M1.DataSetId AS DataSetId, M1.IterationNum AS IterationNum, M1.LoadIterationNum AS LoadIterationNum, M1.FrameSize AS FrameSize, M1.FrameLengthDistribution AS FrameLengthDistribution, M1.FrameSizeType AS FrameSizeType, PG.GroupName AS GroupName, M1.TxPort AS TxPort, M1.MbpsLineRate AS MbpsLineRate, M1.StreamBlockName AS StreamBlockName, M1.LoadResult AS LoadResult, M1.RxFrameCount AS RxFrameCount, M1.TxFrameCount AS TxFrameCount, ROUND (M1.IntendedLoad,4) AS IntendedLoad, ROUND (M1.OfferedLoad ,4) AS OfferedLoad, ROUND (M1.TheoMaxFps, 4) AS TheoMaxFps, M1.FrameLoss AS FrameLoss, Coalesce(ROUND (M1.PercentLoss,4), '') AS PercentLoss FROM ( SELECT F.DataSetId AS DataSetId, F.IterationNum AS IterationNum, F.LoadIterationNum AS LoadIterationNum, F.FrameSize AS FrameSize, F.FrameLengthDistribution AS FrameLengthDistribution, F.FrameSizeType AS FrameSizeType, F.TxPort AS TxPort, T.PortHnd AS PortHnd, T.MbpsLineRate AS MbpsLineRate, F.StreamBlockHandle AS StreamBlockHnd, F.StreamBlock AS StreamBlockName, F.LoadResult AS LoadResult, F.RxFrameCount AS RxFrameCount, F.TxFrameCount AS TxFrameCount, F.IntendedLoad AS IntendedLoad, F.OfferedLoad AS OfferedLoad, T.FrameRate AS TheoMaxFps, F.FrameLoss AS FrameLoss, Coalesce(F.PercentLoss, '') AS PercentLoss FROM Rfc2544AsymmetricFrameLossPerLoadResult AS F LEFT JOIN TheoreticalMaxLineRatePerPort AS T ON F.PortHandle == T.PortHnd AND CASE WHEN T.FrameSizeType=="IMIX" THEN T.FrameLengthDistribution== F.FrameLengthDistribution WHEN T.FrameSizeType=="RANDOM" THEN (T.RandomMinFrameSize == ( SELECT RTC.RandomMinFrameSize FROM Rfc2544FrameLossConfig AS RTC WHERE Handle= '=$@Rfc2544ConfigHnd$') AND T.RandomMaxFrameSize == ( SELECT RTC.RandomMaxFrameSize FROM Rfc2544FrameLossConfig AS RTC WHERE Handle= '=$@Rfc2544ConfigHnd$')) ELSE T.FrameSize == F.FrameSize END ) AS M1 LEFT JOIN ( SELECT M.PortHnd AS PortHnd, M.PortName AS PortName, CASE WHEN G.GroupName=="" THEN G.Name ELSE G.GroupName END AS GroupName, G.Handle AS PortGroupHandle FROM ( SELECT R.SourceHnd AS SourceHnd, R.TargetHnd AS PortHnd, P.Name AS PortName FROM RelationTable AS R LEFT JOIN Port AS P WHERE Type=="GroupMembership" AND R.TargetHnd == P.Handle ) AS M LEFT JOIN PortGroup AS G ON G.Handle == M.SourceHnd ) AS PG ON PG.PortHnd == M1.PortHnd )</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>L_EotResViewDefStreamSumSql</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>SELECT SqlCommand FROM EotResultViewDefinition WHERE Description=="Asymmetric Frame Loss Stream Summary"</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>L_EotResViewDefStreamSumResNodeParams</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>SELECT NP.Name ||'^'|| NP.ParamValue FROM EotResultNodeParam AS NP WHERE ParentHnd == ( SELECT Handle FROM EotResultNode WHERE Description == "Asymmetric Frame Loss Stream Block Results" )</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>L_EotResViewDefRgSumSql</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>SELECT SqlCommand FROM EotResultViewDefinition WHERE Handle == ( SELECT ViewDefinition FROM EotResultNode WHERE Description=="Asymmetric Frame Loss Group Type Results" AND Name=="Asymmetric Frame Loss RG Results" )</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>L_EotResViewDefRgSumResNodeParams</name>
+      <persist>false</persist>
+      <value type="strings"/>
+      <path>SELECT NP.Name ||'^'|| NP.ParamValue FROM EotResultNodeParam AS NP WHERE ParentHnd == ( SELECT Handle FROM EotResultNode WHERE Description=="Asymmetric Frame Loss Group Type Results" AND Name=="Asymmetric Frame Loss RG Results" )</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>L_EnableJitter</name>
+      <persist>false</persist>
+      <path>SELECT EnableJitterMeasurement FROM Rfc2544FrameLossConfig WHERE Handle= '=$@Rfc2544ConfigHnd$'</path>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>WarningMsg</name>
+      <persist>false</persist>
+      <value type="strings">
+        <instance>Warning : Some modules do not support latency measurement</instance>
+      </value>
+      <path>select BenchmarkWarningMessageResultsReporter from BenchmarkRfc2544ResultsWriteIterationCommand where State="RUNNING"</path>
+      <multivalued>true</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+  </reported>
+  <computed>
+    <instance>
+      <name>TestResultsColour</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Set the text colour based on pass/fail&#xa;# In table: <td bgcolor="=$computedVarName$">&#xa;# In graphs: =$computedVarName$ instead of #xxxxxx&#xa;if {($TestStatus == "COMPLETED")||($TestStatus == "PASSED")} {&#xa;set result "#00ff00"&#xa;} else {&#xa;set result "#ff0000"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>ReportDate</name>
+      <persist>false</persist>
+      <value type="String">2010-12-17 19:14:02 PST</value>
+      <script><![CDATA[# generate the current date&#xa;set systemTime [clock seconds]&#xa;set result [clock format $systemTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TestDate</name>
+      <persist>false</persist>
+      <value type="String">2010-12-17 16:33:15 PST</value>
+      <script><![CDATA[# generate the report date - must convert from GMT to local time&#xa;#  - test time is stored as 2007-01-15 19:50:39 gmt&#xa;#  - must convert to "mm/dd/yyyy hh:mm:ss GMT" format&#xa;#  - then must convert to local time&#xa;&#xa;set  dateSplit [split $tstDate -]&#xa;&#xa;set yy [lindex $dateSplit 0]&#xa;set mm [lindex $dateSplit 1]&#xa;set rest [lindex $dateSplit 2]&#xa;&#xa;set timeSplit [split $rest]&#xa;set dd [lindex $timeSplit 0]&#xa;set time [lindex $timeSplit 1]&#xa;&#xa;#set result "$mm/$dd/$yy $time"&#xa;set formattedDate "$mm/$dd/$yy $time GMT"&#xa;&#xa;#set result $formattedDate&#xa;&#xa;set testTime [clock scan $formattedDate]&#xa;set result [clock format $testTime -format "%Y-%m-%d %H:%M:%S  %Z"]&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>DetailStatsEnabled</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check if Detailed Stas Flag was enabled&#xa;&#xa;if {$DetailStatus == 1} {&#xa;set result "Enabled"&#xa;} else {&#xa;set result "Disabled"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>CounterModeType</name>
+      <persist>false</persist>
+      <value type="String">Interarrivaltime</value>
+      <script><![CDATA[# Determine counter mode&#xa;&#xa;set str [string range $CounterMode 0 0]&#xa;set str [string toupper $str]&#xa;set str2 [string range $CounterMode 1 end]&#xa;set result $str$str2]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Title</pageName>
+    </instance>
+    <instance>
+      <name>L_JitterNote</name>
+      <persist>false</persist>
+      <value type="String">Note: Jitter measurments are only available when the test is run in the 'Jitter' mode.</value>
+      <script><![CDATA[# Sets the 'Note' variable  to be displayed on the template page layout&#xa;&#xa;if {([string toupper $ResultViewMode] == "JITTER")} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Jitter measurments are only available when the test is run in the 'Jitter' mode."&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>FrameSizeTitle</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#Derive the Framesize title based on the frame size type&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result "iMIX \\n Distribution"&#xa;} else {&#xa;set result "Frame Size\\n(bytes)"&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency,Jitter,Trial Summary,Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>ImixNote</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[#Display Note when frame size type is not iMIX&#xa;if {$FrameSizeType == "iMIX"} {&#xa;set result ""&#xa;} else {&#xa;set result "Note: Imix Distributions are only available for the 'iMIX' Frame Size Type "&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSDistNameVal</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSDistName&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSModeVal</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSMode&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSIPLenVal</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSIPLen&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSWeightVal</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSWeight&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixFSPercentWtVal</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result $ImixFSPercentWt&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixDefaultEthernet</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Calculate Default Ethernet frame length for frame sizes in iMIX Distributions&#xa;&#xa;# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result ""&#xa;&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;&#xa;set etherlen "-"&#xa;if {$fmode != "RANDOM"}  {&#xa;   set fsize [expr int($fsize)]&#xa;   set etherlen [expr $fsize + 18]      &#xa;    if {$etherlen < 64} {&#xa;         set etherlen 64&#xa;     }&#xa;} else {&#xa;   set flist [split $fsize "-"]&#xa;   set minlen [expr [lindex $flist 0] + 18]&#xa;   set maxlen [expr [lindex $flist 1] + 18]&#xa;   if { $minlen < 64}  {&#xa;        set minlen 64&#xa;   }&#xa;   if { $maxlen < 64}  {&#xa;        set maxlen 64&#xa;   }&#xa;   set etherlen "$minlen-$maxlen"&#xa;}&#xa;lappend result $etherlen&#xa;}&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>ImixPosLen</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Calculate POS Length&#xa;&#xa;# Check for empty row&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result "N/A"&#xa;} else {&#xa;set result ""&#xa;foreach fsize $ImixFSIPLen fmode $ImixFSMode {&#xa;&#xa;set poslen "-"&#xa;&#xa;if {$fmode != "RANDOM"}  {&#xa;    &#xa;    set fsize [expr int($fsize)]&#xa;    set poslen [expr $fsize + 8]      &#xa;&#xa;} else {&#xa;    set flist [split $fsize "-"]&#xa;    &#xa;    set minlen [expr [lindex $flist 0] + 8]&#xa;    set maxlen [expr [lindex $flist 1] + 8]&#xa;    &#xa;    set poslen "$minlen-$maxlen"&#xa;}&#xa;    lappend result $poslen&#xa;&#xa;}&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>iMIX Distributions</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestampMS</name>
+      <persist>true</persist>
+      <value type="String">1292642037037</value>
+      <script><![CDATA[set result "1292642502619"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>RRTemplateSavedTimestamp</name>
+      <persist>true</persist>
+      <value type="String">Fri Dec 17 19:13:57.037 PST 2010</value>
+      <script><![CDATA[set result "Fri Dec 17 19:21:42.619 PST 2010"]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Theoretical Max</pageName>
+    </instance>
+    <instance>
+      <name>DistinctFrameSizeToDisplay</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Display frame size or frame length distribution depending on the frame size mode&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result $DistinctFrameSize&#xa;} else {&#xa;set result $DistinctFrameLengthDistribution&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>DistinctFrameSizeLabel</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Calculate Frame size label&#xa;set result [list]&#xa;set count 0&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set frameSizeList $DistinctFrameSize&#xa;} else {&#xa;set frameSizeList $DistinctFrameLengthDistribution&#xa;}&#xa;&#xa;foreach framesize $frameSizeList {&#xa;set temp "FS-"&#xa;incr count&#xa;append temp $count&#xa;lappend result $temp&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>TrialFsToDisplay</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[# Display frame size or frame length distribution depending on the frame size mode&#xa;&#xa;if {$FrameSizeType != "iMIX"} {&#xa;set result $TrialFS&#xa;} else {&#xa;set result $TrialFD&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.PortGroup</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[catch {array unset AsymmetricSumData}&#xa;&#xa;set cols [list FrameSizeType FrameSize FrameLengthDistribution PortGroup PortGroupHandle PortLineRate IntendedLoad OfferedLoad TxFrameCount RxFrameCount FrameLoss PercentLoss]&#xa;set result ""&#xa;&#xa;foreach row $T_AsymmetricSum {&#xa;   set row [string trimright $row ,]&#xa;   foreach val [split $row ^] col $cols {&#xa;      lappend AsymmetricSumData($col) $val&#xa;   }&#xa;}&#xa;&#xa;set result $AsymmetricSumData(PortGroup)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.Fs</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;if {[lsearch $AsymmetricSumData(FrameSizeType) "iMIX"] != -1} {&#xa;   set result $AsymmetricSumData(FrameLengthDistribution)&#xa;} else {&#xa;   set result $AsymmetricSumData(FrameSize)&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.IntendedLoad</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricSumData(IntendedLoad)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.OfferedLoad</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricSumData(OfferedLoad)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.TxFrames</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricSumData(TxFrameCount)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.RxFrames</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricSumData(RxFrameCount)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.FrameLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricSumData(FrameLoss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.FrameLossPercent</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricSumData(PercentLoss)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricSum.PortLineRate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricSumData(PortLineRate)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.PortGroup</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[catch {array unset AsymmetricLatJitData}&#xa;set cols [list "PortGroup" "PortGroupHandle" "FrameSize" "FrameLengthDistribution" "FrameSizeType" "TheoreticalMaxMbpsLineRate" "IntendedLoad" "MinLatency" "MaxLatency" "AvgLatency" "MinJitter" "MaxJitter" "AvgJitter" "PercentLoss"]&#xa;set result ""&#xa;&#xa;foreach row $T_AsymmetricLatJitSum {&#xa;   set row [string trimright $row ,]&#xa;   foreach val [split $row ^] col $cols {&#xa;      lappend AsymmetricLatJitData($col) $val&#xa;   }&#xa;}&#xa;&#xa;set result $AsymmetricLatJitData(PortGroup)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.Fs</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;if {[lsearch $AsymmetricLatJitData(FrameSizeType) "iMIX"] != -1} {&#xa;   set result $AsymmetricLatJitData(FrameLengthDistribution)&#xa;} else {&#xa;   set result $AsymmetricLatJitData(FrameSize)&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.TheoMaxMbps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.Intend</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricLatJitData(IntendedLoad)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.MinLat</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricLatJitData(MinLatency)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.MaxLat</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricLatJitData(MaxLatency)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.AvgLat</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricLatJitData(AvgLatency)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricLatSum.PercentLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricLatJitData(PercentLoss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.MinJit</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(MinJitter)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.MaxJit</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(MaxJitter)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.AvgJit</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(AvgJitter)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.PortGroup</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[catch {array unset AsymmetricTrialData}&#xa;&#xa;set cols [list "DataSetId" "IterationNum" "LoadIterationNum" "FrameSize" "FrameLengthDistribution" "FrameSizeType" \&#xa;   "PortGroup" "TxPort" "MbpsLineRate" "StreamBlockName" "LoadResult" "RxFrameCount" "TxFrameCount" "IntendedLoad" \&#xa;   "OfferedLoad" "TheoMaxFps" "FrameLoss" "PercentLoss"]&#xa;set result ""&#xa;&#xa;foreach row $T_AsymmetricTrialSum {&#xa;   set row [string trimright $row ,]&#xa;   foreach val [split $row ^] col $cols {&#xa;      lappend AsymmetricTrialData($col) $val&#xa;   }&#xa;}&#xa;&#xa;set result $AsymmetricTrialData(PortGroup)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.Fs</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;if {[lsearch $AsymmetricTrialData(FrameSizeType) "iMIX"] != -1} {&#xa;   set result $AsymmetricTrialData(FrameLengthDistribution)&#xa;} else {&#xa;   set result $AsymmetricTrialData(FrameSize)&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.DataSetId</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(DataSetId)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.TxPort</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(TxPort)&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.MbpsLineRate</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(MbpsLineRate)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.StreamBlockName</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(StreamBlockName)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.LoadResult</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(LoadResult)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.RxFrameCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(RxFrameCount)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.TxFrameCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(TxFrameCount)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.IntendedLoad</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(IntendedLoad)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.OfferedLoad</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(OfferedLoad)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.TheoMaxFps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(TheoMaxFps)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.FrameLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(FrameLoss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.PercentLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(PercentLoss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.PercentLoss.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          frameLoss $AsymmetricSumData(PercentLoss) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          lappend result $frameLoss&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.Xaxis.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          load $AsymmetricSumData(IntendedLoad) fst $AsymmetricSumData(FrameSizeType) \&#xa;          fld $AsymmetricSumData(FrameLengthDistribution) fs $AsymmetricSumData(FrameSize) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.PercentLoss.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          frameLoss $AsymmetricSumData(PercentLoss) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          lappend result $frameLoss&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.Xaxis.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          load $AsymmetricSumData(IntendedLoad) fst $AsymmetricSumData(FrameSizeType) \&#xa;          fld $AsymmetricSumData(FrameLengthDistribution) fs $AsymmetricSumData(FrameSize) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.PercentLoss.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          frameLoss $AsymmetricSumData(PercentLoss) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          lappend result $frameLoss&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.Xaxis.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          load $AsymmetricSumData(IntendedLoad) fst $AsymmetricSumData(FrameSizeType) \&#xa;          fld $AsymmetricSumData(FrameLengthDistribution) fs $AsymmetricSumData(FrameSize) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.PercentLoss.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          frameLoss $AsymmetricSumData(PercentLoss) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          lappend result $frameLoss&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.Xaxis.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          load $AsymmetricSumData(IntendedLoad) fst $AsymmetricSumData(FrameSizeType) \&#xa;          fld $AsymmetricSumData(FrameLengthDistribution) fs $AsymmetricSumData(FrameSize) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.PercentLoss.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          frameLoss $AsymmetricSumData(PercentLoss) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          lappend result $frameLoss&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.Xaxis.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          load $AsymmetricSumData(IntendedLoad) fst $AsymmetricSumData(FrameSizeType) \&#xa;          fld $AsymmetricSumData(FrameLengthDistribution) fs $AsymmetricSumData(FrameSize) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.PercentLoss.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          frameLoss $AsymmetricSumData(PercentLoss) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          lappend result $frameLoss&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricSum.Xaxis.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricSumData(PortLineRate) portGroup $AsymmetricSumData(PortGroup) \&#xa;          load $AsymmetricSumData(IntendedLoad) fst $AsymmetricSumData(FrameSizeType) \&#xa;          fld $AsymmetricSumData(FrameLengthDistribution) fs $AsymmetricSumData(FrameSize) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Test Summary</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinLat.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minLat $AsymmetricLatJitData(MinLatency) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          lappend result $minLat&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxLat.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxLat $AsymmetricLatJitData(MaxLatency) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          lappend result $maxLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgLat.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgLat $AsymmetricLatJitData(AvgLatency) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          lappend result $avgLat&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.Xaxis.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          load $AsymmetricLatJitData(IntendedLoad) fst $AsymmetricLatJitData(FrameSizeType) \&#xa;          fld $AsymmetricLatJitData(FrameLengthDistribution) fs $AsymmetricLatJitData(FrameSize) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency,Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinLat.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minLat $AsymmetricLatJitData(MinLatency) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          lappend result $minLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxLat.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxLat $AsymmetricLatJitData(MaxLatency) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          lappend result $maxLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgLat.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgLat $AsymmetricLatJitData(AvgLatency) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          lappend result $avgLat&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.Xaxis.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          load $AsymmetricLatJitData(IntendedLoad) fst $AsymmetricLatJitData(FrameSizeType) \&#xa;          fld $AsymmetricLatJitData(FrameLengthDistribution) fs $AsymmetricLatJitData(FrameSize) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency,Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinLat.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minLat $AsymmetricLatJitData(MinLatency) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          lappend result $minLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxLat.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxLat $AsymmetricLatJitData(MaxLatency) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          lappend result $maxLat&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgLat.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgLat $AsymmetricLatJitData(AvgLatency) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          lappend result $avgLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.Xaxis.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          load $AsymmetricLatJitData(IntendedLoad) fst $AsymmetricLatJitData(FrameSizeType) \&#xa;          fld $AsymmetricLatJitData(FrameLengthDistribution) fs $AsymmetricLatJitData(FrameSize) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency,Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinLat.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minLat $AsymmetricLatJitData(MinLatency) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          lappend result $minLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxLat.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxLat $AsymmetricLatJitData(MaxLatency) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          lappend result $maxLat&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgLat.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgLat $AsymmetricLatJitData(AvgLatency) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          lappend result $avgLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.Xaxis.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          load $AsymmetricLatJitData(IntendedLoad) fst $AsymmetricLatJitData(FrameSizeType) \&#xa;          fld $AsymmetricLatJitData(FrameLengthDistribution) fs $AsymmetricLatJitData(FrameSize) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency,Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinLat.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minLat $AsymmetricLatJitData(MinLatency) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          lappend result $minLat&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxLat.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxLat $AsymmetricLatJitData(MaxLatency) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          lappend result $maxLat&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgLat.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgLat $AsymmetricLatJitData(AvgLatency) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          lappend result $avgLat&#xa;     }&#xa;}&#xa;&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.Xaxis.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          load $AsymmetricLatJitData(IntendedLoad) fst $AsymmetricLatJitData(FrameSizeType) \&#xa;          fld $AsymmetricLatJitData(FrameLengthDistribution) fs $AsymmetricLatJitData(FrameSize) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency,Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinLat.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minLat $AsymmetricLatJitData(MinLatency) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          lappend result $minLat&#xa;     }&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxLat.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxLat $AsymmetricLatJitData(MaxLatency) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          lappend result $maxLat&#xa;     }&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgLat.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgLat $AsymmetricLatJitData(AvgLatency) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          lappend result $avgLat&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.Xaxis.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          load $AsymmetricLatJitData(IntendedLoad) fst $AsymmetricLatJitData(FrameSizeType) \&#xa;          fld $AsymmetricLatJitData(FrameLengthDistribution) fs $AsymmetricLatJitData(FrameSize) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          set frameLabel $fs&#xa;          if {$fst == "iMIX"} {&#xa;               set frameLabel $fld&#xa;          }&#xa;          lappend result "FS:$frameLabel  Load:$load"&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Latency,Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinJit.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minJit $AsymmetricLatJitData(MinJitter) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          lappend result $minJit&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxJit.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxJit $AsymmetricLatJitData(MaxJitter) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          lappend result $maxJit&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgJit.Down1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgJit $AsymmetricLatJitData(AvgJitter) {&#xa;     if {($mbps == 1000) && ($portGroup =="Downstream")} {&#xa;          lappend result $avgJit&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinJit.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minJit $AsymmetricLatJitData(MinJitter) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          lappend result $minJit&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxJit.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxJit $AsymmetricLatJitData(MaxJitter) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          lappend result $maxJit&#xa;     }&#xa;}]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgJit.Down10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgJit $AsymmetricLatJitData(AvgJitter) {&#xa;     if {($mbps == 10000) && ($portGroup =="Downstream")} {&#xa;          lappend result $avgJit&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinJit.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minJit $AsymmetricLatJitData(MinJitter) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          lappend result $minJit&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxJit.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxJit $AsymmetricLatJitData(MaxJitter) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          lappend result $maxJit&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgJit.Down100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgJit $AsymmetricLatJitData(AvgJitter) {&#xa;     if {($mbps == 100) && ($portGroup =="Downstream")} {&#xa;          lappend result $avgJit&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinJit.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minJit $AsymmetricLatJitData(MinJitter) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          lappend result $minJit&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxJit.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxJit $AsymmetricLatJitData(MaxJitter) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          lappend result $maxJit&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgJit.Up1G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgJit $AsymmetricLatJitData(AvgJitter) {&#xa;     if {($mbps == 1000) && ($portGroup =="Upstream")} {&#xa;          lappend result $avgJit&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinJit.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minJit $AsymmetricLatJitData(MinJitter) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          lappend result $minJit&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxJit.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxJit $AsymmetricLatJitData(MaxJitter) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          lappend result $maxJit&#xa;     }&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgJit.Up10G</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgJit $AsymmetricLatJitData(AvgJitter) {&#xa;     if {($mbps == 10000) && ($portGroup =="Upstream")} {&#xa;          lappend result $avgJit&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MinJit.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          minJit $AsymmetricLatJitData(MinJitter) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          lappend result $minJit&#xa;     }&#xa;}&#xa;&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.MaxJit.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          maxJit $AsymmetricLatJitData(MaxJitter) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          lappend result $maxJit&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>G_AsymmetricLatJit.AvgJit.Up100M</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;foreach mbps $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate) portGroup $AsymmetricLatJitData(PortGroup) \&#xa;          avgJit $AsymmetricLatJitData(AvgJitter) {&#xa;     if {($mbps == 100) && ($portGroup =="Upstream")} {&#xa;          lappend result $avgJit&#xa;     }&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.TxPort</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;catch {array unset AsymmetricStreamResData}&#xa;catch {array unset ResNodeParams}&#xa;set result ""&#xa;&#xa;# Parse the eot result node params&#xa;foreach row $L_EotResViewDefStreamSumResNodeParams {&#xa;   set row [string trimright $row ,]&#xa;   set paramName [lindex [split $row ^] 0]&#xa;   set paramVal [lindex [split $row ^] 1]&#xa;&#xa;   lappend ResNodeParams(params) $paramName&#xa;   set ResNodeParams($paramName) $paramVal&#xa;}&#xa;&#xa;# Get the SQL string and do substitution for the params&#xa;set tempSqlCmd $L_EotResViewDefStreamSumSql&#xa;foreach param $ResNodeParams(params) {&#xa;   regsub -all $param $tempSqlCmd $ResNodeParams($param) sqlCmd&#xa;   set tempSqlCmd $sqlCmd&#xa;}&#xa;&#xa;# Execute the SQL string&#xa;package require java&#xa;set ::dbname $dataSource&#xa;set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;set tr [$db query [lindex $sqlCmd 0]]&#xa;&#xa;# Number of rows&#xa;set numRows [java::field $tr nrows]&#xa;&#xa;# Get the columns&#xa;set columns [java::field $tr column]&#xa;set i 0&#xa;set cols ""&#xa;set n [$columns length]&#xa;while {$i < $n} {&#xa;   lappend cols [$columns get $i]&#xa;   incr i&#xa;}&#xa;&#xa;# All possible columns&#xa;set allCols [list "Tx Port" "Stream Block" "Source Endpoint" "Frame Size" "Frame Size Type" "iMIX Distribution" \&#xa;   "Average Frame Size" "Trial" "Result" "Load Result" "Offered Load (%)" "Rx Frame Count" "Tx Frame Count" \&#xa;   "Rx Frame Rate (fps)" "Tx Frame Rate (fps)" "Tx Bit Rate (Mbps)" "Frame Loss" "Percent Loss"]&#xa;&#xa;foreach colName $allCols {&#xa;   set AsymmetricStreamResData($colName) ""&#xa;   if {[lsearch $cols $colName] == -1} {&#xa;      # N/A out this column&#xa;      set i 0&#xa;      while {$i < $numRows} {&#xa;         lappend AsymmetricStreamResData($colName) "N/A"&#xa;         incr i&#xa;      }&#xa;   }&#xa;}&#xa;&#xa;# Process the data and build the array&#xa;set i 0&#xa;while {$i < $numRows} {&#xa;   set queryRow [[java::field $tr rows] get $i]&#xa;   set queryRowArray [java::cast {java.lang.Object[]} $queryRow]&#xa;   set j 0&#xa;   set rowLen [$queryRowArray length]&#xa;   while {$j < $rowLen} {&#xa;      if {[catch {set val [[$queryRowArray get $j] toString]} msg]} {&#xa;         lappend AsymmetricStreamResData([lindex $cols $j]) ""&#xa;      } else {&#xa;         lappend AsymmetricStreamResData([lindex $cols $j]) $val&#xa;      }&#xa;      incr j&#xa;   }&#xa;   incr i&#xa;}&#xa;&#xa;set result $AsymmetricStreamResData(Tx Port)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.StreamBlock</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Stream Block)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.SourceEndpoint</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Source Endpoint)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.FrameSize</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Frame Size)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.FrameSizeType</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Frame Size Type)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.ImixDist</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(iMIX Distribution)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.AvgFrameSize</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Average Frame Size)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.Trial</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Trial)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.Result</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Result)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.LoadResult</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Load Result)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.OfferedLoad</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Offered Load \(%\))]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.RxFrameCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Rx Frame Count)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.TxFrameCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Tx Frame Count)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.RxFrameRateFps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Rx Frame Rate \(fps\))&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.TxFrameRateFps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Tx Frame Rate \(fps\))]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.TxBitRateMbps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Tx Bit Rate \(Mbps\))]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.FrameLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Frame Loss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricStreamResults.PercentLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricStreamResData(Percent Loss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Stream Block</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.GroupType</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;catch {array unset RgGroupResData}&#xa;catch {array unset ResNodeParams}&#xa;set result ""&#xa;&#xa;# All possible columns&#xa;set allCols [list "Group Type" "Group Name" "Frame Size" "Frame Size Type" "iMIX Distribution" "Average Frame Size" "Trial" \&#xa;          "Result" "Load Result" "Offered Load (%)" "Rx Frame Count" "Tx Frame Count" "Rx Frame Rate (fps)" \&#xa;          "Tx Frame Rate (fps)" "Tx Bit Rate (Mbps)" "Frame Loss" "Percent Loss"]&#xa;&#xa;if {[info exists L_EotResViewDefRgSumSql]} {&#xa;   # Parse the eot result node params&#xa;   foreach row $L_EotResViewDefRgSumResNodeParams {&#xa;      set row [string trimright $row ,]&#xa;      set paramName [lindex [split $row ^] 0]&#xa;      set paramVal [lindex [split $row ^] 1]&#xa;      lappend ResNodeParams(params) $paramName&#xa;      set ResNodeParams($paramName) $paramVal&#xa;   }&#xa;&#xa;   # Get the SQL string and do substitution for the params&#xa;   set tempSqlCmd $L_EotResViewDefRgSumSql&#xa;   foreach param $ResNodeParams(params) {&#xa;      regsub -all $param $tempSqlCmd $ResNodeParams($param) sqlCmd&#xa;      set tempSqlCmd $sqlCmd&#xa;   }&#xa;&#xa;   # Execute the SQL string&#xa;   package require java&#xa;   set ::dbname $dataSource&#xa;   set db [java::call com.spirent.tc.core.db.SqlReaderFactory create $::dbname]&#xa;   set tr [$db query [lindex $sqlCmd 0]]&#xa;&#xa;   # Number of rows&#xa;   set numRows [java::field $tr nrows]&#xa;&#xa;   # Get the columns&#xa;   set columns [java::field $tr column]&#xa;   set i 0&#xa;   set cols ""&#xa;   set n [$columns length]&#xa;   while {$i < $n} {&#xa;      lappend cols [$columns get $i]&#xa;      incr i&#xa;   }&#xa;&#xa;   foreach colName $allCols {&#xa;      set RgGroupResData($colName) ""&#xa;      if {[lsearch $cols $colName] == -1} {&#xa;         # N/A out this column&#xa;         set i 0&#xa;         while {$i < $numRows} {&#xa;            lappend RgGroupResData($colName) "N/A"&#xa;            incr i&#xa;         }&#xa;      }&#xa;   }&#xa;&#xa;   # Process the data and build the array&#xa;   set i 0&#xa;   while {$i < $numRows} {&#xa;      set queryRow [[java::field $tr rows] get $i]&#xa;      set queryRowArray [java::cast {java.lang.Object[]} $queryRow]&#xa;      set j 0&#xa;      set rowLen [$queryRowArray length]&#xa;      while {$j < $rowLen} {&#xa;         if {[catch {set val [[$queryRowArray get $j] toString]}]} {&#xa;            lappend RgGroupResData([lindex $cols $j]) ""&#xa;         } else {&#xa;            lappend RgGroupResData([lindex $cols $j]) $val&#xa;         }&#xa;         incr j&#xa;      }&#xa;      incr i&#xa;   }&#xa;} else {&#xa;   foreach colName $allCols {&#xa;      set RgGroupResData($colName) "N/A"&#xa;   }&#xa;}&#xa;&#xa;set result $RgGroupResData(Group Type)&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.GroupName</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Group Name)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.FrameSize</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Frame Size)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.FrameSizeType</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Frame Size Type)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.ImixDist</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(iMIX Distribution)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.AvgFrameSize</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Average Frame Size)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.Trial</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Trial)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.Result</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Result)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.LoadResult</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Load Result)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.OfferedLoad</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Offered Load \(%\))]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.RxFrameCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Rx Frame Count)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.TxFrameCount</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Tx Frame Count)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.RxFrameRateFps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Rx Frame Rate \(fps\))]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.TxFrameRateFps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Tx Frame Rate \(fps\))]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.TxBitRateMbps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Tx Bit Rate \(Mbps\))]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.FrameLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Frame Loss)&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_RgGroupResults.PercentLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $RgGroupResData(Percent Loss)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>L_RgNote</name>
+      <persist>false</persist>
+      <value type="String"></value>
+      <script><![CDATA[#Display Note when no RG groups&#xa;if {![info exists L_EotResViewDefRgSumSql]} {&#xa;   set result "Note: RG Group results are only available when RG grouping of devices is used."&#xa;} else {&#xa;   set result ""&#xa;}&#xa;&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>RG</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.Fs</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[&#xa;set result ""&#xa;if {$L_EnableJitter} {&#xa;   if {[lsearch $AsymmetricLatJitData(FrameSizeType) "iMIX"] != -1} {&#xa;      set result $AsymmetricLatJitData(FrameLengthDistribution)&#xa;   } else {&#xa;      set result $AsymmetricLatJitData(FrameSize)&#xa;   }&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.PortGroup</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(PortGroup)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.LoadIterationNum</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(LoadIterationNum)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>ALL</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.TheoMaxMbps</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(TheoreticalMaxMbpsLineRate)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.Intend</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(IntendedLoad)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricJitSum.PercentLoss</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result ""&#xa;if {$L_EnableJitter} {&#xa;   set result $AsymmetricLatJitData(PercentLoss)&#xa;} else {&#xa;   set result "N/A"&#xa;}&#xa;]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Jitter</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.IterationNum</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(IterationNum)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+    <instance>
+      <name>T_AsymmetricTrial.LoadIterationNum</name>
+      <persist>false</persist>
+      <value type="String">-</value>
+      <script><![CDATA[set result $AsymmetricTrialData(LoadIterationNum)]]></script>
+      <multivalued>false</multivalued>
+      <pageName>Trial Summary</pageName>
+    </instance>
+  </computed>
+  <tables>
+    <instance>
+      <name>FrameSizeImixDistribution</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">iMIX\nDistribution</td>&#xa;    <td bgcolor="#eeeeee">Frame\nLength Mode</td>&#xa;     <td bgcolor="#eeeeee">IP Total\nLength</td>&#xa;     <td bgcolor="#eeeeee">Default\nEthernet</td>&#xa;     <td bgcolor="#eeeeee">POS\nLength</td>&#xa;     <td bgcolor="#eeeeee">Weight</td>&#xa;     <td bgcolor="#eeeeee">Percentage\n(%)</td>&#xa;  </tr>&#xa; <tr iterate="=$ImixFSDistNameVal$">&#xa;    <td halign="right" bgcolor="#eeeeee">=$ImixFSDistNameVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSModeVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSIPLenVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixDefaultEthernet$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixPosLen$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSWeightVal$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$ImixFSPercentWtVal$</td>&#xa;  </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>AsymmetricFrameLossSummary</name>
+      <script><![CDATA[<table>&#xa;  <tr>&#xa;    <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;    <td bgcolor="#eeeeee">Port Group</td>&#xa;    <td bgcolor="#eeeeee">Port Line\nRate (mbps)</td>&#xa;    <td bgcolor="#eeeeee">Load\n(%)</td>&#xa;     <td bgcolor="#eeeeee">Tx Frames</td>&#xa;     <td bgcolor="#eeeeee">Rx Frames</td>&#xa;     <td bgcolor="#eeeeee">Frames\nLost</td>&#xa;     <td bgcolor="#eeeeee">Frame\nLoss (%)</td>&#xa;  </tr>&#xa; <tr iterate="=$T_AsymmetricSum.PortGroup$">&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.Fs$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.PortGroup$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.PortLineRate$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.OfferedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.TxFrames$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.RxFrames$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.FrameLoss$</td>&#xa;   <td halign="right" bgcolor="#ffffff">=$T_AsymmetricSum.FrameLossPercent$</td>&#xa; </tr>&#xa;</table>&#xa;]]></script>
+    </instance>
+    <instance>
+      <name>AsymmetricLatency</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;     <td bgcolor="#eeeeee">Port Group</td>&#xa;     <td bgcolor="#eeeeee">Port Line\nRate (mbps)</td>&#xa;     <td bgcolor="#eeeeee">Intended\nLoad (%)</td>&#xa;     <td bgcolor="#eeeeee">Latency\nMin (uSec)</td>&#xa;     <td bgcolor="#eeeeee">Latency\nMax (uSec)</td>&#xa;     <td bgcolor="#eeeeee">Latency\nAvg (uSec)</td>&#xa;     <td bgcolor="#eeeeee">Loss (%)</td>&#xa;&#xa;  </tr>&#xa; <tr iterate="=$T_AsymmetricLatSum.PortGroup$">&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.Fs$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.PortGroup$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.TheoMaxMbps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.Intend$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.MinLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.MaxLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.AvgLat$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricLatSum.PercentLoss$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>AsymmetricJitter</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;     <td bgcolor="#eeeeee">Port Group</td>&#xa;     <td bgcolor="#eeeeee">Port Line\nRate (mbps)</td>&#xa;     <td bgcolor="#eeeeee">Intended\nLoad (%)</td>&#xa;     <td bgcolor="#eeeeee">Jitter\nMin (uSec)</td>&#xa;     <td bgcolor="#eeeeee">Jitter\nMax (uSec)</td>&#xa;     <td bgcolor="#eeeeee">Jitter\nAvg (uSec)</td>&#xa;     <td bgcolor="#eeeeee">Loss (%)</td>&#xa;&#xa;  </tr>&#xa; <tr iterate="=$T_AsymmetricJitSum.PortGroup$">&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.Fs$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.PortGroup$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.TheoMaxMbps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.Intend$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.MinJit$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.MaxJit$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.AvgJit$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricJitSum.PercentLoss$</td>&#xa;  </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>AsymmetricTrialSummary</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">Trial</td>&#xa;     <td bgcolor="#eeeeee">Load\nIteration</td>&#xa;     <td bgcolor="#eeeeee">=$FrameSizeTitle$</td>&#xa;     <td bgcolor="#eeeeee">Port Group\n</td>&#xa;     <td bgcolor="#eeeeee">Tx Port</td>&#xa;     <td bgcolor="#eeeeee">Mbps Line\nRate</td>&#xa;     <td bgcolor="#eeeeee">Stream Block</td>&#xa;     <td bgcolor="#eeeeee">Result\n</td>&#xa;     <td bgcolor="#eeeeee">Rx Frame\nCount</td>&#xa;     <td bgcolor="#eeeeee">Tx Frame\nCount</td>&#xa;     <td bgcolor="#eeeeee">Intended\nLoad (%)</td>&#xa;     <td bgcolor="#eeeeee">Offered\nLoad (%)</td>&#xa;     <td bgcolor="#eeeeee">Frame\nLoss</td>&#xa;     <td bgcolor="#eeeeee">Percent\nLoss</td>&#xa;   </tr>&#xa; <tr iterate="=$T_AsymmetricTrial.DataSetId$">&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.IterationNum$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.LoadIterationNum$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.Fs$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.PortGroup$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.TxPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.MbpsLineRate$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.StreamBlockName$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.LoadResult$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.RxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.TxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.IntendedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.OfferedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.FrameLoss$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricTrial.PercentLoss$</td>&#xa;   </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>StreamBlockSummary</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">Tx Port</td>&#xa;     <td bgcolor="#eeeeee">Stream Block</td>&#xa;     <td bgcolor="#eeeeee">Source Endpoint</td>&#xa;     <td bgcolor="#eeeeee">Frame\nSize</td>&#xa;     <td bgcolor="#eeeeee">Frame Size\nType</td>&#xa;     <td bgcolor="#eeeeee">iMIX\nDistribution</td>&#xa;     <td bgcolor="#eeeeee">Average\nFrame Size</td>&#xa;     <td bgcolor="#eeeeee">Trial</td>&#xa;     <td bgcolor="#eeeeee">Result</td>&#xa;     <td bgcolor="#eeeeee">Load \nResult</td>&#xa;     <td bgcolor="#eeeeee">Offered\nLoad (%)</td>&#xa;     <td bgcolor="#eeeeee">Rx Frame\nCount</td>&#xa;     <td bgcolor="#eeeeee">Tx Frame\nCount</td>&#xa;     <td bgcolor="#eeeeee">Rx Frame\nRate (fps)</td>&#xa;     <td bgcolor="#eeeeee">Tx Frame\nRate (fps)</td>&#xa;     <td bgcolor="#eeeeee">Tx Bit Rate\n(Mbps)</td>&#xa;     <td bgcolor="#eeeeee">Frame\nLoss</td>&#xa;     <td bgcolor="#eeeeee">Percent\nLoss</td>&#xa;   </tr>&#xa; <tr iterate="=$T_AsymmetricStreamResults.TxPort$">&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.TxPort$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.StreamBlock$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.SourceEndpoint$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.FrameSize$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.FrameSizeType$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.ImixDist$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.AvgFrameSize$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.Trial$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.Result$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.LoadResult$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.OfferedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.RxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.TxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.RxFrameRateFps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.TxFrameRateFps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.TxBitRateMbps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.FrameLoss$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_AsymmetricStreamResults.PercentLoss$</td>&#xa;   </tr>&#xa;</table>]]></script>
+    </instance>
+    <instance>
+      <name>RgGroupSummary</name>
+      <script><![CDATA[<table>&#xa;   <tr>&#xa;     <td bgcolor="#eeeeee">Group Type</td>&#xa;     <td bgcolor="#eeeeee">Group Name</td>&#xa;     <td bgcolor="#eeeeee">Frame\nSize</td>&#xa;     <td bgcolor="#eeeeee">Frame Size\nType</td>&#xa;     <td bgcolor="#eeeeee">iMIX\nDistribution</td>&#xa;     <td bgcolor="#eeeeee">Average\nFrame Size</td>&#xa;     <td bgcolor="#eeeeee">Trial</td>&#xa;     <td bgcolor="#eeeeee">Result</td>&#xa;     <td bgcolor="#eeeeee">Load \nResult</td>&#xa;     <td bgcolor="#eeeeee">Offered\nLoad (%)</td>&#xa;     <td bgcolor="#eeeeee">Rx Frame\nCount</td>&#xa;     <td bgcolor="#eeeeee">Tx Frame\nCount</td>&#xa;     <td bgcolor="#eeeeee">Rx Frame\nRate (fps)</td>&#xa;     <td bgcolor="#eeeeee">Tx Frame\nRate (fps)</td>&#xa;     <td bgcolor="#eeeeee">Tx Bit Rate\n(Mbps)</td>&#xa;     <td bgcolor="#eeeeee">Frame\nLoss</td>&#xa;     <td bgcolor="#eeeeee">Percent\nLoss</td>&#xa;   </tr>&#xa; <tr iterate="=$T_RgGroupResults.GroupType$">&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.GroupType$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.GroupName$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.FrameSize$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.FrameSizeType$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.ImixDist$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.AvgFrameSize$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.Trial$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.Result$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.LoadResult$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.OfferedLoad$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.RxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.TxFrameCount$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.RxFrameRateFps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.TxFrameRateFps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.TxBitRateMbps$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.FrameLoss$</td>&#xa;    <td halign="right" bgcolor="#ffffff">=$T_RgGroupResults.PercentLoss$</td>&#xa;   </tr>&#xa;</table>]]></script>
+    </instance>
+  </tables>
+  <graphs>
+    <instance type="Bar">
+      <name>Down1GSumChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricSum.PercentLoss.Down1G</name>
+        <title>FrameLoss</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricSum.Xaxis.Down1G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Frame Loss (%)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down10GSumChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricSum.PercentLoss.Down10G</name>
+        <title>FrameLoss</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricSum.Xaxis.Down10G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Frame Loss (%)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down100MSumChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricSum.PercentLoss.Down100M</name>
+        <title>Frame Loss</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricSum.Xaxis.Down100M</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Frame Loss (%)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up1GSumChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricSum.PercentLoss.Up1G</name>
+        <title>Frame Loss</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricSum.Xaxis.Up1G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Frame Loss (%)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up10GSumChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricSum.PercentLoss.Up10G</name>
+        <title>Frame Loss</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricSum.Xaxis.Up10G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Frame Loss (%)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up100MSumChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricSum.PercentLoss.Up100M</name>
+        <title>Frame Loss</title>
+        <color></color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricSum.Xaxis.Up100M</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Frame Loss (%)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down1GLatChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinLat.Down1G</name>
+        <title>Min Latency</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxLat.Down1G</name>
+        <title>Max Latency</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgLat.Down1G</name>
+        <title>Avg Latency</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Down1G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down10GLatChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinLat.Down10G</name>
+        <title>Min Latency</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxLat.Down10G</name>
+        <title>Max Latency</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgLat.Down10G</name>
+        <title>Avg Latency</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Down10G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down100MLatChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinLat.Down100M</name>
+        <title>Min Latency</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxLat.Down100M</name>
+        <title>Max Latency</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgLat.Down100M</name>
+        <title>Avg Latency</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Down100M</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up1GLatChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinLat.Up1G</name>
+        <title>Min Latency</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxLat.Up1G</name>
+        <title>Max Latency</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgLat.Up1G</name>
+        <title>Avg Latency</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Up1G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up10GLatChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinLat.Up10G</name>
+        <title>Min Latency</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxLat.Up10G</name>
+        <title>Max Latency</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgLat.Up10G</name>
+        <title>Avg Latency</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Up10G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up100MLatChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinLat.Up100M</name>
+        <title>Min Latency</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxLat.Up100M</name>
+        <title>Max Latency</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgLat.Up100M</name>
+        <title>Avg Latency</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Up100M</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Latency (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down1GJitChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinJit.Down1G</name>
+        <title>Min Jitter</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxJit.Down1G</name>
+        <title>Max Jitter</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgJit.Down1G</name>
+        <title>Avg Jitter</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Down1G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down10GJitChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinJit.Down10G</name>
+        <title>Min Jitter</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxJit.Down10G</name>
+        <title>Max Jitter</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgJit.Down10G</name>
+        <title>Avg Jitter</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Down10G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Down100MJitChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinJit.Down100M</name>
+        <title>Min Jitter</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxJit.Down100M</name>
+        <title>Max Jitter</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgJit.Down100M</name>
+        <title>Avg Jitter</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Down100M</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up1GJitChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinJit.Up1G</name>
+        <title>Min Jitter</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxJit.Up1G</name>
+        <title>Max Jitter</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgJit.Up1G</name>
+        <title>Avg Jitter</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Up1G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up10GJitChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinJit.Up10G</name>
+        <title>Min Jitter</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxJit.Up10G</name>
+        <title>Max Jitter</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgJit.Up10G</name>
+        <title>Avg Jitter</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Up10G</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+    <instance type="Bar">
+      <name>Up100MJitChart</name>
+      <ThreeD>false</ThreeD>
+      <iterate>false</iterate>
+      <backgroundColor>#eeeeee</backgroundColor>
+      <plotBackgroundColor>#ffffff</plotBackgroundColor>
+      <statistic>
+        <name>G_AsymmetricLatJit.MaxJit.Up100M</name>
+        <title>Max Jitter</title>
+        <color>#00FF00</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.MinJit.Up100M</name>
+        <title>Min Jitter</title>
+        <color>#FF0000</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <statistic>
+        <name>G_AsymmetricLatJit.AvgJit.Up100M</name>
+        <title>Avg Jitter</title>
+        <color>#0000FF</color>
+        <valueAxis></valueAxis>
+      </statistic>
+      <title></title>
+      <xStatistic>G_AsymmetricLatJit.Xaxis.Up100M</xStatistic>
+      <xTitle>Frame Size and Load (%)</xTitle>
+      <yTitle>Jitter (uSec)</yTitle>
+    </instance>
+  </graphs>
+  <layout>
+    <page name="Title" display="true">
+      <width>800</width>
+      <height>800</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>startDateStr</name>
+        <x>200</x>
+        <y>510</y>
+        <width>56</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Date:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>SpirentLotoTextStr</name>
+        <x>200</x>
+        <y>350</y>
+        <width>588</width>
+        <height>30</height>
+        <size>25</size>
+        <value xml:space="preserve">Spirent&amp;nbsp;TestCenter&amp;nbsp;Report</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeStr</name>
+        <x>200</x>
+        <y>450</y>
+        <width>61</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Test&amp;nbsp;Type:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>TestTypeVar</name>
+        <x>300</x>
+        <y>450</y>
+        <width>212</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">RFC&amp;nbsp;2544&amp;nbsp;Asymmetric&amp;nbsp;Frame&amp;nbsp;Loss&amp;nbsp;Test</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>200</x>
+        <y>480</y>
+        <width>103</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">Counter&amp;nbsp;Mode:</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>CounterModeStr</name>
+        <x>300</x>
+        <y>480</y>
+        <width>4</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$CounterModeType$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>startDateVar</name>
+        <x>300</x>
+        <y>510</y>
+        <width>145</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$TestDate$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>nameLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+        <src>upperLeftLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>hdrLogo</name>
+        <x>170</x>
+        <y>0</y>
+        <width>630</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>690</x>
+        <y>100</y>
+        <width>110</width>
+        <height>700</height>
+        <src>rightSideLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>720</y>
+        <width>800</width>
+        <height>80</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>WarningStr</name>
+        <x>200</x>
+        <y>540</y>
+        <width>100</width>
+        <height>16</height>
+        <size>12</size>
+        <value xml:space="preserve">=$WarningMsg$</value>
+        <color>#000000</color>
+      </instance>
+    </page>
+    <page name="Test Summary" display="true">
+      <width>720</width>
+      <height>2000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>AggThruTitleStr</name>
+        <x>200</x>
+        <y>110</y>
+        <width>116</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;Loss&amp;nbsp;Rate</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>AsymmetricFrameLossSummaryTable</name>
+        <x>90</x>
+        <y>980</y>
+        <width>665</width>
+        <height>794</height>
+        <value>AsymmetricFrameLossSummary</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>Down1GPortsTitle</name>
+        <x>80</x>
+        <y>150</y>
+        <width>126</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;1G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Down10GPortsTitle</name>
+        <x>80</x>
+        <y>420</y>
+        <width>134</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;10G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Down100MPortsTitle</name>
+        <x>80</x>
+        <y>690</y>
+        <width>143</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;100M&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up1GPortsTitle</name>
+        <x>440</x>
+        <y>150</y>
+        <width>110</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;1G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up10GPortsTitle</name>
+        <x>440</x>
+        <y>420</y>
+        <width>118</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;10G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up100MPortsTitle</name>
+        <x>440</x>
+        <y>690</y>
+        <width>127</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;100M&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Graph">
+        <name>Down1GSumChart</name>
+        <x>50</x>
+        <y>180</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down1GSumChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Down10GSumChart</name>
+        <x>50</x>
+        <y>450</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down10GSumChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Down100MSumChart</name>
+        <x>50</x>
+        <y>720</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down100MSumChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up1GSumChart</name>
+        <x>410</x>
+        <y>180</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up1GSumChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up10GSumChart</name>
+        <x>410</x>
+        <y>450</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up10GSumChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up100MSumChart</name>
+        <x>410</x>
+        <y>720</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up100MSumChart</value>
+      </instance>
+    </page>
+    <page name="Latency" display="true">
+      <width>720</width>
+      <height>2000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Text">
+        <name>LatencyTitle</name>
+        <x>200</x>
+        <y>110</y>
+        <width>225</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Latency&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;size&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>AsymmetricLatencyTable</name>
+        <x>90</x>
+        <y>980</y>
+        <width>664</width>
+        <height>794</height>
+        <value>AsymmetricLatency</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>Down1GPortsTitle</name>
+        <x>80</x>
+        <y>150</y>
+        <width>126</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;1G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Down10GPortsTitle</name>
+        <x>80</x>
+        <y>420</y>
+        <width>134</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;10G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Down100MPortsTitle</name>
+        <x>80</x>
+        <y>690</y>
+        <width>143</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;100M&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up1GPortsTitle</name>
+        <x>440</x>
+        <y>150</y>
+        <width>110</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;1G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up10GPortsTitle</name>
+        <x>440</x>
+        <y>420</y>
+        <width>118</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;10G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up100MPortsTitle</name>
+        <x>440</x>
+        <y>690</y>
+        <width>127</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;100M&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Graph">
+        <name>Down1GLatChart</name>
+        <x>50</x>
+        <y>180</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down1GLatChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Down10GLatChart</name>
+        <x>50</x>
+        <y>450</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down10GLatChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Down100MLatChart</name>
+        <x>50</x>
+        <y>720</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down100MLatChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up1GLatChart</name>
+        <x>410</x>
+        <y>180</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up1GLatChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up10GLatChart</name>
+        <x>410</x>
+        <y>450</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up10GLatChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up100MLatChart</name>
+        <x>410</x>
+        <y>720</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up100MLatChart</value>
+      </instance>
+    </page>
+    <page name="Jitter" display="true">
+      <width>720</width>
+      <height>2000</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>AsymmetricJitterTable</name>
+        <x>90</x>
+        <y>980</y>
+        <width>664</width>
+        <height>794</height>
+        <value>AsymmetricJitter</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>NoteText</name>
+        <x>100</x>
+        <y>130</y>
+        <width>406</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">=$L_JitterNote$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Text">
+        <name>JitterTitle</name>
+        <x>200</x>
+        <y>110</y>
+        <width>228</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Jitter&amp;nbsp;by&amp;nbsp;Frame&amp;nbsp;size&amp;nbsp;and&amp;nbsp;Load</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Down1GPortsTitle</name>
+        <x>80</x>
+        <y>150</y>
+        <width>126</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;1G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Down10GPortsTitle</name>
+        <x>80</x>
+        <y>420</y>
+        <width>134</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;10G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Down100MPortsTitle</name>
+        <x>80</x>
+        <y>690</y>
+        <width>143</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Downstream&amp;nbsp;100M&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up1GPortsTitle</name>
+        <x>440</x>
+        <y>150</y>
+        <width>110</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;1G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up10GPortsTitle</name>
+        <x>440</x>
+        <y>420</y>
+        <width>118</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;10G&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>Up100MPortsTitle</name>
+        <x>440</x>
+        <y>690</y>
+        <width>127</width>
+        <height>15</height>
+        <size>12</size>
+        <value xml:space="preserve">Upstream&amp;nbsp;100M&amp;nbsp;Ports</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Graph">
+        <name>Down1GJitChart</name>
+        <x>50</x>
+        <y>180</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down1GJitChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Down10GJitChart</name>
+        <x>50</x>
+        <y>450</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down10GJitChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Down100MJitChart</name>
+        <x>50</x>
+        <y>720</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Down100MJitChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up1GJitChart</name>
+        <x>410</x>
+        <y>180</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up1GJitChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up10GJitChart</name>
+        <x>410</x>
+        <y>450</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up10GJitChart</value>
+      </instance>
+      <instance type="Graph">
+        <name>Up100MJitChart</name>
+        <x>410</x>
+        <y>720</y>
+        <width>300</width>
+        <height>230</height>
+        <value>Up100MJitChart</value>
+      </instance>
+    </page>
+    <page name="Trial Summary" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>StatsByIterTitleStr</name>
+        <x>290</x>
+        <y>101</y>
+        <width>139</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;Loss&amp;nbsp;by&amp;nbsp;Trial</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>hdr</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>AsymmetricTrialSummaryTable</name>
+        <x>24</x>
+        <y>147</y>
+        <width>1131</width>
+        <height>718</height>
+        <value>AsymmetricTrialSummary</value>
+        <size>10</size>
+      </instance>
+    </page>
+    <page name="Stream Block" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>Title</name>
+        <x>270</x>
+        <y>100</y>
+        <width>147</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">Stream&amp;nbsp;Block&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>StreamBlockResultsTable</name>
+        <x>10</x>
+        <y>150</y>
+        <width>1006</width>
+        <height>98</height>
+        <value>StreamBlockSummary</value>
+        <size>10</size>
+      </instance>
+    </page>
+    <page name="RG" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>Title</name>
+        <x>270</x>
+        <y>100</y>
+        <width>125</width>
+        <height>20</height>
+        <size>16</size>
+        <value xml:space="preserve">RG&amp;nbsp;Group&amp;nbsp;Results</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Table">
+        <name>RgResultsTable</name>
+        <x>10</x>
+        <y>150</y>
+        <width>901</width>
+        <height>47</height>
+        <value>RgGroupSummary</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>RgErrorNote</name>
+        <x>73</x>
+        <y>123</y>
+        <width>0</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">=$L_RgNote$</value>
+        <color>#FF0000</color>
+      </instance>
+    </page>
+    <page name="iMIX Distributions" display="true">
+      <width>720</width>
+      <height>540</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>ImixDistTitle</name>
+        <x>259</x>
+        <y>106</y>
+        <width>234</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Frame&amp;nbsp;sizes&amp;nbsp;for&amp;nbsp;iMIX&amp;nbsp;Distributions</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Table">
+        <name>ImixDistFSTbl</name>
+        <x>178</x>
+        <y>156</y>
+        <width>1016</width>
+        <height>47</height>
+        <value>FrameSizeImixDistribution</value>
+        <size>10</size>
+      </instance>
+      <instance type="Text">
+        <name>ImixNoteTxt</name>
+        <x>202</x>
+        <y>132</y>
+        <width>0</width>
+        <height>13</height>
+        <size>10</size>
+        <value xml:space="preserve">=$ImixNote$</value>
+        <color>#FF0000</color>
+      </instance>
+      <instance type="Image">
+        <name>header</name>
+        <x>0</x>
+        <y>0</y>
+        <width>720</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+    </page>
+    <page name="Theoretical Max" display="true">
+      <width>800</width>
+      <height>700</height>
+      <masterPage></masterPage>
+      <iterate>false</iterate>
+      <iterateType>Duplicate</iterateType>
+      <gridRows>1</gridRows>
+      <gridColumns>1</gridColumns>
+      <instance type="Text">
+        <name>titleStr</name>
+        <x>200</x>
+        <y>104</y>
+        <width>243</width>
+        <height>21</height>
+        <size>16</size>
+        <value xml:space="preserve">Theoretical&amp;nbsp;Maximum&amp;nbsp;Frame&amp;nbsp;Rates</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>VersionStr</name>
+        <x>35</x>
+        <y>459</y>
+        <width>97</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">Template&amp;nbsp;Version:&amp;nbsp;R2C</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>InputStartIdStr</name>
+        <x>35</x>
+        <y>485</y>
+        <width>165</width>
+        <height>15</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;Start&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@StartDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Text">
+        <name>inputEndIdStr</name>
+        <x>35</x>
+        <y>509</y>
+        <width>136</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RunTime&amp;nbsp;End&amp;nbsp;Data&amp;nbsp;Set&amp;nbsp;ID:&amp;nbsp;=$@EndDataSetId$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>headerLogo</name>
+        <x>0</x>
+        <y>0</y>
+        <width>800</width>
+        <height>100</height>
+        <src>headerLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>rightLogo</name>
+        <x>670</x>
+        <y>100</y>
+        <width>131</width>
+        <height>297</height>
+        <src>contactLogo.jpg</src>
+      </instance>
+      <instance type="Image">
+        <name>footerLogo</name>
+        <x>0</x>
+        <y>520</y>
+        <width>800</width>
+        <height>100</height>
+        <src>footerLogo.png</src>
+      </instance>
+      <instance type="Text">
+        <name>Timestamp</name>
+        <x>37</x>
+        <y>528</y>
+        <width>289</width>
+        <height>11</height>
+        <size>9</size>
+        <value xml:space="preserve">RR&amp;nbsp;Template&amp;nbsp;Saved&amp;nbsp;Timestamp:&amp;nbsp;=$RRTemplateSavedTimestamp$</value>
+        <color>#000000</color>
+      </instance>
+      <instance type="Image">
+        <name>TheoMax</name>
+        <x>17</x>
+        <y>140</y>
+        <width>659</width>
+        <height>221</height>
+        <src>theoMax.jpg</src>
+      </instance>
+    </page>
+  </layout>
+  <csv/>
+</template>

@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<stc:meta plugin="stakcommands" version="0.0.0-0" package="spirent.core" xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<!--
+    *******************************************************************
+    Class: HyperglanceCommand
+    Usage: Command to send topology info to hyperglance
+    ******************************************************************* 
+    -->
+    <stc:class
+        name="HyperglanceCommand"
+        packageName="spirent.core"
+        displayName="Hyperglance Topology Command"
+        canCreate="true"
+        isInternal="false"
+        bllDirectInterface="true">
+
+        <stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="true"/>
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="Switching//Openflow"/>
+        
+        <!-- enumerations -->
+        <stc:enumeration name="EnumCommandType">
+          <stc:enum name="ADD_TOPOLOGY" value="0" displayName="Add Topology" />
+          <stc:enum name="UPDATE_TOPOLOGY" value="1" displayName="Update Topology" />
+          <stc:enum name="GET_TOPOLOGY" value="2" displayName="Get Topology" />
+          <stc:enum name="DELETE_TOPOLOGY" value="3" displayName="Delete Topology" />
+          <stc:enum name="UPDATE_ATTRIBUTES" value="4" displayName="Update Attributes" />
+          <stc:enum name="GET_NETWORK" value="5" displayName="Get Network" />
+          <stc:enum name="CHECK_CONNECTION" value="6" displayName="Check Connection" />
+        </stc:enumeration>
+        
+        <stc:property name="CmdType" type="u8" default="ADD_TOPOLOGY" 
+                      category="input" displayName="Hyperglance Command Type">
+            <stc:attribute type="framework.PropertyDescription"
+                         value="Hyperglance Command Type"
+                         internalType="string"/>
+            <stc:enumerationRef ref="EnumCommandType"/> 
+        </stc:property>
+        
+        <stc:property name="NodeIdentifier" type="string" default="" 
+                      category="input" displayName="Hyperglance Node Identifier">
+            <stc:attribute type="framework.PropertyDescription"
+                         value="Hyperglance Node identifier(optional)"
+                         internalType="string"/>
+        </stc:property>
+        
+        <stc:property name="CmdParam" type="string" default="" 
+                      category="input" displayName="Hyperglance Command Parameter">
+            <stc:attribute type="framework.PropertyDescription"
+                         value="Hyperglance Command Parameter"
+                         internalType="string"/>
+        </stc:property>
+        
+        <stc:property name="Response" type="string" default="" 
+                      category="output" displayName="Hyperglance Command Response">
+            <stc:attribute type="framework.PropertyDescription"
+                         value="Response received from Hyperglance"
+                         internalType="string"/>
+        </stc:property>
+     </stc:class>
+</stc:meta>

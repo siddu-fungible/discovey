@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Flow name="NFS_Portmap_Sunrpc" type="stream" layer="udp">
+  <MetaData description="NFS_Portmap_Sunrpc" protocol="NFS_V2_UDP" application="NFS" createDate="">
+    <Sapee version="16" clientIp="139.25.22.2" clientPort="3291" serverIp="139.25.22.102" serverPort="111" startTime="0" dataStartTime="30"/>
+  </MetaData>
+  <Packets>
+    <Packet name="packet_1" pktDelay="10" tx="client">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>0CDB006F0048D9A03841AADF0000000000000002000186A0000000030000000300000000000000000000000000000000000186A30000000200000003756470000000000000000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+    <Packet name="packet_2" pktDelay="0" tx="server">
+      <frame>
+        <config>
+          <pdus>
+            <pdu name="Payload" pdu="custom:Custom">
+              <pattern>006F0CDB003802E33841AADF0000000100000000000000000000000000000000000000113133392E32352E32322E3130322E382E31000000</pattern>
+            </pdu>
+          </pdus>
+        </config>
+      </frame>
+    </Packet>
+  </Packets>
+  <Variables/>
+  <Modifiers/>
+</Flow>

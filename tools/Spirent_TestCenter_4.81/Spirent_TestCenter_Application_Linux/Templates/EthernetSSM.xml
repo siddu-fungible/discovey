@@ -1,0 +1,18 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="EthernetSSM"
+    showName="Ethernet SSM"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="ethernetssm:EthernetSSM"
+    description="Ethernet SSM" >
+
+    <pdus>
+	<pdu name="proto2" pdu="ethernetssm:EthernetSSM" />
+	<pdu name="proto3" pdu="ethernetssm:QlTlv" />
+    </pdus>
+  </template>
+</frame>

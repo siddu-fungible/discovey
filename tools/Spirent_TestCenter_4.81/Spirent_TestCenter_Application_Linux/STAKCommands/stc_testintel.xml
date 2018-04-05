@@ -1,0 +1,136 @@
+<?xml version="1.0" ?>
+<stc:meta package="spirent.testintel" plugin="plcommands" version="0.0.0-0" xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<stc:class name="UsageCheckCommand" displayName="Check Resource Usage" bllDirectInterface="true" isInternal="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="true"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandDescription" value="Check Resource Usage"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="Test Intelligence"/>
+    <stc:attribute type="core.RequireApplyToIL" value="false" internalType="bool" />
+    <stc:attribute type="core.RequirePostApplyToIL" value="false" internalType="bool" />
+
+    <stc:property category="input" name="TestPoint" displayName="Test Point" type="string" default="">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Unique string for this test and this point in the test"/>
+    </stc:property>
+</stc:class>
+
+<stc:class name="TrafficSummarizeCommand" displayName="Summarize Traffic" bllDirectInterface="true" isInternal="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="false"/>
+    <stc:attribute type="core.RequireApplyToIL" value="false" internalType="bool" />
+    <stc:attribute type="core.RequirePostApplyToIL" value="false" internalType="bool" />
+
+    <!-- Input Parameters -->
+    <stc:property category="input" name="Port" displayName="Port" type="handle" default="0"/>
+
+    <stc:property category="input" name="SoftStreamsOnly" displayName="Soft Streams Only" type="bool" default="true">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Limit summary to soft streams." />
+    </stc:property>
+
+    <stc:property category="input" name="QueryPort" displayName="Query the Port for Additional Information" type="bool" default="false">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Retrieve additional information (e.g. memory usage) from the port." />
+    </stc:property>
+
+    <stc:property category="input" name="LogFileName" displayName="Log File Name" type="string" default="">
+        <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="File name to log output. Empty string means don't log." />
+    </stc:property>
+
+    <!-- Output Parameters -->
+    <stc:property name="NameList" type="string" default="" category="output" minOccurs="0" maxOccurs="unbounded" displayName="Names"/>
+
+    <stc:property name="ValueList" type="double" default="0" category="output" minOccurs="0" maxOccurs="unbounded" displayName="Values"/>
+</stc:class>
+
+<stc:class name="ScalingCheckResourcesCommand" displayName="Calculate Resource Requirements Command" bllDirectInterface="true" isInternal="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="true"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandDescription" value="Calculate Resource Requirements"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="Test Intelligence"/>
+    <stc:attribute type="core.RequireApplyToIL" value="false" internalType="bool" />
+    <stc:attribute type="core.RequirePostApplyToIL" value="false" internalType="bool" />
+
+    <!-- Input Parameters -->
+    <stc:property category="input" name="FeatureNameList" displayName="List of Feature Names" type="string" default="" minOccurs="0" maxOccurs="unbounded">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Features required. Length must match FeatureValueList." />
+    </stc:property>
+
+    <stc:property category="input" name="FeatureValueList" displayName="List of Feature Values" type="string" default="" minOccurs="0" maxOccurs="unbounded">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Values for required features. Length must match FeatureNameList" />
+    </stc:property>
+
+    <!-- Output Parameters -->
+    <stc:property category="output" name="MinMemoryMb" displayName="Minimum memory in MB" type="u32" default="">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Minimum port memory required in MB"/>
+    </stc:property>
+
+    <stc:property category="output" name="MinCores" displayName="Minimum number of cores required" type="u32" default="">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Minimum number of cores required"/>
+    </stc:property>
+
+    <stc:property category="output" name="MinSpiMips" displayName="Minimum amount of SpiMIPS required" type="u32" default="">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Minimum amount of processing power required in SpiMIPS"/>
+    </stc:property>
+</stc:class>
+
+<stc:class name="ScalingValidatePortsCommand" displayName="Validate Port Scaling Command" bllDirectInterface="true" isInternal="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="true"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandDescription" value="Calculate Resource Requirements Across Ports"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="Test Intelligence"/>
+    <stc:attribute type="core.RequireApplyToIL" value="false" internalType="bool" />
+    <stc:attribute type="core.RequirePostApplyToIL" value="false" internalType="bool" />
+
+    <!-- Input Parameters -->
+    <stc:property category="input" name="Profile" displayName="Port/Feature Profile JSON String" type="string" default='{"portProfiles":[]}' minOccurs="1" maxOccurs="1">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Ports and features required. Must match ProfileSchema." />
+    </stc:property>
+
+    <!-- Output Parameters -->
+
+    <!-- check PassFailState for first-order result -->
+
+    <stc:property category="output" name="Verdict" displayName="Per port results in JSON" type="string" default="[]">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Per port results in JSON"/>
+    </stc:property>
+
+    <!-- Schema Parameters (readonly, internal, eventually should move) -->
+    <stc:property category="input" name="ProfileSchema" displayName="Port/Feature Profile JSON Schema" type="string" default='{"$schema":"http://json-schema.org/schema#","type":"object","properties":{"portProfiles":{"type":"array","items":{"type":"object","properties":{"profileId":{"type":"string"},"portLocations":{"type":"array","items":{"type":"string"}},"portCount":{"type":"number"}},"required":["profileId"]}}},"required":["portProfiles"]}' isInternal="true">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Schema for Profile" />
+    </stc:property>
+
+    <stc:property category="input" name="VerdictSchema" displayName="Detailed Verdict Schema" type="string" default='{"$schema":"http://json-schema.org/schema#","type":"array","items":{"type":"object","properties":{"profileId":{"type":"string"},"portLocations":{"type":"array","items":{"type":"object","properties":{"location":{"type":"string"},"confidence":{"type":"number","minimum":0,"maximum":100},"reason":{"type":"string"}}}},"portTypes":{"type":"array","items":{"type":"object","properties":{"portType":{"type":"string"},"confidence":{"type":"number","minimum":0,"maximum":100},"reason":{"type":"string"}}}}}}}' isInternal="true">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Schema for DetailedVerdict" />
+    </stc:property>
+
+</stc:class>
+
+<stc:class name="ScalingGetValidPortTypesCommand" displayName="Get Valid Port Types Command" bllDirectInterface="true" isInternal="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none" type="core.Sequenceable" value="true"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandDescription" value="Get Port Types Meeting Resource Requirements"/>
+    <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.CommandCategory" value="Test Intelligence"/>
+    <stc:attribute type="core.RequireApplyToIL" value="false" internalType="bool" />
+    <stc:attribute type="core.RequirePostApplyToIL" value="false" internalType="bool" />
+
+    <!-- Input Parameters -->
+    <stc:property category="input" name="MinMemoryMb" displayName="Minimum memory in MB" type="u32" default="512">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Minimum port memory required in MB"/>
+    </stc:property>
+
+    <stc:property category="input" name="MinCores" displayName="Minimum number of cores required" type="u32" default="1">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Minimum number of cores required"/>
+    </stc:property>
+
+    <stc:property category="input" name="MinSpiMips" displayName="Minimum amount of SpiMIPS required" type="u32" default="100">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Minimum amount of processing power required in SpiMIPS"/>
+    </stc:property>
+
+    <stc:property category="input" name="FilterPortTypeList" displayName="Filter Port Type List" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Filter output port type list by limiting to valid ports in this list"/>
+    </stc:property>
+
+
+    <!-- Output Parameters -->
+    <stc:property category="output" name="PortTypeList" displayName="Port Types" type="string" minOccurs="0" maxOccurs="unbounded" default="">
+      <stc:attribute internalIsEnum="false" internalType="string" name="none" type="framework.PropertyDescription" value="Port type (a.k.a. test module part number) list"/>
+    </stc:property>
+</stc:class>
+
+<!-- Todo: What about virtual ports meeting certain resource reqs.? -->
+
+</stc:meta>

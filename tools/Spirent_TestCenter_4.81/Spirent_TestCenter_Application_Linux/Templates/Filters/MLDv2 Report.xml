@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Simple_MLDv2Report"
+    showName="MLDv2 Report"
+    version="1.00"
+    category="IP"
+    readonly="true"
+    validate="true"
+    firstPdu="icmpv6:MLDv2Report"
+    description="MLDv2 Report" >
+
+    <pdus>
+      <pdu name="proto1" pdu="icmpv6:MLDv2Report" />
+    </pdus>
+  </template>
+</frame>

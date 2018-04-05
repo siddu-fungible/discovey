@@ -1,0 +1,21 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="Gre_ipv6"
+    showName="GRE with Checksum/IPv6"
+    version="1.00"
+    category="GRE"
+    readonly="true"
+    validate="true"
+    firstPdu="gre:Gre"
+    description="Gre/IPv6" >
+
+    <pdus>
+      <pdu name="proto1" pdu="gre:Gre" >
+        <ckPresent>1</ckPresent>
+        <checksums><GreChecksum><value>0</value></GreChecksum></checksums>
+      </pdu>
+      <pdu name="ipProto" pdu="ipv6:IPv6" />
+    </pdus>
+  </template>
+</frame>

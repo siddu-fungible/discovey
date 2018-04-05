@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<stc:meta xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:stc="urn:www.spirentcom.com:XMLSchema.xsd"
+          package="spirent.proto.multihoming"
+          version="0.0.0-0">
+
+<!-- Subscriber Roaming Setup -->
+<stc:class name="CreateSubsRoamingCommand"
+    displayName="Create Subscriber Roaming Topology"
+    bllDirectInterface="true" isInternal="true">
+    <stc:attribute internalIsEnum="false" internalType="bool" name="none"
+        type="core.Sequenceable" value="false" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandDescription"
+        value="Create Subscriber Roaming Topology" />
+    <stc:attribute internalIsEnum="false" internalType="string" name="none"
+        type="framework.CommandCategory" value="Protocols//Multi-Homing" />
+    <stc:attribute internalType="bool" type="core.RequireApplyToIL" value="false" />
+    <stc:attribute internalType="bool" type="core.RequirePostApplyToIL" value="false" />
+    <stc:property category="input" name="InputJson" displayName="JSON Input"
+        type="string" default="">
+        <stc:attribute internalIsEnum="false" internalType="string"
+            type="framework.PropertyDescription"
+            value="JSON string representation of topology parameters" />
+    </stc:property>
+    <stc:property category="input" name="PortTagList"
+        displayName="Member Port Tag List"
+        type="string" default="" minOccurs="0" maxOccurs="unbounded">
+        <stc:attribute internalIsEnum="false" internalType="string"
+            type="framework.PropertyDescription"
+            value="List of tags tagging the aggregate member ports to create topology, each tag must point to a separate group" />
+    </stc:property>
+    <stc:property category="input" name="ApPrefix"
+        displayName="Access Point Device Tag Prefix" type="string"
+        default="ApDevice">
+        <stc:attribute internalIsEnum="false" internalType="string"
+            type="framework.PropertyDescription"
+            value="Tag Prefix for AP devices created" />
+    </stc:property>
+    <stc:property category="input" name="UePrefix"
+        displayName="User Equipment Device Tag Prefix" type="string"
+        default="UeDevice">
+        <stc:attribute internalIsEnum="false" internalType="string"
+            type="framework.PropertyDescription"
+            value="Tag Prefix for UE devices created" />
+    </stc:property>
+    <stc:property category="state" name="DefaultInputJson"
+        displayName="Default input JSON value (used by command for key validation)"
+        type="string"
+        default='{"AP_DevPerPort":1,"AP_IpStart":"1.1.1.1","AP_IpStep":"0.0.1.0","AP_GwStart":"1.1.1.2","AP_GwStep":"0.0.1.0","AP_RtrIdStart":"1.1.1.1","AP_RtrIdStep":"0.0.0.1","AP_MacStart":"00:10:95:00:00:01","AP_MacStep":"00:00:00:00:00:01","AP_DevCount":1,"AP_EnableRfc4814Mac":false,"AP_Rfc4814RandomSeed":4814,"AP_UseDefaultPhyMac":false,"AP_EnableVlan":false,"AP_VlanIdStart":100,"AP_VlanIdStep":1,"UE_DevPerAp":1,"UE_RtrIdStart":"100.0.0.1","UE_RtrIdStep":"0.0.0.1","UE_VlanIdStart":100,"UE_VlanIdStep":1,"UE_VlanIdRecycle":0,"UE_MacStart":"00:10:95:01:00:01","UE_MacStep":"00:00:00:00:00:01","UE_DevCount":1,"UE_EnableRemoteId":true,"UE_EnableRfc4814Mac":false,"UE_Rfc4814RandomSeed":4814,"UE_UseDefaultPhyMac":false,"UE_EnableWifi":true,"UE_SsidName":"SSID","UE_SplitPrimaryPorts":false}'>
+        <stc:attribute internalIsEnum="false" internalType="string"
+            type="framework.PropertyDescription"
+            value="Default input JSON value (used by command for key validation)" />
+    </stc:property>
+</stc:class>
+
+</stc:meta>

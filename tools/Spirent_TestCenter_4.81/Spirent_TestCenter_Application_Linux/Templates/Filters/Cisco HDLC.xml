@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="CiscoHDLC"
+    showName="Cisco HDLC"
+    version="1.00"
+    category="Layer2"
+    readonly="true"
+    validate="true"
+    firstPdu="hdlc:CiscoHDLC"
+    description="Cisco HDLC" >
+
+    <pdus>
+      <pdu name="proto1" pdu="hdlc:CiscoHDLC" />
+    </pdus>
+  </template>
+</frame>

@@ -1,0 +1,17 @@
+<frame>
+  <template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="frame_schema.xsd"
+    name="MacControl"
+    showName="Ethernet 802.3 MAC Control"
+    version="1.00"
+    category="MAC Control"
+    readonly="true"
+    validate="true"
+    firstPdu="ethernetpause:MacControl"
+    description="Ethernet 802.3 MAC Control" >
+
+    <pdus>
+      <pdu name="proto1" pdu="ethernetpause:MacControl"/>
+    </pdus>
+  </template>
+</frame>
