@@ -7,7 +7,23 @@ class MetricChart(models.Model):
     chart_name = models.TextField(unique=True)
     metric_model_name = models.TextField(default="Performance1")
     description = models.TextField(default="TBD")
+    metric_id = models.IntegerField(default=10)
 
+    def __str__(self):
+        return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
+
+
+class LastMetricId(models.Model):
+    last_id = models.IntegerField(unique=True, default=10)
+
+    @staticmethod
+    def get_next_id():
+        if not LastMetricId.objects.count():
+            LastMetricId().save()
+        last = LastMetricId.objects.all().last()
+        last.last_id = last.last_id + 1
+        last.save()
+        return last.last_id
 
 class ModelMapping(models.Model):
     module = models.TextField()
