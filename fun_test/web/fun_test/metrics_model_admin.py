@@ -3,6 +3,7 @@ from web.fun_test.metrics_models import Performance1
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.metrics_models import ModelMapping, VolumePerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance
+from web.fun_test.metrics_models import LastMetricId
 
 
 @admin.register(Performance1)
@@ -27,4 +28,8 @@ class VolumePerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(AllocSpeedPerformance)
 class AllocSpeedPerformanceAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(LastMetricId)
+class LastMetricIdAdmin(admin.ModelAdmin):
     pass

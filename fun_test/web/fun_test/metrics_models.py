@@ -10,7 +10,7 @@ class MetricChart(models.Model):
     metric_id = models.IntegerField(default=10)
 
     def __str__(self):
-        return "{} : {}".format(self.chart_name, self.metric_model_name)
+        return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
 
 
 class LastMetricId(models.Model):
