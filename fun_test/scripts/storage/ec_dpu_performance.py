@@ -256,7 +256,7 @@ class ECDPULevelTestcase(FunTestCase):
                     dut = self.global_setup["duts"][type][i]
                     self.storage_controller[type].append(StorageController(target_ip=dut.host_ip,
                                                                            target_port=dut.external_dpcsh_port))
-                    command_result = self.storage_controller[type][i].command("enable_counters")
+                    command_result = self.storage_controller[type][i].command(command="enable_counters", legacy=True)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Enabling counters on {} {} DUT instance"
                                          .format(type, i))
@@ -291,7 +291,7 @@ class ECDPULevelTestcase(FunTestCase):
             # Configuring the controller in the DUT in case if the EC volume needs to configured in a separate DPU
             if self.global_setup["ec_in_sep_dpu"]:
                 # Configuring the controller
-                command_result = self.storage_controller["ec"][0].command("enable_counters")
+                command_result = self.storage_controller["ec"][0].command(command="enable_counters", legacy=True)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Enabling counters in the last DUT instance")
 
@@ -362,7 +362,7 @@ class ECDPULevelTestcase(FunTestCase):
 
             # disabling the error_injection for the EC volume
             command_result = {}
-            command_result = self.storage_controller["ec"][0].command("poke params/ecvol/error_inject 0")
+            command_result = self.storage_controller["ec"][0].poke("params/ecvol/error_inject 0")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume in the last DUT "
                                                            "instance")
@@ -644,8 +644,8 @@ class ECDPULevelTestcase(FunTestCase):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got increased more than the expected value {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
+                            fun_test.log("{} {} {} got {} than the expected value {}".
+                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
                             fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
@@ -918,9 +918,9 @@ if __name__ == "__main__":
 
     ec_dpu_script = ECDPULevelScript()
     ec_dpu_script.add_test_case(EC21FioSeqWriteSeqReadOnly())
-    ec_dpu_script.add_test_case(EC21FioRandWriteRandReadOnly())
+    # ec_dpu_script.add_test_case(EC21FioRandWriteRandReadOnly())
     # Commenting this case because of the bug #771
     # ec_dpu_script.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
-    ec_dpu_script.add_test_case(EC21FioSeqReadWriteMix())
-    ec_dpu_script.add_test_case(EC21FioRandReadWriteMix())
+    # ec_dpu_script.add_test_case(EC21FioSeqReadWriteMix())
+    # ec_dpu_script.add_test_case(EC21FioRandReadWriteMix())
     ec_dpu_script.run()
