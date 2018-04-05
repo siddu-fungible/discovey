@@ -265,7 +265,10 @@ def modules(request):
 def jenkins_job_id_map(request):
     all_entries = JenkinsJobIdMap.objects.all()
     s = JenkinsJobIdMapSerializer(all_entries, many=True)
-    return s.data
+    s = s.data
+    # print s
+    s = sorted(s, key=lambda x: x["fun_sdk_branch"], reverse=True)
+    return s
 
 @csrf_exempt
 @api_safe_json_response
@@ -278,7 +281,7 @@ def build_to_date_map(request):
         key = 0
         if m:
             key = int(m.group(1))
-        build_info[key] = {"software_date": entry.software_date}
+        build_info[key] = {"software_date": entry.software_date, "hardware_version": entry.hardware_version}
     return build_info
 
 
