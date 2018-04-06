@@ -81,7 +81,7 @@ class QemuStorageTemplate(object):
             new_dpcsh_tcp_proxy_process_id = self.dut.get_process_id(dpcsh_tcp_proxy_name)
             fun_test.simple_assert(not new_dpcsh_tcp_proxy_process_id, "Stopped DPCSH TCP proxy")
             fun_test.sleep("Waiting for the port to be released", 60)
-        dpcsh_tcp_proxy_cmd = "{}/{} --inet_sock --tcp_proxy {}".format(dpcsh_tcp_proxy_path, dpcsh_tcp_proxy_name,
+        dpcsh_tcp_proxy_cmd = "{}/{} --inet_sock --tcp_proxy={}".format(dpcsh_tcp_proxy_path, dpcsh_tcp_proxy_name,
                                                                         dpcsh_tcp_proxy_port)
         dpcsh_tcp_proxy_process_id = self.dut.start_bg_process(command=dpcsh_tcp_proxy_cmd,
                                                                output_file=F1.DPCSH_PROXY_LOG)
