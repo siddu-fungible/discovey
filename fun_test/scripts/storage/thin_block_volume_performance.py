@@ -84,8 +84,8 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        pass
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        # pass
 
 
 class BLTVolumePerformanceTestcase(FunTestCase):
