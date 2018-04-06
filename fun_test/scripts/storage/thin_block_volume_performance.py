@@ -618,7 +618,7 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
 
         destination_ip = self.dut_instance.data_plane_ip
 
-        # storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
+        self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
         storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
 
