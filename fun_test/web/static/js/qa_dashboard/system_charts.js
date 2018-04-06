@@ -65,13 +65,16 @@ function SystemChartsController($scope, $http, commonService) {
 
     $scope.tooltipFormatter = (x, y) => {
         let softwareDate = "Unknown";
+        let hardwareVersion = "Unknown";
         let sdkBranchRef = x;
         let key = parseInt(x);
         if (key in $scope.buildInfo) {
             softwareDate = $scope.buildInfo[key]["software_date"];
+            hardwareVersion = $scope.buildInfo[key]["hardware_version"];
         }
         let s = "<b>SDK branch git ref:</b> " + sdkBranchRef + "<br>";
         s += "<b>Software date:</b> " + softwareDate + "<br>";
+        s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
         s += "<b>Value:</b> " + y + "<br>";
         return s;
     }

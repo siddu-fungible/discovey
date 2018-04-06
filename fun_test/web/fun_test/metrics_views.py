@@ -6,6 +6,7 @@ from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer
+from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
@@ -170,7 +171,10 @@ def update_chart(request):
             c.description = description
         c.save()
     except ObjectDoesNotExist:
-        c = MetricChart(metric_model_name=model_name, chart_name=chart_name, data_sets=json.dumps(data_sets))
+        c = MetricChart(metric_model_name=model_name,
+                        chart_name=chart_name,
+                        data_sets=json.dumps(data_sets),
+                        metric_id=LastMetricId.get_next_id())
         c.save()
     return "Ok"
 

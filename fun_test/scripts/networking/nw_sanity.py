@@ -102,8 +102,10 @@ class NwSanitySimpleL3Integration(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
+        output = linux_obj.command("export SHELL=/bin/bash")
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
-        output = linux_obj.command("make venv")
+        output = linux_obj.command("make -f makefiles/pipenv.mk")
+        output = linux_obj.command("pipenv shell")
         output = linux_obj.command(
             command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -p -b -s > {}/nutest.txt 2>&1"
             .format(target_workspace, target_workspace), timeout=300)
@@ -161,8 +163,10 @@ class NwSanityPRV(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
+        output = linux_obj.command("export SHELL=/bin/bash")
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
-        output = linux_obj.command("make venv")
+        output = linux_obj.command("make -f makefiles/pipenv.mk")
+        output = linux_obj.command("pipenv shell")
         output = linux_obj.command(
             command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic --testcase prv >> {}/nutest.txt 2>&1"
                         .format(target_workspace, target_workspace), timeout=600)

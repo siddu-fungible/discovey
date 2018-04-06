@@ -96,6 +96,7 @@
                     <th>Jenkins job-id</th>
                     <th>Software date</th>
                     <th>Fun SDK branch</th>
+                    <th>HW version</th>
                     <th>Git commit</th>
                 </tr>
                 <tr ng-repeat="jenkinsJobIdentry in jenkinsJobIdMap">
@@ -107,6 +108,9 @@
                     </td>
                     <td>
                         {{ jenkinsJobIdentry.fun_sdk_branch }}
+                    </td>
+                    <td>
+                        {{ jenkinsJobIdentry.hardware_version }}
                     </td>
                     <td>
                         {{ jenkinsJobIdentry.git_commit }}

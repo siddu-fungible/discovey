@@ -52,6 +52,9 @@ class FunTestCase1(FunTestCase):
             branch_fun_sdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
             software_date = past_job["software_date"]
+            hardware_version = "---"
+            if "hardware_version" in past_job:
+                hardware_version = past_job["hardware_version"]
 
             fun_test.log("Return code: {}".format(return_code))
             fun_test.log("Job id: {}".format(job_id))
@@ -61,7 +64,7 @@ class FunTestCase1(FunTestCase):
             fun_test.log("Software date: {}".format(software_date))
             models_helper.add_jenkins_job_id_map(jenkins_job_id=jenkins_build_number,
                                                  fun_sdk_branch=branch_fun_sdk,
-                                                 git_commit=git_commit, software_date=software_date)
+                                                 git_commit=git_commit, software_date=software_date, hardware_version=hardware_version)
             job_info_url = "{}/job/{}?format=json".format(LSF_WEB_SERVER_BASE_URL, job_id)
             fun_test.log("URL: {}".format(job_info_url))
             response = requests.get(job_info_url)
