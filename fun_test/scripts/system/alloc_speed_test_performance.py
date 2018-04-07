@@ -73,7 +73,10 @@ class FunTestCase1(FunTestCase):
             fun_test.log(json.dumps(response_dict, indent=4))
             output_text = response_dict["output_text"]
 
-            return_code = int(response_dict["job_dict"]["return_code"])
+            try:
+                return_code = int(response_dict["job_dict"]["return_code"])
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
             lines = output_text.split("\n")
             lines = [x for x in lines if "Best time" in x]
