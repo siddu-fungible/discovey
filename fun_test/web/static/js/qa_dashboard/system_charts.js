@@ -27,6 +27,28 @@ function SystemChartsController($scope, $http, commonService) {
 
         $scope.currentChartName = "Best time for 1 malloc/free (WU)";
         $scope.currentMetricModelName = "AllocSpeedPerformance";
+
+        $scope.featureTable.forEach((feature) => {
+            $scope.getMetricStatus(feature);
+        });
+
+
+    };
+
+    $scope.getMetricStatus = (feature) => {
+        let thisFeature = feature;
+        let payload = {metric_model_name: feature.metricModelName, chart_name: feature.chartName};
+        commonService.apiPost('/metrics/status', payload).then((data) => {
+            thisFeature.result = data.status;
+        });
+    };
+
+    $scope.getStatusIcon = (result) => {
+        let s = "<i class='fa fa-check-circle text-success'></i>";
+        if(result === false) {
+            s = "<i class='fa fa-thumbs-down text-danger'></i>";
+        }
+        return s;
     };
 
     $scope.fetchJenkinsJobIdMap = () => {

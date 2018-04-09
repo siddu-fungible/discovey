@@ -27,7 +27,7 @@
                         <td>
                             <a href="#" ng-click="showChart(oneFeature.chartName, oneFeature.metricModelName)">{{ oneFeature.name }}</a>
                         </td>
-                        <td ng-bind-html="getStatusIcon(row.result)">
+                        <td ng-bind-html="getStatusIcon(oneFeature.result)">
                         </td>
                     </tr>
                 </table>

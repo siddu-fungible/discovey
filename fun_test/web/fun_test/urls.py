@@ -96,6 +96,7 @@ metric_urls = [
     url(r'^charts_info$', metrics_views.charts_info),
     url(r'^chart_info$', metrics_views.chart_info),
     url(r'^data$', metrics_views.data),
+    url(r'^status$', metrics_views.status),
     url(r'^charts_by_module$', metrics_views.charts_by_module),
     url(r'^models_by_module$', metrics_views.models_by_module),
     url(r'^edit_chart/(.*)$', metrics_views.edit_chart),

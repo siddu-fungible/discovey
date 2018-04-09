@@ -198,6 +198,19 @@ def models_by_module(request):
             model_charts.append(chart.chart_name)
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def status(request):
+    data = {"status": False, "goodness": 0}
+    request_json = json.loads(request.body)
+    metric_model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    try:
+        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+        data["status"], data["goodness"] = chart.get_status()
+    except ObjectDoesNotExist:
+        pass
+    return data
 
 @csrf_exempt
 @api_safe_json_response
