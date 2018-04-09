@@ -1,6 +1,12 @@
 from django.db import models
 from rest_framework.serializers import ModelSerializer
+import json
+from django.forms.models import model_to_dict
+from django.core.exceptions import ObjectDoesNotExist
+from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
+import logging
 
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 class MetricChart(models.Model):
     data_sets = models.TextField(default="[]")
@@ -8,13 +14,111 @@ class MetricChart(models.Model):
     metric_model_name = models.TextField(default="Performance1")
     description = models.TextField(default="TBD")
     metric_id = models.IntegerField(default=10)
+    children = models.TextField(default="[]")
+    leaf = models.BooleanField(default=False)
+    positive = models.BooleanField(default=True)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
 
+    def get_children(self):
+        return json.loads(self.children)
+
+    def add_child(self, child_id):
+        children = json.loads(self.children)
+        children.append(child_id)
+        self.children = json.dumps(children)
+        self.save()
+
+    def goodness(self):
+        children = json.loads(self.children)
+        goodness = 0
+        if len(children):
+            goodness = 0
+            for child in children:
+                metric = MetricChart.objects.get(metric_id=child)
+                goodness += metric.goodness()
+        else:
+            # Must be a leaf
+            # get_last_value
+            # get expected value
+            pass
+        return goodness
+
+    def get_output_data_set(self, output_name):
+        result = {}
+        data_sets = json.loads(self.data_sets)
+        for data_set in data_sets:
+            if data_set["output"]["name"] == output_name:
+                result["min"] = data_set["output"]["min"]
+                result["max"] = data_set["output"]["max"]
+                break
+        return result
+
+    def get_last_record(self):
+        return self.filter(last=True)
+
+    def get_status(self):
+        status = False
+        goodness = 0
+        children = json.loads(self.children)
+        if not self.leaf:
+            if len(children):
+                status = True
+                for child in children:
+                    child_metric = MetricChart.objects.get(metric_id=child)
+                    child_status, child_goodness = child_metric.get_status()
+                    status = status and child_status
+                    goodness += child_goodness
+        else:
+            last_record = self.get_last_record()
+            data_sets = json.loads(self.data_sets)
+            if len(data_sets):
+                data_set = data_sets[0]
+
+                max_value = data_set["output"]["max"]
+                min_value = data_set["output"]["min"]
+                output_name = data_set["output"]["name"]
+                expected_value = None
+                if "expected" in data_set["output"]:
+                    expected_value = data_set["output"]["expected"]
+
+                output_value = last_record[output_name]
+                status = output_value >= min_value and output_value <= max_value
+
+                if expected_value is not None and status:
+                    if self.positive:
+                        goodness = (float(output_value) / expected_value) * 100
+                    else:
+                        goodness = (float(expected_value) / output_value) * 100
+        print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status, goodness))
+        return status, goodness
+
+    def filter(self, last=False):
+        data = []
+        data_sets = json.loads(self.data_sets)
+        if len(data_sets):
+            data_set = data_sets[0]
+            inputs = data_set["inputs"]
+            model = ANALYTICS_MAP[self.metric_model_name]["model"]
+            d = {}
+            for input_name, input_value in inputs.iteritems():
+                d[input_name] = input_value
+            try:
+                if not last:
+                    entries = model.objects.filter(**d).order_by("-id")
+                    for entry in entries:
+                        data.append(model_to_dict(entry))
+                else:
+                    entry = model.objects.filter(**d).last()
+                    data = model_to_dict(entry)
+
+            except ObjectDoesNotExist:
+                logger.critical("No data found Model: {} Inputs: {}".format(self.metric_model_name, str(inputs)))
+        return data
 
 class LastMetricId(models.Model):
-    last_id = models.IntegerField(unique=True, default=10)
+    last_id = models.IntegerField(unique=True, default=100)
 
     @staticmethod
     def get_next_id():
