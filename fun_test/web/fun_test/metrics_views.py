@@ -164,11 +164,14 @@ def update_chart(request):
     description = None
     if "description" in request_json:
         description = request_json["description"]
+
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
         c.data_sets = json.dumps(data_sets)
         if description:
             c.description = description
+        if "negative_gradient" in request_json:
+            c.positive = not request_json["negative_gradient"]
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,

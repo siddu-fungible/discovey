@@ -37,7 +37,7 @@
     <div class="panel-body">
         <div class="row">
             <div class="col-lg-10 col-xl-10 pull-left">
-                <table class="table table-nonfluid table-borderless"
+                <table id="edit-panel" class="table table-nonfluid table-borderless"
                        ng-repeat="dataSet in previewDataSets track by $index">
                     <tr>
                         <th>Min</th>
@@ -55,9 +55,10 @@
                                    style="width: 100px"></td>
                     </tr>
                 </table>
+                <p><input type="checkbox" ng-model="$parent.negativeGradient">&nbsp;Negative gradient</p>
             </div>
             <div class="col-lg-2 col-xl-2">
-                <a href="#" ng-click="dismiss()">close</a>
+                <a href="#edit-panel" ng-click="dismiss()">close</a>
             </div>
         </div>
         <div class="row">

@@ -16,6 +16,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         $scope.tableInfo = null;
         $scope.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
         $scope.showOutputSelection = true;
+        $scope.negativeGradient = null;
 
         if (ctrl.xaxisFormatter) {
             $scope.xAxisFormatter = (value) => {
@@ -185,6 +186,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         payload["chart_name"] = $scope.chartName;
         payload["data_sets"] = $scope.previewDataSets;
         payload["description"] = $scope.currentDescription;
+        payload["negative_gradient"] = $scope.negativeGradient;
         commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
             if (data) {
                 alert("Submitted");
