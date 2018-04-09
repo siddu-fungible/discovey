@@ -8,6 +8,7 @@
             <th>Action</th>
             <th>Min</th>
             <th>Max</th>
+            <th>Expected</th>
         </tr>
 
     </thead>
@@ -21,6 +22,9 @@
         <td>
             {{ dataSet.output.max }}
         </td>
+        <td>
+            {{ dataSet.output.expected }}
+        </td>
     </tr>
 </table>
 
@@ -29,7 +33,7 @@
 <div ng-bind-html="currentDescription"></div>
 
 
-<div ng-if="editing" class="panel panel-default col-lg-6 col-xl-6 col-xxl-6">
+<div ng-if="editing" class="panel panel-default col-lg-10 col-xl-6 col-xxl-6">
     <div class="panel-body">
         <div class="row">
             <div class="col-lg-10 col-xl-10 pull-left">
@@ -38,6 +42,7 @@
                     <tr>
                         <th>Min</th>
                         <th>Max</th>
+                        <th>Expected</th>
                     </tr>
                     <tr>
                         <td>
@@ -45,6 +50,8 @@
                                    style="width: 100px">
                         </td>
                         <td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max"
+                                   style="width: 100px"></td>
+                        <td><input type="number" ng-model="dataSet.output.expected" ng-value="dataSet.output.expected"
                                    style="width: 100px"></td>
                     </tr>
                 </table>

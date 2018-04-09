@@ -40,6 +40,7 @@ function SystemChartsController($scope, $http, commonService) {
         let payload = {metric_model_name: feature.metricModelName, chart_name: feature.chartName};
         commonService.apiPost('/metrics/status', payload).then((data) => {
             thisFeature.result = data.status;
+            thisFeature.goodness = data.goodness;
         });
     };
 

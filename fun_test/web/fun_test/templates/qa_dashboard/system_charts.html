@@ -20,6 +20,9 @@
                         <th>
                             Status
                         </th>
+                        <th>
+                            Goodness
+                        </th>
                     </tr>
                     <tr>
                     </tr>
@@ -28,6 +31,9 @@
                             <a href="#" ng-click="showChart(oneFeature.chartName, oneFeature.metricModelName)">{{ oneFeature.name }}</a>
                         </td>
                         <td ng-bind-html="getStatusIcon(oneFeature.result)">
+                        </td>
+                        <td>
+                            {{ oneFeature.goodness | number:1 }}
                         </td>
                     </tr>
                 </table>

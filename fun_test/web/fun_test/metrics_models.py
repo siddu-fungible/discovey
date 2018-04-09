@@ -82,11 +82,15 @@ class MetricChart(models.Model):
                 expected_value = None
                 if "expected" in data_set["output"]:
                     expected_value = data_set["output"]["expected"]
+                else:
+                    expected_value = max_value
+                    if not self.positive:
+                        expected_value = min_value
 
                 output_value = last_record[output_name]
                 status = output_value >= min_value and output_value <= max_value
 
-                if expected_value is not None and status:
+                if expected_value is not None:
                     if self.positive:
                         goodness = (float(output_value) / expected_value) * 100
                     else:
