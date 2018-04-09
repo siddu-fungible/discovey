@@ -99,6 +99,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
                 $scope.currentDescription = $scope.chartInfo.description;
+                $scope.negativeGradient = !$scope.chartInfo.positive;
             });
         } else {
 

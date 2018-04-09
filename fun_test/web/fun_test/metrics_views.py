@@ -53,7 +53,7 @@ def chart_info(request):
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result = None
     if chart:
-        result = {"data_sets": json.loads(chart.data_sets), "description": chart.description}
+        result = {"data_sets": json.loads(chart.data_sets), "description": chart.description, "positive": chart.positive}
     return result
 
 
