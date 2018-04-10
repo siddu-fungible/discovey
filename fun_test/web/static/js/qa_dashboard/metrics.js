@@ -92,6 +92,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         $scope.tableInfo = null;
         $scope.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
         $scope.showOutputSelection = true;
+        $scope.negativeGradient = null;
+
 
         let payload = {};
         payload["metric_model_name"] = modelName;
@@ -132,6 +134,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
                 $scope.chartInfo = chartInfo;
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
+                $scope.negativeGradient = !$scope.chartInfo.positive;
+
             });
         } else {
         }
@@ -215,6 +219,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             payload["metric_model_name"] = $scope.modelName;
             payload["chart_name"] = $scope.chartName;
             payload["data_sets"] = $scope.previewDataSets;
+            payload["negative_gradient"] = $scope.negativeGradient;
+
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
                 if(data) {
                     alert("Submitted");
