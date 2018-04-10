@@ -1,4 +1,6 @@
 import random
+from base64 import b64encode
+import os
 from string import printable
 
 
@@ -89,3 +91,26 @@ def create_hex_file(size, name):
 
 def create_data_file(size, name, data):
     pass
+
+
+def generate_unique_literals(start, end, randomize=False):
+    lit_arr = []
+    for i in range(start, end + 1):
+        lit_arr.append(chr(i))
+
+    if randomize:
+        random.shuffle(lit_arr)
+
+    uniq_literals = ''.join(lit_arr)
+    return uniq_literals
+
+
+def generate_random_literals(size):
+    byte_arr = os.urandom(int(size * 1024))
+    #return b64encode(byte_arr).decode('utf-8')
+    return byte_arr
+
+
+if __name__ == '__main__':
+    with open("/tmp/datagen.test", "w+") as infile:
+        infile.write(generate_random_literals(2048))
