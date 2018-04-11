@@ -198,7 +198,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
 
             fun_test.shared_variables["blt"]["setup_created"] = True
-            fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
+            # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
 
             # Executing the FIO command to warm up the system
@@ -217,7 +217,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         destination_ip = self.dut_instance.data_plane_ip
 
-        self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
+        # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
         storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
 
@@ -504,7 +504,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
-        pass
+
+        self.storage_controller.disconnect()
+        # pass
 
 
 class BLTFioSeqWriteSeqReadOnly(BLTVolumePerformanceTestcase):
