@@ -38,7 +38,7 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
-class ECVolumeLevelScript(FunTestScript):
+class ECinQemuScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Start 1 POSIXs and allocate a Linux instance 
@@ -56,35 +56,23 @@ class ECVolumeLevelScript(FunTestScript):
         pass
 
 
-class ECVolumeLevelTestcase(FunTestCase):
+class ECinQemuTestcase(FunTestCase):
 
     def describe(self):
-        self.set_test_details(id=1,
-                              summary="Sequential write and then read by failing m number of data volumes in n = k+m "
-                                      "EC volume",
-                              steps="""
-        1. Run the outer loop from ndata_partition_start_range to ndata_partition_end_range. Say it as k
-        2. Run the inner loop from nparity_start_range = min(int(ndata / 4) + 1, self.max_parity) to 
-        nparity_end_range = min(ndata - 1, self.max_parity) + 1. Say it as m
-        3. Configure k data and m parity BLT volumes.
-        4. Configure k:m EC volume.
-        5. Create a LS volume on top of the EC volume.
-        6. Export (Attach) the above LS volume to PCIe controller. 
-        7. Write dataset_size bytes of data into the LSV in a sequential manner.
-        8. Start a loop to run 0 to m-1 and inside it fail the data volume in that index and read back the previously
-        written data   
-        """)
+        pass
 
     def check_num_dpcsh_cmds(self):
 
         self.num_dpcsh_cmds += 1
         fun_test.log("DPCsh command executed: {}".format(self.num_dpcsh_cmds))
+        """
         if self.num_dpcsh_cmds >= self.max_dpcsh_cmds:
             self.qemu.start_dpcsh_proxy()
             self.num_dpcsh_cmds = 0
             self.storage_controller.disconnect()
             self.storage_controller = StorageController(target_ip=self.dut.host_ip,
                                                         target_port=self.dut.external_dpcsh_port)
+        """
 
     def setup_ec_volume(self, ndata, nparity):
 
@@ -173,7 +161,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # disabling the error_injection for the EC volume
         command_result = {}
-        command_result = self.storage_controller.command("poke params/ecvol/error_inject 0")
+        command_result = self.storage_controller.poke("params/ecvol/error_inject 0")
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT instance")
         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
@@ -323,7 +311,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.num_dpcsh_cmds = 0
 
         # Configuring the controller
-        command_result = self.storage_controller.command("enable_counters")
+        command_result = self.storage_controller.command(command="enable_counters", legacy=True)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance")
         self.num_dpcsh_cmds += 1
@@ -332,63 +320,147 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
         self.volume_attached = False
 
+    def do_write_test(self, ndata, nparity):
+
+        # Creating input data file containing (data volume block size * ndata volume) bytes of random data
+        self.input_size = self.volume_block["ndata"] * ndata
+        return_size = self.qemu.dd(input_file=self.data_pattern, output_file=self.input_data,
+                                   block_size=self.volume_block["ndata"], count=ndata)
+        fun_test.test_assert_expected(self.input_size, return_size, "Input data creation")
+        self.input_md5sum = self.qemu.md5sum(file_name=self.input_data)
+        fun_test.test_assert(self.input_md5sum, "Finding md5sum for input data")
+
+        # Starting the write test
+        num_writes = self.dataset_size / self.input_size
+        for blk in range(1, num_writes + 2):
+            blk_write_result = ""
+            if blk != 1:
+                blk = blk * ndata - 1
+            else:
+                begin = blk
+            end = begin + self.input_size - 1
+            blk_write_result = self.qemu.nvme_write(device=self.nvme_block_device, start=blk, count=ndata - 1,
+                                                    size=self.input_size, data=self.input_data)
+            if blk_write_result != "Success":
+                self.write_result[ndata][nparity] = False
+                fun_test.critical("Write failed for {} to {} bytes".format(begin, end))
+            else:
+                fun_test.log("Write succeeded for {} to {} bytes".format(begin, end))
+            begin = end + 1
+        fun_test.test_assert(self.write_result[ndata][nparity], "Write operation for {} bytes".
+                             format(self.dataset_size))
+
+    def do_read_test(self, ndata, nparity, index):
+
+        # Starting the read test
+        num_reads = self.dataset_size / self.input_size
+        for blk in range(1, num_reads + 1):
+            blk_read_result = ""
+            output_md5sum = ""
+            if blk != 1:
+                blk = blk * ndata - 1
+            else:
+                begin = blk
+            end = begin + self.input_size - 1
+            output_file = self.output_data + "_" + str(blk)
+            blk_read_result = self.qemu.nvme_read(device=self.nvme_block_device, start=blk, count=ndata - 1,
+                                                  size=self.input_size, data=output_file)
+            if blk_read_result != "Success":
+                self.read_result[ndata][nparity][index] = False
+                fun_test.critical("Read failed for {} to {} bytes".format(begin, end))
+            else:
+                fun_test.log("Read succeeded for {} to {} bytes".format(begin, end))
+
+            output_md5sum = self.qemu.md5sum(file_name=output_file)
+            if output_md5sum == self.input_md5sum:
+                fun_test.log("md5sum for {} to {} bytes {} matches with input md5sum {}".
+                             format(begin, end, output_md5sum, self.input_md5sum))
+            else:
+                self.read_result[ndata][nparity][index] = False
+                fun_test.critical("md5sum for {} to {} bytes {} is not matching with input md5sum {}".
+                                  format(begin, end, output_md5sum, self.input_md5sum))
+            begin = end + 1
+        fun_test.test_assert(self.read_result[ndata][nparity][index],
+                             "Read operation for {} bytes after failing {} data volumes".
+                             format(self.dataset_size, index + 1))
+
+    def run(self):
+
+        pass
+
+    def cleanup(self):
+
+        # Check any plex needs to be re-enabled from failure_injection condition
+        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
+            for index in self.failure_plex_indices:
+                command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
+                                                                     command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
+                                                               "having the UUID {}".format(self.uuids["ndata"][index]))
+                fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
+                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                  self.uuids["ndata"][index])
+                command_result = self.storage_controller.peek(props_tree)
+                fun_test.log(command_result)
+                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
+                                              message="Ensuring fault_injection got disabled")
+
+        self.storage_controller.disconnect()
+
+
+class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Sequential write and then read by failing m number of data volumes in n = k+m "
+                                      "EC volume",
+                              steps="""
+        1. Run the outer loop from ndata_partition_start_range to ndata_partition_end_range. Say it as k
+        2. Run the inner loop from nparity_start_range = min(int(ndata / 4) + 1, self.max_parity) to 
+        nparity_end_range = min(ndata - 1, self.max_parity) + 1. Say it as m
+        3. Configure k data and m parity BLT volumes.
+        4. Configure k:m EC volume.
+        5. Create a LS volume on top of the EC volume.
+        6. Export (Attach) the above LS volume to PCIe controller. 
+        7. Write dataset_size bytes of random data into the LSV in a sequential manner.
+        8. Start a loop to run 0 to m-1 and inside it fail the data volume in that index and read back the previously
+        written data   
+        """)
+
+    def setup(self):
+        super(RndDataWriteAndReadWithDataVolumeFailure, self).setup()
+
     def run(self):
 
         testcase = self.__class__.__name__
-        test_method = testcase[4:]
 
-        write_result = {}
-        read_result = {}
+        self.write_result = {}
+        self.read_result = {}
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
 
-            write_result[ndata] = {}
-            read_result[ndata] = {}
+            self.write_result[ndata] = {}
+            self.read_result[ndata] = {}
             if not hasattr(self, "nparity_start_range"):
                 self.nparity_start_range = min(int(ndata / 4) + 1, self.max_parity)
             if not hasattr(self, "nparity_end_range"):
-                self.nparity_end_range = min(ndata - 1, self.max_parity) + 1
+                self.nparity_end_range = min(ndata - 1, self.max_parity)
 
-            for nparity in range(self.nparity_start_range, self.nparity_end_range):
+            for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
 
-                write_result[ndata][nparity] = True
-                read_result[ndata][nparity] = {}
+                self.write_result[ndata][nparity] = True
+                self.read_result[ndata][nparity] = {}
 
                 # Creating ndata:npartiy EC volume
                 self.setup_ec_volume(ndata, nparity)
 
-                # Creating input data file containing (data volume block size * ndata volume) bytes of random data
-                self.input_size = self.volume_block["ndata"] * ndata
-                return_size = self.qemu.dd(input_file=self.data_pattern, output_file=self.input_data,
-                                           block_size=self.volume_block["ndata"], count=ndata)
-                fun_test.test_assert_expected(self.input_size, return_size, "Input data creation")
-                input_md5sum = self.qemu.md5sum(file_name=self.input_data)
-                fun_test.test_assert(input_md5sum, "Finding md5sum for input data")
-
-                # Starting the write test
-                num_writes = self.dataset_size / self.input_size
-                for blk in range(1, num_writes + 2):
-                    blk_write_result = ""
-                    if blk != 1:
-                        blk = blk * ndata - 1
-                    else:
-                        begin = blk
-                    end = begin + self.input_size - 1
-                    blk_write_result = self.qemu.nvme_write(device=self.nvme_block_device, start=blk, count=ndata-1,
-                                                            size=self.input_size, data=self.input_data)
-                    if blk_write_result != "Success":
-                        write_result[ndata][nparity] = False
-                        fun_test.critical("Write failed for {} to {} bytes".format(begin, end))
-                    else:
-                        fun_test.log("Write succeeded for {} to {} bytes".format(begin, end))
-                    begin = end + 1
-                fun_test.test_assert(write_result[ndata][nparity], "Write operation for {} bytes".
-                                     format(self.dataset_size))
+                # Performing Write Test
+                self.do_write_test(ndata, nparity)
 
                 # Disabling the nparity number of data BLT volumes one after the other and trying to read the
                 # previously written data back
                 for index in range(nparity):
-
-                    read_result[ndata][nparity][index] = True
+                    self.read_result[ndata][nparity][index] = True
                     # Start the dpc server to inject error into the data BLT volumes
                     self.qemu.start_dpc_server()
                     self.storage_controller.disconnect()
@@ -411,37 +483,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     # Rebooting the qemu host as a workaround for the bug #swos-1332
                     self.qemu.reboot()
 
-                    # Starting the read test
-                    num_reads = self.dataset_size / self.input_size
-                    for blk in range(1, num_reads + 1):
-                        blk_read_result = ""
-                        output_md5sum = ""
-                        if blk != 1:
-                            blk = blk * ndata - 1
-                        else:
-                            begin = blk
-                        end = begin + self.input_size - 1
-                        output_file = self.output_data + "_" + str(blk)
-                        blk_read_result = self.qemu.nvme_read(device=self.nvme_block_device, start=blk, count=ndata - 1,
-                                                              size=self.input_size, data=output_file)
-                        if blk_read_result != "Success":
-                            read_result[ndata][nparity][index] = False
-                            fun_test.critical("Read failed for {} to {} bytes".format(begin, end))
-                        else:
-                            fun_test.log("Read succeeded for {} to {} bytes".format(begin, end))
-
-                        output_md5sum = self.qemu.md5sum(file_name=output_file)
-                        if output_md5sum == input_md5sum:
-                            fun_test.log("md5sum for {} to {} bytes {} matches with input md5sum {}".
-                                         format(begin, end, output_md5sum, input_md5sum))
-                        else:
-                            read_result[ndata][nparity][index] = False
-                            fun_test.critical("md5sum for {} to {} bytes {} is not matching with input md5sum {}".
-                                              format(begin, end, output_md5sum, input_md5sum))
-                        begin = end + 1
-                    fun_test.test_assert(read_result[ndata][nparity][index],
-                                         "Read operation for {} bytes after failing {} number data volumes".
-                                         format(self.dataset_size, index + 1))
+                    # Performing read test
+                    self.do_read_test(ndata, nparity, index)
 
                 # Commented the below section because of the bug SWOS-1418
                 # Starting the dpc server in the qemu host
@@ -453,30 +496,102 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # self.cleanup_ec_volume(ndata, nparity)
 
     def cleanup(self):
+        super(RndDataWriteAndReadWithDataVolumeFailure, self).cleanup()
 
-        # Check any plex needs to be re-enabled from failure_injection condition
-        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-            for index in self.failure_plex_indices:
-                command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                     command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
-                                                               "having the UUID {}".format(self.uuids["ndata"][index]))
-                fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                  self.uuids["ndata"][index])
-                command_result = self.storage_controller.peek(props_tree)
-                fun_test.log(command_result)
-                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
-                                              message="Ensuring fault_injection got disabled")
+
+class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Sequential write and then read by failing m number of data volumes in n = k+m "
+                                      "EC volume",
+                              steps="""
+        1. Run the outer loop from ndata_partition_start_range to ndata_partition_end_range. Say it as k
+        2. Run the inner loop from nparity_start_range = min(int(ndata / 4) + 1, self.max_parity) to 
+        nparity_end_range = min(ndata - 1, self.max_parity) + 1. Say it as m
+        3. Configure k data and m parity BLT volumes.
+        4. Configure k:m EC volume.
+        5. Create a LS volume on top of the EC volume.
+        6. Export (Attach) the above LS volume to PCIe controller. 
+        7. Write dataset_size bytes of random data into the LSV in a sequential manner.
+        8. Start a loop to run 0 to m-1 and inside it fail the data volume in that index and read back the previously
+        written data   
+        """)
+
+    def setup(self):
+        super(ZeroDataWriteAndReadWithDataVolumeFailure, self).setup()
+
+    def run(self):
+
+        testcase = self.__class__.__name__
+
+        self.write_result = {}
+        self.read_result = {}
+        for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
+
+            self.write_result[ndata] = {}
+            self.read_result[ndata] = {}
+            if not hasattr(self, "nparity_start_range"):
+                self.nparity_start_range = min(int(ndata / 4) + 1, self.max_parity)
+            if not hasattr(self, "nparity_end_range"):
+                self.nparity_end_range = min(ndata - 1, self.max_parity)
+
+            for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
+
+                self.write_result[ndata][nparity] = True
+                self.read_result[ndata][nparity] = {}
+
+                # Creating ndata:npartiy EC volume
+                self.setup_ec_volume(ndata, nparity)
+
+                # Performing Write Test
+                self.do_write_test(ndata, nparity)
+
+                # Disabling the nparity number of data BLT volumes one after the other and trying to read the
+                # previously written data back
+                for index in range(nparity):
+                    self.read_result[ndata][nparity][index] = True
+                    # Start the dpc server to inject error into the data BLT volumes
+                    self.qemu.start_dpc_server()
+                    self.storage_controller.disconnect()
+                    command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
+                                                                         command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
+                                                                   "UUID {}".format(self.uuids["ndata"][index]))
+                    self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+                    fun_test.sleep("to enable the fault_injection", 1)
+                    props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                      self.uuids["ndata"][index])
+                    command_result = self.storage_controller.peek(props_tree)
+                    fun_test.log(command_result)
+                    fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
+                                                  message="Ensuring fault_injection got enabled",
+                                                  ignore_on_success=True)
+                    self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+
+                    # Rebooting the qemu host as a workaround for the bug #swos-1332
+                    self.qemu.reboot()
+
+                    # Performing read test
+                    self.do_read_test(ndata, nparity, index)
+
+                # Commented the below section because of the bug SWOS-1418
+                # Starting the dpc server in the qemu host
+                # self.qemu.start_dpc_server()
+                # fun_test.sleep("Breathing...", 10)
+                # self.storage_controller.disconnect()
+                # self.storage_controller = StorageController(target_ip=self.dut.host_ip,
+                #                                            target_port=self.dut.external_dpcsh_port)
+                # self.cleanup_ec_volume(ndata, nparity)
+
+    def cleanup(self):
+        super(ZeroDataWriteAndReadWithDataVolumeFailure, self).cleanup()
 
 
 if __name__ == "__main__":
 
-    ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(ECVolumeLevelTestcase())
-    # ecscript.add_test_case(EC21FioRandWriteRandReadOnly())
-    # ecscript.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
-    # ecscript.add_test_case(EC21FioSeqReadWriteMix())
-    # ecscript.add_test_case(EC21FioRandReadWriteMix())
+    ecscript = ECinQemuScript()
+    # ecscript.add_test_case(RndDataWriteAndReadWithDataVolumeFailure())
+    ecscript.add_test_case(ZeroDataWriteAndReadWithDataVolumeFailure())
     ecscript.run()
