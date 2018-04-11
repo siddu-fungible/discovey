@@ -204,6 +204,18 @@ class ReplicaDPULevelTestcase(FunTestCase):
         rds_uuids = []
         volume_details = []
 
+        # Initializing the storage controller handle
+        self.storage_controller = {}
+        self.storage_controller["blt"] = []
+        replica_dut = self.global_setup["duts"]["replica"]
+        self.storage_controller["replica"] = [StorageController(target_ip=replica_dut.host_ip,
+                                                                target_port=replica_dut.external_dpcsh_port)]
+
+        for i in range(self.global_setup["num_replica"]):
+            dut = self.global_setup["duts"]["blt"][i]
+            self.storage_controller["blt"].append(StorageController(target_ip=dut.host_ip,
+                                                                    target_port=dut.external_dpcsh_port))
+
         if "replica" not in fun_test.shared_variables or not fun_test.shared_variables["replica"]["setup_created"]:
             fun_test.shared_variables["replica"] = {}
             fun_test.shared_variables["replica"]["setup_created"] = False
@@ -212,18 +224,9 @@ class ReplicaDPULevelTestcase(FunTestCase):
             self.uuids["rds"] = []
             self.uuids["replica"] = []
 
-            # Configuring ndata and nparity number of BLT volumes in their appropriate DPU
-            self.storage_controller = {}
-            self.storage_controller["blt"] = []
-            replica_dut = self.global_setup["duts"]["replica"]
-            self.storage_controller["replica"] = [StorageController(target_ip=replica_dut.host_ip,
-                                                                    target_port=replica_dut.external_dpcsh_port)]
-
             for i in range(self.global_setup["num_replica"]):
                 # Configuring the controller
                 dut = self.global_setup["duts"]["blt"][i]
-                self.storage_controller["blt"].append(StorageController(target_ip=dut.host_ip,
-                                                                        target_port=dut.external_dpcsh_port))
                 command_result = self.storage_controller["blt"][i].command(command="enable_counters", legacy=True)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Enabling counters on BLT {} DUT instance".format(i))
@@ -326,7 +329,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                                           message="Ensuring error_injection got disabled")
 
             fun_test.shared_variables["replica"]["uuids"] = self.uuids
-            fun_test.shared_variables["replica"]["storage_controller"] = self.storage_controller
+            # fun_test.shared_variables["replica"]["storage_controller"] = self.storage_controller
             fun_test.shared_variables["replica"]["setup_created"] = True
 
             # Executing the FIO command to warm up the system
@@ -344,7 +347,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
         test_method = testcase
 
         self.uuids = fun_test.shared_variables["replica"]["uuids"]
-        self.storage_controller = fun_test.shared_variables["replica"]["storage_controller"]
+        # self.storage_controller = fun_test.shared_variables["replica"]["storage_controller"]
         destination_ip = self.global_setup["duts"]["replica"].data_plane_ip
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
@@ -717,6 +720,10 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(actual=int(command_result["blt"]["fault_injection"]), expected=0,
                                               message="Ensuring fault_injection got enabled")
 
+        for i in range(self.global_setup["num_replica"]):
+            self.storage_controller["blt"][i].disconnect()
+        self.storage_controller["replica"][0].disconnect()
+
 
 class FioSeqWriteSeqReadOnly(ReplicaDPULevelTestcase):
     def describe(self):
@@ -863,7 +870,7 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
         test_method = testcase
 
         self.uuids = fun_test.shared_variables["replica"]["uuids"]
-        self.storage_controller = fun_test.shared_variables["replica"]["storage_controller"]
+        # self.storage_controller = fun_test.shared_variables["replica"]["storage_controller"]
         destination_ip = self.global_setup["duts"]["replica"].data_plane_ip
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
