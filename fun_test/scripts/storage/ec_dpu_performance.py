@@ -232,6 +232,18 @@ class ECDPULevelTestcase(FunTestCase):
             self.volume_capacity["rds"] = self.volume_capacity["ndata"]
             self.volume_capacity["ec"] = self.volume_capacity["ndata"]
 
+        # Initializing the storage controller handle
+        self.storage_controller = {}
+        ec_dut = self.global_setup["duts"]["ec"]
+        self.storage_controller["ec"] = [StorageController(target_ip=ec_dut.host_ip,
+                                                           target_port=ec_dut.external_dpcsh_port)]
+        for type in sorted(self.global_setup["ec_coding"]):
+            self.storage_controller[type] = []
+            for i in range(self.global_setup["ec_coding"][type]):
+                dut = self.global_setup["duts"][type][i]
+                self.storage_controller[type].append(StorageController(target_ip=dut.host_ip,
+                                                                       target_port=dut.external_dpcsh_port))
+
         if self.ec_ratio not in fun_test.shared_variables or \
                 not fun_test.shared_variables[self.ec_ratio]["setup_created"]:
             fun_test.shared_variables[self.ec_ratio] = {}
@@ -243,19 +255,12 @@ class ECDPULevelTestcase(FunTestCase):
             self.uuids["lsv"] = []
 
             # Configuring ndata and nparity number of BLT volumes in their appropriate DPU
-            self.storage_controller = {}
-            ec_dut = self.global_setup["duts"]["ec"]
-            self.storage_controller["ec"] = [StorageController(target_ip=ec_dut.host_ip,
-                                                               target_port=ec_dut.external_dpcsh_port)]
             for type in sorted(self.global_setup["ec_coding"]):
                 self.uuids[type] = []
-                self.storage_controller[type] = []
                 for i in range(self.global_setup["ec_coding"][type]):
 
                     # Configuring the controller
                     dut = self.global_setup["duts"][type][i]
-                    self.storage_controller[type].append(StorageController(target_ip=dut.host_ip,
-                                                                           target_port=dut.external_dpcsh_port))
                     command_result = self.storage_controller[type][i].command(command="enable_counters", legacy=True)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Enabling counters on {} {} DUT instance"
@@ -378,7 +383,7 @@ class ECDPULevelTestcase(FunTestCase):
                                           message="Ensuring error_injection got disabled")
 
             fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
-            fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
+            # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
             fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
 
             # Executing the FIO command to warm up the system
@@ -396,7 +401,7 @@ class ECDPULevelTestcase(FunTestCase):
         test_method = testcase[4:]
 
         self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
-        self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
+        # self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
         destination_ip = self.global_setup["duts"]["ec"].data_plane_ip
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
@@ -786,6 +791,12 @@ class ECDPULevelTestcase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
                                               message="Ensuring fault_injection got enabled")
+
+        # Initializing the storage controller handle
+        for type in sorted(self.global_setup["ec_coding"]):
+            for i in range(self.global_setup["ec_coding"][type]):
+                self.storage_controller[type][i].disconnect()
+        self.storage_controller["ec"][0].disconnect()
 
 
 class EC21FioSeqWriteSeqReadOnly(ECDPULevelTestcase):
