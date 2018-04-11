@@ -267,7 +267,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                           message="Ensuring error_injection got disabled")
 
             fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
-            fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
+            # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
             fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
 
             # Executing the FIO command to warm up the system
@@ -286,7 +286,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         destination_ip = self.dut.data_plane_ip
         self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
-        self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
+        # self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -624,6 +624,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
+
+        self.storage_controller.disconnect()
 
         # Check any plex needs to be re-enabled from failure_injection condition
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
