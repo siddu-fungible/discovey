@@ -625,8 +625,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def cleanup(self):
 
-        self.storage_controller.disconnect()
-
         # Check any plex needs to be re-enabled from failure_injection condition
         if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
@@ -642,6 +640,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
                                               message="Ensuring fault_injection got disabled")
+
+        self.storage_controller.disconnect()
 
 
 class EC21FioSeqWriteSeqReadOnly(ECVolumeLevelTestcase):
