@@ -7,7 +7,7 @@ from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
 # SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
 SBP_FIRMWARE_REPO_DIR = "/Users/johnabraham/temp2/SBPFirmware"
-BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit"
+BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180322.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 
 

@@ -3,7 +3,7 @@ from asset.asset_manager import AssetManager
 from lib.host.linux import Linux
 from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
-BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180307.bit"
+BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180322.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 
 

@@ -38,12 +38,12 @@
                   "read": {"read": {"bw": 379, "iops": 12, "latency": 84301}}}
     },
     "expected_volume_stats": {
-      "write": {"ndata": {"0": {"fault_injection": 0, "num_reads": 35, "num_writes": 528},
-                          "1": {"fault_injection": 0, "num_reads": 35, "num_writes": 528}},
+      "write": {"ndata": {"0": {"fault_injection": 0, "num_reads": 39, "num_writes": 528},
+                          "1": {"fault_injection": 0, "num_reads": 39, "num_writes": 528}},
                 "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 528}},
-                "ec": {"0": {"fault_injection": 0, "num_reads": 30, "num_writes": 528}}},
-      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 480, "num_writes": 0},
-                         "1": {"fault_injection": 0, "num_reads": 480, "num_writes": 0}},
+                "ec": {"0": {"fault_injection": 0, "num_reads": 34, "num_writes": 528}}},
+      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0},
+                         "1": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
                "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}},
                "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
     },
@@ -92,12 +92,12 @@
                   "randread": {"read": {"bw": 385, "iops": 12, "latency": 82979}}}
     },
     "expected_volume_stats": {
-      "randwrite": {"ndata": {"0": {"fault_injection": 0, "num_reads": 35, "num_writes": 528},
-                              "1": {"fault_injection": 0, "num_reads": 35, "num_writes": 528}},
+      "randwrite": {"ndata": {"0": {"fault_injection": 0, "num_reads": 39, "num_writes": 528},
+                              "1": {"fault_injection": 0, "num_reads": 39, "num_writes": 528}},
                     "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 528}},
-                    "ec": {"0": {"fault_injection": 0, "num_reads": 30, "num_writes": 528}}},
-      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 480, "num_writes": 0},
-                             "1": {"fault_injection": 0, "num_reads": 480, "num_writes": 0}},
+                    "ec": {"0": {"fault_injection": 0, "num_reads": 34, "num_writes": 528}}},
+      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0},
+                             "1": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
                    "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}},
                    "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
     },
@@ -147,14 +147,14 @@
                   "randread": {"read": {"bw": 292, "iops": 9, "latency": 109561}}}
     },
     "expected_volume_stats": {
-      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0},
+      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 982, "num_writes": 0},
                          "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
-               "nparity": {"0": {"fault_injection": 0, "num_reads": 480, "num_writes": 0}},
+               "nparity": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
                "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}},
-      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0},
+      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 982, "num_writes": 0},
                              "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
-                   "nparity": {"0": {"fault_injection": 0, "num_reads": 480, "num_writes": 0}},
-                   "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
+                   "nparity": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
+                   "ec": {"0": {"fault_injection": 0, "num_reads": 982, "num_writes": 0}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
@@ -203,7 +203,7 @@
       "(4, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 159, "num_writes": 396},
                                   "1": {"fault_injection": 0, "num_reads": 160, "num_writes": 396}},
                         "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
-                        "ec": {"0": {"fault_injection": 0, "num_reads": 247, "num_writes": 396}}}},
+                        "ec": {"0": {"fault_injection": 0, "num_reads": 252, "num_writes": 396}}}},
       "(8, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 144, "num_writes": 396},
                                   "1": {"fault_injection": 0, "num_reads": 144, "num_writes": 396}},
                         "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
@@ -211,7 +211,7 @@
       "(16, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 156, "num_writes": 363},
                                    "1": {"fault_injection": 0, "num_reads": 156, "num_writes": 363}},
                          "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 363}},
-                         "ec": {"0": {"fault_injection": 0, "num_reads": 282, "num_writes": 363}}}},
+                         "ec": {"0": {"fault_injection": 0, "num_reads": 285, "num_writes": 363}}}},
       "(32, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 169, "num_writes": 396},
                                    "1": {"fault_injection": 0, "num_reads": 169, "num_writes": 396}},
                          "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
