@@ -21,7 +21,7 @@ RUN     apt -y update; apt-get -y upgrade; \
         python-pip perl python3-minimal python-pip python-setuptools sudo iputils-ping \
         build-essential software-properties-common  \
         cmake libboost-dev python-dev libhiredis-dev \
-        automake libsdl-image1.2 language-pack-id \
+        libpcap-dev automake libsdl-image1.2 language-pack-id \
         libfdt-dev net-tools libc6-dev libncursesw5-dev openvswitch-switch bridge-utils
 
 RUN     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \

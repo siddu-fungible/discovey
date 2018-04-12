@@ -1,4 +1,4 @@
-FROM    reg-nw-base:v1 
+FROM    nw-reg-base:v1 
 
 ARG  ARG_USER
 ARG  ARG_UID
