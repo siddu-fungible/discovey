@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from lib.utilities.jira_manager import JiraManager
 from web.fun_test.models import CatalogSuite, CatalogTestCase, CatalogSuiteExecution, CatalogTestCaseExecution
 from web.fun_test.models import TestBed, Engineer, TestCaseExecution
+from web.fun_test.models import JiraCache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 from web.fun_test.models_helper import add_suite_execution, add_test_case_execution
@@ -213,7 +214,13 @@ def _get_catalog_suite_execution_details(request, suite_execution_id, with_jira_
             instances = payload["jira_ids"][te.jira_id]["instances"]
             this_module = None
             if with_jira_attributes:
-                this_module = jira_manager.get_issue_attributes_by_id(id=te.jira_id)["module"]
+                try:
+                    o = JiraCache.objects.get(jira_id=te.jira_id)
+                    this_module = o.module
+                except ObjectDoesNotExist:
+                    this_module = jira_manager.get_issue_attributes_by_id(id=te.jira_id)["module"]
+                    o = JiraCache(jira_id=te.jira_id, module=this_module)
+                    o.save()
 
             info = {}
             info["test_bed"] = te.test_bed

@@ -145,6 +145,9 @@ class JenkinsJobIdMapSerializer(ModelSerializer):
         model = JenkinsJobIdMap
         fields = "__all__"
 
+class JiraCache(models.Model):
+    jira_id = models.IntegerField()
+    module = models.CharField(max_length=100, default="networking")
 
 if is_performance_server():
     from web.fun_test.metrics_models import *
