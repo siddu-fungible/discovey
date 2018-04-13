@@ -111,7 +111,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
         timer = FunTimer(max_time=180)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/psim.log".format(qemu_status, target_workspace),
+            output = linux_obj.command(command="grep --text '{}' {}/psim.log".format(qemu_status, target_workspace),
                                        include_last_line=True)
             if re.search(qemu_status, output):
                 fun_test.log("PSIM + QEMU up")
@@ -123,7 +123,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
         timer = FunTimer(max_time=120)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/nutest.txt".format(sanity_status, target_workspace),
+            output = linux_obj.command(command="grep --text '{}' {}/nutest.txt".format(sanity_status, target_workspace),
                                        include_last_line=True)
             if re.search(sanity_status, output):
                 fun_test.log("NwSanitySimpleL3Integration Success")
@@ -172,7 +172,7 @@ class NwSanityPRV(FunTestCase):
         timer = FunTimer(max_time=600)
         status = False
         while not timer.is_expired():
-            output = linux_obj.command(command="grep '{}' {}/ptf.log".format(prv_completed, target_workspace))
+            output = linux_obj.command(command="grep --text '{}' {}/ptf.log".format(prv_completed, target_workspace))
             if re.search(prv_completed, output):
                 status = True
                 break
@@ -180,7 +180,7 @@ class NwSanityPRV(FunTestCase):
         fun_test.test_assert(status, "NwSanityPRV Completed")
 
         status = True
-        output = linux_obj.command(command="grep -E '{}' {}/nutest.txt".format(prv_status, target_workspace))
+        output = linux_obj.command(command="grep -E --text '{}' {}/nutest.txt".format(prv_status, target_workspace))
         for res in prv_status.split('|'):
             if re.search(res, output):
                 status = False
