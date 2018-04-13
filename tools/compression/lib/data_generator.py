@@ -2,12 +2,12 @@ import random
 from base64 import b64encode
 import os
 from string import printable
-
+import binascii
 
 def generate_pattern(size):
     use_char = []
     printable_char = list(printable)
-    remove_list = ['\t', '\f', '\r', '\n']
+    remove_list = ['\t', '\f', '\r', '\n', '\x0c']
     for r in remove_list:
         if r in printable_char:
             printable_char.remove(r)
@@ -36,6 +36,44 @@ def junk_list(len):
     if var:
         lst.append(var)
     return lst
+
+
+def generate_garbage_data(size):
+    garbage_list = junk_list(size)
+    random.shuffle(garbage_list)
+    garbage_data = ''.join([''.join(generate_pattern(x)) for x in garbage_list])
+    return garbage_data
+
+
+def create_pattern_distance_file(pattern, size, name, distance=0):
+    buffer_len = 1024
+    if size < buffer_len:
+        buffer_len = size
+    str_len = (len(pattern) + distance)
+    extra_pos = size % buffer_len
+    buffer_len -= extra_pos
+    file_write_iter = size / buffer_len
+
+    bal_chars = buffer_len % str_len * file_write_iter
+
+    f_obj = open(name, 'wb')
+    for i in xrange(file_write_iter):
+        buffer_str = create_buffer_str(distance=distance, pattern=pattern, buffer_len=buffer_len)
+        f_obj.write(buffer_str)
+    if bal_chars:
+        f_obj.write(generate_garbage_data(bal_chars))
+    f_obj.close()
+
+
+def create_buffer_str(distance, pattern, buffer_len):
+    str_len = (len(pattern) + distance)
+    buffer_iter = buffer_len / str_len
+    ls = []
+    for i in xrange(buffer_iter):
+        ls.append(pattern)
+        if distance:
+            ls.append(generate_garbage_data(distance))
+    return ''.join(ls)
 
 
 def create_file(size, patern_len, file_name):
@@ -89,10 +127,6 @@ def create_hex_file(size, name):
     f_obj.close()
 
 
-def create_data_file(size, name, data):
-    pass
-
-
 def generate_unique_literals(start, end, randomize=False):
     lit_arr = []
     for i in range(start, end + 1):
@@ -109,6 +143,19 @@ def generate_random_literals(size):
     byte_arr = os.urandom(int(size * 1024))
     #return b64encode(byte_arr).decode('utf-8')
     return byte_arr
+
+
+def convert_to_binary(file_content):
+    binary_content = ""
+    for c in file_content:
+        hex_eq = binascii.hexlify(bytearray(c))
+        bin_eq = bin(int(hex_eq, 16))[2:]
+        binary_content += bin_eq.zfill(8)
+    return binary_content
+
+
+def convert_int_to_byte_array(data):
+    return str(bytearray([data]))
 
 
 if __name__ == '__main__':
