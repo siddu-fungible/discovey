@@ -140,7 +140,7 @@ def generate_unique_literals(start, end, randomize=False):
 
 
 def generate_random_literals(size):
-    byte_arr = os.urandom(int(size * 1024))
+    byte_arr = os.urandom(int(size))
     #return b64encode(byte_arr).decode('utf-8')
     return byte_arr
 
