@@ -1,4 +1,6 @@
 from lib.data_generator import *
+from lib.utils import *
+from lib.compress import *
 
 # LZ77
 # LZ77 compression
@@ -121,6 +123,11 @@ def multiple_pattern_file(self, pattern_size_freq_dict, size, name):
         f_wirter.write(data_str)
 
 
+def generate_length_offset_data(in_file, length, offset):
+    bytes = test_pattern_len(length, offset)
+    fwrite_raw_bytes(in_file, bytes)
+
+
 # pat1 + junk + pat1 + pat1(mod) + junk + pat1(mod m chars) + junk + pat1(mod m +/- n chars) + junk + pat1(mod m +/- n chars) ...
 # pattern splitting to next window
 #
@@ -137,3 +144,128 @@ def multiple_pattern_file(self, pattern_size_freq_dict, size, name):
 # Decompression with Dynamic Huffman
 
 
+if __name__ == "__main__":
+
+    """
+    print "#### Non repeated within window length (default for deflate 32KB) ####"
+    seq_len = 32 * 1024  # 32KB random sequence
+    repeat = 2
+    orig_data = gen_repeated_seq(seq_len, repeat)
+
+    compare_results(orig_data)
+
+    print "#### Repeated once within window length ####"
+    seq_len = 16 * 1024
+    repeat = 2
+
+    orig_data = gen_repeated_seq(seq_len, repeat)
+
+    compare_results(orig_data)
+
+    print "#### Overlapping sequence ####"
+    seq_len = 4
+    repeat = 4
+    orig_data = gen_repeated_seq(seq_len, repeat) + os.urandom(4)  # Adding a 4 byte random string at the end
+
+    compare_results(orig_data)
+
+    print "#### Sequence with incremental repeats ####"
+    seq = ""
+    repeat = 16
+    for i in range(1, repeat):
+        seq = seq + seq + os.urandom(1)
+    #print seq
+    compare_results(seq)
+    """
+
+    #### Generate test data ####
+
+    # Input file path
+    filepath = '/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/dflttest'
+    report_file = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/results.csv"
+    report = open(report_file, "w+")
+    input_files = []
+
+    """
+    # Literals 0 - 143
+    filename = filepath + '/uniq-143-literals.input'
+    generate_literals(0, 143, filename)
+    input_files.append(filename)
+
+    # Literals 144 - 255
+    filename = filepath + '/uniq-255-literals.input'
+    generate_literals(144, 255, filename)
+    input_files.append(filename)
+
+    # Literals 0-143 repeated once
+    filename = filepath + '/repeat-143-literals.input'
+    generate_literals(0, 143, filename, repeat=2)
+    input_files.append(filename)
+
+    # Literals 144-255 repeated once
+    filename = filepath + '/repeat-255-literals.input'
+    generate_literals(144, 255, filename, repeat=2)
+    input_files.append(filename)
+
+    # Repeat length < 3
+    filename = filepath + '/repeat-length-lt-2.input'
+    bytes = test_pattern_len(2, 16 * 1024)   # Taking offset as 1024 for now
+    fwrite_raw_bytes(filename, bytes)
+    input_files.append(filename)
+
+    # Repeat 3 >= length <= 258
+
+    length_list = [3, 11, 19, 35, 67, 131, 258, 259]
+    offset_list = [1, 5, 9, 17, 33, 65, 129, 257, 513, 1025, 2049, 4097, 8193, 16385, 32768, 32769]
+    for length in length_list:
+        for offset in offset_list:
+            filename = generate_filename(filepath, length, offset)
+            generate_length_offset_data(filename, length, offset)
+            input_files.append(filename)
+    """
+
+    # Misc input data
+    #### Overlapping sequence ####
+    """    
+    filename = filepath + '/overlapping-sequence.input'
+    seq_len = 4
+    repeat = 4
+    orig_data = gen_repeated_seq(seq_len, repeat) + os.urandom(4)  # Adding a 4 byte random string at the end
+    fwrite_raw_bytes(filename, orig_data)
+    input_files.append(filename)
+    """
+
+    #### Sequence with incremental repeats ####
+    filename = filepath + '/incremental-repeats.input'
+    seq = ""
+    repeat = 16
+    for i in range(1, repeat):
+        seq = seq + seq + os.urandom(1)
+    fwrite_raw_bytes(filename, seq)
+    input_files.append(filename)
+
+    print "#### Test with deflate\n"
+    for in_file in input_files:
+        result = test_f1_compress(in_file, compress_type='f1_deflate')
+        print "%s,%s\n" % (in_file, result)
+        # report.write("%s,%s\n" % (in_file, result))
+
+    print "#### Test with gzip header\n"
+    for in_file in input_files:
+        result = test_f1_compress(in_file, compress_type='f1_gzip_hdr')
+        print "%s,%s\n" % (in_file, result)
+        # report.write("%s,%s\n" % (in_file, result))
+
+    print "#### Test with gzip\n"
+    for in_file in input_files:
+        result = test_f1_compress(in_file, compress_type='gzip')
+        print "%s,%s\n" % (in_file, result)
+        # report.write("%s,%s\n" % (in_file, result))
+
+    print "#### Test with 7z\n"
+    for in_file in input_files:
+        result = test_f1_compress(in_file, compress_type='7z')
+        print "%s,%s\n" % (in_file, result)
+        # report.write("%s,%s\n" % (in_file, result))
+
+    report.close()
