@@ -20,7 +20,7 @@ class FunControlPlaneSanity(FunTestScript):
         workspace = dirname(abspath(dirname(abspath(FUN_TEST_DIR))))
         self.container_name = "parser"
         f1_hostname = "parser"
-        f1_image_name = "reg-nw-user:v1"
+        f1_image_name = "nw-reg-user:v1"
         self.target_workspace = "/workspace"
         entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(self.target_workspace)
         environment_variables = {"DOCKER": True,
@@ -47,7 +47,7 @@ class FunControlPlaneSanity(FunTestScript):
                           ssh_username=self.docker_host.ssh_username,
                           ssh_password=self.docker_host.ssh_password)
 
-        timer = FunTimer(max_time=240)
+        timer = FunTimer(max_time=300)
         container_up = False
         while not timer.is_expired():
             output = linux_obj.command(command="docker logs {}".format(self.container_name), include_last_line=True)
@@ -102,8 +102,8 @@ class NwSanitySimpleL3Integration(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
-        output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
-        output = linux_obj.command("make -j2")
+        #output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
+        #output = linux_obj.command("make -j2")
         output = linux_obj.command(
             command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -p -b -s > {}/nutest.txt 2>&1"
             .format(target_workspace, target_workspace), timeout=300)
@@ -150,7 +150,7 @@ class NwSanityPRV(FunTestCase):
 
     def run(self):
         prv_completed = "TEST RUN END"
-        prv_status = "ATTENTION|FAIL|ERROR|RuntimeError"
+        prv_status = "ATTENTION|FAIL|RuntimeError"
 
         container_asset = fun_test.shared_variables["container_asset"]
         target_workspace = fun_test.shared_variables["target_workspace"]
@@ -161,6 +161,10 @@ class NwSanityPRV(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
+        output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
+        output = linux_obj.command("make clean")
+        output = linux_obj.command("make -j8", timeout=600)
+
         output = linux_obj.command(
             command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic --testcase prv >> {}/nutest.txt 2>&1"
                         .format(target_workspace, target_workspace), timeout=600)
