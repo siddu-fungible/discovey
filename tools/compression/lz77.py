@@ -43,7 +43,7 @@ def encode(stream):
 
     # Stream finished, flush buffer
     logging.info("READ: <END>")
-    if s != "":
+    if len(s) > 2:
         i = lookback(window, s)
         code_data.append(code_pointer(i, s))
     return code_data
@@ -59,7 +59,9 @@ def code_pointer(i, s):
     return len(s), i
 
 
-MAX_WINDOW_SIZE = 32<<10
+MAX_WINDOW_SIZE = 32 << 10
+MIN_PAT_LEN = 2
+MAX_PAT_LEN = 258
 
 
 def lookback(window, s):

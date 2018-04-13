@@ -135,11 +135,3 @@ def test_overlapping_pattern1():
 
 if __name__ == "__main__":
     test_overlapping_pattern1()
-    #create_pattern_distance_file(pattern=generate_garbage_data(100), distance=3, name="/tmp/a22.txt", size=203)
-    #create_pattern_distance_file(pattern=generate_garbage_data(100))
-    #test_pattern_distance2()
-    #test_deflate_all_chars()
-    #test_distance(size=4 << 20, log_file="/tmp/deflate_distance_4MB_250", pattern_len=250)
-    # test_distance(size=512, log_file="/tmp/deflate_pattern_3_distance_512", pattern_len=3)
-    # test_distance(size=1024, log_file="/tmp/deflate_pattern_3_distance_1024", pattern_len=3)
-    #test_distance(size=4096, log_file="/tmp/deflate_pattern_100_distance_4096", pattern_len=100)
