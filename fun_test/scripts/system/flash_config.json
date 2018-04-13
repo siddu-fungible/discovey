@@ -1,0 +1,47 @@
+{
+  "name": "flash_image",
+  "size": "0xE0000",
+  "page_size": "0x10000",
+  "puf_rom": {
+    "a": {
+      "version": "0x1"
+    },
+    "b": {
+      "version": "0x2"
+    }
+  },
+  "firmware": {
+    "a": {
+      "key": "fpk3",
+      "version": "0x1"
+    }
+  },
+  "host": {
+    "a": {
+      "key": "fpk5",
+      "version": "0x2"
+    },
+    "b": ""
+  },
+  "enrollment_certificate": {
+    "a": {
+      "reserve": 2000,
+      "key": "fpk4"
+    }
+  },
+  "start_certificate": {
+    "serial_number": "0x00",
+    "serial_number_mask": "00",
+    "tamper_flags": "pufr",
+    "debugger_flags": "000",
+    "name": "start_certificate.bin",
+    "public_key": "fpk2",
+    "key": "fpk1"
+  },
+  "eeprom": {
+    "a": {
+      "version": "0x1",
+      "key": "fpk5"
+    }
+  }
+}

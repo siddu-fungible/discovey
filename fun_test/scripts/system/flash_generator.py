@@ -1,52 +1,4 @@
-spec = {
-  "name": "flash_image",
-  "size": "0xE0000",
-  "page_size": "0x10000",
-  "puf_rom": {
-    "a": {
-      "version": "0x1",
-    },
-    "b": {
-      "version": "0x2",
-    }
-  },
-  "firmware": {
-    "a": {
-      "key": "fpk3",
-      "version": "0x1"
-    }
-  },
-  "host": {
-    "a": {
-      "key": "fpk5",
-      "version": "0x2"
-    },
-    "b": ""
-  },
-  "enrollment_certificate": {
-    "a": {
-      "reserve": 2000,
-      "key": "fpk4"
-    }
-  },
-  "start_certificate": {
-    "serial_number": "0x00",
-    "serial_number_mask": "00",
-    "tamper_flags": "pufr",
-    "debugger_flags": "000",
-    "name": "start_certificate.bin",
-    "public_key": "fpk2",
-    "key": "fpk1"
-  },
-  "eeprom": {
-    "a": {
-      "version": "0x1",
-      "key": "fpk5"
-    }
-  }
-}
-
-
+import json
 CONFIG_TEMPLATE = """
 # Mandatory sections: All, PUF-ROM, START-CERT, FIRMWARE, HOST
 [All]
@@ -308,15 +260,28 @@ class FlashGenerator():
 
 
         # Enrollment certificate
-        enrollment_certificate_key = "fpk4"
+        enrollment_certificate_key = self.spec["enrollment_certificate"]["a"]["key"]
 
         # EEPROM
-        eeprom_a_version = "0x1"
-        eeprom_a_key = "fpk5"
+        eeprom_spec = self.spec["eeprom"]
+        if "a" in eeprom_spec:
+            eeprom_a_version = eeprom_spec["a"]["version"]
+            eeprom_a_key = eeprom_spec["a"]["key"]
+            fg.set_eeprom(key=eeprom_a_key, version=eeprom_a_version)
+
+        if "b" in eeprom_spec:
+            eeprom_b_version = eeprom_spec["b"]["version"]
+            eeprom_b_key = eeprom_spec["b"]["key"]
+            fg.set_eeprom(key=eeprom_b_key, version=eeprom_b_version)
+
 
         # Host
-        host_a_version = "0x1"
-        host_a_key = "fpk5"
+        host_spec = self.spec["host"]
+        if "a" in self.host:
+            host_a_version = host_spec["a"]["version"]
+            host_a_key = host_spec["a"]["key"]
+            fg.set_host(version=host_a_version, key=host_a_key)
+
 
         # General settings
 
@@ -339,10 +304,8 @@ class FlashGenerator():
 
         # Set eeprom
 
-        fg.set_eeprom(key=eeprom_a_key, version=eeprom_a_version)
 
         # Set host
-        fg.set_host(version=host_a_version, key=host_a_key)
 
         print fg.get_flash_config()
         print fg.generate_start_certificate()
@@ -354,10 +317,12 @@ class FlashGenerator():
 
 
 if __name__ == "__main__":
-    fg = FlashGenerator(puf_rom_binary=None,
-                        firmware_binary=None,
-                        eeprom_binary=None,
-                        host_binary=None,
-                        enrollment_certificate_binary=None, spec=spec)
+    with open("./flash_config.json", "r") as fp:
+        spec = json.load(fp)
+        fg = FlashGenerator(puf_rom_binary=None,
+                            firmware_binary=None,
+                            eeprom_binary=None,
+                            host_binary=None,
+                            enrollment_certificate_binary=None, spec=spec)
 
-    fg.generate()
+        fg.generate()
