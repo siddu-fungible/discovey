@@ -141,11 +141,14 @@ class FunTestCase1(FunTestCase):
                     'lvs_vol_uuid': lvs_vol_uuid,
                     'lvs_allocator_uuid': lvs_allocator_uuid,
                     "options": 0,
-                    "lba_bytes_log2": 12}
+                    "lba_bytes_log2": 12,
+                    'zip_algorithm': 0,
+                    'zip_effort': 0,
+                    'zip_preamble_size': 0}
         result = storage_controller.json_command(action="cal_vols_size", data=create_d, command_duration=3)
         fun_test.test_assert(result["status"], "cal_vols_size")
 
-        result = storage_controller.json_command(action="create", data=create_d)
+        result = storage_controller.json_command(action="create", data=create_d, command_duration=2)
         fun_test.test_assert(result["status"], "Likv create")
         open_d = {"volume_id": volume_id}
         result = storage_controller.json_command(data=open_d, action="open")
@@ -163,7 +166,7 @@ class FunTestCase1(FunTestCase):
 
         fun_test.test_assert_expected(actual=contents, expected=ba_str,
                                       message="Ensure put value and get value are same")
-        result = storage_controller.command("peek stats/likv")
+        result = storage_controller.command("peek stats/likv", command_duration=2)
         fun_test.simple_assert(result["status"], "Fetch ikv stats")
         volume_id = str(volume_id)
         fun_test.test_assert(result["data"][volume_id]["LIKV_USED_BYTES"], "LIKV get bytes")

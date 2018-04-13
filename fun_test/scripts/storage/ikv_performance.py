@@ -170,8 +170,8 @@ class FunTestCase1(FunTestCase):
         ikv_stats = ikv_obj.storage_controller_obj.peek(props_tree="stats/likv")
         fun_test.simple_assert(ikv_stats['status'], message="Peek likv stats")
         ikv_vol_id = str(ikv_obj.volume_id)
-        result['tombs'] = ikv_stats['data'][ikv_vol_id]['IKV_TOMBS']
-        result['rehash'] = ikv_stats['data'][ikv_vol_id]['IKV_REHASH']
+        result['tombs'] = ikv_stats['data'][ikv_vol_id]['KV_TOMBS']
+        result['rehash'] = ikv_stats['data'][ikv_vol_id]['KV_REHASH']
         result['LIKV used space'] = ikv_stats['data'][ikv_vol_id]['LIKV_USED_BYTES']
         fun_test.sleep(message="volume resizing", seconds=3)
         # close_ikv = ikv_obj.close()
