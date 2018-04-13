@@ -76,7 +76,7 @@ class TcmsExcel:
 
             for component in components:
                 if component not in allowed_components:
-                    raise Exception("Row: {} Component {} not allowed".format(row_index, component))
+                    raise Exception("Row: {} Component {} not allowed. Allowed components: {}".format(row_index, component, allowed_components))
 
     def get_columns_by_row(self, row_index):
         cells = self.test_cases_sheet.row_slice(rowx=row_index, start_colx=0, end_colx=len(FIELDS.keys()))

@@ -250,7 +250,7 @@ if __name__ == "__main__":
                              automatable="yes",
                              test_bed="Simulation")
     '''
-    print m.summary_exists(summary="Summary John")
+    # print m.summary_exists(summary="Summary John")
     # print m.get_issues(component="nw-bgp")
     # print m.get_project_components()
     # ft = FunTimer(max_time=1)
@@ -258,3 +258,8 @@ if __name__ == "__main__":
     #print m.is_issue_present(id=2)
     #m.generate_issue()
     #print ft.elapsed_time()
+
+    component_names = m.get_project_component_names()
+    for component_name in component_names:
+        if component_name.startswith("cr"):
+            print ("\"{}\", ".format(component_name))

@@ -28,7 +28,20 @@ MODULE_COMPONENT_MAP = {
                    'nw-ut-perf',
                    'nw-ut-psw',
                    'nw-ut-stress'],
-    "storage": ["st-nvmeof", "st-durable-volume", "st-likv"]
+    "storage": ["st-nvmeof",
+                "st-durable-volume",
+                "st-likv"],
+    "security": [
+                    "cr-cbc-xcbc-ecb-ctr",
+                    "cr-ctr",
+                    "cr-digest",
+                    "cr-gcm-ccm",
+                    "cr-hmac",
+                    "cr-rng",
+                    "cr-storage",
+                    "cr-tls",
+                    "cr-xts"
+    ]
 }
 
 def get_jira_manager():
