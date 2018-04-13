@@ -28,6 +28,11 @@ class LibkcapiTemplate(CryptoTemplate):
     #     self.host.command("export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/libkcapi/lib")
     #     return True
 
+    def setup(self):
+        self.load_funcrypto()
+        self.verify_funcrypto()
+        return True
+
     def parse_input_libkcapi(self, file_path):
         input_dict = eval((open(file_path, 'r')).read())
         return input_dict
