@@ -71,7 +71,20 @@ def create_deflate_block(block_type, literals):
     final_block = False
     last = '1'
     literals_reversed = literals[::-1]
+    """
+    Codes
+    00 - Uncompressed
+    01 - Compressed with fixed huffman codes
+    10 - Compressed with dynamic huffman codes
+    11 - Reserved (error)
+    """
     if str(block_type).lower() == 'fixed':
+        """
+        # Static huff block
+        +------------+-----------+-----------------+------------------+
+        | BFINAL(1b) | BTYPE(2b) | Compressed data | Huf code for 256 |
+        +------------+-----------+-----------------+------------------+
+        """
         code = '01'
         end_of_block = '0000000'
         lit_code_arr = []
@@ -97,6 +110,31 @@ def create_deflate_block(block_type, literals):
             end = -(8 * i)
             start = end - 8
             final_block.append(int(encoded_block[start:end].zfill(8), 2))   # Zero fill last chunk if < 8 bits
+    elif str(block_type).lower() == 'stored':
+        """
+        # Uncompressed block
+        +------------+-----------+---------------------+----------+-----------+---------------------------+
+        | BFINAL(1b) | BTYPE(2b) | 0/more bits ignored | LEN(16b) | NLEN(16b) | LEN bytes of literal data |
+        +------------+-----------+---------------------+----------+-----------+---------------------------+
+        """
+        code = '00'
+        final_block = []
+
+        deflate_header = (code + last).zfill(8)
+        final_block.append(int(deflate_header, 2))
+
+        length = bin(len(literals))[2:].zfill(16)
+        final_block.append(int(length[-8:], 2))
+        final_block.append(int(length[-16:-8], 2))
+
+        nlength = bin(len(literals) ^ 0xffff)[2:]
+        final_block.append(int(nlength[-8:], 2))
+        final_block.append(int(nlength[-16:-8], 2))
+
+        for lit in literals:
+            block = bin(ord(lit))[2:].zfill(8)
+            final_block.append(int(block, 2))
+
     else:
         pass
         # Need to write logic to create stored and dynamic blocks
@@ -245,8 +283,8 @@ if __name__ == '__main__':
     # print generate_static_huffman(256, 279, '0000000')
     # print generate_static_huffman(280, 287, '11000000')
     print generate_static_huffman(0, 31, '00000')
-
-    raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/a.txt.deflate"
+    
+    raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/stored.deflate"
     decoded, header, trailer = decode_gzip_header(raw_infile)
 
     # print decoded
@@ -282,7 +320,6 @@ if __name__ == '__main__':
 
     # Create deflate file
     with open("/tmp/ascii_str.deflate", "wb+") as out:
-        result = create_deflate_block('fixed', ''.join(ascii_str))
+        result = create_deflate_block('stored', ''.join(ascii_str))
         if result:
             out.write(struct.pack('%dB' % len(result), *result))
-
