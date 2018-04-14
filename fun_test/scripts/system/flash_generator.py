@@ -1,4 +1,9 @@
 import json
+import argparse
+import fnmatch
+import os
+import subprocess
+
 CONFIG_TEMPLATE = """
 # Mandatory sections: All, PUF-ROM, START-CERT, FIRMWARE, HOST
 [All]
@@ -47,7 +52,7 @@ class FlashGenerator():
                  firmware_binary,
                  eeprom_binary,
                  host_binary,
-                 enrollment_certificate_binary,
+                 tbs,
                  spec):
         self.image_size = None
         self.page_size = None
@@ -80,7 +85,7 @@ class FlashGenerator():
         self.firmware_binary = firmware_binary
         self.eeprom_binary = eeprom_binary
         self.host_binary = host_binary
-        self.enrollment_certificate_binary = enrollment_certificate_binary
+        self.tbs = tbs
 
         self.spec = spec
 
@@ -217,7 +222,7 @@ class FlashGenerator():
 
     def generate_enrollment_certificate(self):
         s = "python3 {} sign --fwpath {} --key {} --output {}".format(self.FIRMWARE_IMAGE_PY_PATH,
-                                                                      self.enrollment_certificate_binary,
+                                                                      self.tbs,
                                                                       self.enrollment_certificate["key"],
                                                                       self.enrollment_certificate["name"])
         return s
@@ -258,7 +263,6 @@ class FlashGenerator():
             firmware_b_key = self.spec["firmware"]["b"]["key"]
             fg.set_firmware(version=firmware_b_version, key=firmware_b_key)
 
-
         # Enrollment certificate
         enrollment_certificate_key = self.spec["enrollment_certificate"]["a"]["key"]
 
@@ -274,7 +278,6 @@ class FlashGenerator():
             eeprom_b_key = eeprom_spec["b"]["key"]
             fg.set_eeprom(key=eeprom_b_key, version=eeprom_b_version)
 
-
         # Host
         host_spec = self.spec["host"]
         if "a" in self.host:
@@ -282,14 +285,12 @@ class FlashGenerator():
             host_a_key = host_spec["a"]["key"]
             fg.set_host(version=host_a_version, key=host_a_key)
 
-
         # General settings
 
         fg.set_image_size(size=image_size)
         fg.set_page_size(size=page_size)
 
         # Set start-certificate
-
         fg.set_start_certificate(serial_number=serial_number,
                                  serial_number_mask=serial_number_mask,
                                  tamper_flags=tamper_flags,
@@ -297,32 +298,95 @@ class FlashGenerator():
                                  key=start_certificate_key,
                                  public_key=start_certificate_public_key)
 
-
         # Set enrollment certificate
         reserve = 2000
         fg.set_enrollment_certificate(reserve=reserve, key=enrollment_certificate_key)
+        flash_config = fg.get_flash_config()
+        stages = ["GEN_START_CERT", "GEN_PUF_ROM", "GEN_FIRMWARE", "GEN_EEPROM", "GEN_HOST", "GEN_ENROLLMENT_CERT"]
 
-        # Set eeprom
+        for stage in stages:
+            poll_status = None
+            stdout = stderr = None
+            if stage == "GEN_START_CERT":
+                poll_status, stdout, stderr = fg.generate_start_certificate()
+
+            if stage == "GEN_PUF_ROM":
+                poll_status, stdout, stderr = fg.generate_puf_rom()
+
+            if stage == "GEN_FIRMWARE":
+                poll_status, stdout, stderr = fg.generate_firmware()
+
+            if stage == "GEN_EEPROM":
+                poll_status, stdout, stderr = fg.generate_eeprom()
+
+            if stage == "GEN_HOST":
+                poll_status, stdout, stderr = fg.generate_host()
+
+            if stage == "GEN_ENROLLMENT_CERT":
+                poll_status, stdout, stderr = fg.generate_enrollment_certificate()
+
+            if poll_status:
+                s = "{} Failed: stdout: {}, stderr: {}".format(stage, stdout, stderr)
+                raise Exception(s)
+        return True
 
 
-        # Set host
+    @staticmethod
+    def find_host_bin():
+        result = None
+        for root, dirnames, filenames in os.walk('../../'):
+            for filename in fnmatch.filter(filenames, 'host_bmetal.bin'):
+                result = os.path.join(root, filename)
+                break
+            if result:
+                break
+        return result
 
-        print fg.get_flash_config()
-        print fg.generate_start_certificate()
-        print fg.generate_puf_rom()
-        print fg.generate_firmware()
-        print fg.generate_eeprom()
-        print fg.generate_host()
-        print fg.generate_enrollment_certificate()
-
+    def execute_command(self, command):
+        sp = subprocess.Popen(command.split(), close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        poll_status = None
+        while poll_status is None:
+            poll_status = sp.poll()
+        stdout, stderr = sp.communicate()
+        return poll_status, stdout, stderr
 
 if __name__ == "__main__":
-    with open("./flash_config.json", "r") as fp:
+    parser = argparse.ArgumentParser(description="qa_flash_generator")
+    parser.add_argument('--spec',
+                        dest="spec",
+                        required=True,
+                        help="Specification of the flash contents")
+    parser.add_argument('--puf_rom_binary',
+                        dest="puf_rom_binary",
+                        default="puf_rom_m5150.bin",
+                        help="Path to PUF-ROM binary")
+    parser.add_argument('--firmware_binary',
+                        dest="firmware_binary",
+                        default="firmware_m5150.bin",
+                        help="Path to firmware binary")
+    parser.add_argument('--eeprom_binary',
+                        dest="eeprom_binary",
+                        default="eeprom_zync6",
+                        help="Path to EEPROM binary")
+    parser.add_argument('--host_binary',
+                        dest="host_binary",
+                        help="Path to Host binary")
+    parser.add_argument('--tbs',
+                        dest="tbs",
+                        help="Path to TBS",
+                        default="enroll_cert.tbs")
+    args = parser.parse_args()
+    host_binary = args.host_binary
+    if not host_binary:
+        host_binary = FlashGenerator.find_host_bin() # Find bin file
+
+    assert host_binary, "Host Binary"
+    with open(args.spec, "r") as fp:
         spec = json.load(fp)
-        fg = FlashGenerator(puf_rom_binary=None,
-                            firmware_binary=None,
-                            eeprom_binary=None,
-                            host_binary=None,
-                            enrollment_certificate_binary=None, spec=spec)
+        fg = FlashGenerator(puf_rom_binary=args.puf_rom_binary,
+                            firmware_binary=args.firmware_binary,
+                            eeprom_binary=args.eeprom_binary,
+                            host_binary=host_binary,
+                            tbs=args.tbs, spec=spec)
 
         fg.generate()
