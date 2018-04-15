@@ -18,9 +18,12 @@ class MetricHelper(object):
 
     def delete(self, key):
         entries = self.model.objects.filter(key=key)
+        entries.delete()
+        '''
         for entry in entries:
             entry.delete()
             entry.save()
+        '''
 
     def clear(self):
         self.model.objects.all().delete()
@@ -29,3 +32,4 @@ class MetricHelper(object):
 if __name__ == "__main__":
     h = MetricHelper(AllocSpeedPerformance)
     h.delete(key="2202")
+    h.delete(key="2184")

@@ -208,6 +208,9 @@ class AllocSpeedPerformance(models.Model):
     output_one_malloc_free_threaded = models.IntegerField(verbose_name="Time in ns (Threaded)")
     tag = "analytics"
 
+    def __str__(self):
+        return "{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded)
+
 
 class VolumePerformanceSerializer(ModelSerializer):
     class Meta:
