@@ -26,6 +26,9 @@ def index(request):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     return render(request, 'qa_dashboard/regression.html', locals())
 
+def sampler(request):
+    return render(request, 'qa_dashboard/tree_view.html', locals())
+
 def completed_jobs(request):
     filter_string = SUITE_EXECUTION_FILTERS["COMPLETED"]
     return render(request, 'qa_dashboard/regression.html', locals())
