@@ -11,7 +11,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         self.session_name = session_name
 
     def setup(self, no_of_ports_needed):
-        result = {"result": False}
+        result = {"result": False, 'port_list': []}
+
         try:
             fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
                                  message="Health of Spirent Test Center")
@@ -27,8 +28,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 chassis_info = self.stc_manager.get_test_module_info()
                 slot_found = False
                 for module in chassis_info['module_info']:
-                    if module['Index'] == self.stc_manager.host_config['test_module']['slot_no'] and \
-                            module['PortCount'] >= no_of_ports_needed:
+                    if int(module['Index']) == self.stc_manager.host_config['test_module']['slot_no'] and \
+                            int(module['PortCount']) >= no_of_ports_needed:
                         slot_found = True
                         status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
                         fun_test.simple_assert(status, "Ports are not free. Please check")
@@ -37,14 +38,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
                 project_handle = self.stc_manager.create_project(project_name=self.session_name)
                 fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
-                physical_interface_type = self.stc_manager.host_config['test_module']['interface_type']
+                physical_interface_type = str(self.stc_manager.host_config['test_module']['interface_type'])
 
                 for port_no in self.stc_manager.host_config['test_module']['port_nos']:
                     port_location = "//%s/%s/%s" % (self.stc_manager.chassis_ip,
                                                     self.stc_manager.host_config['test_module']['slot_no'], port_no)
                     port_handle = self.stc_manager.create_port(location=port_location)
                     fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
-                    result['port_%s' % port_no] = port_handle
+                    result['port_list'].append(port_handle)
                     port_interface = self.stc_manager.configure_physical_interface(port_handle=port_handle,
                                                                                    interface_type=physical_interface_type)
                     fun_test.test_assert(port_interface, "Create %s Interface for Port %s" % (physical_interface_type,
@@ -344,14 +345,17 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             for counter in error_counters_list:
                 if not rx_results[counter] == '0':
                     result[counter] = rx_results[counter]
-            '''
-            for key, val in rx_results.iteritems():
-                if ('error' in key.lower())and ('count' in key.lower()) and (not int(val) == 0):
-                    fun_test.log("Non zero count %s seen for %s " % (val, key))
-                    result[key] = val
-            '''
             if len(result) == 1:
                 result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def delete_streamblocks(self, streamblock_handle_list):
+        result = False
+        try:
+            fun_test.debug("Deleting list of objects %s" % streamblock_handle_list)
+            result = self.stc_manager.delete_objects(streamblock_handle_list)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
