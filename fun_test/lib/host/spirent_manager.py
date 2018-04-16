@@ -9,6 +9,9 @@ class SpirentManager(object):
     SPIRENT_HOSTS_SPEC = ASSET_DIR + "/traffic_generator_hosts.json"
     SYSTEM_OBJECT = "system1"
     ETHERNET_COPPER_INTERFACE = "EthernetCopper"
+    ETHERNET_10GIG_FIBER = "Ethernet10GigFiber"
+    ETHERNET_100GIG_FIBER = "Ethernet100GigFiber"
+    LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     ETHERNETII_FRAME = "ethernet:EthernetII"
     ETHERNET_PAUSE_FRAME = "ethernetpause:EthernetPause"
     IP_VERSION_4 = "ipv4:IPv4"
@@ -28,21 +31,27 @@ class SpirentManager(object):
         try:
             self.stc = StcPython()
         except Exception as ex:
-            fun_test.critical("Unable to initialized Spirent Manager: %s" % str(ex))
+            raise FunTestLibException("Unable to initialized Spirent Manager: %s" % str(ex))
         self.project_handle = None
-        self.config = {}
+        self.host_config = {}
+        self.dut_config = {}
         self.chassis_type = chassis_type
         self.dut_type = dut_type
+        if fun_test.local_settings:
+            self.chassis_type = fun_test.get_local_setting("spirent_chassis_type")
+            self.dut_type = fun_test.get_local_setting("dut_type")
+            self.host_config['test_module'] = fun_test.get_local_setting(self.chassis_type)
+            self.dut_config = fun_test.get_local_setting(self.dut_type)
         self.chassis_ip = self._get_chassis_ip_by_chassis_type()
 
-    def check_health(self, session_name="TestSession"):
+    def health(self, session_name="TestSession"):
         health_result = {"result": False, "error_message": None}
-        fun_test.log("Determining health of Spirent Application and Lab Server. Checking availability of ports")
+        fun_test.debug("Determining health of Spirent Application and Lab Server. Checking availability of ports")
         try:
-            self.get_api_version()
-            if self.connect_lab_server(session_name=session_name):
-                if self.connect_license_manager():
-                    health_result['result'] = True
+            fun_test.test_assert(self.get_api_version(), "Get STC API Version")
+            fun_test.test_assert(self.connect_lab_server(session_name=session_name), "Connect to Lab Server")
+            fun_test.test_assert(self.connect_license_manager(), "Connect to License Server")
+            health_result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return health_result
@@ -58,7 +67,7 @@ class SpirentManager(object):
             chassis_mgr = self.get_chassis_manager()
             manager_handles = self.stc.get(chassis_mgr, "children-PhysicalChassis").split()
             for handle in manager_handles:
-                modules = self.stc.get(handle, "children-PhysicalTestModule")
+                modules = self.stc.get(handle, "children-PhysicalTestModule").split()
                 for module in modules:
                     info = self.stc.get(module)
                     module_list.append(info)
@@ -69,8 +78,8 @@ class SpirentManager(object):
                         info = self.stc.get(group)
                         port_group_list.append(info)
 
-                        # Ggetting Port handles for each group
-                        ports = self.stc.get(group).split()
+                        # Getting Port handles for each group
+                        ports = self.stc.get(group, "children-physicalport").split()
                         for port in ports:
                             info = self.stc.get(port)
                             port_list.append(info)
@@ -87,7 +96,7 @@ class SpirentManager(object):
         result = False
         try:
             for module in module_list:
-                fun_test.log("Determining status of slot no: %d " % module['Index'])
+                fun_test.debug("Determining status of slot no: %d " % module['Index'])
                 if not module['Status'] == self.MODULE_STATUS_UP:
                     raise FunTestLibException("Test Module Status is not UP. Found: %s" % module['Status'])
 
@@ -101,8 +110,10 @@ class SpirentManager(object):
     def ensure_port_groups_status(self, port_group_list):
         result = False
         try:
+            fun_test.simple_assert(port_group_list, "Port Group List is empty")
+
             for port_group in port_group_list:
-                fun_test.log("Determining status of port group no: %d " % port_group['Index'])
+                fun_test.debug("Determining status of port group no: %d " % port_group['Index'])
                 if not port_group['OwnershipState'] == self.OWNERSHIP_STATE_AVAILABLE:
                     raise FunTestLibException("Port Group Reserved by %s@%s" % (port_group['OwnerUserId'],
                                                                                 port_group['OwnerHostname']))
@@ -115,11 +126,23 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def is_port_group_free(self, port_group):
+        result = True
+        try:
+            if port_group['OwnerUserId'] and port_group['OwnerHostname']:
+                fun_test.debug("Port Group Reserved by %s@%s" % (port_group['OwnerUserId'],
+                                                                 port_group['OwnerHostname']))
+                result = False
+            fun_test.simple_assert(result, "Port Group is not free")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def ensure_ports_status(self, port_list):
         result = False
         try:
             for port in port_list:
-                fun_test.log("Determining status of port no: %d " % port['Index'])
+                fun_test.debug("Determining status of port no: %d " % port['Index'])
                 if not port['LinkStatus'] == self.LINK_STATUS_UP:
                     raise FunTestLibException("Port is not UP. Found: %s" % (port['LinkStatus']))
             result = True
@@ -127,21 +150,14 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def _get_slots_by_dut_type(self):
-        if self.chassis_type == self.PHYSICAL_CHASSIS_TYPE:
-            slots = self.config['physical_slots'][self.dut_type]
-        else:
-            slots = self.config['virtual_slots'][self.dut_type]
-        return slots
-
     def _get_chassis_ip_by_chassis_type(self):
         ip_address = None
         try:
             self._read_spirent_config()
             if self.chassis_type == self.PHYSICAL_CHASSIS_TYPE:
-                ip_address = self.config['physical_chassis_ip']
+                ip_address = self.host_config['physical_chassis_ip']
             else:
-                ip_address = self.config['virtual_chassis_ip']
+                ip_address = self.host_config['virtual_chassis_ip']
         except Exception as ex:
             fun_test.critical(str(ex))
         return ip_address
@@ -149,7 +165,7 @@ class SpirentManager(object):
     def connect_chassis(self):
         result = False
         try:
-            self.stc.connect(self.chassis_ip)
+            self.stc.connect(str(self.chassis_ip))
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -158,7 +174,7 @@ class SpirentManager(object):
     def disconnect_chassis(self):
         result = False
         try:
-            self.stc.disconnect(self.chassis_ip)
+            self.stc.disconnect(str(self.chassis_ip))
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -174,25 +190,25 @@ class SpirentManager(object):
                     spirent_config = config
                     break
             fun_test.debug("Found: %s" % spirent_config)
-            self.config = spirent_config
+            self.host_config = spirent_config
         except Exception as ex:
             fun_test.critical(str(ex))
-        return self.config
+        return self.host_config
 
     def get_chassis_manager(self):
         handle = None
         try:
-            handle = self.stc.get(self.SYSTEM_OBJECT, "children-PhysicalChassis")
+            handle = self.stc.get(self.SYSTEM_OBJECT, "children-PhysicalChassisManager")
         except Exception as ex:
             fun_test.critical(str(ex))
         return handle
 
     def get_api_version(self):
-        fun_test.log("Getting STC API version")
+        fun_test.debug("Getting STC API version")
         version = None
         try:
             version = self.stc.get(self.SYSTEM_OBJECT, 'version')
-            fun_test.log("Version: %s" % version)
+            fun_test.debug("Version: %s" % version)
         except Exception as ex:
             fun_test.critical(str(ex))
         return version
@@ -200,11 +216,11 @@ class SpirentManager(object):
     def connect_lab_server(self, session_name):
         result = False
         try:
-            self.stc.perform("CSTestSessionConnect", host=self.config['lab_server_ip'],
+            self.stc.perform("CSTestSessionConnect", host=self.host_config['lab_server_ip'],
                              TestSessionName=session_name,
                              CreateNewTestSession=True)
             self.stc.perform("TerminateBll", TerminateType="ON_LAST_DISCONNECT")
-            fun_test.log("Connected to Lab Server: %s" % self.config['lab_server_ip'])
+            fun_test.debug("Connected to Lab Server: %s" % self.host_config['lab_server_ip'])
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -214,10 +230,10 @@ class SpirentManager(object):
         result = False
         try:
             license_manager = self.stc.get(self.SYSTEM_OBJECT, "children-licenseservermanager")
-            output = self.stc.create("LicenseServer", under=license_manager, server=self.config['license_server_ip'])
-            if output:
-                result = True
-            fun_test.log("Connected to License Server: %s" % self.config['license_server_ip'])
+            output = self.stc.create("LicenseServer", under=license_manager, server=self.host_config['license_server_ip'])
+            fun_test.simple_assert(output, "Connect to License Server: %s" % self.host_config['license_server_ip'])
+            fun_test.debug("Connected to License Server: %s" % self.host_config['license_server_ip'])
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -245,7 +261,7 @@ class SpirentManager(object):
     def apply_configuration(self):
         result = False
         try:
-            fun_test.log("Applying Configuration")
+            fun_test.debug("Applying Configuration")
             self.stc.apply()
             result = True
         except Exception as ex:
@@ -285,19 +301,19 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return port_info
 
-    def create_streamblock(self, port, attributes):
+    def create_stream_block(self, port, attributes):
         result = None
         try:
             result = self.stc.create("StreamBlock", under=port, **attributes)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-    '''
-    def configure_mac_address(self, streamblock, source_mac, destination_mac,
-                              ethernet_type=LOCAL_EXPERIMENTAL_ETHERTYPE, frame_type=ETHERNETII_FRAME):
+
+    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type,
+                              frame_type=ETHERNETII_FRAME):
         result = False
         try:
-            fun_test.log("Adding Mac Address for %s Stream" % str(streamblock))
+            fun_test.debug("Adding Mac Address for %s Stream" % str(streamblock))
             self.stc.create(frame_type, under=streamblock, srcMac=source_mac, dstMac=destination_mac,
                             etherType=ethernet_type)
             result = True
@@ -314,14 +330,15 @@ class SpirentManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-    '''
 
     def configure_frame_stack(self, stream_block_handle, header_obj):
         result = False
         try:
             attributes = header_obj.get_attributes_dict()
-            fun_test.log("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
-            self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,  **attributes)
+            fun_test.debug("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
+            handle = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,  **attributes)
+            if handle:
+                header_obj.spirent_handle = handle
             if self.apply_configuration():
                 result = True
         except Exception as ex:
@@ -331,7 +348,9 @@ class SpirentManager(object):
     def start_traffic_stream(self, stream_blocks_list):
         result = False
         try:
-            stream_blocks = ' '.join(stream_blocks_list)
+            stream_blocks = stream_blocks_list
+            if type(stream_blocks_list) == list:
+                stream_blocks = ' '.join(stream_blocks_list)
             self.stc.perform("StreamBlockStartCommand", StreamBlockList=stream_blocks)
             result = True
         except Exception as ex:
@@ -404,7 +423,7 @@ class SpirentManager(object):
     def load_tcc_configuration(self, tcc_config_file_path):
         result = False
         try:
-            fun_test.log("Loading TCC configuration %s" % tcc_config_file_path)
+            fun_test.debug("Loading TCC configuration %s" % tcc_config_file_path)
             result = self.stc.perform("LoadFromDatabaseCommand", DatabaseConnectionString=tcc_config_file_path)
             self.apply_configuration()
             if result['State'] != "COMPLETED":
@@ -418,7 +437,7 @@ class SpirentManager(object):
         try:
             if not self.project_handle:
                 self.project_handle = self.stc.get(self.SYSTEM_OBJECT, "children-project")
-            fun_test.log("Spirent Project: %s" % self.project_handle)
+            fun_test.debug("Spirent Project: %s" % self.project_handle)
         except Exception as ex:
             fun_test.critical(str(ex))
         return self.project_handle
@@ -427,7 +446,7 @@ class SpirentManager(object):
         ports = None
         try:
             ports = self.stc.get(self.project_handle, "children-port").split()
-            fun_test.log("List of ports: %s" % ports)
+            fun_test.debug("List of ports: %s" % ports)
         except Exception as ex:
             fun_test.critical(str(ex))
         return ports
@@ -443,7 +462,7 @@ class SpirentManager(object):
     def update_stream_block(self, stream_block_handle, update_attributes):
         result = False
         try:
-            fun_test.log("Updating %s stream parameters: %s " % (stream_block_handle, update_attributes))
+            fun_test.debug("Updating %s stream parameters: %s " % (stream_block_handle, update_attributes))
             self.stc.config(stream_block_handle, **update_attributes)
             if self.apply_configuration():
                 result = True
@@ -491,7 +510,7 @@ class SpirentManager(object):
     def update_generator_config(self, generator_config_handle, attributes):
         result = False
         try:
-            fun_test.log("updating %s generator config %s" % (generator_config_handle, attributes))
+            fun_test.debug("updating %s generator config %s" % (generator_config_handle, attributes))
             self.stc.config(generator_config_handle, **attributes)
             if self.apply_configuration():
                 result = True
@@ -536,8 +555,8 @@ class SpirentManager(object):
         parent = None
         try:
             result = self.stc.get(handle, "parent")
-            if result:
-                parent = result.split()
+            fun_test.simple_assert(result, "Fetch parents of object handle %s" % handle)
+            parent = result.split()
         except Exception as ex:
             fun_test.critical(str(ex))
         return parent
@@ -547,8 +566,8 @@ class SpirentManager(object):
         port_result_handle = None
         try:
             port_result_handle = self.stc.get(generator_handle, "children-GeneratorPortResults")
-            if port_result_handle:
-                result = self.stc.get(port_result_handle)
+            fun_test.simple_assert(port_result_handle, "Get generator port results handle")
+            result = self.stc.get(port_result_handle)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -557,8 +576,8 @@ class SpirentManager(object):
         result = False
         try:
             output = self.stc.perform("RefreshResultView", resultDataSet=view_handle)
-            if output['State'] == "COMPLETED":
-                result = True
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Check state of Refresh View command")
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -575,8 +594,8 @@ class SpirentManager(object):
         result = False
         try:
             output = self.stc.unsubscribe(result_handle)
-            if output['State'] == "COMPLETED":
-                result = True
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Unsubscribe results")
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -587,10 +606,8 @@ class SpirentManager(object):
         try:
             output = self.stc.create("ResultQuery", under=subscribe_handle, ResultRootList=result_root_list,
                                      ConfigClassId=config_class_id, ResultClassId=result_class_id)
-            self.stc.create("ResultQuery", under=subscribe_handle, ResultRootList=result_root_list,
-                            ConfigClassId="StreamBlock", ResultClassId="RxStreamBlockResults")
-            if output:
-                result = True
+            fun_test.simple_assert(output, "Result query handle")
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -625,12 +642,28 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def get_rx_port_analyzer_results(self, port_handle, subscribe_handle):
+        result = {}
+        try:
+            analyzer_handle = self.stc.get(port_handle, "children-Analyzer")
+            res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
+            for output in res_handle_list:
+                regex = re.compile("analyzerportresults.")
+                if re.match(regex, output):
+                    parent = self.stc.get(output, "parent")
+                    if parent == analyzer_handle:
+                        result = self.stc.get(output)
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def clear_all_port_results(self, port_list):
         result = False
         try:
             output = self.stc.perform("ResultsClearAllCommand", PortList=port_list)
-            if output['State'] == "COMPLETED":
-                result = True
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Check status of clear port results command")
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -644,8 +677,8 @@ class SpirentManager(object):
                 output = self.stc.perform("ResultsClearViewCommand", ResultDataSet=result_dataset)
             else:
                 output = self.stc.perform("ResultsClearViewCommand", ResultList=result_list)
-            if output['State'] == "COMPLETED":
-                result = True
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Check Clear Result view command status")
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
