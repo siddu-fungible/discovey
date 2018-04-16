@@ -1,0 +1,274 @@
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.6.9/angular-sanitize.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<style>
+.info-box {
+    border: 1px;
+    border-color: #4CAF50;
+    border-style: solid;
+    border-radius: 5px;
+    width: inherit;
+    margin-top: 5px;
+}
+.info-box-header {
+    background-color: #dff0d8;
+    border-radius: 5px;
+
+}
+
+.info-box-text {
+    padding: 5px;
+}
+.aspect-label {
+    padding: 5px;
+}
+
+.aspect-label-text {
+    padding: 5px;
+}
+
+.fa-icon-green {
+    color: green;
+    padding: 5px;
+}
+
+.fa-icon-red {
+    color: red;
+}
+
+.aspect-trend-icon, .aspect-children-icon {
+    padding: 10px;
+}
+
+.table-nonfluid {
+    width: auto !important;
+}
+
+</style>
+
+<script>
+
+function myController($scope) {
+    let ctrl = this;
+
+    this.$onInit = function () {
+        console.log("init");
+        console.log(this.name);
+        let s = "john, john2";
+        console.log(s.split(","));
+
+        $scope.treeModel = [
+            {
+                info: "",
+                showInfo: false,
+                label: "Product",
+                trend: "up",
+                goodness: 5.6,
+                "children": [
+                    {
+                        info: "",
+                        showInfo: false,
+                        label: "Software",
+                        goodness: 7.5,
+                        children: [{info: "", label: "Nucleus", trend: "down", goodness: 6.6, children: [{
+                            info: "",
+                            goodness: 1.0,
+                            label: "Best time for 1 malloc/free (WU)",
+                            status: false,
+
+                        }, {
+                            info: "",
+                            goodness: 3.0,
+                            label: "Best time for 1 malloc/free (Threaded)",
+                            status: true,
+
+                        }]},
+                            {info: "", label: "Storage"}]
+                    },
+                    {
+                        info: "",
+                        showInfo: false,
+                        label: "Hardware",
+                        children: [{info: "", label: "leaf3"}]
+                    }
+                ]
+            }
+
+        ];
+
+        $scope.flatNodes = [];
+        $scope.flatten($scope.treeModel[0]);
+        $scope.customHtml = $scope.getTreeHtml();
+        //console.log($scope.treeModel[0][0].showInfo);
+    };
+
+    $scope.flatten = (node) => {
+        $scope.flatNodes.push(node);
+        if (node.hasOwnProperty("children")) {
+            node.children.forEach((node) => {
+                $scope.flatten(node);
+            });
+        }
+    };
+
+    $scope.testClick = function () {
+        console.log("testClick");
+        console.log(ctrl.f);
+    };
+
+    $scope.showInfoClick = (node) => {
+        node.showInfo = !node.showInfo;
+    };
+
+    $scope.getTreeHtml = () => {
+        let s = "";
+
+        let node = $scope.treeModel.forEach((node, index) => {
+            let indexString = "[" + index + "]";
+            s += $scope._getNodeHtml(node, indexString);
+        });
+        //console.logn(s);
+        return s;
+    };
+
+    $scope._getNodeHtml = (node, indexString) => {
+        let nodeReference = "treeModel" + indexString;
+        let s = "";
+        s = "<ul class=\"aspect-node\">";
+        s += $scope.getGoodnessHtml(node);
+        s += $scope.getTrendHtml(node);
+        s += $scope.getStatusHtml(node);
+        s += "<icon ng-if=\"!" + nodeReference + ".children.length" + "\" class=\"fa fa-leaf fa-icon-green\"></icon>";
+        s += "<a href=\"#\" ng-click=\"showChildrenClick(" + nodeReference + ")\" class=\"aspect-label-text\">" + node.label + "</a>";
+
+        s += "<a ng-click='showInfoClick(" + nodeReference + ")' " + "ng-if='" + nodeReference + ".showInfo' ><i class=\"fa fa-info-circle\"></i></a>";
+        s += "<a ng-click='showInfoClick(" + nodeReference + ")' " + "ng-if='!" + nodeReference + ".showInfo' ><i class=\"fa fa-info-circle\"></i></a>";
+
+        s += '<div class="info-box" ng-if="' + nodeReference + '.showInfo">' +
+                '<div class="info-box-header info-box-text">Info</div>' +
+                '<div class="info-box-text">Some more info</div>' +
+            '</div>';
+        let thisIndexString = indexString;
+        s += "<div ng-if=\"" + nodeReference + ".showChildren\">";
+        if (node.children && node.children.length) {
+            node.children.forEach((child, index) => {
+                let indexString = thisIndexString + ".children[" + index + "]";
+                s += $scope._getNodeHtml(child, indexString);
+            })
+        }
+        s += "</div>";
+        s += "</ul>";
+        return s;
+    };
+
+    $scope.showChildrenClick = (node) => {
+        if (node.hasOwnProperty("showChildren")) {
+            node.showChildren = !node.showChildren;
+        } else {
+            node.showChildren = true;
+        }
+    };
+
+    $scope.getStatusHtml = (node) => {
+        let s = "";
+        if (node.hasOwnProperty("status")) {
+            if (node.status === true) {
+                s = "<label class=\"label label-success\">PASSED</label>";
+            } else {
+                s = "<label class=\"label label-danger\">FAILED</label>";
+            }
+        }
+        return s;
+    };
+
+    $scope.getGoodnessHtml = (node) => {
+        let goodness = 0.0;
+        if (node.hasOwnProperty("goodness")) {
+            goodness = node.goodness;
+        }
+        s = "<label class=\"label label-primary\">" + goodness + "</label>";
+        return s;
+    };
+
+    $scope.getTrendHtml = (node) => {
+        let s = "<icon class=\"fa fa-arrows-h aspect-trend-icon\"></icon>";
+        if (node.hasOwnProperty("trend")) {
+            if (node.trend === "up") {
+                s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>";
+            } else if (node.trend === "down") {
+                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
+            }
+        }
+        return s;
+    }
+
+}
+
+angular.module("myApp", ['ngSanitize'])
+    .component("helloWorld",{
+        template: "" +
+                  "<button ng-click='testClick()'>Submit</button>" +
+                  "<div ng-bind='customHtml'></div>"
+                  ,
+        bindings: { name: '@' ,
+                    f: '<'
+                    },
+        controller: myController
+  });
+
+angular.module('myApp').directive('dynamic', function ($compile) {
+  return {
+    restrict: 'A',
+    replace: true,
+    link: function (scope, ele, attrs) {
+      scope.$watch(attrs.dynamic, function(html) {
+        ele.html(html);
+        $compile(ele.contents())(scope);
+      });
+    }
+  };
+});
+
+ angular.module('myApp').controller("myController", myController)
+
+
+
+</script>
+{%  verbatim %}
+<div ng-app="myApp">
+    <div class="col-lg-6 col-xl-6 col-md-6">
+        <div ng-controller="myController">
+            <p dynamic="customHtml"></p>
+            <table class="table table-nonfluid">
+                <tr>
+                    <th>Aspect</th>
+                    <th>Score</th>
+                    <th>Trend</th>
+
+                </tr>
+                <tr ng-repeat="node in flatNodes track by $index">
+                    <td> {{ node.label  }}</td>
+                    <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
+                    <td></td>
+                </tr>
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+{%  endverbatim %}
+
+</html>

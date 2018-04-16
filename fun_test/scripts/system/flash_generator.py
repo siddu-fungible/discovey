@@ -45,7 +45,9 @@ class FlashGenerator():
     HOST_NAME = "host_firmware_packed_{}.bin"
     ENROLLMENT_CERTIFICATE_NAME = "enroll_cert.bin"
     EEPROM_NAME = "eeprom_packed_{}.bin"
-    FIRMWARE_IMAGE_PY_PATH = "generate_firmware_image.py"
+    FIRMWARE_IMAGE_PY_PATH = "../devtools/firmware/generate_firmware_image.py"
+    GEN_FLASH2_PY_PATH = "../devtools/firmware/generate_flash2.py"
+    FLASH_CONFIG_FILE = "flash_config"
 
     def __init__(self,
                  puf_rom_binary,
@@ -101,23 +103,27 @@ class FlashGenerator():
     def set_puf_rom(self,
                     version,
                     start_certificate=START_CERTIFICATE_NAME,
-                    bank="a"):
+                    bank="a",
+                    type="pufr"):
         d = self.puf_rom[bank]
         d["name"] = self.PUF_ROM_NAME.format(bank)
         d["version"] = version
         d["start_certificate"] = start_certificate
+        d["type"] = type
 
-    def set_firmware(self, version, key, bank="a"):
+    def set_firmware(self, version, key, bank="a", type="frmw"):
         d = self.firmware[bank]
         d["name"] = self.FIRMWARE_NAME.format(bank)
         d["version"] = version
         d["key"] = key
+        d["type"] = type
 
-    def set_host(self, version, key, bank="a"):
+    def set_host(self, version, key, bank="a", type="host"):
         d = self.host[bank]
         d["name"] = self.HOST_NAME.format(bank)
         d["version"] = version
         d["key"] = key
+        d["type"] = type
 
     def set_start_certificate(self,
                               serial_number,
@@ -140,15 +146,16 @@ class FlashGenerator():
         self.enrollment_certificate["reserve"] = reserve
         self.enrollment_certificate["key"] = key
 
-    def set_eeprom(self, key, version, bank="a"):
+    def set_eeprom(self, key, version, bank="a", type="eepr"):
         d = self.eeprom[bank]
         d["name"] = self.EEPROM_NAME.format(bank)
         d["key"] = key
         d["version"] = version
+        d["type"] = type
 
-    def get_flash_config(self):
+    def write_flash_config(self):
         config = CONFIG_TEMPLATE.format(self.image_size,
-                                        self.page_size,
+                                        "flash_image",
                                         self.puf_rom["a"]["name"],
                                         self.puf_rom["b"]["name"],
                                         self.firmware["a"]["name"],
@@ -159,7 +166,8 @@ class FlashGenerator():
                                         self.eeprom["a"]["name"],
                                         self.eeprom["b"]["name"]
                                         )
-        return config
+        with open(self.FLASH_CONFIG_FILE, "w") as f:
+            f.write(config)
 
     def generate_start_certificate(self):
         s = "python3 {} certificate --tamper_flags {} --debugger_flags {} --serial_number {} --serial_number_mask {} --public {} --key {} --output {}".format(
@@ -168,64 +176,82 @@ class FlashGenerator():
             self.start_cert_debugger_flags,
             self.start_cert_serial_number,
             self.start_cert_serial_number_mask, self.start_cert_public_key, self.start_cert_key, self.start_cert_name)
-        return s
+        return self.execute_command(s)
 
     def generate_puf_rom(self):
-        ss = []
+        poll_status, stdout, stderr = 0, "", ""
         for bank, info in self.puf_rom.iteritems():
             if self.puf_rom[bank]["name"]:
-                s = "python3 {} image --fwpath {} --fwver {} --fwtype pufr --certificate {} --output {}".format(
-                    self.FIRMWARE_IMAGE_PY_PATH, self.puf_rom_binary, self.puf_rom[bank]["version"],
-                    self.start_cert_name, self.puf_rom[bank]["name"])
-                ss.append(s)
-
-        return ss
+                s = "python3 {} image --fwpath {} --fwver {} --fwtype {} --certificate {} --output {}".format(
+                    self.FIRMWARE_IMAGE_PY_PATH,
+                    self.puf_rom_binary,
+                    self.puf_rom[bank]["version"],
+                    self.puf_rom[bank]["type"],
+                    self.start_cert_name,
+                    self.puf_rom[bank]["name"])
+                poll_status, stdout, stderr = self.execute_command(s)
+                if poll_status:
+                    break
+        return poll_status, stdout, stderr
 
     def generate_firmware(self):
-        ss = []
+        poll_status, stdout, stderr = 0, "", ""
         for bank, info in self.firmware.iteritems():
             if self.firmware[bank]["name"]:
-                s = "python3 {} image --fwpath {} --fwver {} --fwtype frmw --key {} --output {}".format(
+                s = "python3 {} image --fwpath {} --fwver {} --fwtype {} --key {} --output {}".format(
                     self.FIRMWARE_IMAGE_PY_PATH,
                     self.firmware_binary,
                     self.firmware[bank]["version"],
+                    self.firmware[bank]["type"],
                     self.firmware[bank]["key"],
                     self.firmware[bank]["name"])
-                ss.append(s)
-        return ss
+                poll_status, stdout, stderr = self.execute_command(s)
+                if poll_status:
+                    break
+        return poll_status, stdout, stderr
 
     def generate_eeprom(self):
-        ss = []
+        poll_status, stdout, stderr = 0, "", ""
         for bank, info in self.eeprom.iteritems():
             if self.eeprom[bank]["name"]:
-                s = "python3 {} image --fwpath {} --fwver {} --fwtype eepr --key {} --output {}".format(
+                s = "python3 {} image --fwpath {} --fwver {} --fwtype {} --key {} --output {}".format(
                     self.FIRMWARE_IMAGE_PY_PATH,
                     self.eeprom_binary,
                     self.eeprom[bank]["version"],
+                    self.eeprom[bank]["type"],
                     self.eeprom[bank]["key"],
                     self.eeprom[bank]["name"])
-                ss.append(s)
-        return ss
+                poll_status, stdout, stderr = self.execute_command(s)
+                if poll_status:
+                    break
+        return poll_status, stdout, stderr
 
     def generate_host(self):
-        ss = []
+        poll_status, stdout, stderr = 0, "", ""
         for bank, info in self.host.iteritems():
             if self.host[bank]["name"]:
-                s = "python3 {} image --fwpath {} --fwver {} --fwtype host --key {} --output {}".format(
+                s = "python3 {} image --fwpath {} --fwver {} --fwtype {} --key {} --output {}".format(
                     self.FIRMWARE_IMAGE_PY_PATH,
                     self.host_binary,
                     self.host[bank]["version"],
+                    self.host[bank]["type"],
                     self.host[bank]["key"],
                     self.host[bank]["name"])
-                ss.append(s)
-        return ss
+                poll_status, stdout, stderr = self.execute_command(s)
+                if poll_status:
+                    break
+        return poll_status, stdout, stderr
 
     def generate_enrollment_certificate(self):
         s = "python3 {} sign --fwpath {} --key {} --output {}".format(self.FIRMWARE_IMAGE_PY_PATH,
                                                                       self.tbs,
                                                                       self.enrollment_certificate["key"],
                                                                       self.enrollment_certificate["name"])
-        return s
+        return self.execute_command(s)
+
+    def generate_flash(self):
+        s = "python {} {}".format(self.GEN_FLASH2_PY_PATH, self.FLASH_CONFIG_FILE, self.ENROLLMENT_CERTIFICATE_NAME)
+        return self.execute_command(s)
 
     def generate(self):
         image_size = self.spec["size"]
@@ -244,24 +270,27 @@ class FlashGenerator():
         puf_rom_spec = self.spec["puf_rom"]
         if "a" in puf_rom_spec:
             puf_rom_a_version = self.spec["puf_rom"]["a"]["version"]
-            fg.set_puf_rom(version=puf_rom_a_version, bank="a")
+            puf_rom_a_type = self.spec["puf_rom"]["a"].get("type", "pufr")
+            fg.set_puf_rom(version=puf_rom_a_version, bank="a", type=puf_rom_a_type)
 
         if "b" in puf_rom_spec:
             puf_rom_b_version = self.spec["puf_rom"]["b"]["version"]
-            fg.set_puf_rom(version=puf_rom_b_version, bank="b")
-
+            puf_rom_b_type = self.spec["puf_rom"]["b"].get("type", "pufr")
+            fg.set_puf_rom(version=puf_rom_b_version, bank="b", type=puf_rom_b_type)
 
         # Firmware
         firmware_spec = self.spec["firmware"]
         if "a" in firmware_spec:
             firmware_a_version = self.spec["firmware"]["a"]["version"]
             firmware_a_key = self.spec["firmware"]["a"]["key"]
-            fg.set_firmware(version=firmware_a_version, key=firmware_a_key)
+            firmware_a_type = self.spec["firmware"]["a"].get("type", "frmw")
+            fg.set_firmware(version=firmware_a_version, key=firmware_a_key, type=firmware_a_type)
 
         if "b" in firmware_spec:
             firmware_b_version = self.spec["firmware"]["b"]["version"]
             firmware_b_key = self.spec["firmware"]["b"]["key"]
-            fg.set_firmware(version=firmware_b_version, key=firmware_b_key)
+            firmware_b_type = self.spec["firmware"]["b"].get("type", "frmw")
+            fg.set_firmware(version=firmware_b_version, key=firmware_b_key, type=firmware_b_type)
 
         # Enrollment certificate
         enrollment_certificate_key = self.spec["enrollment_certificate"]["a"]["key"]
@@ -271,19 +300,22 @@ class FlashGenerator():
         if "a" in eeprom_spec:
             eeprom_a_version = eeprom_spec["a"]["version"]
             eeprom_a_key = eeprom_spec["a"]["key"]
-            fg.set_eeprom(key=eeprom_a_key, version=eeprom_a_version)
+            eeprom_a_type = eeprom_spec["a"].get("type", "eepr")
+            fg.set_eeprom(key=eeprom_a_key, version=eeprom_a_version, type=eeprom_a_type)
 
         if "b" in eeprom_spec:
             eeprom_b_version = eeprom_spec["b"]["version"]
             eeprom_b_key = eeprom_spec["b"]["key"]
-            fg.set_eeprom(key=eeprom_b_key, version=eeprom_b_version)
+            eeprom_b_type = eeprom_spec["b"].get("type", "eepr")
+            fg.set_eeprom(key=eeprom_b_key, version=eeprom_b_version, type=eeprom_b_type)
 
         # Host
         host_spec = self.spec["host"]
         if "a" in self.host:
             host_a_version = host_spec["a"]["version"]
             host_a_key = host_spec["a"]["key"]
-            fg.set_host(version=host_a_version, key=host_a_key)
+            host_a_type = host_spec["a"].get("type", "host")
+            fg.set_host(version=host_a_version, key=host_a_key, type=host_a_type)
 
         # General settings
 
@@ -301,10 +333,12 @@ class FlashGenerator():
         # Set enrollment certificate
         reserve = 2000
         fg.set_enrollment_certificate(reserve=reserve, key=enrollment_certificate_key)
-        flash_config = fg.get_flash_config()
-        stages = ["GEN_START_CERT", "GEN_PUF_ROM", "GEN_FIRMWARE", "GEN_EEPROM", "GEN_HOST", "GEN_ENROLLMENT_CERT"]
+        fg.write_flash_config()
+        stages = ["GEN_START_CERT", "GEN_PUF_ROM", "GEN_FIRMWARE", "GEN_EEPROM", "GEN_HOST", "GEN_ENROLLMENT_CERT",
+                  "GEN_FLASH"]
 
         for stage in stages:
+            print("***** Stage: {} ***** \n\n".format(stage))
             poll_status = None
             stdout = stderr = None
             if stage == "GEN_START_CERT":
@@ -325,11 +359,14 @@ class FlashGenerator():
             if stage == "GEN_ENROLLMENT_CERT":
                 poll_status, stdout, stderr = fg.generate_enrollment_certificate()
 
+            if stage == "GEN_FLASH":
+                poll_status, stdout, stderr = fg.generate_flash()
+
             if poll_status:
                 s = "{} Failed: stdout: {}, stderr: {}".format(stage, stdout, stderr)
                 raise Exception(s)
+            print("**** *****\n\n")
         return True
-
 
     @staticmethod
     def find_host_bin():
@@ -343,12 +380,14 @@ class FlashGenerator():
         return result
 
     def execute_command(self, command):
+        print("Executing: {}".format(command))
         sp = subprocess.Popen(command.split(), close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         poll_status = None
         while poll_status is None:
             poll_status = sp.poll()
         stdout, stderr = sp.communicate()
         return poll_status, stdout, stderr
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="qa_flash_generator")
@@ -378,7 +417,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     host_binary = args.host_binary
     if not host_binary:
-        host_binary = FlashGenerator.find_host_bin() # Find bin file
+        host_binary = FlashGenerator.find_host_bin()  # Find bin file
 
     assert host_binary, "Host Binary"
     with open(args.spec, "r") as fp:

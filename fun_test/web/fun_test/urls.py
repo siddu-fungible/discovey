@@ -51,7 +51,8 @@ regression_urls = [
     url(r'^modules$', regression_views.modules),
     url(r'^jenkins_job_id_maps$', regression_views.jenkins_job_id_map),
     url(r'^build_to_date_map$', regression_views.build_to_date_map),
-    url(r'^sampler$', regression_views.sampler)
+    url(r'^sampler$', regression_views.sampler),
+    url(r'^sampler2$', regression_views.sampler2)
 
 ]
 

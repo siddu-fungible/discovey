@@ -30,11 +30,10 @@
     }
   },
   "start_certificate": {
-    "serial_number": "0x00",
-    "serial_number_mask": "00",
-    "tamper_flags": "pufr",
-    "debugger_flags": "000",
-    "name": "start_certificate.bin",
+    "serial_number": "00000000000000000000000000000000",
+    "serial_number_mask": "00000000000000000000000000000000",
+    "tamper_flags": "00000000",
+    "debugger_flags": "00000000",
     "public_key": "fpk2",
     "key": "fpk1"
   },
