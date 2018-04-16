@@ -8,6 +8,7 @@ from web.fun_test.analytics_models_helper import AllocSpeedPerformanceHelper
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 TOLERANCE_PERCENTAGE = 5
+BLACK_LIST = [2184, 2194, 2202]
 
 
 class MyScript(FunTestScript):
@@ -22,6 +23,7 @@ class MyScript(FunTestScript):
 
     def cleanup(self):
         pass
+
 
 
 class FunTestCase1(FunTestCase):
@@ -101,6 +103,8 @@ class FunTestCase1(FunTestCase):
             m = re.search(r'refs/tags/bld_(\d+)', branch_fun_sdk)
             if m:
                 key = int(m.group(1))
+            if key in BLACK_LIST:
+                continue
             AllocSpeedPerformanceHelper().add_entry(key=key, input_app="alloc_speed_test",
                                                     output_one_malloc_free_wu=output_one_malloc_free_wu,
                                                     output_one_malloc_free_threaded=output_one_malloc_free_threaded)
