@@ -133,9 +133,8 @@ function myController($scope) {
         s += $scope.getTrendHtml(node);
         s += $scope.getStatusHtml(node);
         s += "<icon ng-if=\"!" + nodeReference + ".children.length" + "\" class=\"fa fa-leaf fa-icon-green\"></icon>";
-        s += "<span class=\"aspect-label-text\">" + node.label + "</span>";
+        s += "<a href=\"#\" ng-click=\"showChildrenClick(" + nodeReference + ")\" class=\"aspect-label-text\">" + node.label + "</a>";
 
-        s += $scope.getListChildrenHtml(node, nodeReference);
         s += "<a ng-click='showInfoClick(" + nodeReference + ")' " + "ng-if='" + nodeReference + ".showInfo' ><i class=\"fa fa-info-circle\"></i></a>";
         s += "<a ng-click='showInfoClick(" + nodeReference + ")' " + "ng-if='!" + nodeReference + ".showInfo' ><i class=\"fa fa-info-circle\"></i></a>";
 
@@ -153,14 +152,6 @@ function myController($scope) {
         }
         s += "</div>";
         s += "</ul>";
-        return s;
-    };
-
-    $scope.getListChildrenHtml = (node, nodeReference) => {
-        let s = "";
-        if (node.hasOwnProperty("children") && (node.children.length > 0)) {
-            s = "<icon class=\"fa fa-tasks aspect-children-icon\" ng-click=\"showChildrenClick(" + nodeReference + ")\"></icon>";
-        }
         return s;
     };
 
