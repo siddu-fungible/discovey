@@ -113,7 +113,7 @@ class SpirentManager(object):
             fun_test.simple_assert(port_group_list, "Port Group List is empty")
 
             for port_group in port_group_list:
-                fun_test.debug("Determining status of port group no: %d " % port_group['Index'])
+                fun_test.debug("Determining status of port group no: %d " % int(port_group['Index']))
                 if not port_group['OwnershipState'] == self.OWNERSHIP_STATE_AVAILABLE:
                     raise FunTestLibException("Port Group Reserved by %s@%s" % (port_group['OwnerUserId'],
                                                                                 port_group['OwnerHostname']))
@@ -155,9 +155,9 @@ class SpirentManager(object):
         try:
             self._read_spirent_config()
             if self.chassis_type == self.PHYSICAL_CHASSIS_TYPE:
-                ip_address = self.host_config['physical_chassis_ip']
+                ip_address = self.host_config['hosts']['physical_chassis_ip']
             else:
-                ip_address = self.host_config['virtual_chassis_ip']
+                ip_address = self.host_config['hosts']['virtual_chassis_ip']
         except Exception as ex:
             fun_test.critical(str(ex))
         return ip_address
@@ -190,7 +190,7 @@ class SpirentManager(object):
                     spirent_config = config
                     break
             fun_test.debug("Found: %s" % spirent_config)
-            self.host_config = spirent_config
+            self.host_config['hosts'] = spirent_config
         except Exception as ex:
             fun_test.critical(str(ex))
         return self.host_config
@@ -216,11 +216,11 @@ class SpirentManager(object):
     def connect_lab_server(self, session_name):
         result = False
         try:
-            self.stc.perform("CSTestSessionConnect", host=self.host_config['lab_server_ip'],
+            self.stc.perform("CSTestSessionConnect", host=self.host_config['hosts']['lab_server_ip'],
                              TestSessionName=session_name,
                              CreateNewTestSession=True)
             self.stc.perform("TerminateBll", TerminateType="ON_LAST_DISCONNECT")
-            fun_test.debug("Connected to Lab Server: %s" % self.host_config['lab_server_ip'])
+            fun_test.debug("Connected to Lab Server: %s" % self.host_config['hosts']['lab_server_ip'])
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -230,9 +230,9 @@ class SpirentManager(object):
         result = False
         try:
             license_manager = self.stc.get(self.SYSTEM_OBJECT, "children-licenseservermanager")
-            output = self.stc.create("LicenseServer", under=license_manager, server=self.host_config['license_server_ip'])
-            fun_test.simple_assert(output, "Connect to License Server: %s" % self.host_config['license_server_ip'])
-            fun_test.debug("Connected to License Server: %s" % self.host_config['license_server_ip'])
+            output = self.stc.create("LicenseServer", under=license_manager, server=self.host_config['hosts']['license_server_ip'])
+            fun_test.simple_assert(output, "Connect to License Server: %s" % self.host_config['hosts']['license_server_ip'])
+            fun_test.debug("Connected to License Server: %s" % self.host_config['hosts']['license_server_ip'])
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -678,6 +678,16 @@ class SpirentManager(object):
             else:
                 output = self.stc.perform("ResultsClearViewCommand", ResultList=result_list)
             fun_test.simple_assert(output['State'] == "COMPLETED", "Check Clear Result view command status")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def delete_objects(self, object_handle_list):
+        result = False
+        try:
+            output = self.stc.perform("DeleteCommand", ConfigList=object_handle_list)
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Delete objects")
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
