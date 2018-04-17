@@ -1,11 +1,13 @@
 {
   "RndDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 8,
-    "ndata_partition_end_range": 8,
+    "ndata_partition_start_range": 16,
+    "ndata_partition_end_range": 16,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
     "max_dpcsh_cmds": 32,
+    "track_num_cmds": 0,
+    "reboot_after_config": 1,
     "volumes": ["ndata", "nparity", "ec", "lsv"],
     "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
                      "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
@@ -22,63 +24,18 @@
     "output_data": "/tmp/output",
     "dataset_size": 262144,
     // Head room needed for the LS volume in percentage
-    "lsv_pct": 0.3,
-    "check_lsv_stats": 0,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
-    // FIO commandline arguments
-    "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 180},
-    "fio_modes": ["write", "read"],
-    // The below is the list of tuples in which the first element of the tuple represents the FIO block size in kB and
-    // the second element represents the IO depth
-    // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
-    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
-    // Passing threshold for the FIO results from the expected benchmark values
-    "fio_pass_threshold": 0.05,
-    // Passing threshold of the internal volume stats from the expected benchmark values
-    "volume_pass_threshold": 33,
-    "expected_fio_result": {
-      "(4, 1)": {"write": {"write": {"bw": 57, "iops": 14, "latency": 69566}},
-                 "read": {"read": {"bw": 99, "iops": 25, "latency": 40198}}},
-      "(8, 1)": {"write": {"write": {"bw": 103, "iops": 13, "latency": 76961}},
-                 "read": {"read": {"bw": 166, "iops": 21, "latency": 48012}}},
-      "(16, 1)": {"write": {"write": {"bw": 147, "iops": 10, "latency": 108597}},
-                  "read": {"read": {"bw": 254, "iops": 16, "latency": 62773}}},
-      "(32, 1)": {"write": {"write": {"bw": 160, "iops": 5, "latency": 199237}},
-                  "read": {"read": {"bw": 379, "iops": 12, "latency": 84301}}}
-    },
-    "expected_volume_stats": {
-      "write": {"ndata": {"0": {"fault_injection": 0, "num_reads": 35, "num_writes": 528},
-                          "1": {"fault_injection": 0, "num_reads": 35, "num_writes": 528}},
-                "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 528}},
-                "ec": {"0": {"fault_injection": 0, "num_reads": 30, "num_writes": 528}}},
-      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 480, "num_writes": 0},
-                         "1": {"fault_injection": 0, "num_reads": 480, "num_writes": 0}},
-               "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}},
-               "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
-    },
-    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
-    // The first element is the expected value and the second element is the maximum threshold in absolute value
-    "expected_stats": {
-      "write": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      },
-      "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      }
-    }
+    "lsv_pct": 0.52,
+    "check_lsv_stats": 0
   },
   "ZeroDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 8,
-    "ndata_partition_end_range": 8,
+    "ndata_partition_start_range": 16,
+    "ndata_partition_end_range": 16,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
     "max_dpcsh_cmds": 32,
+    "track_num_cmds": 0,
+    "reboot_after_config": 1,
     "volumes": ["ndata", "nparity", "ec", "lsv"],
     "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
                      "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
@@ -95,54 +52,7 @@
     "output_data": "/tmp/output",
     "dataset_size": 262144,
     // Head room needed for the LS volume in percentage
-    "lsv_pct": 0.3,
-    "check_lsv_stats": 0,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
-    // FIO commandline arguments
-    "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 180},
-    "fio_modes": ["write", "read"],
-    // The below is the list of tuples in which the first element of the tuple represents the FIO block size in kB and
-    // the second element represents the IO depth
-    // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
-    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
-    // Passing threshold for the FIO results from the expected benchmark values
-    "fio_pass_threshold": 0.05,
-    // Passing threshold of the internal volume stats from the expected benchmark values
-    "volume_pass_threshold": 33,
-    "expected_fio_result": {
-      "(4, 1)": {"write": {"write": {"bw": 57, "iops": 14, "latency": 69566}},
-                 "read": {"read": {"bw": 99, "iops": 25, "latency": 40198}}},
-      "(8, 1)": {"write": {"write": {"bw": 103, "iops": 13, "latency": 76961}},
-                 "read": {"read": {"bw": 166, "iops": 21, "latency": 48012}}},
-      "(16, 1)": {"write": {"write": {"bw": 147, "iops": 10, "latency": 108597}},
-                  "read": {"read": {"bw": 254, "iops": 16, "latency": 62773}}},
-      "(32, 1)": {"write": {"write": {"bw": 160, "iops": 5, "latency": 199237}},
-                  "read": {"read": {"bw": 379, "iops": 12, "latency": 84301}}}
-    },
-    "expected_volume_stats": {
-      "write": {"ndata": {"0": {"fault_injection": 0, "num_reads": 35, "num_writes": 528},
-                          "1": {"fault_injection": 0, "num_reads": 35, "num_writes": 528}},
-                "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 528}},
-                "ec": {"0": {"fault_injection": 0, "num_reads": 30, "num_writes": 528}}},
-      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 480, "num_writes": 0},
-                         "1": {"fault_injection": 0, "num_reads": 480, "num_writes": 0}},
-               "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}},
-               "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
-    },
-    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
-    // The first element is the expected value and the second element is the maximum threshold in absolute value
-    "expected_stats": {
-      "write": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      },
-      "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 419430)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      }
-    }
+    "lsv_pct": 0.32,
+    "check_lsv_stats": 0
   }
 }

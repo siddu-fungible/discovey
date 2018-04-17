@@ -5,6 +5,7 @@ from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
 from lib.host.storage_controller import StorageController
 from lib.templates.storage.qemu_storage_template import QemuStorageTemplate
+from lib.orchestration.simulation_orchestrator import DockerContainerOrchestrator
 from web.fun_test.analytics_models_helper import VolumePerformanceHelper
 import uuid
 import re
@@ -65,16 +66,18 @@ class ECinQemuTestcase(FunTestCase):
 
         self.num_dpcsh_cmds += 1
         fun_test.log("DPCsh command executed: {}".format(self.num_dpcsh_cmds))
-        """
-        if self.num_dpcsh_cmds >= self.max_dpcsh_cmds:
-            self.qemu.start_dpcsh_proxy()
-            self.num_dpcsh_cmds = 0
-            self.storage_controller.disconnect()
-            self.storage_controller = StorageController(target_ip=self.dut.host_ip,
-                                                        target_port=self.dut.external_dpcsh_port)
-        """
+        if self.track_num_cmds:
+            if self.num_dpcsh_cmds >= self.max_dpcsh_cmds:
+                self.qemu.start_dpcsh_proxy()
+                self.num_dpcsh_cmds = 0
+                self.storage_controller.disconnect()
 
     def setup_ec_volume(self, ndata, nparity):
+
+        if self.need_dpc_server_start:
+            self.qemu.start_dpc_server()
+            self.storage_controller.disconnect()
+            self.need_dpc_server_start = False
 
         self.ec_ratio = str(ndata) + str(nparity)
         if self.ec_ratio not in fun_test.shared_variables:
@@ -92,19 +95,22 @@ class ECinQemuTestcase(FunTestCase):
         self.uuids["ec"] = []
         self.uuids["lsv"] = []
 
+        self.calc_volume_capacity = {}
+        # LS volume capacity is the ndata times of the BLT volume capacity
+        self.calc_volume_capacity["lsv"] = self.volume_capacity["ndata"] * ndata
         if self.use_lsv:
-            # LS volume capacity is the ndata times of the BLT volume capacity
-            self.volume_capacity["lsv"] = self.volume_capacity["ndata"] * ndata
 
             fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
                          "rounding that to the nearest 8MB value")
             eight_mb = 1024 * 1024 * 8
             for vtype in ["ndata", "nparity"]:
                 tmp = self.volume_capacity[vtype] * (1 + self.lsv_pct)
-                self.volume_capacity[vtype] = int(tmp + (eight_mb - (tmp % eight_mb)))
+                self.calc_volume_capacity[vtype] = int(tmp + (eight_mb - (tmp % eight_mb)))
 
             # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            self.volume_capacity["ec"] = self.volume_capacity["ndata"]
+            self.calc_volume_capacity["ec"] = self.calc_volume_capacity["ndata"]
+        else:
+            self.calc_volume_capacity.update(self.volume_capacity)
 
         # Configuring ndata and nparity number of BLT volumes
         for vtype in ["ndata", "nparity"]:
@@ -113,27 +119,24 @@ class ECinQemuTestcase(FunTestCase):
                 this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
                 self.uuids[vtype].append(this_uuid)
                 self.uuids["blt"].append(this_uuid)
-                try:
-                    command_result = self.storage_controller.create_volume(
-                        type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                        block_size=self.volume_block[vtype], name=vtype+str(i), uuid=this_uuid,
-                        command_duration=self.command_timeout)
-                except Exception as ex:
-                    pass
+                command_result = self.storage_controller.create_volume(
+                    type=self.volume_types[vtype], capacity=self.calc_volume_capacity[vtype],
+                    block_size=self.volume_block[vtype], name=vtype+str(i), uuid=this_uuid,
+                    command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                # fun_test.test_assert(command_result["status"], "Create {} {} BLT volume on DUT instance".
-                #                     format(i, vtype))
+                fun_test.simple_assert(command_result["status"], "Create {} {} BLT volume on DUT instance".
+                                       format(i, vtype))
                 self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
 
         # Configuring EC volume on top of BLT volumes
         this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
         self.uuids["ec"].append(this_uuid)
         command_result = self.storage_controller.create_volume(
-            type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
+            type=self.volume_types["ec"], capacity=self.calc_volume_capacity["ec"], block_size=self.volume_block["ec"],
             name="ec1", uuid=this_uuid, ndata=self.num_volumes["ndata"], nparity=self.num_volumes["nparity"],
             pvol_id=self.uuids["blt"], command_duration=self.command_timeout)
         fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Create EC volume on DUT instance")
+        fun_test.simple_assert(command_result["status"], "Create EC volume on DUT instance")
         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
         attach_uuid = this_uuid
 
@@ -142,11 +145,11 @@ class ECinQemuTestcase(FunTestCase):
             this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
             self.uuids["lsv"].append(this_uuid)
             command_result = self.storage_controller.create_volume(
-                type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
+                type=self.volume_types["lsv"], capacity=self.calc_volume_capacity["lsv"],
                 block_size=self.volume_block["lsv"], name="lsv1", uuid=this_uuid, group=self.num_volumes["ndata"],
                 pvol_id=self.uuids["ec"], command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create LS volume on DUT instance")
+            fun_test.simple_assert(command_result["status"], "Create LS volume on DUT instance")
             self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
             attach_uuid = this_uuid
 
@@ -155,15 +158,18 @@ class ECinQemuTestcase(FunTestCase):
             command_result = self.storage_controller.volume_attach_pcie(
                 ns_id=self.ns_id, uuid=attach_uuid, command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT instance")
+            fun_test.simple_assert(command_result["status"], "Attaching EC/LS volume on DUT instance")
             self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
             self.volume_attached = True
+
+        fun_test.add_checkpoint("Created {}:{} EC Volume".format(ndata, nparity), "PASSED", True,
+                                command_result["status"])
 
         # disabling the error_injection for the EC volume
         command_result = {}
         command_result = self.storage_controller.poke("params/ecvol/error_inject 0")
         fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT instance")
+        fun_test.simple_assert(command_result["status"], "Disabling error_injection for EC volume on DUT instance")
         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
 
         # Ensuring that the error_injection got disabled properly
@@ -171,13 +177,15 @@ class ECinQemuTestcase(FunTestCase):
         command_result = {}
         command_result = self.storage_controller.peek("params/ecvol")
         fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT instance")
+        fun_test.simple_assert(command_result["status"], "Retrieving error_injection status on DUT instance")
         fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                       message="Ensuring error_injection got disabled")
         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
 
         # Rebooting the qemu host before checking the disk as a workaround to the bug swos-1331
-        fun_test.test_assert(self.qemu.reboot(timeout=self.command_timeout, retries=12), "Qemu Host Rebooted")
+        if self.reboot_after_config:
+            fun_test.simple_assert(self.qemu.reboot(timeout=self.command_timeout, retries=12), "Qemu Host Rebooted")
+            self.need_dpc_server_start = True
 
         # Checking that the volume is accessible to the host
         lsblk_output = self.host.lsblk()
@@ -189,6 +197,11 @@ class ECinQemuTestcase(FunTestCase):
 
     def cleanup_ec_volume(self, data, parity):
 
+        if self.need_dpc_server_start:
+            self.qemu.start_dpc_server()
+            self.storage_controller.disconnect()
+            self.need_dpc_server_start = False
+
         self.ec_ratio = str(data) + str(parity)
         if self.ec_ratio not in fun_test.shared_variables:
             fun_test.shared_variables[self.ec_ratio] = {}
@@ -198,20 +211,20 @@ class ECinQemuTestcase(FunTestCase):
         if self.use_lsv:
             this_uuid = self.uuids["lsv"][0]
             command_result = self.storage_controller.delete_volume(
-                type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
+                type=self.volume_types["lsv"], capacity=self.calc_volume_capacity["lsv"],
                 block_size=self.volume_block["lsv"], name="lsv1", uuid=this_uuid, command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Delete LS volume on DUT instance")
+            fun_test.simple_assert(command_result["status"], "Delete LS volume on DUT instance")
             self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
             attach_uuid = this_uuid
 
         # Unconfiguring EC volume configured on top of BLT volumes
         this_uuid = self.uuids["ec"][0]
         command_result = self.storage_controller.delete_volume(
-            type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
+            type=self.volume_types["ec"], capacity=self.calc_volume_capacity["ec"], block_size=self.volume_block["ec"],
             name="ec1", uuid=this_uuid, command_duration=self.command_timeout)
         fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Delete EC volume on DUT instance")
+        fun_test.simple_assert(command_result["status"], "Delete EC volume on DUT instance")
         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
         if not attach_uuid:
             attach_uuid = this_uuid
@@ -222,17 +235,21 @@ class ECinQemuTestcase(FunTestCase):
                 this_uuid = self.uuids[vtype][i]
                 self.uuids["blt"].append(this_uuid)
                 command_result = self.storage_controller.delete_volume(
-                    type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
+                    type=self.volume_types[vtype], capacity=self.calc_volume_capacity[vtype],
                     block_size=self.volume_block[vtype], name=vtype+str(i), uuid=this_uuid,
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Delete {} {} BLT volume on DUT instance".
-                                     format(i, vtype))
+                fun_test.simple_assert(command_result["status"], "Delete {} {} BLT volume on DUT instance".
+                                       format(i, vtype))
                 self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+
+        self.volume_attached = False
 
     def setup(self):
 
         testcase = self.__class__.__name__
+
+        self.need_dpc_server_start = True
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -243,57 +260,8 @@ class ECinQemuTestcase(FunTestCase):
         benchmark_dict = {}
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
 
-        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
-            benchmark_parsing = False
-            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
-                              format(testcase, benchmark_file))
-            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
-
-        # fio_bs_iodepth variable is a list of tuples in which the first element of the tuple refers the
-        # block size & second one refers the iodepth going to used for that block size
-        # Checking the block size and IO depth combo list availability
-        if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
-            benchmark_parsing = False
-            fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
-                              "the {} file".format(testcase, benchmark_file))
-
-        # Checking the availability of expected FIO results
-        if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
-            benchmark_parsing = False
-            fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
-                              "testcase is not available in the {} file".format(testcase, benchmark_file))
-
-        if len(self.fio_bs_iodepth) != len(self.expected_fio_result.keys()):
-            benchmark_parsing = False
-            fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
-
-        # Checking the availability of expected volume level internal stats at the end of every FIO run
-        if ('expected_volume_stats' not in benchmark_dict[testcase] or
-                not benchmark_dict[testcase]['expected_volume_stats']):
-            benchmark_parsing = False
-            fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
-                              "the {} file".format(testcase, benchmark_file))
-
-        if 'fio_pass_threshold' not in benchmark_dict[testcase]:
-            self.fio_pass_threshold = .05
-            fun_test.log("Setting FIO passing threshold percentage to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.fio_pass_threshold, testcase, benchmark_file))
-
-        if 'volume_pass_threshold' not in benchmark_dict[testcase]:
-            self.volume_pass_threshold = 20
-            fun_test.log("Setting volume passing threshold number to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.volume_pass_threshold, testcase, benchmark_file))
-
-        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
-                     format(testcase, self.fio_bs_iodepth))
-        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
-                     format(testcase, self.expected_fio_result))
-        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
-                     format(testcase, self.expected_volume_stats))
 
         # End of benchmarking json file parsing
 
@@ -302,10 +270,22 @@ class ECinQemuTestcase(FunTestCase):
         fun_test.test_assert(self.dut, "Retrieved dut instance 0")
         self.host = self.topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
         self.qemu = QemuStorageTemplate(host=self.host, dut=self.dut)
+        self.funos_running = True
+
+        # Preserving the funos-posix and qemu commandline
+        self.funos_cmdline = self.qemu.get_process_cmdline(F1.FUN_OS_SIMULATION_PROCESS_NAME)
+        fun_test.log("\nfunos-posix commandline: {}".format(self.funos_cmdline))
+        self.qemu_cmdline = self.qemu.get_process_cmdline(DockerContainerOrchestrator.QEMU_PROCESS)
+        fun_test.log("\nQemu commandline: {}".format(self.qemu_cmdline))
+        self.qemu_cmdline = re.sub(r'(.*append)\s+(root.*mem=\d+M)(.*)', r'\1 "\2"\3', self.qemu_cmdline)
+        fun_test.log("\nProcessed Qemu commandline: {}".format(self.qemu_cmdline))
 
         # Starting the dpc server in the qemu host
-        self.qemu.start_dpc_server()
-        fun_test.sleep("Waiting for the DPC server and DPCSH TCP proxy to settle down", self.iter_interval)
+        if self.need_dpc_server_start:
+            self.qemu.start_dpc_server()
+            fun_test.sleep("Waiting for the DPC server and DPCSH TCP proxy to settle down", self.iter_interval)
+            self.need_dpc_server_start = False
+
         self.storage_controller = StorageController(target_ip=self.dut.host_ip,
                                                     target_port=self.dut.external_dpcsh_port)
         self.num_dpcsh_cmds = 0
@@ -328,7 +308,7 @@ class ECinQemuTestcase(FunTestCase):
                                    block_size=self.volume_block["ndata"], count=ndata)
         fun_test.test_assert_expected(self.input_size, return_size, "Input data creation")
         self.input_md5sum = self.qemu.md5sum(file_name=self.input_data)
-        fun_test.test_assert(self.input_md5sum, "Finding md5sum for input data")
+        fun_test.simple_assert(self.input_md5sum, "Finding md5sum for input data")
 
         # Starting the write test
         num_writes = self.dataset_size / self.input_size
@@ -347,8 +327,14 @@ class ECinQemuTestcase(FunTestCase):
             else:
                 fun_test.log("Write succeeded for {} to {} bytes".format(begin, end))
             begin = end + 1
-        fun_test.test_assert(self.write_result[ndata][nparity], "Write operation for {} bytes".
-                             format(self.dataset_size))
+        if self.write_result[ndata][nparity]:
+            fun_test.add_checkpoint("Write operation for {} bytes".format(self.dataset_size), "PASSED", True,
+                                    self.write_result[ndata][nparity])
+        else:
+            fun_test.add_checkpoint("Write operation for {} bytes".format(self.dataset_size), "FAILED", True,
+                                    self.write_result[ndata][nparity])
+        # fun_test.test_assert(self.write_result[ndata][nparity], "Write operation for {} bytes".
+        #                      format(self.dataset_size))
 
     def do_read_test(self, ndata, nparity, index):
 
@@ -380,9 +366,17 @@ class ECinQemuTestcase(FunTestCase):
                 fun_test.critical("md5sum for {} to {} bytes {} is not matching with input md5sum {}".
                                   format(begin, end, output_md5sum, self.input_md5sum))
             begin = end + 1
-        fun_test.test_assert(self.read_result[ndata][nparity][index],
-                             "Read operation for {} bytes after failing {} data volumes".
-                             format(self.dataset_size, index + 1))
+        if self.read_result[ndata][nparity][index]:
+            fun_test.add_checkpoint("Read operation for {} bytes after failing {} data volume(s)".
+                                    format(self.dataset_size, index + 1), "PASSED", True,
+                                    self.read_result[ndata][nparity][index])
+        else:
+            fun_test.add_checkpoint("Read operation for {} bytes after failing {} data volume(s)".
+                                    format(self.dataset_size, index + 1), "FAILED", True,
+                                    self.read_result[ndata][nparity][index])
+        # fun_test.test_assert(self.read_result[ndata][nparity][index],
+        #                      "Read operation for {} bytes after failing {} data volumes".
+        #                      format(self.dataset_size, index + 1))
 
     def run(self):
 
@@ -390,22 +384,7 @@ class ECinQemuTestcase(FunTestCase):
 
     def cleanup(self):
 
-        # Check any plex needs to be re-enabled from failure_injection condition
-        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-            for index in self.failure_plex_indices:
-                command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                     command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
-                                                               "having the UUID {}".format(self.uuids["ndata"][index]))
-                fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                  self.uuids["ndata"][index])
-                command_result = self.storage_controller.peek(props_tree)
-                fun_test.log(command_result)
-                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
-                                              message="Ensuring fault_injection got disabled")
-
+        self.qemu.stop_dpc_server()
         self.storage_controller.disconnect()
 
 
@@ -435,12 +414,16 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
         testcase = self.__class__.__name__
 
+        self.unconfig_result = {}
         self.write_result = {}
         self.read_result = {}
+
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
 
+            self.unconfig_result[ndata] = {}
             self.write_result[ndata] = {}
             self.read_result[ndata] = {}
+
             if not hasattr(self, "nparity_start_range"):
                 self.nparity_start_range = min(int(ndata / 4) + 1, self.max_parity)
             if not hasattr(self, "nparity_end_range"):
@@ -448,6 +431,7 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
             for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
 
+                self.unconfig_result[ndata][nparity] = True
                 self.write_result[ndata][nparity] = True
                 self.read_result[ndata][nparity] = {}
 
@@ -462,8 +446,11 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                 for index in range(nparity):
                     self.read_result[ndata][nparity][index] = True
                     # Start the dpc server to inject error into the data BLT volumes
-                    self.qemu.start_dpc_server()
-                    self.storage_controller.disconnect()
+                    if self.need_dpc_server_start:
+                        self.qemu.start_dpc_server()
+                        self.storage_controller.disconnect()
+                        self.need_dpc_server_start = False
+
                     command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
                                                                          command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -481,19 +468,70 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                     self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
 
                     # Rebooting the qemu host as a workaround for the bug #swos-1332
-                    self.qemu.reboot()
+                    if self.reboot_after_config:
+                        self.qemu.reboot()
+                        self.need_dpc_server_start = True
 
                     # Performing read test
                     self.do_read_test(ndata, nparity, index)
 
+                # Unconfiguring everything to move to next variation
                 # Commented the below section because of the bug SWOS-1418
                 # Starting the dpc server in the qemu host
-                # self.qemu.start_dpc_server()
-                # fun_test.sleep("Breathing...", 10)
-                # self.storage_controller.disconnect()
-                # self.storage_controller = StorageController(target_ip=self.dut.host_ip,
-                #                                            target_port=self.dut.external_dpcsh_port)
-                # self.cleanup_ec_volume(ndata, nparity)
+                if self.need_dpc_server_start:
+                    self.qemu.start_dpc_server()
+                    fun_test.sleep("Breathing...", 10)
+                    self.storage_controller.disconnect()
+                    self.need_dpc_server_start = False
+                self.cleanup_ec_volume(ndata, nparity)
+
+                if self.reboot_after_config:
+                    self.qemu.reboot()
+                    self.need_dpc_server_start = True
+
+                # Checking whether the funos-posix is running after unconfiguration
+                funos_pid = self.host.get_process_id(F1.FUN_OS_SIMULATION_PROCESS_NAME)
+                if not funos_pid:
+                    self.unconfig_result[ndata][nparity] = False
+                    self.funos_running = False
+                    fun_test.critical("funos-posix is not running")
+                    if self.funos_cmdline:
+                        fun_test.log("Restarting the funos-posix")
+                        new_funos_pid = self.qemu.start_funos(self.funos_cmdline, self.command_timeout)
+                        fun_test.test_assert(new_funos_pid, "Restarting the funos-posix")
+                        fun_test.log("Restarting the Qemu")
+                        new_qemu_pid = self.qemu.start_qemu(qemu_cmdline=self.qemu_cmdline,
+                                                            timeout=self.command_timeout)
+                        fun_test.log("New Qemu Process ID: {}".format(new_qemu_pid))
+                        fun_test.test_assert(new_qemu_pid, "Restarting the Qemu")
+                        self.host.disconnect()
+                        self.funos_running = True
+                        self.need_dpc_server_start = True
+
+                test_variation_result = self.write_result[ndata][nparity] and self.read_result[ndata][nparity] and \
+                    self.unconfig_result[ndata][nparity]
+                if test_variation_result:
+                    fun_test.add_checkpoint("Sequential write and then read of random data by failing {} number of "
+                                            "data volumes in {}:{} EC volume".format(nparity, ndata, nparity),
+                                            "PASSED", True, test_variation_result)
+                else:
+                    fun_test.add_checkpoint("Sequential write and then read of random data by failing {} number of "
+                                            "data volumes in {}:{} EC volume".format(nparity, ndata, nparity),
+                                            "FAILED", True, test_variation_result)
+
+                if not self.funos_running:
+                    fun_test.critical("Unable to get the funos-posix commandline...So aborting the test for further "
+                                      "EC combinations")
+                    break
+
+        test_result = True
+        for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
+            for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
+                if not self.write_result[ndata][nparity] or self.read_result[ndata][nparity] or \
+                        self.unconfig_result[ndata][nparity]:
+                    test_result = False
+
+        fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
         super(RndDataWriteAndReadWithDataVolumeFailure, self).cleanup()
@@ -502,7 +540,7 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary="Sequential write and then read by failing m number of data volumes in n = k+m "
                                       "EC volume",
                               steps="""
@@ -525,12 +563,16 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
         testcase = self.__class__.__name__
 
+        self.unconfig_result = {}
         self.write_result = {}
         self.read_result = {}
+
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
 
+            self.unconfig_result[ndata] = {}
             self.write_result[ndata] = {}
             self.read_result[ndata] = {}
+
             if not hasattr(self, "nparity_start_range"):
                 self.nparity_start_range = min(int(ndata / 4) + 1, self.max_parity)
             if not hasattr(self, "nparity_end_range"):
@@ -538,6 +580,7 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
             for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
 
+                self.unconfig_result[ndata][nparity] = True
                 self.write_result[ndata][nparity] = True
                 self.read_result[ndata][nparity] = {}
 
@@ -552,8 +595,11 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                 for index in range(nparity):
                     self.read_result[ndata][nparity][index] = True
                     # Start the dpc server to inject error into the data BLT volumes
-                    self.qemu.start_dpc_server()
-                    self.storage_controller.disconnect()
+                    if self.need_dpc_server_start:
+                        self.qemu.start_dpc_server()
+                        self.storage_controller.disconnect()
+                        self.need_dpc_server_start = False
+
                     command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
                                                                          command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -571,19 +617,70 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                     self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
 
                     # Rebooting the qemu host as a workaround for the bug #swos-1332
-                    self.qemu.reboot()
+                    if self.reboot_after_config:
+                        self.qemu.reboot()
+                        self.need_dpc_server_start = True
 
                     # Performing read test
                     self.do_read_test(ndata, nparity, index)
 
+                # Unconfiguring everything to move to next variation
                 # Commented the below section because of the bug SWOS-1418
                 # Starting the dpc server in the qemu host
-                # self.qemu.start_dpc_server()
-                # fun_test.sleep("Breathing...", 10)
-                # self.storage_controller.disconnect()
-                # self.storage_controller = StorageController(target_ip=self.dut.host_ip,
-                #                                            target_port=self.dut.external_dpcsh_port)
-                # self.cleanup_ec_volume(ndata, nparity)
+                if self.need_dpc_server_start:
+                    self.qemu.start_dpc_server()
+                    fun_test.sleep("Breathing...", 10)
+                    self.storage_controller.disconnect()
+                    self.need_dpc_server_start = False
+                self.cleanup_ec_volume(ndata, nparity)
+
+                if self.reboot_after_config:
+                    self.qemu.reboot()
+                    self.need_dpc_server_start = True
+
+                # Checking whether the funos-posix is running after unconfiguration
+                funos_pid = self.host.get_process_id(F1.FUN_OS_SIMULATION_PROCESS_NAME)
+                if not funos_pid:
+                    self.unconfig_result[ndata][nparity] = False
+                    self.funos_running = False
+                    fun_test.critical("funos-posix is not running")
+                    if self.funos_cmdline:
+                        fun_test.log("Restarting the funos-posix")
+                        new_funos_pid = self.qemu.start_funos(self.funos_cmdline, self.command_timeout)
+                        fun_test.test_assert(new_funos_pid, "Restarting the funos-posix")
+                        fun_test.log("Restarting the Qemu")
+                        new_qemu_pid = self.qemu.start_qemu(qemu_cmdline=self.qemu_cmdline,
+                                                            timeout=self.command_timeout)
+                        fun_test.log("New Qemu Process ID: {}".format(new_qemu_pid))
+                        fun_test.test_assert(new_qemu_pid, "Restarting the Qemu")
+                        self.host.disconnect()
+                        self.funos_running = True
+                        self.need_dpc_server_start = True
+
+                test_variation_result = self.write_result[ndata][nparity] and self.read_result[ndata][nparity] and \
+                    self.unconfig_result[ndata][nparity]
+                if test_variation_result:
+                    fun_test.add_checkpoint("Sequential write and then read of random data by failing {} number of "
+                                            "data volumes in {}:{} EC volume".format(nparity, ndata, nparity),
+                                            "PASSED", True, test_variation_result)
+                else:
+                    fun_test.add_checkpoint("Sequential write and then read of random data by failing {} number of "
+                                            "data volumes in {}:{} EC volume".format(nparity, ndata, nparity),
+                                            "FAILED", True, test_variation_result)
+
+                if not self.funos_running:
+                    fun_test.critical("Unable to get the funos-posix commandline...So aborting the test for further "
+                                      "EC combinations")
+                    break
+
+        test_result = True
+        for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
+            for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
+                if not self.write_result[ndata][nparity] or self.read_result[ndata][nparity] or \
+                        self.unconfig_result[ndata][nparity]:
+                    test_result = False
+
+        fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
         super(ZeroDataWriteAndReadWithDataVolumeFailure, self).cleanup()
@@ -592,6 +689,6 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 if __name__ == "__main__":
 
     ecscript = ECinQemuScript()
-    # ecscript.add_test_case(RndDataWriteAndReadWithDataVolumeFailure())
+    ecscript.add_test_case(RndDataWriteAndReadWithDataVolumeFailure())
     ecscript.add_test_case(ZeroDataWriteAndReadWithDataVolumeFailure())
     ecscript.run()
