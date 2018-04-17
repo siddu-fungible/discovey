@@ -298,6 +298,19 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result_handle
 
+    def subscribe_generator_results(self,  parent, config_type="Generator", result_type="GeneratorPortResults"):
+        result_handle = None
+        try:
+            fun_test.log("Subscribing to port generator results on port %s" % parent)
+            pass
+            op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
+                                                           result_type=result_type)
+            fun_test.simple_assert(op_handle, "Getting generator subscribe handle")
+            result_handle = op_handle
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result_handle
+
     def create_result_query(self, tx_subscribe_handle, parent, config_class_id="StreamBlock",
                             result_class_id="RxStreamBlockResults"):
         result = False
@@ -356,6 +369,34 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             fun_test.debug("Deleting list of objects %s" % streamblock_handle_list)
             result = self.stc_manager.delete_objects(streamblock_handle_list)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def subscribe_to_all_results(self, parent):
+        result = {'result': 'False'}
+        try:
+            fun_test.debug("Subscribing to tx results")
+            tx_subscribe = self.subscribe_tx_results(parent=parent)
+            fun_test.simple_assert(tx_subscribe, "Check tx subscribed")
+            result['tx_subscribe'] = tx_subscribe
+
+            fun_test.debug("Subscribing to rx results")
+            rx_subscribe = self.subscribe_rx_results(parent=parent)
+            fun_test.simple_assert(rx_subscribe, "Check rx subscribed")
+            result['rx_subscribe'] = rx_subscribe
+
+            fun_test.debug("Subscribing to generator results")
+            generator_subscribe = self.subscribe_generator_results(parent=parent)
+            fun_test.simple_assert(generator_subscribe, "Check generator subscribed")
+            result['generator_subscribe'] = generator_subscribe
+
+            fun_test.debug("Subscribing to analyzer results")
+            analyzer_subscribe = self.subscribe_analyzer_results(parent=parent)
+            fun_test.simple_assert(analyzer_subscribe, "Check analyzer subscribed")
+            result['analyzer_subscribe'] = analyzer_subscribe
+
+            result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
