@@ -1,7 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.spirent_manager import *
-from lib.templates.traffic_generator.spirent_traffic_generator_template import SpirentTrafficGeneratorTemplate, \
-    StreamBlock, GeneratorConfig
+from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 
 
 class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
@@ -11,7 +10,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         self.session_name = session_name
 
     def setup(self, no_of_ports_needed):
-        result = {"result": False, 'port_list': []}
+        result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
         try:
             fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
@@ -46,10 +45,11 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     port_handle = self.stc_manager.create_port(location=port_location)
                     fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
                     result['port_list'].append(port_handle)
-                    port_interface = self.stc_manager.configure_physical_interface(port_handle=port_handle,
-                                                                                   interface_type=physical_interface_type)
-                    fun_test.test_assert(port_interface, "Create %s Interface for Port %s" % (physical_interface_type,
-                                                                                              port_handle))
+                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
+                                                                   port_handle=port_handle)
+                    fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
+                                                                                             port_handle))
+                    result['interface_obj_list'] = interface_obj
 
                 # Attach ports method take care of applying configuration
                 fun_test.test_assert(self.stc_manager.attach_ports(), message="Attach Ports")
@@ -72,6 +72,39 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return True
+
+    def create_physical_interface(self, interface_type, port_handle):
+        result = None
+        try:
+            interface_class = None
+            if interface_type == self.stc_manager.ETHERNET_COPPER_INTERFACE:
+                interface_class = EthernnetCopperInterface
+            elif interface_type == self.stc_manager.ETHERNET_10GIG_FIBER_INTERFACE:
+                interface_class = Ethernnet10GigFiberInterface
+
+            interface_obj = interface_class()
+            attributes = interface_obj.get_attributes_dict()
+            spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
+                                                                        interface_type=interface_obj.ETHERNET_INTERFACE,
+                                                                        attributes=attributes)
+            fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
+            interface_class._spirent_handle = spirent_handle
+            result = interface_obj
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_physical_interface(self, interface_obj):
+        result = False
+        try:
+            attributes = interface_obj.get_attributes_dict()
+            result = self.stc_manager.update_physical_interface(interface_handle=interface_obj._spirent_handle,
+                                                                update_attributes=attributes)
+            fun_test.test_assert(result, "Update %s physical interface" % interface_obj._spirent_handle)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def configure_stream_block(self, stream_block_obj, port_handle=None, update=False):
         result = False

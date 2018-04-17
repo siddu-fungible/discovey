@@ -9,8 +9,7 @@ class SpirentManager(object):
     SPIRENT_HOSTS_SPEC = ASSET_DIR + "/traffic_generator_hosts.json"
     SYSTEM_OBJECT = "system1"
     ETHERNET_COPPER_INTERFACE = "EthernetCopper"
-    ETHERNET_10GIG_FIBER = "Ethernet10GigFiber"
-    ETHERNET_100GIG_FIBER = "Ethernet100GigFiber"
+    ETHERNET_10GIG_FIBER_INTERFACE = "Ethernet10GigFiber"
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     ETHERNETII_FRAME = "ethernet:EthernetII"
     ETHERNET_PAUSE_FRAME = "ethernetpause:EthernetPause"
@@ -268,11 +267,24 @@ class SpirentManager(object):
             fun_test.critical("Unable to apply configuration. ERROR: %s" % str(ex))
         return result
 
-    def configure_physical_interface(self, port_handle, interface_type=ETHERNET_COPPER_INTERFACE):
+    def create_physical_interface(self, port_handle, interface_type, attributes):
         result = None
         try:
-            result = self.stc.create(interface_type, under=port_handle)
+            fun_test.debug("Creating %s Interface on %s port" % (interface_type, port_handle))
+            result = self.stc.create(interface_type, under=port_handle, **attributes)
+            fun_test.simple_assert(result, "Create Physical Interface")
             self.apply_configuration()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def update_physical_interface(self, interface_handle, update_attributes):
+        result = False
+        try:
+            fun_test.debug("Updating %s interface parameters: %s " % (interface_handle, update_attributes))
+            self.stc.config(interface_handle, **update_attributes)
+            if self.apply_configuration():
+                result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
