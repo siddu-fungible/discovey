@@ -561,13 +561,18 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return parent
 
-    def get_generator_port_results(self, generator_handle):
+    def get_generator_port_results(self, port_handle, subscribe_handle):
         result = {}
-        port_result_handle = None
         try:
-            port_result_handle = self.stc.get(generator_handle, "children-GeneratorPortResults")
-            fun_test.simple_assert(port_result_handle, "Get generator port results handle")
-            result = self.stc.get(port_result_handle)
+            generator_handle = self.stc.get(port_handle, "children-Generator")
+            res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
+            for output in res_handle_list:
+                regex = re.compile("generatorportresults.")
+                if re.match(regex, output):
+                    parent = self.stc.get(output, "parent")
+                    if parent == generator_handle:
+                        result = self.stc.get(output)
+                        break
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
