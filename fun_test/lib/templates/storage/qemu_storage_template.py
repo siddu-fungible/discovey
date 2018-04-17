@@ -1,5 +1,6 @@
 from lib.system.fun_test import fun_test
 from lib.fun.f1 import F1, DockerF1
+from lib.orchestration.simulation_orchestrator import DockerContainerOrchestrator
 import re
 
 
@@ -70,6 +71,18 @@ class QemuStorageTemplate(object):
     @fun_test.safe
     def md5sum(self, file_name):
         return self.host.md5sum(file_name)
+
+    @fun_test.safe
+    def get_process_cmdline(self, process_name):
+
+        process_cmdline = ""
+        process_id = self.dut.get_process_id(process_name)
+        if process_id:
+            # command = r"echo `cat /proc/{}/cmdline | tr '\0' '\n'`".format(process_id)
+            command = r"ps -p {} -o args --no-headers".format(process_id)
+            process_cmdline = self.dut.command(command=command)
+
+        return process_cmdline
 
     @fun_test.safe
     def start_dpcsh_proxy(self, dpcsh_tcp_proxy_path=DockerF1.DPCSH_PATH, dpcsh_tcp_proxy_name=F1.DPCSH_PROCESS_NAME,
@@ -154,6 +167,7 @@ class QemuStorageTemplate(object):
         self.stop_dpc_server(funq_setup_path=funq_setup_path, funq_setup_name=funq_setup_name,
                              dpc_srv_path=dpc_srv_path, dpc_srv_name=dpc_srv_name,
                              dpcsh_tcp_proxy_name=dpcsh_tcp_proxy_name)
+        fun_test.sleep("Breathing", 10)
         self.start_dpc_server(funq_setup_path=funq_setup_path, funq_setup_name=funq_setup_name, ld_lib_path=ld_lib_path,
                               dpc_srv_path=dpc_srv_path, dpc_srv_name=dpc_srv_name,
                               dpcsh_tcp_proxy_path=dpcsh_tcp_proxy_path, dpcsh_tcp_proxy_name=dpcsh_tcp_proxy_name,
@@ -182,6 +196,36 @@ class QemuStorageTemplate(object):
         if match:
             result = match.group(2)
         return result
+
+    @fun_test.safe
+    def start_funos(self, funos_cmdline, timeout=5):
+
+        self.dut.command("cd /")
+        self.dut.command("./{} app=mdt_test nvfile=nvfile &> {}".format(F1.FUN_OS_SIMULATION_PROCESS_NAME, F1.F1_LOG))
+        funos_process_id = self.dut.start_bg_process(command=funos_cmdline, output_file=F1.F1_LOG)
+        fun_test.sleep("Ensure FunOS is started", seconds=timeout)
+        funos_process_id = self.dut.get_process_id(F1.FUN_OS_SIMULATION_PROCESS_NAME)
+
+        return funos_process_id
+
+    @fun_test.safe
+    def start_qemu(self, qemu_cmdline, qemu_dir=DockerContainerOrchestrator.QEMU_DIRECTORY,
+                   qemu_process_name=DockerContainerOrchestrator.QEMU_PROCESS,
+                   qemu_log=DockerContainerOrchestrator.QEMU_LOG, timeout=5):
+
+        current_qemu_process_id = self.dut.get_process_id(qemu_process_name)
+        if current_qemu_process_id:
+            self.dut.kill_process(process_id=current_qemu_process_id)
+            new_qemu_process_id = self.dut.get_process_id(qemu_process_name)
+            fun_test.simple_assert(not new_qemu_process_id, "Stopped Qemu Host")
+
+        self.dut.command("cd {}".format(qemu_dir))
+        qemu_process_id = self.dut.start_bg_process(command=qemu_cmdline, output_file=qemu_log)
+        fun_test.sleep("Ensure Qemu is started", seconds=60)
+        self.dut.command("cd")
+        qemu_process_id = self.dut.get_process_id(qemu_process_name)
+
+        return qemu_process_id
 
     @fun_test.safe
     def reboot(self, timeout=5, retries=6):
