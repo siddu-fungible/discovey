@@ -10,7 +10,7 @@
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.4/angular-animate.min.js"></script>
 
 <style>
 .info-box {
@@ -40,20 +40,42 @@
 
 .fa-icon-green {
     color: green;
-    padding: 5px;
 }
 
 .fa-icon-red {
     color: red;
 }
 
-.aspect-trend-icon, .aspect-children-icon {
-    padding: 10px;
-}
 
 .table-nonfluid {
     width: auto !important;
 }
+
+
+/*
+
+tr.ng-enter {
+    -webkit-transition: width 0.1s, height 0.1s, opacity 1s;
+    transition: width 0.1s, height 0.1s, opacity 1s;
+}*/
+
+arrow-icon {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.arrow-right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}
+
+.arrow-down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
 
 </style>
 
@@ -72,7 +94,7 @@ function myController($scope) {
             {
                 info: "",
                 showInfo: false,
-                label: "Product",
+                label: "Total",
                 trend: "up",
                 goodness: 5.6,
                 "children": [
@@ -108,13 +130,18 @@ function myController($scope) {
         ];
 
         $scope.flatNodes = [];
+
         $scope.flatten($scope.treeModel[0], 0);
+        $scope.treeModel[0].hide = false;
+        $scope.collapseNode($scope.treeModel[0]);
         $scope.customHtml = $scope.getTreeHtml();
         //console.log($scope.treeModel[0][0].showInfo);
     };
 
     $scope.flatten = (node, indent) => {
         node.indent = indent;
+        node.hide = true;
+        node.collapsed = true;
         $scope.flatNodes.push(node);
         if (node.hasOwnProperty("children")) {
             node.children.forEach((node) => {
@@ -218,15 +245,49 @@ function myController($scope) {
         let s = "";
         if (node.hasOwnProperty("indent")) {
             for(let i = 0; i < node.indent - 1; i++) {
-                s += "<span style=\"color: blue\">&#8658;</span>";
+                s += "<span style=\"color: white\">&rarr;</span>";
             }
+            if (node.indent)
+                s += "<span>&#8627;</span>";
         }
+
         return s;
     };
 
+    $scope.collapseNode = (node) => {
+        node.collapsed = true;
+        if (node.hasOwnProperty("children")) {
+            node.children.forEach((node) => {
+                $scope.hideBranch(node);
+            });
+        }
+    };
+
+    $scope.expandNode = (node) => {
+        node.collapsed = false;
+        if (node.hasOwnProperty("children")) {
+            node.children.forEach((node) => {
+                node.hide = false;
+            });
+        }
+    };
+
+    $scope.hideBranch = (node) => {
+        node.hide = true;
+        if (node.hasOwnProperty("children")) {
+            node.children.forEach((node) => {
+                $scope.hideBranch(node);
+            });
+        }
+    };
+
+    $scope.isNodeVisible = (node) => {
+        return !node.hide;
+    }
+
 }
 
-angular.module("myApp", ['ngSanitize'])
+angular.module("myApp", ['ngSanitize', 'ngAnimate'])
     .component("helloWorld",{
         template: "" +
                   "<button ng-click='testClick()'>Submit</button>" +
@@ -269,10 +330,10 @@ angular.module('myApp').filter('unsafe', function($sce) { return $sce.trustAsHtm
                     <th>Trend</th>
 
                 </tr>
-                <tr ng-repeat="node in flatNodes track by $index">
-                    <td><span ng-bind-html="getIndentHtml(node) | unsafe"></span> {{ node.label  }}</td>
+                <tr ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
+                    <td><span ng-bind-html="getIndentHtml(node) | unsafe"></span> {{ node.label  }}&nbsp<span ng-if="node.children && node.children.length"><a href="#" ng-if="!node.collapsed" ng-click="collapseNode(node)"><arrow-icon class="arrow-down"></arrow-icon></a><a href="#" ng-if="node.collapsed" ng-click="expandNode(node)"><arrow-icon class="arrow-right"></arrow-icon></a></span></td>
                     <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
-                    <td ng-bind-html="getTrendHtml(node) | unsafe"></td>
+                    <td style="vertical-align: top" ng-bind-html="getTrendHtml(node) | unsafe"></td>
                 </tr>
             </table>
 
