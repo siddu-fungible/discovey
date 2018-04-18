@@ -30,8 +30,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     if int(module['Index']) == self.stc_manager.host_config['test_module']['slot_no'] and \
                             int(module['PortCount']) >= no_of_ports_needed:
                         slot_found = True
-                        status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
-                        fun_test.simple_assert(status, "Ports are not free. Please check")
+                        #status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
+                        #fun_test.simple_assert(status, "Ports are not free. Please check")
 
                 fun_test.test_assert(slot_found, "Ensure slot no mentioned in config exists on STC")
 
@@ -241,8 +241,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             attributes = generator_config_obj.get_attributes_dict()
             if update:
-                result = self.stc_manager.update_generator_config(generator_config_handle=generator_config_obj.spirent_handle,
-                                                                  attributes=attributes)
+                result = self.stc_manager.update_handle_config(config_handle=generator_config_obj.spirent_handle,
+                                                               attributes=attributes)
                 fun_test.test_assert(result, message="Update Generator Config: %s" % generator_config_obj.spirent_handle)
             else:
                 fun_test.log("Getting new generator in port: %s with default values" % port_handle)
@@ -252,6 +252,27 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 fun_test.test_assert(generator_config_handle, "Get Generator Config for %s " % generator)
                 self.stc_manager.stc.config(generator_config_handle, **attributes)
                 GeneratorConfig._spirent_handle = generator
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_analyzer_config(self, port_handle, analyzer_config_obj, update=False):
+        result = False
+        try:
+            attributes = analyzer_config_obj.get_attributes_dict()
+            if update:
+                result = self.stc_manager.update_handle_config(config_handle=analyzer_config_obj.spirent_handle,
+                                                               attributes=attributes)
+                fun_test.test_assert(result, message="Update Generator Config: %s" % analyzer_config_obj.spirent_handle)
+            else:
+                fun_test.log("Getting new analyzer in port: %s with default values" % port_handle)
+                analyzer = self.stc_manager.get_analyzer(port_handle=port_handle)
+                fun_test.test_assert(analyzer, "Get Analyzer")
+                analyzer_config_handle = self.stc_manager.get_analyzer_config(analyzer_handle=analyzer)
+                fun_test.test_assert(analyzer_config_handle, "Get Analyzer Config for %s " % analyzer)
+                self.stc_manager.stc.config(analyzer_config_handle, **attributes)
+                GeneratorConfig._spirent_handle = analyzer
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))
