@@ -348,7 +348,7 @@ class Ethernnet10GigFiberInterface(object):
         self.IsPfcNegotiated = is_pfc_negotiated
         self.LineSpeed = line_speed
         self.Mtu = mtu
-        self.OptimizeXon = optimize_xon
+        self.OptimizedXon = optimize_xon
         self.PortMode = port_mode
         self.PerformanaceMode = performance_mode
         self.PortSetupMode = port_setup_mode
