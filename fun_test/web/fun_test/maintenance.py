@@ -33,3 +33,4 @@ if __name__ == "__main__":
     h = MetricHelper(AllocSpeedPerformance)
     h.delete(key="2202")
     h.delete(key="2184")
+    h.delete(key="2194")
