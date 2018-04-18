@@ -3,6 +3,7 @@ import argparse
 import fnmatch
 import os
 import subprocess
+from shutil import copyfile
 
 CONFIG_TEMPLATE = """
 # Mandatory sections: All, PUF-ROM, START-CERT, FIRMWARE, HOST
@@ -55,7 +56,8 @@ class FlashGenerator():
                  eeprom_binary,
                  host_binary,
                  tbs,
-                 spec):
+                 spec,
+                 output_dir):
         self.image_size = None
         self.page_size = None
         self.puf_rom = {}
@@ -88,6 +90,7 @@ class FlashGenerator():
         self.eeprom_binary = eeprom_binary
         self.host_binary = host_binary
         self.tbs = tbs
+        self.output_dir = output_dir
 
         self.spec = spec
 
@@ -251,11 +254,11 @@ class FlashGenerator():
 
     def generate_flash(self):
         s = "python {} {}".format(self.GEN_FLASH2_PY_PATH, self.FLASH_CONFIG_FILE, self.ENROLLMENT_CERTIFICATE_NAME)
+        copyfile("flash_image.bin", self.output_dir + "/flash_image.bin")
         return self.execute_command(s)
 
     def generate(self):
         image_size = self.spec["size"]
-        page_size = self.spec["page_size"]
 
         # Start-certificate
 
@@ -320,7 +323,9 @@ class FlashGenerator():
         # General settings
 
         fg.set_image_size(size=image_size)
-        fg.set_page_size(size=page_size)
+        if "page_size" in self.spec:
+            page_size = self.spec["page_size"]
+            fg.set_page_size(size=page_size)
 
         # Set start-certificate
         fg.set_start_certificate(serial_number=serial_number,
@@ -390,7 +395,7 @@ class FlashGenerator():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="qa_flash_generator")
+    parser = argparse.ArgumentParser(description="custom_flash_generator")
     parser.add_argument('--spec',
                         dest="spec",
                         required=True,
@@ -414,6 +419,9 @@ if __name__ == "__main__":
                         dest="tbs",
                         help="Path to TBS",
                         default="enroll_cert.tbs")
+    parser.add_argument('--output_dir',
+                        dest="output_dir",
+                        help="Directory where flash_image.bin should be placed")
     args = parser.parse_args()
     host_binary = args.host_binary
     if not host_binary:
@@ -426,6 +434,7 @@ if __name__ == "__main__":
                             firmware_binary=args.firmware_binary,
                             eeprom_binary=args.eeprom_binary,
                             host_binary=host_binary,
-                            tbs=args.tbs, spec=spec)
+                            tbs=args.tbs, spec=spec,
+                            output_dir=args.output_dir)
 
         fg.generate()

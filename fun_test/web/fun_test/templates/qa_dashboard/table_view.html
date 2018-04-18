@@ -108,16 +108,17 @@ function myController($scope) {
         ];
 
         $scope.flatNodes = [];
-        $scope.flatten($scope.treeModel[0]);
+        $scope.flatten($scope.treeModel[0], 0);
         $scope.customHtml = $scope.getTreeHtml();
         //console.log($scope.treeModel[0][0].showInfo);
     };
 
-    $scope.flatten = (node) => {
+    $scope.flatten = (node, indent) => {
+        node.indent = indent;
         $scope.flatNodes.push(node);
         if (node.hasOwnProperty("children")) {
             node.children.forEach((node) => {
-                $scope.flatten(node);
+                $scope.flatten(node, indent + 1);
             });
         }
     };
@@ -211,7 +212,17 @@ function myController($scope) {
             }
         }
         return s;
-    }
+    };
+
+    $scope.getIndentHtml = (node) => {
+        let s = "";
+        if (node.hasOwnProperty("indent")) {
+            for(let i = 0; i < node.indent - 1; i++) {
+                s += "<span style=\"color: blue\">&#8658;</span>";
+            }
+        }
+        return s;
+    };
 
 }
 
@@ -240,7 +251,8 @@ angular.module('myApp').directive('dynamic', function ($compile) {
   };
 });
 
- angular.module('myApp').controller("myController", myController)
+ angular.module('myApp').controller("myController", myController);
+angular.module('myApp').filter('unsafe', function($sce) { return $sce.trustAsHtml; });
 
 
 
@@ -249,7 +261,7 @@ angular.module('myApp').directive('dynamic', function ($compile) {
 <div ng-app="myApp">
     <div class="col-lg-6 col-xl-6 col-md-6">
         <div ng-controller="myController">
-            <p dynamic="customHtml"></p>
+            <p dynamic="customHtml1"></p>
             <table class="table table-nonfluid">
                 <tr>
                     <th>Aspect</th>
@@ -258,9 +270,9 @@ angular.module('myApp').directive('dynamic', function ($compile) {
 
                 </tr>
                 <tr ng-repeat="node in flatNodes track by $index">
-                    <td> {{ node.label  }}</td>
+                    <td><span ng-bind-html="getIndentHtml(node) | unsafe"></span> {{ node.label  }}</td>
                     <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
-                    <td></td>
+                    <td ng-bind-html="getTrendHtml(node) | unsafe"></td>
                 </tr>
             </table>
 
