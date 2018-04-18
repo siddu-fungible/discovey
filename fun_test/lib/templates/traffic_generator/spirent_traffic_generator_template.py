@@ -365,12 +365,53 @@ class Ethernnet10GigFiberInterface(object):
         return "Ethernet10GigFiber"
 
 
+class AnalyzerConfig(object):
+    HISTOGRAM_MODE_INTERARRIVAL_TIME = "INTERARRIVAL_TIME"
+    HISTOGRAM_MODE_LATENCY = "LATENCY"
+    HISTOGRAM_MODE_FRAME_LENGTH = "FRAME_LENGTH"
+    HISTOGRAM_MODE_SEQ_RUN_LENGTH = "SEQ_RUN_LENGTH"
+    HISTOGRAM_MODE_SEQ_DIFF_CHECK = "SEQ_DIFF_CHECK"
+    HISTOGRAM_MODE_JITTER = "JITTER"
+    LATENCY_MODE_PER_STREAM_RX_LATENCY_OFF = "PER_STREAM_RX_LATENCY_OFF"
+    LATENCY_MODE_PER_STREAM_RX_LATENCY_ON = "PER_STREAM_RX_LATENCY_ON"
+    LATENCY_MODE_LATENCY_MODE_OFF_4096_RX_STREAMS = "LATENCY_MODE_OFF_4096_RX_STREAMS"
+    LATENCY_MODE_LATENCY_MODE_OFF_1024_RX_STREAMS = "LATENCY_MODE_OFF_1024_RX_STREAMS"
+    SIG_MODE_LONG_SEQ_NUM = "LONG_SEQ_NUM"
+    SIG_MODE_ENHANCED_DETECTION = "ENHANCED_DETECTION"
+    TIME_STAMP_LATCH_MDOE_START_OF_FRAME = "START_OF_FRAME"
+    TIME_STAMP_LATCH_MODE_END_OF_FRAME = "END_OF_FRAME"
+    _spirent_handle = None
 
+    def __init__(self, adv_seq_checker_late_threshold="1000", alternate_sig_offset="0",
+                 histogram_mode=HISTOGRAM_MODE_LATENCY,
+                 jumbo_frame_threshold="1518", latency_mode=LATENCY_MODE_PER_STREAM_RX_LATENCY_ON,
+                 oversize_frame_threshold="9018",
+                 sig_mode=SIG_MODE_ENHANCED_DETECTION, timestamp_latch_mode=TIME_STAMP_LATCH_MDOE_START_OF_FRAME,
+                 undersize_frame_threshold="64",
+                 vlan_alternate_tpid="34984"):
+        self.AdvSeqCheckerLateThreshold = adv_seq_checker_late_threshold
+        self.AlternateSigOffset = alternate_sig_offset
+        self.HistogramMode = histogram_mode
+        self.JumboFrameThreshold = jumbo_frame_threshold
+        self.LatencyMode = latency_mode
+        self.OversizeFrameThreshold = oversize_frame_threshold
+        self.SigMode = sig_mode
+        self.TimestampLatchMode = timestamp_latch_mode
+        self.UndersizeFrameThreshold = undersize_frame_threshold
+        self.VlanAlternateTpid = vlan_alternate_tpid
 
+    def get_attributes_dict(self):
+        return vars(self)
 
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
 
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
 
-
-
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
 
 
