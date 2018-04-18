@@ -515,6 +515,15 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return generator_handle
 
+    def get_analyzer(self, port_handle):
+        # Generator object is a child of Port object
+        analyzer_handle = None
+        try:
+            analyzer_handle = self.stc.get(port_handle, "children-Analyzer")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return analyzer_handle
+
     def get_generator_config(self, generator_handle):
         generator_config = None
         try:
@@ -523,11 +532,19 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return generator_config
 
-    def update_generator_config(self, generator_config_handle, attributes):
+    def get_analyzer_config(self, analyzer_handle):
+        analyzer_config = None
+        try:
+            analyzer_config = self.stc.get(analyzer_handle, "children-AnalyzerConfig")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return analyzer_config
+
+    def update_handle_config(self, config_handle, attributes):
         result = False
         try:
-            fun_test.debug("updating %s generator config %s" % (generator_config_handle, attributes))
-            self.stc.config(generator_config_handle, **attributes)
+            fun_test.debug("updating %s generator config %s" % (config_handle, attributes))
+            self.stc.config(config_handle, **attributes)
             if self.apply_configuration():
                 result = True
         except Exception as ex:
