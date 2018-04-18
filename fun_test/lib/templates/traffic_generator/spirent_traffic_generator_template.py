@@ -259,7 +259,6 @@ class EthernnetCopperInterface(object):
     DATA_PATH_MODE_LINE_MONITOR = "LINE_MONITOR"
     FULL_DUPLEX = "FULL"
     HALF_DUPLEX = "HALF"
-    ETHERNET_INTERFACE = "EthernetCopper"
     _spirent_handle = None
 
     def __init__(self, advertise_ieee=True, advertise_nbaset=True, alternate_speeds=SPEED_UNKNOWN,
@@ -299,6 +298,9 @@ class EthernnetCopperInterface(object):
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
 
+    def __str__(self):
+        return "EthernetCopper"
+
 
 class Ethernnet10GigFiberInterface(object):
     SPEED_UNKNOWN = "SPEED_UNKNOWN"
@@ -312,7 +314,6 @@ class Ethernnet10GigFiberInterface(object):
     DATA_PATH_MODE_LINE_MONITOR = "LINE_MONITOR"
     FULL_DUPLEX = "FULL"
     HALF_DUPLEX = "HALF"
-    ETHERNET_INTERFACE = "Ethernet10GigFiber"
     _spirent_handle = None
 
     def __init__(self, advertise_ieee=True, advertise_nbaset=True, alternate_speeds=SPEED_UNKNOWN,
@@ -359,6 +360,9 @@ class Ethernnet10GigFiberInterface(object):
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
+
+    def __str__(self):
+        return "Ethernet10GigFiber"
 
 
 

@@ -85,7 +85,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             interface_obj = interface_class()
             attributes = interface_obj.get_attributes_dict()
             spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
-                                                                        interface_type=interface_obj.ETHERNET_INTERFACE,
+                                                                        interface_type=str(interface_obj),
                                                                         attributes=attributes)
             fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
             interface_class._spirent_handle = spirent_handle

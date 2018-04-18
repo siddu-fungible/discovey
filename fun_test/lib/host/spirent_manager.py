@@ -28,6 +28,9 @@ class SpirentManager(object):
 
     def __init__(self, chassis_type=VIRTUAL_CHASSIS_TYPE, dut_type=DUT_TYPE_PALLADIUM):
         try:
+            stc_private_install_dir = fun_test.get_environment_variable(variable="STC_PRIVATE_INSTALL_DIR")
+            if not stc_private_install_dir:
+                raise FunTestLibException("STC install directory not found. Please export STC_PRIVATE_INSTALL_DIR.")
             self.stc = StcPython()
         except Exception as ex:
             raise FunTestLibException("Unable to initialized Spirent Manager: %s" % str(ex))
