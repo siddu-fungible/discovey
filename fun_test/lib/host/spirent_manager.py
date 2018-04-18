@@ -10,6 +10,7 @@ class SpirentManager(object):
     SYSTEM_OBJECT = "system1"
     ETHERNET_COPPER_INTERFACE = "EthernetCopper"
     ETHERNET_10GIG_FIBER_INTERFACE = "Ethernet10GigFiber"
+    ETHERNET_100GIG_FIBER_INTERFACE = "Ethernet100GigFiber"
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     ETHERNETII_FRAME = "ethernet:EthernetII"
     ETHERNET_PAUSE_FRAME = "ethernetpause:EthernetPause"
@@ -635,6 +636,9 @@ class SpirentManager(object):
     def get_tx_stream_block_results(self, stream_block_handle, subscribe_handle):
         result = {}
         try:
+            fun_test.debug("Refresh result view for handle %s" % subscribe_handle)
+            refresh_view = self.refresh_result_view(subscribe_handle)
+            fun_test.simple_assert(refresh_view, "Refresh result view")
             res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
             for output in res_handle_list:
                 regex = re.compile("txstreamblockresults.")
@@ -650,6 +654,9 @@ class SpirentManager(object):
     def get_rx_stream_block_results(self, stream_block_handle, subscribe_handle):
         result = {}
         try:
+            fun_test.debug("Refresh result view for handle %s" % subscribe_handle)
+            refresh_view = self.refresh_result_view(subscribe_handle)
+            fun_test.simple_assert(refresh_view, "Refresh result view")
             res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
             for output in res_handle_list:
                 regex = re.compile("rxstreamblockresults.")
