@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from asset.asset_manager import AssetManager
 from lib.host.linux import Linux
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD, FUN_TEST_DIR
-import re
+import re, os
 
 
 class FunControlPlaneSanity(FunTestScript):
@@ -68,6 +68,13 @@ class FunControlPlaneSanity(FunTestScript):
                  target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]), filename=artifact_file_name)
 
+        # cleanup log/trace files
+        for f in os.listdir(self.target_workspace):
+            for pattern in ['trace', 'psim', 'ptf', 'nutest']:
+                if re.search(pattern, f):
+                    os.remove(os.path.join(self.target_workspace, f))
+                    break
+ 
         self.docker_host.destroy_container(
             container_name=self.container_name,
             ignore_error=True)
@@ -102,13 +109,15 @@ class NwSanitySimpleL3Integration(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
-        #output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
-        #output = linux_obj.command("make -j2")
+        output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
+        output = linux_obj.command("make -j8", timeout=600)
+        output = linux_obj.command("cd {}/FunOS".format(target_workspace))
+        output = linux_obj.command("make -j8 MACHINE=posix", timeout=600)
         output = linux_obj.command(
-            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -p -b -s > {}/nutest.txt 2>&1"
+            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -s > {}/nutest.txt 2>&1"
             .format(target_workspace, target_workspace), timeout=300)
 
-        timer = FunTimer(max_time=180)
+        timer = FunTimer(max_time=300)
         status = False
         while not timer.is_expired():
             output = linux_obj.command(command="grep --text '{}' {}/psim.log".format(qemu_status, target_workspace),
@@ -120,7 +129,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
             fun_test.sleep("Waiting for QEMU/PSIM to come up", seconds=10)
         fun_test.test_assert(status, "QEMU/PSIM UP")
 
-        timer = FunTimer(max_time=120)
+        timer = FunTimer(max_time=300)
         status = False
         while not timer.is_expired():
             output = linux_obj.command(command="grep --text '{}' {}/nutest.txt".format(sanity_status, target_workspace),
@@ -162,14 +171,11 @@ class NwSanityPRV(FunTestCase):
 
         output = linux_obj.command("bash")
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
-        output = linux_obj.command("make clean")
-        output = linux_obj.command("make -j8", timeout=600)
-
         output = linux_obj.command(
-            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py --traffic --testcase prv >> {}/nutest.txt 2>&1"
-                        .format(target_workspace, target_workspace), timeout=600)
+            command="./scripts/nutest/test_l3_traffic.py --traffic --testcase prv >> {}/nutest.txt 2>&1"
+                        .format(target_workspace, target_workspace), timeout=1200)
 
-        timer = FunTimer(max_time=600)
+        timer = FunTimer(max_time=1200)
         status = False
         while not timer.is_expired():
             output = linux_obj.command(command="grep --text '{}' {}/ptf.log".format(prv_completed, target_workspace))

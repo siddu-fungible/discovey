@@ -8,21 +8,15 @@ export LC_ALL=C
 
 echo "Workspace : $WORKSPACE"
 
-echo "Clone FunControlPlane and FunSDK Repo"
-sudo rm -rf funnel-as sonic-swss-common qemu_image FunControlPlane FunSDK
+echo "Clone FunControlPlane, FunOS and FunSDK Repos"
+sudo rm -rf FunSDK-cache funnel-as sonic-swss-common qemu_image FunOS FunControlPlane FunSDK
 git clone git@github.com:fungible-inc/FunControlPlane.git
 git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
+git clone git@github.com:fungible-inc/FunOS.git
 cd $WORKSPACE/FunSDK
-sudo scripts/bob --sdkup
+scripts/bob --sdkup
 cd $WORKSPACE/FunSDK/integration_test
-sudo lib/build_setup.py
-
-#cd $WORKSPACE/FunControlPlane
-#./scripts/nutest/test_l3_traffic -l
-#sudo -E python scripts/nutest/test_l3_traffic.py -n 12 -p -b -s > $WORKSPACE/nutest.log 2>&1
-#./scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv.PrvTest_fpg_simple_tcp 
-#./scripts/nutest/test_l3_traffic.py --traffic -n12 --testcase prv  > $WORKSPACE/parser.log 2>&1
-#sudo -E python scripts/nutest/test_l3_traffic.py -n 12 --kill
+lib/build_setup.py
 
 echo "Container UP. Idling now"
 while [ 1 ]
