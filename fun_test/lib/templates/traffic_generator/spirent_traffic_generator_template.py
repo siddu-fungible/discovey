@@ -286,8 +286,8 @@ class EthernnetCopperInterface(object):
         self.InternalPpmAdjust = internal_ppm_adjust
         self.LineSpeed = line_speed
         self.Mtu = mtu
-        self.OptimizeXon = optimize_xon
-        self.PerformanaceMode = performance_mode
+        self.OptimizedXon = optimize_xon
+        self.PerformanceMode = performance_mode
         self.PortSetupMode = port_setup_mode
         self.TestMode = test_mode
         self.TransmitClockSource = transmit_clock_source
@@ -350,7 +350,7 @@ class Ethernnet10GigFiberInterface(object):
         self.Mtu = mtu
         self.OptimizedXon = optimize_xon
         self.PortMode = port_mode
-        self.PerformanaceMode = performance_mode
+        self.PerformanceMode = performance_mode
         self.PortSetupMode = port_setup_mode
         self.TestMode = test_mode
         self.TransmitClockSource = transmit_clock_source

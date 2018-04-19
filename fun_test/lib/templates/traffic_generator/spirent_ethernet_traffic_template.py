@@ -33,7 +33,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         #status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
                         #fun_test.simple_assert(status, "Ports are not free. Please check")
 
-                fun_test.test_assert(slot_found, "Ensure slot no mentioned in config exists on STC")
+                fun_test.test_assert(slot_found, "Ensure slot num mentioned in config exists on STC")
 
                 project_handle = self.stc_manager.create_project(project_name=self.session_name)
                 fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
@@ -49,7 +49,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                                    port_handle=port_handle)
                     fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
                                                                                              port_handle))
-                    result['interface_obj_list'] = interface_obj
+                    result['interface_obj_list'].append(interface_obj)
 
                 # Attach ports method take care of applying configuration
                 fun_test.test_assert(self.stc_manager.attach_ports(), message="Attach Ports")
@@ -68,7 +68,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             self.stc_manager.disconnect_session()
             self.stc_manager.disconnect_lab_server()
-            self.stc_manager.disconnect_chassis()
+            # self.stc_manager.disconnect_chassis()
         except Exception as ex:
             fun_test.critical(str(ex))
         return True
@@ -278,18 +278,26 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def activate_stream_blocks(self, stream_block_handles):
+    def activate_stream_blocks(self, stream_obj_list):
         result = False
         try:
+            stream_block_handles = []
+            for stream_obj in stream_obj_list:
+                stream_block_handles.append(stream_obj._spirent_handle)
+
             result = self.stc_manager.run_stream_block_active_command(stream_block_handles=stream_block_handles)
             fun_test.test_assert(result, message="Activate Stream Blocks: %s" % stream_block_handles)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def deactivate_stream_blocks(self, stream_block_handles):
+    def deactivate_stream_blocks(self, stream_obj_list):
         result = False
         try:
+            stream_block_handles = []
+            for stream_obj in stream_obj_list:
+                stream_block_handles.append(stream_obj._spirent_handle)
+
             result = self.stc_manager.run_stream_block_active_command(stream_block_handles=stream_block_handles,
                                                                       activate=False)
             fun_test.test_assert(result, message="Deactivate Stream Blocks: %s" % stream_block_handles)

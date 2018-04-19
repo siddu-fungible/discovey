@@ -287,6 +287,8 @@ class SpirentManager(object):
         try:
             fun_test.debug("Updating %s interface parameters: %s " % (interface_handle, update_attributes))
             self.stc.config(interface_handle, **update_attributes)
+            out = self.stc.get(interface_handle)
+            print out
             if self.apply_configuration():
                 result = True
         except Exception as ex:
