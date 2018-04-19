@@ -88,7 +88,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                                         interface_type=str(interface_obj),
                                                                         attributes=attributes)
             fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
-            interface_class._spirent_handle = spirent_handle
+            interface_obj._spirent_handle = spirent_handle
             result = interface_obj
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -119,7 +119,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     raise Exception("Please provide port handle under which stream to be created")
                 spirent_handle = self.stc_manager.create_stream_block(port=port_handle, attributes=attributes)
                 fun_test.test_assert(spirent_handle, message="Create Stream Block: %s" % spirent_handle)
-                StreamBlock._spirent_handle = spirent_handle  # Setting Spirent handle to our object
+                stream_block_obj._spirent_handle = spirent_handle  # Setting Spirent handle to our object
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -251,7 +251,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 generator_config_handle = self.stc_manager.get_generator_config(generator_handle=generator)
                 fun_test.test_assert(generator_config_handle, "Get Generator Config for %s " % generator)
                 self.stc_manager.stc.config(generator_config_handle, **attributes)
-                GeneratorConfig._spirent_handle = generator
+                generator_config_obj.spirent_handle = generator
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -272,7 +272,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 analyzer_config_handle = self.stc_manager.get_analyzer_config(analyzer_handle=analyzer)
                 fun_test.test_assert(analyzer_config_handle, "Get Analyzer Config for %s " % analyzer)
                 self.stc_manager.stc.config(analyzer_config_handle, **attributes)
-                GeneratorConfig._spirent_handle = analyzer
+                analyzer_config_obj.spirent_handle = analyzer
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))

@@ -92,7 +92,12 @@ class StreamBlock(object):
         self.TrafficPattern = traffic_pattern
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -166,7 +171,12 @@ class GeneratorConfig(object):
         self.LoadUnit = load_unit
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -192,7 +202,12 @@ class Ethernet2Header(object):
         self.srcMac = source_mac
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -212,7 +227,12 @@ class EthernetPauseHeader(object):
         self.Reserved = reserved
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -241,7 +261,12 @@ class Ipv4Header(object):
         self.version = version
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -293,7 +318,12 @@ class EthernnetCopperInterface(object):
         self.TransmitClockSource = transmit_clock_source
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -356,7 +386,12 @@ class Ethernnet10GigFiberInterface(object):
         self.TransmitClockSource = transmit_clock_source
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -401,7 +436,12 @@ class AnalyzerConfig(object):
         self.VlanAlternateTpid = vlan_alternate_tpid
 
     def get_attributes_dict(self):
-        return vars(self)
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
