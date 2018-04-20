@@ -193,8 +193,9 @@ class GeneratorConfig(object):
 class Ethernet2Header(object):
     HEADER_TYPE = "ethernet:EthernetII"
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
+    INTERNET_IP_ETHERTYPE = "0800"
 
-    def __init__(self, destination_mac="00:00:01:00:00:01", ether_type=LOCAL_EXPERIMENTAL_ETHERTYPE,
+    def __init__(self, destination_mac="00:00:01:00:00:01", ether_type=INTERNET_IP_ETHERTYPE,
                  preamble="55555555555555d5", source_mac="00:10:94:00:00:02"):
         self.dstMac = destination_mac
         self.etherType = ether_type
