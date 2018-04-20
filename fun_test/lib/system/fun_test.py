@@ -963,7 +963,7 @@ class FunTestScript(object):
         try:
             self.cleanup()
             result = FunTest.PASSED
-        except TestException as ex:
+        except Exception as ex:
             fun_test.critical(ex)
         fun_test._end_test(result=result)
 

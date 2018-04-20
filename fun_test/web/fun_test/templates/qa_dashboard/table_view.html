@@ -52,23 +52,40 @@
 }
 
 
-/*
+.fade-element-in.ng-enter {
+  transition: 0.8s linear all;
+  opacity: 0;
+}
 
-tr.ng-enter {
-    -webkit-transition: width 0.1s, height 0.1s, opacity 1s;
-    transition: width 0.1s, height 0.1s, opacity 1s;
-}*/
+.fade-element-in-init .fade-element-in.ng-enter {
+  opacity: 1;
+}
+
+.fade-element-in.ng-enter.ng-enter-active {
+  opacity: 1;
+}
+
+.fade-element-in.ng-leave {
+  transition: 0.3s linear all;
+  opacity: 1;
+}
+.fade-element-in.ng-leave.ng-leave-active {
+  opacity: 0;
+}
+
 
 arrow-icon {
   border: solid black;
   border-width: 0 3px 3px 0;
   display: inline-block;
   padding: 3px;
+
 }
 
 .arrow-right {
     transform: rotate(-45deg);
     -webkit-transform: rotate(-45deg);
+
 }
 
 .arrow-down {
@@ -330,8 +347,8 @@ angular.module('myApp').filter('unsafe', function($sce) { return $sce.trustAsHtm
                     <th>Trend</th>
 
                 </tr>
-                <tr ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
-                    <td><span ng-bind-html="getIndentHtml(node) | unsafe"></span> {{ node.label  }}&nbsp<span ng-if="node.children && node.children.length"><a href="#" ng-if="!node.collapsed" ng-click="collapseNode(node)"><arrow-icon class="arrow-down"></arrow-icon></a><a href="#" ng-if="node.collapsed" ng-click="expandNode(node)"><arrow-icon class="arrow-right"></arrow-icon></a></span></td>
+                <tr class="fade-element-in" ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
+                    <td class="child-transition"><span ng-bind-html="getIndentHtml(node) | unsafe"></span> {{ node.label  }}&nbsp<span ng-if="node.children && node.children.length"><a href="#" ng-if="!node.collapsed" ng-click="collapseNode(node)"><arrow-icon class="arrow-down"></arrow-icon></a><a href="#" ng-if="node.collapsed" ng-click="expandNode(node)"><arrow-icon class="arrow-right"></arrow-icon></a></span></td>
                     <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
                     <td style="vertical-align: top" ng-bind-html="getTrendHtml(node) | unsafe"></td>
                 </tr>
