@@ -67,7 +67,7 @@ class TestCase1(FunTestCase):
 class TestPke(FunTestCase):
     secure_boot = False
     enroll = False
-    stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+    stimuli_dir = "{}/validation/stimuli/short_to_review".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
     stimuli_file = "{}/test_pke.py".format(stimuli_dir)
 
     def describe(self):

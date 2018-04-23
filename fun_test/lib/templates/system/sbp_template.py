@@ -33,7 +33,7 @@ class SbpZynqSetupTemplate:
             bit_stream = self.DEFAULT_SBP_PUF_BIT_STREAM
         self.bit_stream = bit_stream
 
-    def setup_container(self):
+    def setup_container(self, git_pull=True):
         self.docker_host = AssetManager().get_any_docker_host()
         workspace = os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(FUN_TEST_DIR))))
         self.container_name = "this_container"
@@ -60,7 +60,8 @@ class SbpZynqSetupTemplate:
                                                                handoff_string="Idling"), message="Container handoff")
 
         localhost = Linux(host_ip="127.0.0.1", localhost=True)
-        localhost.command("cd {}; git pull".format(self.SBP_FIRMWARE_REPO_DIR))
+        if git_pull:
+            localhost.command("cd {}; git pull".format(self.SBP_FIRMWARE_REPO_DIR))
         fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
         return self.container_asset
 
@@ -71,8 +72,33 @@ class SbpZynqSetupTemplate:
         fun_test.test_assert(self.setup_build(), "Cmake Build")
         fun_test.test_assert(self.clear_board_tests_logs(), "Clear board-tests logs")
         self.clear_enrollment_bin()
-
         return True
+
+    def _get_artifacts_dir(self, secure_boot=True, platform="zync6"):
+        secure_str = "unsecure"
+        if secure_boot:
+            secure_str = "secure"
+        s = "artifacts_{}_eeprom_{}".format(secure_str, platform)
+        return os.path.join(self.LOCAL_REPOSITORY_DIR, s)
+
+    def artifacts_setup(self, enroll=True):
+        fun_test.test_assert(self.setup_local_repository(), message="Setup local repository")
+        fun_test.test_assert(self.setup_hsm(), "HSM install")
+        fun_test.test_assert(self.run_test_software(), "Run test_software")
+        fun_test.test_assert(self.setup_build(make=False), "Cmake")
+        fun_test.test_assert(self.host.list_files(self._get_artifacts_dir()), "List artifacts")
+        if enroll:
+            fun_test.test_assert(self.enroll(artifacts_dir=self._get_artifacts_dir()), "Enroll")
+            fun_test.test_assert(self.run_test_software(enroll_tbs=os.path.join(self.LOCAL_REPOSITORY_DIR,
+                                                                                self.ENROLLMENT_TBS_BIN)),
+                                 "Run test_software with enrollment TBS")
+
+    def run_test_software(self, enroll_tbs=None, ram="128K", num_pkes=1):
+        self.host.command("cd {}".format(self.LOCAL_REPOSITORY_DIR))
+        command = "./test_software.sh -r {} -b {}".format(ram, num_pkes)
+        if enroll_tbs:
+            command += " -e {}".format(enroll_tbs)
+        return self.host.command(command, timeout=120)
 
     def setup_local_repository(self):
         self.host.command("ls -l {}".format(self.REPOSITORY_DIR))
@@ -86,16 +112,28 @@ class SbpZynqSetupTemplate:
         fun_test.test_assert("The token has been initialized" in output, "Initialize token")
         return True
 
-    def setup_build(self):
+    def setup_build(self, make=True):
         self.host.command("cd {}".format(self.local_repository))
         self.host.command("mkdir ../build-sbp")
         self.host.command("cd ../build-sbp")
         self.host.command('cmake {} -DBUILD_ESECURE_UNITTESTS=0 -DBOARD_ADDRESS={}'.format(self.local_repository,
                                                                                            self.zynq_board_ip))
-        output = self.host.command("make")
-        fun_test.test_assert("[100%] Built target eSecure_platform_tests" in output,
-                             "[100%] Built target eSecure_platform_tests")
+        if not make:
+            output = self.host.command("make")
+            fun_test.test_assert("[100%] Built target eSecure_platform_tests" in output,
+                                 "[100%] Built target eSecure_platform_tests")
         return True
+
+    def custom_flash_generator(self, artifacts_dir, spec="/tmp/flash_config.json", output_dir=None):
+        self.host.command("cd {}".format(self.get_board_tests_dir()))
+        if not artifacts_dir:
+            artifacts_dir = self._get_artifacts_dir()
+        if not output_dir:
+            output_dir = artifacts_dir
+        command = "python custom_flash_generator.py --spec {} --artifacts_dir {} --output_dir {}".format(spec,
+                                                                                                         artifacts_dir,
+                                                                                                         output_dir)
+        return self.host.command(command)
 
     def get_board_tests_dir(self):
         return "{}/{}".format(self.local_repository, self.RELATIVE_BOARD_TESTS_DIR)
@@ -118,7 +156,8 @@ class SbpZynqSetupTemplate:
                     test_log_file=TEST_LOG_FILE,
                     no_host_boot=False,
                     clear_all_logs=True,
-                    timeout=900):
+                    timeout=900,
+                    artifacts_dir=None):
         result = False
         try:
             self.host.command('cd {}'.format(self.get_board_tests_dir()))
@@ -134,8 +173,13 @@ class SbpZynqSetupTemplate:
             if no_host_boot:
                 no_host_boot_str = "--nohostboot"
 
-            command = 'python ./run_test.py --cpu={} --board_type={} --bitstream={} --board={} -vv {} --secureboot={} {} &> {}'.format(
+            artifacts_dir_str = ""
+            if artifacts_dir:
+                artifacts_dir_str = " --artifacts_dir={}".format(artifacts_dir)
+
+            command = 'python ./run_test.py --cpu={} {} --board_type={} --bitstream={} --board={} -vv {} --secureboot={} {} &> {}'.format(
                 cpu,
+                artifacts_dir_str,
                 board_type,
                 self.bit_stream,
                 self.zynq_board_ip,
@@ -181,11 +225,14 @@ class SbpZynqSetupTemplate:
         local_log_file = "log/{}".format(just_file_name.replace(".py", replacement))
         return local_log_file
 
-    def enroll(self):
+    def enroll(self, artifacts_dir=None):
         stimuli_dir = "{}/validation/stimuli/enroll".format(self.local_repository)
         stimuli_file = "{}/cmd_enroll_puf_chal.py".format(stimuli_dir)
 
-        fun_test.test_assert(self.run_test_py(secure_boot=True, stimuli_file=stimuli_file, no_host_boot=True),
+        fun_test.test_assert(self.run_test_py(secure_boot=True,
+                                              stimuli_file=stimuli_file,
+                                              no_host_boot=True,
+                                              artifacts_dir=artifacts_dir),
                              message="Run test py enrollment challenge")
 
         output = self.host.command("cat {}".format(self.get_stimuli_log_filename(stimuli_file=stimuli_file,
@@ -201,8 +248,9 @@ class SbpZynqSetupTemplate:
                              message="Find magic in enrollment cert")
         fun_test.log("TBS cert: {}".format(certificate_contents))
 
+        tbs_bin_base_file = "enroll_tbs.bin"
         tbs_hex_file = "/tmp/tbs.hex"
-        tbs_bin_file = "/tmp/enroll_tbs.bin"
+        tbs_bin_file = "/tmp/{}".format(tbs_bin_base_file)
         self.host.create_file(tbs_hex_file, contents=certificate_contents)
 
         self.host.command("xxd -r -p {} {}".format(tbs_hex_file, tbs_bin_file))
@@ -215,4 +263,7 @@ class SbpZynqSetupTemplate:
         #                     message="Signed enrollment bin file")
         self.host.command('cd {}'.format(self.get_board_tests_dir()))
         self.host.command("mv {} .".format(tbs_bin_file))
+        self.host.command("cp ./{} {}/".format(tbs_bin_base_file, self.LOCAL_REPOSITORY_DIR))
+        fun_test.test_assert(self.host.list_files(self.LOCAL_REPOSITORY_DIR + "/" + tbs_bin_base_file),
+                             "Ensure TBS bin is copied")
         return True
