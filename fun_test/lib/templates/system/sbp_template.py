@@ -20,6 +20,7 @@ class SbpZynqSetupTemplate:
     ENROLLMENT_CERT_BIN = "enroll_cert.bin"
     ENROLLMENT_TBS_BIN = "enroll_tbs.bin"
     SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
+    DEFAULT_SBP_PUF_BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180412.bit"
 
     def __init__(self, host, zynq_board_ip, bit_stream=None):
         self.host = host
@@ -28,6 +29,8 @@ class SbpZynqSetupTemplate:
         if host:
             self.host.command("echo $MIPS_ELF_ROOT")
             self.host.command("ls -l {}".format(self.ZYNQ_SETUP_DIR))
+        if not bit_stream:
+            bit_stream = self.DEFAULT_SBP_PUF_BIT_STREAM
         self.bit_stream = bit_stream
 
     def setup_container(self):
