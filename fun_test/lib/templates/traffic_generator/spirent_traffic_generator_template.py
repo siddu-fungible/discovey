@@ -13,6 +13,16 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
 
+    def read_json_file_contents(self, file_path):
+        contents = {}
+        try:
+            contents = fun_test.parse_file_to_json(file_name=file_path)
+            fun_test.simple_assert(expression=contents, message="Read %s File" % file_path)
+            fun_test.debug("Found: %s" % contents)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return contents
+
 
 class StreamBlock(object):
     ENDPOINT_MAPPING_ONE_TO_ONE = "ONE_TO_ONE"

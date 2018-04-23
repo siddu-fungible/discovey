@@ -298,7 +298,6 @@ class SpirentManager(object):
         result = False
         try:
             output = self.stc.perform("AttachPorts")
-            print output
             # if re.search(r'ERROR', output):
             #    raise FunTestLibException("Failed to Attach Ports: %s" % output)
             if self.apply_configuration():
