@@ -32,6 +32,64 @@
       "name": "system",
       "verbose_name": "System"
     }
-  ]
+  ],
+  "performance": {
+    "leaves": [
+      {
+        "chart_name": "Best time for 1 malloc/free (WU)",
+        "metric_model_name": "AllocSpeedPerformance"
+      },
+      {
+        "chart_name": "Best time for 1 malloc/free (Threaded)",
+        "metric_model_name": "AllocSpeedPerformance"
+      }
+    ],
+    "metrics": [
+      {
+        "name": "Total",
+        "label": "Total",
+        "info": "Total",
+        "leaf": false,
+        "children": [
+          {
+            "label": "Software",
+            "info": "Software",
+            "leaf": false,
+            "name": "Software",
+            "children": [
+              {
+              "label": "Nucleus",
+              "name": "Nucleus",
+              "info": "Nucleus",
+              "leaf": false,
+              "children": [
+                {
+                  "name": "Best time for 1 malloc/free (WU)",
+                  "label": "Best time for 1 malloc/free (WU)",
+                  "info": "Best time for 1 malloc/free (WU)",
+                  "metric_model_name": "AllocSpeedPerformance",
+                  "leaf": true
+                },
+                {
+                  "name": "Best time for 1 malloc/free (Threaded)",
+                  "label": "Best time for 1 malloc/free (Threaded)",
+                  "info": "Best time for 1 malloc/free (Threaded)",
+                  "metric_model_name": "AllocSpeedPerformance",
+                  "leaf": true
+                }
+              ]
+                }
+            ]
+          },
+          {
+            "label": "Hardware",
+            "info": "Hardware",
+            "name": "Hardware"
+          }
+        ]
+      }
+
+    ]
+  }
 
 }

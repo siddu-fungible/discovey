@@ -5,6 +5,7 @@ from web.fun_test.models import Engineer
 from web.fun_test.models import Tag
 from web.fun_test.models import TestBed
 from web.fun_test.models import Module
+from web.fun_test.metrics_models import MetricChart, LastMetricId
 import json
 
 site_state = None
@@ -18,8 +19,7 @@ class SiteState():
         with open(SITE_BASE_DATA_FILE, "r") as f:
             self.site_base_data = json.load(f)
 
-
-    def register_metric(self, model, model_name, module, component):
+    def register_model_mapping(self, model, model_name, module, component):
         self.metric_models[model_name] = model
         try:
             ModelMapping.objects.get(model_name=model_name)
@@ -42,9 +42,9 @@ class SiteState():
                 e = Engineer(short_name=user["short_name"], email=user["email"])
                 e.save()
 
-    def register_metrics(self):
+    def register_model_mappings(self):
         for model_name, model_info in ANALYTICS_MAP.iteritems():
-            self.register_metric(model=model_info["model"],
+            self.register_model_mapping(model=model_info["model"],
                                  model_name=model_name,
                                  module=model_info["module"],
                                  component=model_info["component"])
@@ -75,6 +75,36 @@ class SiteState():
                 m = Module(name=module["name"], verbose_name=module["verbose_name"])
                 m.save()
 
+    def _do_register_metric(self, metric):
+        m = None
+        children = []
+        if "children" in metric:
+            children = metric["children"]
+        try:
+            metric_model_name = "MetricContainer"
+            if "metric_model_name" in metric:
+                metric_model_name = metric["metric_model_name"]
+            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
+        except ObjectDoesNotExist:
+            if len(children):
+                m = MetricChart(metric_model_name="MetricContainer",
+                                chart_name=metric["name"],
+                                leaf=False, metric_id=LastMetricId.get_next_id())
+                m.save()
+
+        for child in children:
+            c = self._do_register_metric(metric=child)
+            if c:
+                m.add_child(child_id=c.metric_id)
+        return m
+
+    def register_product_metrics(self):
+        performance_spec = self.site_base_data["performance"]
+        metrics = performance_spec["metrics"]
+        for metric in metrics:
+            self._do_register_metric(metric=metric)
+
+    # def re
 
 if not site_state:
     site_state = SiteState()

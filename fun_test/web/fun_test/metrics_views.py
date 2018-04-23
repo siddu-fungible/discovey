@@ -7,7 +7,7 @@ from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer
 from web.fun_test.metrics_models import LastMetricId
-from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer
+from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
@@ -53,9 +53,12 @@ def chart_info(request):
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result = None
     if chart:
-        result = {"data_sets": json.loads(chart.data_sets), "description": chart.description, "positive": chart.positive}
+        result = {"data_sets": json.loads(chart.data_sets),
+                  "description": chart.description,
+                  "positive": chart.positive,
+                  "children": json.loads(chart.children),
+                  "metric_id": chart.metric_id}
     return result
-
 
 @csrf_exempt
 @api_safe_json_response
@@ -117,8 +120,20 @@ def tables(request, metric_model_name, chart_name):
 
 @csrf_exempt
 def summary_page(request):
-    return render(request, 'qa_dashboard/analytics_summary_page.html', locals())
+    return render(request, 'qa_dashboard/metrics_summary.html', locals())
 
+@csrf_exempt
+@api_safe_json_response
+def metric_info(request):
+    request_json = json.loads(request.body)
+    metric_id = request_json["metric_id"]
+    c = MetricChart.objects.get(metric_id=metric_id)
+    serialized = MetricChartSerializer(c, many=False)
+    serialized_data = serialized.data
+    status_values, goodness_values = c.get_status(number_of_records=5)
+    serialized_data["goodness_values"] = goodness_values
+    serialized_data["status_values"] = status_values
+    return serialized_data
 
 @csrf_exempt
 @api_safe_json_response

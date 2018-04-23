@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/metrics_summary.js" %}"></script>
+    <script src="{% static "js/qa_dashboard/editable_metric_chart.js" %}"></script>
+{% endblock %}
+{% block content %}
+    {% verbatim %}
+<style>
+.info-box {
+    border: 1px;
+    border-color: #4CAF50;
+    border-style: solid;
+    border-radius: 5px;
+    width: inherit;
+    margin-top: 5px;
+}
+.info-box-header {
+    background-color: #dff0d8;
+    border-radius: 5px;
+
+}
+
+.info-box-text {
+    padding: 5px;
+}
+.aspect-label {
+    padding: 5px;
+}
+
+.aspect-label-text {
+    padding: 5px;
+}
+
+.fa-icon-green {
+    color: green;
+}
+
+.fa-icon-red {
+    color: red;
+}
+
+.fade-element-in.ng-enter {
+  transition: 0.8s linear all;
+  opacity: 0;
+}
+
+.fade-element-in-init .fade-element-in.ng-enter {
+  opacity: 1;
+}
+
+.fade-element-in.ng-enter.ng-enter-active {
+  opacity: 1;
+}
+
+.fade-element-in.ng-leave {
+  transition: 0.3s linear all;
+  opacity: 1;
+}
+.fade-element-in.ng-leave.ng-leave-active {
+  opacity: 0;
+}
+
+
+arrow-icon {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+
+}
+
+.arrow-right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+
+}
+
+.arrow-down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
+
+</style>
+<div class="content" ng-controller="metricsSummaryController">
+    <div class="col-lg-6 col-xl-6 col-md-6">
+        <div>
+            <table class="table table-nonfluid">
+                <tr>
+                    <th>Aspect</th>
+                    <th>Score</th>
+                    <th>Trend</th>
+
+                </tr>
+                <tr class="fade-element-in" ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
+                    <td class="child-transition">
+                        <span ng-bind-html="getIndentHtml(node) | unsafe">
+                        </span>
+                            <a ng-if="node.leaf" href="#" ng-click="setCurrentChart(node.chartName, node.metricModelName)">{{ node.label  }}</a>
+                            <span ng-if="!node.leaf">{{ node.label }}</span>&nbsp
+                        <span ng-if="node.numChildren">
+                            <a href="#" ng-if="!node.collapsed" ng-click="collapseNode(node)">
+                                <arrow-icon class="arrow-down"></arrow-icon>
+                            </a>
+                            <a href="#" ng-if="node.collapsed" ng-click="expandNode(node)">
+                                <arrow-icon class="arrow-right"></arrow-icon>
+                            </a>
+                        </span>
+                    </td>
+                    <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
+                    <td style="vertical-align: top" ng-bind-html="getTrendHtml(node) | unsafe"></td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+    <div class="card col-xl-6 col-lg-6 col-xxl-6">
+        <div ng-if="currentChartName">
+            <editable-metric-chart chart-name="currentChartName" model-name="currentMetricModelName" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></editable-metric-chart>
+        </div>
+    </div>
+
+</div>
+{% endverbatim %}
+{% endblock %}

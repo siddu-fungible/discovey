@@ -55,23 +55,33 @@ class MetricChart(models.Model):
                 break
         return result
 
-    def get_last_record(self):
-        return self.filter(last=True)
+    def get_last_record(self, number_of_records=1):
+        return self.filter(number_of_records=number_of_records)
 
-    def get_status(self):
-        status = False
-        goodness = 0
+    def get_status(self, number_of_records=5):
+        goodness_values = []
+        status_values = []
         children = json.loads(self.children)
         if not self.leaf:
             if len(children):
-                status = True
+
                 for child in children:
                     child_metric = MetricChart.objects.get(metric_id=child)
-                    child_status, child_goodness = child_metric.get_status()
-                    status = status and child_status
-                    goodness += child_goodness
+                    child_status_values, child_goodness_values = child_metric.get_status()
+
+                    for i in range(number_of_records):
+                        if len(status_values) < (i + 1):
+                            status_values.append(True)
+                        if len(child_status_values) < (i + 1):
+                            child_status_values.append(True)
+                        status_values[i] = status_values[i] and child_status_values[i]
+                        if len(goodness_values) < (i + 1):
+                            goodness_values.append(0)
+                        if len(child_goodness_values) < (i + 1):
+                            child_goodness_values.append(0)
+                        goodness_values[i] += child_goodness_values[i]
         else:
-            last_record = self.get_last_record()
+            last_records = self.get_last_record(number_of_records=number_of_records)
             data_sets = json.loads(self.data_sets)
             if len(data_sets):
                 data_set = data_sets[0]
@@ -79,7 +89,7 @@ class MetricChart(models.Model):
                 max_value = data_set["output"]["max"]
                 min_value = data_set["output"]["min"]
                 output_name = data_set["output"]["name"]
-                expected_value = None
+
                 if "expected" in data_set["output"]:
                     expected_value = data_set["output"]["expected"]
                 else:
@@ -87,18 +97,33 @@ class MetricChart(models.Model):
                     if not self.positive:
                         expected_value = min_value
 
-                output_value = last_record[output_name]
-                status = output_value >= min_value and output_value <= max_value
+                for last_record in last_records:
+                    output_value = last_record[output_name]
+                    status = output_value >= min_value and output_value <= max_value
+                    goodness = 0
+                    if expected_value is not None:
+                        if self.positive:
+                            goodness = (float(output_value) / expected_value) * 100
+                        else:
+                            goodness = (float(expected_value) / output_value) * 100
+                    goodness_values.append(goodness)
+                    status_values.append(status)
 
-                if expected_value is not None:
-                    if self.positive:
-                        goodness = (float(output_value) / expected_value) * 100
-                    else:
-                        goodness = (float(expected_value) / output_value) * 100
-        print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status, goodness))
-        return status, goodness
+            # Fill up missing values
+            for i in range(number_of_records - len(goodness_values)):
+                if len(goodness_values):
+                    goodness_values.append(goodness_values[-1])
+                else:
+                    goodness_values.append(0)
+            for i in range(number_of_records - len(status_values)):
+                if len(status_values):
+                    status_values.append(status_values[-1])
+                else:
+                    status_values.append(False)
+        print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
+        return status_values, goodness_values
 
-    def filter(self, last=False):
+    def filter(self, number_of_records=1):
         data = []
         data_sets = json.loads(self.data_sets)
         if len(data_sets):
@@ -109,17 +134,30 @@ class MetricChart(models.Model):
             for input_name, input_value in inputs.iteritems():
                 d[input_name] = input_value
             try:
-                if not last:
-                    entries = model.objects.filter(**d).order_by("-id")
-                    for entry in entries:
-                        data.append(model_to_dict(entry))
-                else:
-                    entry = model.objects.filter(**d).last()
-                    data = model_to_dict(entry)
-
+                entries = model.objects.filter(**d).order_by("-id")[:number_of_records]
+                entries.reverse()
+                for entry in entries:
+                    data.append(model_to_dict(entry))
             except ObjectDoesNotExist:
                 logger.critical("No data found Model: {} Inputs: {}".format(self.metric_model_name, str(inputs)))
         return data
+
+    @staticmethod
+    def get(chart_name, metric_model_name):
+        result = None
+        try:
+            object = MetricChart.objects.get(chart_name=chart_name, metric_model_name=metric_model_name)
+            result = object
+        except ObjectDoesNotExist:
+            pass
+        return result
+
+
+class MetricChartSerializer(ModelSerializer):
+    class Meta:
+        model = MetricChart
+        fields = "__all__"
+
 
 class LastMetricId(models.Model):
     last_id = models.IntegerField(unique=True, default=100)
