@@ -135,7 +135,7 @@ class MetricChart(models.Model):
                 d[input_name] = input_value
             try:
                 entries = model.objects.filter(**d).order_by("-id")[:number_of_records]
-                entries.reverse()
+                entries = reversed(entries)
                 for entry in entries:
                     data.append(model_to_dict(entry))
             except ObjectDoesNotExist:

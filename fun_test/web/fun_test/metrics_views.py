@@ -225,7 +225,8 @@ def status(request):
     chart_name = request_json["chart_name"]
     try:
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-        data["status"], data["goodness"] = chart.get_status()
+        status = chart.get_status()
+        data["status"], data["goodness"] = status[0][-1], status[1][-1]
     except ObjectDoesNotExist:
         pass
     return data
