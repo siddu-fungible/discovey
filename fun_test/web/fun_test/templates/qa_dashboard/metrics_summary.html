@@ -92,6 +92,7 @@ arrow-icon {
                     <th>Aspect</th>
                     <th>Score</th>
                     <th>Trend</th>
+                    <th>Status</th>
 
                 </tr>
                 <tr class="fade-element-in" ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
@@ -111,6 +112,7 @@ arrow-icon {
                     </td>
                     <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
                     <td style="vertical-align: top" ng-bind-html="getTrendHtml(node) | unsafe"></td>
+                    <td ng-bind-html="getStatusHtml(node) | unsafe"></td>
                 </tr>
             </table>
 
