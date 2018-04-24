@@ -60,8 +60,8 @@ class ECinQemuScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        pass
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        # pass
 
 
 class ECinQemuTestcase(FunTestCase):
@@ -716,5 +716,5 @@ if __name__ == "__main__":
 
     ecscript = ECinQemuScript()
     ecscript.add_test_case(RndDataWriteAndReadWithDataVolumeFailure())
-    # ecscript.add_test_case(ZeroDataWriteAndReadWithDataVolumeFailure())
+    ecscript.add_test_case(ZeroDataWriteAndReadWithDataVolumeFailure())
     ecscript.run()
