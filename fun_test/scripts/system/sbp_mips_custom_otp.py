@@ -42,7 +42,8 @@ class TestCase1(FunTestCase):
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
         sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP)
-        sbp_setup.artifacts_setup(enroll=True)
+
+        sbp_setup.artifacts_setup(enroll=True, otp_settings={"hw_lock_bit": 0, "esec_secureboot": 0})
 
 
         config_template_path = fun_test.get_script_parent_directory() + "/flash_config.json"
