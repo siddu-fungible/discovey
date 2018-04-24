@@ -47,6 +47,13 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
+def generate_uuid(length=16):
+
+    this_uuid = str(uuid.uuid4()).replace("-", "")[length:]
+    # this_uuid = this_uuid[:3] + '-' + this_uuid[3:6] + '-' + this_uuid[6:9] + '-' + this_uuid[9:]
+    return this_uuid
+
+
 class ECDPULevelScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -273,7 +280,7 @@ class ECDPULevelTestcase(FunTestCase):
                                          "ip_cfg {} on {} {} DUT instance".format(dut.data_plane_ip, type, i))
 
                     # Configuring the BLT volume
-                    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+                    this_uuid = generate_uuid()
                     self.uuids[type].append(this_uuid)
                     self.uuids["blt"].append(this_uuid)
                     command_result = self.storage_controller[type][i].create_volume(
@@ -315,7 +322,7 @@ class ECDPULevelTestcase(FunTestCase):
                 for i in range(self.global_setup["ec_coding"][type]):
                     dut = self.global_setup["duts"][type][i]
                     if ec_dut != dut:
-                        this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+                        this_uuid = generate_uuid()
                         self.uuids["rds"].append(this_uuid)
                         command_result = self.storage_controller["ec"][0].create_volume(
                             type=self.volume_types["rds"], capacity=self.volume_capacity["rds"],
@@ -332,7 +339,7 @@ class ECDPULevelTestcase(FunTestCase):
                 ec_pvol_id = self.uuids["rds"] + list(self.uuids["blt"][-1])
 
             # Configuring EC volume on top of BLT volumes
-            this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+            this_uuid = generate_uuid()
             self.uuids["ec"].append(this_uuid)
             command_result = self.storage_controller["ec"][0].create_volume(
                 type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
@@ -346,7 +353,7 @@ class ECDPULevelTestcase(FunTestCase):
 
             # Configuring LS volume based on the script config settting
             if self.use_lsv:
-                this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+                this_uuid = generate_uuid()
                 self.uuids["lsv"].append(this_uuid)
                 command_result = self.storage_controller["ec"][0].create_volume(
                     type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
