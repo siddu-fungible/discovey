@@ -118,7 +118,7 @@ class SbpZynqSetupTemplate:
         self.host.command("cd ../build-sbp")
         self.host.command('cmake {} -DBUILD_ESECURE_UNITTESTS=0 -DBOARD_ADDRESS={}'.format(self.local_repository,
                                                                                            self.zynq_board_ip))
-        if not make:
+        if make:
             output = self.host.command("make")
             fun_test.test_assert("[100%] Built target eSecure_platform_tests" in output,
                                  "[100%] Built target eSecure_platform_tests")

@@ -1,13 +1,9 @@
 {
   "name": "flash_image",
-  "size": "0xE0000",
-  "page_size": "0x10000",
+  "size": "0x40000",
   "puf_rom": {
     "a": {
       "version": "0x1"
-    },
-    "b": {
-      "version": "0x2"
     }
   },
   "firmware": {
@@ -20,8 +16,7 @@
     "a": {
       "key": "fpk5",
       "version": "0x2"
-    },
-    "b": ""
+    }
   },
   "enrollment_certificate": {
     "a": {
