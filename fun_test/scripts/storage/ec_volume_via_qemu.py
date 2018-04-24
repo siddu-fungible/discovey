@@ -39,6 +39,13 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
+def generate_uuid(length=16):
+
+    this_uuid = str(uuid.uuid4()).replace("-", "")[length:]
+    # this_uuid = this_uuid[:3] + '-' + this_uuid[3:6] + '-' + this_uuid[6:9] + '-' + this_uuid[9:]
+    return this_uuid
+
+
 class ECinQemuScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -116,7 +123,7 @@ class ECinQemuTestcase(FunTestCase):
         for vtype in ["ndata", "nparity"]:
             self.uuids[vtype] = []
             for i in range(self.num_volumes[vtype]):
-                this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+                this_uuid = generate_uuid()
                 self.uuids[vtype].append(this_uuid)
                 self.uuids["blt"].append(this_uuid)
                 command_result = self.storage_controller.create_volume(
@@ -129,20 +136,33 @@ class ECinQemuTestcase(FunTestCase):
                 self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
 
         # Configuring EC volume on top of BLT volumes
-        this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+        this_uuid = generate_uuid()
         self.uuids["ec"].append(this_uuid)
-        command_result = self.storage_controller.create_volume(
-            type=self.volume_types["ec"], capacity=self.calc_volume_capacity["ec"], block_size=self.volume_block["ec"],
-            name="ec1", uuid=this_uuid, ndata=self.num_volumes["ndata"], nparity=self.num_volumes["nparity"],
-            pvol_id=self.uuids["blt"], command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.simple_assert(command_result["status"], "Create EC volume on DUT instance")
+        try:
+            command_result = self.storage_controller.create_volume(
+                type=self.volume_types["ec"], capacity=self.calc_volume_capacity["ec"],
+                block_size=self.volume_block["ec"], name="ec1", uuid=this_uuid, ndata=self.num_volumes["ndata"],
+                nparity=self.num_volumes["nparity"], pvol_id=self.uuids["blt"], command_duration=self.command_timeout)
+        except Exception as e:
+            # EC command creation didn't received any response. So going to check whether the command actually failed
+            # or the command got executed properly, but it didn't received the response only
+            self.qemu.start_dpcsh_proxy()
+            self.num_dpcsh_cmds = 0
+            self.storage_controller.disconnect()
+            fun_test.log("EC volume creation command didn't received any response. So checking the whether the volume "
+                         "is actually created or not")
+            storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ec"], this_uuid)
+            command_result = self.storage_controller.peek(storage_props_tree)
+            if command_result["status"]:
+                fun_test.log("EC volume created successfully, but the command returned no output")
+            else:
+                fun_test.simple_assert(command_result["status"], "Create EC volume on DUT instance")
         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
         attach_uuid = this_uuid
 
         # Configuring LS volume based on the script config settting
         if self.use_lsv:
-            this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+            this_uuid = generate_uuid()
             self.uuids["lsv"].append(this_uuid)
             command_result = self.storage_controller.create_volume(
                 type=self.volume_types["lsv"], capacity=self.calc_volume_capacity["lsv"],
@@ -443,34 +463,37 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
                 # Disabling the nparity number of data BLT volumes one after the other and trying to read the
                 # previously written data back
-                for index in range(nparity):
+                for index in range(-1, nparity):
                     self.read_result[ndata][nparity][index] = True
-                    # Start the dpc server to inject error into the data BLT volumes
-                    if self.need_dpc_server_start:
-                        self.qemu.start_dpc_server()
-                        self.storage_controller.disconnect()
-                        self.need_dpc_server_start = False
 
-                    command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                         command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
-                                                                   "UUID {}".format(self.uuids["ndata"][index]))
-                    self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
-                    fun_test.sleep("to enable the fault_injection", 1)
-                    props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                      self.uuids["ndata"][index])
-                    command_result = self.storage_controller.peek(props_tree)
-                    fun_test.log(command_result)
-                    fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
-                                                  message="Ensuring fault_injection got enabled",
-                                                  ignore_on_success=True)
-                    self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+                    if index != -1:
 
-                    # Rebooting the qemu host as a workaround for the bug #swos-1332
-                    if self.reboot_after_config:
-                        self.qemu.reboot()
-                        self.need_dpc_server_start = True
+                        # Start the dpc server to inject error into the data BLT volumes
+                        if self.need_dpc_server_start:
+                            self.qemu.start_dpc_server()
+                            self.storage_controller.disconnect()
+                            self.need_dpc_server_start = False
+
+                        command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
+                                                                             command_duration=self.command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having "
+                                                                       "the UUID {}".format(self.uuids["ndata"][index]))
+                        self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+                        fun_test.sleep("to enable the fault_injection", 1)
+                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                          self.uuids["ndata"][index])
+                        command_result = self.storage_controller.peek(props_tree)
+                        fun_test.log(command_result)
+                        fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]),
+                                                      expected=1, message="Ensuring fault_injection got enabled",
+                                                      ignore_on_success=True)
+                        self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+
+                        # Rebooting the qemu host as a workaround for the bug #swos-1332
+                        if self.reboot_after_config:
+                            self.qemu.reboot()
+                            self.need_dpc_server_start = True
 
                     # Performing read test
                     self.do_read_test(ndata, nparity, index)
@@ -592,34 +615,37 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
                 # Disabling the nparity number of data BLT volumes one after the other and trying to read the
                 # previously written data back
-                for index in range(nparity):
+                for index in range(-1, nparity):
                     self.read_result[ndata][nparity][index] = True
-                    # Start the dpc server to inject error into the data BLT volumes
-                    if self.need_dpc_server_start:
-                        self.qemu.start_dpc_server()
-                        self.storage_controller.disconnect()
-                        self.need_dpc_server_start = False
 
-                    command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
-                                                                         command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
-                                                                   "UUID {}".format(self.uuids["ndata"][index]))
-                    self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
-                    fun_test.sleep("to enable the fault_injection", 1)
-                    props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                      self.uuids["ndata"][index])
-                    command_result = self.storage_controller.peek(props_tree)
-                    fun_test.log(command_result)
-                    fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
-                                                  message="Ensuring fault_injection got enabled",
-                                                  ignore_on_success=True)
-                    self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+                    if index != -1:
 
-                    # Rebooting the qemu host as a workaround for the bug #swos-1332
-                    if self.reboot_after_config:
-                        self.qemu.reboot()
-                        self.need_dpc_server_start = True
+                        # Start the dpc server to inject error into the data BLT volumes
+                        if self.need_dpc_server_start:
+                            self.qemu.start_dpc_server()
+                            self.storage_controller.disconnect()
+                            self.need_dpc_server_start = False
+
+                        command_result = self.storage_controller.fail_volume(uuid=self.uuids["ndata"][index],
+                                                                             command_duration=self.command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having "
+                                                                       "the UUID {}".format(self.uuids["ndata"][index]))
+                        self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+                        fun_test.sleep("to enable the fault_injection", 1)
+                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                          self.uuids["ndata"][index])
+                        command_result = self.storage_controller.peek(props_tree)
+                        fun_test.log(command_result)
+                        fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]),
+                                                      expected=1, message="Ensuring fault_injection got enabled",
+                                                      ignore_on_success=True)
+                        self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
+
+                        # Rebooting the qemu host as a workaround for the bug #swos-1332
+                        if self.reboot_after_config:
+                            self.qemu.reboot()
+                            self.need_dpc_server_start = True
 
                     # Performing read test
                     self.do_read_test(ndata, nparity, index)
@@ -690,5 +716,5 @@ if __name__ == "__main__":
 
     ecscript = ECinQemuScript()
     ecscript.add_test_case(RndDataWriteAndReadWithDataVolumeFailure())
-    ecscript.add_test_case(ZeroDataWriteAndReadWithDataVolumeFailure())
+    # ecscript.add_test_case(ZeroDataWriteAndReadWithDataVolumeFailure())
     ecscript.run()
