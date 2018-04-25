@@ -6,6 +6,147 @@ import os
 import re
 
 
+
+
+
+class OtpTemplateGenerator():
+    OTP_TEMPLATE_STRING = """HW_LOCK_BIT {hw_lock_bit}
+ESEC_SECUREBOOT {esec_secureboot}
+WATCHDOG {watchdog}
+CUSTOMER_KEY_BIT {customer_key_bit}
+I2C_CHAL_BIT {i2c_chal_bit}
+TAMPERFILTERPERIOD {tamper_filter_period}
+TAMPERFILTERTHRESHOLD {tamper_filter_threshold}
+DEBUGPROTEN {debug_protection}
+SERIAL_INFO {serial_info}
+SERIALNO {serial_no}
+TAMP00_CM {tamp00_cm}
+TAMP01_CM {tamp01_cm}
+TAMP02_CM {tamp02_cm}
+TAMP03_CM {tamp03_cm}
+TAMP04_CM {tamp04_cm}
+TAMP05_CM {tamp05_cm}
+TAMP06_CM {tamp06_cm}
+TAMP07_CM {tamp07_cm}
+TAMP08_CM {tamp08_cm}
+TAMP09_CM {tamp09_cm}
+TAMP10_CM {tamp10_cm}
+TAMP11_CM {tamp11_cm}
+TAMP12_CM {tamp12_cm}
+TAMP13_CM {tamp13_cm}
+TAMP14_CM {tamp14_cm}
+TAMP15_CM {tamp15_cm}
+TAMP16_CM {tamp16_cm}
+TAMP17_CM {tamp17_cm}
+TAMP18_CM {tamp18_cm}
+TAMP19_CM {tamp19_cm}
+TAMP20_CM {tamp20_cm}
+TAMP21_CM {tamp21_cm}
+TAMP22_CM {tamp22_cm}
+TAMP23_CM {tamp23_cm}
+TAMP24_CM {tamp24_cm}
+TAMP25_CM {tamp25_cm}
+TAMP26_CM {tamp26_cm}
+TAMP27_CM {tamp27_cm}
+TAMP28_CM {tamp28_cm}
+TAMP29_CM {tamp29_cm}
+TAMP30_CM {tamp30_cm}
+TAMP31_CM {tamp31_cm}"""
+    def __init__(self):
+        self.hw_lock_bit = 1
+        self.esec_secureboot = 0
+        self.watchdog = 1
+        self.customer_key_bit = 0
+        self.i2c_chal_bit = 0
+        self.tamper_filter_period = "0x1f"
+        self.tamper_filter_threshold = "0x05"
+        self.debug_protection = "0xFC00FF"
+        self.serial_info = 0
+        self.serial_no = "0x78502fa8f092ca5008b8d8992f64208d"
+        self.tamp00_cm = 1
+        self.tamp01_cm = 1
+        self.tamp02_cm = 4
+        self.tamp03_cm = 4
+        self.tamp04_cm = 4
+        self.tamp05_cm = 4
+        self.tamp06_cm = 1
+        self.tamp07_cm = 4
+        self.tamp08_cm = 4
+        self.tamp09_cm = 4
+        self.tamp10_cm = 1
+        self.tamp11_cm = 1
+        self.tamp12_cm = 4
+        self.tamp13_cm = 4
+        self.tamp14_cm = 4
+        self.tamp15_cm = 1
+        self.tamp16_cm = 0
+        self.tamp17_cm = 0
+        self.tamp18_cm = 0
+        self.tamp19_cm = 0
+        self.tamp20_cm = 0
+        self.tamp21_cm = 0
+        self.tamp22_cm = 0
+        self.tamp23_cm = 0
+        self.tamp24_cm = 1
+        self.tamp25_cm = 0
+        self.tamp26_cm = 0
+        self.tamp27_cm = 0
+        self.tamp28_cm = 0
+        self.tamp29_cm = 0
+        self.tamp30_cm = 0
+        self.tamp31_cm = 4
+
+    def set(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def generate(self):
+        template = self.OTP_TEMPLATE_STRING.format(hw_lock_bit=self.hw_lock_bit,
+                                          esec_secureboot=self.esec_secureboot,
+                                          watchdog=self.watchdog,
+                                          customer_key_bit=self.customer_key_bit,
+                                          i2c_chal_bit=self.i2c_chal_bit,
+                                          tamper_filter_period=self.tamper_filter_period,
+                                          tamper_filter_threshold=self.tamper_filter_threshold,
+                                          debug_protection=self.debug_protection,
+                                          serial_info=self.serial_info,
+                                          serial_no=self.serial_no,
+                                          tamp00_cm=self.tamp00_cm,
+                                          tamp01_cm=self.tamp01_cm,
+                                          tamp02_cm=self.tamp02_cm,
+                                          tamp03_cm=self.tamp03_cm,
+                                          tamp04_cm=self.tamp04_cm,
+                                          tamp05_cm=self.tamp05_cm,
+                                          tamp06_cm=self.tamp06_cm,
+                                          tamp07_cm=self.tamp07_cm,
+                                          tamp08_cm=self.tamp08_cm,
+                                          tamp09_cm=self.tamp09_cm,
+                                          tamp10_cm=self.tamp10_cm,
+                                          tamp11_cm=self.tamp11_cm,
+                                          tamp12_cm=self.tamp12_cm,
+                                          tamp13_cm=self.tamp13_cm,
+                                          tamp14_cm=self.tamp14_cm,
+                                          tamp15_cm=self.tamp15_cm,
+                                          tamp16_cm=self.tamp16_cm,
+                                          tamp17_cm=self.tamp17_cm,
+                                          tamp18_cm=self.tamp18_cm,
+                                          tamp19_cm=self.tamp19_cm,
+                                          tamp20_cm=self.tamp20_cm,
+                                          tamp21_cm=self.tamp21_cm,
+                                          tamp22_cm=self.tamp22_cm,
+                                          tamp23_cm=self.tamp23_cm,
+                                          tamp24_cm=self.tamp24_cm,
+                                          tamp25_cm=self.tamp25_cm,
+                                          tamp26_cm=self.tamp26_cm,
+                                          tamp27_cm=self.tamp27_cm,
+                                          tamp28_cm=self.tamp28_cm,
+                                          tamp29_cm=self.tamp29_cm,
+                                          tamp30_cm=self.tamp30_cm,
+                                          tamp31_cm=self.tamp31_cm)
+        return template
+
+
 class SbpZynqSetupTemplate:
     ZYNQ_SETUP_DIR = "/zynq_setup"
     REPOSITORY_DIR = "/repository"
@@ -32,6 +173,14 @@ class SbpZynqSetupTemplate:
         if not bit_stream:
             bit_stream = self.DEFAULT_SBP_PUF_BIT_STREAM
         self.bit_stream = bit_stream
+
+    def set_otp_template(self, **kwargs):
+        otp_template = OtpTemplateGenerator()
+        otp_template.set(**kwargs)
+        template = otp_template.generate()
+        fun_test.log("OTP Template:\n{}".format(template))
+        target_file_name = self.get_otp_templates_dir() + "/OTP_content_CM.txt.in"
+        self.host.create_file(contents=template, file_name=target_file_name)
 
     def setup_container(self, git_pull=True):
         self.docker_host = AssetManager().get_any_docker_host()
@@ -81,12 +230,14 @@ class SbpZynqSetupTemplate:
         s = "artifacts_{}_eeprom_{}".format(secure_str, platform)
         return os.path.join(self.LOCAL_REPOSITORY_DIR, s)
 
-    def artifacts_setup(self, enroll=True):
+    def artifacts_setup(self, enroll=True, otp_settings=None, secure_boot=True):
         fun_test.test_assert(self.setup_local_repository(), message="Setup local repository")
+        if otp_settings:
+            self.set_otp_template(**otp_settings)
         fun_test.test_assert(self.setup_hsm(), "HSM install")
         fun_test.test_assert(self.run_test_software(), "Run test_software")
         fun_test.test_assert(self.setup_build(make=False), "Cmake")
-        fun_test.test_assert(self.host.list_files(self._get_artifacts_dir()), "List artifacts")
+        fun_test.test_assert(self.host.list_files(self._get_artifacts_dir(secure_boot=secure_boot)), "List artifacts")
         if enroll:
             fun_test.test_assert(self.enroll(artifacts_dir=self._get_artifacts_dir()), "Enroll")
             fun_test.test_assert(self.run_test_software(enroll_tbs=os.path.join(self.LOCAL_REPOSITORY_DIR,
@@ -138,6 +289,10 @@ class SbpZynqSetupTemplate:
     def get_board_tests_dir(self):
         return "{}/{}".format(self.local_repository, self.RELATIVE_BOARD_TESTS_DIR)
 
+    def get_otp_templates_dir(self):
+        s = self.DEVTOOLS_FIRMWARE_DIR + "/otp_templates"
+        return s
+
     def get_board_tests_log_dir(self):
         return "{}/{}".format(self.get_board_tests_dir(), self.RELATIVE_BOARD_TESTS_LOG_DIR)
 
@@ -148,6 +303,8 @@ class SbpZynqSetupTemplate:
     def clear_enrollment_bin(self):
         self.host.command("rm {}/{}".format(self.get_board_tests_dir(), self.ENROLLMENT_TBS_BIN))
 
+
+
     def run_test_py(self,
                     secure_boot,
                     stimuli_file,
@@ -157,7 +314,8 @@ class SbpZynqSetupTemplate:
                     no_host_boot=False,
                     clear_all_logs=True,
                     timeout=900,
-                    artifacts_dir=None):
+                    artifacts_dir=None,
+                    get_log=None):
         result = False
         try:
             self.host.command('cd {}'.format(self.get_board_tests_dir()))
@@ -176,8 +334,11 @@ class SbpZynqSetupTemplate:
             artifacts_dir_str = ""
             if artifacts_dir:
                 artifacts_dir_str = " --artifacts_dir={}".format(artifacts_dir)
+            test_log_file_str = ""
+            if test_log_file:
+                test_log_file_str = " &> {}".format(test_log_file)
 
-            command = 'python ./run_test.py --cpu={} {} --board_type={} --bitstream={} --board={} -vv {} --secureboot={} {} &> {}'.format(
+            command = 'python ./run_test.py --cpu={} {} --board_type={} --bitstream={} --board={} -vv {} --secureboot={} {} {}'.format(
                 cpu,
                 artifacts_dir_str,
                 board_type,
@@ -186,7 +347,7 @@ class SbpZynqSetupTemplate:
                 no_host_boot_str,
                 secure_boot_str,
                 stimuli_file,
-                test_log_file)
+                test_log_file_str)
             fun_test.debug("run_test_py command: {}".format(command))
             output = self.host.command(command, timeout=timeout)
             stimuli_files = self.host.list_files(stimuli_file)
@@ -213,6 +374,8 @@ class SbpZynqSetupTemplate:
 
         except Exception as ex:
             fun_test.critical(str(ex))
+        if get_log:
+            result = self.host.read_file(file_name=test_log_file)
         return result
 
     def get_stimuli_log_filename(self, stimuli_file, secure_boot=False):
@@ -267,3 +430,9 @@ class SbpZynqSetupTemplate:
         fun_test.test_assert(self.host.list_files(self.LOCAL_REPOSITORY_DIR + "/" + tbs_bin_base_file),
                              "Ensure TBS bin is copied")
         return True
+
+    def get_status(self, secure_boot=True):
+        stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+        stimuli_file = "{}/cmd_get_status.py".format(stimuli_dir)
+        logs = self.run_test_py(secure_boot=False, stimuli_file=stimuli_file,
+                         artifacts_dir=self._get_artifacts_dir(secure_boot=False), get_log=True)
