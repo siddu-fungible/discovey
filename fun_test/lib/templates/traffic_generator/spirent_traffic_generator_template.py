@@ -252,6 +252,8 @@ class EthernetPauseHeader(object):
 class Ipv4Header(object):
     PROTOCOL_TYPE_EXPERIMENTAL = "Experimental"
     HEADER_TYPE = "ipv4:IPv4"
+    CHECKSUM_ERROR = '65535'
+    TOTAL_HEADER_LENGTH_ERROR = '65535'
 
     def __init__(self, checksum=0, destination_address="192.0.0.1", dest_prefix_length=24,
                  frag_offset=0, gateway="192.85.0.1", identification=0, ihl=5, prefix_length=24,
