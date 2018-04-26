@@ -59,6 +59,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
         } else {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, ctrl.previewDataSets); // TODO: Race condition on chartInfo
         }
+
     }, true);
 
     $scope.fetchChartInfo = () => {
@@ -139,9 +140,18 @@ function FunMetricChartController($scope, commonService, $attrs) {
                         for(let j = 0; j < oneDataSet.length; j++) {
                             let oneRecord = oneDataSet[j];
                             if(oneRecord.key.toString() === keyList[i]) {
-                                let outputName = filterDataSets[0].output.name;
+                                let outputName = filterDataSets[dataSetIndex].output.name;
                                 output = oneRecord[outputName];
-                                $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                if (chartInfo && chartInfo.y1axis_title) {
+                                   $scope.chart1YaxisTitle = chartInfo.y1axis_title;
+                                } else {
+                                   $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                }
+                                if (ctrl.y1AxisTitle) {
+                                    $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
+                                }
+
+
                                 $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
                                 break;
                             }
@@ -172,6 +182,7 @@ angular.module('qa-dashboard').component("funMetricChart", {
 
         bindings: {
                     chartName: '<',
+                    y1AxisTitle: '<',
                     modelName: '<',
                     width: '@',
                     height: '@',

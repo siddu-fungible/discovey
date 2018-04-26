@@ -82,10 +82,10 @@ function MetricsSummaryController($scope, commonService) {
             chartName: data.chart_name,
             metricModelName: data.metric_model_name
         };
-        newNode.goodness = data.goodness_values.splice(-1)[0].toFixed(1);
-        newNode.status = data.status_values.splice(-1)[0];
+        newNode.goodness = data.goodness_values[data.goodness_values.length - 1].toFixed(1);
+        newNode.status = data.status_values[data.status_values.length - 1];
         newNode.trend = "flat";
-        let penultimateGoodness = data.goodness_values.splice(-2)[0];
+        let penultimateGoodness = data.goodness_values[data.goodness_values.length - 2].toFixed(1);
         if (penultimateGoodness > newNode.goodness) {
             newNode.trend = "down";
         } else if (penultimateGoodness < newNode.goodness) {
