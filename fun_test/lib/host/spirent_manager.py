@@ -496,10 +496,12 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def get_object_children(self, handle):
+    def get_object_children(self, handle, child_type=None):
         children = None
         try:
-            result = self.stc.get(handle, "children")
+            if not child_type:
+                child_type = "children"
+            result = self.stc.get(handle, child_type)
             if result:
                 children = result.split()
         except Exception as ex:
