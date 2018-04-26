@@ -445,7 +445,7 @@ class NuTransitJitterTest(FunTestCase):
 if __name__ == "__main__":
     ts = NuTransitPerformance()
     ts.add_test_case(NuTransitLatencyTest())
-    # ts.add_test_case(NuTransitJitterTest())
+    ts.add_test_case(NuTransitJitterTest())
     ts.run()
 
 

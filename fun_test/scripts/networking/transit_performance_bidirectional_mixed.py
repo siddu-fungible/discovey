@@ -222,14 +222,6 @@ class NuTransitLatencyTest(FunTestCase):
                 tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
                 stream_objects=stream_objs, wait_before_fetching_results=False)
             fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
-            '''
-            checkpoint = "Validate Tx and Rx Rate under %s streams" % port2
-            rate_result = template_obj.validate_traffic_rate_results(
-                rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
-                tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
-                stream_objects=port2_stream_objs, wait_before_fetching_results=False)
-            fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
-            '''
             key = "frame_%s" % frame_size
             result_dict[key] = {'pps_count': rate_result['pps_count'][key],
                                 'throughput_count': rate_result['throughput_count'][key]}
@@ -481,7 +473,7 @@ class NuTransitJitterTest(FunTestCase):
 
 if __name__ == "__main__":
     ts = NuTransitPerformance()
-    # ts.add_test_case(NuTransitLatencyTest())
+    ts.add_test_case(NuTransitLatencyTest())
     ts.add_test_case(NuTransitJitterTest())
     ts.run()
 
