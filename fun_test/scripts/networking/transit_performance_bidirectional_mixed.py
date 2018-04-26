@@ -52,7 +52,7 @@ class NuTransitPerformance(FunTestScript):
         performance_data = template_obj.read_json_file_contents(file_path=file_path)
         fun_test.simple_assert(expression=performance_data, message=checkpoint)
 
-        frame_load_dict = performance_data['fixed_size']['frames']
+        frame_load_dict = performance_data['mixed_size']['frames']
 
         # Create stream block objects for each port
         for port in result['port_list']:
@@ -116,7 +116,7 @@ class NuTransitLatencyTest(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="NU Transit Performance Bidirectional Latency Test",
+                              summary="NU Transit Performance Bidirectional Latency Test (Mixed Size Frames)",
                               steps="""
                               1. Get port handles
                               2. Create Generator Config for each port and set below parameters
@@ -136,8 +136,8 @@ class NuTransitLatencyTest(FunTestCase):
 
     def setup(self):
         self.ports = template_obj.stc_manager.get_port_list()
-        fun_test.simple_assert(self.ports, "Get Port handle")
-        self.traffic_duration = performance_data['fixed_size']['traffic_duration']
+        fun_test.test_assert(self.ports, "Get Port handle")
+        self.traffic_duration = performance_data['mixed_size']['traffic_duration']
 
         port1_generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                                  duration=self.traffic_duration,
@@ -174,84 +174,110 @@ class NuTransitLatencyTest(FunTestCase):
         self.subscribe_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
         fun_test.test_assert(expression=self.subscribe_results['result'], message=checkpoint)
 
-        self.expected_latency_data = performance_data['fixed_size']['latency']
-        self.tolerance_percent = performance_data['fixed_size']['tolerance_percent']
+        self.expected_latency_data = performance_data['mixed_size']['latency']
+        self.tolerance_percent = performance_data['mixed_size']['tolerance_percent']
 
     def run(self):
+        result_dict = OrderedDict()
         port1 = self.ports[0]
         port2 = self.ports[1]
 
         port1_stream_objs = stream_port_obj_dict[port1]
         port2_stream_objs = stream_port_obj_dict[port2]
-
         all_stream_objects = zip(port1_stream_objs, port2_stream_objs)
-        result_dict = OrderedDict()
+        frame_sizes = []
+        loads = []
+        for stream_obj in port1_stream_objs:
+            frame_sizes.append(str(stream_obj.FixedFrameLength))
+            loads.append(str(stream_obj.Load))
 
+        checkpoint = "Performance for %s frame size with %s load" % (frame_sizes, str(loads))
+        message = "---------------------------------> Start %s  <---------------------------------" % checkpoint
+        fun_test.log(message)
+        fun_test.add_checkpoint(message)
+
+        checkpoint = "Activate %s frame size streams for all ports" % frame_sizes
+        result = template_obj.activate_stream_blocks(stream_obj_list=port1_stream_objs)
+        fun_test.simple_assert(result, checkpoint)
+        result = template_obj.activate_stream_blocks(stream_obj_list=port2_stream_objs)
+        fun_test.simple_assert(result, checkpoint)
+
+        checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % self.traffic_duration
+        result = template_obj.enable_generator_configs(generator_configs=[
+            self.generator_port_obj_dict[port1].spirent_handle, self.generator_port_obj_dict[port2].spirent_handle])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
         for stream_objs in all_stream_objects:
-            port1_stream_obj = stream_objs[0]
-            port2_stream_obj = stream_objs[1]
-
-            frame_size = str(port1_stream_obj.FixedFrameLength)
-            load = port1_stream_obj.Load
-            key = "frame_%s" % frame_size
-
-            checkpoint = "Performance for %s frame size with %s load" % (frame_size, str(load))
-            message = "---------------------------------> Start %s  <---------------------------------" % checkpoint
+            frame_size = str(stream_objs[0].FixedFrameLength)
+            load = str(stream_objs[0].Load)
+            checkpoint = "Validate Traffic Rates for %s frame size with %s load" % (frame_size, load)
+            message = "--------------------------------->  %s  <---------------------------------" % checkpoint
             fun_test.log(message)
             fun_test.add_checkpoint(message)
 
-            checkpoint = "Activate %s frame size streams for all ports" % frame_size
-            result = template_obj.activate_stream_blocks(stream_obj_list=[port1_stream_obj,
-                                                                          port2_stream_obj])
-            fun_test.simple_assert(result, checkpoint)
-
-            checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % self.traffic_duration
-            result = template_obj.enable_generator_configs(generator_configs=[
-                self.generator_port_obj_dict[port1].spirent_handle, self.generator_port_obj_dict[port2].spirent_handle])
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            checkpoint = "Validate Tx and Rx Rate"
+            checkpoint = "Validate Tx and Rx Rate under %s streams " % port1
             rate_result = template_obj.validate_traffic_rate_results(
                 rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
-                stream_objects=stream_objs)
+                stream_objects=stream_objs, wait_before_fetching_results=False)
             fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
-            fun_test.sleep("Waiting for traffic to complete", seconds=30)
+            '''
+            checkpoint = "Validate Tx and Rx Rate under %s streams" % port2
+            rate_result = template_obj.validate_traffic_rate_results(
+                rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
+                tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
+                stream_objects=port2_stream_objs, wait_before_fetching_results=False)
+            fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
+            '''
+            key = "frame_%s" % frame_size
+            result_dict[key] = {'pps_count': rate_result['pps_count'][key],
+                                'throughput_count': rate_result['throughput_count'][key]}
+        fun_test.sleep("Waiting for traffic to complete", seconds=30)
 
-            checkpoint = "Validate Latency Results"
-            latency_result = template_obj.validate_performance_result(
+        for stream_objs in all_stream_objects:
+            frame_size = str(stream_objs[0].FixedFrameLength)
+            load = str(stream_objs[0].Load)
+            checkpoint = "Validate Latency Counters for %s frame size with %s load" % (frame_size, load)
+            message = "--------------------------------->  %s  <---------------------------------" % checkpoint
+            fun_test.log(message)
+            fun_test.add_checkpoint(message)
+
+            checkpoint = "Validate Latency Results under %s streams" % port1
+            latency_results = template_obj.validate_performance_result(
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=stream_objs, expected_latency_count=self.expected_latency_data,
                 tolerance_percent=self.tolerance_percent)
-            fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
+            fun_test.simple_assert(expression=latency_results['result'], message=checkpoint)
+            '''
+            checkpoint = "Validate Latency Results under %s streams" % port2
+            port2_latency_result = template_obj.validate_performance_result(
+                tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
+                rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
+                stream_objects=port2_stream_objs, expected_latency_count=self.expected_latency_data,
+                tolerance_percent=self.tolerance_percent)
+            fun_test.simple_assert(expression=port2_latency_result['result'], message=checkpoint)
+            '''
+            key = "frame_%s" % stream_objs[0].FixedFrameLength
+            result_dict[key].update(latency_count=latency_results[key])
 
-            checkpoint = "Ensure no errors are seen for port %s" % \
-                         self.analyzer_port_obj_dict[port1].spirent_handle
-            analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
-                port_handle=port1, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
-            result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            fun_test.test_assert(expression=result['result'], message=checkpoint)
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1].spirent_handle
+        analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=port1, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
+        result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
+        fun_test.test_assert(expression=result['result'], message=checkpoint)
 
-            checkpoint = "Ensure no errors are seen for port %s" % \
-                         self.analyzer_port_obj_dict[port2].spirent_handle
-            analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
-                port_handle=port2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
-            result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            fun_test.test_assert(expression=result['result'], message=checkpoint)
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port2].spirent_handle
+        analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=port2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
+        result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
+        fun_test.test_assert(expression=result['result'], message=checkpoint)
 
-            checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
-            result = template_obj.deactivate_stream_blocks(stream_obj_list=[port1_stream_obj, port2_stream_obj])
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            result_dict[key] = {'pps_count': rate_result['pps_count'][key],
-                                'throughput_count': rate_result['throughput_count'][key],
-                                'latency_count': latency_result[key]}
-
-            checkpoint = "Performance for %s frame size with %s load" % (frame_size, str(load))
-            message = "---------------------------------> End %s  <---------------------------------" % checkpoint
-            fun_test.log(message)
-            fun_test.add_checkpoint(message)
+        checkpoint = "Performance for %s frame size with %s load" % (frame_sizes, loads)
+        message = "---------------------------------> End %s  <---------------------------------" % checkpoint
+        fun_test.log(message)
+        fun_test.add_checkpoint(message)
 
         checkpoint = "Display Latency Performance Counters"
         template_obj.display_latency_counters(result_dict)
@@ -274,11 +300,11 @@ class NuTransitJitterTest(FunTestCase):
     tolerance_percent = None
     ports = []
     traffic_duration = None
-    view_attribute_list = ["AvgJitter", "MinJitter", "MaxJitter", "L1BitRate", "FrameRate", "FrameCount"]
+    view_attribute_list = ["AvgJitter", "MinJitter", "MaxJitter", "FrameRate", "FrameCount"]
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="NU Transit Performance Bidirectional Jitter Test",
+                              summary="NU Transit Performance Bidirectional Jitter Test (Mixed Size Frames)",
                               steps="""
                               1. Get port handles
                               2. Create Generator Config for each port and set below parameters
@@ -299,9 +325,9 @@ class NuTransitJitterTest(FunTestCase):
     def setup(self):
         self.ports = template_obj.stc_manager.get_port_list()
         fun_test.test_assert(self.ports, "Get Port handle")
-        self.traffic_duration = performance_data['fixed_size']['traffic_duration']
-        self.expected_jitter_data = performance_data['fixed_size']['jitter']
-        self.tolerance_percent = performance_data['fixed_size']['tolerance_percent']
+        self.traffic_duration = performance_data['mixed_size']['traffic_duration']
+        self.expected_jitter_data = performance_data['mixed_size']['jitter']
+        self.tolerance_percent = performance_data['mixed_size']['tolerance_percent']
 
         port1_generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                                  duration=self.traffic_duration,
@@ -346,8 +372,8 @@ class NuTransitJitterTest(FunTestCase):
         checkpoint = "Subscribe to Rx Stream Summary Results"
         rx_summary_subscribe = template_obj.subscribe_rx_results(parent=template_obj.stc_manager.project_handle,
                                                                  result_type="RxStreamSummaryResults",
-                                                                 view_attribute_list=self.view_attribute_list,
-                                                                 change_mode=True)
+                                                                 change_mode=True,
+                                                                 view_attribute_list=self.view_attribute_list)
         fun_test.test_assert(rx_summary_subscribe, checkpoint)
 
         checkpoint = "Subscribe to Analyzer Results"
@@ -359,80 +385,91 @@ class NuTransitJitterTest(FunTestCase):
                                   "analyzer_subscribe": analyzer_subscribe}
 
     def run(self):
+        result_dict = OrderedDict()
         port1 = self.ports[0]
         port2 = self.ports[1]
 
         port1_stream_objs = stream_port_obj_dict[port1]
         port2_stream_objs = stream_port_obj_dict[port2]
-
         all_stream_objects = zip(port1_stream_objs, port2_stream_objs)
-        result_dict = OrderedDict()
 
+        frame_sizes = []
+        loads = []
+        for stream_obj in port1_stream_objs:
+            frame_sizes.append(str(stream_obj.FixedFrameLength))
+            loads.append(str(stream_obj.Load))
+
+        checkpoint = "Performance for %s frame size with %s load" % (frame_sizes, loads)
+        message = "---------------------------------> Start %s  <---------------------------------" % checkpoint
+        fun_test.log(message)
+        fun_test.add_checkpoint(message)
+
+        checkpoint = "Activate %s frame size streams for all ports" % frame_sizes
+        result = template_obj.activate_stream_blocks(stream_obj_list=port1_stream_objs)
+        fun_test.simple_assert(result, checkpoint)
+        result = template_obj.activate_stream_blocks(stream_obj_list=port2_stream_objs)
+        fun_test.simple_assert(result, checkpoint)
+
+        checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % self.traffic_duration
+        result = template_obj.enable_generator_configs(generator_configs=[
+            self.generator_port_obj_dict[port1].spirent_handle, self.generator_port_obj_dict[port2].spirent_handle])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
         for stream_objs in all_stream_objects:
-            port1_stream_obj = stream_objs[0]
-            port2_stream_obj = stream_objs[1]
-
-            frame_size = str(port1_stream_obj.FixedFrameLength)
-            load = port1_stream_obj.Load
+            frame_size = str(stream_objs[0].FixedFrameLength)
+            load = str(stream_objs[0].Load)
             key = "frame_%s" % frame_size
-
-            checkpoint = "Performance for %s frame size with %s load" % (frame_size, str(load))
-            message = "---------------------------------> Start %s  <---------------------------------" % checkpoint
+            checkpoint = "Validate Traffic Rates for %s frame size with %s load" % (frame_size, load)
+            message = "--------------------------------->  %s  <---------------------------------" % checkpoint
             fun_test.log(message)
             fun_test.add_checkpoint(message)
 
-            checkpoint = "Activate %s frame size streams for all ports" % frame_size
-            result = template_obj.activate_stream_blocks(stream_obj_list=[port1_stream_obj,
-                                                                          port2_stream_obj])
-            fun_test.simple_assert(result, checkpoint)
-
-            checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % self.traffic_duration
-            result = template_obj.enable_generator_configs(generator_configs=[
-                self.generator_port_obj_dict[port1].spirent_handle, self.generator_port_obj_dict[port2].spirent_handle])
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
             checkpoint = "Validate Tx and Rx Rate"
             rate_result = template_obj.validate_traffic_rate_results(
                 rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
                 stream_objects=stream_objs, wait_before_fetching_results=False, validate_throughput=False)
             fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
+            result_dict[key] = {'pps_count': rate_result['pps_count'][key],
+                                'throughput_count': rate_result['throughput_count'][key]}
 
-            fun_test.sleep("Waiting for traffic to complete", seconds=30)
+        fun_test.sleep("Waiting for traffic to complete", seconds=30)
+
+        for stream_objs in all_stream_objects:
+            frame_size = str(stream_objs[0].FixedFrameLength)
+            load = str(stream_objs[0].Load)
+            key = "frame_%s" % frame_size
+            checkpoint = "Validate Jitter Counters for %s frame size with %s load" % (frame_size, load)
+            message = "--------------------------------->  %s  <---------------------------------" % checkpoint
+            fun_test.log(message)
+            fun_test.add_checkpoint(message)
 
             checkpoint = "Validate Jitter Results"
-            jitter_result = template_obj.validate_performance_result(
+            jitter_results = template_obj.validate_performance_result(
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=stream_objs, expected_jitter_count=self.expected_jitter_data,
                 tolerance_percent=self.tolerance_percent, jitter=True)
-            fun_test.simple_assert(expression=jitter_result, message=checkpoint)
+            fun_test.simple_assert(expression=jitter_results['result'], message=checkpoint)
+            result_dict[key].update(jitter_count=jitter_results[key])
 
-            checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1].spirent_handle
-            analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
-                port_handle=port1, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
-            result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            fun_test.test_assert(expression=result['result'], message=checkpoint)
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1].spirent_handle
+        analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=port1, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
+        result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
+        fun_test.test_assert(expression=result['result'], message=checkpoint)
 
-            checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port2].spirent_handle
-            analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
-                port_handle=port2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
-            result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            fun_test.test_assert(expression=result['result'], message=checkpoint)
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port2].spirent_handle
+        analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=port2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
+        result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
+        fun_test.test_assert(expression=result['result'], message=checkpoint)
 
-            checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
-            result = template_obj.deactivate_stream_blocks(stream_obj_list=[port1_stream_obj, port2_stream_obj])
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            result_dict[key] = {'pps_count': rate_result['pps_count'][key],
-                                'throughput_count': rate_result['throughput_count'][key],
-                                'jitter_count': jitter_result[key]}
-
-            checkpoint = "Performance for %s frame size with %s load" % (frame_size, str(load))
-            message = "---------------------------------> End %s  <---------------------------------" % checkpoint
-            fun_test.log(message)
-            fun_test.add_checkpoint(message)
+        checkpoint = "Performance for %s frame size with %s load" % (frame_sizes, loads)
+        message = "---------------------------------> End %s  <---------------------------------" % checkpoint
+        fun_test.log(message)
+        fun_test.add_checkpoint(message)
 
         checkpoint = "Display Jitter Performance Counters"
         template_obj.display_jitter_counters(result_dict)
@@ -444,8 +481,8 @@ class NuTransitJitterTest(FunTestCase):
 
 if __name__ == "__main__":
     ts = NuTransitPerformance()
-    ts.add_test_case(NuTransitLatencyTest())
-    # ts.add_test_case(NuTransitJitterTest())
+    # ts.add_test_case(NuTransitLatencyTest())
+    ts.add_test_case(NuTransitJitterTest())
     ts.run()
 
 

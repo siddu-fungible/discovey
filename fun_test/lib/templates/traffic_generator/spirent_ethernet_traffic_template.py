@@ -523,6 +523,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return result
 
     def _manipulate_rate_counters(self, tx_rate_count, rx_rate_count, tolerance_count=5):
+        if rx_rate_count == 0:
+            return rx_rate_count
         pps_count_difference = tx_rate_count - rx_rate_count
         if pps_count_difference < tolerance_count:
             rx_rate_count += pps_count_difference
@@ -533,7 +535,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return int(count_in_mbps)
 
     def validate_traffic_rate_results(self, rx_summary_subscribe_handle, tx_summary_subscribe_handle, stream_objects,
-                                      wait_before_fetching_results=True):
+                                      wait_before_fetching_results=True, validate_throughput=True):
         result = {'result': False, 'pps_count': {}, 'throughput_count': {}}
         try:
             if wait_before_fetching_results:
@@ -552,8 +554,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                                          summary=True, refresh=False)
                 fun_test.simple_assert(expression=rx_result, message=checkpoint)
 
-                checkpoint = "Ensure Tx FrameRate(PPS) is equal to Rx FrameRate(PPS) for %d Frame Size" % \
-                             stream_obj.FixedFrameLength
+                checkpoint = "Ensure Tx FrameRate(PPS) is equal to Rx FrameRate(PPS) for %d Frame Size (%s)" % \
+                             (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
                 fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
                     stream_obj.spirent_handle, int(tx_result['FrameRate']), int(rx_result['FrameRate'])))
                 fun_test.simple_assert(expression=int(tx_result['FrameRate']) != 0, message="Tx FrameRate is zero")
@@ -563,22 +565,23 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                               actual=rx_pps_count,
                                               message=checkpoint)
 
-                checkpoint = "Ensure Throughput Tx Rate is equal to Rx Rate for %d Frame Size" % \
-                             stream_obj.FixedFrameLength
-                tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_result['L1BitRate']))
-                rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_result['L1BitRate']))
-                fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
-                    stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
-                fun_test.simple_assert(expression=int(tx_result['L1BitRate']) != 0, message="Tx L1 Rate is zero")
-                rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
-                                                             rx_rate_count=rx_l1_bit_rate_in_mbps)
-                fun_test.test_assert_expected(expected=tx_l1_bit_rate_in_mbps,
-                                              actual=rx_bit_rate,
-                                              message=checkpoint)
+                if validate_throughput:
+                    checkpoint = "Ensure Throughput Tx Rate is equal to Rx Rate for %d Frame Size (%s)" % \
+                                 (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
+                    tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_result['L1BitRate']))
+                    rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_result['L1BitRate']))
+                    fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
+                        stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
+                    fun_test.simple_assert(expression=int(tx_result['L1BitRate']) != 0, message="Tx L1 Rate is zero")
+                    rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
+                                                                 rx_rate_count=rx_l1_bit_rate_in_mbps)
+                    fun_test.test_assert_expected(expected=tx_l1_bit_rate_in_mbps,
+                                                  actual=rx_bit_rate,
+                                                  message=checkpoint)
 
                 result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): int(rx_result['FrameRate'])}
-
-                result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): rx_bit_rate}
+                if validate_throughput:
+                    result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): rx_bit_rate}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -708,10 +711,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                     tolerance_percent=10):
         result = {'result': False}
         try:
-            rx_result = {}
+
+            key = "frame_%s" % str(stream_objects[0].FixedFrameLength)
+            result[key] = []
             for stream_obj in stream_objects:
-                key = "frame_%s" % str(stream_obj.FixedFrameLength)
-                result[key] = []
                 checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
                 rx_result = self.stc_manager.get_rx_stream_block_results(
                     stream_block_handle=stream_obj.spirent_handle,
@@ -741,8 +744,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                                  tolerance_percent=tolerance_percent)
                     fun_test.simple_assert(expression=jitter_result['result'], message=checkpoint)
                     result[key].append(jitter_result[key])
-
-                    #TODO: Add Logging
                 else:
                     checkpoint = "Validate Latency Counters"
                     latency_result = self.validate_latency_results(rx_result=rx_result,
@@ -757,30 +758,64 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def print_table(self, result):
-        table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
-                                 'Max Latency (us)'])
-        for key in result:
-            pps_count = result[key]['pps_count']
-            throughput_count = result[key]['throughput_count']
-            if len(result[key]['latency_count']) > 1:
-                avg_latency1 = result[key]['latency_count'][0]['avg']
-                avg_latency2 = result[key]['latency_count'][1]['avg']
-                min_latency1 = result[key]['latency_count'][0]['min']
-                min_latency2 = result[key]['latency_count'][1]['min']
-                max_latency1 = result[key]['latency_count'][0]['max']
-                max_latency2 = result[key]['latency_count'][1]['max']
-                table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
-                table_obj.add_row([key, pps_count, throughput_count, avg_latency2, min_latency2, max_latency2])
-            else:
-                avg_latency1 = result[key]['latency_count'][0]['avg']
-                min_latency1 = result[key]['latency_count'][0]['min']
-                max_latency1 = result[key]['latency_count'][0]['max']
+    def display_latency_counters(self, result):
+        try:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("Nu Transit Performance Latency Counters")
+            table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
+                                     'Max Latency (us)'])
+            for key in result:
+                pps_count = result[key]['pps_count']
+                throughput_count = result[key]['throughput_count']
+                if len(result[key]['latency_count']) > 1:
+                    avg_latency1 = result[key]['latency_count'][0]['avg']
+                    avg_latency2 = result[key]['latency_count'][1]['avg']
+                    min_latency1 = result[key]['latency_count'][0]['min']
+                    min_latency2 = result[key]['latency_count'][1]['min']
+                    max_latency1 = result[key]['latency_count'][0]['max']
+                    max_latency2 = result[key]['latency_count'][1]['max']
+                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+                    table_obj.add_row([key, pps_count, throughput_count, avg_latency2, min_latency2, max_latency2])
+                else:
+                    avg_latency1 = result[key]['latency_count'][0]['avg']
+                    min_latency1 = result[key]['latency_count'][0]['min']
+                    max_latency1 = result[key]['latency_count'][0]['max']
 
-                table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+            fun_test.log(str(table_obj))
+            fun_test.log_enable_timestamps()
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
-        print table_obj
-        fun_test.log(str(table_obj))
+    def display_jitter_counters(self, result):
+        try:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("Nu Transit Performance Jitter Counters")
+            table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Jitter (us)', 'Min Jitter (us)',
+                                     'Max Jitter (us)'])
+            for key in result:
+                pps_count = result[key]['pps_count']
+                throughput_count = result[key]['throughput_count']
+                if len(result[key]['latency_count']) > 1:
+                    avg_latency1 = result[key]['jitter_count'][0]['avg']
+                    avg_latency2 = result[key]['jitter_count'][1]['avg']
+                    min_latency1 = result[key]['jitter_count'][0]['min']
+                    min_latency2 = result[key]['jitter_count'][1]['min']
+                    max_latency1 = result[key]['jitter_count'][0]['max']
+                    max_latency2 = result[key]['jitter_count'][1]['max']
+                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+                    table_obj.add_row([key, pps_count, throughput_count, avg_latency2, min_latency2, max_latency2])
+                else:
+                    avg_latency1 = result[key]['jitter_count'][0]['avg']
+                    min_latency1 = result[key]['jitter_count'][0]['min']
+                    max_latency1 = result[key]['jitter_count'][0]['max']
+
+                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+            fun_test.log(str(table_obj))
+            fun_test.log_enable_timestamps()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
 
 
 

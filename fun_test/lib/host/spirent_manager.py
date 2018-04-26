@@ -647,8 +647,7 @@ class SpirentManager(object):
     def unsubscribe_results(self, result_handle):
         result = False
         try:
-            output = self.stc.unsubscribe(result_handle)
-            fun_test.simple_assert(output['State'] == "COMPLETED", "Unsubscribe results")
+            self.stc.unsubscribe(result_handle)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

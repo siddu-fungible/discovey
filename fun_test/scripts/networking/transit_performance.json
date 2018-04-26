@@ -100,6 +100,10 @@
       "frame_9000": [
         9000,
         15.5
+      ],
+      "frame_16380": [
+        16380,
+        15.5
       ]
     }
   },
@@ -139,7 +143,7 @@
       }
     },
     "tolerance_percent": 10,
-    "traffic_duration": 60,
+    "traffic_duration": 90,
     "frames": {
       "frame_64": [
         64,
