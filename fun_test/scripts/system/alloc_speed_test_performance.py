@@ -4,7 +4,8 @@ import requests
 import json
 import re
 from web.fun_test.analytics_models_helper import MetricChartHelper
-from web.fun_test.analytics_models_helper import AllocSpeedPerformanceHelper
+from web.fun_test.analytics_models_helper import AllocSpeedPerformanceHelper, MetricHelper
+from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
@@ -40,15 +41,6 @@ class FunTestCase1(FunTestCase):
         print("Testcase cleanup")
 
     def run(self):
-        """
-        url = "{}/?tag={}&format=json".format(LSF_WEB_SERVER_BASE_URL, ALLOC_SPEED_TEST_TAG)
-        response = requests.get(url=url)
-        fun_test.test_assert(response.status_code == 200, "Fetched jobs by tag")
-        response_dict = json.loads(response.text)
-        fun_test.log(json.dumps(response_dict, indent=4))
-        past_jobs = response_dict["past_jobs"]
-
-        """
         job_info = {}
         lsf_status_server = LsfStatusServer()
         past_jobs = lsf_status_server.get_past_jobs_by_tag(tag=ALLOC_SPEED_TEST_TAG)
@@ -72,7 +64,9 @@ class FunTestCase1(FunTestCase):
             fun_test.log("Software date: {}".format(software_date))
             models_helper.add_jenkins_job_id_map(jenkins_job_id=jenkins_build_number,
                                                  fun_sdk_branch=branch_fun_sdk,
-                                                 git_commit=git_commit, software_date=software_date, hardware_version=hardware_version)
+                                                 git_commit=git_commit,
+                                                 software_date=software_date,
+                                                 hardware_version=hardware_version)
             response = lsf_status_server.get_job_by_id(job_id=job_id)
             fun_test.test_assert(response, "Fetch job info for {}".format(job_id))
             response_dict = json.loads(response)
@@ -85,56 +79,106 @@ class FunTestCase1(FunTestCase):
                 fun_test.critical(str(ex))
 
             lines = output_text.split("\n")
-            lines = [x for x in lines if "Best time" in x]
+            lines = [x for x in lines if "Best time" in x or "wu_latency_test" in x]
+
+
+            alloc_speed_test_found = False
             output_one_malloc_free_wu = 0
             output_one_malloc_free_threaded = 0
+
+            wu_latency_test_found = False
+            wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = None
+            wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = None
+
+
             for line in lines:
                 m = re.search(r'Best time for one malloc/free \(WU\): (\d+)ns', line)
                 if m:
+                    alloc_speed_test_found = True
                     output_one_malloc_free_wu = int(m.group(1))
                 m = re.search(r'Best time for one malloc/free \(threaded\): (\d+)ns', line)
                 if m:
                     output_one_malloc_free_threaded = int(m.group(1))
+
+                # wu_latency_test
+                m = re.search(r' wu_latency_test (.*)perf_wu_alloc_stack_ns', line)
+                if m:
+                    wu_latency_test_found = True
+                    data = m.group(1)
+                    m2 = re.search(r'\[min,\s?avg,\s?max\]=\[(\d+),\s?(\d+),\s?(\d+)\]', data)
+                    if m2:
+                        wu_alloc_stack_ns_min = int(m2.group(1))
+                        wu_alloc_stack_ns_avg = int(m2.group(2))
+                        wu_alloc_stack_ns_max = int(m2.group(3))
+                m = re.search(r' wu_latency_test (.*)perf_wu_ungated_ns', line)
+                if m:
+                    data = m.group(1)
+                    m2 = re.search(r'\[min,\s?avg,\s?max\]=\[(\d+),\s?(\d+),\s?(\d+)\]', data)
+                    if m2:
+                        wu_ungated_ns_min = int(m2.group(1))
+                        wu_ungated_ns_avg = int(m2.group(2))
+                        wu_ungated_ns_max = int(m2.group(3))
+
             try:
                 if not int(return_code) == 0:
                     continue
             except Exception as ex:
                 fun_test.critical(str(ex))
-            # fun_test.test_assert_expected(actual=return_code, expected=0, message="Return code in test: {}".format(ALLOC_SPEED_TEST_TAG))
+
             fun_test.log("Malloc Free threaded: {}".format(output_one_malloc_free_threaded))
             fun_test.log("Malloc Free WU: {}".format(output_one_malloc_free_wu))
+            fun_test.log("wu_latency_test: wu_alloc_stack_ns: min: {}, avg: {}, max: {}".format(wu_alloc_stack_ns_min,
+                                                                                 wu_alloc_stack_ns_avg,
+                                                                                 wu_alloc_stack_ns_max))
+            fun_test.log("wu_latency_test: wu_ungated_ns: min: {}, avg: {}, max: {}".format(wu_ungated_ns_min,
+                                                                             wu_ungated_ns_avg,
+                                                                             wu_ungated_ns_max))
+
             key = branch_fun_sdk
             m = re.search(r'refs/tags/bld_(\d+)', branch_fun_sdk)
             if m:
                 key = int(m.group(1))
             if key in BLACK_LIST:
                 continue
-            AllocSpeedPerformanceHelper().add_entry(key=key, input_app="alloc_speed_test",
-                                                    output_one_malloc_free_wu=output_one_malloc_free_wu,
-                                                    output_one_malloc_free_threaded=output_one_malloc_free_threaded)
 
-            job_info[int(key)] = {"output_one_malloc_free_wu": output_one_malloc_free_wu,
-                                  "output_one_malloc_free_threaded": output_one_malloc_free_threaded}
+            if wu_latency_test_found:
+                MetricHelper(model=WuLatencyAllocStack).add_entry(key=key, input_app="wu_latency_test",
+                                                                  output_min=wu_alloc_stack_ns_min,
+                                                                  output_max=wu_alloc_stack_ns_max,
+                                                                  output_avg=wu_alloc_stack_ns_avg)
+                MetricHelper(model=WuLatencyUngated).add_entry(key=key, input_app="wu_latency_test",
+                                                               output_min=wu_ungated_ns_min,
+                                                               output_max=wu_ungated_ns_max,
+                                                               output_avg=wu_ungated_ns_avg)
 
-        newest_build_number = max(job_info.keys())
-        expected_values = {}
+            if alloc_speed_test_found:
+                AllocSpeedPerformanceHelper().add_entry(key=key, input_app="alloc_speed_test",
+                                                        output_one_malloc_free_wu=output_one_malloc_free_wu,
+                                                        output_one_malloc_free_threaded=output_one_malloc_free_threaded)
 
-        metric_model_name = "AllocSpeedPerformance"
-        chart_map = {}
-        chart_map["output_one_malloc_free_wu"] = "Best time for 1 malloc/free (WU)"
-        chart_map["output_one_malloc_free_threaded"] = "Best time for 1 malloc/free (Threaded)"
-        values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
+                job_info[int(key)] = {"output_one_malloc_free_wu": output_one_malloc_free_wu,
+                                      "output_one_malloc_free_threaded": output_one_malloc_free_threaded}
 
-        for value_to_check in values_to_check:
-            chart_helper = MetricChartHelper(chart_name=chart_map[value_to_check], metric_model_name=metric_model_name)
-            expected_values[value_to_check] = {"min": chart_helper.get_output_data_set(output_name=value_to_check)["min"],
-                                               "max": chart_helper.get_output_data_set(output_name=value_to_check)["max"]}
+                newest_build_number = max(job_info.keys())
+                expected_values = {}
 
-        for value_to_check in values_to_check:
-            min_value, max_value = expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]
-            actual = job_info[newest_build_number][value_to_check]
-            fun_test.test_assert(actual >= min_value, "Build: {} Attr: {} Min: {} Actual: {}".format(newest_build_number, value_to_check, min_value, actual))
-            fun_test.test_assert(actual <= max_value, "Build: {} Attr: {} Max: {} Actual: {}".format(newest_build_number, value_to_check, max_value, actual))
+                metric_model_name = "AllocSpeedPerformance"
+                chart_map = {}
+                chart_map["output_one_malloc_free_wu"] = "Best time for 1 malloc/free (WU)"
+                chart_map["output_one_malloc_free_threaded"] = "Best time for 1 malloc/free (Threaded)"
+                values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
+
+                for value_to_check in values_to_check:
+                    chart_helper = MetricChartHelper(chart_name=chart_map[value_to_check], metric_model_name=metric_model_name)
+                    expected_values[value_to_check] = {"min": chart_helper.get_output_data_set(output_name=value_to_check)["min"],
+                                                       "max": chart_helper.get_output_data_set(output_name=value_to_check)["max"]}
+
+                for value_to_check in values_to_check:
+                    min_value, max_value = expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]
+                    actual = job_info[newest_build_number][value_to_check]
+                    fun_test.test_assert(actual >= min_value, "Build: {} Attr: {} Min: {} Actual: {}".format(newest_build_number, value_to_check, min_value, actual))
+                    fun_test.test_assert(actual <= max_value, "Build: {} Attr: {} Max: {} Actual: {}".format(newest_build_number, value_to_check, max_value, actual))
+
 
 
 if __name__ == "__main__":

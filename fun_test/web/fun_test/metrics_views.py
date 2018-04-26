@@ -57,7 +57,9 @@ def chart_info(request):
                   "description": chart.description,
                   "positive": chart.positive,
                   "children": json.loads(chart.children),
-                  "metric_id": chart.metric_id}
+                  "metric_id": chart.metric_id,
+                  "y1_axis_title": chart.y1_axis_title,
+                  "y2_axis_title": chart.y2_axis_title}
     return result
 
 @csrf_exempt
@@ -187,6 +189,10 @@ def update_chart(request):
             c.description = description
         if "negative_gradient" in request_json:
             c.positive = not request_json["negative_gradient"]
+        if "y1_axis_title" in request_json:
+            c.y1axis_title = request_json["y1_axis_title"] if request_json["y1_axis_title"] else ""
+        if "y2_axis_title" in request_json:
+            c.y2axis_title = request_json["y2_axis_title"] if request_json["y2_axis_title"] else ""
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,
@@ -256,7 +262,7 @@ def data(request):
         for input_name, input_value in inputs.iteritems():
             d[input_name] = input_value
         try:
-            result = model.objects.filter(**d)
+            result = model.objects.filter(**d)   #unpack, pack
             data.append([model_to_dict(x) for x in result])
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))

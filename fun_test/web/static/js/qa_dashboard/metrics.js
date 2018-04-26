@@ -17,13 +17,6 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         let thisModule = $scope.selectedModule;
         if ($scope.selectedModule) {
             payload["module_name"] = $scope.selectedModule;
-            /*
-            commonService.apiPost("/metrics/charts_by_module", payload, "fetchModules get charts by module").then((charts) => {
-
-                $scope.chartInfos[thisModule] = charts;
-                let i = 0;
-            })*/
-
             commonService.apiPost("/metrics/models_by_module", payload, "moduleChange").then((models) => {
                 $scope.modelsInfo[thisModule] = models;
             })
@@ -83,6 +76,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             $scope.mode = "Create";
         }
         $scope.chartName = chartName;
+        $scope.y1AxisTitle = null;
+        $scope.y2AxisTitle = null;
         $scope.modelName = modelName;
         $scope.chartInfo = null;
         $scope.copyChartInfo = null;
@@ -142,6 +137,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
 
 
         $scope.addDataSetClick = () => {
+            $scope.addDataSet = true;
             //let newDataSet = {};
 
             if(!$scope.tableInfo) {
@@ -152,6 +148,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
 
 
             $scope.addDataSet["inputs"] = $scope.inputs;
+            $scope.addDataSet["output"] = {min: 0, max: 99999};
+            /*
             let outputName = "";
             if($scope.previewDataSets.length > 0) {
                 let firstChartInfoDataSet = $scope.previewDataSets.data_sets[0];
@@ -162,7 +160,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             }
 
             $scope.addDataSet["output"] = {"name": $scope.selectedOutput, "min": 0, "max": 99999};
-
+            */
             /*newDataSet["inputs"] = {};
             $scope.addDataSet["inputs"].forEach((oneField) => {
                 newDataSet["inputs"][oneField.name] = oneField.selectedChoice;
@@ -220,6 +218,8 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             payload["chart_name"] = $scope.chartName;
             payload["data_sets"] = $scope.previewDataSets;
             payload["negative_gradient"] = $scope.negativeGradient;
+            payload["y1_axis_title"] = $scope.y1AxisTitle;
+            payload["y2_axis_title"] = $scope.y2AxisTitle;
 
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
                 if(data) {
