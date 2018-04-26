@@ -193,6 +193,7 @@ def update_chart(request):
             c.y1axis_title = request_json["y1_axis_title"] if request_json["y1_axis_title"] else ""
         if "y2_axis_title" in request_json:
             c.y2axis_title = request_json["y2_axis_title"] if request_json["y2_axis_title"] else ""
+        c.leaf = True
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,
