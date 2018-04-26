@@ -76,9 +76,23 @@
                   "info": "Best time for 1 malloc/free (Threaded)",
                   "metric_model_name": "AllocSpeedPerformance",
                   "leaf": true
+                },
+                { 
+                  "name": "WU Latency: Alloc Stack",
+                  "label": "WU Latency: Alloc Stack",
+                  "info": "WU Latency: Alloc Stack",
+                  "metric_model_name": "WuLatencyAllocStack",
+                  "leaf": true
+                },
+                { 
+                  "name": "WU Latency: Ungated",
+                  "label": "WU Latency: Ungated",
+                  "info": "WU Latency: Ungated",
+                  "metric_model_name": "WuLatencyUngated",
+                  "leaf": true
                 }
-              ]
-                }
+                ]
+               }
             ]
           },
           {
