@@ -96,6 +96,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         if ($scope.chartName) {
             commonService.apiPost("/metrics/chart_info", payload, "EditableMetricChartController: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;
+                $scope.y1AxisTitle = chartInfo.y1_axis_title;
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
                 $scope.currentDescription = $scope.chartInfo.description;

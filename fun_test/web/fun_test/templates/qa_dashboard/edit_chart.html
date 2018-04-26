@@ -16,39 +16,63 @@
                     </td>
                 </tr>
                 <tr>
-                    <td><label>Select output name</label></td>
+                    <!--td><label>Select output name</label></td>
                     <td>
                         <select ng-disabled="!showOutputSelection" ng-change="outputChange()"
                                 ng-model="$parent.selectedOutput" ng-options="output for output in outputList"></select>
-                    </td>
+                    </td-->
                 </tr>
             </table>
         </div>
-        <div ng-if="((mode==='Create') && selectedOutput && chartName) || (mode==='Edit')">
+        <div ng-if="((mode==='Create') && chartName) || (mode==='Edit')">
             <span class="fa fa-plus"></span>
             <a href="#" ng-click="addDataSetClick()">Add data-set</a>
         </div>
+        <table class="table table-nonfluid">
+            <tr>
+                <th>Y1 axis title</th>
+            </tr>
+            <tr>
+                <td>
+                    <fun-field type="text" min-length="1" max-length="100" required="true"
+                                       bind-value="y1AxisTitle">
+                </td>
+            </tr>
+        </table>
         <div ng-if="addDataSet">
             <table class="table table-nonfluid">
+                <tr>
+                    <th>Name</th>
+                    <th>Input</th>
+                    <th>Output</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                </tr>
                 <tr ng-repeat="input in addDataSet.inputs">
-                    <td><label>{{ input.name }}</label></td>
-                    <td><select ng-model="input.selectedChoice"
-                                ng-options="choice for choice in input.choices"></select></td>
-                </tr>
-                <tr>
-                    <td><label>Name</label></td>
                     <td>
-                        <fun-field type="text" min-length="1" max-length="50" required="true"
-                                   bind-value="addDataSet.name">
+                            <fun-field type="text" min-length="1" max-length="50" required="true"
+                                       bind-value="addDataSet.name">
                     </td>
-                </tr>
-                <tr>
-                    <td><label>{{ selectedOutput }}</label></td>
-                    <td><label>Min</label>
+                    <td><label>{{ input.name }}</label>
+                        <select ng-model="input.selectedChoice"
+                                ng-options="choice for choice in input.choices">
+
+                        </select>
+                    </td>
+
+
+                    <td>
+                        <select ng-change="outputChange()"
+                                    ng-model="addDataSet.output.name" ng-options="output for output in outputList">
+
+                        </select>
+                    </td>
+
+                    <td>
                         <fun-field type="number" min="0" max="999999" required="true"
                                    bind-value="addDataSet.output.min">
                     </td>
-                    <td><label>Max</label>
+                    <td>
                         <fun-field type="number" min="0" max="999999" required="true"
                                    bind-value="addDataSet.output.max">
                     </td>

@@ -17,6 +17,8 @@ class MetricChart(models.Model):
     children = models.TextField(default="[]")
     leaf = models.BooleanField(default=False)
     positive = models.BooleanField(default=True)
+    y1_axis_title = models.TextField(default="")
+    y2_axis_title = models.TextField(default="")
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -250,6 +252,26 @@ class AllocSpeedPerformance(models.Model):
         return "{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded)
 
 
+class WuLatencyAllocStack(models.Model):
+    key = models.CharField(max_length=30, verbose_name="Software date")
+    input_app = models.TextField(verbose_name="wu_latency_test: alloc_stack", default="wu_latency_test", choices=[(0, "wu_latency_test")])
+    output_min = models.IntegerField(verbose_name="Min (ns)")
+    output_max = models.IntegerField(verbose_name="Max (ns)")
+    output_avg = models.IntegerField(verbose_name="Avg (ns)")
+
+    def __str__(self):
+        return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
+
+class WuLatencyUngated(models.Model):
+    key = models.CharField(max_length=30, verbose_name="Software date")
+    input_app = models.TextField(verbose_name="wu_latency_test: Ungated WU", default="wu_latency_test", choices=[(0, "wu_latency_test")])
+    output_min = models.IntegerField(verbose_name="Min (ns)")
+    output_max = models.IntegerField(verbose_name="Max (ns)")
+    output_avg = models.IntegerField(verbose_name="Avg (ns)")
+
+    def __str__(self):
+        return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
+
 class VolumePerformanceSerializer(ModelSerializer):
     class Meta:
         model = VolumePerformance
@@ -296,6 +318,19 @@ ANALYTICS_MAP = {
         "module": "system",
         "component": "general",
         "verbose_name": "Alloc Speed Performance"
+    },
+
+    "WuLatencyAllocStack": {
+        "model": WuLatencyAllocStack,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "WU Latency Test: Alloc stack"
+    },
+    "WuLatencyUngated": {
+        "model": WuLatencyUngated,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "WU Latency Test: Ungated"
     }
 
 }
