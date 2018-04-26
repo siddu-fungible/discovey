@@ -154,7 +154,7 @@ class FunTestCase1(FunTestCase):
 
                     chart_helper = MetricChartHelper(chart_name=chart_name,
                                                      metric_model_name=metric_model_name)
-                    entry = MetricHelper(model=WuLatencyUngated).get_recent_entry()
+                    entry = MetricHelper(model=model).get_recent_entry()
 
                     if entry:
                         values_to_check = ["output_min", "output_max", "output_avg"]
