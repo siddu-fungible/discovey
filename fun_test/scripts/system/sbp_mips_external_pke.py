@@ -3,7 +3,7 @@ from asset.asset_manager import AssetManager
 from lib.host.linux import Linux
 from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
-BIT_STREAM = "SilexBitfiles/esecure_top_fpga_pke_20180322.bit"
+BIT_STREAM = "SilexBitfiles/esecure_top_fpga_pke_20180412.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 
 
@@ -67,7 +67,7 @@ class TestCase1(FunTestCase):
 class TestPke(FunTestCase):
     secure_boot = False
     enroll = False
-    stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+    stimuli_dir = "{}/validation/stimuli/short_to_review".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
     stimuli_file = "{}/test_pke.py".format(stimuli_dir)
 
     def describe(self):

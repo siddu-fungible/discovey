@@ -40,7 +40,7 @@ class TestCase1(FunTestCase):
                           ssh_username=container_asset["mgmt_ssh_username"],
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
-        sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP, bit_stream=BIT_STREAM)
+        sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP)
         fun_test.test_assert(sbp_setup.setup(), "Setup")
 
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
@@ -85,7 +85,7 @@ class TestCase2(FunTestCase):
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
         self.linux_obj = linux_obj
-        sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP, bit_stream=BIT_STREAM)
+        sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP)
         fun_test.test_assert(sbp_setup.setup(), "Setup")
         if self.enroll:
             fun_test.test_assert(sbp_setup.enroll(), "Enrollment")

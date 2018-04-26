@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from lib.host.lsf_status_server import LsfStatusServer
 import requests
 import json
 import re
@@ -39,13 +40,18 @@ class FunTestCase1(FunTestCase):
         print("Testcase cleanup")
 
     def run(self):
+        """
         url = "{}/?tag={}&format=json".format(LSF_WEB_SERVER_BASE_URL, ALLOC_SPEED_TEST_TAG)
         response = requests.get(url=url)
         fun_test.test_assert(response.status_code == 200, "Fetched jobs by tag")
         response_dict = json.loads(response.text)
         fun_test.log(json.dumps(response_dict, indent=4))
         past_jobs = response_dict["past_jobs"]
+
+        """
         job_info = {}
+        lsf_status_server = LsfStatusServer()
+        past_jobs = lsf_status_server.get_past_jobs_by_tag(tag=ALLOC_SPEED_TEST_TAG)
         for past_job in past_jobs:
             return_code = -1
             job_id = past_job["job_id"]
@@ -67,11 +73,9 @@ class FunTestCase1(FunTestCase):
             models_helper.add_jenkins_job_id_map(jenkins_job_id=jenkins_build_number,
                                                  fun_sdk_branch=branch_fun_sdk,
                                                  git_commit=git_commit, software_date=software_date, hardware_version=hardware_version)
-            job_info_url = "{}/job/{}?format=json".format(LSF_WEB_SERVER_BASE_URL, job_id)
-            fun_test.log("URL: {}".format(job_info_url))
-            response = requests.get(job_info_url)
-            fun_test.test_assert(response.status_code == 200, "Fetch job info for {}".format(job_id))
-            response_dict = json.loads(response.text)
+            response = lsf_status_server.get_job_by_id(job_id=job_id)
+            fun_test.test_assert(response, "Fetch job info for {}".format(job_id))
+            response_dict = json.loads(response)
             fun_test.log(json.dumps(response_dict, indent=4))
             output_text = response_dict["output_text"]
 
@@ -125,12 +129,6 @@ class FunTestCase1(FunTestCase):
             chart_helper = MetricChartHelper(chart_name=chart_map[value_to_check], metric_model_name=metric_model_name)
             expected_values[value_to_check] = {"min": chart_helper.get_output_data_set(output_name=value_to_check)["min"],
                                                "max": chart_helper.get_output_data_set(output_name=value_to_check)["max"]}
-
-        # expected_values["output_one_malloc_free_wu"] = {"expected": 660, "min": 1}
-        # expected_values["output_one_malloc_free_threaded"] = {"expected": 402, "min": 1}
-
-        # for value_to_check in values_to_check:
-        #    expected_values[value_to_check]["max"] = expected_values[value_to_check]["expected"] * (1 + (TOLERANCE_PERCENTAGE / 100))
 
         for value_to_check in values_to_check:
             min_value, max_value = expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]

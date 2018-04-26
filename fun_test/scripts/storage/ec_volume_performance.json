@@ -147,14 +147,14 @@
                   "randread": {"read": {"bw": 292, "iops": 9, "latency": 109561}}}
     },
     "expected_volume_stats": {
-      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 982, "num_writes": 0},
+      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 992, "num_writes": 0},
                          "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
                "nparity": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
-               "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}},
-      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 982, "num_writes": 0},
+               "ec": {"0": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}},
+      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 992, "num_writes": 0},
                              "1": {"fault_injection": 1, "num_reads": 0, "num_writes": 0}},
                    "nparity": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
-                   "ec": {"0": {"fault_injection": 0, "num_reads": 982, "num_writes": 0}}}
+                   "ec": {"0": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
