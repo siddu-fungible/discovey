@@ -26,6 +26,8 @@ class SpirentManager(object):
     MODULE_SYNC_STATUS = "MODULE_IN_SYNC"
     OWNERSHIP_STATE_AVAILABLE = "OWNERSHIP_STATE_AVAILABLE"
     LINK_STATUS_UP = "LINK_STATUS_UP"
+    RESULT_VIEW_MODE_JITTER = "JITTER"
+    TIMED_REFRESH_RESULT_VIEW_MODE = "PERIODIC"
 
     def __init__(self, chassis_type=VIRTUAL_CHASSIS_TYPE, dut_type=DUT_TYPE_PALLADIUM):
         try:
@@ -620,10 +622,22 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def subscribe_results(self, parent, config_type, result_type):
+    def subscribe_results(self, parent, config_type, result_type, change_mode=False,
+                          result_view_mode=RESULT_VIEW_MODE_JITTER,
+                          timed_refresh_result_view_mode=TIMED_REFRESH_RESULT_VIEW_MODE,
+                          view_attribute_list=None):
         result_handle = None
         try:
-            result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type)
+            if change_mode:
+                result_options_handle = self.stc.get(parent, "children-ResultOptions")
+                self.stc.config(result_options_handle, ResultViewMode=result_view_mode,
+                                TimedRefreshResultViewMode=timed_refresh_result_view_mode, TimedRefreshInterval="1")
+            if view_attribute_list:
+                attributes = ' '.join(view_attribute_list)
+                result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type,
+                                                   viewAttributeList=attributes)
+            else:
+                result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_handle
@@ -650,15 +664,19 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def get_tx_stream_block_results(self, stream_block_handle, subscribe_handle):
+    def get_tx_stream_block_results(self, stream_block_handle, subscribe_handle, summary=False, refresh=True):
         result = {}
         try:
-            fun_test.debug("Refresh result view for handle %s" % subscribe_handle)
-            refresh_view = self.refresh_result_view(subscribe_handle)
-            fun_test.simple_assert(refresh_view, "Refresh result view")
+            tx_stream_str = "txstreamblockresults."
+            if summary:
+                tx_stream_str = "txstreamresults."
+            if refresh:
+                fun_test.debug("Refresh result view for handle %s" % subscribe_handle)
+                refresh_view = self.refresh_result_view(subscribe_handle)
+                fun_test.simple_assert(refresh_view, "Refresh result view")
             res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
             for output in res_handle_list:
-                regex = re.compile("txstreamblockresults.")
+                regex = re.compile(tx_stream_str)
                 if re.match(regex, output):
                     parent = self.stc.get(output, "parent")
                     if parent == stream_block_handle:
@@ -668,15 +686,19 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def get_rx_stream_block_results(self, stream_block_handle, subscribe_handle):
+    def get_rx_stream_block_results(self, stream_block_handle, subscribe_handle, summary=False, refresh=True):
         result = {}
         try:
-            fun_test.debug("Refresh result view for handle %s" % subscribe_handle)
-            refresh_view = self.refresh_result_view(subscribe_handle)
-            fun_test.simple_assert(refresh_view, "Refresh result view")
+            rx_stream_str = "rxstreamblockresults."
+            if summary:
+                rx_stream_str = "rxstreamsummaryresults."
+            if refresh:
+                fun_test.debug("Refresh result view for handle %s" % subscribe_handle)
+                refresh_view = self.refresh_result_view(subscribe_handle)
+                fun_test.simple_assert(refresh_view, "Refresh result view")
             res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
             for output in res_handle_list:
-                regex = re.compile("rxstreamblockresults.")
+                regex = re.compile(rx_stream_str)
                 if re.match(regex, output):
                     parent = self.stc.get(output, "parent")
                     if parent == stream_block_handle:

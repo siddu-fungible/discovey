@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
+from prettytable import PrettyTable
 
 
 class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
@@ -323,50 +324,67 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def subscribe_tx_results(self, parent, config_type="StreamBlock", result_type="TxStreamBlockResults"):
+    def subscribe_tx_results(self, parent, config_type="StreamBlock", result_type="TxStreamBlockResults",
+                             view_attribute_list=None, change_mode=False,
+                             result_view_mode=SpirentManager.RESULT_VIEW_MODE_JITTER,
+                             timed_refresh_result_view_mode=SpirentManager.TIMED_REFRESH_RESULT_VIEW_MODE):
         result_handle = None
         try:
             fun_test.log("Subscribing to %s for %s config to get %s result" % (parent, config_type, result_type))
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
-                                                           result_type=result_type)
+                                                           result_type=result_type,
+                                                           view_attribute_list=view_attribute_list,
+                                                           change_mode=change_mode,
+                                                           result_view_mode=result_view_mode,
+                                                           timed_refresh_result_view_mode=timed_refresh_result_view_mode)
             fun_test.simple_assert(op_handle, "Getting tx subscribe handle")
             result_handle = op_handle
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_handle
 
-    def subscribe_rx_results(self, parent, config_type="StreamBlock", result_type="RxStreamBlockResults"):
+    def subscribe_rx_results(self, parent, config_type="StreamBlock", result_type="RxStreamBlockResults",
+                             view_attribute_list=None, change_mode=False,
+                             result_view_mode=SpirentManager.RESULT_VIEW_MODE_JITTER,
+                             timed_refresh_result_view_mode=SpirentManager.TIMED_REFRESH_RESULT_VIEW_MODE):
         result_handle = None
         try:
             fun_test.log("Subscribing to %s for %s config to get %s result" % (parent, config_type, result_type))
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
-                                                           result_type=result_type)
+                                                           result_type=result_type,
+                                                           view_attribute_list=view_attribute_list,
+                                                           change_mode=change_mode,
+                                                           result_view_mode=result_view_mode,
+                                                           timed_refresh_result_view_mode=timed_refresh_result_view_mode)
             fun_test.simple_assert(op_handle, "Getting rx subscribe handle")
             result_handle = op_handle
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_handle
 
-    def subscribe_analyzer_results(self,  parent, config_type="Analyzer", result_type="AnalyzerPortResults"):
+    def subscribe_analyzer_results(self,  parent, config_type="Analyzer", result_type="AnalyzerPortResults",
+                                   view_attribute_list=None):
         result_handle = None
         try:
             fun_test.log("Subscribing to port analyzer results on port %s" % parent)
             pass
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
-                                                           result_type=result_type)
+                                                           result_type=result_type,
+                                                           view_attribute_list=view_attribute_list)
             fun_test.simple_assert(op_handle, "Getting analyzer subscribe handle")
             result_handle = op_handle
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_handle
 
-    def subscribe_generator_results(self,  parent, config_type="Generator", result_type="GeneratorPortResults"):
+    def subscribe_generator_results(self,  parent, config_type="Generator", result_type="GeneratorPortResults",
+                                    view_attribute_list=None):
         result_handle = None
         try:
             fun_test.log("Subscribing to port generator results on port %s" % parent)
-            pass
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
-                                                           result_type=result_type)
+                                                           result_type=result_type,
+                                                           view_attribute_list=view_attribute_list)
             fun_test.simple_assert(op_handle, "Getting generator subscribe handle")
             result_handle = op_handle
         except Exception as ex:
@@ -436,17 +454,27 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return result
 
     def subscribe_to_all_results(self, parent):
-        result = {'result': 'False'}
+        result = {'result': False}
         try:
             fun_test.debug("Subscribing to tx results")
             tx_subscribe = self.subscribe_tx_results(parent=parent)
             fun_test.simple_assert(tx_subscribe, "Check tx subscribed")
             result['tx_subscribe'] = tx_subscribe
 
+            fun_test.debug("Subscribing to tx stream results")
+            tx_stream_subscribe = self.subscribe_tx_results(parent=parent, result_type="TxStreamResults")
+            fun_test.simple_assert(tx_stream_subscribe, "Check tx summary subscribe")
+            result['tx_stream_subscribe'] = tx_stream_subscribe
+
             fun_test.debug("Subscribing to rx results")
             rx_subscribe = self.subscribe_rx_results(parent=parent)
             fun_test.simple_assert(rx_subscribe, "Check rx subscribed")
             result['rx_subscribe'] = rx_subscribe
+
+            fun_test.debug("Subscribing to rx summary results")
+            rx_summary_subscribe = self.subscribe_rx_results(parent=parent, result_type="RxStreamSummaryResults")
+            fun_test.simple_assert(rx_summary_subscribe, "Check rx summary subscribe")
+            result['rx_summary_subscribe'] = rx_summary_subscribe
 
             fun_test.debug("Subscribing to generator results")
             generator_subscribe = self.subscribe_generator_results(parent=parent)
@@ -463,19 +491,47 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def validate_traffic_rate_results(self, rx_subscribe_handle, tx_subscribe_handle, stream_objects):
+    def unsubscribe_to_all_results(self, subscribe_dict):
+        result = False
+        try:
+            checkpoint = "Unsubscribe all results"
+            fun_test.debug(checkpoint)
+            for key in subscribe_dict:
+                fun_test.simple_assert(self.stc_manager.unsubscribe_results(result_handle=subscribe_dict[key]),
+                                       checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _manipulate_rate_counters(self, tx_rate_count, rx_rate_count, tolerance_count=5):
+        pps_count_difference = tx_rate_count - rx_rate_count
+        if pps_count_difference < tolerance_count:
+            rx_rate_count += pps_count_difference
+        return rx_rate_count
+
+    def _convert_bps_to_mbps(self, count_in_bps):
+        count_in_mbps = count_in_bps / 1000000
+        return int(count_in_mbps)
+
+    def validate_traffic_rate_results(self, rx_summary_subscribe_handle, tx_summary_subscribe_handle, stream_objects,
+                                      wait_before_fetching_results=True):
         result = {'result': False, 'pps_count': {}, 'throughput_count': {}}
         try:
-            fun_test.sleep("wait", seconds=2)
+            if wait_before_fetching_results:
+                fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
+
             for stream_obj in stream_objects:
                 checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
                 tx_result = self.stc_manager.get_tx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
-                                                                         subscribe_handle=tx_subscribe_handle)
+                                                                         subscribe_handle=tx_summary_subscribe_handle,
+                                                                         summary=True, refresh=False)
                 fun_test.simple_assert(expression=tx_result, message=checkpoint)
 
                 checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
                 rx_result = self.stc_manager.get_rx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
-                                                                         subscribe_handle=rx_subscribe_handle)
+                                                                         subscribe_handle=rx_summary_subscribe_handle,
+                                                                         summary=True, refresh=False)
                 fun_test.simple_assert(expression=rx_result, message=checkpoint)
 
                 checkpoint = "Ensure Tx FrameRate(PPS) is equal to Rx FrameRate(PPS) for %d Frame Size" % \
@@ -483,25 +539,28 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
                     stream_obj.spirent_handle, int(tx_result['FrameRate']), int(rx_result['FrameRate'])))
                 fun_test.simple_assert(expression=int(tx_result['FrameRate']) != 0, message="Tx FrameRate is zero")
+                rx_pps_count = self._manipulate_rate_counters(tx_rate_count=int(tx_result['FrameRate']),
+                                                              rx_rate_count=int(rx_result['FrameRate']))
                 fun_test.test_assert_expected(expected=int(tx_result['FrameRate']),
-                                              actual=int(rx_result['FrameRate']),
+                                              actual=rx_pps_count,
                                               message=checkpoint)
 
                 checkpoint = "Ensure Throughput Tx Rate is equal to Rx Rate for %d Frame Size" % \
                              stream_obj.FixedFrameLength
-                fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d bps and Rx --> %d bps " % (
-                    stream_obj.spirent_handle, int(tx_result['L1BitRate']), int(rx_result['L1BitRate'])
-                ))
+                tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_result['L1BitRate']))
+                rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_result['L1BitRate']))
+                fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
+                    stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
                 fun_test.simple_assert(expression=int(tx_result['L1BitRate']) != 0, message="Tx L1 Rate is zero")
-                fun_test.test_assert_expected(expected=int(tx_result['L1BitRate']),
-                                              actual=int(rx_result['L1BitRate']),
+                rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
+                                                             rx_rate_count=rx_l1_bit_rate_in_mbps)
+                fun_test.test_assert_expected(expected=tx_l1_bit_rate_in_mbps,
+                                              actual=rx_bit_rate,
                                               message=checkpoint)
-                result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): {'tx': tx_result['FrameRate'],
-                                                                                       'rx': rx_result['FrameRate']}}
 
-                result['throughput_count'] = {'frame_%s' %
-                                              str(stream_obj.FixedFrameLength): {'tx': tx_result['L1BitRate'],
-                                                                                 'rx': rx_result['L1BitRate']}}
+                result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): int(rx_result['FrameRate'])}
+
+                result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): rx_bit_rate}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -510,7 +569,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def _calculate_threshold_count(self, count, tolerance_percent=10):
         return (float(count) * tolerance_percent/100) + count
 
-    def validate_latency_results(self, rx_result, stream_objects,
+    def validate_latency_results(self, rx_result, stream_obj,
                                  expected_latency_count={}, tolerance_percent=10):
         """
         :param rx_result: Spirent Result Dict
@@ -527,43 +586,50 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 pass
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
-                for stream_obj in stream_objects:
-                    frame_size = str(stream_obj.FixedFrameLength)
-                    checkpoint = "Validate Avg. latency for %s Frame Size with Load %s " \
-                                 "Actual latency <= Expected Threshold latency" % \
-                                 (frame_size, str(stream_obj.Load))
-                    expected_threshold_latency = self._calculate_threshold_count(
-                        count=expected_latency_count['frame_%s' % frame_size]['avg'],
-                        tolerance_percent=tolerance_percent)
-                    fun_test.test_assert(expression=float(rx_result['AvgLatency']) <= float(expected_threshold_latency),
-                                         message=checkpoint)
+                frame_size = str(stream_obj.FixedFrameLength)
+                checkpoint = "Validate Avg. latency for %s Frame Size with Load %s " \
+                             "Actual latency <= Expected Threshold latency (%s) " % \
+                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                expected_threshold_latency = self._calculate_threshold_count(
+                    count=expected_latency_count['frame_%s' % frame_size]['avg'],
+                    tolerance_percent=tolerance_percent)
+                fun_test.log("Avg Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
+                                                                            frame_size, str(rx_result['AvgLatency'])))
+                fun_test.test_assert(expression=float(rx_result['AvgLatency']) <= float(expected_threshold_latency),
+                                     message=checkpoint)
 
-                    checkpoint = "Validate Min. latency for %s Frame Size with Load %s " \
-                                 "Actual latency <= Expected Threshold latency" % \
-                                 (frame_size, str(stream_obj.Load))
-                    expected_threshold_latency = self._calculate_threshold_count(
-                        count=expected_latency_count['frame_%s' % frame_size]['min'],
-                        tolerance_percent=tolerance_percent)
-                    fun_test.test_assert(expression=float(rx_result['MinLatency']) <= float(expected_threshold_latency),
-                                         message=checkpoint)
+                checkpoint = "Validate Min. latency for %s Frame Size with Load %s " \
+                             "Actual latency <= Expected Threshold latency (%s) " % \
+                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                expected_threshold_latency = self._calculate_threshold_count(
+                    count=expected_latency_count['frame_%s' % frame_size]['min'],
+                    tolerance_percent=tolerance_percent)
 
-                    checkpoint = "Validate Max. latency for %s Frame Size with Load %s " \
-                                 "Actual latency <= Expected Threshold latency" % \
-                                 (frame_size, str(stream_obj.Load))
-                    expected_threshold_latency = self._calculate_threshold_count(
-                        count=expected_latency_count['frame_%s' % frame_size]['max'],
-                        tolerance_percent=tolerance_percent)
-                    fun_test.test_assert(expression=float(rx_result['MaxLatency']) <= float(expected_threshold_latency),
-                                         message=checkpoint)
-                    result['frame_%s' % frame_size] = {'avg': rx_result['AvgLatency'],
-                                                       'min': rx_result['MinLatency'],
-                                                       'max': rx_result['MaxLatency']}
+                fun_test.log("Min Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
+                                                                            frame_size, str(rx_result['MinLatency'])))
+                fun_test.test_assert(expression=float(rx_result['MinLatency']) <= float(expected_threshold_latency),
+                                     message=checkpoint)
+
+                checkpoint = "Validate Max. latency for %s Frame Size with Load %s " \
+                             "Actual latency <= Expected Threshold latency (%s)" % \
+                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                expected_threshold_latency = self._calculate_threshold_count(
+                    count=expected_latency_count['frame_%s' % frame_size]['max'],
+                    tolerance_percent=tolerance_percent)
+
+                fun_test.log("Max Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
+                                                                            frame_size, str(rx_result['MaxLatency'])))
+                fun_test.test_assert(expression=float(rx_result['MaxLatency']) <= float(expected_threshold_latency),
+                                     message=checkpoint)
+                result['frame_%s' % frame_size] = {'avg': rx_result['AvgLatency'],
+                                                   'min': rx_result['MinLatency'],
+                                                   'max': rx_result['MaxLatency']}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def validate_jitter_results(self, rx_result, stream_objects,
+    def validate_jitter_results(self, rx_result, stream_obj,
                                 expected_jitter_count={}, tolerance_percent=10):
         """
         :param rx_result: Spirent Result Dict
@@ -580,34 +646,39 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 pass
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
-                for stream_obj in stream_objects:
-                    frame_size = str(stream_obj.FixedFrameLength)
-                    checkpoint = "Validate Avg. jitter for %s Frame Size with Load %s " \
-                                 "Actual jitter <= Expected Threshold jitter" % \
-                                 (frame_size, str(stream_obj.Load))
-                    expected_threshold_jitter = self._calculate_threshold_count(
-                        count=expected_jitter_count['frame_%s' % frame_size]['avg'], tolerance_percent=tolerance_percent)
-                    fun_test.test_assert(expression=float(rx_result['AvgJitter']) <= float(expected_threshold_jitter),
-                                         message=checkpoint)
+                frame_size = str(stream_obj.FixedFrameLength)
+                checkpoint = "Validate Avg. jitter for %s Frame Size with Load %s " \
+                             "Actual jitter <= Expected Threshold jitter (%s)" % \
+                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                expected_threshold_jitter = self._calculate_threshold_count(
+                    count=expected_jitter_count['frame_%s' % frame_size]['avg'], tolerance_percent=tolerance_percent)
+                fun_test.log("Avg Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
+                                                                         frame_size, str(rx_result['AvgJitter'])))
+                fun_test.test_assert(expression=float(rx_result['AvgJitter']) <= float(expected_threshold_jitter),
+                                     message=checkpoint)
 
-                    checkpoint = "Validate Min. jitter for %s Frame Size with Load %s " \
-                                 "Actual jitter <= Expected Threshold jitter" % \
-                                 (frame_size, str(stream_obj.Load))
-                    expected_threshold_jitter = self._calculate_threshold_count(
-                        count=expected_jitter_count['frame_%s' % frame_size]['min'], tolerance_percent=tolerance_percent)
-                    fun_test.test_assert(expression=float(rx_result['MinJitter']) <= float(expected_threshold_jitter),
-                                         message=checkpoint)
+                checkpoint = "Validate Min. jitter for %s Frame Size with Load %s " \
+                             "Actual jitter <= Expected Threshold jitter (%s)" % \
+                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                expected_threshold_jitter = self._calculate_threshold_count(
+                    count=expected_jitter_count['frame_%s' % frame_size]['min'], tolerance_percent=tolerance_percent)
+                fun_test.log("Min Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
+                                                                         frame_size, str(rx_result['MinJitter'])))
+                fun_test.test_assert(expression=float(rx_result['MinJitter']) <= float(expected_threshold_jitter),
+                                     message=checkpoint)
 
-                    checkpoint = "Validate Max. jitter for %s Frame Size with Load %s " \
-                                 "Actual latency <= Expected Threshold latency" % \
-                                 (frame_size, str(stream_obj.Load))
-                    expected_threshold_jitter = self._calculate_threshold_count(
-                        count=expected_jitter_count['frame_%s' % frame_size]['max'], tolerance_percent=tolerance_percent)
-                    fun_test.test_assert(expression=float(rx_result['MaxJitter']) <= float(expected_threshold_jitter),
-                                         message=checkpoint)
-                    result['frame_%s' % frame_size] = {'avg': rx_result['AvgJitter'],
-                                                       'min': rx_result['MinJitter'],
-                                                       'max': rx_result['MaxJitter']}
+                checkpoint = "Validate Max. jitter for %s Frame Size with Load %s " \
+                             "Actual latency <= Expected Threshold latency (%s)" % \
+                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                expected_threshold_jitter = self._calculate_threshold_count(
+                    count=expected_jitter_count['frame_%s' % frame_size]['max'], tolerance_percent=tolerance_percent)
+                fun_test.log("Max Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
+                                                                         frame_size, str(rx_result['MaxJitter'])))
+                fun_test.test_assert(expression=float(rx_result['MaxJitter']) <= float(expected_threshold_jitter),
+                                     message=checkpoint)
+                result['frame_%s' % frame_size] = {'avg': rx_result['AvgJitter'],
+                                                   'min': rx_result['MinJitter'],
+                                                   'max': rx_result['MaxJitter']}
 
             result['result'] = True
         except Exception as ex:
@@ -617,14 +688,16 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def validate_performance_result(self, tx_subscribe_handle, rx_subscribe_handle, stream_objects,
                                     jitter=False, expected_latency_count={}, expected_jitter_count={},
                                     tolerance_percent=10):
-        result = False
+        result = {'result': False}
         try:
             rx_result = {}
             for stream_obj in stream_objects:
+                key = "frame_%s" % str(stream_obj.FixedFrameLength)
+                result[key] = []
                 checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
                 rx_result = self.stc_manager.get_rx_stream_block_results(
                     stream_block_handle=stream_obj.spirent_handle,
-                    subscribe_handle=rx_subscribe_handle)
+                    subscribe_handle=rx_subscribe_handle, summary=True)
                 fun_test.simple_assert(expression=rx_result, message=checkpoint)
 
                 checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
@@ -633,8 +706,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     subscribe_handle=tx_subscribe_handle)
                 fun_test.simple_assert(expression=tx_result, message=checkpoint)
 
-                checkpoint = "Ensure Tx FrameCount is equal to Rx FrameCount for %d frame size" % (
-                    stream_obj.FixedFrameLength
+                checkpoint = "Ensure Tx FrameCount is equal to Rx FrameCount for %d frame size (%s)" % (
+                    stream_obj.FixedFrameLength, stream_obj.spirent_handle
                 )
                 fun_test.log("Frame Count Results for %d B: \n Tx Frame Count: %d \n Rx Frame Count: %d " % (
                     stream_obj.FixedFrameLength, int(tx_result['FrameCount']), int(rx_result['FrameCount'])
@@ -642,27 +715,59 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 fun_test.test_assert_expected(expected=int(tx_result['FrameCount']),
                                               actual=int(rx_result['FrameCount']),
                                               message=checkpoint)
-            if jitter:
-                checkpoint = "Validate Jitter Counters"
-                jitter_result = self.validate_jitter_results(rx_result=rx_result,
-                                                             stream_objects=stream_objects,
-                                                             expected_jitter_count=expected_jitter_count,
-                                                             tolerance_percent=tolerance_percent)
-                fun_test.simple_assert(expression=jitter_result['result'], message=checkpoint)
+                if jitter:
+                    checkpoint = "Validate Jitter Counters"
+                    jitter_result = self.validate_jitter_results(rx_result=rx_result,
+                                                                 stream_obj=stream_obj,
+                                                                 expected_jitter_count=expected_jitter_count,
+                                                                 tolerance_percent=tolerance_percent)
+                    fun_test.simple_assert(expression=jitter_result['result'], message=checkpoint)
+                    result[key].append(jitter_result[key])
 
-                #TODO: Add Logging
-            else:
-                checkpoint = "Validate Latency Counters"
-                latency_result = self.validate_latency_results(rx_result=rx_result,
-                                                               stream_objects=stream_objects,
-                                                               expected_latency_count=expected_latency_count,
-                                                               tolerance_percent=tolerance_percent)
-                fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
+                    #TODO: Add Logging
+                else:
+                    checkpoint = "Validate Latency Counters"
+                    latency_result = self.validate_latency_results(rx_result=rx_result,
+                                                                   stream_obj=stream_obj,
+                                                                   expected_latency_count=expected_latency_count,
+                                                                   tolerance_percent=tolerance_percent)
+                    fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
+                    result[key].append(latency_result[key])
 
-            result = True
+            result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def print_table(self, result):
+        table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
+                                 'Max Latency (us)'])
+        for key in result:
+            pps_count = result[key]['pps_count']
+            throughput_count = result[key]['throughput_count']
+            if len(result[key]['latency_count']) > 1:
+                avg_latency1 = result[key]['latency_count'][0]['avg']
+                avg_latency2 = result[key]['latency_count'][1]['avg']
+                min_latency1 = result[key]['latency_count'][0]['min']
+                min_latency2 = result[key]['latency_count'][1]['min']
+                max_latency1 = result[key]['latency_count'][0]['max']
+                max_latency2 = result[key]['latency_count'][1]['max']
+                table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+                table_obj.add_row([key, pps_count, throughput_count, avg_latency2, min_latency2, max_latency2])
+            else:
+                avg_latency1 = result[key]['latency_count'][0]['avg']
+                min_latency1 = result[key]['latency_count'][0]['min']
+                max_latency1 = result[key]['latency_count'][0]['max']
+
+                table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+
+        print table_obj
+        fun_test.log(str(table_obj))
+
+
+
+
+
 
 
 
