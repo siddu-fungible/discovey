@@ -276,6 +276,7 @@ class SbpZynqSetupTemplate:
         return True
 
     def custom_flash_generator(self, artifacts_dir, spec="/tmp/flash_config.json", output_dir=None):
+        fun_test.add_checkpoint("Custom Flash generator")
         self.host.command("cd {}".format(self.get_board_tests_dir()))
         if not artifacts_dir:
             artifacts_dir = self._get_artifacts_dir()
