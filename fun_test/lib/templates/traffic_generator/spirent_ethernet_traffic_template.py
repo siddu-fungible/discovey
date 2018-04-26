@@ -278,12 +278,21 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def activate_stream_blocks(self, stream_obj_list):
+    def activate_stream_blocks(self, stream_obj_list=None):
         result = False
         try:
             stream_block_handles = []
-            for stream_obj in stream_obj_list:
-                stream_block_handles.append(stream_obj._spirent_handle)
+            if not stream_obj_list:
+                project = self.stc_manager.get_project_handle()
+                ports = self.stc_manager.get_object_children(project, child_type="children-port")
+                for port in ports:
+                    streamblocks = self.stc_manager.get_object_children(port, "children-streamblock")
+                    if streamblocks:
+                        for stream_obj in streamblocks:
+                            stream_block_handles.append(stream_obj)
+            else:
+                for stream_obj in stream_obj_list:
+                    stream_block_handles.append(stream_obj._spirent_handle)
 
             result = self.stc_manager.run_stream_block_active_command(stream_block_handles=stream_block_handles)
             fun_test.test_assert(result, message="Activate Stream Blocks: %s" % stream_block_handles)
@@ -291,12 +300,21 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def deactivate_stream_blocks(self, stream_obj_list):
+    def deactivate_stream_blocks(self, stream_obj_list=None):
         result = False
         try:
             stream_block_handles = []
-            for stream_obj in stream_obj_list:
-                stream_block_handles.append(stream_obj._spirent_handle)
+            if not stream_obj_list:
+                project = self.stc_manager.get_project_handle()
+                ports = self.stc_manager.get_object_children(project, child_type="children-port")
+                for port in ports:
+                    streamblocks = self.stc_manager.get_object_children(port, "children-streamblock")
+                    if streamblocks:
+                        for stream_obj in streamblocks:
+                            stream_block_handles.append(stream_obj)
+            else:
+                for stream_obj in stream_obj_list:
+                    stream_block_handles.append(stream_obj._spirent_handle)
 
             result = self.stc_manager.run_stream_block_active_command(stream_block_handles=stream_block_handles,
                                                                       activate=False)
