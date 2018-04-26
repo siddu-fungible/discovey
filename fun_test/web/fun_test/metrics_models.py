@@ -28,9 +28,10 @@ class MetricChart(models.Model):
 
     def add_child(self, child_id):
         children = json.loads(self.children)
-        children.append(child_id)
-        self.children = json.dumps(children)
-        self.save()
+        if child_id not in children:
+            children.append(child_id)
+            self.children = json.dumps(children)
+            self.save()
 
     def goodness(self):
         children = json.loads(self.children)
