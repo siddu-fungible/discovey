@@ -87,30 +87,33 @@ class MetricChart(models.Model):
             last_records = self.get_last_record(number_of_records=number_of_records)
             data_sets = json.loads(self.data_sets)
             if len(data_sets):
-                data_set = data_sets[0]
+                # data_set = data_sets[0]
 
-                max_value = data_set["output"]["max"]
-                min_value = data_set["output"]["min"]
-                output_name = data_set["output"]["name"]
-
-                if "expected" in data_set["output"]:
-                    expected_value = data_set["output"]["expected"]
-                else:
-                    expected_value = max_value
-                    if not self.positive:
-                        expected_value = min_value
+                data_set_statuses = []
 
                 for last_record in last_records:
-                    output_value = last_record[output_name]
-                    status = output_value >= min_value and output_value <= max_value
-                    goodness = 0
-                    if expected_value is not None:
-                        if self.positive:
-                            goodness = (float(output_value) / expected_value) * 100
+                    data_set_combined_goodness = 0
+                    for data_set in data_sets:
+                        max_value = data_set["output"]["max"]
+                        min_value = data_set["output"]["min"]
+                        output_name = data_set["output"]["name"]
+
+                        if "expected" in data_set["output"]:
+                            expected_value = data_set["output"]["expected"]
                         else:
-                            goodness = (float(expected_value) / output_value) * 100
-                    goodness_values.append(goodness)
-                    status_values.append(status)
+                            expected_value = max_value
+                            if not self.positive:
+                                expected_value = min_value
+
+                        output_value = last_record[output_name]
+                        data_set_statuses.append(output_value >= min_value and output_value <= max_value)
+                        if expected_value is not None:
+                            if self.positive:
+                                data_set_combined_goodness += (float(output_value) / expected_value) * 100
+                            else:
+                                data_set_combined_goodness += (float(expected_value) / output_value) * 100
+                    goodness_values.append(data_set_combined_goodness/len(data_sets))
+                status_values.append(reduce(lambda x, y: x and y, data_set_statuses))
 
             # Fill up missing values
             for i in range(number_of_records - len(goodness_values)):

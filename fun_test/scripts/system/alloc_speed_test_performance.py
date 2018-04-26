@@ -27,7 +27,6 @@ class MyScript(FunTestScript):
         pass
 
 
-
 class FunTestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
@@ -44,6 +43,8 @@ class FunTestCase1(FunTestCase):
         job_info = {}
         lsf_status_server = LsfStatusServer()
         past_jobs = lsf_status_server.get_past_jobs_by_tag(tag=ALLOC_SPEED_TEST_TAG)
+
+        issues_found = 0
         for past_job in past_jobs:
             return_code = -1
             job_id = past_job["job_id"]
@@ -81,7 +82,6 @@ class FunTestCase1(FunTestCase):
             lines = output_text.split("\n")
             lines = [x for x in lines if "Best time" in x or "wu_latency_test" in x]
 
-
             alloc_speed_test_found = False
             output_one_malloc_free_wu = 0
             output_one_malloc_free_threaded = 0
@@ -89,7 +89,6 @@ class FunTestCase1(FunTestCase):
             wu_latency_test_found = False
             wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = None
             wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = None
-
 
             for line in lines:
                 m = re.search(r'Best time for one malloc/free \(WU\): (\d+)ns', line)
@@ -128,11 +127,11 @@ class FunTestCase1(FunTestCase):
             fun_test.log("Malloc Free threaded: {}".format(output_one_malloc_free_threaded))
             fun_test.log("Malloc Free WU: {}".format(output_one_malloc_free_wu))
             fun_test.log("wu_latency_test: wu_alloc_stack_ns: min: {}, avg: {}, max: {}".format(wu_alloc_stack_ns_min,
-                                                                                 wu_alloc_stack_ns_avg,
-                                                                                 wu_alloc_stack_ns_max))
+                                                                                                wu_alloc_stack_ns_avg,
+                                                                                                wu_alloc_stack_ns_max))
             fun_test.log("wu_latency_test: wu_ungated_ns: min: {}, avg: {}, max: {}".format(wu_ungated_ns_min,
-                                                                             wu_ungated_ns_avg,
-                                                                             wu_ungated_ns_max))
+                                                                                            wu_ungated_ns_avg,
+                                                                                            wu_ungated_ns_max))
 
             key = branch_fun_sdk
             m = re.search(r'refs/tags/bld_(\d+)', branch_fun_sdk)
@@ -142,14 +141,43 @@ class FunTestCase1(FunTestCase):
                 continue
 
             if wu_latency_test_found:
-                MetricHelper(model=WuLatencyAllocStack).add_entry(key=key, input_app="wu_latency_test",
-                                                                  output_min=wu_alloc_stack_ns_min,
-                                                                  output_max=wu_alloc_stack_ns_max,
-                                                                  output_avg=wu_alloc_stack_ns_avg)
-                MetricHelper(model=WuLatencyUngated).add_entry(key=key, input_app="wu_latency_test",
-                                                               output_min=wu_ungated_ns_min,
-                                                               output_max=wu_ungated_ns_max,
-                                                               output_avg=wu_ungated_ns_avg)
+
+                for chart_name, metric_model_name, model in [
+                    ("WU Latency: Ungated", "WuLatencyUngated", WuLatencyUngated),
+                    ("WU Latency: Alloc Stack", "WuLatencyAllocStack",
+                     WuLatencyAllocStack)]:
+                    MetricHelper(model=model).add_entry(key=key,
+                                                        input_app="wu_latency_test",
+                                                        output_min=wu_ungated_ns_min,
+                                                        output_max=wu_ungated_ns_max,
+                                                        output_avg=wu_ungated_ns_avg)
+
+                    chart_helper = MetricChartHelper(chart_name=chart_name,
+                                                     metric_model_name=metric_model_name)
+                    entry = MetricHelper(model=WuLatencyUngated).get_recent_entry()
+
+                    if entry:
+                        values_to_check = ["output_min", "output_max", "output_avg"]
+                        for value_to_check in values_to_check:
+                            output_data_set = chart_helper.get_output_data_set(output_name=value_to_check)
+                            expected_min_value, expected_max_value = output_data_set["min"], output_data_set["max"]
+
+                            try:
+                                actual = getattr(entry, value_to_check)
+                                fun_test.test_assert(actual >= expected_min_value,
+                                                     "Build: {} Chart: {} Attr: {} Min: {} Actual: {}".format(key,
+                                                                                                              chart_name,
+                                                                                                              value_to_check,
+                                                                                                              expected_min_value,
+                                                                                                              actual))
+                                fun_test.test_assert(actual <= expected_max_value,
+                                                     "Build: {} Chart: {} Attr: {} Max: {} Actual: {}".format(key,
+                                                                                                              chart_name,
+                                                                                                              value_to_check,
+                                                                                                              expected_max_value,
+                                                                                                              actual))
+                            except:
+                                issues_found += 1
 
             if alloc_speed_test_found:
                 AllocSpeedPerformanceHelper().add_entry(key=key, input_app="alloc_speed_test",
@@ -160,7 +188,6 @@ class FunTestCase1(FunTestCase):
                                       "output_one_malloc_free_threaded": output_one_malloc_free_threaded}
 
                 newest_build_number = max(job_info.keys())
-                expected_values = {}
 
                 metric_model_name = "AllocSpeedPerformance"
                 chart_map = {}
@@ -169,16 +196,23 @@ class FunTestCase1(FunTestCase):
                 values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
 
                 for value_to_check in values_to_check:
-                    chart_helper = MetricChartHelper(chart_name=chart_map[value_to_check], metric_model_name=metric_model_name)
-                    expected_values[value_to_check] = {"min": chart_helper.get_output_data_set(output_name=value_to_check)["min"],
-                                                       "max": chart_helper.get_output_data_set(output_name=value_to_check)["max"]}
-
-                for value_to_check in values_to_check:
-                    min_value, max_value = expected_values[value_to_check]["min"], expected_values[value_to_check]["max"]
+                    chart_helper = MetricChartHelper(chart_name=chart_map[value_to_check],
+                                                     metric_model_name=metric_model_name)
+                    output_data_set = chart_helper.get_output_data_set(output_name=value_to_check)
+                    min_value, max_value = output_data_set["min"], output_data_set["max"]
                     actual = job_info[newest_build_number][value_to_check]
-                    fun_test.test_assert(actual >= min_value, "Build: {} Attr: {} Min: {} Actual: {}".format(newest_build_number, value_to_check, min_value, actual))
-                    fun_test.test_assert(actual <= max_value, "Build: {} Attr: {} Max: {} Actual: {}".format(newest_build_number, value_to_check, max_value, actual))
-
+                    try:
+                        fun_test.test_assert(actual >= min_value,
+                                             "Build: {} Attr: {} Min: {} Actual: {}".format(newest_build_number,
+                                                                                            value_to_check, min_value,
+                                                                                            actual))
+                        fun_test.test_assert(actual <= max_value,
+                                             "Build: {} Attr: {} Max: {} Actual: {}".format(newest_build_number,
+                                                                                            value_to_check, max_value,
+                                                                                            actual))
+                    except:
+                        issues_found += 1
+        fun_test.test_assert_expected(expected=0, actual=issues_found, message="Number of issues found")
 
 
 if __name__ == "__main__":

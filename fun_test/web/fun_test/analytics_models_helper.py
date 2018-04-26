@@ -44,6 +44,23 @@ class MetricHelper(object):
             o = self.model(**kwargs)
             o.save()
 
+    def get_entry(self, **kwargs):
+        result = None
+        inputs = {}
+        inputs["key"] = kwargs["key"]
+        outputs = {}
+        for key, value in kwargs.iteritems():
+            if key.startswith("input_"):
+                inputs[key] = value
+        try:
+            result = self.model.objects.get(**inputs)
+        except ObjectDoesNotExist:
+            pass
+        return result
+
+    def get_recent_entry(self):
+        return self.model.objects.last()
+
 class MetricChartHelper(object):
     def __init__(self, chart_name, metric_model_name):
         self.chart_name = chart_name
