@@ -22,6 +22,7 @@ class SpirentManager(object):
     DUT_TYPE_QFX = "qfx"
     DUT_TYPE_F1 = "f1"
     DUT_TYPE_PALLADIUM = "palladium"
+    DUT_INTERFACE_MODE = "interface_mode"
     MODULE_STATUS_UP = "MODULE_STATUS_UP"
     MODULE_SYNC_STATUS = "MODULE_IN_SYNC"
     OWNERSHIP_STATE_AVAILABLE = "OWNERSHIP_STATE_AVAILABLE"
@@ -29,7 +30,8 @@ class SpirentManager(object):
     RESULT_VIEW_MODE_JITTER = "JITTER"
     TIMED_REFRESH_RESULT_VIEW_MODE = "PERIODIC"
 
-    def __init__(self, chassis_type=VIRTUAL_CHASSIS_TYPE, dut_type=DUT_TYPE_PALLADIUM):
+    def __init__(self, chassis_type=VIRTUAL_CHASSIS_TYPE, dut_type=DUT_TYPE_PALLADIUM,
+                 interface_mode=DUT_INTERFACE_MODE):
         try:
             stc_private_install_dir = fun_test.get_environment_variable(variable="STC_PRIVATE_INSTALL_DIR")
             if not stc_private_install_dir:
@@ -42,11 +44,13 @@ class SpirentManager(object):
         self.dut_config = {}
         self.chassis_type = chassis_type
         self.dut_type = dut_type
+        self.interface_mode = interface_mode
         if fun_test.local_settings:
             self.chassis_type = fun_test.get_local_setting("spirent_chassis_type")
             self.dut_type = fun_test.get_local_setting("dut_type")
             self.host_config['test_module'] = fun_test.get_local_setting(self.chassis_type)
             self.dut_config = fun_test.get_local_setting(self.dut_type)
+            self.interface_mode = fun_test.get_local_setting("interface_mode")
         self.chassis_ip = self._get_chassis_ip_by_chassis_type()
 
     def health(self, session_name="TestSession"):

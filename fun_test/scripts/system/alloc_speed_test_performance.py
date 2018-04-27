@@ -146,11 +146,19 @@ class FunTestCase1(FunTestCase):
                     ("WU Latency: Ungated", "WuLatencyUngated", WuLatencyUngated),
                     ("WU Latency: Alloc Stack", "WuLatencyAllocStack",
                      WuLatencyAllocStack)]:
-                    MetricHelper(model=model).add_entry(key=key,
-                                                        input_app="wu_latency_test",
-                                                        output_min=wu_ungated_ns_min,
-                                                        output_max=wu_ungated_ns_max,
-                                                        output_avg=wu_ungated_ns_avg)
+                    if metric_model_name == "WuLatencyUngated":
+                        MetricHelper(model=model).add_entry(key=key,
+                                                            input_app="wu_latency_test",
+                                                            output_min=wu_ungated_ns_min,
+                                                            output_max=wu_ungated_ns_max,
+                                                            output_avg=wu_ungated_ns_avg)
+                    elif metric_model_name == "WuLatencyAllocStack":
+                        MetricHelper(model=model).add_entry(key=key,
+                                                            input_app="wu_latency_test",
+                                                            output_min=wu_alloc_stack_ns_min,
+                                                            output_max=wu_alloc_stack_ns_max,
+                                                            output_avg=wu_alloc_stack_ns_avg)
+     
 
                     chart_helper = MetricChartHelper(chart_name=chart_name,
                                                      metric_model_name=metric_model_name)
