@@ -1,6 +1,6 @@
 {
   "name": "flash_image",
-  "size": "0x40000",
+  "size": "0x50000",
   "puf_rom": {
     "a": {
       "version": "0x1"

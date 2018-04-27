@@ -103,7 +103,7 @@ class TestCase2(FunTestCase):
 
         config = {
             "name": "flash_image",
-            "size": "0x40000",
+            "size": "0x50000",
             "puf_rom": {
                 "a": {
                     "version": "0xa11"

@@ -104,7 +104,7 @@ class FunTestCase1(FunTestCase):
                 if m:
                     wu_latency_test_found = True
                     data = m.group(1)
-                    m2 = re.search(r'\[min,\s?avg,\s?max\]=\[(\d+),\s?(\d+),\s?(\d+)\]', data)
+                    m2 = re.search(r'{min:\s?(\d+), avg:\s?(\d+),\s?max:\s?(\d+)', data)
                     if m2:
                         wu_alloc_stack_ns_min = int(m2.group(1))
                         wu_alloc_stack_ns_avg = int(m2.group(2))
@@ -112,7 +112,7 @@ class FunTestCase1(FunTestCase):
                 m = re.search(r' wu_latency_test (.*)perf_wu_ungated_ns', line)
                 if m:
                     data = m.group(1)
-                    m2 = re.search(r'\[min,\s?avg,\s?max\]=\[(\d+),\s?(\d+),\s?(\d+)\]', data)
+                    m2 = re.search(r'{min:\s?(\d+), avg:\s?(\d+),\s?max:\s?(\d+)', data)
                     if m2:
                         wu_ungated_ns_min = int(m2.group(1))
                         wu_ungated_ns_avg = int(m2.group(2))
