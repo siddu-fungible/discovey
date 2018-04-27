@@ -1,0 +1,4 @@
+{
+  "25G": {"bad_frame_load_mbps": "0.1", "good_frame_load_mbps": "14", "incremental_load_mbps": "5"},
+  "50G": {"bad_frame_load_mbps": "0.2", "good_frame_load_mbps": "28", "incremental_load_mbps": "5"}
+}
