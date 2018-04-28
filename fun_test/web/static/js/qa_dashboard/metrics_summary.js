@@ -47,8 +47,16 @@ function MetricsSummaryController($scope, commonService) {
         $scope.fetchJenkinsJobIdMap();
 
         $scope.flatNodes = [];
-        $scope.fetchRootMetricInfo("Total", "MetricContainer").then(() => {
-
+        $scope.fetchRootMetricInfo("Total", "MetricContainer").then((data) => {
+            let metricId = data.metric_id;
+            let p1 = {metric_id: metricId};
+            commonService.apiPost('/metrics/metric_info', p1).then((data) => {
+                let newNode = $scope.getNodeFromData(data);
+                newNode.indent = 0;
+                $scope.flatNodes.push(newNode);
+                $scope.expandNode(newNode);
+            });
+            return data;
         });
 
 
@@ -59,7 +67,7 @@ function MetricsSummaryController($scope, commonService) {
     $scope.fetchJenkinsJobIdMap = () => {
         commonService.apiGet('/regression/jenkins_job_id_maps').then((data) => {
             $scope.jenkinsJobIdMap = data;
-            console.log($scope.jenkinsJobIdMap);
+            //console.log($scope.jenkinsJobIdMap);
             commonService.apiGet('/regression/build_to_date_map').then((data) => {
                 $scope.buildInfo = data;
             })
@@ -69,6 +77,12 @@ function MetricsSummaryController($scope, commonService) {
     $scope.getIndex = (node) => {
         let index = $scope.flatNodes.map(function(x) {return x.metricId;}).indexOf(node.metricId);
         return index;
+    };
+
+    $scope.expandAllNodes = () => {
+        $scope.flatNodes.forEach((node) => {
+            $scope.expandNode(node, true);
+        })
     };
 
     $scope.getNodeFromData = (data) => {
@@ -108,13 +122,6 @@ function MetricsSummaryController($scope, commonService) {
     $scope.fetchRootMetricInfo = (chartName, metricModelName) => {
         let payload = {"metric_model_name": metricModelName, chart_name: chartName};
         return commonService.apiPost('/metrics/chart_info', payload).then((data) => {
-            let metricId = data.metric_id;
-            let p1 = {metric_id: metricId};
-            commonService.apiPost('/metrics/metric_info', p1).then((data) => {
-                let newNode = $scope.getNodeFromData(data);
-                newNode.indent = 0;
-                $scope.flatNodes.push(newNode);
-            });
             return data;
         });
     };
@@ -235,7 +242,7 @@ function MetricsSummaryController($scope, commonService) {
     };
 
 
-    $scope.expandNode = (node) => {
+    $scope.expandNode = (node, all) => {
         node.collapsed = false;
         if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
             let thisNode = node;
@@ -257,6 +264,9 @@ function MetricsSummaryController($scope, commonService) {
                             newNode = $scope.flatNodes[childIndex];
                         }
                         newNode.hide = false;
+                        if (all) {
+                            $scope.expandNode(newNode, all);
+                        }
                     });
                 });
             });
