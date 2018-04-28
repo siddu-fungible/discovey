@@ -43,7 +43,6 @@ function MetricsSummaryController($scope, commonService) {
             }
 
         ];
-
         $scope.fetchJenkinsJobIdMap();
 
         $scope.flatNodes = [];
@@ -55,6 +54,7 @@ function MetricsSummaryController($scope, commonService) {
                 newNode.indent = 0;
                 $scope.flatNodes.push(newNode);
                 $scope.expandNode(newNode);
+                $scope.collapsedAll = true;
             });
             return data;
         });
@@ -82,7 +82,15 @@ function MetricsSummaryController($scope, commonService) {
     $scope.expandAllNodes = () => {
         $scope.flatNodes.forEach((node) => {
             $scope.expandNode(node, true);
-        })
+        });
+        $scope.collapsedAll = false;
+        $scope.expandedAll = true;
+    };
+
+    $scope.collapseAllNodes = () => {
+        $scope.collapseNode($scope.flatNodes[0]);
+        $scope.expandedAll = false;
+        $scope.collapsedAll = true;
     };
 
     $scope.getNodeFromData = (data) => {

@@ -87,8 +87,14 @@ arrow-icon {
 <div class="content" ng-controller="metricsSummaryController">
     <div class="col-lg-6 col-xl-6 col-md-6">
         <div>
-            <a href="#" ng-click="expandAllNodes()">Expand all</a>
+
             <table class="table table-nonfluid">
+                <tr style="border: 0">
+                    <td colspan="4" style="border: 0">
+                        <a style="float: right" href="#" ng-click="expandAllNodes()" ng-if="collapsedAll">Expand all</a>
+                        <a style="float: right" href="#" ng-click="collapseAllNodes()" ng-if="expandedAll">Collapse all</a>
+                    </td>
+                </tr>
                 <tr>
                     <th>Aspect</th>
                     <th>Score</th>
