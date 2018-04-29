@@ -91,8 +91,8 @@ arrow-icon {
             <table class="table table-nonfluid">
                 <tr style="border: 0">
                     <td colspan="4" style="border: 0">
-                        <a style="float: right" href="#" ng-click="expandAllNodes()" ng-if="collapsedAll">Expand all</a>
-                        <a style="float: right" href="#" ng-click="collapseAllNodes()" ng-if="expandedAll">Collapse all</a>
+                        <button style="float: right" class="btn" ng-if="collapsedAll" ng-click="expandAllNodes()"><i class="fa fa-expand"></i> Expand all</button>
+                        <button style="float: right" class="btn" ng-if="expandedAll" ng-click="collapseAllNodes()"><i class="fa fa-compress"></i> Collapse all</button>
                     </td>
                 </tr>
                 <tr>

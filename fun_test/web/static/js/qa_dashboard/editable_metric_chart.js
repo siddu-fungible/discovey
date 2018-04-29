@@ -107,8 +107,21 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         }
     };
 
+    $scope.showThreshold = () => {
+        $scope.showingThreshold = true;
+    };
 
+    $scope.hideThreshold = () => {
+        $scope.showingThreshold = false;
+    };
 
+    $scope.showTable = () => {
+        $scope.showingTable = true;
+    };
+
+    $scope.hideTable = () => {
+        $scope.showingTable = false;
+    };
 
     $scope.addDataSetClick = () => {
         //let newDataSet = {};
