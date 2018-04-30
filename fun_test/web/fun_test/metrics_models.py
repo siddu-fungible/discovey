@@ -67,7 +67,6 @@ class MetricChart(models.Model):
         children = json.loads(self.children)
         if not self.leaf:
             if len(children):
-
                 for child in children:
                     child_metric = MetricChart.objects.get(metric_id=child)
                     child_status_values, child_goodness_values = child_metric.get_status()
@@ -115,17 +114,17 @@ class MetricChart(models.Model):
                     goodness_values.append(data_set_combined_goodness/len(data_sets))
                 status_values.append(reduce(lambda x, y: x and y, data_set_statuses))
 
-            # Fill up missing values
-            for i in range(number_of_records - len(goodness_values)):
-                if len(goodness_values):
-                    goodness_values.append(goodness_values[-1])
-                else:
-                    goodness_values.append(0)
-            for i in range(number_of_records - len(status_values)):
-                if len(status_values):
-                    status_values.append(status_values[-1])
-                else:
-                    status_values.append(False)
+        # Fill up missing values
+        for i in range(number_of_records - len(goodness_values)):
+            if len(goodness_values):
+                goodness_values.append(goodness_values[-1])
+            else:
+                goodness_values.append(0)
+        for i in range(number_of_records - len(status_values)):
+            if len(status_values):
+                status_values.append(status_values[-1])
+            else:
+                status_values.append(True)
         print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
         return status_values, goodness_values
 

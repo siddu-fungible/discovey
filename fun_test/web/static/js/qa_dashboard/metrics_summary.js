@@ -51,6 +51,7 @@ function MetricsSummaryController($scope, commonService) {
             let p1 = {metric_id: metricId};
             commonService.apiPost('/metrics/metric_info', p1).then((data) => {
                 let newNode = $scope.getNodeFromData(data);
+                newNode.hide = false;
                 newNode.indent = 0;
                 $scope.flatNodes.push(newNode);
                 $scope.expandNode(newNode);
@@ -99,7 +100,7 @@ function MetricsSummaryController($scope, commonService) {
             label: data.chart_name,
             collapsed: true,
             metricId: data.metric_id,
-            hide: false,
+            hide: true,
             leaf: data.leaf,
             chartName: data.chart_name,
             metricModelName: data.metric_model_name
@@ -250,6 +251,35 @@ function MetricsSummaryController($scope, commonService) {
     };
 
 
+
+    $scope._insertNewNode = (node, childrenIds, all) => {
+        if (childrenIds.length <= 0) {
+            return;
+        }
+        let childId = childrenIds.pop();
+        let thisChildrenIds = childrenIds;
+        let thisAll = all;
+        let p1 = {metric_id: childId};
+                    let thisNode = node;
+                    $scope.fetchMetricInfoById({metricId: childId}).then((data) => {
+                        let newNode = $scope.getNodeFromData(data);
+                        //console.log(newNode);
+                        newNode.indent = thisNode.indent + 1;
+                        let index = $scope.getIndex(thisNode);
+                        let childIndex = $scope.getIndex(newNode);
+                        if (childIndex === -1) {
+                            $scope.flatNodes.splice(index + 1, 0, newNode);
+                        } else {
+                            newNode = $scope.flatNodes[childIndex];
+                        }
+                        $scope._insertNewNode(thisNode, thisChildrenIds, thisAll);
+                        newNode.hide = false;
+                        if (thisAll) {
+                            $scope.expandNode(newNode, thisAll);
+                        }
+                    });
+    };
+
     $scope.expandNode = (node, all) => {
         node.collapsed = false;
         if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
@@ -258,11 +288,15 @@ function MetricsSummaryController($scope, commonService) {
 
             $scope.fetchMetricInfoById(node).then((data) => {
                 let childrenIds = JSON.parse(data.children);
+                $scope._insertNewNode(node, childrenIds, all);
+
+                /*
                 childrenIds.forEach((childId) => {
                     let p1 = {metric_id: childId};
                     let thisNode = node;
                     commonService.apiPost('/metrics/metric_info', p1).then((data) => {
                         let newNode = $scope.getNodeFromData(data);
+                        console.log(newNode);
                         newNode.indent = thisNode.indent + 1;
                         let index = $scope.getIndex(thisNode);
                         let childIndex = $scope.getIndex(newNode);
@@ -277,21 +311,55 @@ function MetricsSummaryController($scope, commonService) {
                         }
                     });
                 });
+                */
             });
         }
     };
 
-    $scope.collapseBranch = (node) => {
+    $scope.collapseBranch = (node, traversedNodes) => {
         let thisIndex = $scope.getIndex(node);
         if (node.hasOwnProperty("numChildren")) {
+            $scope.hideChildren(node, true);
+            /*
             for(let i = 1; i <= node.numChildren; i++) {
                 if (!node.collapsed) {
-                    $scope.collapseBranch($scope.flatNodes[thisIndex + i]);
-                    $scope.flatNodes[thisIndex + i].hide = true;
-                    $scope.flatNodes[thisIndex + i].collapsed = true;
+                    traversedNodes += $scope.collapseBranch($scope.flatNodes[thisIndex + traversedNodes + 2]);
+                    $scope.flatNodes[thisIndex + traversedNodes + 1].collapsed = true;
+                    $scope.flatNodes[thisIndex + traversedNodes + 1].hide = true;
                 }
+            }*/
+        }
+        return traversedNodes;
+    };
+
+    $scope.hideChildren = (node, root) => {
+        let totalHides = 0;
+        if (!node) {
+            return 0;
+        }
+        let thisIndex = $scope.getIndex(node);
+        let nextIndex = thisIndex + 1;
+        if (nextIndex >= $scope.flatNodes.length) {
+            return 0;
+        }
+
+        if (node.hasOwnProperty("numChildren")) {
+            for(let i = 1; i <= node.numChildren  && (nextIndex < $scope.flatNodes.length); i++) {
+                let hides = 0;
+                hides += $scope.hideChildren($scope.flatNodes[nextIndex], false);
+                $scope.flatNodes[nextIndex].collapsed = true;
+                $scope.flatNodes[nextIndex].hide = true;
+                totalHides += 1 + hides;
+                nextIndex += hides + 1;
             }
         }
+        /*
+        if (!root) {
+            $scope.flatNodes[thisIndex].collapsed = true;
+            $scope.flatNodes[thisIndex].hide = true;
+            hides += 1;
+        }*/
+        return totalHides;
     };
 
     $scope.isNodeVisible = (node) => {
