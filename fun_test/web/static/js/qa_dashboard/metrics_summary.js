@@ -214,12 +214,15 @@ function MetricsSummaryController($scope, commonService) {
             } else {
                 s = "<label class=\"label label-danger\">FAILED</label>";
             }
+            if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
+                s = "<p style='background-color: white' class=\"\">No Data</p>";
+            }
         }
         return s;
     };
 
     $scope.getTrendHtml = (node) => {
-        let s = "<icon class=\"fa fa-arrows-h aspect-trend-icon\"></icon>";
+        let s = "<icon>&#61;</icon>";
         if (node.hasOwnProperty("trend")) {
             if (node.trend === "up") {
                 s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>";
@@ -289,6 +292,7 @@ function MetricsSummaryController($scope, commonService) {
             $scope.fetchMetricInfoById(node).then((data) => {
                 let childrenIds = JSON.parse(data.children);
                 $scope._insertNewNode(node, childrenIds, all);
+                node.childrenFetched = true;
 
                 /*
                 childrenIds.forEach((childId) => {
@@ -338,26 +342,37 @@ function MetricsSummaryController($scope, commonService) {
             return 0;
         }
         let thisIndex = $scope.getIndex(node);
-        let nextIndex = thisIndex + 1;
-        if (nextIndex >= $scope.flatNodes.length) {
-            return 0;
-        }
+
+
 
         if (node.hasOwnProperty("numChildren")) {
+            if (!node.childrenFetched) {
+                return 0;
+            }
+
+            let nextIndex = thisIndex + 1;
+            if ((nextIndex >= $scope.flatNodes.length) && (!node.collapsed)) {
+                console.log("Huh!");
+                return 0;
+            }
             for(let i = 1; i <= node.numChildren  && (nextIndex < $scope.flatNodes.length); i++) {
                 let hides = 0;
-                hides += $scope.hideChildren($scope.flatNodes[nextIndex], false);
+                if (true) {
+                    hides += $scope.hideChildren($scope.flatNodes[nextIndex], false);
+                }
+
                 $scope.flatNodes[nextIndex].collapsed = true;
                 $scope.flatNodes[nextIndex].hide = true;
                 totalHides += 1 + hides;
                 nextIndex += hides + 1;
+
             }
         }
         /*
         if (!root) {
             $scope.flatNodes[thisIndex].collapsed = true;
             $scope.flatNodes[thisIndex].hide = true;
-            hides += 1;
+            totalHides += 1;
         }*/
         return totalHides;
     };
