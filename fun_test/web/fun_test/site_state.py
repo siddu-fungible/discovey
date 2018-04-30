@@ -11,6 +11,7 @@ import json
 site_state = None
 
 SITE_BASE_DATA_FILE = WEB_ROOT_DIR + "/site_base_data.json"
+METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
 
 class SiteState():
@@ -86,12 +87,14 @@ class SiteState():
                 metric_model_name = metric["metric_model_name"]
             m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
         except ObjectDoesNotExist:
-            if len(children):
-                m = MetricChart(metric_model_name="MetricContainer",
-                                chart_name=metric["name"],
-                                leaf=False, metric_id=LastMetricId.get_next_id())
-                m.save()
+            # if len(children):
+            m = MetricChart(metric_model_name="MetricContainer",
+                            chart_name=metric["name"],
+                            leaf=False, metric_id=LastMetricId.get_next_id())
+            m.save()
 
+        m.children = "[]"
+        m.save()
         for child in children:
             c = self._do_register_metric(metric=child)
             if c:
@@ -99,12 +102,10 @@ class SiteState():
         return m
 
     def register_product_metrics(self):
-        performance_spec = self.site_base_data["performance"]
-        metrics = performance_spec["metrics"]
-        for metric in metrics:
-            self._do_register_metric(metric=metric)
-
-    # def re
+        with open(METRICS_BASE_DATA_FILE, "r") as f:
+            metrics = json.load(f)
+            for metric in metrics:
+                self._do_register_metric(metric=metric)
 
 if not site_state:
     site_state = SiteState()

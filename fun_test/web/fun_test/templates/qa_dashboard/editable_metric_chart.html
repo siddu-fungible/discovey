@@ -1,9 +1,9 @@
 <div align="right">
-    <button class="btn" ng-if="!showingTable" ng-click="showTable()"><i class="fa fa-table"></i> Show Tables</button>
-    <button class="btn" ng-if="showingTable" ng-click="hideTable()"><i class="fa fa-table"></i> Hide Tables</button>
+    <button class="btn" style="background-color: white" ng-if="!showingTable" ng-click="showTable()"><i class="fa fa-table"></i> Show Tables</button>
+    <button class="btn" style="background-color: white" ng-if="showingTable" ng-click="hideTable()"><i class="fa fa-table"></i> Hide Tables</button>
 
-    <button class="btn" ng-if="!showingThreshold" ng-click="showThreshold()"><i class="fa fa-sliders"></i> Show Threshold</button>
-    <button class="btn" ng-if="showingThreshold" ng-click="hideThreshold()"><i class="fa fa-sliders"></i> Hide Threshold</button>
+    <button class="btn" style="background-color: white" ng-if="!showingThreshold" ng-click="showThreshold()"><i class="fa fa-sliders"></i> Show Threshold</button>
+    <button class="btn" style="background-color: white" ng-if="showingThreshold" ng-click="hideThreshold()"><i class="fa fa-sliders"></i> Hide Threshold</button>
 </div>
 <div class="row" style="padding-bottom: 10px">
     <fun-metric-chart chart-name="chartName" y1-axis-title="y1AxisTitle" model-name="modelName"
@@ -11,7 +11,7 @@
                       tooltip-formatter="tooltipFormatter" showing-table="showingTable"></fun-metric-chart>
 </div>
 <div align="right">
-    <button class="btn" ng-if="showingTable" ng-click="hideTable()"><i class="fa fa-table"></i> Hide Tables</button>
+    <button class="btn" style="background-color: white" ng-if="showingTable" ng-click="hideTable()"><i class="fa fa-table"></i> Hide Tables</button>
 </div>
 <div style="padding-top: 10px; padding-bottom: 10px">
     <b>Description:</b>
@@ -22,7 +22,7 @@
 
 <div ng-if="showingThreshold">
     <div class="closed-section"></div>
-    <button class="btn" ng-if="!editing" ng-click="editClick()"><i class="fa fa-pencil"></i> Edit</button>
+    <button class="btn" style="background-color: white" ng-if="!editing" ng-click="editClick()"><i class="fa fa-pencil"></i> Edit</button>
     <table class="table table-nonfluid table-bordered">
         <thead class="qa-thead">
         <tr>
