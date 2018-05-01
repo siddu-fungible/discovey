@@ -81,6 +81,29 @@ arrow-icon {
     -webkit-transform: rotate(45deg);
 }
 
+.trend-button-green {
+    background-color: white;
+    border: 1px solid #4CAF50;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 1.5px;
+
+}
+
+.score-label {
+    text-decoration: solid;
+}
+
+.trend-button-red {
+    background-color: white;
+    border: 1px solid red;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 1.5px;
+
+}
 
 </style>
 <div class="content" ng-controller="metricsSummaryController">
@@ -116,8 +139,11 @@ arrow-icon {
                             </a>
                         </span>
                     </td>
-                    <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
-                    <td style="vertical-align: top" ng-bind-html="getTrendHtml(node) | unsafe"></td>
+                    <td> <div class="score-label">{{ node.goodness  }}</div></td>
+                    <td>
+                        <a href='#' ng-click='showGoodnessTrend(node)'><span style="vertical-align: top" ng-bind-html="getTrendHtml(node) | unsafe"></span></a>
+                    </td>
+
                     <td ng-bind-html="getStatusHtml(node) | unsafe"></td>
                 </tr>
             </table>
@@ -125,6 +151,9 @@ arrow-icon {
         </div>
     </div>
     <div class="card col-xl-6 col-lg-6 col-xxl-6">
+        <fun-chart ng-if="showingGoodnessTrend && !currentChartName" style="width: 500px; height: 500px" values="goodnessTrendValues" show-legend="true"
+                   title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">
+        </fun-chart>
         <div ng-if="currentChartName">
             <editable-metric-chart chart-name="currentChartName" model-name="currentMetricModelName" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></editable-metric-chart>
         </div>

@@ -1,6 +1,6 @@
 'use strict';
 
-function MetricsSummaryController($scope, commonService) {
+function MetricsSummaryController($scope, commonService, $timeout) {
     let ctrl = this;
 
     this.$onInit = function () {
@@ -61,7 +61,7 @@ function MetricsSummaryController($scope, commonService) {
         });
 
 
-
+        $scope.goodnessTrendValues = null;
         //console.log($scope.treeModel[0][0].showInfo);
     };
 
@@ -106,6 +106,7 @@ function MetricsSummaryController($scope, commonService) {
             metricModelName: data.metric_model_name
         };
         newNode.goodness = data.goodness_values[data.goodness_values.length - 1].toFixed(1);
+        newNode.goodnessValues = data.goodness_values;
         newNode.status = data.status_values[data.status_values.length - 1];
         newNode.trend = "flat";
         let penultimateGoodness = data.goodness_values[data.goodness_values.length - 2].toFixed(1);
@@ -222,15 +223,31 @@ function MetricsSummaryController($scope, commonService) {
     };
 
     $scope.getTrendHtml = (node) => {
-        let s = "<icon>&#61;</icon>";
+        let s = "";
         if (node.hasOwnProperty("trend")) {
             if (node.trend === "up") {
-                s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>";
+                s = "<button class='trend-button-green'><icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon></button>";
             } else if (node.trend === "down") {
-                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
+                s = "<button class='trend-button-red'><icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon></button>";
             }
         }
         return s;
+    };
+
+    $scope.showGoodnessTrend = (node) => {
+        $scope.showingGoodnessTrend = true;
+        $scope.currentChartName = null;
+        let values = [{
+                data: node.goodnessValues
+            }];
+        $scope.goodnessTrendValues = null;
+        $timeout (() => {
+            $scope.goodnessTrendValues = values;
+        }, 1);
+
+        $scope.charting = true;
+
+        $scope.goodnessTrendChartTitle = "Goodness Trend";
     };
 
     $scope.getIndentHtml = (node) => {
