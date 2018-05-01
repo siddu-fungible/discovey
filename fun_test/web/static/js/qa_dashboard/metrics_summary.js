@@ -105,16 +105,23 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             chartName: data.chart_name,
             metricModelName: data.metric_model_name
         };
-        newNode.goodness = data.goodness_values[data.goodness_values.length - 1].toFixed(1);
+        newNode.goodness = Number(data.goodness_values[data.goodness_values.length - 1].toFixed(1));
         newNode.goodnessValues = data.goodness_values;
         newNode.status = data.status_values[data.status_values.length - 1];
         newNode.trend = "flat";
-        let penultimateGoodness = data.goodness_values[data.goodness_values.length - 2].toFixed(1);
+        let penultimateGoodness = Number(data.goodness_values[data.goodness_values.length - 2].toFixed(1));
         if (penultimateGoodness > newNode.goodness) {
+            //console.log("Setting down:" + penultimateGoodness + ":" + newNode.goodness);
             newNode.trend = "down";
         } else if (penultimateGoodness < newNode.goodness) {
             newNode.trend = "up";
+            //console.log("Setting up:" + penultimateGoodness + ":" + newNode.goodness);
         }
+        /*
+        console.log(newNode.chartName);
+        console.log(newNode.trend);
+        console.log(data.goodness_values);
+        console.log(newNode.goodness, penultimateGoodness);*/
 
         let newNodeChildrenIds = JSON.parse(data.children);
         if (newNodeChildrenIds.length > 0) {
