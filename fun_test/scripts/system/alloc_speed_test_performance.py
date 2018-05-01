@@ -91,34 +91,31 @@ class FunTestCase1(FunTestCase):
             wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = None
 
             for line in lines:
-                m = re.search(r'Best time for one malloc/free \(WU\): (\d+)ns', line)
+                m = re.search(r'Best time for one malloc/free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
                 if m:
                     alloc_speed_test_found = True
-                    output_one_malloc_free_wu = int(m.group(1))
-                m = re.search(r'Best time for one malloc/free \(threaded\): (\d+)ns', line)
+                    d = json.loads(m.group(1))
+                    output_one_malloc_free_wu = int(d["avg"])
+                m = re.search(r'Best time for one malloc/free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
                 if m:
-                    output_one_malloc_free_threaded = int(m.group(1))
+                    d = json.loads(m.group(1))
+                    output_one_malloc_free_threaded = int(d['avg'])
 
                 # wu_latency_test
-                m = re.search(r' wu_latency_test (.*)perf_wu_alloc_stack_ns', line)
+                m = re.search(r' wu_latency_test.*({.*}).*perf_wu_alloc_stack_ns', line)
                 if m:
-
-                    data = m.group(1)
-                    m2 = re.search(r'{\s?min:\s?(\d+),\s?avg:\s?(\d+),\s?max:\s?(\d+)', data)
-                    if m2:
-                        wu_latency_test_found = True
-                        wu_alloc_stack_ns_min = int(m2.group(1))
-                        wu_alloc_stack_ns_avg = int(m2.group(2))
-                        wu_alloc_stack_ns_max = int(m2.group(3))
-                m = re.search(r' wu_latency_test (.*)perf_wu_ungated_ns', line)
+                    d = json.loads(m.group(1))
+                    wu_latency_test_found = True
+                    wu_alloc_stack_ns_min = int(d["min"])
+                    wu_alloc_stack_ns_avg = int(d["avg"])
+                    wu_alloc_stack_ns_max = int(d["max"])
+                m = re.search(r' wu_latency_test.*({.*}).*perf_wu_ungated_ns', line)
                 if m:
-                    data = m.group(1)
-                    m2 = re.search(r'{\s?min:\s?(\d+),\s?avg:\s?(\d+),\s?max:\s?(\d+)', data)
-                    if m2:
-                        wu_latency_test_found = True
-                        wu_ungated_ns_min = int(m2.group(1))
-                        wu_ungated_ns_avg = int(m2.group(2))
-                        wu_ungated_ns_max = int(m2.group(3))
+                    d = json.loads(m.group(1))
+                    wu_latency_test_found = True
+                    wu_ungated_ns_min = int(d["min"])
+                    wu_ungated_ns_avg = int(d["avg"])
+                    wu_ungated_ns_max = int(d["max"])
 
             try:
                 if not int(return_code) == 0:
