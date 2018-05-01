@@ -1,7 +1,7 @@
 'use strict';
 
 
-function EditableMetricChartController($scope, commonService, $attrs) {
+function EditableMetricChartController($scope, commonService, $attrs, $window) {
     let ctrl = this;
 
     ctrl.$onInit = () => {
@@ -87,6 +87,10 @@ function EditableMetricChartController($scope, commonService, $attrs) {
     };
 
 
+    $scope.openAtomicTab = () => {
+        let url = "/metrics/atomic/" + $scope.chartName + "/" + $scope.modelName;
+        $window.open(url, '_blank');
+    };
 
     $scope.fetchChartInfo = () => {
         // Fetch chart info
@@ -225,7 +229,8 @@ angular.module('qa-dashboard').component("editableMetricChart", {
         previewDataSets: '<',
         pointClickCallback: '&',
         xaxisFormatter: '&',
-        tooltipFormatter: '&'
+        tooltipFormatter: '&',
+        atomic: '<'
     },
     controller: EditableMetricChartController
 });

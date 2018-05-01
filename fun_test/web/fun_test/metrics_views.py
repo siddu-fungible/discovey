@@ -119,6 +119,10 @@ def view_all_system_charts(request):
 def tables(request, metric_model_name, chart_name):
     return render(request, 'qa_dashboard/analytics_tables.html', locals())
 
+@csrf_exempt
+def atomic(request, chart_name, model_name):
+    return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
+
 
 @csrf_exempt
 def summary_page(request):
