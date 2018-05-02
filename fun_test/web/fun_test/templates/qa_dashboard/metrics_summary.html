@@ -125,16 +125,16 @@ arrow-icon {
 
                 </tr>
                 <tr class="fade-element-in" ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
-                    <td class="child-transition">
-                        <span ng-bind-html="getIndentHtml(node) | unsafe">
+                    <td id="{{ node.guid }}" class="child-transition">
+                        <span  ng-bind-html="getIndentHtml(node) | unsafe">
                         </span>
                             <a ng-if="node.leaf" href="#" ng-click="setCurrentChart(node.chartName, node.metricModelName)">{{ node.label  }}</a>
                             <span ng-if="!node.leaf">{{ node.label }}</span>&nbsp
                         <span ng-if="node.numChildren">
-                            <a href="#" ng-if="!node.collapsed" ng-click="collapseNode(node)">
+                            <a href="#{{ node.guid }}" ng-if="!node.collapsed" ng-click="collapseNode(node)">
                                 <arrow-icon class="arrow-down"></arrow-icon>
                             </a>
-                            <a href="#" ng-if="node.collapsed" ng-click="expandNode(node)">
+                            <a href="#{{ node.guid }}" ng-if="node.collapsed" ng-click="expandNode(node)">
                                 <arrow-icon class="arrow-right"></arrow-icon>
                             </a>
                         </span>
