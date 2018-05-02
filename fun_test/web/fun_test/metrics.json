@@ -42,24 +42,7 @@
                     "leaf": false,
                     "name": "Nucleus",
                     "label": "Nucleus",
-                    "children": []
-                },
-                {
-                    "info": "Allocation",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "Allocation",
-                    "label": "Allocation",
-                    "children": []
-                },
-                {
-                    "info": "WUs",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "WUs",
-                    "label": "WUs",
-                    "children": [
-                        {
+                    "children": [{
                             "info": "Best time for 1 malloc/free (WU)",
                             "metric_model_name": "AllocSpeedPerformance",
                             "leaf": true,
@@ -90,17 +73,72 @@
                             "name": "WU Latency: Ungated",
                             "label": "WU Latency: Ungated",
                             "children": []
+                        }]
+                },
+                {
+                    "info": "Allocation",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "Allocation",
+                    "label": "Allocation",
+                    "children": [{
+                            "info": "Best time for 1 malloc/free (WU)",
+                            "metric_model_name": "AllocSpeedPerformance",
+                            "leaf": true,
+                            "name": "Best time for 1 malloc/free (WU)",
+                            "label": "Best time for 1 malloc/free (WU)",
+                            "children": []
+                        },
+                        {
+                            "info": "Best time for 1 malloc/free (Threaded)",
+                            "metric_model_name": "AllocSpeedPerformance",
+                            "leaf": true,
+                            "name": "Best time for 1 malloc/free (Threaded)",
+                            "label": "Best time for 1 malloc/free (Threaded)",
+                            "children": []
+                        }]
+                },
+                {
+                    "info": "WUs",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "WUs",
+                    "label": "WUs",
+                    "children": [
+                        {
+                            "info": "Best time for 1 malloc/free (WU)",
+                            "metric_model_name": "AllocSpeedPerformance",
+                            "leaf": true,
+                            "name": "Best time for 1 malloc/free (WU)",
+                            "label": "Best time for 1 malloc/free (WU)",
+                            "children": []
+                        },
+                        {
+                            "info": "WU Latency: Alloc Stack",
+                            "metric_model_name": "WuLatencyAllocStack",
+                            "leaf": true,
+                            "name": "WU Latency: Alloc Stack",
+                            "label": "WU Latency: Alloc Stack",
+                            "children": []
+                        },
+                        {
+                            "info": "WU Latency: Ungated",
+                            "metric_model_name": "WuLatencyUngated",
+                            "leaf": true,
+                            "name": "WU Latency: Ungated",
+                            "label": "WU Latency: Ungated",
+                            "children": []
                         }
                     ]
                 }
             ]
         },
         {
-            "info": "TerraMarks",
+            "info": "TeraMarks",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "TerraMarks",
-            "label": "TerraMarks",
+            "name": "TeraMarks",
+            "label": "TeraMarks",
             "children": []
         }
     ]

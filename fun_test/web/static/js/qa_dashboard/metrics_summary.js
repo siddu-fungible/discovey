@@ -51,6 +51,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             let p1 = {metric_id: metricId};
             commonService.apiPost('/metrics/metric_info', p1).then((data) => {
                 let newNode = $scope.getNodeFromData(data);
+                newNode.guid = $scope.guid();
                 newNode.hide = false;
                 newNode.indent = 0;
                 $scope.flatNodes.push(newNode);
@@ -65,6 +66,16 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         //console.log($scope.treeModel[0][0].showInfo);
     };
 
+
+    $scope.guid = () => {
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      }
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+    };
+
     $scope.fetchJenkinsJobIdMap = () => {
         commonService.apiGet('/regression/jenkins_job_id_maps').then((data) => {
             $scope.jenkinsJobIdMap = data;
@@ -76,7 +87,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
     };
 
     $scope.getIndex = (node) => {
-        let index = $scope.flatNodes.map(function(x) {return x.metricId;}).indexOf(node.metricId);
+        let index = $scope.flatNodes.map(function(x) {return x.guid;}).indexOf(node.guid);
         return index;
     };
 
@@ -203,17 +214,6 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         node.showInfo = !node.showInfo;
     };
 
-    $scope.getTreeHtml = () => {
-        let s = "";
-
-        let node = $scope.treeModel.forEach((node, index) => {
-            let indexString = "[" + index + "]";
-            s += $scope._getNodeHtml(node, indexString);
-        });
-        //console.logn(s);
-        return s;
-    };
-
     $scope.getStatusHtml = (node) => {
         let s = "";
         if (node.hasOwnProperty("status")) {
@@ -279,69 +279,63 @@ function MetricsSummaryController($scope, commonService, $timeout) {
 
 
 
-    $scope._insertNewNode = (node, childrenIds, all) => {
+    $scope._insertNewNode = (node, childrenIds, all, alreadyInserted) => {
         if (childrenIds.length <= 0) {
             return;
         }
+        let thisNode = node;
+        let thisAll = all;
         let childId = childrenIds.pop();
         let thisChildrenIds = childrenIds;
-        let thisAll = all;
         let p1 = {metric_id: childId};
-                    let thisNode = node;
-                    $scope.fetchMetricInfoById({metricId: childId}).then((data) => {
-                        let newNode = $scope.getNodeFromData(data);
-                        //console.log(newNode);
-                        newNode.indent = thisNode.indent + 1;
-                        let index = $scope.getIndex(thisNode);
-                        let childIndex = $scope.getIndex(newNode);
-                        if (childIndex === -1) {
-                            $scope.flatNodes.splice(index + 1, 0, newNode);
-                        } else {
-                            newNode = $scope.flatNodes[childIndex];
-                        }
-                        $scope._insertNewNode(thisNode, thisChildrenIds, thisAll);
-                        newNode.hide = false;
-                        if (thisAll) {
-                            $scope.expandNode(newNode, thisAll);
-                        }
-                    });
+        if (!node.hasOwnProperty("childrenGuids")) {
+            node.childrenGuids = [];
+        }
+
+        $scope.fetchMetricInfoById({metricId: childId}).then((data) => {
+            if (!alreadyInserted) {
+                let newNode = $scope.getNodeFromData(data);
+                newNode.guid = $scope.guid();
+                node.childrenGuids.push(newNode.guid);
+                newNode.indent = thisNode.indent + 1;
+                let index = $scope.getIndex(thisNode);
+                $scope.flatNodes.splice(index + 1, 0, newNode);
+                $scope._insertNewNode(thisNode, thisChildrenIds, thisAll);
+                newNode.hide = false;
+                if (thisAll) {
+                    $scope.expandNode(newNode, thisAll);
+                }
+            } else {
+                node.childrenGuids.forEach((childGuid) => {
+                   let childNode = $scope.flatNodes[$scope.getIndex({guid: childGuid})];
+                   let childrenIds = JSON.parse(data.children);
+                   childNode.hide = false;
+
+                });
+
+                $scope._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
+            }
+
+        });
+
+
     };
 
     $scope.expandNode = (node, all) => {
         node.collapsed = false;
+
         if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
             let thisNode = node;
             // Fetch children ids
 
             $scope.fetchMetricInfoById(node).then((data) => {
                 let childrenIds = JSON.parse(data.children);
-                $scope._insertNewNode(node, childrenIds, all);
+                $scope._insertNewNode(node, childrenIds, all, node.childrenFetched);
                 node.childrenFetched = true;
-
-                /*
-                childrenIds.forEach((childId) => {
-                    let p1 = {metric_id: childId};
-                    let thisNode = node;
-                    commonService.apiPost('/metrics/metric_info', p1).then((data) => {
-                        let newNode = $scope.getNodeFromData(data);
-                        console.log(newNode);
-                        newNode.indent = thisNode.indent + 1;
-                        let index = $scope.getIndex(thisNode);
-                        let childIndex = $scope.getIndex(newNode);
-                        if (childIndex === -1) {
-                            $scope.flatNodes.splice(index + 1, 0, newNode);
-                        } else {
-                            newNode = $scope.flatNodes[childIndex];
-                        }
-                        newNode.hide = false;
-                        if (all) {
-                            $scope.expandNode(newNode, all);
-                        }
-                    });
-                });
-                */
             });
+
         }
+        node.hide = false;
     };
 
     $scope.collapseBranch = (node, traversedNodes) => {
