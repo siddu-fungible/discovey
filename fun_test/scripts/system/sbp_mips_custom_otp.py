@@ -62,14 +62,14 @@ class TestCase1(FunTestCase):
 
             sbp_setup.host.create_file(contents=json.dumps(config), file_name="/tmp/flash_config.json")
             sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
-            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=True))
+            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
 
             stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
             stimuli_file = "{}/cmd_AES_CTR.py".format(stimuli_dir)
 
             fun_test.test_assert(not sbp_setup.run_test_py(secure_boot=True,
                                                        stimuli_file=stimuli_file,
-                                                       artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=True)),
+                                                       artifacts_dir=sbp_setup._get_artifacts_dir()),
                                  "run_test should fail")
 
             # stimuli_file = "{}/cmd_get_status.py".format(stimuli_dir)
@@ -124,14 +124,14 @@ class TestCase2(FunTestCase):
 
             sbp_setup.host.create_file(contents=json.dumps(config), file_name="/tmp/flash_config.json")
             sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
-            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=False))
+            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
 
             stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
             stimuli_file = "{}/cmd_AES_CTR.py".format(stimuli_dir)
 
             fun_test.test_assert(sbp_setup.run_test_py(secure_boot=False,
                                                        stimuli_file=stimuli_file,
-                                                       artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=False)),
+                                                       artifacts_dir=sbp_setup._get_artifacts_dir()),
                                  "run_test not should fail")
 
             # stimuli_file = "{}/cmd_get_status.py".format(stimuli_dir)
@@ -282,7 +282,7 @@ class TestCase5(FunTestCase):
             sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
 
             sbp_setup.artifacts_setup(enroll=True, secure_boot=True)
-            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=True))
+            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
 
             stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
             stimuli_file = "{}/cmd_AES_CTR.py".format(stimuli_dir)
@@ -290,7 +290,7 @@ class TestCase5(FunTestCase):
             # sbp_setup.get_status(secure_boot=True)
             fun_test.test_assert(not sbp_setup.run_test_py(secure_boot=True,
                                              stimuli_file=stimuli_file,
-                                             artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=True)), "Run test should fail")
+                                             artifacts_dir=sbp_setup._get_artifacts_dir()), "Run test should fail")
 
 
 
@@ -338,7 +338,7 @@ class TestCase6(FunTestCase):
             sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
 
             sbp_setup.artifacts_setup(enroll=True, secure_boot=True)
-            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=True))
+            sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
 
             stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
             stimuli_file = "{}/cmd_AES_CTR.py".format(stimuli_dir)
@@ -346,7 +346,7 @@ class TestCase6(FunTestCase):
             # sbp_setup.get_status(secure_boot=True)
             fun_test.test_assert(sbp_setup.run_test_py(secure_boot=True,
                                              stimuli_file=stimuli_file,
-                                             artifacts_dir=sbp_setup._get_artifacts_dir(secure_boot=True)), "Run test should not fail")
+                                             artifacts_dir=sbp_setup._get_artifacts_dir()), "Run test should not fail")
 
 
 

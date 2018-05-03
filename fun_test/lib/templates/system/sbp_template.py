@@ -223,11 +223,8 @@ class SbpZynqSetupTemplate:
         self.clear_enrollment_bin()
         return True
 
-    def _get_artifacts_dir(self, secure_boot=True, platform="zync6"):
-        secure_str = "unsecure"
-        if secure_boot:
-            secure_str = "secure"
-        s = "artifacts_{}_eeprom_{}".format(secure_str, platform)
+    def _get_artifacts_dir(self, party="fungible", platform="zync6"):
+        s = "artifacts_{}_eeprom_{}".format(party, platform)
         return os.path.join(self.LOCAL_REPOSITORY_DIR, s)
 
     def artifacts_setup(self, enroll=True, otp_settings=None, secure_boot=True):
@@ -237,7 +234,7 @@ class SbpZynqSetupTemplate:
         fun_test.test_assert(self.setup_hsm(), "HSM install")
         fun_test.test_assert(self.run_test_software(), "Run test_software")
         fun_test.test_assert(self.setup_build(make=False), "Cmake")
-        fun_test.test_assert(self.host.list_files(self._get_artifacts_dir(secure_boot=secure_boot)), "List artifacts")
+        fun_test.test_assert(self.host.list_files(self._get_artifacts_dir()), "List artifacts")
         if enroll:
             fun_test.test_assert(self.enroll(artifacts_dir=self._get_artifacts_dir()), "Enroll")
             fun_test.test_assert(self.run_test_software(enroll_tbs=os.path.join(self.LOCAL_REPOSITORY_DIR,
@@ -436,4 +433,4 @@ class SbpZynqSetupTemplate:
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
         stimuli_file = "{}/cmd_get_status.py".format(stimuli_dir)
         logs = self.run_test_py(secure_boot=False, stimuli_file=stimuli_file,
-                         artifacts_dir=self._get_artifacts_dir(secure_boot=False), get_log=True)
+                         artifacts_dir=self._get_artifacts_dir(), get_log=True)

@@ -25,12 +25,22 @@
     }
   },
   "start_certificate": {
-    "serial_number": "00000000000000000000000000000000",
-    "serial_number_mask": "00000000000000000000000000000000",
-    "tamper_flags": "00000000",
-    "debugger_flags": "00000000",
-    "public_key": "fpk2",
-    "key": "fpk1"
+    "a": {
+        "serial_number": "00000000000000000000000000000000",
+        "serial_number_mask": "00000000000000000000000000000000",
+        "tamper_flags": "00000000",
+        "debugger_flags": "00000000",
+        "public_key": "fpk2",
+        "key": "fpk1"
+    },
+    "b": {
+        "serial_number": "00000000000000000000000000000000",
+        "serial_number_mask": "00000000000000000000000000000000",
+        "tamper_flags": "00000000",
+        "debugger_flags": "00000000",
+        "public_key": "fpk2",
+        "key": "fpk1"
+    }
   },
   "eeprom": {
     "a": {
