@@ -129,7 +129,8 @@ arrow-icon {
                         <span  ng-bind-html="getIndentHtml(node) | unsafe">
                         </span>
                             <a ng-if="node.leaf" href="#" ng-click="setCurrentChart(node.chartName, node.metricModelName)">{{ node.label  }}</a>
-                            <span ng-if="!node.leaf">{{ node.label }}</span>&nbsp
+                            <a ng-if="!node.leaf" href="#" ng-click="showNonAtomicMetric(node)">{{ node.label }}</a>
+                            <!-- span ng-if="!node.leaf">{{ node.label }}</span -->&nbsp
                         <span ng-if="node.numChildren">
                             <a href="#{{ node.guid }}" ng-if="!node.collapsed" ng-click="collapseNode(node)">
                                 <arrow-icon class="arrow-down"></arrow-icon>
@@ -150,12 +151,28 @@ arrow-icon {
 
         </div>
     </div>
-    <div class="card col-xl-6 col-lg-6 col-xxl-6">
-        <fun-chart ng-if="showingGoodnessTrend && !currentChartName" style="width: 500px; height: 500px" values="goodnessTrendValues" show-legend="true"
-                   title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">
-        </fun-chart>
-        <div ng-if="currentChartName">
-            <editable-metric-chart chart-name="currentChartName" model-name="currentMetricModelName" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></editable-metric-chart>
+    <div class="card col-xl-6 col-lg-6 col-xxl-6" ng-switch="mode">
+        <div ng-switch-when="showingGoodnessTrend">
+            <fun-chart values="goodnessTrendValues" show-legend="true"
+                       title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">
+            </fun-chart>
+        </div>
+        <div ng-switch-when="showingAtomicMetric">
+            <div ng-if="currentChartName">
+                <editable-metric-chart chart-name="currentChartName" model-name="currentMetricModelName" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></editable-metric-chart>
+            </div>
+        </div>
+        <div ng-switch-when="showingNonAtomicMetric">
+            <fun-chart values="goodnessTrendValues" show-legend="true"
+                       title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">
+            </fun-chart>
+            <br>
+            <b>Description</b><button class="btn" style="background-color: white" ng-if="!editingDescription" ng-click="editDescriptionClick()"><i class="fa fa-pencil"></i> Edit</button>
+            <div ng-if="editingDescription">
+                <textarea rows="4" ng-model="inner.nonAtomicMetricInfo" style="min-width: 100%"></textarea>
+                <button class="btn btn-success" ng-click="submitDescription(currentNode)">Submit</button>
+            </div>
+            <div ng-bind-html="inner.nonAtomicMetricInfo"></div>
         </div>
     </div>
 

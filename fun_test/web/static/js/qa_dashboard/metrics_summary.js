@@ -43,6 +43,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             }
 
         ];
+        $scope.mode = null;
         $scope.fetchJenkinsJobIdMap();
 
         $scope.flatNodes = [];
@@ -63,6 +64,8 @@ function MetricsSummaryController($scope, commonService, $timeout) {
 
 
         $scope.goodnessTrendValues = null;
+        $scope.inner = {};
+        $scope.inner.nonAtomicMetricInfo = "";
         //console.log($scope.treeModel[0][0].showInfo);
     };
 
@@ -107,7 +110,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
 
     $scope.getNodeFromData = (data) => {
         let newNode = {
-            info: "",
+            info: data.description,
             label: data.chart_name,
             collapsed: true,
             metricId: data.metric_id,
@@ -116,6 +119,9 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             chartName: data.chart_name,
             metricModelName: data.metric_model_name
         };
+        if (newNode.info === "") {
+            newNode.info = "<p>Please update the description</p>";
+        }
         newNode.goodness = Number(data.goodness_values[data.goodness_values.length - 1].toFixed(1));
         newNode.goodnessValues = data.goodness_values;
         newNode.status = data.status_values[data.status_values.length - 1];
@@ -143,6 +149,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
     };
 
     $scope.setCurrentChart = (chartName, metricModelName) => {
+        $scope.mode = "showingAtomicMetric";
         $scope.currentChartName = chartName;
         $scope.currentMetricModelName = metricModelName;
     };
@@ -152,6 +159,26 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         return commonService.apiPost('/metrics/chart_info', payload).then((data) => {
             return data;
         });
+    };
+
+    $scope.editDescriptionClick = () => {
+        $scope.editingDescription = true;
+    };
+
+    $scope.submitDescription = (node) => {
+        let payload = {};
+        payload["metric_model_name"] = node.metricModelName;
+        payload["chart_name"] = node.chartName;
+        payload["description"] = $scope.inner.nonAtomicMetricInfo;
+        commonService.apiPost('/metrics/update_chart', payload, "EditDescription: Submit").then((data) => {
+            if (data) {
+                alert("Submitted");
+            } else {
+                alert("Submission failed. Please check alerts");
+            }
+        });
+        $scope.editingDescription = false;
+
     };
 
     $scope.xAxisFormatter = (value) => {
@@ -241,9 +268,14 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         return s;
     };
 
-    $scope.showGoodnessTrend = (node) => {
-        $scope.showingGoodnessTrend = true;
-        $scope.currentChartName = null;
+    $scope.showNonAtomicMetric = (node) => {
+        $scope.mode = "showingNonAtomicMetric";
+        $scope._setupGoodnessTrend(node);
+        $scope.inner.nonAtomicMetricInfo = node.info;
+        $scope.currentNode = node;
+    };
+
+    $scope._setupGoodnessTrend = (node) => {
         let values = [{
                 data: node.goodnessValues
             }];
@@ -255,6 +287,11 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         $scope.charting = true;
 
         $scope.goodnessTrendChartTitle = "Goodness Trend";
+    };
+
+    $scope.showGoodnessTrend = (node) => {
+        $scope.mode = "showingGoodnessTrend";
+        $scope._setupGoodnessTrend(node);
     };
 
     $scope.getIndentHtml = (node) => {

@@ -59,7 +59,9 @@ def chart_info(request):
                   "children": json.loads(chart.children),
                   "metric_id": chart.metric_id,
                   "y1_axis_title": chart.y1_axis_title,
-                  "y2_axis_title": chart.y2_axis_title}
+                  "y2_axis_title": chart.y2_axis_title,
+                  "info": chart.description,
+                  "leaf": chart.leaf}
     return result
 
 @csrf_exempt
@@ -181,14 +183,21 @@ def update_chart(request):
     request_json = json.loads(request.body)
     model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
-    data_sets = request_json["data_sets"]
+
+    leaf = None
+    data_sets = None
+    if "data_sets" in request_json:
+        data_sets = request_json["data_sets"]
     description = None
     if "description" in request_json:
         description = request_json["description"]
+    if "leaf" in request_json:
+        leaf = request_json["leaf"]
 
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
-        c.data_sets = json.dumps(data_sets)
+        if data_sets:
+            c.data_sets = json.dumps(data_sets)
         if description:
             c.description = description
         if "negative_gradient" in request_json:
@@ -197,7 +206,8 @@ def update_chart(request):
             c.y1axis_title = request_json["y1_axis_title"] if request_json["y1_axis_title"] else ""
         if "y2_axis_title" in request_json:
             c.y2axis_title = request_json["y2_axis_title"] if request_json["y2_axis_title"] else ""
-        c.leaf = True
+        if leaf:
+            c.leaf = leaf
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,

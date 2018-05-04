@@ -83,14 +83,18 @@ class SiteState():
             children = metric["children"]
         try:
             metric_model_name = "MetricContainer"
+            description = "TBD"
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
-            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
+            if "info" in metric:
+                description = metric["info"]
+            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"], description=description)
         except ObjectDoesNotExist:
             # if len(children):
             m = MetricChart(metric_model_name="MetricContainer",
                             chart_name=metric["name"],
-                            leaf=False, metric_id=LastMetricId.get_next_id())
+                            leaf=False, metric_id=LastMetricId.get_next_id(),
+                            description=description)
             m.save()
 
         m.children = "[]"
