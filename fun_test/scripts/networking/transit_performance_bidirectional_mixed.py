@@ -5,6 +5,8 @@ from collections import OrderedDict
 
 stream_port_obj_dict = OrderedDict()
 performance_data = OrderedDict()
+latency_results = None
+jitter_results = None
 
 
 class NuTransitPerformance(FunTestScript):
@@ -103,6 +105,10 @@ class NuTransitPerformance(FunTestScript):
 
     def cleanup(self):
         template_obj.cleanup()
+        template_obj.populate_performance_counters_json(test_name="NU Transit Performance Bidirectional Mixed Frames",
+                                                        latency_results=latency_results,
+                                                        jitter_results=jitter_results,
+                                                        file_name="nu_transit_performance_bidirectional_mixed_size")
 
 
 class NuTransitLatencyTest(FunTestCase):
@@ -115,7 +121,7 @@ class NuTransitLatencyTest(FunTestCase):
     traffic_duration = None
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=1,
                               summary="NU Transit Performance Bidirectional Latency Test (Mixed Size Frames)",
                               steps="""
                               1. Get port handles
@@ -178,9 +184,10 @@ class NuTransitLatencyTest(FunTestCase):
         self.tolerance_percent = performance_data['mixed_size']['tolerance_percent']
 
     def run(self):
-        result_dict = OrderedDict()
         port1 = self.ports[0]
         port2 = self.ports[1]
+        global latency_results
+        latency_results = OrderedDict()
 
         port1_stream_objs = stream_port_obj_dict[port1]
         port2_stream_objs = stream_port_obj_dict[port2]
@@ -223,9 +230,9 @@ class NuTransitLatencyTest(FunTestCase):
                 stream_objects=stream_objs, wait_before_fetching_results=False)
             fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
             key = "frame_%s" % frame_size
-            result_dict[key] = {'pps_count': rate_result['pps_count'][key],
-                                'throughput_count': rate_result['throughput_count'][key]}
-        fun_test.sleep("Waiting for traffic to complete", seconds=30)
+            latency_results[key] = {'pps_count': rate_result['pps_count'][key],
+                                    'throughput_count': rate_result['throughput_count'][key]}
+        fun_test.sleep("Waiting for traffic to complete", seconds=self.traffic_duration)
 
         for stream_objs in all_stream_objects:
             frame_size = str(stream_objs[0].FixedFrameLength)
@@ -236,12 +243,12 @@ class NuTransitLatencyTest(FunTestCase):
             fun_test.add_checkpoint(message)
 
             checkpoint = "Validate Latency Results under %s streams" % port1
-            latency_results = template_obj.validate_performance_result(
+            latency_result = template_obj.validate_performance_result(
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=stream_objs, expected_latency_count=self.expected_latency_data,
                 tolerance_percent=self.tolerance_percent)
-            fun_test.simple_assert(expression=latency_results['result'], message=checkpoint)
+            fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
             '''
             checkpoint = "Validate Latency Results under %s streams" % port2
             port2_latency_result = template_obj.validate_performance_result(
@@ -252,7 +259,7 @@ class NuTransitLatencyTest(FunTestCase):
             fun_test.simple_assert(expression=port2_latency_result['result'], message=checkpoint)
             '''
             key = "frame_%s" % stream_objs[0].FixedFrameLength
-            result_dict[key].update(latency_count=latency_results[key])
+            latency_results[key].update(latency_count=latency_result[key])
 
         checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1].spirent_handle
         analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
@@ -272,11 +279,7 @@ class NuTransitLatencyTest(FunTestCase):
         fun_test.add_checkpoint(message)
 
         checkpoint = "Display Latency Performance Counters"
-        template_obj.display_latency_counters(result_dict)
-        fun_test.add_checkpoint(checkpoint)
-
-        checkpoint = "Unsubscribe to all results"
-        template_obj.unsubscribe_to_all_results(subscribe_dict=self.subscribe_results)
+        template_obj.display_latency_counters(latency_results)
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
@@ -377,9 +380,11 @@ class NuTransitJitterTest(FunTestCase):
                                   "analyzer_subscribe": analyzer_subscribe}
 
     def run(self):
-        result_dict = OrderedDict()
+        global jitter_results
+        jitter_results = OrderedDict()
         port1 = self.ports[0]
         port2 = self.ports[1]
+        template_obj.clear_subscribed_results(subscribe_handle_list=self.subscribe_results.values())
 
         port1_stream_objs = stream_port_obj_dict[port1]
         port2_stream_objs = stream_port_obj_dict[port2]
@@ -423,10 +428,9 @@ class NuTransitJitterTest(FunTestCase):
                 tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
                 stream_objects=stream_objs, wait_before_fetching_results=False, validate_throughput=False)
             fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
-            result_dict[key] = {'pps_count': rate_result['pps_count'][key],
-                                'throughput_count': rate_result['throughput_count'][key]}
+            jitter_results[key] = {'pps_count': rate_result['pps_count'][key]}
 
-        fun_test.sleep("Waiting for traffic to complete", seconds=30)
+        fun_test.sleep("Waiting for traffic to complete", seconds=self.traffic_duration)
 
         for stream_objs in all_stream_objects:
             frame_size = str(stream_objs[0].FixedFrameLength)
@@ -438,13 +442,13 @@ class NuTransitJitterTest(FunTestCase):
             fun_test.add_checkpoint(message)
 
             checkpoint = "Validate Jitter Results"
-            jitter_results = template_obj.validate_performance_result(
+            jitter_result = template_obj.validate_performance_result(
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=stream_objs, expected_jitter_count=self.expected_jitter_data,
                 tolerance_percent=self.tolerance_percent, jitter=True)
-            fun_test.simple_assert(expression=jitter_results['result'], message=checkpoint)
-            result_dict[key].update(jitter_count=jitter_results[key])
+            fun_test.simple_assert(expression=jitter_result['result'], message=checkpoint)
+            jitter_results[key].update(jitter_count=jitter_result[key])
 
         checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1].spirent_handle
         analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
@@ -464,7 +468,7 @@ class NuTransitJitterTest(FunTestCase):
         fun_test.add_checkpoint(message)
 
         checkpoint = "Display Jitter Performance Counters"
-        template_obj.display_jitter_counters(result_dict)
+        template_obj.display_jitter_counters(jitter_results)
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):

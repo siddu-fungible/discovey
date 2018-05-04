@@ -428,7 +428,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             for handle in subscribe_handle_list:
                 output = self.stc_manager.clear_results_view_command(result_dataset=handle)
-                fun_test.test_assert(output, message="Clear results for handle %s" % handle)
+                fun_test.simple_assert(output, message="Clear results for handle %s" % handle)
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -791,46 +791,39 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             fun_test.log_disable_timestamps()
             fun_test.log_section("Nu Transit Performance Jitter Counters")
-            table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Jitter (us)', 'Min Jitter (us)',
-                                     'Max Jitter (us)'])
+            if 'throughput_count' in result:
+                column_list = ['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Jitter (us)', 'Min Jitter (us)',
+                               'Max Jitter (us)']
+            else:
+                column_list = ['Frame Size', 'PPS', 'Avg. Jitter (us)', 'Min Jitter (us)', 'Max Jitter (us)']
+            table_obj = PrettyTable(column_list)
             for key in result:
                 pps_count = result[key]['pps_count']
-                throughput_count = result[key]['throughput_count']
-                if len(result[key]['latency_count']) > 1:
-                    avg_latency1 = result[key]['jitter_count'][0]['avg']
-                    avg_latency2 = result[key]['jitter_count'][1]['avg']
-                    min_latency1 = result[key]['jitter_count'][0]['min']
-                    min_latency2 = result[key]['jitter_count'][1]['min']
-                    max_latency1 = result[key]['jitter_count'][0]['max']
-                    max_latency2 = result[key]['jitter_count'][1]['max']
-                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
-                    table_obj.add_row([key, pps_count, throughput_count, avg_latency2, min_latency2, max_latency2])
+                throughput_count = None
+                if 'Throughput' in column_list:
+                    throughput_count = result[key]['throughput_count']
+                if len(result[key]['jitter_count']) > 1:
+                    avg_jitter1 = result[key]['jitter_count'][0]['avg']
+                    avg_jitter2 = result[key]['jitter_count'][1]['avg']
+                    min_jitter1 = result[key]['jitter_count'][0]['min']
+                    min_jitter2 = result[key]['jitter_count'][1]['min']
+                    max_jitter1 = result[key]['jitter_count'][0]['max']
+                    max_jitter2 = result[key]['jitter_count'][1]['max']
+                    if throughput_count:
+                        table_obj.add_row([key, pps_count, throughput_count, avg_jitter1, min_jitter1, max_jitter1])
+                        table_obj.add_row([key, pps_count, throughput_count, avg_jitter2, min_jitter2, max_jitter2])
+                    else:
+                        table_obj.add_row([key, pps_count, avg_jitter1, min_jitter1, max_jitter1])
+                        table_obj.add_row([key, pps_count, avg_jitter2, min_jitter2, max_jitter2])
                 else:
-                    avg_latency1 = result[key]['jitter_count'][0]['avg']
-                    min_latency1 = result[key]['jitter_count'][0]['min']
-                    max_latency1 = result[key]['jitter_count'][0]['max']
-
-                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
+                    avg_jitter1 = result[key]['jitter_count'][0]['avg']
+                    min_jitter1 = result[key]['jitter_count'][0]['min']
+                    max_jitter1 = result[key]['jitter_count'][0]['max']
+                    if throughput_count:
+                        table_obj.add_row([key, pps_count, throughput_count, avg_jitter1, min_jitter1, max_jitter1])
+                    else:
+                        table_obj.add_row([key, pps_count, avg_jitter1, min_jitter1, max_jitter1])
             fun_test.log(str(table_obj))
             fun_test.log_enable_timestamps()
         except Exception as ex:
             fun_test.critical(str(ex))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

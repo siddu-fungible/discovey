@@ -1,6 +1,9 @@
 from lib.system.fun_test import *
 from lib.templates.traffic_generator.traffic_generator_template import TrafficGeneratorTemplate
 from lib.host.spirent_manager import SpirentManager
+import json
+import datetime
+import time
 
 
 class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
@@ -22,6 +25,36 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return contents
+
+    def create_counters_file(self, json_file_name, counter_dict):
+        result = False
+        try:
+            file_path = SYSTEM_TMP_DIR + "/" + json_file_name + ".json"
+            with open(file_path, "w") as f:
+                json.dump(counter_dict, f, indent=4)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def populate_performance_counters_json(self, test_name, file_name, latency_results=None, jitter_results=None):
+        file_created = False
+        result = dict()
+        result['name'] = test_name
+        ts = time.time()
+        current_time = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        result['version'] = "F1"
+        result['timestamp'] = current_time
+        if latency_results:
+            result['latency'] = latency_results
+        if jitter_results:
+            result['jitter'] = jitter_results
+        try:
+            file_created = self.create_counters_file(json_file_name=file_name, counter_dict=result)
+            fun_test.simple_assert(file_created, "Create Performance JSON File")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return file_created
 
 
 class StreamBlock(object):
