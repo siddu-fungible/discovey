@@ -66,6 +66,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         $scope.goodnessTrendValues = null;
         $scope.inner = {};
         $scope.inner.nonAtomicMetricInfo = "";
+        $scope.currentNodeChildrenGuids = null;
         //console.log($scope.treeModel[0][0].showInfo);
     };
 
@@ -94,6 +95,10 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         return index;
     };
 
+    $scope.getNode = (guid) => {
+        return $scope.flatNodes[$scope.getIndex({guid: guid})];
+    };
+
     $scope.expandAllNodes = () => {
         $scope.flatNodes.forEach((node) => {
             $scope.expandNode(node, true);
@@ -117,7 +122,8 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             hide: true,
             leaf: data.leaf,
             chartName: data.chart_name,
-            metricModelName: data.metric_model_name
+            metricModelName: data.metric_model_name,
+            childrenWeights: JSON.parse(data.children_weights)
         };
         if (newNode.info === "") {
             newNode.info = "<p>Please update the description</p>";
@@ -159,6 +165,14 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         return commonService.apiPost('/metrics/chart_info', payload).then((data) => {
             return data;
         });
+    };
+
+    $scope.getChildWeight = (node, childMetricId) => {
+        if (node.hasOwnProperty("childrenWeights")) {
+            return node.childrenWeights[childMetricId];
+        } else {
+            return 0;
+        }
     };
 
     $scope.editDescriptionClick = () => {
@@ -269,10 +283,14 @@ function MetricsSummaryController($scope, commonService, $timeout) {
     };
 
     $scope.showNonAtomicMetric = (node) => {
+        $scope.expandNode(node);
         $scope.mode = "showingNonAtomicMetric";
         $scope._setupGoodnessTrend(node);
         $scope.inner.nonAtomicMetricInfo = node.info;
-        $scope.currentNode = node;
+        $scope.currentNode = null;
+        $scope.currentNode = node
+        $scope.inner.currentNodeChildrenGuids = angular.copy(node.childrenGuids);
+        let i = 0;
     };
 
     $scope._setupGoodnessTrend = (node) => {
@@ -286,7 +304,11 @@ function MetricsSummaryController($scope, commonService, $timeout) {
 
         $scope.charting = true;
 
-        $scope.goodnessTrendChartTitle = "Goodness Trend";
+        $scope.goodnessTrendChartTitle = "Goodness Trend" ;
+    };
+
+    $scope.getChildrenGuids = (node) => {
+        return node.childrenGuids;
     };
 
     $scope.showGoodnessTrend = (node) => {

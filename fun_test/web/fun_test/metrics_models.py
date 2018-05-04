@@ -19,6 +19,7 @@ class MetricChart(models.Model):
     positive = models.BooleanField(default=True)
     y1_axis_title = models.TextField(default="")
     y2_axis_title = models.TextField(default="")
+    children_weights = models.TextField(default="{}")
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -32,6 +33,12 @@ class MetricChart(models.Model):
             children.append(child_id)
             self.children = json.dumps(children)
             self.save()
+
+    def add_child_weight(self, child_id, weight):
+        children_weights = json.loads(self.children_weights)
+        children_weights[child_id] = weight
+        self.children_weights = json.dumps(children_weights)
+        self.save()
 
     def goodness(self):
         children = json.loads(self.children)

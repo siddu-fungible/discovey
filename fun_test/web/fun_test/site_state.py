@@ -81,14 +81,18 @@ class SiteState():
         children = []
         if "children" in metric:
             children = metric["children"]
+        description = "TBD"
         try:
             metric_model_name = "MetricContainer"
-            description = "TBD"
+
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
             if "info" in metric:
                 description = metric["info"]
-            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"], description=description)
+            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
+            if description:
+                m.description = description
+                m.save()
         except ObjectDoesNotExist:
             # if len(children):
             m = MetricChart(metric_model_name="MetricContainer",
@@ -103,6 +107,10 @@ class SiteState():
             c = self._do_register_metric(metric=child)
             if c:
                 m.add_child(child_id=c.metric_id)
+                child_weight = 0
+                if "weight" in child:
+                    child_weight = child["weight"]
+                m.add_child_weight(child_id=c.metric_id, weight=child_weight)
         return m
 
     def register_product_metrics(self):

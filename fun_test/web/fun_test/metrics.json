@@ -11,7 +11,8 @@
             "leaf": false,
             "name": "Networking",
             "label": "Networking",
-            "children": []
+            "children": [],
+            "weight": 1
         },
         {
             "info": "Storage",
@@ -19,7 +20,8 @@
             "leaf": false,
             "name": "Storage",
             "label": "Storage",
-            "children": []
+            "children": [],
+            "weight": 1
         },
         {
             "info": "Accelerators",
@@ -27,7 +29,8 @@
             "leaf": false,
             "name": "Accelerators",
             "label": "Accelerators",
-            "children": []
+            "children": [],
+            "weight": 1
         },
         {
             "info": "FunOS",
@@ -35,6 +38,7 @@
             "leaf": false,
             "name": "FunOS",
             "label": "FunOS",
+            "weight": 1,
             "children": [
                 {
                     "info": "Nucleus",
@@ -42,13 +46,15 @@
                     "leaf": false,
                     "name": "Nucleus",
                     "label": "Nucleus",
+                    "weight": 1,
                     "children": [{
                             "info": "Best time for 1 malloc/free (WU)",
                             "metric_model_name": "AllocSpeedPerformance",
                             "leaf": true,
                             "name": "Best time for 1 malloc/free (WU)",
                             "label": "Best time for 1 malloc/free (WU)",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         },
                         {
                             "info": "Best time for 1 malloc/free (Threaded)",
@@ -56,7 +62,8 @@
                             "leaf": true,
                             "name": "Best time for 1 malloc/free (Threaded)",
                             "label": "Best time for 1 malloc/free (Threaded)",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         },
                         {
                             "info": "WU Latency: Alloc Stack",
@@ -64,7 +71,8 @@
                             "leaf": true,
                             "name": "WU Latency: Alloc Stack",
                             "label": "WU Latency: Alloc Stack",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         },
                         {
                             "info": "WU Latency: Ungated",
@@ -72,7 +80,8 @@
                             "leaf": true,
                             "name": "WU Latency: Ungated",
                             "label": "WU Latency: Ungated",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         }]
                 },
                 {
@@ -81,13 +90,15 @@
                     "leaf": false,
                     "name": "Allocation",
                     "label": "Allocation",
+                    "weight": 1,
                     "children": [{
                             "info": "Best time for 1 malloc/free (WU)",
                             "metric_model_name": "AllocSpeedPerformance",
                             "leaf": true,
                             "name": "Best time for 1 malloc/free (WU)",
                             "label": "Best time for 1 malloc/free (WU)",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         },
                         {
                             "info": "Best time for 1 malloc/free (Threaded)",
@@ -95,7 +106,8 @@
                             "leaf": true,
                             "name": "Best time for 1 malloc/free (Threaded)",
                             "label": "Best time for 1 malloc/free (Threaded)",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         }]
                 },
                 {
@@ -104,6 +116,7 @@
                     "leaf": false,
                     "name": "WUs",
                     "label": "WUs",
+                    "weight": 1,
                     "children": [
                         {
                             "info": "Best time for 1 malloc/free (WU)",
@@ -111,7 +124,8 @@
                             "leaf": true,
                             "name": "Best time for 1 malloc/free (WU)",
                             "label": "Best time for 1 malloc/free (WU)",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         },
                         {
                             "info": "WU Latency: Alloc Stack",
@@ -119,7 +133,8 @@
                             "leaf": true,
                             "name": "WU Latency: Alloc Stack",
                             "label": "WU Latency: Alloc Stack",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         },
                         {
                             "info": "WU Latency: Ungated",
@@ -127,7 +142,8 @@
                             "leaf": true,
                             "name": "WU Latency: Ungated",
                             "label": "WU Latency: Ungated",
-                            "children": []
+                            "children": [],
+                            "weight": 1
                         }
                     ]
                 }
@@ -139,7 +155,8 @@
             "leaf": false,
             "name": "TeraMarks",
             "label": "TeraMarks",
-            "children": []
+            "children": [],
+            "weight": 1
         }
     ]
 }]

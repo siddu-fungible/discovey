@@ -166,6 +166,7 @@ arrow-icon {
             <fun-chart values="goodnessTrendValues" show-legend="true"
                        title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">
             </fun-chart>
+
             <br>
             <b>Description</b><button class="btn" style="background-color: white" ng-if="!editingDescription" ng-click="editDescriptionClick()"><i class="fa fa-pencil"></i> Edit</button>
             <div ng-if="editingDescription">
@@ -173,6 +174,21 @@ arrow-icon {
                 <button class="btn btn-success" ng-click="submitDescription(currentNode)">Submit</button>
             </div>
             <div ng-bind-html="inner.nonAtomicMetricInfo"></div>
+            <br>
+            <div class="closed-section"></div>
+            <h3>Children</h3>
+            <div ng-if="currentNode">
+                <table class="table table-nonfluid">
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Weight</th>
+                    </tr>
+                    <tr ng-repeat="childGuid in currentNode.childrenGuids">
+                        <td>{{ getNode(childGuid).chartName }}</td>
+                        <td>{{ getChildWeight(currentNode, getNode(childGuid).metricId) }}</td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 
