@@ -5,7 +5,7 @@ from django.shortcuts import render
 from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
-from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer
+from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer, WuLatencyAllocStack
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer
 from django.core import serializers
@@ -169,7 +169,8 @@ def table_data(request):
             the_data[unique_key].append(row)
     '''
     serializer_map = {"VolumePerformance": VolumePerformanceSerializer,
-                      "AllocSpeedPerformance": AllocSpeedPerformanceSerializer}
+                      "AllocSpeedPerformance": AllocSpeedPerformanceSerializer,
+                      "WuLatencyAllocStack": WuLatencyAllocStack}
     serializer = serializer_map[metric_model_name]
     all_entries = model.objects.all()
     s = serializer(all_entries, many=True)
