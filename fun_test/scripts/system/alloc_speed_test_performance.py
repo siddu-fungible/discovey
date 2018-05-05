@@ -80,7 +80,7 @@ class FunTestCase1(FunTestCase):
                 fun_test.critical(str(ex))
 
             lines = output_text.split("\n")
-            lines = [x for x in lines if "Best time" in x or "wu_latency_test" in x]
+            lines = [x for x in lines if "Time for " in x or "wu_latency_test" in x]
 
             alloc_speed_test_found = False
             output_one_malloc_free_wu = 0
