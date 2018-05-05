@@ -198,8 +198,8 @@ class FunTestCase1(FunTestCase):
 
                 metric_model_name = "AllocSpeedPerformance"
                 chart_map = {}
-                chart_map["output_one_malloc_free_wu"] = "Best time for 1 malloc/free (WU)"
-                chart_map["output_one_malloc_free_threaded"] = "Best time for 1 malloc/free (Threaded)"
+                chart_map["output_one_malloc_free_wu"] = "Time for one malloc/free (WU)"
+                chart_map["output_one_malloc_free_threaded"] = "Time for one malloc/free (Threaded)"
                 values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
 
                 for value_to_check in values_to_check:
