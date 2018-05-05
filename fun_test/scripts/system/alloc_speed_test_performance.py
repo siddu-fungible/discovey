@@ -91,12 +91,12 @@ class FunTestCase1(FunTestCase):
             wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = None
 
             for line in lines:
-                m = re.search(r'Best time for one malloc/free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
+                m = re.search(r'Time for one malloc/free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
                 if m:
                     alloc_speed_test_found = True
                     d = json.loads(m.group(1))
                     output_one_malloc_free_wu = int(d["avg"])
-                m = re.search(r'Best time for one malloc/free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
+                m = re.search(r'Time for one malloc/free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
                 if m:
                     d = json.loads(m.group(1))
                     output_one_malloc_free_threaded = int(d['avg'])
@@ -198,8 +198,8 @@ class FunTestCase1(FunTestCase):
 
                 metric_model_name = "AllocSpeedPerformance"
                 chart_map = {}
-                chart_map["output_one_malloc_free_wu"] = "Time for one malloc/free (WU)"
-                chart_map["output_one_malloc_free_threaded"] = "Time for one malloc/free (Threaded)"
+                chart_map["output_one_malloc_free_wu"] = "Best time for 1 malloc/free (WU)"
+                chart_map["output_one_malloc_free_threaded"] = "Best time for 1 malloc/free (Threaded)"
                 values_to_check = ["output_one_malloc_free_wu", "output_one_malloc_free_threaded"]
 
                 for value_to_check in values_to_check:
