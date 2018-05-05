@@ -38,7 +38,7 @@
             "leaf": false,
             "name": "FunOS",
             "label": "FunOS",
-            "weight": 1,
+            "weight": 0.25,
             "children": [
                 {
                     "info": "Nucleus",
