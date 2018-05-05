@@ -36,6 +36,7 @@ class MetricChart(models.Model):
 
     def add_child_weight(self, child_id, weight):
         children_weights = json.loads(self.children_weights)
+        children_weights = {int(x): y for x, y in children_weights.iteritems()}
         children_weights[child_id] = weight
         self.children_weights = json.dumps(children_weights)
         self.save()
@@ -72,6 +73,8 @@ class MetricChart(models.Model):
         goodness_values = []
         status_values = []
         children = json.loads(self.children)
+        children_weights = json.loads(self.children_weights)
+        children_weights = {int(x): y for x, y in children_weights.iteritems()}
         if not self.leaf:
             if len(children):
                 for child in children:
@@ -88,7 +91,9 @@ class MetricChart(models.Model):
                             goodness_values.append(0)
                         if len(child_goodness_values) < (i + 1):
                             child_goodness_values.append(0)
-                        goodness_values[i] += child_goodness_values[i]
+
+                        child_weight = children_weights[child] if child in children_weights else 1
+                        goodness_values[i] += child_goodness_values[i] * child_weight
         else:
             last_records = self.get_last_record(number_of_records=number_of_records)
             data_sets = json.loads(self.data_sets)
