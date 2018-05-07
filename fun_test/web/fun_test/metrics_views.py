@@ -125,6 +125,25 @@ def tables(request, metric_model_name, chart_name):
 def atomic(request, chart_name, model_name):
     return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
 
+@csrf_exempt
+@api_safe_json_response
+def update_child_weight(request):
+    request_json = json.loads(request.body)
+    child_id = request_json["child_id"]
+    metric_id = request_json["metric_id"]
+    lineage = request_json["lineage"]
+    weight = request_json["weight"]
+    '''
+    Enable it later
+    c = None
+    while lineage:
+        lineage_metric_id = lineage.pop()
+        c = MetricChart.objects.get(metric_id=lineage_metric_id)
+    '''
+    c = MetricChart.objects.get(metric_id=metric_id)
+    children_weights = c.get_children_weights()
+    if child_id in children_weights:
+        c.add_child_weight(child_id=child_id, weight=weight)
 
 @csrf_exempt
 def summary_page(request):
