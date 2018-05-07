@@ -110,7 +110,8 @@ metric_urls = [
     url(r'^table_data$', metrics_views.table_data),
     url(r'^summary$', metrics_views.summary_page),
     url(r'^metric_info$', metrics_views.metric_info),
-    url(r'^atomic/(.*)/(.*)$', metrics_views.atomic)
+    url(r'^atomic/(.*)/(.*)$', metrics_views.atomic),
+    url(r'^update_child_weight$', metrics_views.update_child_weight)
 ]
 
 urlpatterns = [

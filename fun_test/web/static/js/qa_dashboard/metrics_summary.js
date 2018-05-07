@@ -47,6 +47,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         $scope.fetchJenkinsJobIdMap();
 
         $scope.flatNodes = [];
+        $scope.metricMap = {};
         $scope.fetchRootMetricInfo("Total", "MetricContainer").then((data) => {
             let metricId = data.metric_id;
             let p1 = {metric_id: metricId};
@@ -123,11 +124,20 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             leaf: data.leaf,
             chartName: data.chart_name,
             metricModelName: data.metric_model_name,
-            childrenWeights: JSON.parse(data.children_weights)
+            childrenWeights: JSON.parse(data.children_weights),
+            children: {},
+            lineage: []
+
         };
+        $scope.metricMap[newNode.metricId] = {chartName: newNode.chartName};
         if (newNode.info === "") {
             newNode.info = "<p>Please update the description</p>";
         }
+
+        angular.forEach(newNode.childrenWeights, (info, childId) => {
+            newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
+        });
+
         newNode.goodness = Number(data.goodness_values[data.goodness_values.length - 1].toFixed(1));
         newNode.goodnessValues = data.goodness_values;
         newNode.status = data.status_values[data.status_values.length - 1];
@@ -177,6 +187,11 @@ function MetricsSummaryController($scope, commonService, $timeout) {
 
     $scope.editDescriptionClick = () => {
         $scope.editingDescription = true;
+    };
+
+
+    $scope.closeEditingDescriptionClick = () => {
+        $scope.editingDescription = false;
     };
 
     $scope.submitDescription = (node) => {
@@ -234,17 +249,6 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         });
     };
 
-    $scope.flatten = (node, indent) => {
-        node.indent = indent;
-        node.hide = true;
-        node.collapsed = true;
-        $scope.flatNodes.push(node);
-        if (node.hasOwnProperty("children")) {
-            node.children.forEach((node) => {
-                $scope.flatten(node, indent + 1);
-            });
-        }
-    };
 
     $scope.testClick = function () {
         console.log("testClick");
@@ -288,8 +292,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         $scope._setupGoodnessTrend(node);
         $scope.inner.nonAtomicMetricInfo = node.info;
         $scope.currentNode = null;
-        $scope.currentNode = node
-        $scope.inner.currentNodeChildrenGuids = angular.copy(node.childrenGuids);
+        $scope.currentNode = node;
         let i = 0;
     };
 
@@ -329,6 +332,29 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         return s;
     };
 
+    $scope.editingWeightClick = (info) => {
+        info.editing = true;
+        info.editingWeight = info.weight;
+    };
+
+    $scope.submitWeightClick = (node, childId, info) => {
+        let payload = {};
+        payload.metric_id = node.metricId;
+        payload.lineage = node.lineage;
+        payload.child_id = childId;
+        payload.weight = info.editingWeight;
+        commonService.apiPost('/metrics/update_child_weight', payload).then((data) => {
+            info.weight = info.editingWeight;
+
+        });
+        info.editing = false;
+    };
+
+    $scope.closeEditingWeightClick = (info) => {
+        info.editing = false;
+    };
+
+
     $scope.collapseNode = (node) => {
         if (node.hasOwnProperty("numChildren")) {
             $scope.collapseBranch(node);
@@ -355,7 +381,12 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             if (!alreadyInserted) {
                 let newNode = $scope.getNodeFromData(data);
                 newNode.guid = $scope.guid();
+                thisNode.lineage.forEach((ancestor) => {
+                   newNode.lineage.push(ancestor);
+                });
+                newNode.lineage.push(thisNode.metricId);
                 node.childrenGuids.push(newNode.guid);
+
                 newNode.indent = thisNode.indent + 1;
                 let index = $scope.getIndex(thisNode);
                 $scope.flatNodes.splice(index + 1, 0, newNode);

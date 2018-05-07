@@ -27,6 +27,9 @@ class MetricChart(models.Model):
     def get_children(self):
         return json.loads(self.children)
 
+    def get_children_weights(self):
+        return json.loads(self.children_weights)
+
     def add_child(self, child_id):
         children = json.loads(self.children)
         if child_id not in children:
