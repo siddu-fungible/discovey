@@ -138,23 +138,19 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
         });
 
+        $scope.evaluateGoodness(newNode, data.goodness_values);
+        /*
         newNode.goodness = Number(data.goodness_values[data.goodness_values.length - 1].toFixed(1));
         newNode.goodnessValues = data.goodness_values;
-        newNode.status = data.status_values[data.status_values.length - 1];
         newNode.trend = "flat";
         let penultimateGoodness = Number(data.goodness_values[data.goodness_values.length - 2].toFixed(1));
         if (penultimateGoodness > newNode.goodness) {
-            //console.log("Setting down:" + penultimateGoodness + ":" + newNode.goodness);
             newNode.trend = "down";
         } else if (penultimateGoodness < newNode.goodness) {
             newNode.trend = "up";
-            //console.log("Setting up:" + penultimateGoodness + ":" + newNode.goodness);
-        }
-        /*
-        console.log(newNode.chartName);
-        console.log(newNode.trend);
-        console.log(data.goodness_values);
-        console.log(newNode.goodness, penultimateGoodness);*/
+        }*/
+
+        newNode.status = data.status_values[data.status_values.length - 1];
 
         let newNodeChildrenIds = JSON.parse(data.children);
         if (newNodeChildrenIds.length > 0) {
@@ -162,6 +158,18 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         }
 
         return newNode;
+    };
+
+    $scope.evaluateGoodness = (node, goodness_values) => {
+        node.goodness = Number(goodness_values[goodness_values.length - 1].toFixed(1));
+        node.goodnessValues = goodness_values;
+        node.trend = "flat";
+        let penultimateGoodness = Number(goodness_values[goodness_values.length - 2].toFixed(1));
+        if (penultimateGoodness > node.goodness) {
+            node.trend = "down";
+        } else if (penultimateGoodness < node.goodness) {
+            node.trend = "up";
+        }
     };
 
     $scope.setCurrentChart = (chartName, metricModelName) => {
@@ -345,7 +353,11 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         payload.weight = info.editingWeight;
         commonService.apiPost('/metrics/update_child_weight', payload).then((data) => {
             info.weight = info.editingWeight;
-
+            if (node.hasOwnProperty("lineage") && node.lineage.length > 0) {
+                $scope.refreshNode($scope.getNode(node.lineage[0]));
+            } else {
+                $scope.refreshNode(node);
+            }
         });
         info.editing = false;
     };
@@ -384,7 +396,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
                 thisNode.lineage.forEach((ancestor) => {
                    newNode.lineage.push(ancestor);
                 });
-                newNode.lineage.push(thisNode.metricId);
+                newNode.lineage.push(thisNode.guid);
                 node.childrenGuids.push(newNode.guid);
 
                 newNode.indent = thisNode.indent + 1;
@@ -398,7 +410,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             } else {
                 node.childrenGuids.forEach((childGuid) => {
                    let childNode = $scope.flatNodes[$scope.getIndex({guid: childGuid})];
-                   let childrenIds = JSON.parse(data.children);
+                   //let childrenIds = JSON.parse(data.children);
                    childNode.hide = false;
 
                 });
@@ -409,6 +421,19 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         });
 
 
+    };
+
+    $scope.refreshNode = (node) => {
+        let payload = {metric_id: node.metricId};
+        commonService.apiPost('/metrics/metric_info', payload).then((data) => {
+            $scope.evaluateGoodness(node, data.goodness_values);
+            $scope._setupGoodnessTrend(node);
+        });
+        if (node.hasOwnProperty("childrenGuids")) {
+            node.childrenGuids.forEach((childGuid) => {
+                $scope.refreshNode($scope.getNode(childGuid));
+            });
+        }
     };
 
     $scope.expandNode = (node, all) => {

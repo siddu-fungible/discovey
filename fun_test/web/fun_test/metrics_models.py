@@ -40,7 +40,7 @@ class MetricChart(models.Model):
     def add_child_weight(self, child_id, weight):
         children_weights = json.loads(self.children_weights)
         children_weights = {int(x): y for x, y in children_weights.iteritems()}
-        children_weights[child_id] = weight
+        children_weights[int(child_id)] = weight
         self.children_weights = json.dumps(children_weights)
         self.save()
 
