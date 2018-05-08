@@ -79,7 +79,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             interface_class = None
             if interface_type == self.stc_manager.ETHERNET_COPPER_INTERFACE:
-                interface_class = EthernnetCopperInterface
+                interface_class = EthernetCopperInterface
             elif interface_type == self.stc_manager.ETHERNET_10GIG_FIBER_INTERFACE:
                 interface_class = Ethernnet10GigFiberInterface
 
@@ -252,7 +252,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 generator_config_handle = self.stc_manager.get_generator_config(generator_handle=generator)
                 fun_test.test_assert(generator_config_handle, "Get Generator Config for %s " % generator)
                 self.stc_manager.stc.config(generator_config_handle, **attributes)
-                generator_config_obj.spirent_handle = generator_config_handle
+                generator_config_obj.spirent_handle = generator
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -642,9 +642,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                                             frame_size, str(rx_result['MaxLatency'])))
                 fun_test.test_assert(expression=float(rx_result['MaxLatency']) <= float(expected_threshold_latency),
                                      message=checkpoint)
-                result['frame_%s' % frame_size] = {'avg': rx_result['AvgLatency'],
-                                                   'min': rx_result['MinLatency'],
-                                                   'max': rx_result['MaxLatency']}
+                result['frame_%s' % frame_size] = {'avg': float(rx_result['AvgLatency']),
+                                                   'min': float(rx_result['MinLatency']),
+                                                   'max': float(rx_result['MaxLatency'])}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -689,7 +689,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                      message=checkpoint)
 
                 checkpoint = "Validate Max. jitter for %s Frame Size with Load %s " \
-                             "Actual latency <= Expected Threshold latency (%s)" % \
+                             "Actual jitter <= Expected Threshold jitter (%s)" % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
                     count=expected_jitter_count['frame_%s' % frame_size]['max'], tolerance_percent=tolerance_percent)
@@ -697,9 +697,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                                          frame_size, str(rx_result['MaxJitter'])))
                 fun_test.test_assert(expression=float(rx_result['MaxJitter']) <= float(expected_threshold_jitter),
                                      message=checkpoint)
-                result['frame_%s' % frame_size] = {'avg': rx_result['AvgJitter'],
-                                                   'min': rx_result['MinJitter'],
-                                                   'max': rx_result['MaxJitter']}
+                result['frame_%s' % frame_size] = {'avg': float(rx_result['AvgJitter']),
+                                                   'min': float(rx_result['MinJitter']),
+                                                   'max': float(rx_result['MaxJitter'])}
 
             result['result'] = True
         except Exception as ex:
@@ -827,3 +827,65 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.log_enable_timestamps()
         except Exception as ex:
             fun_test.critical(str(ex))
+
+    def configure_pause_mac_control_header(self, stream_obj, source_mac, destination_mac, length="8808", pause_time=0,
+                                           op_code="0001", preamble="55555555555555d5"):
+        result = False
+        try:
+            ethernet_header_obj = Ethernet8023MacControlHeader(destination_mac=destination_mac,
+                                                               source_mac=source_mac, length=length, preamble=preamble)
+            pause_header_obj = PauseMacControlHeader(op_code=op_code, pause_time=pause_time)
+            fun_test.log("Creating Pause Mac Control Frame with Ethernet 802.3 Mac Control header")
+            header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                                    header_obj=ethernet_header_obj)
+            fun_test.test_assert(header_created, "Create Ethernet 802.3 Mac Control header for %s" %
+                                 stream_obj.spirent_handle)
+            header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                                    header_obj=pause_header_obj)
+            fun_test.test_assert(header_created, "Create Pause Mac Control header for %s" % stream_obj.spirent_handle)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_pause_header(self, stream_obj, destination_mac, source_mac, length_type="8808", op_code="0001",
+                               preamble="55555555555555d5", parameters="0000"):
+        result = False
+        try:
+            header_obj = EthernetPauseHeader(destination_mac=destination_mac, source_mac=source_mac,
+                                             length_type=length_type, op_code=op_code, preamble=preamble,
+                                             parameters=parameters)
+            fun_test.log("Creating Ethernet Pause Frame ")
+            result = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                            header_obj=header_obj)
+            fun_test.test_assert(result, "Create Ethernet Pause Frame for %s" % stream_obj.spirent_handle)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_priority_flow_control_header(self, stream_obj, destination_mac, source_mac, length="8808",
+                                               preamble="55555555555555d5", op_code="0101", time0="", time1="",
+                                               time2="", time3="", time4="", time5="", time6="", time7=""):
+        result = False
+        try:
+            ethernet_header_obj = Ethernet8023MacControlHeader(destination_mac=destination_mac,
+                                                               source_mac=source_mac, length=length, preamble=preamble)
+            pfc_header_obj = PriorityFlowControlHeader(op_code=op_code, time0=time0, time1=time1, time2=time2,
+                                                       time3=time3, time4=time4, time5=time5, time6=time6, time7=time7)
+            fun_test.log("Creating Pause Mac Control Frame with Ethernet 802.3 Mac Control header")
+            header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                                    header_obj=ethernet_header_obj)
+            fun_test.test_assert(header_created, "Create Ethernet 802.3 Mac Control header for %s" %
+                                 stream_obj.spirent_handle)
+            header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                                    header_obj=pfc_header_obj)
+            fun_test.test_assert(header_created, "Create Priority Flow Control header for %s" %
+                                 stream_obj.spirent_handle)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+
+
+

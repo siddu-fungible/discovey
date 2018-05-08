@@ -105,10 +105,12 @@ class NuTransitPerformance(FunTestScript):
 
     def cleanup(self):
         template_obj.cleanup()
-        template_obj.populate_performance_counters_json(test_name="NU Transit Performance Bidirectional Mixed Frames",
+        mode = template_obj.stc_manager.dut_config['mode']
+        output_file_path = fun_test.get_script_parent_directory() + "/nu_transit_performance_data.json"
+        template_obj.populate_performance_counters_json(mode=mode,
                                                         latency_results=latency_results,
                                                         jitter_results=jitter_results,
-                                                        file_name="nu_transit_performance_bidirectional_mixed_size")
+                                                        file_name=output_file_path)
 
 
 class NuTransitLatencyTest(FunTestCase):

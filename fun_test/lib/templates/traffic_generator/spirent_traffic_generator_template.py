@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from fun_global import get_current_time
 from lib.templates.traffic_generator.traffic_generator_template import TrafficGeneratorTemplate
 from lib.host.spirent_manager import SpirentManager
 import json
@@ -19,9 +20,10 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
     def read_json_file_contents(self, file_path):
         contents = {}
         try:
-            contents = fun_test.parse_file_to_json(file_name=file_path)
-            fun_test.simple_assert(expression=contents, message="Read %s File" % file_path)
-            fun_test.debug("Found: %s" % contents)
+            if os.path.exists(file_path):
+                contents = fun_test.parse_file_to_json(file_name=file_path)
+                fun_test.simple_assert(expression=contents, message="Read %s File" % file_path)
+                fun_test.debug("Found: %s" % contents)
         except Exception as ex:
             fun_test.critical(str(ex))
         return contents
@@ -29,29 +31,84 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
     def create_counters_file(self, json_file_name, counter_dict):
         result = False
         try:
-            file_path = SYSTEM_TMP_DIR + "/" + json_file_name + ".json"
-            with open(file_path, "w") as f:
-                json.dump(counter_dict, f, indent=4)
+            with open(json_file_name, "w") as f:
+                json.dump(counter_dict, f, indent=4, default=str)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def populate_performance_counters_json(self, test_name, file_name, latency_results=None, jitter_results=None):
+    def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None):
         file_created = False
-        result = dict()
-        result['name'] = test_name
-        ts = time.time()
-        current_time = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        result['version'] = "F1"
-        result['timestamp'] = current_time
-        if latency_results:
-            result['latency'] = latency_results
-        if jitter_results:
-            result['jitter'] = jitter_results
+        records = []
         try:
-            file_created = self.create_counters_file(json_file_name=file_name, counter_dict=result)
-            fun_test.simple_assert(file_created, "Create Performance JSON File")
+            for key in latency_results:
+                record = dict()
+                record['mode'] = mode
+                record['version'] = fun_test.get_version()
+                record['timestamp'] = get_current_time()
+                frame_size = int(key.split('_')[1])
+                record['frame_size'] = frame_size
+                if jitter_results:
+                    if len(latency_results[key]['latency_count']) > 1:
+                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['pps'] = latency_results[key]['pps_count']
+
+                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
+                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
+                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
+
+                        record['port_b_to_a_latency_avg'] = latency_results[key]['latency_count'][1]['avg']
+                        record['port_b_to_a_latency_max'] = latency_results[key]['latency_count'][1]['max']
+                        record['port_b_to_a_latency_min'] = latency_results[key]['latency_count'][1]['min']
+
+                        record['port_a_to_b_jitter_avg'] = jitter_results[key]['jitter_count'][0]['avg']
+                        record['port_a_to_b_jitter_max'] = jitter_results[key]['jitter_count'][0]['max']
+                        record['port_a_to_b_jitter_min'] = jitter_results[key]['jitter_count'][0]['min']
+
+                        record['port_b_to_a_jitter_avg'] = jitter_results[key]['jitter_count'][1]['avg']
+                        record['port_b_to_a_jitter_max'] = jitter_results[key]['jitter_count'][1]['max']
+                        record['port_b_to_a_jitter_min'] = jitter_results[key]['jitter_count'][1]['min']
+                    else:
+                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['pps'] = latency_results[key]['pps_count']
+
+                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
+                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
+                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
+
+                        record['port_a_to_b_jitter_avg'] = jitter_results[key]['jitter_count'][0]['avg']
+                        record['port_a_to_b_jitter_max'] = jitter_results[key]['jitter_count'][0]['max']
+                        record['port_a_to_b_jitter_min'] = jitter_results[key]['jitter_count'][0]['min']
+                else:
+                    if len(latency_results[key]['latency_count']) > 1:
+                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['pps'] = latency_results[key]['pps_count']
+
+                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
+                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
+                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
+
+                        record['port_b_to_a_latency_avg'] = latency_results[key]['latency_count'][1]['avg']
+                        record['port_b_to_a_latency_max'] = latency_results[key]['latency_count'][1]['max']
+                        record['port_b_to_a_latency_min'] = latency_results[key]['latency_count'][1]['min']
+                    else:
+                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['pps'] = latency_results[key]['pps_count']
+
+                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
+                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
+                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
+                records.append(record)
+            fun_test.debug(records)
+            previous_run_records = self.read_json_file_contents(file_path=file_name)
+            if previous_run_records:
+                new_records = previous_run_records + records
+                file_created = self.create_counters_file(json_file_name=file_name, counter_dict=new_records)
+                fun_test.simple_assert(file_created, "Create Performance JSON File")
+            else:
+                file_created = self.create_counters_file(json_file_name=file_name, counter_dict=records)
+                fun_test.simple_assert(file_created, "Create Performance JSON File")
         except Exception as ex:
             fun_test.critical(str(ex))
         return file_created
@@ -258,7 +315,7 @@ class Ethernet2Header(object):
 
 
 class EthernetPauseHeader(object):
-    HEADER_TYPE = "ethernet:EthernetPause"
+    HEADER_TYPE = "ethernetpause:EthernetPause"
 
     def __init__(self, destination_mac="01:80:C2:00:00:01", length_type="8808", op_code="0001",
                  preamble="55555555555555d5", source_mac="00:00:01:00:00:03", parameters="0000", reserved=""):
@@ -318,7 +375,7 @@ class Ipv4Header(object):
         self.__dict__.update(**kwargs)
 
 
-class EthernnetCopperInterface(object):
+class EthernetCopperInterface(object):
     SPEED_UNKNOWN = "SPEED_UNKNOWN"
     SPEED_1G = "SPEED_1G"
     CUSTOM_FEC_MODE_KR = "KR_FEC"
@@ -499,5 +556,76 @@ class AnalyzerConfig(object):
     @spirent_handle.setter
     def spirent_handle(self, handle):
         self._spirent_handle = handle
+
+
+class Ethernet8023MacControlHeader(object):
+    HEADER_TYPE = "ethernet:Ethernet8023Raw"
+
+    def __init__(self, destination_mac="00:00:01:00:00:01", source_mac="00:10:94:00:00:02", length="",
+                 preamble="55555555555555d5"):
+        self.dstMac = destination_mac
+        self.srcMac = source_mac
+        self.Length = length
+        self.preamble = preamble
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PauseMacControlHeader(object):
+    HEADER_TYPE = "ethernetpause:PauseMacControl"
+
+    def __init__(self, op_code="0001", pause_time=0, reserved=""):
+        self.opCode = op_code
+        self.pauseTime = pause_time
+        self.reserved = reserved
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PriorityFlowControlHeader(object):
+    HEADER_TYPE = "ethernetpause:PFC"
+
+    def __init__(self, op_code="0101", time0="", time1="", time2="", time3="", time4="", time5="", time6="", time7="",
+                 reserved=""):
+        self.opCode = op_code
+        self.time0 = time0
+        self.time1 = time1
+        self.time2 = time2
+        self.time3 = time3
+        self.time4 = time4
+        self.time5 = time5
+        self.time6 = time6
+        self.time7 = time7
+        self.reserved = reserved
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
 
 
