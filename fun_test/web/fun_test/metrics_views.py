@@ -157,9 +157,10 @@ def metric_info(request):
     c = MetricChart.objects.get(metric_id=metric_id)
     serialized = MetricChartSerializer(c, many=False)
     serialized_data = serialized.data
-    status_values, goodness_values = c.get_status(number_of_records=5)
-    serialized_data["goodness_values"] = goodness_values
-    serialized_data["status_values"] = status_values
+    result = c.get_status(number_of_records=5)
+    serialized_data["goodness_values"] = result["goodness_values"]
+    serialized_data["status_values"] = result["status_values"]
+    serialized_data["children_goodness_map"] = result["children_goodness_map"]
     return serialized_data
 
 @csrf_exempt
@@ -267,7 +268,7 @@ def status(request):
     try:
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
         status = chart.get_status()
-        data["status"], data["goodness"] = status[0][-1], status[1][-1]
+        data["status"], data["goodness"] = status["status_values"][-1], status["goodness_values"][-1]
     except ObjectDoesNotExist:
         pass
     return data

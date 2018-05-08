@@ -126,7 +126,8 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             metricModelName: data.metric_model_name,
             childrenWeights: JSON.parse(data.children_weights),
             children: {},
-            lineage: []
+            lineage: [],
+            positive: data.positive
 
         };
         $scope.metricMap[newNode.metricId] = {chartName: newNode.chartName};
@@ -138,7 +139,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
         });
 
-        $scope.evaluateGoodness(newNode, data.goodness_values);
+        $scope.evaluateGoodness(newNode, data.goodness_values, data.children_goodness_map);
         /*
         newNode.goodness = Number(data.goodness_values[data.goodness_values.length - 1].toFixed(1));
         newNode.goodnessValues = data.goodness_values;
@@ -160,9 +161,10 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         return newNode;
     };
 
-    $scope.evaluateGoodness = (node, goodness_values) => {
+    $scope.evaluateGoodness = (node, goodness_values, children_goodness_map) => {
         node.goodness = Number(goodness_values[goodness_values.length - 1].toFixed(1));
         node.goodnessValues = goodness_values;
+        node.childrenGoodnessMap = children_goodness_map;
         node.trend = "flat";
         let penultimateGoodness = Number(goodness_values[goodness_values.length - 2].toFixed(1));
         if (penultimateGoodness > node.goodness) {
@@ -172,11 +174,32 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         }
     };
 
-    $scope.setCurrentChart = (chartName, metricModelName) => {
-        $scope.mode = "showingAtomicMetric";
-        $scope.currentChartName = chartName;
-        $scope.currentMetricModelName = metricModelName;
+    $scope.getLastElement = (array) => {
+        let result = null;
+        if (array.length) {
+            result = array[array.length - 1];
+        }
+        return result;
     };
+
+    $scope.setCurrentChart = (node) => {
+        $scope.mode = "showingAtomicMetric";
+        $scope.currentChartName = node.chartName;
+        $scope.currentMetricModelName = node.metricModelName;
+        $scope.currentNode = node;
+    };
+
+    $scope.showNodeInfoClick = (node) => {
+        $scope.showingNodeInfo = !$scope.showingNodeInfo;
+        $scope.currentNodeInfo = "S";
+        if (node.positive) {
+            $scope.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last action value/expected value) * 100&nbsp)/n";
+        } else {
+            $scope.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+        }
+        $scope.currentNodeInfo += "&nbsp, where n is the number of data-sets";
+    };
+
 
     $scope.fetchRootMetricInfo = (chartName, metricModelName) => {
         let payload = {"metric_model_name": metricModelName, chart_name: chartName};
@@ -252,7 +275,6 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         let thisNode = node;
         let p1 = {metric_id: node.metricId};
         return commonService.apiPost('/metrics/metric_info', p1).then((data) => {
-
            return data;
         });
     };
@@ -315,7 +337,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
 
         $scope.charting = true;
 
-        $scope.goodnessTrendChartTitle = "Goodness Trend" ;
+        $scope.goodnessTrendChartTitle = "Score Trend" ;
     };
 
     $scope.getChildrenGuids = (node) => {
@@ -426,7 +448,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
     $scope.refreshNode = (node) => {
         let payload = {metric_id: node.metricId};
         commonService.apiPost('/metrics/metric_info', payload).then((data) => {
-            $scope.evaluateGoodness(node, data.goodness_values);
+            $scope.evaluateGoodness(node, data.goodness_values, data.children_goodness_map);
             $scope._setupGoodnessTrend(node);
         });
         if (node.hasOwnProperty("childrenGuids")) {

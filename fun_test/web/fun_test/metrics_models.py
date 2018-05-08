@@ -78,11 +78,14 @@ class MetricChart(models.Model):
         children = json.loads(self.children)
         children_weights = json.loads(self.children_weights)
         children_weights = {int(x): y for x, y in children_weights.iteritems()}
+        children_goodness_map = {}
         if not self.leaf:
             if len(children):
                 for child in children:
                     child_metric = MetricChart.objects.get(metric_id=child)
-                    child_status_values, child_goodness_values = child_metric.get_status()
+                    get_status = child_metric.get_status()
+                    child_status_values, child_goodness_values = get_status["status_values"], \
+                                                                 get_status["goodness_values"]
 
                     for i in range(number_of_records):
                         if len(status_values) < (i + 1):
@@ -97,6 +100,7 @@ class MetricChart(models.Model):
 
                         child_weight = children_weights[child] if child in children_weights else 1
                         goodness_values[i] += child_goodness_values[i] * child_weight
+                        children_goodness_map[child] = child_goodness_values
         else:
             last_records = self.get_last_record(number_of_records=number_of_records)
             data_sets = json.loads(self.data_sets)
@@ -141,7 +145,9 @@ class MetricChart(models.Model):
             else:
                 status_values.append(True)
         print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
-        return status_values, goodness_values
+        return {"status_values": status_values,
+                "goodness_values": goodness_values,
+                "children_goodness_map": children_goodness_map}
 
     def filter(self, number_of_records=1):
         data = []
