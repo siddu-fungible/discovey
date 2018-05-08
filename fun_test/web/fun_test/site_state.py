@@ -77,6 +77,14 @@ class SiteState():
                 m.save()
 
     def _do_register_metric(self, metric):
+        all_metrics_chart = None
+        try:
+            all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
+                                                        chart_name="All metrics")
+        except ObjectDoesNotExist:
+            all_metrics_chart = MetricChart(metric_model_name="MetricContainer",
+                                            chart_name="All metrics",
+                                            leaf=False, metric_id=LastMetricId.get_next_id())
         m = None
         children = []
         if "children" in metric:
@@ -103,6 +111,9 @@ class SiteState():
 
         m.children = "[]"
         m.save()
+
+        if m.chart_name == "Total":
+            m.add_child(all_metrics_chart.metric_id)
         for child in children:
             c = self._do_register_metric(metric=child)
             if c:
@@ -111,11 +122,25 @@ class SiteState():
                 if "weight" in child:
                     child_weight = child["weight"]
                 m.add_child_weight(child_id=c.metric_id, weight=child_weight)
+                if "leaf" in child and child["leaf"]:
+                    all_metrics_chart.add_child(child_id=c.metric_id)
+                    all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=0)
+
         return m
 
     def register_product_metrics(self):
         with open(METRICS_BASE_DATA_FILE, "r") as f:
             metrics = json.load(f)
+            all_metrics_metric = {
+                "info": "All metrics",
+                "metric_model_name": "MetricContainer",
+                "leaf": False,
+                "name": "All metrics",
+                "label": "All metrics",
+                "children": [],
+                "weight": 0
+            }
+            self._do_register_metric(metric=all_metrics_metric)
             for metric in metrics:
                 self._do_register_metric(metric=metric)
 
