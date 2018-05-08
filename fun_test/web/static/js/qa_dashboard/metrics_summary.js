@@ -305,8 +305,8 @@ function MetricsSummaryController($scope, commonService, $timeout) {
                 }
             }
         } else {
-            s = "<p>Pass:<span style='color: green'><b>" + node.numChildrenPassed + "</b></span>" + "&nbsp" ;
-            s += "Fail:<span style='color: red'><b>" + node.numChildrenFailed + "</b></span></p>"
+            s = "<p>&#10003;<span style='color: green'><b>" + node.numChildrenPassed + "</b></span>" + "&nbsp" ;
+            s += "&#x1f44e;<span style='color: red'><b>" + node.numChildrenFailed + "</b></span></p>"
         }
         return s;
     };
