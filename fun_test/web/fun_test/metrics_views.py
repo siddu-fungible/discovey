@@ -161,6 +161,8 @@ def metric_info(request):
     serialized_data["goodness_values"] = result["goodness_values"]
     serialized_data["status_values"] = result["status_values"]
     serialized_data["children_goodness_map"] = result["children_goodness_map"]
+    serialized_data["num_children_passed"] = result["num_children_passed"]
+    serialized_data["num_children_failed"] = result["num_children_failed"]
     return serialized_data
 
 @csrf_exempt

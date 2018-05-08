@@ -127,7 +127,9 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             childrenWeights: JSON.parse(data.children_weights),
             children: {},
             lineage: [],
-            positive: data.positive
+            positive: data.positive,
+            numChildrenPassed: data.num_children_passed,
+            numChildrenFailed: data.num_children_failed
 
         };
         $scope.metricMap[newNode.metricId] = {chartName: newNode.chartName};
@@ -291,15 +293,20 @@ function MetricsSummaryController($scope, commonService, $timeout) {
 
     $scope.getStatusHtml = (node) => {
         let s = "";
-        if (node.hasOwnProperty("status")) {
-            if (node.status === true) {
-                s = "<label class=\"label label-success\">PASSED</label>";
-            } else {
-                s = "<label class=\"label label-danger\">FAILED</label>";
+        if (node.leaf) {
+            if (node.hasOwnProperty("status")) {
+                if (node.status === true) {
+                    s = "<label class=\"label label-success\">PASSED</label>";
+                } else {
+                    s = "<label class=\"label label-danger\">FAILED</label>";
+                }
+                if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
+                    s = "<p style='background-color: white' class=\"\">No Data</p>";
+                }
             }
-            if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
-                s = "<p style='background-color: white' class=\"\">No Data</p>";
-            }
+        } else {
+            s = "<p><span style='color: green'>Pass:" + node.numChildrenPassed + "</span>" + "&nbsp" ;
+            s += "<span style='color: red'>Fail:" + node.numChildrenFailed + "</span></p>"
         }
         return s;
     };
