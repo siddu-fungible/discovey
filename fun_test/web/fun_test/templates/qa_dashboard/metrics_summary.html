@@ -159,13 +159,15 @@ arrow-icon {
         </div>
         <div ng-switch-when="showingAtomicMetric">
             <div ng-if="currentChartName">
-                <span style="min-height: 20px">Current score: </span>
-                <span style="border: 3px solid lightsteelblue; border-radius: 5px; padding: 10px">{{ currentNode.goodness }}
-                </span>
-                <i class="fa fa-info-circle" style="padding: 10px" ng-click="showNodeInfoClick(currentNode)"></i>
-                <div ng-if="showingNodeInfo">
-                    <h5>Score calculation</h5>
-                    <p ng-bind-html="currentNodeInfo"></p>
+                <div>
+                    <span style="min-height: 20px">Current score: </span>
+                    <span style="border: 3px solid lightsteelblue; border-radius: 5px; padding: 10px">{{ currentNode.goodness }}
+                    </span>
+                    <i class="fa fa-info-circle" style="padding: 10px" ng-click="showNodeInfoClick(currentNode)"></i>
+                    <div ng-if="showingNodeInfo">
+                        <h5>Score calculation</h5>
+                        <p ng-bind-html="currentNodeInfo"></p>
+                    </div>
                 </div>
                 <editable-metric-chart chart-name="currentChartName" model-name="currentMetricModelName" xaxis-formatter="xAxisFormatter" tooltip-formatter="tooltipFormatter"></editable-metric-chart>
             </div>
