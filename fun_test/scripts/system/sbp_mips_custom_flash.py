@@ -1275,6 +1275,364 @@ class TestCase11(FunTestCase):
         fun_test.add_auxillary_file(description="{} Log".format(post_fix_name),
                                     filename=artifact_file_name)
 
+class TestCase12(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=12,
+                              summary="Host A and B invalid key",
+                              steps="""
+        1. Do something on the container.
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        container_asset = fun_test.shared_variables["container_asset"]
+
+        linux_obj = Linux(host_ip=container_asset["host_ip"],
+                          ssh_username=container_asset["mgmt_ssh_username"],
+                          ssh_password=container_asset["mgmt_ssh_password"],
+                          ssh_port=container_asset["mgmt_ssh_port"])
+        sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP)
+        sbp_setup.artifacts_setup(enroll=True)
+
+        config = {
+            "name": "flash_image",
+            "size": "0x50000",
+            "puf_rom": {
+                "a": {
+                    "version": "0xa11"
+                },
+                "b": {
+                    "version": "0xa22"
+                }
+            },
+            "firmware": {
+                "a": {
+                    "key": "fpk3",
+                    "version": "0xb11"
+                },
+                "b": {
+                    "key": "fpk3",
+                    "version": "0xb22"
+                }
+            },
+            "host": {
+                "a": {
+                    "key": "fpk1",
+                    "version": "0xc11"
+                },
+                "b": {
+                    "key": "fpk1",
+                    "version": "0xc22"
+                }
+            },
+            "enrollment_certificate": {
+                "a": {
+                    "reserve": 2000,
+                    "key": "fpk4"
+                }
+            },
+            "start_certificate": {
+                "a": {
+                    "serial_number": "00000000000000000000000000000000",
+                    "serial_number_mask": "00000000000000000000000000000000",
+                    "tamper_flags": "00000000",
+                    "debugger_flags": "00000000",
+                    "public_key": "fpk2",
+                    "key": "fpk1"
+                },
+                "b": {
+                    "serial_number": "00000000000000000000000000000000",
+                    "serial_number_mask": "00000000000000000000000000000000",
+                    "tamper_flags": "00000000",
+                    "debugger_flags": "00000000",
+                    "public_key": "fpk2",
+                    "key": "fpk1"
+                }
+            },
+            "eeprom": {
+                "a": {
+                    "version": "0xd11",
+                    "key": "fpk5"
+                },
+                "b": {
+                    "version": "0xd22",
+                    "key": "fpk5"
+                }
+
+            }
+        }
+
+        sbp_setup.host.create_file(contents=json.dumps(config), file_name="/tmp/flash_config.json")
+        sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
+        sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
+
+        stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+        stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
+        stimuli_file = "{}/cmd_AES_CTR.py".format(stimuli_dir)
+
+        fun_test.test_assert(sbp_setup.run_test_py(secure_boot=True,
+                                                   stimuli_file=stimuli_file,
+                                                   artifacts_dir=sbp_setup._get_artifacts_dir()), "run_test")
+
+        stimuli_file = "{}/cmd_get_status.py".format(stimuli_dir)
+        fun_test.test_assert(sbp_setup.run_test_py(secure_boot=True,
+                                                   stimuli_file=stimuli_file,
+                                                   artifacts_dir=sbp_setup._get_artifacts_dir()), "cmd_get_status")
+
+    def cleanup(self):
+        self.container_asset = fun_test.shared_variables["container_asset"]
+        post_fix_name = self.__class__.__name__ + "_test_log.txt"
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=post_fix_name)
+        fun_test.scp(source_ip=self.container_asset["host_ip"],
+                     source_file_path="{}".format(SbpZynqSetupTemplate.TEST_LOG_FILE),
+                     source_username=self.container_asset["mgmt_ssh_username"],
+                     source_password=self.container_asset["mgmt_ssh_password"],
+                     source_port=self.container_asset["mgmt_ssh_port"],
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(post_fix_name),
+                                    filename=artifact_file_name)
+
+
+class TestCase13(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=13,
+                              summary="puf-rom B higher version, FW A higher version",
+                              steps="""
+        1. Do something on the container.
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        container_asset = fun_test.shared_variables["container_asset"]
+
+        linux_obj = Linux(host_ip=container_asset["host_ip"],
+                          ssh_username=container_asset["mgmt_ssh_username"],
+                          ssh_password=container_asset["mgmt_ssh_password"],
+                          ssh_port=container_asset["mgmt_ssh_port"])
+        sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP)
+        sbp_setup.artifacts_setup(enroll=True)
+
+        config = {
+            "name": "flash_image",
+            "size": "0x50000",
+            "puf_rom": {
+                "a": {
+                    "version": "0xa11"
+                },
+                "b": {
+                    "version": "0xa22"
+                }
+            },
+            "firmware": {
+                "a": {
+                    "key": "fpk3",
+                    "version": "0xb22"
+                },
+                "b": {
+                    "key": "fpk3",
+                    "version": "0xb11"
+                }
+            },
+            "host": {
+                "a": {
+                    "key": "fpk5",
+                    "version": "0xc11"
+                },
+                "b": {
+                    "key": "fpk5",
+                    "version": "0xc22"
+                }
+            },
+            "enrollment_certificate": {
+                "a": {
+                    "reserve": 2000,
+                    "key": "fpk4"
+                }
+            },
+            "start_certificate": {
+                "a": {
+                    "serial_number": "00000000000000000000000000000000",
+                    "serial_number_mask": "00000000000000000000000000000000",
+                    "tamper_flags": "00000000",
+                    "debugger_flags": "00000000",
+                    "public_key": "fpk2",
+                    "key": "fpk1"
+                },
+                "b": {
+                    "serial_number": "00000000000000000000000000000000",
+                    "serial_number_mask": "00000000000000000000000000000000",
+                    "tamper_flags": "00000000",
+                    "debugger_flags": "00000000",
+                    "public_key": "fpk2",
+                    "key": "fpk1"
+                }
+            },
+            "eeprom": {
+                "a": {
+                    "version": "0xd11",
+                    "key": "fpk5"
+                },
+                "b": {
+                    "version": "0xd22",
+                    "key": "fpk5"
+                }
+
+            }
+        }
+
+        sbp_setup.host.create_file(contents=json.dumps(config), file_name="/tmp/flash_config.json")
+        sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
+        sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
+
+        stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+        stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
+        stimuli_file = "{}/cmd_AES_CTR.py".format(stimuli_dir)
+
+        fun_test.test_assert(sbp_setup.run_test_py(secure_boot=True,
+                                                   stimuli_file=stimuli_file,
+                                                   artifacts_dir=sbp_setup._get_artifacts_dir()), "run_test")
+
+        stimuli_file = "{}/cmd_get_status.py".format(stimuli_dir)
+        fun_test.test_assert(sbp_setup.run_test_py(secure_boot=True,
+                                                   stimuli_file=stimuli_file,
+                                                   artifacts_dir=sbp_setup._get_artifacts_dir()), "cmd_get_status")
+
+    def cleanup(self):
+        self.container_asset = fun_test.shared_variables["container_asset"]
+        post_fix_name = self.__class__.__name__ + "_test_log.txt"
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=post_fix_name)
+        fun_test.scp(source_ip=self.container_asset["host_ip"],
+                     source_file_path="{}".format(SbpZynqSetupTemplate.TEST_LOG_FILE),
+                     source_username=self.container_asset["mgmt_ssh_username"],
+                     source_password=self.container_asset["mgmt_ssh_password"],
+                     source_port=self.container_asset["mgmt_ssh_port"],
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(post_fix_name),
+                                    filename=artifact_file_name)
+
+class TestCase14(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=14,
+                              summary="PUF-ROM-(valid, valid higher version), FW-(valid, invalid)",
+                              steps="""
+        1. Do something on the container.
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        container_asset = fun_test.shared_variables["container_asset"]
+
+        linux_obj = Linux(host_ip=container_asset["host_ip"],
+                          ssh_username=container_asset["mgmt_ssh_username"],
+                          ssh_password=container_asset["mgmt_ssh_password"],
+                          ssh_port=container_asset["mgmt_ssh_port"])
+        sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP)
+        sbp_setup.artifacts_setup(enroll=True)
+
+        config = {
+            "name": "flash_image",
+            "size": "0x50000",
+            "puf_rom": {
+                "a": {
+                    "version": "0xa11"
+                },
+                "b": {
+                    "version": "0xa22"
+                }
+            },
+            "firmware": {
+                "a": {
+                    "key": "fpk3",
+                    "version": "0xb11"
+                },
+                "b": {
+                    "key": "fpk1",
+                    "version": "0xb22"
+                }
+            },
+            "host": {
+                "a": {
+                    "key": "fpk5",
+                    "version": "0xc11"
+                },
+                "b": {
+                    "key": "fpk5",
+                    "version": "0xc22"
+                }
+            },
+            "enrollment_certificate": {
+                "a": {
+                    "reserve": 2000,
+                    "key": "fpk4"
+                }
+            },
+            "start_certificate": {
+                "a": {
+                    "serial_number": "00000000000000000000000000000000",
+                    "serial_number_mask": "00000000000000000000000000000000",
+                    "tamper_flags": "00000000",
+                    "debugger_flags": "00000000",
+                    "public_key": "fpk2",
+                    "key": "fpk1"
+                },
+                "b": {
+                    "serial_number": "00000000000000000000000000000000",
+                    "serial_number_mask": "00000000000000000000000000000000",
+                    "tamper_flags": "00000000",
+                    "debugger_flags": "00000000",
+                    "public_key": "fpk2",
+                    "key": "fpk1"
+                }
+            },
+            "eeprom": {
+                "a": {
+                    "version": "0xd11",
+                    "key": "fpk5"
+                },
+                "b": {
+                    "version": "0xd22",
+                    "key": "fpk5"
+                }
+
+            }
+        }
+
+        sbp_setup.host.create_file(contents=json.dumps(config), file_name="/tmp/flash_config.json")
+        sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
+        sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
+
+        stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+        stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
+        stimuli_file = "{}/cmd_AES_CTR.py".format(stimuli_dir)
+
+        fun_test.test_assert(sbp_setup.run_test_py(secure_boot=True,
+                                                   stimuli_file=stimuli_file,
+                                                   artifacts_dir=sbp_setup._get_artifacts_dir()), "run_test")
+
+        stimuli_file = "{}/cmd_get_status.py".format(stimuli_dir)
+        fun_test.test_assert(sbp_setup.run_test_py(secure_boot=True,
+                                                   stimuli_file=stimuli_file,
+                                                   artifacts_dir=sbp_setup._get_artifacts_dir()), "cmd_get_status")
+
+    def cleanup(self):
+        self.container_asset = fun_test.shared_variables["container_asset"]
+        post_fix_name = self.__class__.__name__ + "_test_log.txt"
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=post_fix_name)
+        fun_test.scp(source_ip=self.container_asset["host_ip"],
+                     source_file_path="{}".format(SbpZynqSetupTemplate.TEST_LOG_FILE),
+                     source_username=self.container_asset["mgmt_ssh_username"],
+                     source_password=self.container_asset["mgmt_ssh_password"],
+                     source_port=self.container_asset["mgmt_ssh_port"],
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(post_fix_name),
+                                    filename=artifact_file_name)
+
 if __name__ == "__main__":
     ts = ContainerSetup()
     # ts.add_test_case(TestCase1())
@@ -1287,6 +1645,8 @@ if __name__ == "__main__":
     # ts.add_test_case(TestCase8())
     # ts.add_test_case(TestCase9())
     # ts.add_test_case(TestCase10())
-    ts.add_test_case(TestCase11())
-
+    # ts.add_test_case(TestCase11())
+    # ts.add_test_case(TestCase12())
+    # ts.add_test_case(TestCase13())
+    ts.add_test_case(TestCase14())
     ts.run()
