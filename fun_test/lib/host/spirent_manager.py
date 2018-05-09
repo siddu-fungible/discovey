@@ -353,14 +353,16 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_frame_stack(self, stream_block_handle, header_obj):
+    def configure_frame_stack(self, stream_block_handle, header_obj, out=False):
         result = False
         try:
             attributes = header_obj.get_attributes_dict()
             fun_test.debug("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
             handle = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,  **attributes)
+            if out:
+                print self.stc.get(handle, "Handle")
             if handle:
-                header_obj.spirent_handle = handle
+                header_obj._spirent_handle = handle
             if self.apply_configuration():
                 result = True
         except Exception as ex:
@@ -760,6 +762,24 @@ class SpirentManager(object):
             output = self.stc.perform("DeleteCommand", ConfigList=object_handle_list)
             fun_test.simple_assert(output['State'] == "COMPLETED", "Delete objects")
             result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_pfc_header(self, header_obj, stream_block_handle, class_enable_vector=False,
+                             ls_octet="00000000", ms_octet="00000000"):
+        result = None
+        try:
+            attributes = header_obj.get_attributes_dict()
+            fun_test.debug("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
+            header_created = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle, **attributes)
+            fun_test.simple_assert(header_created, "header created")
+            handle = self.stc.get(header_created, "Handle")
+            if class_enable_vector and handle:
+                output = self.stc.create("classEnableVector", under=handle, lsOctet=ls_octet, msOctet=ms_octet)
+                fun_test.simple_assert(output, "Configure Class Enable Vector for %s" % header_obj._spirent_handle)
+            if self.apply_configuration():
+                result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

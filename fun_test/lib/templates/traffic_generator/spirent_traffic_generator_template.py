@@ -560,6 +560,7 @@ class AnalyzerConfig(object):
 
 class Ethernet8023MacControlHeader(object):
     HEADER_TYPE = "ethernet:Ethernet8023Raw"
+    _spirent_handle = None
 
     def __init__(self, destination_mac="00:00:01:00:00:01", source_mac="00:10:94:00:00:02", length="",
                  preamble="55555555555555d5"):
@@ -582,6 +583,7 @@ class Ethernet8023MacControlHeader(object):
 
 class PauseMacControlHeader(object):
     HEADER_TYPE = "ethernetpause:PauseMacControl"
+    _spirent_handle = None
 
     def __init__(self, op_code="0001", pause_time=0, reserved=""):
         self.opCode = op_code
@@ -602,6 +604,7 @@ class PauseMacControlHeader(object):
 
 class PriorityFlowControlHeader(object):
     HEADER_TYPE = "ethernetpause:PFC"
+    _spirent_handle = None
 
     def __init__(self, op_code="0101", time0="", time1="", time2="", time3="", time4="", time5="", time6="", time7="",
                  reserved=""):

@@ -865,7 +865,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
     def configure_priority_flow_control_header(self, stream_obj, destination_mac, source_mac, length="8808",
                                                preamble="55555555555555d5", op_code="0101", time0="", time1="",
-                                               time2="", time3="", time4="", time5="", time6="", time7=""):
+                                               time2="", time3="", time4="", time5="", time6="", time7="",
+                                               class_enable_vector=False, ls_octet="00000000", ms_octet="00000000"):
         result = False
         try:
             ethernet_header_obj = Ethernet8023MacControlHeader(destination_mac=destination_mac,
@@ -877,10 +878,13 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                                     header_obj=ethernet_header_obj)
             fun_test.test_assert(header_created, "Create Ethernet 802.3 Mac Control header for %s" %
                                  stream_obj.spirent_handle)
-            header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
-                                                                    header_obj=pfc_header_obj)
-            fun_test.test_assert(header_created, "Create Priority Flow Control header for %s" %
+            header_created = self.stc_manager.configure_pfc_header(
+                stream_block_handle=stream_obj.spirent_handle,
+                header_obj=pfc_header_obj, class_enable_vector=class_enable_vector,
+                ls_octet=ls_octet, ms_octet=ms_octet)
+            fun_test.test_assert(header_created, "Create Priority Flow Control Header for %s" %
                                  stream_obj.spirent_handle)
+
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
