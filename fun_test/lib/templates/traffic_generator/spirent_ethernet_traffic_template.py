@@ -890,6 +890,28 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
+    def configure_custom_header(self, stream_obj, source_mac, destination_mac,
+                                ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE, byte_pattern="0001FFFF"):
+        result = None
+        try:
+            ethernet_header_obj = Ethernet2Header(destination_mac=destination_mac,
+                                                  source_mac=source_mac, ether_type=ether_type)
+            custom_byte_pattern_obj = CustomBytePatternHeader(byte_pattern=byte_pattern)
+            fun_test.log("Creating Pause Mac Control Frame with Ethernet 802.3 Mac Control header")
+            header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                                    header_obj=ethernet_header_obj)
+            fun_test.test_assert(header_created, "Create Ethernet 802.3 Mac Control header for %s" %
+                                 stream_obj.spirent_handle)
+            header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                                    header_obj=custom_byte_pattern_obj)
+            fun_test.test_assert(header_created, "Create Pause Mac Control header for %s" % stream_obj.spirent_handle)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+
+
 
 
 

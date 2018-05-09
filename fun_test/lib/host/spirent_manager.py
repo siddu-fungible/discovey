@@ -353,14 +353,12 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_frame_stack(self, stream_block_handle, header_obj, out=False):
+    def configure_frame_stack(self, stream_block_handle, header_obj):
         result = False
         try:
             attributes = header_obj.get_attributes_dict()
             fun_test.debug("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
             handle = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,  **attributes)
-            if out:
-                print self.stc.get(handle, "Handle")
             if handle:
                 header_obj._spirent_handle = handle
             if self.apply_configuration():

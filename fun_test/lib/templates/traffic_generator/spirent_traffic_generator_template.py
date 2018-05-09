@@ -631,4 +631,21 @@ class PriorityFlowControlHeader(object):
         self.__dict__.update(**kwargs)
 
 
+class CustomBytePatternHeader(object):
+    HEADER_TYPE = "custom:Custom"
+    _spirent_handle = None
+
+    def __init__(self, byte_pattern=""):
+        self.pattern = byte_pattern
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
 
