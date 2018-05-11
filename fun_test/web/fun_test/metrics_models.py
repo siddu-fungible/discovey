@@ -277,7 +277,7 @@ class VolumePerformance(models.Model):
 
 class AllocSpeedPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
-    key = models.CharField(max_length=30, verbose_name="Software date")
+    key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
     output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
     output_one_malloc_free_threaded = models.IntegerField(verbose_name="Time in ns (Threaded)")
@@ -289,7 +289,7 @@ class AllocSpeedPerformance(models.Model):
 
 class WuLatencyAllocStack(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
-    key = models.CharField(max_length=30, verbose_name="Software date")
+    key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="wu_latency_test: alloc_stack", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
     output_max = models.IntegerField(verbose_name="Max (ns)")
@@ -299,7 +299,7 @@ class WuLatencyAllocStack(models.Model):
         return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
 
 class WuLatencyUngated(models.Model):
-    key = models.CharField(max_length=30, verbose_name="Software date")
+    key = models.CharField(max_length=30, verbose_name="Git tag")
     input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
     input_app = models.TextField(verbose_name="wu_latency_test: Ungated WU", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
