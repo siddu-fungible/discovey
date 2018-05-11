@@ -69,7 +69,8 @@ class FunTestCase1(FunTestCase):
                                                  fun_sdk_branch=branch_fun_sdk,
                                                  git_commit=git_commit,
                                                  software_date=software_date,
-                                                 hardware_version=hardware_version)
+                                                 hardware_version=hardware_version,
+                                                 completion_date=completion_date)
             response = lsf_status_server.get_job_by_id(job_id=job_id)
             fun_test.test_assert(response, "Fetch job info for {}".format(job_id))
             response_dict = json.loads(response)

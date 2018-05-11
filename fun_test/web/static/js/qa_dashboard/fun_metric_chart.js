@@ -44,7 +44,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
     };
 
     $scope.cleanValue = (key, value) => {
-        if (key === "key" && (ctrl.xaxisFormatter)) {
+        if (key === "input_date_time" && (ctrl.xaxisFormatter)) {
             return ctrl.xaxisFormatter()(value);
         } else {
             return value;
@@ -110,6 +110,17 @@ function FunMetricChartController($scope, commonService, $attrs) {
         $scope.showingTable = true;
     };
 
+    $scope.shortenKeyList = (keyList) => {
+        let newList = [];
+        keyList.forEach((key) => {
+            let r = /(\d{4})-(\d{2})-(\d{2})/g;
+            let match = r.exec(key);
+            let s = match[2] + "/" + match[3];
+            newList.push(s)
+        });
+        return newList;
+    };
+
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
         if(!chartName) {
@@ -141,11 +152,11 @@ function FunMetricChartController($scope, commonService, $attrs) {
                 let keySet = new Set();
                 let firstDataSet = allDataSets[0];
                 firstDataSet.forEach((oneRecord) => {
-                    keySet.add(oneRecord.key.toString());
+                    keySet.add(oneRecord.input_date_time.toString());
                 });
                 let keyList = Array.from(keySet);
                 keyList.sort();
-                $scope.series = keyList;
+                $scope.series = keyList; $scope.shortenKeyList(keyList);
 
                 let chartDataSets = [];
                 let dataSetIndex = 0;
@@ -157,7 +168,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
                         let output = null;
                         for(let j = 0; j < oneDataSet.length; j++) {
                             let oneRecord = oneDataSet[j];
-                            if(oneRecord.key.toString() === keyList[i]) {
+                            if(oneRecord.input_date_time.toString() === keyList[i]) {
                                 let outputName = filterDataSets[dataSetIndex].output.name;
                                 output = oneRecord[outputName];
                                 if (chartInfo && chartInfo.y1axis_title) {
@@ -170,7 +181,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
                                 }
 
 
-                                $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
+                                $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
                                 break;
                             }
                         }

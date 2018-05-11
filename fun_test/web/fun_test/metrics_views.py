@@ -126,6 +126,10 @@ def atomic(request, chart_name, model_name):
     return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
 
 @csrf_exempt
+def table_view(request):
+    return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
+
+@csrf_exempt
 @api_safe_json_response
 def update_child_weight(request):
     request_json = json.loads(request.body)
@@ -301,6 +305,7 @@ def data(request):
             d[input_name] = input_value
         try:
             result = model.objects.filter(**d)   #unpack, pack
+            #
             data.append([model_to_dict(x) for x in result])
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
