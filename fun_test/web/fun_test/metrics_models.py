@@ -85,10 +85,7 @@ class MetricChart(models.Model):
         if not self.leaf:
             if len(children):
                 for child in children:
-                    try:
-                        child_metric = MetricChart.objects.get(metric_id=child)
-                    except Exception as ex:
-                        pass
+                    child_metric = MetricChart.objects.get(metric_id=child)
                     get_status = child_metric.get_status()
                     child_status_values, child_goodness_values = get_status["status_values"], \
                                                                  get_status["goodness_values"]

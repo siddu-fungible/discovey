@@ -24,28 +24,34 @@ function AtomicMetricController($scope, commonService, $timeout) {
 
     $scope.xAxisFormatter = (value) => {
         let s = "Error";
-        let key = parseInt(value);
-        if (key in $scope.buildInfo) {
-            s = $scope.buildInfo[key]["software_date"].toString();
-            let thisYear = new Date().getFullYear();
-            s = s.replace(thisYear, "");
-            let r = /(\d\d+)(\d\d)/g;
-            let match = r.exec(s);
-            s = match[1] + "/" + match[2];
+
+        let r = /(\d{4})-(\d{2})-(\d{2})/g;
+        let match = r.exec(value);
+        if (match) {
+            s = match[2] + "/" + match[3];
+        } else {
+            let i = 0;
         }
+
         return s;
     };
 
     $scope.tooltipFormatter = (x, y) => {
         let softwareDate = "Unknown";
         let hardwareVersion = "Unknown";
-        let sdkBranchRef = x;
-        let key = parseInt(x);
+        let sdkBranch = "Unknown";
+        let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
+        let match = r.exec(x);
+        let key = "";
+        if (match) {
+            key = match[1];
+        }
         if (key in $scope.buildInfo) {
             softwareDate = $scope.buildInfo[key]["software_date"];
             hardwareVersion = $scope.buildInfo[key]["hardware_version"];
+            sdkBranch = $scope.buildInfo[key]["fun_sdk_branch"]
         }
-        let s = "<b>SDK branch git ref:</b> " + sdkBranchRef + "<br>";
+        let s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
         s += "<b>Software date:</b> " + softwareDate + "<br>";
         s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
         s += "<b>Value:</b> " + y + "<br>";
