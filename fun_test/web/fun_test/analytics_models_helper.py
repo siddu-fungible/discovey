@@ -150,9 +150,9 @@ class AllocSpeedPerformanceHelper(MetricHelper):
     def __init__(self):
         super(AllocSpeedPerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, key, input_app, output_one_malloc_free_wu, output_one_malloc_free_threaded):
+    def add_entry(self, key, input_date_time, input_app, output_one_malloc_free_wu, output_one_malloc_free_threaded):
         try:
-            entry = AllocSpeedPerformance.objects.get(key=key, input_app=input_app)
+            entry = AllocSpeedPerformance.objects.get(key=key, input_app=input_app, input_date_time=input_date_time)
             entry.output_one_malloc_free_wu = output_one_malloc_free_wu
             entry.output_one_malloc_free_threaded = output_one_malloc_free_threaded
             entry.save()
@@ -160,6 +160,7 @@ class AllocSpeedPerformanceHelper(MetricHelper):
             pass
             one_entry = AllocSpeedPerformance(key=key,
                                               input_app=input_app,
+                                              input_date_time=input_date_time,
                                               output_one_malloc_free_wu=output_one_malloc_free_wu,
                                               output_one_malloc_free_threaded=output_one_malloc_free_threaded)
             one_entry.save()

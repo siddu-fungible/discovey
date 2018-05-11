@@ -6,6 +6,7 @@ import re
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.analytics_models_helper import AllocSpeedPerformanceHelper, MetricHelper
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
+from datetime import datetime
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
@@ -53,7 +54,8 @@ class FunTestCase1(FunTestCase):
             branch_fun_sdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
             software_date = past_job["software_date"]
-            completion_date = past_job["completion_date"]
+            completion_date = "20" + past_job["completion_date"]
+            dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             hardware_version = "---"
             if "hardware_version" in past_job:
                 hardware_version = past_job["hardware_version"]
@@ -142,6 +144,7 @@ class FunTestCase1(FunTestCase):
             if key in BLACK_LIST:
                 continue
 
+            key = completion_date
             if wu_latency_test_found:
 
                 for chart_name, metric_model_name, model in [
@@ -153,13 +156,15 @@ class FunTestCase1(FunTestCase):
                                                             input_app="wu_latency_test",
                                                             output_min=wu_ungated_ns_min,
                                                             output_max=wu_ungated_ns_max,
-                                                            output_avg=wu_ungated_ns_avg)
+                                                            output_avg=wu_ungated_ns_avg,
+                                                            input_date_time=dt)
                     elif metric_model_name == "WuLatencyAllocStack":
                         MetricHelper(model=model).add_entry(key=key,
                                                             input_app="wu_latency_test",
                                                             output_min=wu_alloc_stack_ns_min,
                                                             output_max=wu_alloc_stack_ns_max,
-                                                            output_avg=wu_alloc_stack_ns_avg)
+                                                            output_avg=wu_alloc_stack_ns_avg,
+                                                            input_date_time=dt)
      
 
                     chart_helper = MetricChartHelper(chart_name=chart_name,
@@ -192,12 +197,14 @@ class FunTestCase1(FunTestCase):
             if alloc_speed_test_found:
                 AllocSpeedPerformanceHelper().add_entry(key=key, input_app="alloc_speed_test",
                                                         output_one_malloc_free_wu=output_one_malloc_free_wu,
-                                                        output_one_malloc_free_threaded=output_one_malloc_free_threaded)
+                                                        output_one_malloc_free_threaded=output_one_malloc_free_threaded,
+                                                        input_date_time=dt)
 
-                job_info[int(key)] = {"output_one_malloc_free_wu": output_one_malloc_free_wu,
+                job_info[key] = {"output_one_malloc_free_wu": output_one_malloc_free_wu,
                                       "output_one_malloc_free_threaded": output_one_malloc_free_threaded}
 
-                newest_build_number = max(job_info.keys())
+                sorted_keys = sorted(job_info.keys())
+                newest_build_number = sorted_keys[-1] #max(job_info.keys())
 
                 metric_model_name = "AllocSpeedPerformance"
                 chart_map = {}

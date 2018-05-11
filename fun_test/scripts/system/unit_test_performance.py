@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from web.fun_test.analytics_models_helper import MetricHelper
 from web.fun_test.metrics_models import UnitTestPerformance
+from fun_global import get_localized_time
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
@@ -52,7 +53,7 @@ class FunTestCase1(FunTestCase):
             branch_funsdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
             software_date = past_job["software_date"]
-            completion_date = past_job["completion_date"]
+            completion_date = "20" + past_job["completion_date"]
             hardware_version = "---"
             if "hardware_version" in past_job:
                 hardware_version = past_job["hardware_version"]
@@ -63,12 +64,13 @@ class FunTestCase1(FunTestCase):
             fun_test.log("Jenkins build number: {}".format(jenkins_build_number))
             fun_test.log("Git commit: {}".format(git_commit))
             fun_test.log("Software date: {}".format(software_date))
-            dt = datetime.strptime(completion_date, "%y-%m-%d %H:%M")
+            dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             models_helper.add_jenkins_job_id_map(jenkins_job_id=jenkins_build_number,
                                                  fun_sdk_branch=branch_funsdk,
                                                  git_commit=git_commit,
                                                  software_date=software_date,
-                                                 hardware_version=hardware_version)
+                                                 hardware_version=hardware_version,
+                                                 completion_date=completion_date)
             response = lsf_status_server.get_job_by_id(job_id=job_id)
             fun_test.test_assert(response, "Fetch job info for {}".format(job_id))
             response_dict = json.loads(response)

@@ -58,11 +58,12 @@ if __name__ == "__main__":
             key = entry.key
             # print key
             entries = JenkinsJobIdMap.objects.filter(fun_sdk_branch="refs/tags/bld_" + key)
-            j_entry = entries[0]
-            dt = get_localized_time(software_date_to_datetime(j_entry.software_date))
-            entry.input_date_time = dt
-            print dt
-            entry.save()
+            if entries:
+                j_entry = entries[0]
+                dt = get_localized_time(software_date_to_datetime(j_entry.software_date))
+                entry.input_date_time = dt
+                print dt
+                entry.save()
 
     jm_entries = JenkinsJobIdMap.objects.all()
     for jm_entry in jm_entries:
