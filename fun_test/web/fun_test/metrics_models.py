@@ -1,11 +1,12 @@
 from django.db import models
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 import json
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 import logging
-
+from datetime import datetime
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 class MetricChart(models.Model):
@@ -275,6 +276,7 @@ class VolumePerformance(models.Model):
 
 
 class AllocSpeedPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Software date")
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
     output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
@@ -286,6 +288,7 @@ class AllocSpeedPerformance(models.Model):
 
 
 class WuLatencyAllocStack(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Software date")
     input_app = models.TextField(verbose_name="wu_latency_test: alloc_stack", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
@@ -297,6 +300,7 @@ class WuLatencyAllocStack(models.Model):
 
 class WuLatencyUngated(models.Model):
     key = models.CharField(max_length=30, verbose_name="Software date")
+    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
     input_app = models.TextField(verbose_name="wu_latency_test: Ungated WU", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
     output_max = models.IntegerField(verbose_name="Max (ns)")
@@ -312,10 +316,29 @@ class VolumePerformanceSerializer(ModelSerializer):
 
 
 class AllocSpeedPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
     class Meta:
         model = AllocSpeedPerformance
         fields = "__all__"
 
+class UnitTestPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_app = models.CharField(max_length=20, default="unit_tests", choices=[(0, "unit_tests")])
+    output_num_passed = models.IntegerField(verbose_name="Passed")
+    output_num_failed = models.IntegerField(verbose_name="Failed")
+    output_num_disabled = models.IntegerField(verbose_name="Disabled")
+    input_hardware_version = models.CharField(max_length=50, default="", verbose_name="Hardware version")
+    input_software_date = models.CharField(max_length=50, default="", verbose_name="Software date")
+    input_git_commit = models.CharField(max_length=100, default="", verbose_name="Git commit")
+    input_branch_funsdk = models.CharField(max_length=100, default="", verbose_name="Branch FunSDK")
+
+    def __str__(self):
+        return "{}..{}..{}".format(self.input_software_date, self.output_num_passed, self.output_num_failed)
+
+class UnitTestPerformanceSerializer(ModelSerializer):
+    class Meta:
+        model = UnitTestPerformance
+        fields = "__all__"
 
 ANALYTICS_MAP = {
     "Performance1": {
@@ -323,6 +346,12 @@ ANALYTICS_MAP = {
         "module": "networking",
         "component": "general",
         "verbose_name": "Performance 1 ..."
+    },
+    "UnitTestPerformance": {
+        "model": UnitTestPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "UnitTestPerformance"
     },
 
     "PerformanceBlt": {

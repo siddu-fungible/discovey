@@ -5,7 +5,7 @@ from web.fun_test.metrics_models import ModelMapping, VolumePerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack
-
+from web.fun_test.metrics_models import UnitTestPerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -41,4 +41,8 @@ class WuLatencyAllocStackAdmin(admin.ModelAdmin):
 
 @admin.register(WuLatencyUngated)
 class WuLatencyUngatedAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(UnitTestPerformance)
+class UnitTestPerformanceAdmin(admin.ModelAdmin):
     pass

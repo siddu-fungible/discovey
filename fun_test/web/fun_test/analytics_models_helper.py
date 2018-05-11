@@ -27,7 +27,8 @@ class MetricHelper(object):
 
     def add_entry(self, **kwargs):
         inputs = {}
-        inputs["key"] = kwargs["key"]
+        if "key" in kwargs:
+            inputs["key"] = kwargs["key"]
         outputs = {}
         for key, value in kwargs.iteritems():
             if key.startswith("input_"):
@@ -47,7 +48,8 @@ class MetricHelper(object):
     def get_entry(self, **kwargs):
         result = None
         inputs = {}
-        inputs["key"] = kwargs["key"]
+        if "key" in inputs:
+            inputs["key"] = kwargs["key"]
         outputs = {}
         for key, value in kwargs.iteritems():
             if key.startswith("input_"):

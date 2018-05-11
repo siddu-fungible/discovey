@@ -9,7 +9,7 @@ from fun_settings import *
 import fun_xml
 import argparse
 import threading
-from fun_global import RESULTS, get_current_time, determine_version
+from fun_global import RESULTS, get_current_time, determine_version, get_localized_time
 from scheduler.scheduler_helper import *
 import signal
 from web.fun_test.web_interface import get_homepage_url
