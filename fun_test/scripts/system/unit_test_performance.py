@@ -88,7 +88,6 @@ class FunTestCase1(FunTestCase):
             num_failed = 0
             num_disabled = 0
 
-
             mh = MetricHelper(model=UnitTestPerformance)
             for line in lines:
                 m = re.search(r'\[\s+PASSED\s+]\s+(\d+)\s+tests', line)
@@ -100,18 +99,8 @@ class FunTestCase1(FunTestCase):
                 m = re.search(r'\[\s+FAILED\s+]\s+(\d+)\s+tests', line)
                 if m:
                     num_disabled = int(m.group(1))
-            '''
-            date_time = models.DateTimeField(verbose_name="Datetime")
-            input_app = "unit_tests"
-            num_passed = models.IntegerField(verbose_name="Passed")
-            num_failed = models.IntegerField(verbose_name="Failed")
-            num_disabled = models.IntegerField(verbose_name="Disabled")
-            hardware_version = models.CharField(max_length=50, default="")
-            software_date = models.CharField(max_length=50, default="")
-            git_commit = models.CharField(max_length=100, default="")
-            branch_funsdk = models.CharField(max_length=100, default="")
-            '''
-            mh.add_entry(input_date_time=get_localized_time(dt),
+
+            mh.add_entry(input_date_time=dt,
                          output_num_passed=num_passed,
                          output_num_failed=num_failed,
                          output_num_disabled=num_disabled,
