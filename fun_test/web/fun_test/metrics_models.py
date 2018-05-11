@@ -85,7 +85,10 @@ class MetricChart(models.Model):
         if not self.leaf:
             if len(children):
                 for child in children:
-                    child_metric = MetricChart.objects.get(metric_id=child)
+                    try:
+                        child_metric = MetricChart.objects.get(metric_id=child)
+                    except Exception as ex:
+                        pass
                     get_status = child_metric.get_status()
                     child_status_values, child_goodness_values = get_status["status_values"], \
                                                                  get_status["goodness_values"]
@@ -170,7 +173,7 @@ class MetricChart(models.Model):
             for input_name, input_value in inputs.iteritems():
                 d[input_name] = input_value
             try:
-                entries = model.objects.filter(**d).order_by("-key")[:number_of_records]
+                entries = model.objects.filter(**d).order_by("-input_date_time")[:number_of_records]
                 entries = reversed(entries)
                 for entry in entries:
                     data.append(model_to_dict(entry))
