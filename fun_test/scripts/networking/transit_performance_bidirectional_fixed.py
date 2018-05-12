@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 stream_port_obj_dict = OrderedDict()
 performance_data = OrderedDict()
+performance_inputs = OrderedDict()
 latency_results = None
 jitter_results = None
 
@@ -12,7 +13,8 @@ jitter_results = None
 class NuTransitPerformance(FunTestScript):
     MTU = 16380
     NO_OF_PORTS = 2
-    EXPECTED_PERFORMANCE_DATA_FILE_NAME = "transit_performance.json"
+    EXPECTED_PERFORMANCE_DATA_FILE_NAME = "nu_transit_performance_data.json"
+    TRANSIT_PERFORMANCE_INPUTS_FILE_NAME = "transit_performance_inputs.json"
 
     def describe(self):
         self.set_test_details(steps="""
@@ -28,6 +30,7 @@ class NuTransitPerformance(FunTestScript):
     def setup(self):
         global template_obj
         global performance_data
+        global performance_inputs
 
         template_obj = SpirentEthernetTrafficTemplate(session_name="performance_bidirectional")
         result = template_obj.setup(no_of_ports_needed=self.NO_OF_PORTS)
@@ -53,8 +56,12 @@ class NuTransitPerformance(FunTestScript):
         file_path = fun_test.get_script_parent_directory() + "/" + self.EXPECTED_PERFORMANCE_DATA_FILE_NAME
         performance_data = template_obj.read_json_file_contents(file_path=file_path)
         fun_test.simple_assert(expression=performance_data, message=checkpoint)
+        checkpoint = "Read Performance input data for fixed size scenario"
+        file_path = fun_test.get_script_parent_directory() + "/" + self.TRANSIT_PERFORMANCE_INPUTS_FILE_NAME
+        performance_inputs = template_obj.read_json_file_contents(file_path=file_path)
+        fun_test.simple_assert(expression=performance_inputs, message=checkpoint)
 
-        frame_load_dict = performance_data['fixed_size']['frames']
+        frame_load_dict = performance_inputs['fixed_size']['frames']
 
         # Create stream block objects for each port
         for port in result['port_list']:
@@ -106,7 +113,7 @@ class NuTransitPerformance(FunTestScript):
     def cleanup(self):
         template_obj.cleanup()
         mode = template_obj.stc_manager.dut_config['mode']
-        output_file_path = fun_test.get_script_parent_directory() + "/nu_transit_performance_data.json"
+        output_file_path = fun_test.get_script_parent_directory() + "/nu_transit_performance_data_bidirectional.json"
         template_obj.populate_performance_counters_json(mode=mode,
                                                         latency_results=latency_results,
                                                         jitter_results=jitter_results,
@@ -145,7 +152,7 @@ class NuTransitLatencyTest(FunTestCase):
     def setup(self):
         self.ports = template_obj.stc_manager.get_port_list()
         fun_test.simple_assert(self.ports, "Get Port handle")
-        self.traffic_duration = performance_data['fixed_size']['traffic_duration']
+        self.traffic_duration = performance_inputs['fixed_size']['traffic_duration']
 
         port1_generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                                  duration=self.traffic_duration,
@@ -182,8 +189,8 @@ class NuTransitLatencyTest(FunTestCase):
         self.subscribe_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
         fun_test.test_assert(expression=self.subscribe_results['result'], message=checkpoint)
 
-        self.expected_latency_data = performance_data['fixed_size']['latency']
-        self.tolerance_percent = performance_data['fixed_size']['tolerance_percent']
+        self.expected_latency_data = performance_data
+        self.tolerance_percent = performance_inputs['fixed_size']['tolerance_percent']
 
     def run(self):
         port1 = self.ports[0]
@@ -231,7 +238,7 @@ class NuTransitLatencyTest(FunTestCase):
             latency_result = template_obj.validate_performance_result(
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
-                stream_objects=stream_objs, expected_latency_count=self.expected_latency_data,
+                stream_objects=stream_objs, expected_performance_data=self.expected_latency_data,
                 tolerance_percent=self.tolerance_percent)
             fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
 
@@ -304,9 +311,9 @@ class NuTransitJitterTest(FunTestCase):
     def setup(self):
         self.ports = template_obj.stc_manager.get_port_list()
         fun_test.test_assert(self.ports, "Get Port handle")
-        self.traffic_duration = performance_data['fixed_size']['traffic_duration']
-        self.expected_jitter_data = performance_data['fixed_size']['jitter']
-        self.tolerance_percent = performance_data['fixed_size']['tolerance_percent']
+        self.traffic_duration = performance_inputs['fixed_size']['traffic_duration']
+        self.expected_jitter_data = performance_data
+        self.tolerance_percent = performance_inputs['fixed_size']['tolerance_percent']
 
         port1_generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                                  duration=self.traffic_duration,
@@ -413,7 +420,7 @@ class NuTransitJitterTest(FunTestCase):
             jitter_result = template_obj.validate_performance_result(
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
-                stream_objects=stream_objs, expected_jitter_count=self.expected_jitter_data,
+                stream_objects=stream_objs, expected_performance_data=self.expected_jitter_data,
                 tolerance_percent=self.tolerance_percent, jitter=True)
             fun_test.simple_assert(expression=jitter_result['result'], message=checkpoint)
 

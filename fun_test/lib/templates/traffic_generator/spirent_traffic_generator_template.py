@@ -3,8 +3,7 @@ from fun_global import get_current_time
 from lib.templates.traffic_generator.traffic_generator_template import TrafficGeneratorTemplate
 from lib.host.spirent_manager import SpirentManager
 import json
-import datetime
-import time
+from collections import OrderedDict
 
 
 class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
@@ -43,7 +42,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         records = []
         try:
             for key in latency_results:
-                record = dict()
+                record = OrderedDict()
                 record['mode'] = mode
                 record['version'] = fun_test.get_version()
                 record['timestamp'] = get_current_time()
@@ -51,7 +50,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                 record['frame_size'] = frame_size
                 if jitter_results:
                     if len(latency_results[key]['latency_count']) > 1:
-                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
                         record['pps'] = latency_results[key]['pps_count']
 
                         record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
@@ -70,19 +69,19 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                         record['port_b_to_a_jitter_max'] = jitter_results[key]['jitter_count'][1]['max']
                         record['port_b_to_a_jitter_min'] = jitter_results[key]['jitter_count'][1]['min']
                     else:
-                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
                         record['pps'] = latency_results[key]['pps_count']
 
-                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
-                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
-                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
+                        record['latency_avg'] = latency_results[key]['latency_count'][0]['avg']
+                        record['latency_max'] = latency_results[key]['latency_count'][0]['max']
+                        record['latency_min'] = latency_results[key]['latency_count'][0]['min']
 
-                        record['port_a_to_b_jitter_avg'] = jitter_results[key]['jitter_count'][0]['avg']
-                        record['port_a_to_b_jitter_max'] = jitter_results[key]['jitter_count'][0]['max']
-                        record['port_a_to_b_jitter_min'] = jitter_results[key]['jitter_count'][0]['min']
+                        record['jitter_avg'] = jitter_results[key]['jitter_count'][0]['avg']
+                        record['jitter_max'] = jitter_results[key]['jitter_count'][0]['max']
+                        record['jitter_min'] = jitter_results[key]['jitter_count'][0]['min']
                 else:
                     if len(latency_results[key]['latency_count']) > 1:
-                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
                         record['pps'] = latency_results[key]['pps_count']
 
                         record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
@@ -93,12 +92,12 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                         record['port_b_to_a_latency_max'] = latency_results[key]['latency_count'][1]['max']
                         record['port_b_to_a_latency_min'] = latency_results[key]['latency_count'][1]['min']
                     else:
-                        record['tx_throughput'] = str(latency_results[key]['throughput_count']) + "Mbps"
+                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
                         record['pps'] = latency_results[key]['pps_count']
 
-                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
-                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
-                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
+                        record['latency_avg'] = latency_results[key]['latency_count'][0]['avg']
+                        record['latency_max'] = latency_results[key]['latency_count'][0]['max']
+                        record['latency_min'] = latency_results[key]['latency_count'][0]['min']
                 records.append(record)
             fun_test.debug(records)
             previous_run_records = self.read_json_file_contents(file_path=file_name)

@@ -612,7 +612,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              "Actual latency <= Expected Threshold latency (%s) " % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_latency = self._calculate_threshold_count(
-                    count=expected_latency_count['frame_%s' % frame_size]['avg'],
+                    count=expected_latency_count['latency_avg'],
                     tolerance_percent=tolerance_percent)
                 fun_test.log("Avg Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
                                                                             frame_size, str(rx_result['AvgLatency'])))
@@ -623,7 +623,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              "Actual latency <= Expected Threshold latency (%s) " % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_latency = self._calculate_threshold_count(
-                    count=expected_latency_count['frame_%s' % frame_size]['min'],
+                    count=expected_latency_count['latency_min'],
                     tolerance_percent=tolerance_percent)
 
                 fun_test.log("Min Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
@@ -635,7 +635,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              "Actual latency <= Expected Threshold latency (%s)" % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_latency = self._calculate_threshold_count(
-                    count=expected_latency_count['frame_%s' % frame_size]['max'],
+                    count=expected_latency_count['latency_max'],
                     tolerance_percent=tolerance_percent)
 
                 fun_test.log("Max Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
@@ -672,7 +672,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              "Actual jitter <= Expected Threshold jitter (%s)" % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
-                    count=expected_jitter_count['frame_%s' % frame_size]['avg'], tolerance_percent=tolerance_percent)
+                    count=expected_jitter_count['jitter_avg'], tolerance_percent=tolerance_percent)
                 fun_test.log("Avg Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['AvgJitter'])))
                 fun_test.test_assert(expression=float(rx_result['AvgJitter']) <= float(expected_threshold_jitter),
@@ -682,7 +682,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              "Actual jitter <= Expected Threshold jitter (%s)" % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
-                    count=expected_jitter_count['frame_%s' % frame_size]['min'], tolerance_percent=tolerance_percent)
+                    count=expected_jitter_count['jitter_min'], tolerance_percent=tolerance_percent)
                 fun_test.log("Min Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['MinJitter'])))
                 fun_test.test_assert(expression=float(rx_result['MinJitter']) <= float(expected_threshold_jitter),
@@ -692,7 +692,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              "Actual jitter <= Expected Threshold jitter (%s)" % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
-                    count=expected_jitter_count['frame_%s' % frame_size]['max'], tolerance_percent=tolerance_percent)
+                    count=expected_jitter_count['jitter_max'], tolerance_percent=tolerance_percent)
                 fun_test.log("Max Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['MaxJitter'])))
                 fun_test.test_assert(expression=float(rx_result['MaxJitter']) <= float(expected_threshold_jitter),
@@ -707,7 +707,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return result
 
     def validate_performance_result(self, tx_subscribe_handle, rx_subscribe_handle, stream_objects,
-                                    jitter=False, expected_latency_count={}, expected_jitter_count={},
+                                    jitter=False, expected_performance_data=[],
                                     tolerance_percent=10):
         result = {'result': False}
         try:
@@ -737,18 +737,33 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                               actual=int(rx_result['FrameCount']),
                                               message=checkpoint)
                 if jitter:
+                    expected_jitter_dict = {}
+                    for record in expected_performance_data:
+                        if "_name" in record:
+                            continue
+                        if record['frame_size'] == stream_obj.FixedFrameLength:
+                            expected_jitter_dict = record
+                            break
                     checkpoint = "Validate Jitter Counters"
                     jitter_result = self.validate_jitter_results(rx_result=rx_result,
                                                                  stream_obj=stream_obj,
-                                                                 expected_jitter_count=expected_jitter_count,
+                                                                 expected_jitter_count=expected_jitter_dict,
                                                                  tolerance_percent=tolerance_percent)
                     fun_test.simple_assert(expression=jitter_result['result'], message=checkpoint)
                     result[key].append(jitter_result[key])
                 else:
+                    expected_latency_dict = {}
+                    for record in expected_performance_data:
+                        if '_name' in record:
+                            continue
+                        if record['frame_size'] == stream_obj.FixedFrameLength:
+                            expected_latency_dict = record
+                            break
+
                     checkpoint = "Validate Latency Counters"
                     latency_result = self.validate_latency_results(rx_result=rx_result,
                                                                    stream_obj=stream_obj,
-                                                                   expected_latency_count=expected_latency_count,
+                                                                   expected_latency_count=expected_latency_dict,
                                                                    tolerance_percent=tolerance_percent)
                     fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
                     result[key].append(latency_result[key])

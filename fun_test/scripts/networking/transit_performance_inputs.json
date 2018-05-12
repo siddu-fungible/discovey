@@ -1,0 +1,54 @@
+{
+  "fixed_size": {
+    "tolerance_percent": 10,
+    "traffic_duration": 60,
+    "frames": {
+      "frame_64": [
+        64,
+        14.5
+      ],
+      "frame_200": [
+        200,
+        15
+      ],
+      "frame_1000": [
+        1000,
+        15.5
+      ],
+      "frame_1500": [
+        1500,
+        15.5
+      ],
+      "frame_3000": [
+        3000,
+        15.5
+      ],
+      "frame_9000": [
+        9000,
+        15.5
+      ],
+      "frame_16380": [
+        16380,
+        15.5
+      ]
+    }
+  },
+  "mixed_size": {
+    "tolerance_percent": 10,
+    "traffic_duration": 90,
+    "frames": {
+      "frame_64": [
+        64,
+        4
+      ],
+      "frame_200": [
+        200,
+        5
+      ],
+      "frame_1500": [
+        1500,
+        5
+      ]
+    }
+  }
+}
