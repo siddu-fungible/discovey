@@ -276,7 +276,7 @@ class VolumePerformance(models.Model):
 
 
 class AllocSpeedPerformance(models.Model):
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
     output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
@@ -288,7 +288,7 @@ class AllocSpeedPerformance(models.Model):
 
 
 class WuLatencyAllocStack(models.Model):
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="wu_latency_test: alloc_stack", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
@@ -300,7 +300,7 @@ class WuLatencyAllocStack(models.Model):
 
 class WuLatencyUngated(models.Model):
     key = models.CharField(max_length=30, verbose_name="Git tag")
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.TextField(verbose_name="wu_latency_test: Ungated WU", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
     output_max = models.IntegerField(verbose_name="Max (ns)")
@@ -322,7 +322,7 @@ class AllocSpeedPerformanceSerializer(ModelSerializer):
         fields = "__all__"
 
 class UnitTestPerformance(models.Model):
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="unit_tests", choices=[(0, "unit_tests")])
     output_num_passed = models.IntegerField(verbose_name="Passed")
     output_num_failed = models.IntegerField(verbose_name="Failed")
@@ -345,7 +345,7 @@ class GenericSerializer(ModelSerializer):
         pass
 
 class EcPerformance(models.Model):
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_ndata_min = models.IntegerField(verbose_name="ndata min", default=8)
     input_ndata_max = models.IntegerField(verbose_name="ndata min", default=8)
     input_nparity_min = models.IntegerField(verbose_name="nparity min", default=4)
