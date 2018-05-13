@@ -340,6 +340,42 @@ class UnitTestPerformanceSerializer(ModelSerializer):
         model = UnitTestPerformance
         fields = "__all__"
 
+class GenericSerializer(ModelSerializer):
+    def set_model(self, model):
+        pass
+
+class EcPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_ndata_min = models.IntegerField(verbose_name="ndata min", default=8)
+    input_ndata_max = models.IntegerField(verbose_name="ndata min", default=8)
+    input_nparity_min = models.IntegerField(verbose_name="nparity min", default=4)
+    input_stridelen_min = models.IntegerField(verbose_name="strideline min", default=4096)
+    input_stridelen_max = models.IntegerField(verbose_name="strideline max", default=4096)
+
+    output_encode_latency_min = models.IntegerField(verbose_name="Encode Latency min")
+    output_encode_latency_max = models.IntegerField(verbose_name="Encode Latency max")
+    output_encode_latency_avg = models.IntegerField(verbose_name="Encode Latency avg")
+
+    output_encode_throughput_min = models.IntegerField(verbose_name="Encode Throughput min")
+    output_encode_throughput_max = models.IntegerField(verbose_name="Encode Throughput max")
+    output_encode_throughput_avg = models.IntegerField(verbose_name="Encode Throughput avg")
+
+    output_recovery_latency_min = models.IntegerField(verbose_name="Recovery Latency min")
+    output_recovery_latency_max = models.IntegerField(verbose_name="Recovery Latency max")
+    output_recovery_latency_avg = models.IntegerField(verbose_name="Recovery Latency avg")
+
+    output_recovery_throughput_min = models.IntegerField(verbose_name="Recovery Throughput min")
+    output_recovery_throughput_max = models.IntegerField(verbose_name="Recovery Throughput max")
+    output_recovery_throughput_avg = models.IntegerField(verbose_name="Recovery Throughput avg")
+
+    '''
+     min_ndata=8 
+     max_ndata=8 
+     min_nparity=4 
+     max_nparity=4 
+     min_stridelen=4096 max_stridelen=4096 numthreads=1
+    '''
+
 ANALYTICS_MAP = {
     "Performance1": {
         "model": Performance1,
@@ -393,7 +429,13 @@ ANALYTICS_MAP = {
         "module": "system",
         "component": "general",
         "verbose_name": "WU Latency Test: Ungated"
-    }
+    },
+    "EcPerformance": {
+        "model": EcPerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "EC Performance"
 
+    }
 }
 

@@ -54,6 +54,9 @@ class FunTestCase1(FunTestCase):
             branch_fun_sdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
             software_date = past_job["software_date"]
+            if "completion_date" not in past_job:
+                fun_test.add_checkpoint("Completion date missing for {}".format(job_id))
+                continue
             completion_date = "20" + past_job["completion_date"]
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             hardware_version = "---"
@@ -73,6 +76,7 @@ class FunTestCase1(FunTestCase):
                                                  software_date=software_date,
                                                  hardware_version=hardware_version,
                                                  completion_date=completion_date)
+
             response = lsf_status_server.get_job_by_id(job_id=job_id)
             fun_test.test_assert(response, "Fetch job info for {}".format(job_id))
             response_dict = json.loads(response)
@@ -85,7 +89,7 @@ class FunTestCase1(FunTestCase):
                 fun_test.critical(str(ex))
 
             lines = output_text.split("\n")
-            lines = [x for x in lines if "Time for " in x or "wu_latency_test" in x]
+            # lines = [x for x in lines if "Time for " in x or "wu_latency_test" in x]
 
             alloc_speed_test_found = False
             output_one_malloc_free_wu = 0
