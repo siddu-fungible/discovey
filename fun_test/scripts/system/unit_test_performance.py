@@ -106,6 +106,7 @@ class FunTestCase1(FunTestCase):
                     num_disabled = int(m.group(1)) * scale
 
             mh.add_entry(input_date_time=dt,
+                         input_job_id=job_id,
                          output_num_passed=num_passed,
                          output_num_failed=num_failed,
                          output_num_disabled=num_disabled,
@@ -133,20 +134,20 @@ class FunTestCase1(FunTestCase):
                 try:
                     actual = getattr(entry, value_to_check)
                     fun_test.test_assert(actual >= expected_min_value,
-                                         "Build: {} Chart: {} Attr: {} Min: {} Actual: {}".format(job_id,
+                                         "Build: {} Chart: {} Attr: {} Min: {} Actual: {}".format(entry.job_id,
                                                                                                   chart_name,
                                                                                                   value_to_check,
                                                                                                   expected_min_value,
                                                                                                   actual))
                     fun_test.test_assert(actual <= expected_max_value,
-                                         "Build: {} Chart: {} Attr: {} Max: {} Actual: {}".format(job_id,
+                                         "Build: {} Chart: {} Attr: {} Max: {} Actual: {}".format(entry.job_id,
                                                                                                   chart_name,
                                                                                                   value_to_check,
                                                                                                   expected_min_value,
                                                                                                   actual))
 
-
-                except:
+                    # fun_test.add_checkpoint("Job {} PASSED".format(job_id))
+                except Exception as ex:
                     issues_found += 1
 
 

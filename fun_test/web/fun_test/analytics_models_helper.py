@@ -61,7 +61,7 @@ class MetricHelper(object):
         return result
 
     def get_recent_entry(self):
-        return self.model.objects.last()
+        return self.model.objects.order_by("-input_date_time")[0]
 
 class MetricChartHelper(object):
     def __init__(self, chart_name, metric_model_name):

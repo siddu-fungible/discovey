@@ -324,6 +324,7 @@ class AllocSpeedPerformanceSerializer(ModelSerializer):
 class UnitTestPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="unit_tests", choices=[(0, "unit_tests")])
+    input_job_id = models.IntegerField(verbose_name="Job Id", default=0)
     output_num_passed = models.IntegerField(verbose_name="Passed")
     output_num_failed = models.IntegerField(verbose_name="Failed")
     output_num_disabled = models.IntegerField(verbose_name="Disabled")
