@@ -207,25 +207,6 @@
                 "weight": 1
               }
             ]
-          },
-          {
-            "info": "Build",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "Build",
-            "label": "Build",
-            "weight": 1,
-            "children": [
-              {
-                "info": "Unit-Tests",
-                "metric_model_name": "UnitTestPerformance",
-                "leaf": true,
-                "name": "Unit-Tests",
-                "label": "Unit-Tests",
-                "children": [],
-                "weight": 1
-              }
-            ]
           }
         ]
       },
