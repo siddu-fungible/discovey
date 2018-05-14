@@ -53,6 +53,8 @@ class FunTestCase1(FunTestCase):
             branch_funsdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
             software_date = past_job["software_date"]
+            if "completion_date" not in past_job:
+                continue 
             completion_date = "20" + past_job["completion_date"]
             hardware_version = "---"
             if "hardware_version" in past_job:
@@ -87,6 +89,7 @@ class FunTestCase1(FunTestCase):
             num_passed = 0
             num_failed = 0
             num_disabled = 0
+            scale = 10
 
             mh = MetricHelper(model=UnitTestPerformance)
             for line in lines:
@@ -95,10 +98,10 @@ class FunTestCase1(FunTestCase):
                     num_passed = int(m.group(1))
                 m = re.search(r'\[\s+FAILED\s+]\s+(\d+)\s+tests', line)
                 if m:
-                    num_failed = int(m.group(1))
-                m = re.search(r'\[\s+FAILED\s+]\s+(\d+)\s+tests', line)
+                    num_failed = int(m.group(1)) * scale
+                m = re.search(r'\[\s+DISABLED\s+]\s+(\d+)\s+tests', line)
                 if m:
-                    num_disabled = int(m.group(1))
+                    num_disabled = int(m.group(1)) * scale
 
             mh.add_entry(input_date_time=dt,
                          output_num_passed=num_passed,
