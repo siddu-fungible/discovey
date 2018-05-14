@@ -17,7 +17,7 @@
 <div style="padding-top: 10px; padding-bottom: 10px">
     <b>Description:</b>
     <br>
-    <div ng-bind-html="currentDescription"></div>
+    <div ng-bind-html="inner.currentDescription"></div>
 </div>
 
 
@@ -92,7 +92,7 @@
                 <div class="">
                     <b>Description:</b>
                     <br>
-                    <textarea rows="4" ng-model="$parent.currentDescription" style="min-width: 100%"></textarea>
+                    <textarea rows="4" ng-model="inner.currentDescription" style="min-width: 100%"></textarea>
                     <button class="btn btn-success" ng-click="submit()">Submit</button>
                 </div>
             </div>
