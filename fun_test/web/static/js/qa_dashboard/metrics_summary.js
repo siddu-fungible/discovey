@@ -331,9 +331,9 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         let s = "";
         if (node.hasOwnProperty("trend")) {
             if (node.trend === "up") {
-                s = "<button class='trend-button-green'><icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon></button>";
+                s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>";
             } else if (node.trend === "down") {
-                s = "<button class='trend-button-red'><icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon></button>";
+                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
             }
         }
         return s;
@@ -379,7 +379,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
                 s += "<span style=\"color: white\">&rarr;</span>";
             }
             if (node.indent)
-                s += "<span>&#8627;</span>";
+                s += "<span>&nbsp;&nbsp;</span>";
         }
 
         return s;
