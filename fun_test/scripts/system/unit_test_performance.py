@@ -6,6 +6,8 @@ from datetime import datetime
 from web.fun_test.analytics_models_helper import MetricHelper
 from web.fun_test.metrics_models import UnitTestPerformance
 from fun_global import get_localized_time
+from web.fun_test.analytics_models_helper import MetricChartHelper
+
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
@@ -111,6 +113,43 @@ class FunTestCase1(FunTestCase):
                          input_software_date=software_date,
                          input_git_commit=git_commit,
                          input_branch_funsdk=branch_funsdk)
+
+        chart_name = "Unit-Tests"
+        metric_model_name = "UnitTestPerformance"
+        model = UnitTestPerformance
+
+        chart_helper = MetricChartHelper(chart_name=chart_name,
+                                         metric_model_name=metric_model_name)
+        entry = MetricHelper(model=model).get_recent_entry()
+
+        if entry:
+            values_to_check = ["output_num_passed",
+                               "output_num_failed",
+                               "output_num_disabled"]
+            for value_to_check in values_to_check:
+                output_data_set = chart_helper.get_output_data_set(output_name=value_to_check)
+                expected_min_value, expected_max_value = output_data_set["min"], output_data_set["max"]
+
+                try:
+                    actual = getattr(entry, value_to_check)
+                    fun_test.test_assert(actual >= expected_min_value,
+                                         "Build: {} Chart: {} Attr: {} Min: {} Actual: {}".format(job_id,
+                                                                                                  chart_name,
+                                                                                                  value_to_check,
+                                                                                                  expected_min_value,
+                                                                                                  actual))
+                    fun_test.test_assert(actual <= expected_max_value,
+                                         "Build: {} Chart: {} Attr: {} Max: {} Actual: {}".format(job_id,
+                                                                                                  chart_name,
+                                                                                                  value_to_check,
+                                                                                                  expected_min_value,
+                                                                                                  actual))
+
+
+                except:
+                    issues_found += 1
+
+
         fun_test.test_assert_expected(expected=0, actual=issues_found, message="Number of issues found")
 
 
