@@ -276,7 +276,7 @@ class VolumePerformance(models.Model):
 
 
 class AllocSpeedPerformance(models.Model):
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
     output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
@@ -288,7 +288,7 @@ class AllocSpeedPerformance(models.Model):
 
 
 class WuLatencyAllocStack(models.Model):
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="wu_latency_test: alloc_stack", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
@@ -300,7 +300,7 @@ class WuLatencyAllocStack(models.Model):
 
 class WuLatencyUngated(models.Model):
     key = models.CharField(max_length=30, verbose_name="Git tag")
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.TextField(verbose_name="wu_latency_test: Ungated WU", default="wu_latency_test", choices=[(0, "wu_latency_test")])
     output_min = models.IntegerField(verbose_name="Min (ns)")
     output_max = models.IntegerField(verbose_name="Max (ns)")
@@ -322,8 +322,9 @@ class AllocSpeedPerformanceSerializer(ModelSerializer):
         fields = "__all__"
 
 class UnitTestPerformance(models.Model):
-    input_date_time = models.DateTimeField(verbose_name="Datetime", default=datetime.now)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="unit_tests", choices=[(0, "unit_tests")])
+    input_job_id = models.IntegerField(verbose_name="Job Id", default=0)
     output_num_passed = models.IntegerField(verbose_name="Passed")
     output_num_failed = models.IntegerField(verbose_name="Failed")
     output_num_disabled = models.IntegerField(verbose_name="Disabled")
@@ -339,6 +340,42 @@ class UnitTestPerformanceSerializer(ModelSerializer):
     class Meta:
         model = UnitTestPerformance
         fields = "__all__"
+
+class GenericSerializer(ModelSerializer):
+    def set_model(self, model):
+        pass
+
+class EcPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_ndata_min = models.IntegerField(verbose_name="ndata min", default=8)
+    input_ndata_max = models.IntegerField(verbose_name="ndata min", default=8)
+    input_nparity_min = models.IntegerField(verbose_name="nparity min", default=4)
+    input_stridelen_min = models.IntegerField(verbose_name="strideline min", default=4096)
+    input_stridelen_max = models.IntegerField(verbose_name="strideline max", default=4096)
+
+    output_encode_latency_min = models.IntegerField(verbose_name="Encode Latency min")
+    output_encode_latency_max = models.IntegerField(verbose_name="Encode Latency max")
+    output_encode_latency_avg = models.IntegerField(verbose_name="Encode Latency avg")
+
+    output_encode_throughput_min = models.IntegerField(verbose_name="Encode Throughput min")
+    output_encode_throughput_max = models.IntegerField(verbose_name="Encode Throughput max")
+    output_encode_throughput_avg = models.IntegerField(verbose_name="Encode Throughput avg")
+
+    output_recovery_latency_min = models.IntegerField(verbose_name="Recovery Latency min")
+    output_recovery_latency_max = models.IntegerField(verbose_name="Recovery Latency max")
+    output_recovery_latency_avg = models.IntegerField(verbose_name="Recovery Latency avg")
+
+    output_recovery_throughput_min = models.IntegerField(verbose_name="Recovery Throughput min")
+    output_recovery_throughput_max = models.IntegerField(verbose_name="Recovery Throughput max")
+    output_recovery_throughput_avg = models.IntegerField(verbose_name="Recovery Throughput avg")
+
+    '''
+     min_ndata=8 
+     max_ndata=8 
+     min_nparity=4 
+     max_nparity=4 
+     min_stridelen=4096 max_stridelen=4096 numthreads=1
+    '''
 
 ANALYTICS_MAP = {
     "Performance1": {
@@ -393,7 +430,13 @@ ANALYTICS_MAP = {
         "module": "system",
         "component": "general",
         "verbose_name": "WU Latency Test: Ungated"
-    }
+    },
+    "EcPerformance": {
+        "model": EcPerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "EC Performance"
 
+    }
 }
 

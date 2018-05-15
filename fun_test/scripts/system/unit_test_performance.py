@@ -6,6 +6,8 @@ from datetime import datetime
 from web.fun_test.analytics_models_helper import MetricHelper
 from web.fun_test.metrics_models import UnitTestPerformance
 from fun_global import get_localized_time
+from web.fun_test.analytics_models_helper import MetricChartHelper
+
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
@@ -53,6 +55,8 @@ class FunTestCase1(FunTestCase):
             branch_funsdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
             software_date = past_job["software_date"]
+            if "completion_date" not in past_job:
+                continue 
             completion_date = "20" + past_job["completion_date"]
             hardware_version = "---"
             if "hardware_version" in past_job:
@@ -87,6 +91,7 @@ class FunTestCase1(FunTestCase):
             num_passed = 0
             num_failed = 0
             num_disabled = 0
+            scale = 10
 
             mh = MetricHelper(model=UnitTestPerformance)
             for line in lines:
@@ -95,12 +100,13 @@ class FunTestCase1(FunTestCase):
                     num_passed = int(m.group(1))
                 m = re.search(r'\[\s+FAILED\s+]\s+(\d+)\s+tests', line)
                 if m:
-                    num_failed = int(m.group(1))
-                m = re.search(r'\[\s+FAILED\s+]\s+(\d+)\s+tests', line)
+                    num_failed = int(m.group(1)) * scale
+                m = re.search(r'\[\s+DISABLED\s+]\s+(\d+)\s+tests', line)
                 if m:
-                    num_disabled = int(m.group(1))
+                    num_disabled = int(m.group(1)) * scale
 
             mh.add_entry(input_date_time=dt,
+                         input_job_id=job_id,
                          output_num_passed=num_passed,
                          output_num_failed=num_failed,
                          output_num_disabled=num_disabled,
@@ -108,6 +114,43 @@ class FunTestCase1(FunTestCase):
                          input_software_date=software_date,
                          input_git_commit=git_commit,
                          input_branch_funsdk=branch_funsdk)
+
+        chart_name = "Unit-Tests"
+        metric_model_name = "UnitTestPerformance"
+        model = UnitTestPerformance
+
+        chart_helper = MetricChartHelper(chart_name=chart_name,
+                                         metric_model_name=metric_model_name)
+        entry = MetricHelper(model=model).get_recent_entry()
+
+        if entry:
+            values_to_check = ["output_num_passed",
+                               "output_num_failed",
+                               "output_num_disabled"]
+            for value_to_check in values_to_check:
+                output_data_set = chart_helper.get_output_data_set(output_name=value_to_check)
+                expected_min_value, expected_max_value = output_data_set["min"], output_data_set["max"]
+
+                try:
+                    actual = getattr(entry, value_to_check)
+                    fun_test.test_assert(actual >= expected_min_value,
+                                         "Build: {} Chart: {} Attr: {} Min: {} Actual: {}".format(entry.job_id,
+                                                                                                  chart_name,
+                                                                                                  value_to_check,
+                                                                                                  expected_min_value,
+                                                                                                  actual))
+                    fun_test.test_assert(actual <= expected_max_value,
+                                         "Build: {} Chart: {} Attr: {} Max: {} Actual: {}".format(entry.job_id,
+                                                                                                  chart_name,
+                                                                                                  value_to_check,
+                                                                                                  expected_min_value,
+                                                                                                  actual))
+
+                    # fun_test.add_checkpoint("Job {} PASSED".format(job_id))
+                except Exception as ex:
+                    issues_found += 1
+
+
         fun_test.test_assert_expected(expected=0, actual=issues_found, message="Number of issues found")
 
 

@@ -2,5 +2,6 @@
   {"path": "storage/thin_block_volume_performance.py"},
   {"path": "storage/ec_volume_performance.py"},
   {"path": "storage/ec_dpu_performance.py"},
-  {"path": "storage/replica_volume_performance.py"}
+  {"path": "storage/replica_volume_performance.py"},
+  {"path": "storage/palladium_ec_performance.py"}
 ]
