@@ -7,8 +7,8 @@ from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer, WuLatencyAllocStack
 from web.fun_test.metrics_models import LastMetricId
-from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer
-from django.core import serializers
+from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance
+from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
@@ -126,8 +126,8 @@ def atomic(request, chart_name, model_name):
     return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
 
 @csrf_exempt
-def table_view(request):
-    return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
+def table_view(request, model_name):
+    return render(request, 'qa_dashboard/table_view_page.html', locals())
 
 @csrf_exempt
 @api_safe_json_response
@@ -171,37 +171,42 @@ def metric_info(request):
 
 @csrf_exempt
 @api_safe_json_response
-def table_data(request):
+def table_data(request, page=None, records_per_page=10):
     request_json = json.loads(request.body)
-    metric_model_name = request_json["metric_model_name"]
-    chart_name = request_json["chart_name"]
-    model = ANALYTICS_MAP[metric_model_name]["model"]
-    key = "key"
-    unique_keys = model.objects.values(key).distinct()
-    unique_keys = [x[key] for x in unique_keys]
+    model_name = request_json["model_name"]
+    model = ANALYTICS_MAP[model_name]["model"]
     data = {}
     header_list = [x.name for x in model._meta.get_fields()]
     data["headers"] = header_list
     data["data"] = {}
-    '''
-    the_data = data["data"]
-    for unique_key in unique_keys:
-        entries = model.objects.filter(key=unique_key)
-        the_data[unique_key] = []
-        for entry in entries:
-            row = []
-            for header in header_list:
-                row.append(getattr(entry, header))
-            the_data[unique_key].append(row)
-    '''
+    data["fields"] = OrderedDict()
+    data["total"] = 0
+    fields = data["fields"]
+    for field in model._meta.get_fields():
+        choices = None
+        if hasattr(field, "choices"):
+            choices = field.choices
+        if hasattr(field, "verbose_name"):
+            verbose_name = field.verbose_name
+            fields[field.name] = {"choices": choices, "verbose_name": verbose_name}
     serializer_map = {"VolumePerformance": VolumePerformanceSerializer,
                       "AllocSpeedPerformance": AllocSpeedPerformanceSerializer,
-                      "WuLatencyAllocStack": WuLatencyAllocStack}
-    serializer = serializer_map[metric_model_name]
-    all_entries = model.objects.all()
+                      "WuLatencyAllocStack": WuLatencyAllocStack,
+                      "EcPerformance": EcPerformance}
+    serializer = serializer_map[model_name]
+    all_entries = model.objects.all().order_by()
+    if hasattr(model.objects.first(), "input_date_time"):
+        all_entries = all_entries.order_by("-input_date_time")
+    else:
+        all_entries = all_entries.order_by("-id")
+
+    data["total_count"] = all_entries.count()
+    if page:
+        p = paginator.Paginator(all_entries, records_per_page)
+        all_entries = p.page(page)
+
     s = serializer(all_entries, many=True)
     data["data"] = s.data
-    data["unique_keys"] = unique_keys
     return data
 
 @csrf_exempt
