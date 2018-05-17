@@ -161,7 +161,7 @@ class SbpZynqSetupTemplate:
     ENROLLMENT_CERT_BIN = "enroll_cert.bin"
     ENROLLMENT_TBS_BIN = "enroll_tbs.bin"
     SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
-    DEFAULT_SBP_PUF_BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180420.bit"
+    DEFAULT_SBP_PUF_BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180507.bit"
 
     def __init__(self, host, zynq_board_ip, bit_stream=None):
         self.host = host
@@ -326,8 +326,8 @@ class SbpZynqSetupTemplate:
             else:
                 secure_boot_str = "off"
             no_host_boot_str = ""
-            if no_host_boot:
-                no_host_boot_str = "--nohostboot"
+            # if no_host_boot:
+            #    no_host_boot_str = "--nohostboot"
 
             artifacts_dir_str = ""
             if artifacts_dir:
@@ -387,6 +387,7 @@ class SbpZynqSetupTemplate:
         return local_log_file
 
     def enroll(self, artifacts_dir=None):
+        fun_test.add_checkpoint("Enrolling")
         stimuli_dir = "{}/validation/stimuli/enroll".format(self.local_repository)
         stimuli_file = "{}/cmd_enroll_puf_chal.py".format(stimuli_dir)
 
