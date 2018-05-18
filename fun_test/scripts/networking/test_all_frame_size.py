@@ -63,6 +63,12 @@ class SpirentSetup(FunTestScript):
         set_mtu_2 = template_obj.configure_physical_interface(interface_2_obj)
         fun_test.test_assert(set_mtu_2, "Set mtu on %s " % interface_2_obj)
 
+        '''
+        mtu1 = template_obj.stc_manager.stc.get(interface_1_obj, 'mtu')
+        mtu2 = template_obj.stc_manager.stc.get(interface_1_obj, 'mtu')
+        fun_test.log("MTU on get are %s, %s" % (mtu1, mtu2))
+        '''
+
         # Create streamblock 1
         streamblock_obj_1 = StreamBlock()
         streamblock_obj_1.LoadUnit = streamblock_obj_1.LOAD_UNIT_MEGABITS_PER_SECOND
@@ -209,25 +215,36 @@ class TestCase1(FunTestCase):
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
-        rx_port_analyzer_results = template_obj.stc_manager.get_rx_port_analyzer_results(
+        rx_port_analyzer_results_2 = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_2, subscribe_handle=subscribe_results['analyzer_subscribe'])
+
+        fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
+        rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
         fun_test.log("Rx 2 Results %s" % rx_results_2)
-        fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
+        fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_1)
+        fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
                              "Check FrameCount for streamblock %s" % streamblock_obj_1.spirent_handle)
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
                              "Check FrameCount for streamblock %s" % streamblock_obj_2.spirent_handle)
 
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters")
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
+
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
 
         fun_test.test_assert(int(rx_results_1['FrameCount']) >= int(streamblock_obj_1.MaxFrameLength),
-                             "Ensure more than %s packets are received" % str(streamblock_obj_1.MaxFrameLength))
+                             "Ensure more than %s packets are received on port2" % str(streamblock_obj_1.MaxFrameLength))
+
+        fun_test.test_assert(int(rx_results_2['FrameCount']) >= int(streamblock_obj_1.MaxFrameLength),
+                             "Ensure more than %s packets are received on port1" % str(streamblock_obj_1.MaxFrameLength))
 
 
 class TestCase2(FunTestCase):
@@ -244,12 +261,13 @@ class TestCase2(FunTestCase):
         streamblock_obj_1.FrameLengthMode = streamblock_obj_1.FRAME_LENGTH_MODE_RANDOM
         streamblock_obj_2.FrameLengthMode = streamblock_obj_2.FRAME_LENGTH_MODE_RANDOM
 
-        streamblock1 = template_obj.configure_stream_block(streamblock_obj_1, port_1, update=True)
-        fun_test.test_assert(streamblock1, "Configure streamblock %s on port %s" % (streamblock_obj_1.spirent_handle,
+        streamblock1 = template_obj.stc_manager.stc.config(streamblock_obj_1.spirent_handle, FrameLengthMode=streamblock_obj_1.FrameLengthMode)
+        fun_test.log("Update streamblock %s on port %s" % (streamblock_obj_1.spirent_handle,
                                                                                     port_1))
 
-        streamblock2 = template_obj.configure_stream_block(streamblock_obj_2, port_2, update=True)
-        fun_test.test_assert(streamblock2, "Configure streamblock %s on port %s" % (streamblock_obj_2.spirent_handle,
+        streamblock2 = template_obj.stc_manager.stc.config(streamblock_obj_2.spirent_handle,
+                                                           FrameLengthMode=streamblock_obj_2.FrameLengthMode)
+        fun_test.log("Update streamblock %s on port %s" % (streamblock_obj_2.spirent_handle,
                                                                                     port_2))
 
     def cleanup(self):
@@ -296,22 +314,30 @@ class TestCase2(FunTestCase):
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
-        rx_port_analyzer_results = template_obj.stc_manager.get_rx_port_analyzer_results(
+        rx_port_analyzer_results_2 = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_2, subscribe_handle=subscribe_results['analyzer_subscribe'])
+
+        fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
+        rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
         fun_test.log("Rx 2 Results %s" % rx_results_2)
-        fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
+        fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_1)
+        fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
                              "Check FrameCount for streamblock %s" % streamblock_obj_1.spirent_handle)
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
                              "Check FrameCount for streamblock %s" % streamblock_obj_2.spirent_handle)
 
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters")
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
+
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
 
 
 if __name__ == "__main__":
