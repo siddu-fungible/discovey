@@ -248,10 +248,6 @@ class TestCase2(FunTestCase):
         fun_test.test_assert_expected(actual=int(rx_port_analyzer_results['TotalFrameCount']), expected=frames_received,
                                       message="Ensure no frame is received")
 
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                      actual=int(rx_port_analyzer_results['DroppedFrameCount']),
-                                      message="Ensure runts are dropped")
-
 
 class TestCase3(FunTestCase):
     streamblock_obj = None
@@ -283,7 +279,7 @@ class TestCase3(FunTestCase):
             fun_test.simple_assert(port_results, "Clear port results")
 
     def run(self):
-        Load = 25000
+        Load = 21000
         self.streamblock_obj = StreamBlock()
         self.streamblock_obj.LoadUnit = self.streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.streamblock_obj.Load = Load
@@ -340,17 +336,31 @@ class TestCase3(FunTestCase):
             stream_block_handle=self.streamblock_obj.spirent_handle,
             subscribe_handle=self.subscribe_results['rx_subscribe'])
 
-        fun_test.log("Fetching rx port results for subscribed object %s" % self.subscribe_results['analyzer_subscribe'])
+        fun_test.log("Fetching rx port results for subscribed object %s" % self.subscribe_results['generator_subscribe'])
+        tx_port_generator_results = template_obj.stc_manager.get_generator_port_results(
+            port_handle=port_1, subscribe_handle=self.subscribe_results['generator_subscribe'])
+
+        fun_test.log("Fetching tx port results for subscribed object %s" % self.subscribe_results['analyzer_subscribe'])
         rx_port_analyzer_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
 
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s " % rx_results)
+        fun_test.log("Tx Generator resukts %s" % tx_port_generator_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
 
         # Verify rx frame count from palladium
         # Verify dropped count from palladium
         # TODO: 0.218 * tx results are good frames and received
+        # Observed 0.1411 of tx results
+
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                      actual=int(tx_port_generator_results['GeneratorUndersizeFrameCount']) +
+                                             int(rx_port_analyzer_results['TotalFrameCount']),
+                                      message="Ensure transmitted match with undersize + received")
+
+        fun_test.test_assert_expected(expected=0, actual=int(rx_port_analyzer_results['FcsErrorFrameCount']),
+                                      message="Ensure no FCS errors are seen")
 
 
 if __name__ == "__main__":
