@@ -85,7 +85,7 @@ class SpirentSetup(FunTestScript):
                 port_2 = port
             for stream_type in stream_list:
                 current_streamblock_obj = StreamBlock()
-                current_streamblock_obj.Load = 1
+                current_streamblock_obj.Load = 0.5
                 current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_MEGABITS_PER_SECOND
                 current_ethernet_obj = Ethernet2Header(destination_mac=destination_mac1, source_mac=source_mac1)
                 current_ipv4_obj = Ipv4Header(destination_address=current_destination_ip,
@@ -977,17 +977,7 @@ class TestCase9(FunTestCase):
         rx_results_2 = template_obj.stc_manager.get_rx_stream_block_results(
             stream_block_handle=streamblock_objects[GOOD_FRAME][str(port_2)].spirent_handle,
             subscribe_handle=subscribe_results['rx_subscribe'])
-        '''
-        fun_test.log("Fetch results of %s to be added to final good frame" % TOTAL_LENGTH_ERROR)
-        tx_results_total_error_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[TOTAL_LENGTH_ERROR][str(port_1)].spirent_handle,
-            subscribe_handle=subscribe_results['tx_subscribe'])
 
-        fun_test.log("Fetch results of %s to be added to final good frame" % TOTAL_LENGTH_ERROR)
-        tx_results_total_error_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[TOTAL_LENGTH_ERROR][str(port_2)].spirent_handle,
-            subscribe_handle=subscribe_results['tx_subscribe'])
-        '''
         fun_test.log(
             "Fetching analyzer port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
         rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
@@ -998,43 +988,27 @@ class TestCase9(FunTestCase):
         rx_port_analyzer_results_2 = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
+        # Get results for streamblock 1
+        fun_test.log(
+            "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
+                                                                            streamblock_objects[CRC_1500B][
+                                                                                str(port_1)].spirent_handle))
+        tx_crc_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
+            stream_block_handle=streamblock_objects[CRC_1500B][str(port_1)].spirent_handle,
+            subscribe_handle=subscribe_results['tx_subscribe'])
+
+        fun_test.log(
+            "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
+                                                                            streamblock_objects[CRC_1500B][
+                                                                                str(port_2)].spirent_handle))
+        tx_crc_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
+            stream_block_handle=streamblock_objects[CRC_1500B][str(port_2)].spirent_handle,
+            subscribe_handle=subscribe_results['tx_subscribe'])
+
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
         fun_test.log("Rx 2 Results %s" % rx_results_2)
-        '''
-        fun_test.test_assert_expected(expected=int(rx_results_1["FrameCount"]),
-                                      actual=int(tx_results_1["FrameCount"]) + int(tx_results_total_error_1["FrameCount"]),
-                                      message="Check all frames from port %s are received by %s" % (port_1, port_2))
-        fun_test.test_assert_expected(expected=int(rx_results_2["FrameCount"]),
-                                      actual=int(tx_results_2["FrameCount"]) + int(tx_results_total_error_2["FrameCount"]),
-                                      message="Check all frames from port %s are received by %s" % (port_2, port_1))
-
-        error_counters = []
-        port_2_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
-        fun_test.log("Error counters on port %s seen are %s" % (port_2, port_2_errors))
-        port_2_errors['port'] = port_2
-        error_counters.append(port_2_errors)
-        port_1_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
-        fun_test.log("Error counters on port %s seen are %s" % (port_1, port_1_errors))
-        port_1_errors['port'] = port_1
-        error_counters.append(port_1_errors)
-
-        for port_error in error_counters:
-            total_error_count = 0
-            for key, val in port_error.iteritems():
-                if key == 'result' or key == 'port':
-                    pass
-                else:
-                    total_error_count += int(val)
-            if port_error['port'] == port_1:
-                expected_count = tx_results_total_error_2["FrameCount"]
-            else:
-                expected_count = tx_results_total_error_1["FrameCount"]
-            fun_test.test_assert_expected(expected=expected_count, actual=total_error_count,
-                                          message="Check no extra error counters have gone up for port %s" %
-                                                  port_error['port'])
-        '''
 
         fun_test.test_assert_expected(expected=tx_results_1['FrameCount'], actual=rx_results_1['FrameCount'],
                                       message="Check good frames are transmitted successfully")
@@ -1044,8 +1018,10 @@ class TestCase9(FunTestCase):
         port_2_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
         port_1_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
 
-        fun_test.log("Errors on port %s are %s" % (port_1, port_2_errors))
-        fun_test.log("Errors on port %s are %s" % (port_2, port_1_errors))
+        if port_2_errors['FcsErrorFrameCount'] == tx_crc_results_1['FrameCount']:
+            port_2_errors['result'] = True
+        if port_1_errors['FcsErrorFrameCount'] == tx_crc_results_2['FrameCount']:
+            port_1_errors['result'] = True
 
         fun_test.test_assert(port_2_errors['result'],
                              message="No error counters are seen for good frames received on %s" % port_2)
