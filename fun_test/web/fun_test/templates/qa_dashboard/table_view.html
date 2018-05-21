@@ -19,12 +19,25 @@
             </li>
         </ul>
     </div>
+    <div>
+        <table class="table table-nonfluid">
+            <tr ng-repeat="header in headers">
+                <td>
+                    <input type="checkbox" ng-model="fields[header].show" ng-checked="fields[header].show"/>
+                </td>
+                <td>
+                    {{ fields[header].verbose_name }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <table class="table table-nonfluid">
         <tr>
-            <th ng-repeat="header in headers">{{ fields[header].verbose_name }}</th>
+            <th ng-if="fields[header].show" ng-repeat="header in headers">{{ fields[header].verbose_name }}</th>
         </tr>
         <tr ng-repeat="row in rows">
-            <td ng-repeat="header in headers">{{ row[header]}}</td>
+            <td ng-if="fields[header].show" ng-repeat="header in headers">{{ row[header]}}</td>
         </tr>
     </table>
 </div>

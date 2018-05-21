@@ -21,6 +21,9 @@ function TableViewController($scope, commonService, pagerService) {
             $scope.totalCount = data.total_count;
             $scope.headers = data.headers;
             $scope.fields = data.fields;
+            angular.forEach($scope.fields, (info, key) => {
+                info.show = true;
+            });
             $scope.rows = data.data;
         });
     };
@@ -34,6 +37,7 @@ function TableViewController($scope, commonService, pagerService) {
     };
 
 }
+
 
 angular.module('qa-dashboard').component("tableView", {
         templateUrl: '/static/qa_dashboard/table_view.html',
