@@ -17,6 +17,7 @@ ADD http://codescape.mips.com/components/toolchain/2016.05-03/Codescape.GNU.Tool
 RUN cd $ZYNQ_SETUP_DIR && tar -zxf Codescape.GNU.Tools.Package.2016.05-03.for.MIPS.MTI.Bare.Metal.CentOS-5.x86_64.tar.gz
 
 RUN pip install pycrypto ed25519 curve25519-donna  ecdsa
+RUN pip install cryptography
 RUN git clone https://github.com/doegox/python-cryptoplus.git
 RUN cd python-cryptoplus && git checkout a5a1f8aecce4ddf476b2d80b586822d9e91eeb7d && python setup.py install
 RUN git clone https://github.com/google/googletest.git
@@ -46,7 +47,7 @@ RUN shebang='#!/usr/bin/env bash'; \
 env_vars="export MIPS_ELF_ROOT=$ZYNQ_SETUP_DIR/mips-mti-elf/2016.05-03"; \
 echo $shebang$'\n'$env_vars > /etc/profile.d/env_vars.sh
 
-ADD FunSDK-small /FunSDK
+ADD FunSDK /FunSDK
 
 # Add startup script
 COPY startup.sh /startup.sh

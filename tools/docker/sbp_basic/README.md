@@ -1,4 +1,4 @@
-# ubuntu_template
+# sbp_basic
 
 Purpose:
 ```
@@ -7,12 +7,13 @@ Base image to create a container with ssh access
 
 Build:
 ```
-[sudo] docker build . -t ubuntu_template
+cp -r <location-of-FunSDK> .
+[sudo] docker build . -t sbp_basic
 ```
 
 Run:
 ```
-sudo docker run -d -p3220:22 --privileged --name="$container_name" ubuntu_template -b 123
+sudo docker run -d -p3220:22 --privileged --name=this_container sbp_basic -b 123
 
 
 ```
