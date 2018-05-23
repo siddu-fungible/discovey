@@ -71,8 +71,12 @@ class FunTestCase1(FunTestCase):
 
                 if m:
                     stats_found = True
-                    coherent = m.group("coherent") == "coherent"
-                    plain = m.group("plain") == "plain"
+                    coherent = "Coherent"
+                    if m.group("coherent") != "coherent":
+                        coherent = "Non-coherent"
+                    plain = "Plain"
+                    if  m.group("plain") != "plain":
+                        plain = "DMA"
                     size = m.group("size")
                     fun_test.test_assert(size.endswith("KB"), "Size should be in KB")
                     size = int(size.replace("KB", ""))

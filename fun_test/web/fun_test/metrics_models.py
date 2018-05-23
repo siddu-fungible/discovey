@@ -380,8 +380,8 @@ class EcPerformance(models.Model):
 class BcopyPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_iterations = models.IntegerField(verbose_name="Iterations", default=10)
-    input_coherent = models.BooleanField(verbose_name="Coherent")
-    input_plain = models.BooleanField(verbose_name="Plain")
+    input_coherent = models.TextField(verbose_name="Coherent/Non", default="Coherent", choices=[(0, "Coherent"), (1, "Non-coherent")])
+    input_plain = models.TextField(verbose_name="Plain/DMA", default="Plain", choices=[(0, "Plain"), (1, "DMA")])
     input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
     output_latency_units = models.TextField(verbose_name="Latency units")
     output_latency_min = models.IntegerField(verbose_name="Latency min")

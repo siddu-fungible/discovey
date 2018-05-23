@@ -142,16 +142,30 @@
                 "weight": 1
               },
               {
-                "name": "Bcopy: Avg Bandwidth",
-                "label": "Bcopy: Avg Bandwidth",
-                "info": "Bcopy: Avg Bandwidth",
+                "name": "Bcopy: Plain: Avg Bandwidth",
+                "label": "Bcopy: Plain: Avg Bandwidth",
+                "info": "Bcopy: Plain: Avg Bandwidth",
                 "metric_model_name": "BcopyPerformance",
                 "leaf": true
               },
               {
-                "name": "Bcopy: Avg Latency",
-                "label": "Bcopy: Avg Latency",
-                "info": "Bcopy: Avg Latency",
+                "name": "Bcopy: Plain: Avg Latency",
+                "label": "Bcopy: Plain: Avg Latency",
+                "info": "Bcopy: Plain: Avg Latency",
+                "metric_model_name": "BcopyPerformance",
+                "leaf": true
+              },
+              {
+                "name": "Bcopy: DMA: Avg Bandwidth",
+                "label": "Bcopy: DMA: Avg Bandwidth",
+                "info": "Bcopy: DMA: Avg Bandwidth",
+                "metric_model_name": "BcopyPerformance",
+                "leaf": true
+              },
+              {
+                "name": "Bcopy: DMA: Avg Latency",
+                "label": "Bcopy: DMA: Avg Latency",
+                "info": "Bcopy: DMA: Avg Latency",
                 "metric_model_name": "BcopyPerformance",
                 "leaf": true
               }
