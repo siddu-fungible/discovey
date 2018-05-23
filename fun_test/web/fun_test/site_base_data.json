@@ -90,7 +90,22 @@
                   "info": "WU Latency: Ungated",
                   "metric_model_name": "WuLatencyUngated",
                   "leaf": true
+                },
+                {
+                  "name": "Bcopy: Avg Bandwidth",
+                  "label": "Bcopy: Avg Bandwidth",
+                  "info": "Bcopy: Avg Bandwidth",
+                  "metric_model_name": "BcopyPerformance",
+                  "leaf": true
+                },
+                { 
+                  "name": "Bcopy: Avg Latency",
+                  "label": "Bcopy: Avg Latency",
+                  "info": "Bcopy: Avg Latency",
+                  "metric_model_name": "BcopyPerformance",
+                  "leaf": true
                 }
+
                 ]
                }
             ]
