@@ -122,7 +122,10 @@ class MetricChart(models.Model):
                     for data_set in data_sets:
                         max_value = data_set["output"]["max"]
                         min_value = data_set["output"]["min"]
-                        output_name = data_set["output"]["name"]
+                        try:
+                            output_name = data_set["output"]["name"]
+                        except:
+                            pass
 
                         if "expected" in data_set["output"]:
                             expected_value = data_set["output"]["expected"]
