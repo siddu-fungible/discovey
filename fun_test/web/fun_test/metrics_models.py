@@ -394,6 +394,12 @@ class BcopyPerformance(models.Model):
     def __str__(self):
         return str(self.__dict__)
 
+class BcopyPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = BcopyPerformance
+        fields = "__all__"
+
 ANALYTICS_MAP = {
     "Performance1": {
         "model": Performance1,
