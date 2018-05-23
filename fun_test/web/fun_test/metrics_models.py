@@ -377,6 +377,23 @@ class EcPerformance(models.Model):
      min_stridelen=4096 max_stridelen=4096 numthreads=1
     '''
 
+class BcopyPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_iterations = models.IntegerField(verbose_name="Iterations", default=10)
+    input_coherent = models.BooleanField(verbose_name="Coherent")
+    input_plain = models.BooleanField(verbose_name="Plain")
+    input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
+    output_latency_units = models.TextField(verbose_name="Latency units")
+    output_latency_min = models.IntegerField(verbose_name="Latency min")
+    output_latency_max = models.IntegerField(verbose_name="Latency max")
+    output_latency_avg = models.IntegerField(verbose_name="Latency max")
+    input_latency_perf_name = models.TextField(verbose_name="Latency perf name")
+    output_average_bandwith = models.IntegerField(verbose_name="Average Bandwidth in MBs")
+    input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")
+
+    def __str__(self):
+        return str(self.__dict__)
+
 ANALYTICS_MAP = {
     "Performance1": {
         "model": Performance1,
@@ -437,6 +454,12 @@ ANALYTICS_MAP = {
         "component": "general",
         "verbose_name": "EC Performance"
 
+    },
+    "BcopyPerformance": {
+        "model": BcopyPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "BCopy Performance"
     }
 }
 

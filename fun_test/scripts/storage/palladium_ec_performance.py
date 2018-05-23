@@ -28,6 +28,9 @@ class MyScript(FunTestScript):
         pass
 
 
+def validate():
+    pass
+
 class FunTestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
@@ -134,20 +137,6 @@ class FunTestCase1(FunTestCase):
                 entry = MetricHelper(model=model).get_recent_entry()
 
                 if entry:
-                    '''
-                    values_to_check = ["output_encode_latency_min",
-                                       "output_encode_latency_max",
-                                       "output_encode_latency_avg",
-                                       "output_encode_throughput_min",
-                                       "output_encode_throughput_max",
-                                       "output_encode_throughput_avg",
-                                       "output_recovery_latency_min",
-                                       "output_recovery_latency_max",
-                                       "output_recovery_latency_avg",
-                                       "output_recovery_throughput_min",
-                                       "output_recovery_throughput_max",
-                                       "output_recovery_throughput_avg"]
-                    '''
                     values_to_check = ["output_encode_latency_min",
                                        "output_encode_latency_max",
                                        "output_encode_latency_avg", 
