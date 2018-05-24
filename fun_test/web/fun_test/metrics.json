@@ -168,6 +168,20 @@
                 "info": "Bcopy: DMA: Avg Latency",
                 "metric_model_name": "BcopyPerformance",
                 "leaf": true
+              },
+              {
+                "name": "Bcopy: Flood DMA: Avg Bandwidth ",
+                "label": "Bcopy: Flood DMA: Avg Bandwidth ",
+                "info": "Bcopy: Flood DMA: Avg Bandwidth ",
+                "metric_model_name": "BcopyFloodDmaPerformance",
+                "leaf": true
+              },
+              {
+                "name": "Bcopy: Flood DMA: Avg Latency ",
+                "label": "Bcopy: Flood DMA: Avg Latency ",
+                "info": "Bcopy: Flood DMA: Avg Latency ",
+                "metric_model_name": "BcopyFloodDmaPerformance",
+                "leaf": true
               }
             ]
           },
