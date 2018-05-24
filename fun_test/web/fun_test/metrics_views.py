@@ -8,6 +8,7 @@ from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer, WuLatencyAllocStack
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, BcopyPerformanceSerializer
+from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
 from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
@@ -193,7 +194,8 @@ def table_data(request, page=None, records_per_page=10):
                       "AllocSpeedPerformance": AllocSpeedPerformanceSerializer,
                       "WuLatencyAllocStack": WuLatencyAllocStack,
                       "EcPerformance": EcPerformance,
-                      "BcopyPerformance": BcopyPerformanceSerializer}
+                      "BcopyPerformance": BcopyPerformanceSerializer,
+                      "BcopyFloodDmaPerformance": BcopyFloodDmaPerformanceSerializer}
     serializer = serializer_map[model_name]
     all_entries = model.objects.all().order_by()
     if hasattr(model.objects.first(), "input_date_time"):

@@ -397,11 +397,34 @@ class BcopyPerformance(models.Model):
     def __str__(self):
         return str(self.__dict__)
 
+class BcopyFloodDmaPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_n = models.IntegerField(verbose_name="N", default=0, choices=[(0, "1"), (1, "2"), (2, "4"), (3, "8"), (4, "16"), (5, "32"), (6, "64")])
+    input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
+    output_latency_units = models.TextField(verbose_name="Latency units")
+    output_latency_min = models.IntegerField(verbose_name="Latency min")
+    output_latency_max = models.IntegerField(verbose_name="Latency max")
+    output_latency_avg = models.IntegerField(verbose_name="Latency max")
+    input_latency_perf_name = models.TextField(verbose_name="Latency perf name")
+    output_average_bandwith = models.IntegerField(verbose_name="Average Bandwidth in MBs")
+    input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
 class BcopyPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
         model = BcopyPerformance
         fields = "__all__"
+
+class BcopyFloodDmaPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = BcopyFloodDmaPerformance
+        fields = "__all__"
+
 
 ANALYTICS_MAP = {
     "Performance1": {
@@ -469,6 +492,12 @@ ANALYTICS_MAP = {
         "module": "system",
         "component": "general",
         "verbose_name": "BCopy Performance"
+    },
+    "BcopyFloodDmaPerformance": {
+        "model": BcopyFloodDmaPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "BCopy Flood DMA Performance"
     }
 }
 

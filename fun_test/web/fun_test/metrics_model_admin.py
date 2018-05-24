@@ -6,7 +6,7 @@ from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack
 from web.fun_test.metrics_models import UnitTestPerformance
-from web.fun_test.metrics_models import EcPerformance, BcopyPerformance
+from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFloodDmaPerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -54,4 +54,8 @@ class EcPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(BcopyPerformance)
 class BcopyPerformanceAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(BcopyFloodDmaPerformance)
+class BcopyFloodDmaPerformanceAdmin(admin.ModelAdmin):
     pass
