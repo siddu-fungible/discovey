@@ -405,7 +405,7 @@ class BcopyFloodDmaPerformance(models.Model):
     output_latency_units = models.TextField(verbose_name="Latency units")
     output_latency_min = models.IntegerField(verbose_name="Latency min")
     output_latency_max = models.IntegerField(verbose_name="Latency max")
-    output_latency_avg = models.IntegerField(verbose_name="Latency max")
+    output_latency_avg = models.IntegerField(verbose_name="Latency avg")
     input_latency_perf_name = models.TextField(verbose_name="Latency perf name")
     output_average_bandwith = models.IntegerField(verbose_name="Average Bandwidth in MBs")
     input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")

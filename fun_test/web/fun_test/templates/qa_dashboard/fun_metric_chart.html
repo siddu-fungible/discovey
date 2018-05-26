@@ -6,6 +6,7 @@
     </fun-chart>
 </div>
 <div ng-show="$ctrl.showingTable">
+    <!-- a href="/metrics/table_view/{{ $ctrl.modelName }}">Full model table</a-->
     <div id="all-data-table" ng-repeat="data in allData">
         <h3>{{ filterDataSets[$index].name }}</h3>
         <table class="table">
