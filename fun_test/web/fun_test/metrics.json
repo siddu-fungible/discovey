@@ -179,18 +179,18 @@
                 "weight": 1
               },
               {
-                "name": "Bcopy: Flood DMA: Avg Bandwidth ",
-                "label": "Bcopy: Flood DMA: Avg Bandwidth ",
-                "info": "Bcopy: Flood DMA: Avg Bandwidth ",
+                "name": "Bcopy: Flood DMA: Avg Bandwidth",
+                "label": "Bcopy: Flood DMA: Avg Bandwidth",
+                "info": "Bcopy: Flood DMA: Avg Bandwidth",
                 "metric_model_name": "BcopyFloodDmaPerformance",
                 "children": [],
                 "leaf": true,
                 "weight": 1
               },
               {
-                "name": "Bcopy: Flood DMA: Avg Latency ",
-                "label": "Bcopy: Flood DMA: Avg Latency ",
-                "info": "Bcopy: Flood DMA: Avg Latency ",
+                "name": "Bcopy: Flood DMA: Avg Latency",
+                "label": "Bcopy: Flood DMA: Avg Latency",
+                "info": "Bcopy: Flood DMA: Avg Latency",
                 "metric_model_name": "BcopyFloodDmaPerformance",
                 "children": [],
                 "leaf": true,
