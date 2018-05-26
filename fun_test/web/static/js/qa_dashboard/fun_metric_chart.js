@@ -123,16 +123,18 @@ function FunMetricChartController($scope, commonService, $attrs) {
 
     $scope.isFieldRelevant = (fieldName) => {
         let relevant = false;
+        if (fieldName === "input_date_time") {
+            relevant = true;
+        }
         $scope.filterDataSets.forEach((oneDataSet) => {
             angular.forEach(oneDataSet.inputs, (value, key) => {
                 if (key === fieldName) {
                     relevant = true;
-                } else if (fieldName === "input_date_time") {
-                    relevant = true;
-                } else if (fieldName === oneDataSet.output.name) {
-                    relevant = true;
                 }
             });
+            if (fieldName === oneDataSet.output.name) {
+                relevant = true;
+            }
         });
         return relevant;
     };
