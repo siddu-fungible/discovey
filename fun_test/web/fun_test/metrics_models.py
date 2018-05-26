@@ -5,6 +5,7 @@ import json
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
 from datetime import datetime
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -498,6 +499,12 @@ ANALYTICS_MAP = {
         "module": "system",
         "component": "general",
         "verbose_name": "BCopy Flood DMA Performance"
+    },
+    "JenkinsJobIdMap": {
+        "model": JenkinsJobIdMap,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "Jenkids Job Id map"
     }
 }
 

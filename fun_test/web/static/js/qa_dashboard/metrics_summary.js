@@ -271,12 +271,14 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         let softwareDate = "Unknown";
         let hardwareVersion = "Unknown";
         let sdkBranch = "Unknown";
+        let gitCommit = "Unknown";
         let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
         let match = r.exec(x);
         let key = "";
         if (match) {
             key = match[1];
         }
+        
         if (key in $scope.buildInfo) {
             softwareDate = $scope.buildInfo[key]["software_date"];
             hardwareVersion = $scope.buildInfo[key]["hardware_version"];
@@ -285,6 +287,7 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         let s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
         s += "<b>Software date:</b> " + softwareDate + "<br>";
         s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
+        s += "<b>Git commit:</b> " + $scope.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "")  + "<br>";
         s += "<b>Value:</b> " + y + "<br>";
         return s;
     };
