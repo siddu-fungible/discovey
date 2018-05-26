@@ -121,6 +121,23 @@ function FunMetricChartController($scope, commonService, $attrs) {
         return newList;
     };
 
+    $scope.isFieldRelevant = (fieldName) => {
+        let relevant = false;
+        $scope.filterDataSets.forEach((oneDataSet) => {
+            angular.forEach(oneDataSet.inputs, (value, key) => {
+                if (key === fieldName) {
+                    relevant = true;
+                } else if (fieldName === "input_date_time") {
+                    relevant = true;
+                } else if (fieldName === oneDataSet.output.name) {
+                    relevant = true;
+                }
+            });
+        });
+        return relevant;
+    };
+
+
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
         if(!chartName) {

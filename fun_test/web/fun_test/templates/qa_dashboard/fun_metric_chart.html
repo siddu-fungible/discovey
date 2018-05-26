@@ -10,12 +10,12 @@
         <h3>{{ filterDataSets[$index].name }}</h3>
         <table class="table">
             <tr>
-                <th ng-repeat="(key, value) in tableInfo">
+                <th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
                     {{ value.verbose_name }}
                 </th>
             </tr>
             <tr ng-repeat="row in data">
-                <td ng-repeat="(key, value) in tableInfo">
+                <td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
                     {{ cleanValue(key, row[key])}}
                 </td>
             </tr>
