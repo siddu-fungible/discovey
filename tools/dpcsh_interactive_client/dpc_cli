@@ -1,0 +1,47 @@
+#! /usr/bin/python
+#
+#  dpc_cli
+#
+#  Created by rushikesh.pendse@fungible.com on 2018-05-29
+#
+#  Copyright 2018 Fungible Inc. All rights reserved.
+#
+
+from optparse import OptionParser
+import sys
+from dpcsh_interactive_client.cmd_controller import CmdController
+
+INTRO = """
+    Interactive Client over DPC 
+    Features :-
+    1. Set/Get configs 
+    2. Clear Stats
+    3. Peek various Stats in iterations at certain time interval. Shows difference in counters in tabular format. 
+       Also user can grep specific counters by using regex
+    
+    For "help" or "-h" for available commands/sub-commands 
+"""
+
+
+def main():
+    try:
+        ip_address = raw_input("Enter DPC server IP (Default 127.0.0.1): ")
+        tcp_port_num = raw_input("Enter Port num on which DPC is listening (Default 40221): ")
+        if not ip_address:
+            ip_address = "127.0.0.1"
+        if not tcp_port_num:
+            tcp_port_num = 40221
+
+        cmd_controller_obj = CmdController(target_ip=ip_address, target_port=int(tcp_port_num))
+        cmd_controller_obj.cmdloop(intro=INTRO)
+    except Exception as ex:
+        print ex
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
