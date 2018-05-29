@@ -96,11 +96,10 @@ class FunTestCase1(FunTestCase):
                     latency_perf_name = m.group("latency_perf_name")
                     average_bandwidth = m.group("average_bandwidth")
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("MBs"), "Avg bw should be MBs")
-                        average_bandwidth = int(average_bandwidth.replace("MBs", ""))
-                    except:
-                        if average_bandwidth.endswith("GBs"):
-                            average_bandwidth = int(average_bandwidth.replace("GBs", "")) * 1000
+                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
 
                     average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
 
@@ -220,11 +219,10 @@ class FunTestCase2(FunTestCase):
                     latency_perf_name = m.group("latency_perf_name")
                     average_bandwidth = m.group("average_bandwidth")
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("MBs"), "Avg bw should be MBs")
-                        average_bandwidth = int(average_bandwidth.replace("MBs", ""))
-                    except:
-                        if average_bandwidth.endswith("GBs"):
-                            average_bandwidth = int(average_bandwidth.replace("GBs", "")) * 1000
+                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
 
                     average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
 
