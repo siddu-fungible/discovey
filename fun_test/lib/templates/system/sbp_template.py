@@ -162,6 +162,8 @@ class SbpZynqSetupTemplate:
     ENROLLMENT_TBS_BIN = "enroll_tbs.bin"
     SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
     DEFAULT_SBP_PUF_BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180523.bit"
+    DEVELOPER_PRIVATE_KEY_FILE = "/tmp/developer_private_key.pem"
+    DEVELOPER_CERT_FILE = "/tmp/developer_cert.cert"
 
     def __init__(self, host, zynq_board_ip, bit_stream=None):
         self.host = host
@@ -213,6 +215,38 @@ class SbpZynqSetupTemplate:
             localhost.command("cd {}; git pull".format(self.SBP_FIRMWARE_REPO_DIR))
         fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
         return self.container_asset
+
+    def setup_developer_cert(self,
+                             key_size=2048,
+                             private_key_filename=DEVELOPER_PRIVATE_KEY_FILE,
+                             cert_filename=DEVELOPER_CERT_FILE,
+                             tamper_flags="00000000",
+                             debugger_flags="00000000",
+                             serial_number="00000000000000000000000000000000",
+                             serial_number_mask="00000000000000000000000000000000",
+                             signing_key="fpk2",
+                             container_ip="127.0.0.1",
+                             container_ssh_port="3220",
+                             container_ssh_username="root",
+                             container_ssh_password="fun123"
+                             ):
+        command = "openssl genrsa -aes256 -out {}  -passout pass:fun123 {}".format(key_filename, key_size)
+        self.host.command(command)
+        fun_test.test_assert(self.host.list_files(key_filename), "Developer private key")
+        # Extract key modulus
+        modulus_filename = "/tmp/developer_modulus.bin"
+        command = "openssl rsa -in {} -passin pass:fun123 -modulus | cut -f 2 -d '=' -s | xxd -p -r  - {}".format(key_filename, modulus_filename)
+        self.host.command(command)
+        fun_test.test_assert(self.host.list_files(modulus_filename), "modulus created")
+
+        self.host.command("cd {}".format(self.DEVTOOLS_FIRMWARE_DIR))
+        command = "python3 ./generate_firmware_image.py certificate --tamper_flags {} --debugger_flags {} --serial_number {} --serial_number_mask {} --public-key-file {} --key {} --output {}".format(tamper_flags, debugger_flags, serial_number, serial_number_mask, modulus_filename, signing_key, cert_filename)
+        self.host.command(command)
+        fun_test.test_assert(self.host.list_files(cert_filename), "developer cert created")
+        fun_test.scp(source_file_path=cert_filename, source_ip=container_ip, source_username=container_ssh_username, source_password=container_ssh_password, source_port=container_ssh_port, target_file_path=cert_filename)
+        fun_test.scp(source_file_path=self.DEVELOPER_PRIVATE_KEY_FILE, source_ip=container_ip, source_username=container_ssh_username, source_password=container_ssh_password, source_port=container_ssh_port, target_file_path=cert_filename)
+
+
 
     def setup(self):
         fun_test.test_assert(self.setup_local_repository(),
