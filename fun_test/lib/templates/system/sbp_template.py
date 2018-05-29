@@ -221,7 +221,7 @@ class SbpZynqSetupTemplate:
                              private_key_filename=DEVELOPER_PRIVATE_KEY_FILE,
                              cert_filename=DEVELOPER_CERT_FILE,
                              tamper_flags="00000000",
-                             debugger_flags="00000000",
+                             debugger_flags="0000FF00",
                              serial_number="00000000000000000000000000000000",
                              serial_number_mask="00000000000000000000000000000000",
                              signing_key="fpk2",
@@ -244,7 +244,7 @@ class SbpZynqSetupTemplate:
         self.host.command(command)
         fun_test.test_assert(self.host.list_files(cert_filename), "developer cert created")
         fun_test.scp(source_file_path=cert_filename, source_ip=container_ip, source_username=container_ssh_username, source_password=container_ssh_password, source_port=container_ssh_port, target_file_path=cert_filename)
-        fun_test.scp(source_file_path=self.DEVELOPER_PRIVATE_KEY_FILE, source_ip=container_ip, source_username=container_ssh_username, source_password=container_ssh_password, source_port=container_ssh_port, target_file_path=cert_filename)
+        fun_test.scp(source_file_path=private_key_filename, source_ip=container_ip, source_username=container_ssh_username, source_password=container_ssh_password, source_port=container_ssh_port, target_file_path=private_key_filename)
 
 
 

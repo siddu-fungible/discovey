@@ -301,7 +301,7 @@ class SbpChallengeTemplate():
 
     def test2(self):
         sd.esecure_enable_debug(developer_key=SbpZynqSetupTemplate.DEVELOPER_PRIVATE_KEY_FILE,
-                                developer_certificate=SbpZynqSetupTemplate.DEVELOPER_CERT_FILE, dbg_grant="00000000", key_password="fun123", verbose=True)
+                                developer_certificate=SbpZynqSetupTemplate.DEVELOPER_CERT_FILE, dbg_grant=0x0000FF00, key_password="fun123", verbose=True)
     def test(self):
         sd.probe(self.probe_name, self.probe_ip, force_disconnect=True)
         # output = sd.esecure_print_status()
