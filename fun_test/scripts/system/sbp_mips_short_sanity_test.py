@@ -18,7 +18,7 @@ class ContainerSetup(FunTestScript):
 
     def setup(self):
         self.docker_host = AssetManager().get_any_docker_host()
-        self.container_asset = SbpZynqSetupTemplate(host=None, zynq_board_ip=None).setup_container()
+        self.container_asset = SbpZynqSetupTemplate(host=None, zynq_board_ip=None).setup_container(git_pull=False)
 
     def cleanup(self):
         container_asset = fun_test.shared_variables["container_asset"]
