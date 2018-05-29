@@ -230,12 +230,12 @@ class SbpZynqSetupTemplate:
                              container_ssh_username="root",
                              container_ssh_password="fun123"
                              ):
-        command = "openssl genrsa -aes256 -out {}  -passout pass:fun123 {}".format(key_filename, key_size)
+        command = "openssl genrsa -aes256 -out {}  -passout pass:fun123 {}".format(private_key_filename, key_size)
         self.host.command(command)
-        fun_test.test_assert(self.host.list_files(key_filename), "Developer private key")
+        fun_test.test_assert(self.host.list_files(private_key_filename), "Developer private key")
         # Extract key modulus
         modulus_filename = "/tmp/developer_modulus.bin"
-        command = "openssl rsa -in {} -passin pass:fun123 -modulus | cut -f 2 -d '=' -s | xxd -p -r  - {}".format(key_filename, modulus_filename)
+        command = "openssl rsa -in {} -passin pass:fun123 -modulus | cut -f 2 -d '=' -s | xxd -p -r  - {}".format(private_key_filename, modulus_filename)
         self.host.command(command)
         fun_test.test_assert(self.host.list_files(modulus_filename), "modulus created")
 
