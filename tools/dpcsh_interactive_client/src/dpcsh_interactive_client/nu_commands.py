@@ -787,7 +787,6 @@ class PeekCommands(object):
                                 else:
                                     table_obj.add_row([_key, result[key][_key]])
                             master_table_obj.add_column(key, [table_obj])
-                    prev_result = result
                 else:
                     if prev_result:
                         for queue in result:
