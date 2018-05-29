@@ -88,7 +88,7 @@ class FunTestCase1(FunTestCase):
                     ec_encode_throughput_avg = int(d["avg"])
 
                     unit = m.group(2)
-                    fun_test.test_assert_expected(actual=unit, expected="MBps",
+                    fun_test.test_assert_expected(actual=unit, expected="Mbps",
                                                   message="perf_ec_encode_throughput unit")
 
                 m = re.search(r'({.*})\s+(\S+)\s+\[perf_ec_recovery_latency\]', line)
@@ -110,7 +110,7 @@ class FunTestCase1(FunTestCase):
                     ec_recovery_throughput_avg = int(d["avg"])
 
                     unit = m.group(2)
-                    fun_test.test_assert_expected(actual=unit, expected="MBps",
+                    fun_test.test_assert_expected(actual=unit, expected="Mbps",
                                                   message="perf_ec_encode_throughput unit")
 
             if stats_found:
