@@ -221,7 +221,7 @@ class SbpZynqSetupTemplate:
                              private_key_filename=DEVELOPER_PRIVATE_KEY_FILE,
                              cert_filename=DEVELOPER_CERT_FILE,
                              tamper_flags="00000000",
-                             debugger_flags="00000000",
+                             debugger_flags="0000FF00",
                              serial_number="00000000000000000000000000000000",
                              serial_number_mask="00000000000000000000000000000000",
                              signing_key="fpk2",
