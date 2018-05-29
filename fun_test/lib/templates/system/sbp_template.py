@@ -161,7 +161,7 @@ class SbpZynqSetupTemplate:
     ENROLLMENT_CERT_BIN = "enroll_cert.bin"
     ENROLLMENT_TBS_BIN = "enroll_tbs.bin"
     SBP_FIRMWARE_REPO_DIR = INTEGRATION_DIR + "/../SBPFirmware"
-    DEFAULT_SBP_PUF_BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180507.bit"
+    DEFAULT_SBP_PUF_BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180523.bit"
 
     def __init__(self, host, zynq_board_ip, bit_stream=None):
         self.host = host
