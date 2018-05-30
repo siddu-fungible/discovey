@@ -435,7 +435,7 @@ class SbpZynqSetupTemplate:
                                                                                  secure_boot=True)))
         certificate_contents = ""
         m = re.search(
-            r'TBS Certificate log start.*memory\s+read.*bytes:(.*)\[INFO\].*Step 1-4: TBS Certificate log end', output,
+            r'TBS Certificate log start.*memory\s+read.*bytes:(.*)\[INFO\].*\[', output,
             re.MULTILINE | re.DOTALL)
         fun_test.test_assert(m, message="Find TBS certificate section in log")
         if m:
