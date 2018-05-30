@@ -16,6 +16,6 @@ setup(
         "ipaddress",
         "netaddr",
         "prettytable",
-        "cmd2",
+        "cmd2 == 0.8.5",
     ],
 )

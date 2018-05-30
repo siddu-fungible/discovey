@@ -14,7 +14,6 @@ class CmdController(Cmd):
         self._sys_cmd_obj = SystemCommands(dpc_client=self._dpc_client.dpc_client)
         self._qos_cmd_obj = QosCommands(dpc_client=self._dpc_client.dpc_client)
         self._peek_cmd_obj = PeekCommands(dpc_client=self._dpc_client.dpc_client)
-        TIME_INTERVAL = 3
 
     def set_system_time_interval(self, args):
         time_interval = args.time
