@@ -1,0 +1,7 @@
+{
+  "source_mac1": "00:10:94:00:00:02",
+  "destination_mac1": "00:DE:AD:BE:EF:00",
+  "source_ip1": "207.1.1.2",
+  "destination_ip1": "50.0.3.1",
+  "gateway1": "192.85.1.1"
+}
