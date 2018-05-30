@@ -45,12 +45,14 @@ class SpirentManager(object):
         self.chassis_type = chassis_type
         self.dut_type = dut_type
         self.interface_mode = interface_mode
+        self.dpcsh_server_config = {}
         if fun_test.local_settings:
             self.chassis_type = fun_test.get_local_setting("spirent_chassis_type")
             self.dut_type = fun_test.get_local_setting("dut_type")
             self.host_config['test_module'] = fun_test.get_local_setting(self.chassis_type)
             self.dut_config = fun_test.get_local_setting(self.dut_type)
             self.interface_mode = fun_test.get_local_setting("interface_mode")
+            self.dpcsh_server_config = fun_test.get_local_setting("dpcsh_server")
         self.chassis_ip = self._get_chassis_ip_by_chassis_type()
 
     def health(self, session_name="TestSession"):
@@ -792,18 +794,30 @@ class SpirentManager(object):
         return result
 
     def configure_pfc_header(self, header_obj, stream_block_handle, class_enable_vector=False,
-                             ls_octet="00000000", ms_octet="00000000"):
+                             ls_octet="00000000", ms_octet="00000000", update=False):
         result = None
         try:
             attributes = header_obj.get_attributes_dict()
             fun_test.debug("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
-            header_created = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle, **attributes)
-            fun_test.simple_assert(header_created, "header created")
-            handle = self.stc.get(header_created, "Handle")
-            header_obj._spirent_handle = handle
-            if class_enable_vector and handle:
-                output = self.stc.create("classEnableVector", under=handle, lsOctet=ls_octet, msOctet=ms_octet)
-                fun_test.simple_assert(output, "Configure Class Enable Vector for %s" % header_obj._spirent_handle)
+            if not update:
+                header_created = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle, **attributes)
+                fun_test.simple_assert(header_created, "header created")
+                handle = self.stc.get(header_created, "Handle")
+                header_obj._spirent_handle = handle
+                if class_enable_vector and handle:
+                    output = self.stc.create("classEnableVector", under=handle, lsOctet=ls_octet, msOctet=ms_octet)
+                    fun_test.simple_assert(output, "Configure Class Enable Vector for %s" % header_obj._spirent_handle)
+            else:
+                header_type = header_obj.HEADER_TYPE.lower()
+                child_type = 'children-' + header_type
+                header_handle = self.get_object_children(stream_block_handle, child_type=child_type)[0]
+                self.stc.config(header_handle, **attributes)
+                fun_test.log('Updated pfc header attributes on streamblock %s' % stream_block_handle)
+                if class_enable_vector:
+                    new_header_handle = self.get_object_children(stream_block_handle, child_type=child_type)[0]
+                    header_child_handle = self.get_object_children(new_header_handle)[0]
+                    self.stc.config(header_child_handle, msOctet=ms_octet, lsOctet=ls_octet)
+                    fun_test.log('Updated class enabled vector attributes on streamblock %s' % stream_block_handle)
             if self.apply_configuration():
                 result = True
         except Exception as ex:
@@ -853,6 +867,54 @@ class SpirentManager(object):
                     output = self.get_rx_port_analyzer_results(port_handle, subscribe_result['analyzer_subscribe'])
                     result[port_handle]['analyzer_result'] = output
                     fun_test.log("Fetched analyzer_result for port %s" % port_handle)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_capture(self, capture_obj, port_handle):
+        result = False
+        try:
+            capture_handle = self.get_object_children(port_handle,child_type='children-capture')
+            capture_obj._spirent_handle = capture_handle[0]
+            update_attributes = capture_obj.get_attributes_dict()
+            self.stc.config(capture_obj._spirent_handle, **update_attributes)
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def start_capture_command(self, capture_handle, real_time_decoder_location="", real_time_host_name='127.0.0.1',
+                              real_time_tcp_port='2006'):
+        result = None
+        try:
+            self.stc.perform("CaptureStartCommand", CaptureProxyId=capture_handle,
+                             RealTimeDecoderLocation=real_time_decoder_location, RealTimeHostName=real_time_host_name,
+                             RealTimeTcpPort=real_time_tcp_port)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def stop_capture_command(self, capture_handle):
+        result = None
+        try:
+            self.stc.perform("CaptureStopCommand", CaptureProxyId=capture_handle)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def save_capture_data_command(self, capture_handle, file_name, file_name_path, append_suffix_to_file_name=False,
+                                  end_frame_index='0', file_name_format='PCAP', start_frame_index='0'):
+
+        result = None
+        try:
+            self.stc.perform("CaptureDataSaveCommand", CaptureProxyId=capture_handle,
+                             AppendSuffixToFileName=append_suffix_to_file_name, EndFrameIndex=end_frame_index,
+                             FileName=file_name, FileNamePath=file_name_path, FileNameFormat=file_name_format,
+                             StartFrameIndex=start_frame_index)
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
