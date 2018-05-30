@@ -3,8 +3,7 @@ from datetime import datetime
 import re
 import time
 
-TIME_INTERVAL = 2
-
+TIME_INTERVAL = 3
 
 class PortCommands(object):
     def __init__(self, dpc_client):
@@ -210,15 +209,23 @@ class SystemCommands(object):
     def __init__(self, dpc_client):
         self.dpc_client = dpc_client
 
-    def set_time_interval(self, time_interval):
-        TIME_INTERVAL = time_interval
-        print "Time interval between stats iteration set to %d secs" % TIME_INTERVAL
+    def time_interval(self, time_interval=None):
+        global TIME_INTERVAL
+        if time_interval:
+            TIME_INTERVAL = time_interval
+            print "Time interval between stats iteration set to %d secs" % TIME_INTERVAL
+        else:
+            print TIME_INTERVAL
 
-    def set_system_syslog_levels(self, level_val):
+    def system_syslog_level(self, level_val=None):
         try:
-            cmd = 'params/syslog/level %d' % level_val
-            result = self.dpc_client.execute(verb='poke', arg_list=cmd)
-            print result
+            if level_val:
+                result = self.dpc_client.execute(verb="poke", arg_list=["params/syslog/level", level_val])
+                print result
+            else:
+                cmd = "params/syslog/level"
+                result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                print result
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 

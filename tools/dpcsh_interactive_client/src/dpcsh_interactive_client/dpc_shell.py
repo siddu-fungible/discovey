@@ -43,6 +43,17 @@ class DpcShell(object):
         else:
             print 'Connected to DPC server via tcp_proxy at %s:%s.' % (
                 self.target_ip, self.target_port)
+            self._set_syslog_level(level=3)
+
+    def _set_syslog_level(self, level):
+        try:
+            result = self.dpc_client.execute(verb="poke", arg_list=["params/syslog/level", level])
+            if result:
+                print "Syslog level set to %d" % level
+            else:
+                print "Unable to set syslog level"
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
 
 
 

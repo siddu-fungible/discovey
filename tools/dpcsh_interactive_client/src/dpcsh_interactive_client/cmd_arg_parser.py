@@ -4,12 +4,12 @@ from argparse import ArgumentParser
 base_set_parser = ArgumentParser(prog="set")
 base_set_subparsers = base_set_parser.add_subparsers(title="subcommands", help="")
 set_nu_parser = base_set_subparsers.add_parser('nu', help="Set NU config")
+set_system_parser = base_set_subparsers.add_parser('system', help="Set System Configs")
 
 # Set NU sub commands
 set_nu_subparsers = set_nu_parser.add_subparsers(title='subcommands', help="")
 set_nu_port_parser = set_nu_subparsers.add_parser('port', help="NU Port commands")
 set_nu_qos_parser = set_nu_subparsers.add_parser('qos', help="NU QoS commands")
-set_nu_system_parser = set_nu_subparsers.add_parser('system', help="NU system log commands")
 
 # -----------------------------------------------------------------------------------------------
 # Set NU Port sub commands
@@ -303,19 +303,16 @@ set_qos_xoff_status_parser.add_argument('-status', type=int, help="QoS xoff_stat
 
 # -----------------------------------------------------------------------------------------------
 # Set NU system sub commands
-set_nu_system_parsers = set_nu_system_parser.add_subparsers(title="subcommands", help="")
-set_system_params_parser = set_nu_system_parsers.add_parser('params', help="Set System Params")
-set_system_time_interval_parser = set_nu_system_parsers.add_parser('time_interval', help="Set Time interval between "
-                                                                                         "stats iterations")
-set_system_time_interval_parser.add_argument('time_interval', type=int, help="Time interval in secs")
+set_system_parsers = set_system_parser.add_subparsers(title="subcommands", help="")
+set_system_params_parser = set_system_parsers.add_parser('params', help="Set System Params")
+set_system_time_interval_parser = set_system_parsers.add_parser('time_interval', help="Set Time interval between "
+                                                                                      "stats iterations")
+set_system_time_interval_parser.add_argument('time', type=int, help="Time interval in secs")
 
 # Set Syslog Levels
 set_system_params_subparsers = set_system_params_parser.add_subparsers(title="subcommands", help="")
 set_system_params_syslog_parser = set_system_params_subparsers.add_parser('syslog', help="Set System Syslog Params")
-set_system_params_syslog_subparsers = set_system_params_syslog_parser.add_subparsers(title="subcommands", help="")
-set_system_params_syslog_level_parser = set_system_params_syslog_subparsers.add_parser('level',
-                                                                                       help="Set System Syslog Levels")
-set_system_params_syslog_level_parser.add_argument('level_val', type=int, help="Syslog Level Value")
+set_system_params_syslog_parser.add_argument('level_val', type=int, help="Syslog Level Value")
 
 # ============================================================================================================
 
@@ -323,12 +320,12 @@ set_system_params_syslog_level_parser.add_argument('level_val', type=int, help="
 base_get_parser = ArgumentParser(prog="get")
 base_get_subparsers = base_get_parser.add_subparsers(title="subcommands", help="")
 get_nu_parser = base_get_subparsers.add_parser('nu', help="Get NU config")
+get_system_parser = base_get_subparsers.add_parser('system', help="system log commands")
 
 # Get NU sub commands
 get_nu_subparsers = get_nu_parser.add_subparsers(title='subcommands', help="")
 get_nu_port_parser = get_nu_subparsers.add_parser('port', help="NU Port commands")
 get_nu_qos_parser = get_nu_subparsers.add_parser('qos', help="NU QoS commands")
-get_nu_system_parser = get_nu_subparsers.add_parser('system', help="NU system log commands")
 # -----------------------------------------------------------------------------------------------
 
 # Get NU Port sub commands
@@ -476,8 +473,14 @@ get_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
 
 
 # -----------------------------------------------------------------------------------------------
-# Get NU system sub commands
-get_nu_system_parsers = get_nu_system_parser.add_subparsers(title="subcommands", help="")
+# Get system sub commands
+get_system_parsers = get_system_parser.add_subparsers(title="subcommands", help="")
+get_system_params_parser = get_system_parsers.add_parser('params', help="Get System Params")
+get_system_time_interval_parser = get_system_parsers.add_parser('time_interval', help="Get Time interval between "
+                                                                                      "stats iterations")
+# Get Syslog Levels
+get_system_params_subparsers = get_system_params_parser.add_subparsers(title="subcommands", help="")
+get_system_params_syslog_parser = get_system_params_subparsers.add_parser('syslog', help="Get System Syslog Params")
 
 # ============================================================================================================
 

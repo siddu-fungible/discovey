@@ -14,10 +14,14 @@ class CmdController(Cmd):
         self._sys_cmd_obj = SystemCommands(dpc_client=self._dpc_client.dpc_client)
         self._qos_cmd_obj = QosCommands(dpc_client=self._dpc_client.dpc_client)
         self._peek_cmd_obj = PeekCommands(dpc_client=self._dpc_client.dpc_client)
+        TIME_INTERVAL = 3
 
     def set_system_time_interval(self, args):
-        time_interval = args.time_interval
-        self._sys_cmd_obj.set_time_interval(time_interval=time_interval)
+        time_interval = args.time
+        self._sys_cmd_obj.time_interval(time_interval=time_interval)
+
+    def get_system_time_interval(self, args):
+        self._sys_cmd_obj.time_interval(time_interval=None)
 
     def set_port_mtu(self, args):
         port_num = args.port_num
@@ -120,7 +124,10 @@ class CmdController(Cmd):
         self._port_cmd_obj.dump_runt_filter(port_num=args.port_num, shape=args.shape)
 
     def set_system_syslog_level(self, args):
-        self._sys_cmd_obj.set_system_syslog_levels(level_val=args.level_val)
+        self._sys_cmd_obj.system_syslog_level(level_val=args.level_val)
+
+    def get_system_syslog_level(self, args):
+        self._sys_cmd_obj.system_syslog_level(level_val=None)
 
     def set_qos_egress_buffer_pool(self, args):
         sf_thr = args.sf_thr
@@ -428,8 +435,10 @@ class CmdController(Cmd):
     get_port_runt_filter_parser.set_defaults(func=dump_port_runt_filter)
 
     # -------------- System Command Handlers ----------------
-    set_system_params_syslog_level_parser.set_defaults(func=set_system_syslog_level)
+    set_system_params_syslog_parser.set_defaults(func=set_system_syslog_level)
     set_system_time_interval_parser.set_defaults(func=set_system_time_interval)
+    get_system_time_interval_parser.set_defaults(func=get_system_time_interval)
+    get_system_params_syslog_parser.set_defaults(func=get_system_syslog_level)
 
     # -------------- QoS Command Handlers ----------------
     set_qos_egress_buffer_pool_parser.set_defaults(func=set_qos_egress_buffer_pool)

@@ -19,7 +19,9 @@ INTRO = """
     3. Peek various Stats in iterations at certain time interval. Shows difference in counters in tabular format. 
        Also user can grep specific counters by using regex
     
-    For "help" or "-h" for available commands/sub-commands 
+    For "help" or "-h" for available commands/sub-commands
+    
+    System log level set to 3 by default. If you want to change it then run set system params syslog <level> 
 """
 
 
