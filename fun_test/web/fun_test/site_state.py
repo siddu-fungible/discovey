@@ -112,8 +112,7 @@ class SiteState():
         m.children = "[]"
         m.save()
 
-        if m.chart_name == "Total":
-            m.add_child(all_metrics_chart.metric_id)
+
         for child in children:
             c = self._do_register_metric(metric=child)
             if c:
@@ -144,6 +143,12 @@ class SiteState():
             for metric in metrics:
                 self._do_register_metric(metric=metric)
 
+        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
+                                                            chart_name="Total")
+        all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
+                                                            chart_name="All metrics")
+        if total_chart.chart_name == "Total":
+            total_chart.add_child(all_metrics_chart.metric_id)
 if not site_state:
     site_state = SiteState()
 

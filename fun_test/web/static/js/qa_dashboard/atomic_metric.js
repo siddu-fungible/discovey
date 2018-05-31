@@ -54,6 +54,7 @@ function AtomicMetricController($scope, commonService, $timeout) {
         let s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
         s += "<b>Software date:</b> " + softwareDate + "<br>";
         s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
+        s += "<b>Git commit:</b> " + $scope.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "")  + "<br>";
         s += "<b>Value:</b> " + y + "<br>";
         return s;
     };

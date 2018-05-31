@@ -1,7 +1,8 @@
 from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig
-
+from lib.host.network_controller import NetworkController
+from helper import *
 
 num_ports = 2
 
@@ -16,11 +17,16 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, srcMac, srcIp, destMac, destIp, gateway, ether_type, gen_obj, \
-            gen_config_obj
+            gen_config_obj, network_controller_obj, dut_port_1, dut_port_2
 
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="mac-sanity")
         fun_test.test_assert(template_obj, "Create template object")
+
+        # Create network controller object
+        dpcsh_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
+        dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
+        network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
         result = template_obj.setup(no_of_ports_needed=num_ports)
         fun_test.test_assert(result['result'], "Configure setup")
@@ -32,6 +38,8 @@ class SpirentSetup(FunTestScript):
         destMac = template_obj.stc_manager.dut_config['destination_mac1']
         srcIp = template_obj.stc_manager.dut_config['source_ip1']
         destIp = template_obj.stc_manager.dut_config['destination_ip1']
+        dut_port_1 = template_obj.stc_manager.dut_config['port_nos'][0]
+        dut_port_2 = template_obj.stc_manager.dut_config['port_nos'][1]
         gateway = template_obj.stc_manager.dut_config['gateway1']
         ether_type = "0800"
 
@@ -74,7 +82,12 @@ class TestCase1(FunTestCase):
                         """)
 
     def setup(self):
-        pass
+        # Clear port results on DUT
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
         fun_test.log("In testcase cleanup")
@@ -149,6 +162,21 @@ class TestCase1(FunTestCase):
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters")
 
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+
+        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+        dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
+
+        fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
+                                      message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
+                                              % (dut_port_1, dut_port_2))
+
+        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results['FrameCount']),
+                                      message="Ensure frames transmitted from DUT and counter on spirent match")
+
 
 class TestCase2(FunTestCase):
     streamblock_obj = None
@@ -166,7 +194,12 @@ class TestCase2(FunTestCase):
                         """)
 
     def setup(self):
-        pass
+        # Clear port results on DUT
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
         fun_test.log("In testcase cleanup")
@@ -241,13 +274,47 @@ class TestCase2(FunTestCase):
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
         fun_test.log("Tx Port Generator Results %s" % tx_port_generator_results)
 
-        # ASK Expected results
-
         # Check frame counts
         frames_received = 0
         fun_test.test_assert_expected(actual=int(rx_port_analyzer_results['TotalFrameCount']), expected=frames_received,
                                       message="Ensure no frame is received")
 
+        # TODO: Undersized frames fpg 6
+
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
+
+        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+        fun_test.test_assert(not dut_port_2_transmit, "Ensure frames transmitted is None")
+
+        dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(dut_port_1_undersize_pkts),
+                                      message="Ensure all packets are marked undersize on rx port of dut")
+        '''
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        fun_test.simple_assert(psw_stats, message="Ensure psw stats are received")
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                      actual=int(psw_stats['input']['cpr_feop_pkt']),
+                                      message="Check all packets are seen in cpr_feop_pkt")
+
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                      actual=int(psw_stats['input']['cpr_sop_drop_pkt']),
+                                      message="Check all packets are seen in cpr_sop_drop_pkt")
+
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                      actual=int(psw_stats['input']['fwd_frv']),
+                                      message="Check all packets are seen in fwd_frv")
+
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                      actual=int(psw_stats['input']['ifpg1_pkt']),
+                                      message="Check all packets are seen in ifpg1_pkt")
+
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                      actual=int(psw_stats['input']['main_pkt_drop_eop']),
+                                      message="Check all packets are seen in main_pkt_drop_eop")
+        '''
 
 class TestCase3(FunTestCase):
     streamblock_obj = None
@@ -267,7 +334,12 @@ class TestCase3(FunTestCase):
                         """)
 
     def setup(self):
-        pass
+        # Clear port results on DUT
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
         fun_test.log("In testcase cleanup")
@@ -361,6 +433,22 @@ class TestCase3(FunTestCase):
 
         fun_test.test_assert_expected(expected=0, actual=int(rx_port_analyzer_results['FcsErrorFrameCount']),
                                       message="Ensure no FCS errors are seen")
+
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+
+        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+        fun_test.test_assert_expected(actual=int(dut_port_2_transmit),
+                                      expected=int(rx_port_analyzer_results['TotalFrameCount']),
+                                      message="Ensure frames transmitted is None")
+
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
+
+        dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
+        fun_test.test_assert_expected(expected=int(tx_port_generator_results['GeneratorUndersizeFrameCount']),
+                                      actual=int(dut_port_1_undersize_pkts),
+                                      message="Ensure packets are marked undersize on rx port of dut")
 
 
 if __name__ == "__main__":

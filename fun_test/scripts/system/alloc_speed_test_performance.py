@@ -79,7 +79,10 @@ class FunTestCase1(FunTestCase):
 
             response = lsf_status_server.get_job_by_id(job_id=job_id)
             fun_test.test_assert(response, "Fetch job info for {}".format(job_id))
-            response_dict = json.loads(response)
+            try:
+                response_dict = json.loads(response)
+            except Exception as ex:
+                pass
             fun_test.log(json.dumps(response_dict, indent=4))
             output_text = response_dict["output_text"]
 

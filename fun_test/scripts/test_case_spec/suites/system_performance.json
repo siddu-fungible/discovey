@@ -1,3 +1,4 @@
 [
-  {"path": "system/alloc_speed_test_performance.py"}
+  {"path": "system/alloc_speed_test_performance.py"},
+  {"path": "system/palladium_bcopy_performance.py"}
 ]

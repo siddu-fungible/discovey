@@ -289,7 +289,8 @@ def build_to_date_map(request):
             key = int(m.group(1))
         build_info[entry.completion_date] = {"software_date": entry.software_date,
                                              "hardware_version": entry.hardware_version,
-                                             "fun_sdk_branch": entry.fun_sdk_branch}
+                                             "fun_sdk_branch": entry.fun_sdk_branch,
+                                             "git_commit": entry.git_commit}
     return build_info
 
 

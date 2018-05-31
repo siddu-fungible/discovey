@@ -3,7 +3,7 @@ from asset.asset_manager import AssetManager
 from lib.host.linux import Linux
 from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
-BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180322.bit"
+BIT_STREAM = "SilexBitfiles/esecure_top_fpga_sbppuf_20180507.bit"
 ZYNC_BOARD_IP = "10.1.23.106"
 
 
@@ -1605,7 +1605,8 @@ class TestCase14(FunTestCase):
 
         sbp_setup.host.create_file(contents=json.dumps(config), file_name="/tmp/flash_config.json")
         sbp_setup.host.read_file(file_name="/tmp/flash_config.json")
-        sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
+        # sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir())
+        sbp_setup.custom_flash_generator(artifacts_dir=sbp_setup._get_artifacts_dir(), spec="./custom_flash_config_files/config14.json")
 
         stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
         stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)

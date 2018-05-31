@@ -140,6 +140,61 @@
                 "label": "WU Latency: Ungated",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "name": "Bcopy: Plain: Avg Bandwidth",
+                "label": "Bcopy: Plain: Avg Bandwidth",
+                "info": "Bcopy: Plain: Avg Bandwidth",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+
+              },
+              {
+                "name": "Bcopy: Plain: Avg Latency",
+                "label": "Bcopy: Plain: Avg Latency",
+                "info": "Bcopy: Plain: Avg Latency",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: DMA: Avg Bandwidth",
+                "label": "Bcopy: DMA: Avg Bandwidth",
+                "info": "Bcopy: DMA: Avg Bandwidth",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: DMA: Avg Latency",
+                "label": "Bcopy: DMA: Avg Latency",
+                "info": "Bcopy: DMA: Avg Latency",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: Flood DMA: Avg Bandwidth",
+                "label": "Bcopy: Flood DMA: Avg Bandwidth",
+                "info": "Bcopy: Flood DMA: Avg Bandwidth",
+                "metric_model_name": "BcopyFloodDmaPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: Flood DMA: Avg Latency",
+                "label": "Bcopy: Flood DMA: Avg Latency",
+                "info": "Bcopy: Flood DMA: Avg Latency",
+                "metric_model_name": "BcopyFloodDmaPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
               }
             ]
           },
