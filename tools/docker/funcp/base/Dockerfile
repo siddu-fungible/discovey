@@ -9,7 +9,7 @@ ARG     DEP_INSTALL_DIR=/fun_external/
 
 RUN     apt -y update; apt-get -y upgrade; \
         apt-get install --no-install-recommends --no-install-suggests -y \
-        gdb python bc procps openssh-client cpio libtool libasan2 less bzip2 vim \
+        gdb python rsync bc procps openssh-client cpio libtool libasan2 less bzip2 vim \
         curl wget libnl-3-dev libnl-route-3-dev libcap2 libpci3 libpng16-16 libpixman-1-0 u-boot-tools \
         iproute2 net-tools openssh-server libsystemd-dev libc-ares-dev \
         texinfo libjson-c-dev openvswitch-switch \
@@ -30,18 +30,21 @@ RUN     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
         update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-6 && \
         update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5; 
 
-RUN     pip install --upgrade pip && \
-        pip install pyyaml jinja2 gcovr bitstring tabulate pipenv scapy --ignore-installed setuptools
+RUN     pip install --upgrade pip setuptools 
+RUN     pip install --upgrade pyyaml jinja2 gcovr 
+RUN     pip install bitstring tabulate pipenv scapy --ignore-installed setuptools
         
 RUN     easy_install setuptools_git
 
-RUN   mkdir -p /fun_external; mkdir -p $DEP_INSTALL_DIR
-RUN   cd /fun_external; git clone --branch v3.0.1 https://github.com/nlohmann/json.git;
+# Install needed packages for FunControlPlane
+# Add JSON
+RUN   mkdir -p $DEP_INSTALL_DIR
+RUN   wget -O $DEP_INSTALL_DIR/v3.0.1.tar.gz https://github.com/nlohmann/json/archive/v3.0.1.tar.gz; cd $DEP_INSTALL_DIR; tar xvf v3.0.1.tar.gz;  ln -s json-3.0.1/ json
 
 # Add asio
 RUN   cd /fun_external; wget -O $ASIO_PKG $ASIO_URL; \
       tar -xjf $ASIO_PKG -C /fun_external; cd $ASIO_DIR && \
-      ./configure --prefix=$DEP_INSTALL_DIR --disable-dependency-tracking --with-boost=no && make -j `nproc` && make install
+    ./configure --prefix=$DEP_INSTALL_DIR --disable-dependency-tracking --with-boost=no && make -j `nproc` && make install
 
 # Add Gtest and gmock
 RUN   cd /fun_external; git clone https://github.com/google/googletest.git;
