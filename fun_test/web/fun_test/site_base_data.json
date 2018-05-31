@@ -32,6 +32,17 @@
       "name": "system",
       "verbose_name": "System"
     }
-  ]
-
+  ],
+  "performance": {
+    "leaves": [
+      {
+        "chart_name": "Best time for 1 malloc/free (WU)",
+        "metric_model_name": "AllocSpeedPerformance"
+      },
+      {
+        "chart_name": "Best time for 1 malloc/free (Threaded)",
+        "metric_model_name": "AllocSpeedPerformance"
+      }
+    ]
+  }
 }

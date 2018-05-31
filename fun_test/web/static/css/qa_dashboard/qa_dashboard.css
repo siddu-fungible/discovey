@@ -310,3 +310,31 @@ input:checked + .slider:before {
     }
 
 }
+
+.highcharts-container {
+    width:100% !important;
+    height:100% !important;
+}
+
+.icon-superscript {
+  float:right;
+  max-width:5%;
+  position: relative;
+  top: 0;
+  font-size: 100%;
+  margin-top:0;
+  padding-top:0;
+}
+
+@media all {
+    .closed-banner {
+        height: 4px;
+        overflow: hidden;
+        background: lightgrey;
+    }
+    .closed-section {
+        height: 2px;
+        overflow: hidden;
+        background: lightgrey;
+    }
+}

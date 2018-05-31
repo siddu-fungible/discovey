@@ -1,11 +1,13 @@
 from django.db import models
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 import json
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
-
+from datetime import datetime
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 class MetricChart(models.Model):
@@ -17,6 +19,9 @@ class MetricChart(models.Model):
     children = models.TextField(default="[]")
     leaf = models.BooleanField(default=False)
     positive = models.BooleanField(default=True)
+    y1_axis_title = models.TextField(default="")
+    y2_axis_title = models.TextField(default="")
+    children_weights = models.TextField(default="{}")
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -24,10 +29,21 @@ class MetricChart(models.Model):
     def get_children(self):
         return json.loads(self.children)
 
+    def get_children_weights(self):
+        return json.loads(self.children_weights)
+
     def add_child(self, child_id):
         children = json.loads(self.children)
-        children.append(child_id)
-        self.children = json.dumps(children)
+        if child_id not in children:
+            children.append(child_id)
+            self.children = json.dumps(children)
+            self.save()
+
+    def add_child_weight(self, child_id, weight):
+        children_weights = json.loads(self.children_weights)
+        children_weights = {int(x): y for x, y in children_weights.iteritems()}
+        children_weights[int(child_id)] = weight
+        self.children_weights = json.dumps(children_weights)
         self.save()
 
     def goodness(self):
@@ -55,50 +71,99 @@ class MetricChart(models.Model):
                 break
         return result
 
-    def get_last_record(self):
-        return self.filter(last=True)
+    def get_last_record(self, number_of_records=1):
+        return self.filter(number_of_records=number_of_records)
 
-    def get_status(self):
-        status = False
-        goodness = 0
+    def get_status(self, number_of_records=5):
+        goodness_values = []
+        status_values = []
         children = json.loads(self.children)
+        children_weights = json.loads(self.children_weights)
+        children_weights = {int(x): y for x, y in children_weights.iteritems()}
+        children_goodness_map = {}
+        num_children_passed = 0
+        num_children_failed = 0
         if not self.leaf:
             if len(children):
-                status = True
                 for child in children:
                     child_metric = MetricChart.objects.get(metric_id=child)
-                    child_status, child_goodness = child_metric.get_status()
-                    status = status and child_status
-                    goodness += child_goodness
+                    get_status = child_metric.get_status()
+                    child_status_values, child_goodness_values = get_status["status_values"], \
+                                                                 get_status["goodness_values"]
+                    last_child_status = child_status_values[-1]
+                    if last_child_status:
+                        num_children_passed += 1
+                    else:
+                        num_children_failed += 1
+
+                    for i in range(number_of_records):
+                        if len(status_values) < (i + 1):
+                            status_values.append(True)
+                        if len(child_status_values) < (i + 1):
+                            child_status_values.append(True)
+                        status_values[i] = status_values[i] and child_status_values[i]
+                        if len(goodness_values) < (i + 1):
+                            goodness_values.append(0)
+                        if len(child_goodness_values) < (i + 1):
+                            child_goodness_values.append(0)
+
+                        child_weight = children_weights[child] if child in children_weights else 1
+                        goodness_values[i] += child_goodness_values[i] * child_weight
+                        children_goodness_map[child] = child_goodness_values
         else:
-            last_record = self.get_last_record()
+            last_records = self.get_last_record(number_of_records=number_of_records)
             data_sets = json.loads(self.data_sets)
             if len(data_sets):
-                data_set = data_sets[0]
+                # data_set = data_sets[0]
 
-                max_value = data_set["output"]["max"]
-                min_value = data_set["output"]["min"]
-                output_name = data_set["output"]["name"]
-                expected_value = None
-                if "expected" in data_set["output"]:
-                    expected_value = data_set["output"]["expected"]
-                else:
-                    expected_value = max_value
-                    if not self.positive:
-                        expected_value = min_value
+                data_set_statuses = []
 
-                output_value = last_record[output_name]
-                status = output_value >= min_value and output_value <= max_value
+                for last_record in last_records:
+                    data_set_combined_goodness = 0
+                    for data_set in data_sets:
+                        max_value = data_set["output"]["max"]
+                        min_value = data_set["output"]["min"]
+                        try:
+                            output_name = data_set["output"]["name"]
+                        except:
+                            pass
 
-                if expected_value is not None:
-                    if self.positive:
-                        goodness = (float(output_value) / expected_value) * 100
-                    else:
-                        goodness = (float(expected_value) / output_value) * 100
-        print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status, goodness))
-        return status, goodness
+                        if "expected" in data_set["output"]:
+                            expected_value = data_set["output"]["expected"]
+                        else:
+                            expected_value = max_value
+                            if not self.positive:
+                                expected_value = min_value
 
-    def filter(self, last=False):
+                        output_value = last_record[output_name]
+                        data_set_statuses.append(output_value >= min_value and output_value <= max_value)
+                        if expected_value is not None:
+                            if self.positive:
+                                data_set_combined_goodness += (float(output_value) / expected_value) * 100
+                            else:
+                                data_set_combined_goodness += (float(expected_value) / output_value) * 100
+                    goodness_values.append(data_set_combined_goodness/len(data_sets))
+                status_values.append(reduce(lambda x, y: x and y, data_set_statuses))
+
+        # Fill up missing values
+        for i in range(number_of_records - len(goodness_values)):
+            if len(goodness_values):
+                goodness_values.append(goodness_values[-1])
+            else:
+                goodness_values.append(0)
+        for i in range(number_of_records - len(status_values)):
+            if len(status_values):
+                status_values.append(status_values[-1])
+            else:
+                status_values.append(True)
+        print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
+        return {"status_values": status_values,
+                "goodness_values": goodness_values,
+                "children_goodness_map": children_goodness_map,
+                "num_children_passed": num_children_passed,
+                "num_children_failed": num_children_failed}
+
+    def filter(self, number_of_records=1):
         data = []
         data_sets = json.loads(self.data_sets)
         if len(data_sets):
@@ -109,17 +174,30 @@ class MetricChart(models.Model):
             for input_name, input_value in inputs.iteritems():
                 d[input_name] = input_value
             try:
-                if not last:
-                    entries = model.objects.filter(**d).order_by("-id")
-                    for entry in entries:
-                        data.append(model_to_dict(entry))
-                else:
-                    entry = model.objects.filter(**d).last()
-                    data = model_to_dict(entry)
-
+                entries = model.objects.filter(**d).order_by("-input_date_time")[:number_of_records]
+                entries = reversed(entries)
+                for entry in entries:
+                    data.append(model_to_dict(entry))
             except ObjectDoesNotExist:
                 logger.critical("No data found Model: {} Inputs: {}".format(self.metric_model_name, str(inputs)))
         return data
+
+    @staticmethod
+    def get(chart_name, metric_model_name):
+        result = None
+        try:
+            object = MetricChart.objects.get(chart_name=chart_name, metric_model_name=metric_model_name)
+            result = object
+        except ObjectDoesNotExist:
+            pass
+        return result
+
+
+class MetricChartSerializer(ModelSerializer):
+    class Meta:
+        model = MetricChart
+        fields = "__all__"
+
 
 class LastMetricId(models.Model):
     last_id = models.IntegerField(unique=True, default=100)
@@ -202,7 +280,8 @@ class VolumePerformance(models.Model):
 
 
 class AllocSpeedPerformance(models.Model):
-    key = models.CharField(max_length=30, verbose_name="Software date")
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
     output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
     output_one_malloc_free_threaded = models.IntegerField(verbose_name="Time in ns (Threaded)")
@@ -212,6 +291,28 @@ class AllocSpeedPerformance(models.Model):
         return "{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded)
 
 
+class WuLatencyAllocStack(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    key = models.CharField(max_length=30, verbose_name="Git tag")
+    input_app = models.TextField(verbose_name="wu_latency_test: alloc_stack", default="wu_latency_test", choices=[(0, "wu_latency_test")])
+    output_min = models.IntegerField(verbose_name="Min (ns)")
+    output_max = models.IntegerField(verbose_name="Max (ns)")
+    output_avg = models.IntegerField(verbose_name="Avg (ns)")
+
+    def __str__(self):
+        return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
+
+class WuLatencyUngated(models.Model):
+    key = models.CharField(max_length=30, verbose_name="Git tag")
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.TextField(verbose_name="wu_latency_test: Ungated WU", default="wu_latency_test", choices=[(0, "wu_latency_test")])
+    output_min = models.IntegerField(verbose_name="Min (ns)")
+    output_max = models.IntegerField(verbose_name="Max (ns)")
+    output_avg = models.IntegerField(verbose_name="Avg (ns)")
+
+    def __str__(self):
+        return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
+
 class VolumePerformanceSerializer(ModelSerializer):
     class Meta:
         model = VolumePerformance
@@ -219,8 +320,110 @@ class VolumePerformanceSerializer(ModelSerializer):
 
 
 class AllocSpeedPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
     class Meta:
         model = AllocSpeedPerformance
+        fields = "__all__"
+
+class UnitTestPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=20, default="unit_tests", choices=[(0, "unit_tests")])
+    input_job_id = models.IntegerField(verbose_name="Job Id", default=0)
+    output_num_passed = models.IntegerField(verbose_name="Passed")
+    output_num_failed = models.IntegerField(verbose_name="Failed")
+    output_num_disabled = models.IntegerField(verbose_name="Disabled")
+    input_hardware_version = models.CharField(max_length=50, default="", verbose_name="Hardware version")
+    input_software_date = models.CharField(max_length=50, default="", verbose_name="Software date")
+    input_git_commit = models.CharField(max_length=100, default="", verbose_name="Git commit")
+    input_branch_funsdk = models.CharField(max_length=100, default="", verbose_name="Branch FunSDK")
+
+    def __str__(self):
+        return "{}..{}..{}".format(self.input_software_date, self.output_num_passed, self.output_num_failed)
+
+class UnitTestPerformanceSerializer(ModelSerializer):
+    class Meta:
+        model = UnitTestPerformance
+        fields = "__all__"
+
+class GenericSerializer(ModelSerializer):
+    def set_model(self, model):
+        pass
+
+class EcPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_ndata_min = models.IntegerField(verbose_name="ndata min", default=8)
+    input_ndata_max = models.IntegerField(verbose_name="ndata min", default=8)
+    input_nparity_min = models.IntegerField(verbose_name="nparity min", default=4)
+    input_stridelen_min = models.IntegerField(verbose_name="strideline min", default=4096)
+    input_stridelen_max = models.IntegerField(verbose_name="strideline max", default=4096)
+
+    output_encode_latency_min = models.IntegerField(verbose_name="Encode Latency min")
+    output_encode_latency_max = models.IntegerField(verbose_name="Encode Latency max")
+    output_encode_latency_avg = models.IntegerField(verbose_name="Encode Latency avg")
+
+    output_encode_throughput_min = models.IntegerField(verbose_name="Encode Throughput min")
+    output_encode_throughput_max = models.IntegerField(verbose_name="Encode Throughput max")
+    output_encode_throughput_avg = models.IntegerField(verbose_name="Encode Throughput avg")
+
+    output_recovery_latency_min = models.IntegerField(verbose_name="Recovery Latency min")
+    output_recovery_latency_max = models.IntegerField(verbose_name="Recovery Latency max")
+    output_recovery_latency_avg = models.IntegerField(verbose_name="Recovery Latency avg")
+
+    output_recovery_throughput_min = models.IntegerField(verbose_name="Recovery Throughput min")
+    output_recovery_throughput_max = models.IntegerField(verbose_name="Recovery Throughput max")
+    output_recovery_throughput_avg = models.IntegerField(verbose_name="Recovery Throughput avg")
+
+    '''
+     min_ndata=8 
+     max_ndata=8 
+     min_nparity=4 
+     max_nparity=4 
+     min_stridelen=4096 max_stridelen=4096 numthreads=1
+    '''
+
+class BcopyPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_iterations = models.IntegerField(verbose_name="Iterations", default=10)
+    input_coherent = models.TextField(verbose_name="Coherent/Non", default="Coherent", choices=[(0, "Coherent"), (1, "Non-coherent")])
+    input_plain = models.TextField(verbose_name="Plain/DMA", default="Plain", choices=[(0, "Plain"), (1, "DMA")])
+    input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
+    output_latency_units = models.TextField(verbose_name="Latency units")
+    output_latency_min = models.IntegerField(verbose_name="Latency min")
+    output_latency_max = models.IntegerField(verbose_name="Latency max")
+    output_latency_avg = models.IntegerField(verbose_name="Latency max")
+    input_latency_perf_name = models.TextField(verbose_name="Latency perf name")
+    output_average_bandwith = models.IntegerField(verbose_name="Average Bandwidth in Gbps")
+    input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+class BcopyFloodDmaPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_n = models.IntegerField(verbose_name="N", default=0, choices=[(0, "1"), (1, "2"), (2, "4"), (3, "8"), (4, "16"), (5, "32"), (6, "64")])
+    input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
+    output_latency_units = models.TextField(verbose_name="Latency units")
+    output_latency_min = models.IntegerField(verbose_name="Latency min")
+    output_latency_max = models.IntegerField(verbose_name="Latency max")
+    output_latency_avg = models.IntegerField(verbose_name="Latency avg")
+    input_latency_perf_name = models.TextField(verbose_name="Latency perf name")
+    output_average_bandwith = models.IntegerField(verbose_name="Average Bandwidth in Gbps")
+    input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
+class BcopyPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = BcopyPerformance
+        fields = "__all__"
+
+class BcopyFloodDmaPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = BcopyFloodDmaPerformance
         fields = "__all__"
 
 
@@ -230,6 +433,12 @@ ANALYTICS_MAP = {
         "module": "networking",
         "component": "general",
         "verbose_name": "Performance 1 ..."
+    },
+    "UnitTestPerformance": {
+        "model": UnitTestPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "UnitTestPerformance"
     },
 
     "PerformanceBlt": {
@@ -258,7 +467,44 @@ ANALYTICS_MAP = {
         "module": "system",
         "component": "general",
         "verbose_name": "Alloc Speed Performance"
-    }
+    },
 
+    "WuLatencyAllocStack": {
+        "model": WuLatencyAllocStack,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "WU Latency Test: Alloc stack"
+    },
+    "WuLatencyUngated": {
+        "model": WuLatencyUngated,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "WU Latency Test: Ungated"
+    },
+    "EcPerformance": {
+        "model": EcPerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "EC Performance"
+
+    },
+    "BcopyPerformance": {
+        "model": BcopyPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "BCopy Performance"
+    },
+    "BcopyFloodDmaPerformance": {
+        "model": BcopyFloodDmaPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "BCopy Flood DMA Performance"
+    },
+    "JenkinsJobIdMap": {
+        "model": JenkinsJobIdMap,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "Jenkids Job Id map"
+    }
 }
 

@@ -1,6 +1,7 @@
 import os, django, json, datetime
+from datetime import datetime
 from django.core import serializers, paginator
-from fun_global import RESULTS, get_current_time
+from fun_global import RESULTS, get_current_time, get_localized_time
 from django.utils import timezone
 import dateutil.parser
 from django.db.models import Q
@@ -259,19 +260,18 @@ def _get_suite_executions(execution_id=None,
 
     return all_objects_dict
 
-
-def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version):
+def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date):
     print"Hardware_version: {}".format(hardware_version)
     try:
-        entry = JenkinsJobIdMap.objects.get(jenkins_job_id=jenkins_job_id, fun_sdk_branch=fun_sdk_branch,
-                                            git_commit=git_commit)
+        entry = JenkinsJobIdMap.objects.get(completion_date=completion_date)
         entry.fun_sdk_branch = fun_sdk_branch
         entry.git_commit = git_commit
         entry.software_date = software_date
         entry.hardware_version = hardware_version
         entry.save()
     except ObjectDoesNotExist:
-        entry = JenkinsJobIdMap(jenkins_job_id=jenkins_job_id,
+        entry = JenkinsJobIdMap(completion_date=completion_date,
+                                jenkins_job_id=jenkins_job_id,
                                 fun_sdk_branch=fun_sdk_branch,
                                 git_commit=git_commit,
                                 software_date=software_date,

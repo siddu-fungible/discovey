@@ -1,7 +1,7 @@
 'use strict';
 
 
-function EditableMetricChartController($scope, commonService, $attrs) {
+function EditableMetricChartController($scope, commonService, $attrs, $window) {
     let ctrl = this;
 
     ctrl.$onInit = () => {
@@ -38,6 +38,7 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         });
 
         $scope.currentDescription = "---";
+        $scope.inner = {};
     };
 
     $scope.$watch(function () {
@@ -87,6 +88,10 @@ function EditableMetricChartController($scope, commonService, $attrs) {
     };
 
 
+    $scope.openAtomicTab = () => {
+        let url = "/metrics/atomic/" + $scope.chartName + "/" + $scope.modelName;
+        $window.open(url, '_blank');
+    };
 
     $scope.fetchChartInfo = () => {
         // Fetch chart info
@@ -96,18 +101,33 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         if ($scope.chartName) {
             commonService.apiPost("/metrics/chart_info", payload, "EditableMetricChartController: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;
+                $scope.y1AxisTitle = chartInfo.y1_axis_title;
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
-                $scope.currentDescription = $scope.chartInfo.description;
+                $scope.inner.currentDescription = $scope.chartInfo.description;
                 $scope.negativeGradient = !$scope.chartInfo.positive;
+                $scope.leaf = $scope.chartInfo.leaf;
             });
         } else {
 
         }
     };
 
+    $scope.showThreshold = () => {
+        $scope.showingThreshold = true;
+    };
 
+    $scope.hideThreshold = () => {
+        $scope.showingThreshold = false;
+    };
 
+    $scope.showTable = () => {
+        $scope.showingTable = true;
+    };
+
+    $scope.hideTable = () => {
+        $scope.showingTable = false;
+    };
 
     $scope.addDataSetClick = () => {
         //let newDataSet = {};
@@ -186,8 +206,9 @@ function EditableMetricChartController($scope, commonService, $attrs) {
         payload["metric_model_name"] = $scope.modelName;
         payload["chart_name"] = $scope.chartName;
         payload["data_sets"] = $scope.previewDataSets;
-        payload["description"] = $scope.currentDescription;
+        payload["description"] = $scope.inner.currentDescription;
         payload["negative_gradient"] = $scope.negativeGradient;
+        payload["leaf"] = $scope.leaf;
         commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
             if (data) {
                 alert("Submitted");
@@ -211,7 +232,8 @@ angular.module('qa-dashboard').component("editableMetricChart", {
         previewDataSets: '<',
         pointClickCallback: '&',
         xaxisFormatter: '&',
-        tooltipFormatter: '&'
+        tooltipFormatter: '&',
+        atomic: '<'
     },
     controller: EditableMetricChartController
 });

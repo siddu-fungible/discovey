@@ -5,6 +5,61 @@ import os
 import subprocess
 from shutil import copyfile
 
+# Sample spec file:
+'''
+{
+  "name": "flash_image",
+  "size": "0x40000",
+  "puf_rom": {
+    "a": {
+      "version": "0x1"
+    }
+  },
+  "firmware": {
+    "a": {
+      "key": "fpk3",
+      "version": "0x1"
+    }
+  },
+  "host": {
+    "a": {
+      "key": "fpk5",
+      "version": "0x2"
+    }
+  },
+  "enrollment_certificate": {
+    "a": {
+      "reserve": 2000,
+      "key": "fpk4"
+    }
+  },
+  "start_certificate": {
+    "a": {
+        "serial_number": "00000000000000000000000000000000",
+        "serial_number_mask": "00000000000000000000000000000000",
+        "tamper_flags": "00000000",
+        "debugger_flags": "00000000",
+        "public_key": "fpk2",
+        "key": "fpk1"
+    },
+    "b": {
+        "serial_number": "00000000000000000000000000000000",
+        "serial_number_mask": "00000000000000000000000000000000",
+        "tamper_flags": "00000000",
+        "debugger_flags": "00000000",
+        "public_key": "fpk2",
+        "key": "fpk1"
+    }
+  },
+  "eeprom": {
+    "a": {
+      "version": "0x1",
+      "key": "fpk5"
+    }
+  }
+}
+'''
+
 CONFIG_TEMPLATE = """
 # Mandatory sections: All, PUF-ROM, START-CERT, FIRMWARE, HOST
 [All]
@@ -31,7 +86,7 @@ optional:
 
 
 class FlashGenerator():
-    START_CERTIFICATE_NAME = "start_certificate.bin"
+    START_CERTIFICATE_NAME = "start_certificate_{}.bin"
     PUF_ROM_NAME = "esecure_puf_rom_packed_{}.bin"
     FIRMWARE_NAME = "esecure_firmware_packed_{}.bin"
     HOST_NAME = "host_firmware_packed_{}.bin"
@@ -68,13 +123,9 @@ class FlashGenerator():
         self.host["b"] = {"name": ""}
         self.enrollment_certificate = {}
 
-        self.start_cert_name = None
-        self.start_cert_serial_number = None
-        self.start_cert_serial_number_mask = None
-        self.start_cert_tamper_flags = None
-        self.start_cert_debugger_flags = None
-        self.start_cert_public_key = None
-        self.start_cert_key = None
+        self.start_certificate = {}
+        self.start_certificate["a"] = {"name": ""}
+        self.start_certificate["b"] = {"name": ""}
 
         self.eeprom = {}
         self.eeprom["a"] = {"name": ""}
@@ -98,13 +149,12 @@ class FlashGenerator():
     def set_puf_rom(self,
                     version,
                     binary,
-                    start_certificate=START_CERTIFICATE_NAME,
                     bank="a",
                     type="pufr"):
         d = self.puf_rom[bank]
         d["name"] = self.PUF_ROM_NAME.format(bank)
         d["version"] = version
-        d["start_certificate"] = start_certificate
+        d["start_certificate"] = self.START_CERTIFICATE_NAME.format(bank)
         d["type"] = type
         d["binary"] = binary
 
@@ -131,14 +181,15 @@ class FlashGenerator():
                               debugger_flags,
                               public_key,
                               key,
-                              name=START_CERTIFICATE_NAME):
-        self.start_cert_name = name
-        self.start_cert_serial_number = serial_number
-        self.start_cert_serial_number_mask = serial_number_mask
-        self.start_cert_tamper_flags = tamper_flags
-        self.start_cert_debugger_flags = debugger_flags
-        self.start_cert_public_key = public_key
-        self.start_cert_key = key
+                              bank="a"):
+        d = self.start_certificate[bank]
+        d["name"] = self.START_CERTIFICATE_NAME.format(bank)
+        d["serial_number"] = serial_number
+        d["serial_number_mask"] = serial_number_mask
+        d["tamper_flags"] = tamper_flags
+        d["debugger_flags"] = debugger_flags
+        d["public_key"] = public_key
+        d["key"] = key
 
     def set_enrollment_certificate(self, reserve, key):
         self.enrollment_certificate["name"] = self.ENROLLMENT_CERTIFICATE_NAME
@@ -170,13 +221,22 @@ class FlashGenerator():
             f.write(config)
 
     def generate_start_certificate(self):
-        s = "python3 {} certificate --tamper_flags {} --debugger_flags {} --serial_number {} --serial_number_mask {} --public {} --key {} --output {}".format(
-            self.FIRMWARE_IMAGE_PY_PATH,
-            self.start_cert_tamper_flags,
-            self.start_cert_debugger_flags,
-            self.start_cert_serial_number,
-            self.start_cert_serial_number_mask, self.start_cert_public_key, self.start_cert_key, self.start_cert_name)
-        return self.execute_command(s)
+        poll_status, stdout, stderr = 0, "", ""
+        for bank, info in self.puf_rom.iteritems():
+            if self.start_certificate[bank]["name"]:
+                s = "python3 {} certificate --tamper_flags {} --debugger_flags {} --serial_number {} --serial_number_mask {} --public {} --key {} --output {}".format(
+                    self.FIRMWARE_IMAGE_PY_PATH,
+                    self.start_certificate[bank]["tamper_flags"],
+                    self.start_certificate[bank]["debugger_flags"],
+                    self.start_certificate[bank]["serial_number"],
+                    self.start_certificate[bank]["serial_number_mask"],
+                    self.start_certificate[bank]["public_key"],
+                    self.start_certificate[bank]["key"],
+                    self.start_certificate[bank]["name"])
+                poll_status, stdout, stderr = self.execute_command(s)
+                if poll_status:
+                    break
+        return poll_status, stdout, stderr
 
     def generate_puf_rom(self):
         poll_status, stdout, stderr = 0, "", ""
@@ -187,7 +247,7 @@ class FlashGenerator():
                     self.puf_rom[bank]["binary"],
                     self.puf_rom[bank]["version"],
                     self.puf_rom[bank]["type"],
-                    self.start_cert_name,
+                    self.start_certificate[bank]["name"],
                     self.puf_rom[bank]["name"])
                 poll_status, stdout, stderr = self.execute_command(s)
                 if poll_status:
@@ -250,98 +310,81 @@ class FlashGenerator():
         return self.execute_command(s)
 
     def generate_flash(self):
-        s = "python {} {} ./{}".format(self.GEN_FLASH2_PY_PATH, self.FLASH_CONFIG_FILE, self.ENROLLMENT_CERTIFICATE_NAME)
+        s = "python {} {} ./{}".format(self.GEN_FLASH2_PY_PATH, self.FLASH_CONFIG_FILE,
+                                       self.ENROLLMENT_CERTIFICATE_NAME)
         output = self.execute_command(s)
-        flash_image_name = self.DEFAULT_FLASH_IMAGE_BASENAME + ".bin"
-        copyfile(flash_image_name, self.output_dir + "/" + flash_image_name)
-        flash_image_map_name = "flash_image.map"
-        copyfile(flash_image_map_name, self.output_dir + "/" + flash_image_map_name)
+        images_to_copy = [self.DEFAULT_FLASH_IMAGE_BASENAME + "." + x for x in ["map", "bin", "byte"]]
+        for image_to_copy in images_to_copy:
+            copyfile(image_to_copy, self.output_dir + "/" + image_to_copy)
         return output
 
     def generate(self):
         image_size = self.spec["size"]
 
-        # Start-certificate
-
-        serial_number = self.spec["start_certificate"]["serial_number"]
-        serial_number_mask = self.spec["start_certificate"]["serial_number_mask"]
-        tamper_flags = self.spec["start_certificate"]["tamper_flags"]
-        debugger_flags = self.spec["start_certificate"]["debugger_flags"]
-        start_certificate_key = self.spec["start_certificate"]["key"]
-        start_certificate_public_key = self.spec["start_certificate"]["public_key"]
-
-        # PUF-ROM
-        puf_rom_spec = self.spec["puf_rom"]
-        if "a" in puf_rom_spec:
-            puf_rom_a_version = self.spec["puf_rom"]["a"]["version"]
-            puf_rom_a_type = self.spec["puf_rom"]["a"].get("type", "pufr")
-            puf_rom_a_binary = self.spec["puf_rom"]["a"].get("binary", os.path.join(self.artifacts_dir, self.DEFAULT_PUF_ROM_BIN))
-            fg.set_puf_rom(version=puf_rom_a_version, bank="a", type=puf_rom_a_type, binary=puf_rom_a_binary)
-
-        if "b" in puf_rom_spec:
-            puf_rom_b_version = self.spec["puf_rom"]["b"]["version"]
-            puf_rom_b_type = self.spec["puf_rom"]["b"].get("type", "pufr")
-            puf_rom_b_binary = self.spec["puf_rom"]["a"].get("binary", os.path.join(self.artifacts_dir, self.DEFAULT_PUF_ROM_BIN))
-            fg.set_puf_rom(version=puf_rom_b_version, bank="b", type=puf_rom_b_type, binary=puf_rom_b_binary)
-
-        # Firmware
-        firmware_spec = self.spec["firmware"]
-        if "a" in firmware_spec:
-            firmware_a_version = self.spec["firmware"]["a"]["version"]
-            firmware_a_key = self.spec["firmware"]["a"]["key"]
-            firmware_a_type = self.spec["firmware"]["a"].get("type", "frmw")
-            firmware_a_binary = self.spec["firmware"]["a"].get("binary", os.path.join(self.artifacts_dir, self.DEFAULT_FIRMWARE_BIN))
-            fg.set_firmware(version=firmware_a_version, key=firmware_a_key, type=firmware_a_type, binary=firmware_a_binary)
-
-        if "b" in firmware_spec:
-            firmware_b_version = self.spec["firmware"]["b"]["version"]
-            firmware_b_key = self.spec["firmware"]["b"]["key"]
-            firmware_b_type = self.spec["firmware"]["b"].get("type", "frmw")
-            firmware_b_binary = self.spec["firmware"]["b"].get("binary", os.path.join(self.artifacts_dir, self.DEFAULT_FIRMWARE_BIN))
-            fg.set_firmware(version=firmware_b_version, key=firmware_b_key, type=firmware_b_type, binary=firmware_b_binary)
-
         # Enrollment certificate
         enrollment_certificate_key = self.spec["enrollment_certificate"]["a"]["key"]
 
-        # EEPROM
-        eeprom_spec = self.spec["eeprom"]
-        if "a" in eeprom_spec:
-            eeprom_a_version = eeprom_spec["a"]["version"]
-            eeprom_a_key = eeprom_spec["a"]["key"]
-            eeprom_a_type = eeprom_spec["a"].get("type", "eepr")
-            eeprom_a_binary = eeprom_spec["a"].get("binary", self.DEFAULT_EEPROM_BIN)
-            fg.set_eeprom(key=eeprom_a_key, version=eeprom_a_version, type=eeprom_a_type, binary=eeprom_a_binary)
+        banks = ["a", "b"]
+        for bank in banks:
+            # Start-certificate:
+            start_certificate_spec = self.spec["start_certificate"]
+            if bank in start_certificate_spec:
+                spec = self.spec["start_certificate"][bank]
+                serial_number = spec["serial_number"]
+                serial_number_mask = spec["serial_number_mask"]
+                tamper_flags = spec["tamper_flags"]
+                debugger_flags = spec["debugger_flags"]
+                start_certificate_key = spec["key"]
+                start_certificate_public_key = spec["public_key"]
+                fg.set_start_certificate(serial_number=serial_number,
+                                         serial_number_mask=serial_number_mask,
+                                         tamper_flags=tamper_flags,
+                                         debugger_flags=debugger_flags,
+                                         key=start_certificate_key,
+                                         public_key=start_certificate_public_key, bank=bank)
 
-        if "b" in eeprom_spec:
-            eeprom_b_version = eeprom_spec["b"]["version"]
-            eeprom_b_key = eeprom_spec["b"]["key"]
-            eeprom_b_type = eeprom_spec["b"].get("type", "eepr")
-            eeprom_b_binary = eeprom_spec["b"].get("binary", self.DEFAULT_EEPROM_BIN)
-            fg.set_eeprom(key=eeprom_b_key, version=eeprom_b_version, type=eeprom_b_type, binary=eeprom_b_binary)
+            # PUF-ROM
+            puf_rom_spec = self.spec["puf_rom"]
+            if bank in puf_rom_spec:
+                puf_rom_version = self.spec["puf_rom"][bank]["version"]
+                puf_rom_type = self.spec["puf_rom"][bank].get("type", "pufr")
+                puf_rom_binary = self.spec["puf_rom"][bank].get("binary", os.path.join(self.artifacts_dir,
+                                                                                       self.DEFAULT_PUF_ROM_BIN))
+                fg.set_puf_rom(version=puf_rom_version, bank=bank, type=puf_rom_type, binary=puf_rom_binary)
 
-        # Host
-        host_spec = self.spec["host"]
-        if "a" in self.host:
-            host_a_version = host_spec["a"]["version"]
-            host_a_key = host_spec["a"]["key"]
-            host_a_type = host_spec["a"].get("type", "host")
-            host_a_binary = host_spec["a"].get("binary", self.DEFAULT_HOST_BIN)
-            fg.set_host(version=host_a_version, key=host_a_key, type=host_a_type, binary=host_a_binary)
+            # Firmware
+            firmware_spec = self.spec["firmware"]
+            if bank in firmware_spec:
+                firmware_version = self.spec["firmware"][bank]["version"]
+                firmware_key = self.spec["firmware"][bank]["key"]
+                firmware_type = self.spec["firmware"][bank].get("type", "frmw")
+                firmware_binary = self.spec["firmware"][bank].get("binary", os.path.join(self.artifacts_dir,
+                                                                                         self.DEFAULT_FIRMWARE_BIN))
+                fg.set_firmware(version=firmware_version, key=firmware_key, type=firmware_type, binary=firmware_binary)
+
+            # EEPROM
+            eeprom_spec = self.spec["eeprom"]
+            if bank in eeprom_spec:
+                eeprom_version = eeprom_spec[bank]["version"]
+                eeprom_key = eeprom_spec[bank]["key"]
+                eeprom_type = eeprom_spec[bank].get("type", "eepr")
+                eeprom_binary = eeprom_spec[bank].get("binary", self.DEFAULT_EEPROM_BIN)
+                fg.set_eeprom(key=eeprom_key, version=eeprom_version, type=eeprom_type, binary=eeprom_binary)
+
+            # Host
+            host_spec = self.spec["host"]
+            if bank in host_spec:
+                host_version = host_spec[bank]["version"]
+                host_key = host_spec[bank]["key"]
+                host_type = host_spec[bank].get("type", "host")
+                host_binary = host_spec[bank].get("binary", self.DEFAULT_HOST_BIN)
+                fg.set_host(version=host_version, key=host_key, type=host_type, binary=host_binary)
 
         # General settings
-
         fg.set_image_size(size=image_size)
         if "page_size" in self.spec:
             page_size = self.spec["page_size"]
             fg.set_page_size(size=page_size)
-
-        # Set start-certificate
-        fg.set_start_certificate(serial_number=serial_number,
-                                 serial_number_mask=serial_number_mask,
-                                 tamper_flags=tamper_flags,
-                                 debugger_flags=debugger_flags,
-                                 key=start_certificate_key,
-                                 public_key=start_certificate_public_key)
 
         # Set enrollment certificate
         reserve = 2000
@@ -351,7 +394,7 @@ class FlashGenerator():
                   "GEN_FLASH"]
 
         for stage in stages:
-            print("***** Stage: {} ***** \n\n".format(stage))
+            print("\n***** Stage: {} ***** \n\n".format(stage))
             poll_status = None
             stdout = stderr = None
             if stage == "GEN_START_CERT":
@@ -404,6 +447,7 @@ class FlashGenerator():
 
 
 if __name__ == "__main__":
+    # Usage: python custom_flash_generator.py --artifacts_dir ../../artifacts_secure_eeprom_zync6/ --spec flash_config.json --output_dir ../../artifacts_secure_eeprom_zync6
     parser = argparse.ArgumentParser(description="custom_flash_generator")
     parser.add_argument('--spec',
                         dest="spec",

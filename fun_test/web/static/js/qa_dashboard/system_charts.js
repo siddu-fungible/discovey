@@ -4,6 +4,24 @@ function SystemChartsController($scope, $http, commonService) {
     let ctrl = this;
 
     ctrl.$onInit = function () {
+        let payload = {};
+        payload["module_name"] = "system";
+        $scope.featureTable = [];
+        commonService.apiPost("/metrics/models_by_module", payload, "Fetch models by module").then((models) => {
+            angular.forEach(models, (value, metricModelName) => {
+                value.charts.forEach((chartName) => {
+                    let oneFeature = {};
+                    oneFeature.name = chartName;
+                    oneFeature.chartName = chartName;
+                    oneFeature.metricModelName = metricModelName;
+                    $scope.featureTable.push(oneFeature);
+                });
+            });
+            $scope.featureTable.forEach((feature) => {
+            $scope.getMetricStatus(feature);
+        });
+        });
+
         $scope.chart1Name = "Best time for 1 malloc/free (WU)";
         $scope.model1Name = "AllocSpeedPerformance";
         $scope.chart2Name = "Best time for 1 malloc/free (Threaded)";
@@ -11,7 +29,7 @@ function SystemChartsController($scope, $http, commonService) {
         $scope.fetchJenkinsJobIdMap();
         $scope.buildInfo = null;
 
-        $scope.featureTable = [];
+        /*
         let oneFeature = {
             name: "Best time for 1 malloc/free (WU)",
             chartName: "Best time for 1 malloc/free (WU)",
@@ -24,13 +42,17 @@ function SystemChartsController($scope, $http, commonService) {
             metricModelName: "AllocSpeedPerformance"};
         $scope.featureTable.push(oneFeature);
 
-
+        oneFeature = {
+            name: "drwer",
+            chartName: "drwer",
+            metricModelName: "WuLatencyUngated"};
+        $scope.featureTable.push(oneFeature);
+        */
         $scope.currentChartName = "Best time for 1 malloc/free (WU)";
         $scope.currentMetricModelName = "AllocSpeedPerformance";
 
-        $scope.featureTable.forEach((feature) => {
-            $scope.getMetricStatus(feature);
-        });
+
+
 
 
     };

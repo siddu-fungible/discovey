@@ -68,16 +68,16 @@ if __name__ == "__main__":
             "expected": 55
         }
     }
-    old_charts = ["root_chart", "child1chart", "child2chart"]
+    old_charts = ["Total", "Software", "Hardware", "Nucleus"]
     for old_chart in old_charts:
         try:
             c = MetricChart.objects.filter(chart_name=old_chart)
             c.delete()
         except Exception as ex:
             pass
-    metric_model_name = "Abc"
-    chart_name = "root_chart"
-    description = "root_desc"
+    metric_model_name = "Total"
+    chart_name = "Total"
+    description = "Total"
     root_metric = add_metric(metric_model_name=metric_model_name,
                              chart_name=chart_name,
                              description=description,
@@ -85,23 +85,41 @@ if __name__ == "__main__":
                              positive=False, leaf=False)
 
 
-    # Child 1
-    metric_model_name = "Performance1"
-    chart_name = "child1chart"
-    description = "child1description"
-    child1 = add_metric(metric_model_name=metric_model_name, chart_name=chart_name, description=description, leaf=False)
+    # Software
+    metric_model_name = "Software"
+    chart_name = "Software"
+    description = "Software"
+    software_metric = add_metric(metric_model_name=metric_model_name,
+                                 chart_name=chart_name,
+                                 description=description,
+                                 leaf=False)
 
-    # Child 2
-    metric_model_name = "child2"
-    chart_name = "child2chart"
-    description = "child2description"
-    child2 = add_metric(metric_model_name=metric_model_name, chart_name=chart_name, description=description, leaf=False)
+    # Hardware
+    metric_model_name = "Hardware"
+    chart_name = "Hardware"
+    description = "Hardware"
+    hardware_metric = add_metric(metric_model_name=metric_model_name,
+                                 chart_name=chart_name,
+                                 description=description,
+                                 leaf=False)
 
     root_metric = get_metric_by_id(metric_id=root_metric.metric_id)
-    root_metric.add_child(child_id=child1.metric_id)
-    root_metric.add_child(child_id=child2.metric_id)
+    root_metric.add_child(child_id=software_metric.metric_id)
+    root_metric.add_child(child_id=hardware_metric.metric_id)
 
     print root_metric.get_children()
+
+
+    # Nucleus
+    metric_model_name = "Nucleus"
+    chart_name = "Nucleus"
+    description = "Nucleus"
+    nucleus_metric = add_metric(metric_model_name=metric_model_name,
+                                 chart_name=chart_name,
+                                 description=description,
+                                 leaf=False)
+
+    software_metric.add_child(child_id=nucleus_metric.metric_id)
 
 
     # Leaf 1
@@ -116,15 +134,16 @@ if __name__ == "__main__":
                                       description=description,
                                       leaf=True, data_sets=[data_set]))
 
-
-    child1.add_child(child_id=leaf_charts[0].metric_id)
-    child1.add_child(child_id=leaf_charts[1].metric_id)
-    child2.add_child(child_id=leaf_charts[2].metric_id)
-    child2.add_child(child_id=leaf_charts[3].metric_id)
+    # nucleus_metric.add_child(child_id=leaf_charts[0].metric_id)
+    # nucleus_metric.add_child(child_id=leaf_charts[1].metric_id)
+    nucleus_metric.add_child(child_id=MetricChart.get(chart_name="Best time for 1 malloc/free (WU)",
+                                                      metric_model_name="AllocSpeedPerformance").metric_id)
+    nucleus_metric.add_child(child_id=MetricChart.get(chart_name="Best time for 1 malloc/free (Threaded)",
+                                                      metric_model_name="AllocSpeedPerformance").metric_id)
 
     # records = root_metric.filter(last=True)
     # print records
     #for record in records:
     #    print str(record)
     # print leaf_charts[0].get_status()
-    print root_metric.get_status()
+    root_metric.get_status()

@@ -70,6 +70,13 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
+def generate_uuid(length=16):
+
+    this_uuid = str(uuid.uuid4()).replace("-", "")[length:]
+    # this_uuid = this_uuid[:3] + '-' + this_uuid[3:6] + '-' + this_uuid[6:9] + '-' + this_uuid[9:]
+    return this_uuid
+
+
 class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -183,7 +190,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                  format(self.dut_instance.data_plane_ip))
 
             command_result = {}
-            self.thin_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+            self.thin_uuid = generate_uuid()
             command_result = self.storage_controller.create_thin_block_volume(
                 capacity=self.volume_details["capacity"], block_size=self.volume_details["block_size"],
                 name=self.volume_details["name"], uuid=self.thin_uuid, command_duration=self.command_timeout)

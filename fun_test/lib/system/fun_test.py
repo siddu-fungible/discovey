@@ -9,7 +9,7 @@ from fun_settings import *
 import fun_xml
 import argparse
 import threading
-from fun_global import RESULTS, get_current_time, determine_version
+from fun_global import RESULTS, get_current_time, determine_version, get_localized_time
 from scheduler.scheduler_helper import *
 import signal
 from web.fun_test.web_interface import get_homepage_url
@@ -588,6 +588,7 @@ class FunTest:
 
         self.log("{}{}/".format(get_homepage_url(), LOGS_RELATIVE_DIR) + self.script_file_name.replace(".py", ".html"),
                  no_timestamp=True)
+        self.log("\nRuntime: {}".format(self.get_wall_clock_time()))
 
     def print_test_case_summary(self, test_case_id):
         metrics = self.test_metrics[test_case_id]
@@ -730,8 +731,19 @@ class FunTest:
             flat = "_".join(parts[-2:])
         return flat.lstrip("/")
 
-    def inspect(self, module_name):
+    def _is_sub_class(self, base_class, mros):
+        result = None
+        for mro in mros[1:]:
+            if base_class in str(mro):
+                result = True
+                break
+        return result
 
+
+
+    def inspect(self, module_name):
+        result = {}
+        result["classes"] = []
         sys.argv.append("--disable_fun_test")
         test_cases = []
 
@@ -739,7 +751,6 @@ class FunTest:
         import inspect
 
         temp_module_name = self._get_flat_file_name(path=module_name)
-
         imp.load_source(temp_module_name, module_name)
         members = inspect.getmembers(sys.modules[temp_module_name], inspect.isclass)
         for m in members:
@@ -747,17 +758,18 @@ class FunTest:
                 klass = m[1]
                 mros = inspect.getmro(klass)
                 if issubclass(klass, FunTestCase):
-                    if len(mros) > 1 and "lib.system.fun_test.FunTestCase" in str(mros[1]):
-                        print klass
+                    if len(mros) > 1 and self._is_sub_class(base_class="lib.system.fun_test.FunTestCase", mros=mros):
+                        # print klass
                         o = klass()
                         o.describe()
-                        print o.id
-                        print o.summary
-                        print o.steps
+                        # print o.id
+                        # print o.summary
+                        # print o.steps
+                        result["classes"].append({"name": o.__class__.__name__, "summary": o.summary})
                         test_cases.append(klass)
 
                 if issubclass(klass, FunTestScript):
-                    if len(mros) > 1 and "lib.system.fun_test.FunTestScript" in str(mros[1]):
+                    if len(mros) > 1 and self._is_sub_class(base_class="lib.system.fun_test.FunTestScript", mros=mros):
                         test_script = klass
         # test_script_obj = test_script()
         # test_case_order = test_script().test_case_order
@@ -765,6 +777,7 @@ class FunTest:
         for entry in test_script().test_case_order:
             print entry["tc"]
         '''
+        return result
 
     def add_auxillary_file(self, description, filename):
         base_name = os.path.basename(filename)

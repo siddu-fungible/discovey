@@ -136,9 +136,10 @@ class JenkinsJobIdMap(models.Model):
     git_commit = models.TextField(default="")
     software_date = models.IntegerField(default=0)
     hardware_version = models.TextField(default="")
+    completion_date = models.TextField(default="")
 
     def __str__(self):
-        return "{} {} {}".format(self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
+        return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
 
 class JenkinsJobIdMapSerializer(ModelSerializer):
     class Meta:

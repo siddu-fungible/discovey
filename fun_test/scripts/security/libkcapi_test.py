@@ -23,24 +23,39 @@ topology_dict = {
 }
 
 libkcapi_template = ""
-vector_path = "/test_vectors/gcmtest.txt"
-# vector_path = "/test_vectors/NIST/DGST/SHA1.txt"
-cbc_vector_path = ["/test_vectors/NIST/CBC/CBCVectors_1.txt", "/test_vectors/NIST/CBC/CBCVectors_2.txt",
-                   "/test_vectors/NIST/CBC/CBCVectors_3.txt", "/test_vectors/NIST/CBC/CBCVectors_4.txt",
-                   "/test_vectors/NIST/CBC/CBCVectors_5.txt", "/test_vectors/NIST/CBC/CBCVectors_6.txt",
-                   "/test_vectors/NIST/CBC/CBCVectors_7.txt"]
 
-ecb_vector_path = ["/test_vectors/NIST/ECB/ECBVectors_1.txt", "/test_vectors/NIST/ECB/ECBVectors_2.txt",
-                   "/test_vectors/NIST/ECB/ECBVectors_3.txt", "/test_vectors/NIST/ECB/ECBVectors_4.txt",
-                   "/test_vectors/NIST/ECB/ECBVectors_5.txt", "/test_vectors/NIST/ECB/ECBVectors_6.txt"]
+vector_path = ""
 
-xts_vector_path = ["/test_vectors/NIST/XTS/XTSVectors_128.txt", "/test_vectors/NIST/XTS/XTSVectors_256.txt"]
+cbc_vector_path = ["/test_vectors/nist/cbc/cbcvectors_1.txt", "/test_vectors/nist/cbc/cbcvectors_2.txt",
+                   "/test_vectors/nist/cbc/cbcvectors_3.txt", "/test_vectors/nist/cbc/cbcvectors_4.txt",
+                   "/test_vectors/nist/cbc/cbcvectors_5.txt", "/test_vectors/nist/cbc/cbcvectors_6.txt",
+                   "/test_vectors/nist/cbc/cbcvectors_7.txt"]
 
-# gcm_vector_path = ["/test_vectors/gcmtest.txt"]
+ecb_vector_path = ["/test_vectors/nist/ecb/ecbvectors_1.txt", "/test_vectors/nist/ecb/ecbvectors_2.txt",
+                   "/test_vectors/nist/ecb/ecbvectors_3.txt", "/test_vectors/nist/ecb/ecbvectors_4.txt",
+                   "/test_vectors/nist/ecb/ecbvectors_5.txt", "/test_vectors/nist/ecb/ecbvectors_6.txt"]
 
-gcm_vector_path = ["/test_vectors/NIST/GCM/gcmDecrypt128.txt", "/test_vectors/NIST/GCM/gcmDecrypt192.txt",
-                   "/test_vectors/NIST/GCM/gcmDecrypt256.txt", "/test_vectors/NIST/GCM/gcmEncryptExtIV128",
-                   "/test_vectors/NIST/GCM/gcmEncryptExtIV192", "/test_vectors/NIST/GCM/gcmEncryptExtIV256"]
+xts_vector_path = ["/test_vectors/nist/xts/xtsvectors_128.txt", "/test_vectors/nist/xts/xtsvectors_256.txt"]
+
+
+gcm_vector_path = ["/test_vectors/nist/gcm/gcmdecrypt128.txt", "/test_vectors/nist/gcm/gcmdecrypt192.txt",
+                   "/test_vectors/nist/gcm/gcmdecrypt256.txt", "/test_vectors/nist/gcm/gcmencryptextiv128",
+                   "/test_vectors/nist/gcm/gcmencryptextiv192", "/test_vectors/nist/gcm/gcmencryptextiv256"]
+
+ccm_vector_path = ["/test_vectors/nist/ccm/ccm_vadt128.txt", "/test_vectors/nist/ccm/ccm_vadt192.txt",
+                   "/test_vectors/nist/ccm/ccm_vadt256.txt", "/test_vectors/nist/ccm/ccm_dvpt128.txt",
+                   "/test_vectors/nist/ccm/ccm_dvpt192.txt", "/test_vectors/nist/ccm/ccm_dvpt256.txt",
+                   "/test_vectors/nist/ccm/ccm_vnt128.txt", "/test_vectors/nist/ccm/ccm_vnt192.txt",
+                   "/test_vectors/nist/ccm/ccm_vnt256.txt", "/test_vectors/nist/ccm/ccm_vpt128.txt",
+                   "/test_vectors/nist/ccm/ccm_vpt192.txt", "/test_vectors/nist/ccm/ccm_vpt256.txt",
+                   "/test_vectors/nist/ccm/ccm_vtt128.txt", "/test_vectors/nist/ccm/ccm_vtt192.txt",
+                   "/test_vectors/nist/ccm/ccm_vtt256.txt"]
+
+sha1_vector_path = "/test_vectors/nist/dgst/sha1.txt"
+sha224_vector_path = "/test_vectors/nist/dgst/sha224.txt"
+sha256_vector_path = "/test_vectors/nist/dgst/sha256.txt"
+sha384_vector_path = "/test_vectors/nist/dgst/sha384.txt"
+sha512_vector_path = "/test_vectors/nist/dgst/sha512.txt"
 
 
 class LibkcapiScript(FunTestScript):
@@ -57,7 +72,7 @@ class LibkcapiScript(FunTestScript):
         fun_test.shared_variables["topology"] = self.topology
         host = self.topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
         libkcapi_template = LibkcapiTemplate(host)
-#        libkcapi_template.setup()
+        libkcapi_template.setup()
         file_path = fun_test.get_script_parent_directory() + vector_path
         input_dict = libkcapi_template.parse_input_libkcapi(file_path)
         fun_test.shared_variables["host"] = host
@@ -72,7 +87,7 @@ class LibkcapiScript(FunTestScript):
         pass
 
 
-class LibkcapiTestCase1(FunTestCase):
+class TestGcm(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Run gcm(aes) with libkcapi",
@@ -119,14 +134,14 @@ class LibkcapiTestCase1(FunTestCase):
                                                            tag=dec_dict['tag'])).strip()
                 print "expected :", dec_dict['result']
                 print "current :", dec_output
-                # Below method of check was done for NIST vectors. Need to find a better way to handle it.
+                # Below method of check was done for nist vectors. Need to find a better way to handle it.
                 fun_test.simple_assert((dec_output == dec_dict['result']) or
                                        (dec_output in "Received data length 0 does not match expected length 1") or
                                        (dec_output in "EBADMSG"), "decryption verified")
             fun_test.test_assert(True, "gcm(aes) decryption verified")
 
 
-class LibkcapiTestCase2(FunTestCase):
+class TestCcm(FunTestCase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Run ccm(aes) with libkcapi",
@@ -144,33 +159,35 @@ class LibkcapiTestCase2(FunTestCase):
 
     def run(self):
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
-        input_dict = fun_test.shared_variables["input_dict"]
-        enc_dicts = []
-        dec_dicts = []
-        for dict in input_dict:
-            if dict == "enc_ccm(aes)":
-                enc_dicts = input_dict[dict]
-            elif dict == "dec_ccm(aes)":
-                dec_dicts = input_dict[dict]
-        for enc_dict in enc_dicts:
-            enc_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.CCM_AES, enc_dict['cipher_type'],
-                                                       enc_dict['key'], plain_text=enc_dict['plain_text'],
-                                                       nonce=enc_dict['nonce'], assoc_data=enc_dict['assosc_data'],
-                                                       tag=enc_dict['tag'])).strip()
-            fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
-        fun_test.test_assert(True, "ccm(aes) encryption verified")
+        for file_paths in ccm_vector_path:
+            vect_path = fun_test.get_script_parent_directory() + file_paths
+            input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
+            enc_dicts = []
+            dec_dicts = []
+            for dict in input_dict:
+                if dict == "enc_ccm(aes)":
+                    enc_dicts = input_dict[dict]
+                elif dict == "dec_ccm(aes)":
+                    dec_dicts = input_dict[dict]
+            for enc_dict in enc_dicts:
+                enc_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.CCM_AES, enc_dict['cipher_type'],
+                                                           enc_dict['key'], plain_text=enc_dict['plain_text'],
+                                                           nonce=enc_dict['nonce'], assoc_data=enc_dict['assosc_data'],
+                                                           tag_len=enc_dict['tag_len'])).strip()
+                fun_test.simple_assert((enc_output == enc_dict['result']), "encryption verified")
+            fun_test.test_assert(True, "ccm(aes) encryption verified")
 
-        for dec_dict in dec_dicts:
-            dec_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.CCM_AES, dec_dict['cipher_type'],
-                                                       dec_dict['key'], cipher_text=dec_dict['cipher_text'],
-                                                       encrypt=False, nonce=dec_dict['nonce'],
-                                                       assoc_data=dec_dict['assosc_data'],
-                                                       tag=dec_dict['tag'])).strip()
-            fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
-        fun_test.test_assert(True, "ccm(aes) decryption verified")
+            for dec_dict in dec_dicts:
+                dec_output = (libkcapi_template.kcapi_cmnd(LibkcapiTemplate.CCM_AES, dec_dict['cipher_type'],
+                                                           dec_dict['key'], cipher_text=dec_dict['cipher_text'],
+                                                           encrypt=False, nonce=dec_dict['nonce'],
+                                                           assoc_data=dec_dict['assosc_data'],
+                                                           tag=dec_dict['tag'])).strip()
+                fun_test.simple_assert((dec_output == dec_dict['result']), "decryption verified")
+            fun_test.test_assert(True, "ccm(aes) decryption verified")
 
 
-class LibkcapiTestCase3(FunTestCase):
+class TestCtr(FunTestCase):
     def describe(self):
         self.set_test_details(id=3,
                               summary="Run ctr(aes) with libkcapi",
@@ -212,7 +229,7 @@ class LibkcapiTestCase3(FunTestCase):
         fun_test.test_assert(True, "ctr(aes) decryption verified")
 
 
-class LibkcapiTestCase4(FunTestCase):
+class TestEcb(FunTestCase):
     def describe(self):
         self.set_test_details(id=4,
                               summary="Run ecb(aes) with libkcapi",
@@ -256,7 +273,7 @@ class LibkcapiTestCase4(FunTestCase):
             fun_test.test_assert(True, "ecb(aes) decryption verified")
 
 
-class LibkcapiTestCase5(FunTestCase):
+class TestXts(FunTestCase):
     def describe(self):
         self.set_test_details(id=5,
                               summary="Run xts(aes) with libkcapi",
@@ -300,7 +317,7 @@ class LibkcapiTestCase5(FunTestCase):
             fun_test.test_assert(True, "xts(aes) decryption verified")
 
 
-class LibkcapiTestCase6(FunTestCase):
+class TestAuthenc(FunTestCase):
     def describe(self):
         self.set_test_details(id=6,
                               summary="Run authenc with libkcapi",
@@ -346,7 +363,7 @@ class LibkcapiTestCase6(FunTestCase):
         fun_test.test_assert(True, "auth decryption verified")
 
 
-class LibkcapiTestCase7(FunTestCase):
+class TestCbc(FunTestCase):
     def describe(self):
         self.set_test_details(id=7,
                               summary="Run cbc(aes) with libkcapi",
@@ -390,7 +407,7 @@ class LibkcapiTestCase7(FunTestCase):
             fun_test.test_assert(True, "cbc(aes) decryption verified")
 
 
-class LibkcapiTestCase8(FunTestCase):
+class TestRfc3686(FunTestCase):
     def describe(self):
         self.set_test_details(id=8,
                               summary="Run rfc3686 with libkcapi",
@@ -432,7 +449,7 @@ class LibkcapiTestCase8(FunTestCase):
         fun_test.test_assert(True, "RFC3686 decryption verified")
 
 
-class LibkcapiTestCase9(FunTestCase):
+class TestRfc4106(FunTestCase):
     def describe(self):
         self.set_test_details(id=9,
                               summary="Run rfc4106 with libkcapi",
@@ -476,7 +493,7 @@ class LibkcapiTestCase9(FunTestCase):
         fun_test.test_assert(True, "RFC4106 decryption verified")
 
 
-class LibkcapiTestCase10(FunTestCase):
+class TestRfc4309(FunTestCase):
     def describe(self):
         self.set_test_details(id=10,
                               summary="Run rfc4309 with libkcapi",
@@ -520,7 +537,7 @@ class LibkcapiTestCase10(FunTestCase):
         fun_test.test_assert(True, "RFC4309 decryption verified")
 
 
-class LibkcapiTestCase11(FunTestCase):
+class TestSha1(FunTestCase):
     def describe(self):
         self.set_test_details(id=11,
                               summary="Run SHA1 with libkcapi",
@@ -536,8 +553,9 @@ class LibkcapiTestCase11(FunTestCase):
         pass
 
     def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha1_vector_path
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
-        input_dict = fun_test.shared_variables["input_dict"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
         enc_dicts = []
         for dict in input_dict:
             if dict == "dgst_sha1":
@@ -550,7 +568,7 @@ class LibkcapiTestCase11(FunTestCase):
         fun_test.test_assert(True, "SHA1 verified")
 
 
-class LibkcapiTestCase12(FunTestCase):
+class TestSha224(FunTestCase):
     def describe(self):
         self.set_test_details(id=12,
                               summary="Run SHA224 with libkcapi",
@@ -566,8 +584,9 @@ class LibkcapiTestCase12(FunTestCase):
         pass
 
     def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha224_vector_path
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
-        input_dict = fun_test.shared_variables["input_dict"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
         enc_dicts = []
         for dict in input_dict:
             if dict == "dgst_sha224":
@@ -580,7 +599,7 @@ class LibkcapiTestCase12(FunTestCase):
         fun_test.test_assert(True, "SHA224 verified")
 
 
-class LibkcapiTestCase13(FunTestCase):
+class TestSha256(FunTestCase):
     def describe(self):
         self.set_test_details(id=13,
                               summary="Run SHA256 with libkcapi",
@@ -596,8 +615,9 @@ class LibkcapiTestCase13(FunTestCase):
         pass
 
     def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha256_vector_path
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
-        input_dict = fun_test.shared_variables["input_dict"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
         enc_dicts = []
         for dict in input_dict:
             if dict == "dgst_sha256":
@@ -610,7 +630,7 @@ class LibkcapiTestCase13(FunTestCase):
         fun_test.test_assert(True, "SHA256 verified")
 
 
-class LibkcapiTestCase14(FunTestCase):
+class TestSha384(FunTestCase):
     def describe(self):
         self.set_test_details(id=14,
                               summary="Run SHA384 with libkcapi",
@@ -626,8 +646,9 @@ class LibkcapiTestCase14(FunTestCase):
         pass
 
     def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha384_vector_path
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
-        input_dict = fun_test.shared_variables["input_dict"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
         enc_dicts = []
         for dict in input_dict:
             if dict == "dgst_sha384":
@@ -640,7 +661,7 @@ class LibkcapiTestCase14(FunTestCase):
         fun_test.test_assert(True, "SHA384 verified")
 
 
-class LibkcapiTestCase15(FunTestCase):
+class TestSha512(FunTestCase):
     def describe(self):
         self.set_test_details(id=15,
                               summary="Run SHA512 with libkcapi",
@@ -656,8 +677,9 @@ class LibkcapiTestCase15(FunTestCase):
         pass
 
     def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha512_vector_path
         libkcapi_template = fun_test.shared_variables["libkcapi_template"]
-        input_dict = fun_test.shared_variables["input_dict"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
         enc_dicts = []
         for dict in input_dict:
             if dict == "dgst_sha512":
@@ -673,20 +695,20 @@ class LibkcapiTestCase15(FunTestCase):
 if __name__ == "__main__":
     libkcapi_script = LibkcapiScript()
 
-    libkcapi_script.add_test_case(LibkcapiTestCase1())
-    libkcapi_script.add_test_case(LibkcapiTestCase2())
-    libkcapi_script.add_test_case(LibkcapiTestCase3())
-    libkcapi_script.add_test_case(LibkcapiTestCase4())
-    libkcapi_script.add_test_case(LibkcapiTestCase5())
-    libkcapi_script.add_test_case(LibkcapiTestCase6())
-    libkcapi_script.add_test_case(LibkcapiTestCase7())
-    libkcapi_script.add_test_case(LibkcapiTestCase8())
-    libkcapi_script.add_test_case(LibkcapiTestCase9())
-    libkcapi_script.add_test_case(LibkcapiTestCase10())
-    libkcapi_script.add_test_case(LibkcapiTestCase11())
-    libkcapi_script.add_test_case(LibkcapiTestCase12())
-    libkcapi_script.add_test_case(LibkcapiTestCase13())
-    libkcapi_script.add_test_case(LibkcapiTestCase14())
-    libkcapi_script.add_test_case(LibkcapiTestCase15())
+    libkcapi_script.add_test_case(TestGcm())
+    libkcapi_script.add_test_case(TestXts())
+    libkcapi_script.add_test_case(TestCcm())
+    libkcapi_script.add_test_case(TestCbc())
+    libkcapi_script.add_test_case(TestEcb())
+    libkcapi_script.add_test_case(TestCtr())
+    libkcapi_script.add_test_case(TestRfc3686())
+    libkcapi_script.add_test_case(TestRfc4106())
+    libkcapi_script.add_test_case(TestRfc4309())
+    libkcapi_script.add_test_case(TestAuthenc())
+    libkcapi_script.add_test_case(TestSha1())
+    libkcapi_script.add_test_case(TestSha224())
+    libkcapi_script.add_test_case(TestSha256())
+    libkcapi_script.add_test_case(TestSha384())
+    libkcapi_script.add_test_case(TestSha512())
 
     libkcapi_script.run()

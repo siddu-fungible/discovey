@@ -1,0 +1,26 @@
+<div>
+    <fun-chart values="values" series="series" title="$ctrl.chartName" charting="charting" chart-type="line-chart"
+               width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle"
+               point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter"
+               tooltip-formatter="tooltipFormatter">
+    </fun-chart>
+</div>
+<div ng-show="$ctrl.showingTable">
+    <!-- a href="/metrics/table_view/{{ $ctrl.modelName }}">Full model table</a-->
+    <div id="all-data-table" ng-repeat="data in allData">
+        <h3>{{ filterDataSets[$index].name }}</h3>
+        <table class="table">
+            <tr>
+                <th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
+                    {{ value.verbose_name }}
+                </th>
+            </tr>
+            <tr ng-repeat="row in data">
+                <td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
+                    {{ cleanValue(key, row[key])}}
+                </td>
+            </tr>
+
+        </table>
+    </div>
+</div>

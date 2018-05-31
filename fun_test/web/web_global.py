@@ -12,6 +12,12 @@ def initialize_result(failed=False):
         status = False
     return {"status": status, "error_message": "", "message": "", "data": None}
 
+class DatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return super(DatetimeEncoder, obj).default(obj)
+        except TypeError:
+            return str(obj)
 
 def api_safe_json_response(the_function):
     def inner(*args, **kwargs):
@@ -21,6 +27,6 @@ def api_safe_json_response(the_function):
             result["status"] = True
         except Exception as ex:
             result["error_message"] = "Exception: {}\n {}".format(str(ex), traceback.format_exc())
-        return HttpResponse(json.dumps(result))
+        return HttpResponse(json.dumps(result, cls=DatetimeEncoder))
     return inner
 

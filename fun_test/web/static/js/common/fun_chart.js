@@ -255,28 +255,32 @@
                                 }
 
                             };
-                            if (ctrl.xaxisFormatter && ctrl.xaxisFormatter()()) {
-                                chartInfo.xAxis["labels"] = {formatter: function () {
-                                    return ctrl.xaxisFormatter()(this.value);
-                                }};
-                            }
-
-                            if (ctrl.tooltipFormatter && ctrl.tooltipFormatter()()) {
-                                chartInfo.tooltip = {
-                                    formatter: function () {
-                                        return ctrl.tooltipFormatter()(this.x, this.y);
-                                    }
+                            try {
+                                if (ctrl.xaxisFormatter && ctrl.xaxisFormatter()()) {
+                                    chartInfo.xAxis["labels"] = {formatter: function () {
+                                        return ctrl.xaxisFormatter()(this.value);
+                                    }};
                                 }
-                            }
 
-                            if (ctrl.pointClickCallback && ctrl.pointClickCallback()()) {
-                                chartInfo.plotOptions.series["point"] = {
-                                    events: {
-                                        click: function (e) {
-                                            ctrl.pointClickCallback()(e.point);
+                                if (ctrl.tooltipFormatter && ctrl.tooltipFormatter()()) {
+                                    chartInfo.tooltip = {
+                                        formatter: function () {
+                                            return ctrl.tooltipFormatter()(this.x, this.y);
                                         }
                                     }
                                 }
+
+                                if (ctrl.pointClickCallback && ctrl.pointClickCallback()()) {
+                                    chartInfo.plotOptions.series["point"] = {
+                                        events: {
+                                            click: function (e) {
+                                                ctrl.pointClickCallback()(e.point);
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+
                             }
 
 

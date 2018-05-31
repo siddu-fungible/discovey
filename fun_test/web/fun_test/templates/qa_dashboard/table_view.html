@@ -1,364 +1,43 @@
-<html>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.6.9/angular-sanitize.min.js"></script>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.4/angular-animate.min.js"></script>
-
-<style>
-.info-box {
-    border: 1px;
-    border-color: #4CAF50;
-    border-style: solid;
-    border-radius: 5px;
-    width: inherit;
-    margin-top: 5px;
-}
-.info-box-header {
-    background-color: #dff0d8;
-    border-radius: 5px;
-
-}
-
-.info-box-text {
-    padding: 5px;
-}
-.aspect-label {
-    padding: 5px;
-}
-
-.aspect-label-text {
-    padding: 5px;
-}
-
-.fa-icon-green {
-    color: green;
-}
-
-.fa-icon-red {
-    color: red;
-}
-
-
-.table-nonfluid {
-    width: auto !important;
-}
-
-
-.fade-element-in.ng-enter {
-  transition: 0.8s linear all;
-  opacity: 0;
-}
-
-.fade-element-in-init .fade-element-in.ng-enter {
-  opacity: 1;
-}
-
-.fade-element-in.ng-enter.ng-enter-active {
-  opacity: 1;
-}
-
-.fade-element-in.ng-leave {
-  transition: 0.3s linear all;
-  opacity: 1;
-}
-.fade-element-in.ng-leave.ng-leave-active {
-  opacity: 0;
-}
-
-
-arrow-icon {
-  border: solid black;
-  border-width: 0 3px 3px 0;
-  display: inline-block;
-  padding: 3px;
-
-}
-
-.arrow-right {
-    transform: rotate(-45deg);
-    -webkit-transform: rotate(-45deg);
-
-}
-
-.arrow-down {
-    transform: rotate(45deg);
-    -webkit-transform: rotate(45deg);
-}
-
-
-</style>
-
-<script>
-
-function myController($scope) {
-    let ctrl = this;
-
-    this.$onInit = function () {
-        console.log("init");
-        console.log(this.name);
-        let s = "john, john2";
-        console.log(s.split(","));
-
-        $scope.treeModel = [
-            {
-                info: "",
-                showInfo: false,
-                label: "Total",
-                trend: "up",
-                goodness: 5.6,
-                "children": [
-                    {
-                        info: "",
-                        showInfo: false,
-                        label: "Software",
-                        goodness: 7.5,
-                        children: [{info: "", label: "Nucleus", trend: "down", goodness: 6.6, children: [{
-                            info: "",
-                            goodness: 1.0,
-                            label: "Best time for 1 malloc/free (WU)",
-                            status: false,
-
-                        }, {
-                            info: "",
-                            goodness: 3.0,
-                            label: "Best time for 1 malloc/free (Threaded)",
-                            status: true,
-
-                        }]},
-                            {info: "", label: "Storage"}]
-                    },
-                    {
-                        info: "",
-                        showInfo: false,
-                        label: "Hardware",
-                        children: [{info: "", label: "leaf3"}]
-                    }
-                ]
-            }
-
-        ];
-
-        $scope.flatNodes = [];
-
-        $scope.flatten($scope.treeModel[0], 0);
-        $scope.treeModel[0].hide = false;
-        $scope.collapseNode($scope.treeModel[0]);
-        $scope.customHtml = $scope.getTreeHtml();
-        //console.log($scope.treeModel[0][0].showInfo);
-    };
-
-    $scope.flatten = (node, indent) => {
-        node.indent = indent;
-        node.hide = true;
-        node.collapsed = true;
-        $scope.flatNodes.push(node);
-        if (node.hasOwnProperty("children")) {
-            node.children.forEach((node) => {
-                $scope.flatten(node, indent + 1);
-            });
-        }
-    };
-
-    $scope.testClick = function () {
-        console.log("testClick");
-        console.log(ctrl.f);
-    };
-
-    $scope.showInfoClick = (node) => {
-        node.showInfo = !node.showInfo;
-    };
-
-    $scope.getTreeHtml = () => {
-        let s = "";
-
-        let node = $scope.treeModel.forEach((node, index) => {
-            let indexString = "[" + index + "]";
-            s += $scope._getNodeHtml(node, indexString);
-        });
-        //console.logn(s);
-        return s;
-    };
-
-    $scope._getNodeHtml = (node, indexString) => {
-        let nodeReference = "treeModel" + indexString;
-        let s = "";
-        s = "<ul class=\"aspect-node\">";
-        s += $scope.getGoodnessHtml(node);
-        s += $scope.getTrendHtml(node);
-        s += $scope.getStatusHtml(node);
-        s += "<icon ng-if=\"!" + nodeReference + ".children.length" + "\" class=\"fa fa-leaf fa-icon-green\"></icon>";
-        s += "<a href=\"#\" ng-click=\"showChildrenClick(" + nodeReference + ")\" class=\"aspect-label-text\">" + node.label + "</a>";
-
-        s += "<a ng-click='showInfoClick(" + nodeReference + ")' " + "ng-if='" + nodeReference + ".showInfo' ><i class=\"fa fa-info-circle\"></i></a>";
-        s += "<a ng-click='showInfoClick(" + nodeReference + ")' " + "ng-if='!" + nodeReference + ".showInfo' ><i class=\"fa fa-info-circle\"></i></a>";
-
-        s += '<div class="info-box" ng-if="' + nodeReference + '.showInfo">' +
-                '<div class="info-box-header info-box-text">Info</div>' +
-                '<div class="info-box-text">Some more info</div>' +
-            '</div>';
-        let thisIndexString = indexString;
-        s += "<div ng-if=\"" + nodeReference + ".showChildren\">";
-        if (node.children && node.children.length) {
-            node.children.forEach((child, index) => {
-                let indexString = thisIndexString + ".children[" + index + "]";
-                s += $scope._getNodeHtml(child, indexString);
-            })
-        }
-        s += "</div>";
-        s += "</ul>";
-        return s;
-    };
-
-    $scope.showChildrenClick = (node) => {
-        if (node.hasOwnProperty("showChildren")) {
-            node.showChildren = !node.showChildren;
-        } else {
-            node.showChildren = true;
-        }
-    };
-
-    $scope.getStatusHtml = (node) => {
-        let s = "";
-        if (node.hasOwnProperty("status")) {
-            if (node.status === true) {
-                s = "<label class=\"label label-success\">PASSED</label>";
-            } else {
-                s = "<label class=\"label label-danger\">FAILED</label>";
-            }
-        }
-        return s;
-    };
-
-    $scope.getGoodnessHtml = (node) => {
-        let goodness = 0.0;
-        if (node.hasOwnProperty("goodness")) {
-            goodness = node.goodness;
-        }
-        s = "<label class=\"label label-primary\">" + goodness + "</label>";
-        return s;
-    };
-
-    $scope.getTrendHtml = (node) => {
-        let s = "<icon class=\"fa fa-arrows-h aspect-trend-icon\"></icon>";
-        if (node.hasOwnProperty("trend")) {
-            if (node.trend === "up") {
-                s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>";
-            } else if (node.trend === "down") {
-                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
-            }
-        }
-        return s;
-    };
-
-    $scope.getIndentHtml = (node) => {
-        let s = "";
-        if (node.hasOwnProperty("indent")) {
-            for(let i = 0; i < node.indent - 1; i++) {
-                s += "<span style=\"color: white\">&rarr;</span>";
-            }
-            if (node.indent)
-                s += "<span>&#8627;</span>";
-        }
-
-        return s;
-    };
-
-    $scope.collapseNode = (node) => {
-        node.collapsed = true;
-        if (node.hasOwnProperty("children")) {
-            node.children.forEach((node) => {
-                $scope.hideBranch(node);
-            });
-        }
-    };
-
-    $scope.expandNode = (node) => {
-        node.collapsed = false;
-        if (node.hasOwnProperty("children")) {
-            node.children.forEach((node) => {
-                node.hide = false;
-            });
-        }
-    };
-
-    $scope.hideBranch = (node) => {
-        node.hide = true;
-        if (node.hasOwnProperty("children")) {
-            node.children.forEach((node) => {
-                $scope.hideBranch(node);
-            });
-        }
-    };
-
-    $scope.isNodeVisible = (node) => {
-        return !node.hide;
-    }
-
-}
-
-angular.module("myApp", ['ngSanitize', 'ngAnimate'])
-    .component("helloWorld",{
-        template: "" +
-                  "<button ng-click='testClick()'>Submit</button>" +
-                  "<div ng-bind='customHtml'></div>"
-                  ,
-        bindings: { name: '@' ,
-                    f: '<'
-                    },
-        controller: myController
-  });
-
-angular.module('myApp').directive('dynamic', function ($compile) {
-  return {
-    restrict: 'A',
-    replace: true,
-    link: function (scope, ele, attrs) {
-      scope.$watch(attrs.dynamic, function(html) {
-        ele.html(html);
-        $compile(ele.contents())(scope);
-      });
-    }
-  };
-});
-
- angular.module('myApp').controller("myController", myController);
-angular.module('myApp').filter('unsafe', function($sce) { return $sce.trustAsHtml; });
-
-
-
-</script>
-{%  verbatim %}
-<div ng-app="myApp">
-    <div class="col-lg-6 col-xl-6 col-md-6">
-        <div ng-controller="myController">
-            <p dynamic="customHtml1"></p>
-            <table class="table table-nonfluid">
-                <tr>
-                    <th>Aspect</th>
-                    <th>Score</th>
-                    <th>Trend</th>
-
-                </tr>
-                <tr class="fade-element-in" ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
-                    <td class="child-transition"><span ng-bind-html="getIndentHtml(node) | unsafe"></span> {{ node.label  }}&nbsp<span ng-if="node.children && node.children.length"><a href="#" ng-if="!node.collapsed" ng-click="collapseNode(node)"><arrow-icon class="arrow-down"></arrow-icon></a><a href="#" ng-if="node.collapsed" ng-click="expandNode(node)"><arrow-icon class="arrow-right"></arrow-icon></a></span></td>
-                    <td> <label class="label label-primary">{{ node.goodness  }}</label></td>
-                    <td style="vertical-align: top" ng-bind-html="getTrendHtml(node) | unsafe"></td>
-                </tr>
-            </table>
-
-        </div>
-
+<div>
+    <div class="text-center">
+        <!-- pager -->
+        <ul ng-if="pager.pages.length" class="pagination">
+            <li ng-class="{disabled:pager.currentPage === 1}">
+                <a ng-click="setPage(1)">First</a>
+            </li>
+            <li ng-class="{disabled:pager.currentPage === 1}">
+                <a ng-click="setPage(pager.currentPage - 1)">Previous</a>
+            </li>
+            <li ng-repeat="page in pager.pages" ng-class="{active:pager.currentPage === page}">
+                <a ng-click="setPage(page)">{{ page }}</a>
+            </li>
+            <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                <a ng-click="setPage(pager.currentPage + 1)">Next</a>
+            </li>
+            <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                <a ng-click="setPage(pager.totalPages)">Last</a>
+            </li>
+        </ul>
     </div>
+    <!--div>
+        <table class="table table-nonfluid">
+            <tr ng-repeat="header in headers">
+                <td>
+                    <input type="checkbox" ng-model="fields[header].show" ng-checked="fields[header].show"/>
+                </td>
+                <td>
+                    {{ fields[header].verbose_name }}
+                </td>
+            </tr>
+        </table>
+    </div-->
 
+    <table class="table table-nonfluid">
+        <tr>
+            <th ng-if="fields[header].show" ng-repeat="header in headers">{{ fields[header].verbose_name }}</th>
+        </tr>
+        <tr ng-repeat="row in rows">
+            <td ng-if="fields[header].show" ng-repeat="header in headers">{{ row[header]}}</td>
+        </tr>
+    </table>
 </div>
-{%  endverbatim %}
-
-</html>

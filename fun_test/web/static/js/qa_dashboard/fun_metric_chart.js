@@ -39,17 +39,24 @@ function FunMetricChartController($scope, commonService, $attrs) {
                 return ctrl.tooltipFormatter()(x, y);
             };
         }
-
+        console.log(ctrl.showingTable);
         /*$scope.pointClickCallback = ctrl.pointClickCallback;*/
     };
 
+    $scope.cleanValue = (key, value) => {
+        if (key === "input_date_time" && (ctrl.xaxisFormatter)) {
+            return ctrl.xaxisFormatter()(value);
+        } else {
+            return value;
+        }
+    };
 
 
     $scope.$watch(function () {
         return ctrl.previewDataSets;
     }, function (newvalue, oldvalue) {
         if (newvalue === oldvalue) {
-            console.log(newvalue, oldvalue);
+            // console.log(newvalue, oldvalue);
             return;
         }
         // let i = 0;
@@ -59,6 +66,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
         } else {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, ctrl.previewDataSets); // TODO: Race condition on chartInfo
         }
+
     }, true);
 
     $scope.fetchChartInfo = () => {
@@ -94,6 +102,44 @@ function FunMetricChartController($scope, commonService, $attrs) {
         return result;
     };
 
+    $scope.hideTable = () => {
+        $scope.showingTable = false;
+    };
+
+    $scope.showTable = () => {
+        $scope.showingTable = true;
+    };
+
+    $scope.shortenKeyList = (keyList) => {
+        let newList = [];
+        keyList.forEach((key) => {
+            let r = /(\d{4})-(\d{2})-(\d{2})/g;
+            let match = r.exec(key);
+            let s = match[2] + "/" + match[3];
+            newList.push(s)
+        });
+        return newList;
+    };
+
+    $scope.isFieldRelevant = (fieldName) => {
+        let relevant = false;
+        if (fieldName === "input_date_time") {
+            relevant = true;
+        }
+        $scope.filterDataSets.forEach((oneDataSet) => {
+            angular.forEach(oneDataSet.inputs, (value, key) => {
+                if (key === fieldName) {
+                    relevant = true;
+                }
+            });
+            if (fieldName === oneDataSet.output.name) {
+                relevant = true;
+            }
+        });
+        return relevant;
+    };
+
+
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
         if(!chartName) {
@@ -101,6 +147,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
         }
 
         commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
+            $scope.tableInfo = tableInfo;
             let payload = {};
             payload["metric_model_name"] = metricModelName;
             payload["chart_name"] = chartName;
@@ -113,6 +160,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
                     filterDataSets = chartInfo.data_sets;
                 }
             }
+            $scope.filterDataSets = filterDataSets;
 
             commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
                 if(allDataSets.length === 0) {
@@ -123,14 +171,15 @@ function FunMetricChartController($scope, commonService, $attrs) {
                 let keySet = new Set();
                 let firstDataSet = allDataSets[0];
                 firstDataSet.forEach((oneRecord) => {
-                    keySet.add(oneRecord.key.toString());
+                    keySet.add(oneRecord.input_date_time.toString());
                 });
                 let keyList = Array.from(keySet);
                 keyList.sort();
-                $scope.series = keyList;
+                $scope.series = keyList; $scope.shortenKeyList(keyList);
 
                 let chartDataSets = [];
                 let dataSetIndex = 0;
+                $scope.allData = allDataSets;
                 allDataSets.forEach((oneDataSet) => {
 
                     let oneChartDataArray = [];
@@ -138,11 +187,20 @@ function FunMetricChartController($scope, commonService, $attrs) {
                         let output = null;
                         for(let j = 0; j < oneDataSet.length; j++) {
                             let oneRecord = oneDataSet[j];
-                            if(oneRecord.key.toString() === keyList[i]) {
-                                let outputName = filterDataSets[0].output.name;
+                            if(oneRecord.input_date_time.toString() === keyList[i]) {
+                                let outputName = filterDataSets[dataSetIndex].output.name;
                                 output = oneRecord[outputName];
-                                $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
-                                $scope.chart1XaxisTitle = tableInfo["key"].verbose_name;
+                                if (chartInfo && chartInfo.y1axis_title) {
+                                   $scope.chart1YaxisTitle = chartInfo.y1axis_title;
+                                } else {
+                                   $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                }
+                                if (ctrl.y1AxisTitle) {
+                                    $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
+                                }
+
+
+                                $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
                                 break;
                             }
                         }
@@ -162,23 +220,18 @@ function FunMetricChartController($scope, commonService, $attrs) {
 }
 
 angular.module('qa-dashboard').component("funMetricChart", {
-        template: '<fun-chart values="values" series="series"\n' +
-        '                   title="$ctrl.chartName" charting="charting" chart-type="line-chart"\n' +
-        '                   width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle"\n' +
-        '                   point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter"\n' +
-        '                   tooltip-formatter="tooltipFormatter">\n' +
-        '                   \n' +
-        '        </fun-chart>',
-
+        templateUrl: '/static/qa_dashboard/fun_metric_chart.html',
         bindings: {
                     chartName: '<',
+                    y1AxisTitle: '<',
                     modelName: '<',
                     width: '@',
                     height: '@',
                     previewDataSets: '<',
                     pointClickCallback: '&',
                     xaxisFormatter: '&',
-                    tooltipFormatter: '&'
+                    tooltipFormatter: '&',
+                    showingTable: '<'
                   },
         controller: FunMetricChartController
  });

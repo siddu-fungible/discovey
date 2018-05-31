@@ -1,0 +1,102 @@
+[
+    {
+        "mode": "25G",
+        "version": 2405,
+        "timestamp": "2018-05-07 23:52:39.562034-07:00",
+        "frame_size": 1000,
+        "pps": 1900,
+        "throughput": "15Mbps",
+        "latency_avg": 1047.26,
+        "latency_min": 1040.08,
+        "latency_max": 1054,
+        "jitter_avg": 4.49,
+        "jitter_min": 0.0,
+        "jitter_max": 9.6
+    }, 
+    {
+        "mode": "25G",
+        "version": 2405,
+        "timestamp": "2018-05-07 23:52:39.562203-07:00",
+        "frame_size": 1500,
+        "pps": 1275,
+        "throughput": "15Mbps",
+        "latency_avg": 1303.88,
+        "latency_min": 1297.32, 
+        "latency_max": 1310.24,
+        "jitter_avg": 4.01,
+        "jitter_min": 0.0,
+        "jitter_max": 9.88
+    }, 
+    {
+        "mode": "25G",
+        "version": 2405, 
+        "timestamp": "2018-05-07 23:52:39.562324-07:00", 
+        "frame_size": 200,
+        "pps": 8523,
+        "throughput": "15Mbps",
+        "latency_avg": 634.85,
+        "latency_min": 630.06,
+        "latency_max": 640.5,
+        "jitter_avg": 4.76,
+        "jitter_min": 0.0,
+        "jitter_max": 8.72
+    }, 
+    { 
+        "mode": "25G",
+        "version": 2405,
+        "timestamp": "2018-05-07 23:52:39.562362-07:00",
+        "frame_size": 9000,
+        "pps": 215,
+        "throughput": "15Mbps",
+        "latency_avg": 5178.4,
+        "latency_min": 5171.2,
+        "latency_max": 5185.12,
+        "jitter_avg": 4.14,
+        "jitter_min": 0.0,
+        "jitter_max": 7.84
+    }, 
+    {
+        "mode": "25G",
+        "version": 2405,
+        "timestamp": "2018-05-07 23:52:39.562386-07:00",
+        "frame_size": 16380,
+        "pps": 118,
+        "throughput": "15Mbps",
+        "latency_avg": 8986.85,
+        "latency_min": 8979.84,
+        "latency_max": 8993.6,
+        "jitter_avg": 1.03,
+        "jitter_min": 0.0,
+        "jitter_max": 13.76
+    }, 
+    {
+        "mode": "25G",
+        "version": 2405,
+        "timestamp": "2018-05-07 23:52:39.562407-07:00",
+        "frame_size": 64, 
+        "pps": 21578,
+        "throughput": "14Mbps",
+        "latency_avg": 570.52,
+        "latency_min": 566.56,
+        "latency_max": 576.86,
+        "jitter_avg": 2.4, 
+        "jitter_min": 0.0,
+        "jitter_max": 6.66
+    }, 
+    {
+         
+        "mode": "25G",
+        "version": 2405,
+        "timestamp": "2018-05-07 23:52:39.562426-07:00",
+        "frame_size": 3000, 
+        "pps": 642,
+        "throughput": "15Mbps",
+        "latency_avg": 2080.01,
+        "latency_min": 2073.12,
+        "latency_max": 2086.8,
+        "jitter_avg": 2.85,
+        "jitter_min": 0.0,
+        "jitter_max": 8.82 
+          
+    }
+]

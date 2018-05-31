@@ -7,7 +7,7 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
-from web.fun_test.metrics_models import AllocSpeedPerformance
+from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
 
@@ -25,6 +25,43 @@ class MetricHelper(object):
     def clear(self):
         self.model.objects.all().delete()
 
+    def add_entry(self, **kwargs):
+        inputs = {}
+        if "key" in kwargs:
+            inputs["key"] = kwargs["key"]
+        outputs = {}
+        for key, value in kwargs.iteritems():
+            if key.startswith("input_"):
+                inputs[key] = value
+            elif key.startswith("output_"):
+                outputs[key] = value
+        try:
+            o = self.model.objects.get(**inputs)
+            for k, v in outputs.iteritems():
+                if hasattr(o, k):
+                    setattr(o, k, v)
+            o.save()
+        except ObjectDoesNotExist:
+            o = self.model(**kwargs)
+            o.save()
+
+    def get_entry(self, **kwargs):
+        result = None
+        inputs = {}
+        if "key" in inputs:
+            inputs["key"] = kwargs["key"]
+        outputs = {}
+        for key, value in kwargs.iteritems():
+            if key.startswith("input_"):
+                inputs[key] = value
+        try:
+            result = self.model.objects.get(**inputs)
+        except ObjectDoesNotExist:
+            pass
+        return result
+
+    def get_recent_entry(self):
+        return self.model.objects.order_by("-input_date_time")[0]
 
 class MetricChartHelper(object):
     def __init__(self, chart_name, metric_model_name):
@@ -113,9 +150,9 @@ class AllocSpeedPerformanceHelper(MetricHelper):
     def __init__(self):
         super(AllocSpeedPerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, key, input_app, output_one_malloc_free_wu, output_one_malloc_free_threaded):
+    def add_entry(self, key, input_date_time, input_app, output_one_malloc_free_wu, output_one_malloc_free_threaded):
         try:
-            entry = AllocSpeedPerformance.objects.get(key=key, input_app=input_app)
+            entry = AllocSpeedPerformance.objects.get(key=key, input_app=input_app, input_date_time=input_date_time)
             entry.output_one_malloc_free_wu = output_one_malloc_free_wu
             entry.output_one_malloc_free_threaded = output_one_malloc_free_threaded
             entry.save()
@@ -123,10 +160,19 @@ class AllocSpeedPerformanceHelper(MetricHelper):
             pass
             one_entry = AllocSpeedPerformance(key=key,
                                               input_app=input_app,
+                                              input_date_time=input_date_time,
                                               output_one_malloc_free_wu=output_one_malloc_free_wu,
                                               output_one_malloc_free_threaded=output_one_malloc_free_threaded)
             one_entry.save()
 
+class WuLatencyAllocStackHelper(MetricHelper):
+    model = WuLatencyAllocStack
+
+    def __init__(self):
+        super(WuLatencyAllocStackHelper, self).__init__(model=self.model)
+
+    def add_entry(self, key, input_date_time, input_app, output_min, output_avg, output_max):
+        entry = WuLatencyAllocStack
 
 
 

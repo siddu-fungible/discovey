@@ -1,5 +1,5 @@
 from lib.system.fun_test import FunTestLibException, fun_test
-import json, time
+import json, time, re
 import socket, fcntl, errno
 import os, sys
 
@@ -29,7 +29,7 @@ class DpcshClient(object):
 
     def _read(self, command_duration=1):
         start = time.time()
-        chunk = 1024
+        chunk = 4096
 
         output = ""
         while not output.endswith("\n"):
@@ -77,10 +77,16 @@ class DpcshClient(object):
                 fun_test.log("DPCSH Send:" + command + "\n")
 
             self.sendall(command, command_duration)
+            time.sleep(2)
             output = self._read(command_duration)
             if output:
+                actual_output = self._parse_actual_output(output=output)
                 result["raw_output"] = output
-                json_output = json.loads(output)
+                try:
+                    json_output = json.loads(actual_output.strip())
+                except:
+                    fun_test.debug("Unable to parse JSON data")
+                    json_output = output
                 result["status"] = True
                 result["data"] = json_output
                 result["error_message"] = None
@@ -100,6 +106,12 @@ class DpcshClient(object):
             self.print_result(result=result)
         return result
 
+    def _parse_actual_output(self, output):
+        actual_output = output
+        if re.search(r'.*arguments.*', output, re.MULTILINE):
+            actual_output = re.sub(r'.*arguments.*', "", output, re.MULTILINE)
+        return actual_output
+
     def print_result(self, result):
         fun_test.log("DPCSH Result")
         fun_test.log("Command: {}".format(result["command"]))
@@ -107,8 +119,16 @@ class DpcshClient(object):
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_execute(self, verb, data, command_duration=1):
-        jdict = {"verb": verb, "arguments": [data], "tid": 0}
+    def json_execute(self, verb, data=None, command_duration=1):
+        jdict = None
+        if data:
+            if type(data) is not list:
+                jdict = {"verb": verb, "arguments": [data], "tid": 0}
+            elif type(data) is list:
+                jdict = {"verb": verb, "arguments": data, "tid": 0}
+        else:
+            jdict = {"verb": verb, "arguments": [], "tid": 0}
+
         return self.command('{}'.format(json.dumps(jdict)),
                             command_duration=command_duration)
 

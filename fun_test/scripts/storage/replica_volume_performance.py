@@ -29,6 +29,13 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
+def generate_uuid(length=16):
+
+    this_uuid = str(uuid.uuid4()).replace("-", "")[length:]
+    # this_uuid = this_uuid[:3] + '-' + this_uuid[3:6] + '-' + this_uuid[6:9] + '-' + this_uuid[9:]
+    return this_uuid
+
+
 class ReplicaDPULevelScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -238,7 +245,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                                      format(dut.data_plane_ip, i))
 
                 # Configuring the BLT volume
-                this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+                this_uuid = generate_uuid()
                 self.uuids["blt"].append(this_uuid)
                 command_result = self.storage_controller["blt"][i].create_volume(
                     type=self.volume_types["blt"], capacity=self.volume_capacity["blt"],
@@ -276,7 +283,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
             for i in range(self.global_setup["num_replica"]):
                 dut = self.global_setup["duts"]["blt"][i]
                 if replica_dut != dut:
-                    this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+                    this_uuid = generate_uuid()
                     self.uuids["rds"].append(this_uuid)
                     command_result = self.storage_controller["replica"][0].create_volume(
                         type=self.volume_types["rds"], capacity=self.volume_capacity["rds"],
@@ -293,7 +300,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 replica_pvol_id = self.uuids["rds"] + list(self.uuids["blt"][-1])
 
             # Configuring Replica volume on top of RDS volumes
-            this_uuid = str(uuid.uuid4()).replace("-", "")[:10]
+            this_uuid = generate_uuid()
             self.uuids["replica"].append(this_uuid)
             command_result = self.storage_controller["replica"][0].create_volume(
                 type=self.volume_types["replica"], capacity=self.volume_capacity["replica"],

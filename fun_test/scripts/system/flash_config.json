@@ -1,13 +1,9 @@
 {
   "name": "flash_image",
-  "size": "0xE0000",
-  "page_size": "0x10000",
+  "size": "0x50000",
   "puf_rom": {
     "a": {
       "version": "0x1"
-    },
-    "b": {
-      "version": "0x2"
     }
   },
   "firmware": {
@@ -20,8 +16,7 @@
     "a": {
       "key": "fpk5",
       "version": "0x2"
-    },
-    "b": ""
+    }
   },
   "enrollment_certificate": {
     "a": {
@@ -30,12 +25,22 @@
     }
   },
   "start_certificate": {
-    "serial_number": "00000000000000000000000000000000",
-    "serial_number_mask": "00000000000000000000000000000000",
-    "tamper_flags": "00000000",
-    "debugger_flags": "00000000",
-    "public_key": "fpk2",
-    "key": "fpk1"
+    "a": {
+        "serial_number": "00000000000000000000000000000000",
+        "serial_number_mask": "00000000000000000000000000000000",
+        "tamper_flags": "00000000",
+        "debugger_flags": "00000000",
+        "public_key": "fpk2",
+        "key": "fpk1"
+    },
+    "b": {
+        "serial_number": "00000000000000000000000000000000",
+        "serial_number_mask": "00000000000000000000000000000000",
+        "tamper_flags": "00000000",
+        "debugger_flags": "00000000",
+        "public_key": "fpk2",
+        "key": "fpk1"
+    }
   },
   "eeprom": {
     "a": {

@@ -107,12 +107,17 @@ metric_urls = [
     url(r'^view_all_system_charts$', metrics_views.view_all_system_charts),
     url(r'^update_chart$', metrics_views.update_chart),
     url(r'^tables/(.*?)/(.*)$', metrics_views.tables),
-    url(r'^table_data$', metrics_views.table_data),
-    url(r'^summary$', metrics_views.summary_page)
+    url(r'^table_data/(\d+)/(\d+)$', metrics_views.table_data),
+    url(r'^summary$', metrics_views.summary_page),
+    url(r'^metric_info$', metrics_views.metric_info),
+    url(r'^atomic/(.*)/(.*)$', metrics_views.atomic),
+    url(r'^update_child_weight$', metrics_views.update_child_weight),
+    url(r'^table_view/(.*)$', metrics_views.table_view)
 ]
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^performance/', metrics_views.summary_page),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     url(r'^tools/', include('tools.urls')),

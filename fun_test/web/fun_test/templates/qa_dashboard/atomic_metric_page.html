@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/atomic_metric.js" %}"></script>
+    <script src="{% static "js/qa_dashboard/editable_metric_chart.js" %}"></script>
+    <script src="{% static "js/qa_dashboard/analytics_tables.js" %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12 col-xxl-12 col-xl-12 col-md-12">
+        <atomic-metric chart-name="{{ chart_name }}" model-name="{{ model_name }}">
+        </atomic-metric>
+    </div>
+{% endblock %}

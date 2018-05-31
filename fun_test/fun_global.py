@@ -25,6 +25,10 @@ def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())
     return utc.astimezone(pytz.timezone(TIME_ZONE))
 
+def get_localized_time(datetime_obj):
+    pytz.timezone(TIME_ZONE)
+    localized = pytz.utc.localize(datetime_obj)
+    return localized
 
 def is_regression_server():
     return "REGRESSION_SERVER" in os.environ

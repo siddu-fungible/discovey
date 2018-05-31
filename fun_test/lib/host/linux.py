@@ -575,12 +575,12 @@ class Linux(object, ToDictMixin):
         lines = contents.split('\n')
         if len(lines):
             processed_line = lines[0].replace(r'"', r'\"')
-            self.command("printf \"%s\" > %s" % (processed_line, file_name))
+            self.command("printf \"%s\\n\" > %s" % (processed_line, file_name))
 
         if len(lines) > 1:
             for line in lines[1:]:
                 processed_line = line.replace(r'"', r'\"')
-                self.command("printf \"%s\" >> %s" % (processed_line, file_name))
+                self.command("printf \"%s\\n\" >> %s" % (processed_line, file_name))
         return file_name
 
     @fun_test.safe
