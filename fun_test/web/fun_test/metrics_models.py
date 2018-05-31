@@ -373,6 +373,9 @@ class EcPerformance(models.Model):
     output_recovery_throughput_max = models.IntegerField(verbose_name="Recovery Throughput max")
     output_recovery_throughput_avg = models.IntegerField(verbose_name="Recovery Throughput avg")
 
+    def __str__(self):
+        return str(self.__dict__)
+
     '''
      min_ndata=8 
      max_ndata=8 
