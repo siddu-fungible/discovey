@@ -707,6 +707,7 @@ class PeekCommands(object):
     def peek_fpg_stats(self, port_num, grep_regex=None):
         prev_result = {}
         result = None
+        first_iteration = True
         while True:
             try:
                 master_table_obj = PrettyTable()
@@ -715,71 +716,73 @@ class PeekCommands(object):
                 master_table_obj.header = False
                 cmd = "stats/fpg/port/[%d]" % port_num
                 result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                if result_list:
-                    result = result_list[0]
-                if result:
-                    if prev_result:
-                        diff_result = self._get_difference(result=result, prev_result=prev_result)
-                        tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter', 'Counter diff'])
-                        rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter', 'Counter diff'])
-                        tx_table_obj.align = 'l'
-                        tx_table_obj.sortby = "Port %d Tx Stats" % port_num
-                        rx_table_obj.align = 'l'
-                        rx_table_obj.sortby = "Port %d Rx Stats" % port_num
-                        for key in result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
+                if not first_iteration:
+                    if result_list:
+                        result = result_list[0]
+                    if result_list:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter', 'Counter diff'])
+                            rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter', 'Counter diff'])
+                            tx_table_obj.align = 'l'
+                            tx_table_obj.sortby = "Port %d Tx Stats" % port_num
+                            rx_table_obj.align = 'l'
+                            rx_table_obj.sortby = "Port %d Rx Stats" % port_num
+                            for key in result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        if re.search(r'.*tx.*', key, re.IGNORECASE):
+                                            tx_table_obj.add_row([key, result[key], diff_result[key]])
+                                        else:
+                                            rx_table_obj.add_row([key, result[key], diff_result[key]])
+                                else:
                                     if re.search(r'.*tx.*', key, re.IGNORECASE):
                                         tx_table_obj.add_row([key, result[key], diff_result[key]])
                                     else:
                                         rx_table_obj.add_row([key, result[key], diff_result[key]])
-                            else:
-                                if re.search(r'.*tx.*', key, re.IGNORECASE):
-                                    tx_table_obj.add_row([key, result[key], diff_result[key]])
+                            prev_result = result
+                            if tx_table_obj.rowcount > 1:
+                                master_table_obj.add_column('Tx Stats', [tx_table_obj])
+                            if rx_table_obj.rowcount > 1:
+                                master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                        else:
+                            tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter'])
+                            rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter'])
+                            tx_table_obj.align = 'l'
+                            tx_table_obj.sortby = "Port %d Tx Stats" % port_num
+                            rx_table_obj.align = 'l'
+                            rx_table_obj.sortby = "Port %d Rx Stats" % port_num
+                            for key in result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        if re.search(r'.*tx.*', key, re.IGNORECASE):
+                                            tx_table_obj.add_row([key, result[key]])
+                                        else:
+                                            rx_table_obj.add_row([key, result[key]])
                                 else:
-                                    rx_table_obj.add_row([key, result[key], diff_result[key]])
-                        prev_result = result
-                        if tx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Tx Stats', [tx_table_obj])
-                        if rx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Rx Stats', [rx_table_obj])
-                    else:
-                        tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter'])
-                        rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter'])
-                        tx_table_obj.align = 'l'
-                        tx_table_obj.sortby = "Port %d Tx Stats" % port_num
-                        rx_table_obj.align = 'l'
-                        rx_table_obj.sortby = "Port %d Rx Stats" % port_num
-                        for key in result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
                                     if re.search(r'.*tx.*', key, re.IGNORECASE):
                                         tx_table_obj.add_row([key, result[key]])
                                     else:
                                         rx_table_obj.add_row([key, result[key]])
-                            else:
-                                if re.search(r'.*tx.*', key, re.IGNORECASE):
-                                    tx_table_obj.add_row([key, result[key]])
-                                else:
-                                    rx_table_obj.add_row([key, result[key]])
-                        prev_result = result
-                        if tx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Tx Stats', [tx_table_obj])
-                        if rx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Rx Stats', [rx_table_obj])
-                print master_table_obj
-                print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
-
+                            prev_result = result
+                            if tx_table_obj.rowcount > 1:
+                                master_table_obj.add_column('Tx Stats', [tx_table_obj])
+                            if rx_table_obj.rowcount > 1:
+                                master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                    print master_table_obj
+                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+                first_iteration = False
             except KeyboardInterrupt:
-                self.dpc_client.disconnect()
+                # self.dpc_client.disconnect()
                 break
             except Exception as ex:
                 print "ERROR: %s" % str(ex)
-                self.dpc_client.disconnect()
+                # self.dpc_client.disconnect()
 
     def peek_psw_stats(self, port_num=None, queue_list=None, grep_regex=None):
         prev_result = None
+        first_iteration = True
         while True:
             try:
                 is_global = False
@@ -792,130 +795,133 @@ class PeekCommands(object):
                 master_table_obj.border = False
                 master_table_obj.align = 'l'
                 result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
-                if is_global:
-                    if prev_result:
-                        diff_result = self._get_difference(result=result, prev_result=prev_result)
-                        for key in sorted(result):
-                            table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                            table_obj.align = 'l'
-                            table_obj.sortby = 'Field Name'
-                            for _key in result[key]:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                if not first_iteration:
+                    if is_global:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            for key in sorted(result):
+                                table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                                table_obj.align = 'l'
+                                table_obj.sortby = 'Field Name'
+                                for _key in result[key]:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                    else:
                                         table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                else:
-                                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                            master_table_obj.add_column(key, [table_obj])
-                    else:
-                        for key in sorted(result):
-                            table_obj = PrettyTable(['Field Name', 'Counters'])
-                            table_obj.align = 'l'
-                            table_obj.sortby = 'Field Name'
-                            for _key in result[key]:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                master_table_obj.add_column(key, [table_obj])
+                        else:
+                            for key in sorted(result):
+                                table_obj = PrettyTable(['Field Name', 'Counters'])
+                                table_obj.align = 'l'
+                                table_obj.sortby = 'Field Name'
+                                for _key in result[key]:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[key][_key]])
+                                    else:
                                         table_obj.add_row([_key, result[key][_key]])
-                                else:
-                                    table_obj.add_row([_key, result[key][_key]])
-                            master_table_obj.add_column(key, [table_obj])
-                else:
-                    print "--------------> Port %d  <--------------" % port_num
-                    if prev_result:
-                        for queue in result:
-                            count_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Bytes Diff', 'Packets',
-                                                           'Packets Diff'])
-                            drops_table_obj = PrettyTable(['Drops Type', 'Count', 'Drop Count Diff'])
+                                master_table_obj.add_column(key, [table_obj])
+                    else:
+                        print "--------------> Port %d  <--------------" % port_num
+                        if prev_result:
+                            for queue in result:
+                                count_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Bytes Diff', 'Packets',
+                                                               'Packets Diff'])
+                                drops_table_obj = PrettyTable(['Drops Type', 'Count', 'Drop Count Diff'])
 
-                            m = re.search(r'q_\d+', queue)
-                            if not m:
-                                diff = result[queue] - prev_result[queue]
-                                master_table_obj.add_row(['Orm Port Shared Drops', result[queue], diff])
-                                continue
-                            queue_result = result[queue]
-                            count_result = queue_result['count']
-                            drop_result = queue_result['drops']
+                                m = re.search(r'q_\d+', queue)
+                                if not m:
+                                    diff = result[queue] - prev_result[queue]
+                                    master_table_obj.add_row(['Orm Port Shared Drops', result[queue], diff])
+                                    continue
+                                queue_result = result[queue]
+                                count_result = queue_result['count']
+                                drop_result = queue_result['drops']
 
-                            diff_count_result = self._get_difference(result=count_result,
-                                                                     prev_result=prev_result[queue]['count'])
-                            diff_drop_result = self._get_difference(result=drop_result,
-                                                                    prev_result=prev_result[queue]['drops'])
-                            for key in count_result:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                diff_count_result = self._get_difference(result=count_result,
+                                                                         prev_result=prev_result[queue]['count'])
+                                diff_drop_result = self._get_difference(result=drop_result,
+                                                                        prev_result=prev_result[queue]['drops'])
+                                for key in count_result:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            count_table_obj.add_row([key, count_result[key]['bytes'],
+                                                                     diff_count_result[key]['bytes'],
+                                                                     count_result[key]['pkts'],
+                                                                     diff_count_result[key]['pkts']])
+                                    else:
                                         count_table_obj.add_row([key, count_result[key]['bytes'],
                                                                  diff_count_result[key]['bytes'],
                                                                  count_result[key]['pkts'],
                                                                  diff_count_result[key]['pkts']])
-                                else:
-                                    count_table_obj.add_row([key, count_result[key]['bytes'],
-                                                             diff_count_result[key]['bytes'],
-                                                             count_result[key]['pkts'],
-                                                             diff_count_result[key]['pkts']])
 
-                            for key in drop_result:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                for key in drop_result:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            drops_table_obj.add_row([key, drop_result[key], diff_drop_result[key]])
+                                    else:
                                         drops_table_obj.add_row([key, drop_result[key], diff_drop_result[key]])
+
+                                if queue_list:
+                                    if queue in queue_list:
+                                        master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+
                                 else:
-                                    drops_table_obj.add_row([key, drop_result[key], diff_drop_result[key]])
-
-                            if queue_list:
-                                if queue in queue_list:
                                     master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+                        else:
+                            for queue in result:
+                                count_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Packets'])
+                                drops_table_obj = PrettyTable(['Drops Type', 'Count'])
 
-                            else:
-                                master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
-                    else:
-                        for queue in result:
-                            count_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Packets'])
-                            drops_table_obj = PrettyTable(['Drops Type', 'Count'])
+                                m = re.search(r'q_\d+', queue)
+                                if not m:
+                                    master_table_obj.add_row(['Orm Port Shared Drops', result[queue], None])
+                                    continue
+                                queue_result = result[queue]
+                                count_result = queue_result['count']
+                                drop_result = queue_result['drops']
 
-                            m = re.search(r'q_\d+', queue)
-                            if not m:
-                                master_table_obj.add_row(['Orm Port Shared Drops', result[queue], None])
-                                continue
-                            queue_result = result[queue]
-                            count_result = queue_result['count']
-                            drop_result = queue_result['drops']
-
-                            for key in count_result:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                for key in count_result:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            count_table_obj.add_row([key, count_result[key]['bytes'],
+                                                                     count_result[key]['pkts']])
+                                    else:
                                         count_table_obj.add_row([key, count_result[key]['bytes'],
-                                                                 count_result[key]['pkts']])
-                                else:
-                                    count_table_obj.add_row([key, count_result[key]['bytes'],
-                                                            count_result[key]['pkts']])
-                            for key in drop_result:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                                                count_result[key]['pkts']])
+                                for key in drop_result:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            drops_table_obj.add_row([key, drop_result[key]])
+                                    else:
                                         drops_table_obj.add_row([key, drop_result[key]])
+                                if queue_list:
+                                    if queue in queue_list:
+                                        master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+
                                 else:
-                                    drops_table_obj.add_row([key, drop_result[key]])
-                            if queue_list:
-                                if queue in queue_list:
                                     master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+                        master_table_obj.border = True
+                        master_table_obj.sortby = 'Field 1'
+                        master_table_obj.header = False
+                        master_table_obj.hrules = FRAME
 
-                            else:
-                                master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
-                    master_table_obj.border = True
-                    master_table_obj.sortby = 'Field 1'
-                    master_table_obj.header = False
-                    master_table_obj.hrules = FRAME
-
-                prev_result = result
-                print master_table_obj
-                print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                time.sleep(TIME_INTERVAL)
+                    prev_result = result
+                    print master_table_obj
+                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+                first_iteration = False
             except KeyboardInterrupt:
-                self.dpc_client.disconnect()
+                # self.dpc_client.disconnect()
                 break
             except Exception as ex:
                 print "ERROR: %s" % str(ex)
-                self.dpc_client.disconnect()
+                # self.dpc_client.disconnect()
 
     def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek"):
         try:
+            first_iteration = True
             while True:
                 try:
                     if type(cmd) == list:
@@ -924,43 +930,45 @@ class PeekCommands(object):
                         result = self.dpc_client.execute(verb=verb, arg_list=[cmd])
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result)
-                    if result:
-                        if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
-                            table_obj.align = 'l'
-                            if 'bam' not in cmd:
-                                table_obj.sortby = 'Field Name'
-                            for key in result:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                    if not first_iteration:
+                        if result:
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
+                                table_obj.align = 'l'
+                                if 'bam' not in cmd:
+                                    table_obj.sortby = 'Field Name'
+                                for key in result:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            table_obj.add_row([key, result[key], diff_result[key]])
+                                    else:
                                         table_obj.add_row([key, result[key], diff_result[key]])
-                                else:
-                                    table_obj.add_row([key, result[key], diff_result[key]])
-                        else:
-                            table_obj = PrettyTable(['Field Name', 'Counters'])
-                            table_obj.align = 'l'
-                            if 'bam' not in cmd:
-                                table_obj.sortby = 'Field Name'
-                            for key in result:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                            else:
+                                table_obj = PrettyTable(['Field Name', 'Counters'])
+                                table_obj.align = 'l'
+                                if 'bam' not in cmd:
+                                    table_obj.sortby = 'Field Name'
+                                for key in result:
+                                    if grep_regex:
+                                        if re.search(grep_regex, key, re.IGNORECASE):
+                                            table_obj.add_row([key, result[key]])
+                                    else:
                                         table_obj.add_row([key, result[key]])
-                                else:
-                                    table_obj.add_row([key, result[key]])
 
-                        prev_result = result
-                        print table_obj
-                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
-                    else:
-                        print "Empty Result"
+                            prev_result = result
+                            print table_obj
+                            print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                            time.sleep(TIME_INTERVAL)
+                        else:
+                            print "Empty Result"
+                    first_iteration = False
                 except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
+                    # self.dpc_client.disconnect()
                     break
         except Exception as ex:
             print "ERROR: %s" % str(ex)
-            self.dpc_client.disconnect()
+            # self.dpc_client.disconnect()
 
     def _display_all_erp_stats(self, grep_regex, global_prev_result=None, nu_prev_result=None, hnu_prev_result=None):
         try:
