@@ -170,37 +170,45 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
 
         $scope.addClick = () => {
             $scope.showOutputSelection = false;
-
+            let error = false;
             //
             let validDataSet = {};
             validDataSet["inputs"] = {};
             validDataSet["output"] = {};
             if($scope.addDataSet) {
+
                 // lets validate all inputs
                 $scope.addDataSet["inputs"].forEach((oneField) => {
-                    if(!oneField.selectedChoice) {
+                    if(!oneField.selectedChoice && oneField.name !== "input_date_time") {
                         let message = "Please select a choice for " + oneField.name;
                         alert(message);
+                        error = true;
                         return commonService.showError(message);
                     } else {
                         validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
 
                     }
                 });
-                if(!$scope.addDataSet.name) {
-                    let message = "Please provide a name for the data-set";
-                    alert(message);
-                    return commonService.showError(message);
-                } else {
-                    validDataSet["name"] = $scope.addDataSet.name;
-                    validDataSet["output"]["name"] = $scope.addDataSet["output"].name;
-                    validDataSet["output"]["min"] = $scope.addDataSet["output"].min;
-                    validDataSet["output"]["max"] = $scope.addDataSet["output"].max;
+                if (!error) {
+                    if(!$scope.addDataSet.name) {
+                        let message = "Please provide a name for the data-set";
+                        alert(message);
+                        error = true;
+                        return commonService.showError(message);
+                    } else {
+                        validDataSet["name"] = $scope.addDataSet.name;
+                        validDataSet["output"]["name"] = $scope.addDataSet["output"].name;
+                        validDataSet["output"]["min"] = $scope.addDataSet["output"].min;
+                        validDataSet["output"]["max"] = $scope.addDataSet["output"].max;
+                    }
+
                 }
             }
 
-            $scope.previewDataSets.push(validDataSet);
-            $scope.addDataSet = null;
+            if (!error) {
+                $scope.previewDataSets.push(validDataSet);
+                $scope.addDataSet = null;
+            }
 
         };
 

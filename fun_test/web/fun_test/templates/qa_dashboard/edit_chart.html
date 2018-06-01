@@ -48,12 +48,12 @@
                     <th>Min</th>
                     <th>Max</th>
                 </tr>
-                <tr ng-repeat="input in addDataSet.inputs">
+                <tr>
                     <td>
                             <fun-field type="text" min-length="1" max-length="50" required="true"
                                        bind-value="addDataSet.name">
                     </td>
-                    <td><label>{{ input.name }}</label>
+                    <td ng-repeat="input in addDataSet.inputs"><label>{{ input.name }}</label>
                         <select ng-model="input.selectedChoice"
                                 ng-options="choice for choice in input.choices">
 
