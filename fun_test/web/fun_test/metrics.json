@@ -49,7 +49,99 @@
               }
             ],
             "weight": 1
+          },
+          {
+            "info": "LSV",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "LSV",
+            "label": "LSV",
+            "children": [
+              {
+                "info": "LSV: IOPS",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "LSV: IOPS",
+                "label": "LSV: IOPS",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "LSV: Op Bandwidth",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "LSV: Op Bandwidth",
+                "label": "LSV: Op Bandwidth",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "LSV: Latency",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "LSV: Latency",
+                "label": "LSV: Latency",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Filter: XTS IOPS",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "Filter: XTS IOPS",
+                "label": "Filter: XTS IOPS",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Filter: XTS Op Bandwidth",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "Filter: XTS Op Bandwidth",
+                "label": "Filter: XTS Op Bandwidth",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Filter: XTS Latency",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "Filter: XTS Latency",
+                "label": "Filter: XTS Latency",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Filter: Zip IOPS",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "Filter: Zip IOPS",
+                "label": "Filter: Zip IOPS",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Filter: Zip Op Bandwidth",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "Filter: Zip Op Bandwidth",
+                "label": "Filter: Zip Op Bandwidth",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Filter: Zip Latency",
+                "metric_model_name": "LsvZipCryptoPerformance",
+                "leaf": true,
+                "name": "Filter: Zip Latency",
+                "label": "Filter: Zip Latency",
+                "children": [],
+                "weight": 1
+              }
+            ],
+            "weight": 1
           }
+
         ],
         "weight": 1
       },
