@@ -704,10 +704,9 @@ class PeekCommands(object):
             sorted_dict[key] = result[key]
         return sorted_dict
 
-
-
     def peek_fpg_stats(self, port_num, grep_regex=None):
         prev_result = {}
+        result = None
         while True:
             try:
                 master_table_obj = PrettyTable()
@@ -716,14 +715,13 @@ class PeekCommands(object):
                 master_table_obj.header = False
                 cmd = "stats/fpg/port/[%d]" % port_num
                 result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                result = None
                 if result_list:
                     result = result_list[0]
                 if result:
                     if prev_result:
                         diff_result = self._get_difference(result=result, prev_result=prev_result)
                         tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter', 'Counter diff'])
-                        rx_table_obj = PrettyTable(['Port %d Stats' % port_num, 'Counter', 'Counter diff'])
+                        rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter', 'Counter diff'])
                         tx_table_obj.align = 'l'
                         tx_table_obj.sortby = "Port %d Tx Stats" % port_num
                         rx_table_obj.align = 'l'
@@ -774,9 +772,11 @@ class PeekCommands(object):
                 time.sleep(TIME_INTERVAL)
 
             except KeyboardInterrupt:
+                self.dpc_client.disconnect()
                 break
             except Exception as ex:
                 print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
 
     def peek_psw_stats(self, port_num=None, queue_list=None, grep_regex=None):
         prev_result = None
@@ -819,6 +819,7 @@ class PeekCommands(object):
                                     table_obj.add_row([_key, result[key][_key]])
                             master_table_obj.add_column(key, [table_obj])
                 else:
+                    print "--------------> Port %d  <--------------" % port_num
                     if prev_result:
                         for queue in result:
                             count_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Bytes Diff', 'Packets',
@@ -907,16 +908,20 @@ class PeekCommands(object):
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
                 time.sleep(TIME_INTERVAL)
             except KeyboardInterrupt:
+                self.dpc_client.disconnect()
                 break
             except Exception as ex:
                 print "ERROR: %s" % str(ex)
-                break
+                self.dpc_client.disconnect()
 
-    def _display_stats(self, cmd, grep_regex, prev_result=None):
+    def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek"):
         try:
             while True:
                 try:
-                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if type(cmd) == list:
+                        result = self.dpc_client.execute(verb=verb, arg_list=cmd)
+                    else:
+                        result = self.dpc_client.execute(verb=verb, arg_list=[cmd])
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result)
                     if result:
@@ -951,9 +956,11 @@ class PeekCommands(object):
                     else:
                         print "Empty Result"
                 except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
                     break
         except Exception as ex:
             print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
 
     def _display_all_erp_stats(self, grep_regex, global_prev_result=None, nu_prev_result=None, hnu_prev_result=None):
         try:
@@ -964,6 +971,7 @@ class PeekCommands(object):
                     nu_result = self.dpc_client.execute(verb='peek', arg_list=["stats/erp/nu"])
                     master_table_obj = PrettyTable()
                     master_table_obj.border = False
+                    master_table_obj.align = 'l'
 
                     if global_prev_result or nu_prev_result or hnu_prev_result:
                         global_diff_result = self._get_difference(result=global_result, prev_result=global_prev_result)
@@ -971,8 +979,11 @@ class PeekCommands(object):
                         hnu_diff_result = self._get_difference(result=hnu_result, prev_result=hnu_prev_result)
 
                         global_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                        global_table_obj.align = 'l'
                         nu_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                        nu_table_obj.align = 'l'
                         hnu_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                        hnu_table_obj.align = 'l'
                         for key in global_result:
                             if grep_regex:
                                 if re.search(grep_regex, key, re.IGNORECASE):
@@ -1001,8 +1012,11 @@ class PeekCommands(object):
                             master_table_obj.add_column('ERP HNU Result', [hnu_table_obj])
                     else:
                         global_table_obj = PrettyTable(['Field Name', 'Counters'])
+                        global_table_obj.align = 'l'
                         nu_table_obj = PrettyTable(['Field Name', 'Counters'])
+                        nu_table_obj.align = 'l'
                         hnu_table_obj = PrettyTable(['Field Name', 'Counters'])
+                        hnu_table_obj.align = 'l'
                         for key in global_result:
                             if grep_regex:
                                 if re.search(grep_regex, key, re.IGNORECASE):
@@ -1037,9 +1051,11 @@ class PeekCommands(object):
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
                     time.sleep(TIME_INTERVAL)
                 except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
                     break
         except Exception as ex:
             print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
 
     def peek_vp_stats(self, grep_regex=None):
         cmd = "stats/vppkts"
@@ -1072,4 +1088,61 @@ class PeekCommands(object):
             self._display_all_erp_stats(grep_regex=grep_regex)
         else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_parser_nu_stats(self, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "stats/prsr/nu"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    master_table_obj = PrettyTable()
+                    master_table_obj.align = 'l'
+                    master_table_obj.border = False
+                    master_table_obj.header = False
+                    if result:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            for key in sorted(result):
+                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result[key]):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                master_table_obj.add_row([key, table_obj])
+                        else:
+                            for key in sorted(result):
+                                table_obj = PrettyTable(['Field Name', 'Counter'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result[key]):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[key][_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[key][_key]])
+                                master_table_obj.add_row([key, table_obj])
+                    else:
+                        print "Empty Result"
+
+                    prev_result = result
+                    print master_table_obj
+                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def peek_parser_hnu_stats(self, grep_regex=None):
+        # TODO: Currently this cmd is crashing on palladium. Implement it later
+        pass
+
+    def peek_wred_ecn_stats(self, port_num, queue_num, grep_regex=None):
+        cmd = ["get", "wred_ecn_stats", {"port": port_num, "queue": queue_num}]
+        self._display_stats(cmd=cmd, verb='qos', grep_regex=grep_regex)
 

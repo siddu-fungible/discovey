@@ -1,19 +1,20 @@
 from dpc_shell import DpcShell
+from dpc_client import DpcClient
 from cmd2 import Cmd, with_argparser
 from nu_commands import *
 from cmd_arg_parser import *
-
+import sys
 
 class CmdController(Cmd):
 
     def __init__(self, target_ip, target_port, verbose=False):
         Cmd.__init__(self)
         self.prompt = "(dpcsh) "
-        self._dpc_client = DpcShell(target_ip=target_ip, target_port=target_port, verbose=verbose)
-        self._port_cmd_obj = PortCommands(dpc_client=self._dpc_client.dpc_client)
-        self._sys_cmd_obj = SystemCommands(dpc_client=self._dpc_client.dpc_client)
-        self._qos_cmd_obj = QosCommands(dpc_client=self._dpc_client.dpc_client)
-        self._peek_cmd_obj = PeekCommands(dpc_client=self._dpc_client.dpc_client)
+        self.dpc_client = DpcClient(target_ip=target_ip, target_port=target_port, verbose=verbose)
+        self._port_cmd_obj = PortCommands(dpc_client=self.dpc_client)
+        self._sys_cmd_obj = SystemCommands(dpc_client=self.dpc_client)
+        self._qos_cmd_obj = QosCommands(dpc_client=self.dpc_client)
+        self._peek_cmd_obj = PeekCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -112,7 +113,6 @@ class CmdController(Cmd):
         self._port_cmd_obj.enable_disable_ptp_1step(port_num=args.port_num, shape=args.shape)
 
     def disable_port_ptp_1step(self, args):
-        print len(args)
         self._port_cmd_obj.enable_disable_ptp_1step(port_num=args.port_num, shape=args.shape, enable=False)
 
     def set_port_runt_filter(self, args):
@@ -399,6 +399,20 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_erp_stats(cmd_type='hu', grep_regex=grep_regex)
 
+    def peek_nu_parser_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_parser_nu_stats(grep_regex=grep_regex)
+
+    def peek_hnu_parser_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_parser_hnu_stats(grep_regex=grep_regex)
+
+    def peek_nu_qos_wred_ecn_stats(self, args):
+        port_num = args.port_num
+        queue_num = args.queue_num
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_wred_ecn_stats(port_num=port_num, queue_num=queue_num, grep_regex=grep_regex)
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -489,6 +503,9 @@ class CmdController(Cmd):
     peek_erp_global_stats_parser.set_defaults(func=peek_global_erp_stats)
     peek_erp_hnu_stats_parser.set_defaults(func=peek_hnu_erp_stats)
     peek_erp_nu_stats_parser.set_defaults(func=peek_nu_erp_stats)
+    peek_parser_nu_stats_parser.set_defaults(func=peek_nu_parser_stats)
+    peek_parser_hnu_stats_parser.set_defaults(func=peek_hnu_parser_stats)
+    peek_wred_ecn_stats_parser.set_defaults(func=peek_nu_qos_wred_ecn_stats)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
@@ -516,6 +533,7 @@ class CmdController(Cmd):
 
     @with_argparser(base_peek_parser)
     def do_peek(self, args):
+        # pdb.set_trace()
         func = getattr(args, 'func', None)
         if func is not None:
             func(self, args)
@@ -526,7 +544,8 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.23.102", target_port=40221)
+    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
+
 
 

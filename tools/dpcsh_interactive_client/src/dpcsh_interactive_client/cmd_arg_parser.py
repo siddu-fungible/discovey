@@ -548,5 +548,19 @@ peek_erp_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", defau
 peek_erp_nu_stats_parser = peek_erp_stats_parsers.add_parser('nu', help="Peek HU erp stats")
 peek_erp_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# Parser NU stats
+peek_prp_stats_parser = peek_stats_parsers.add_parser('parser', help="NU Peek Parser Stats")
+peek_prp_stats_parsers = peek_prp_stats_parser.add_subparsers(title='subcommands', help="")
 
+peek_parser_nu_stats_parser = peek_prp_stats_parsers.add_parser('nu', help="Peek Parser NU Stats")
+peek_parser_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_parser_hnu_stats_parser = peek_prp_stats_parsers.add_parser('hnu', help="Peek Parser HNU Stats")
+peek_parser_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# Peek WRED ECN stats
+peek_wred_ecn_stats_parser = peek_stats_parsers.add_parser('wred_ecn', help="Peek QoS WRED ECN Stats")
+peek_wred_ecn_stats_parser.add_argument('port_num', type=int, help="Port Num")
+peek_wred_ecn_stats_parser.add_argument('queue_num', type=int, help="Queue Num")
+peek_wred_ecn_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
