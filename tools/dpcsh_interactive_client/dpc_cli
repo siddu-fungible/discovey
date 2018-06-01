@@ -7,7 +7,6 @@
 #  Copyright 2018 Fungible Inc. All rights reserved.
 #
 
-from optparse import OptionParser
 import sys
 from dpcsh_interactive_client.cmd_controller import CmdController
 
@@ -34,7 +33,7 @@ def main():
         if not tcp_port_num:
             tcp_port_num = 40221
 
-        cmd_controller_obj = CmdController(target_ip=ip_address, target_port=int(tcp_port_num))
+        cmd_controller_obj = CmdController(target_ip=ip_address, target_port=int(tcp_port_num), verbose=False)
         cmd_controller_obj.cmdloop(intro=INTRO)
     except Exception as ex:
         print ex

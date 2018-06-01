@@ -4,7 +4,7 @@ from collections import OrderedDict
 import re
 import time
 
-TIME_INTERVAL = 3
+TIME_INTERVAL = 5
 
 class PortCommands(object):
     def __init__(self, dpc_client):
