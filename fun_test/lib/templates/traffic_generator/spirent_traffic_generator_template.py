@@ -648,3 +648,79 @@ class CustomBytePatternHeader(object):
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
 
+
+class Capture(object):
+    WRAP = 'WRAP'
+    STOP_ON_FULL = 'STOP_ON_FULL'
+    FRAMECONTENT = 'FRAMECONTENT'
+    BYTEOFFSETANDRANGE = 'BYTEOFFSETANDRANGE'
+    IEEE80211FRAMECONTENT = 'IEEE80211FRAMECONTENT'
+    IDLE = 'IDLE'
+    SAVING = 'SAVING'
+    RETRIEVING = 'RETRIEVING'
+    REGULAR_FLAG_MODE = 'REGULAR_FLAG_MODE'
+    ADV_SEQ_FLAG_MODE = 'ADV_SEQ_FLAG_MODE'
+    REGULAR_MODE = 'REGULAR_MODE'
+    SIG_MODE = 'SIG_MODE'
+    IEEE80211_MODE = 'IEEE80211_REGULAR_MODE'
+    REALTIME_DISABLE = 'REALTIME_DISABLE'
+    REALTIME_ENABLE = 'REALTIME_ENABLE'
+    DISABLE = 'DISABLE'
+    ENABLE = 'ENABLE'
+    PREAMBLE = 'PREAMBLE'
+    FRAME = 'FRAME'
+    IP = 'IP'
+    IP_PAYLOAD = 'IP_PAYLOAD'
+    TX_MODE = 'TX_MODE'
+    RX_MODE = 'RX_MODE'
+    TX_RX_MODE = 'TX_RX_MODE'
+
+    def __init__(self, abort_save_task=False, buffer_mode=WRAP, capture_filter_mode=FRAMECONTENT,
+                 current_filter_bytes_used=0, current_filters_used=0, current_task=IDLE, elapsed_time='0:00:00',
+                 flag_mode=REGULAR_FLAG_MODE, ieee80211_filter_string="", increased_memory_support=False,
+                 mode=REGULAR_MODE, real_time_buffer_status=False, real_time_frames_buffer=0,
+                 real_time_mode=REALTIME_DISABLE, slice_capture_size=128, slice_mode=DISABLE, slice_offset=0,
+                 slice_offset_ref=PREAMBLE, src_mode=TX_RX_MODE, start='0x00004000', stop='0x00000000', tab_index=0):
+        self.AbortSaveTask = abort_save_task
+        self.BufferMode = buffer_mode
+        self.CaptureFilterMode = capture_filter_mode
+        self.CurrentFilterBytesUsed = current_filter_bytes_used
+        self.CurrentFiltersUsed = current_filters_used
+        self.CurrentTask = current_task
+        self.ElapsedTime = elapsed_time
+        self.FlagMode = flag_mode
+        self.Ieee80211FilterString = ieee80211_filter_string
+        self.IncreasedMemorySupport = increased_memory_support
+        self.Mode = mode
+        self.RealTimeBufferStatus = real_time_buffer_status
+        self.RealTimeFramesBuffer = real_time_frames_buffer
+        self.RealTimeMode = real_time_mode
+        self.SliceCaptureSize = slice_capture_size
+        self.SliceMode = slice_mode
+        self.SliceOffset = slice_offset
+        self.SliceOffsetRef = slice_offset_ref
+        self.srcMode = src_mode
+        self.Start = start
+        self.Stop = stop
+        self.TabIndex = tab_index
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+

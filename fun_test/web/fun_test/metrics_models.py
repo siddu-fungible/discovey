@@ -5,6 +5,7 @@ import json
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
 from datetime import datetime
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -122,7 +123,10 @@ class MetricChart(models.Model):
                     for data_set in data_sets:
                         max_value = data_set["output"]["max"]
                         min_value = data_set["output"]["min"]
-                        output_name = data_set["output"]["name"]
+                        try:
+                            output_name = data_set["output"]["name"]
+                        except:
+                            pass
 
                         if "expected" in data_set["output"]:
                             expected_value = data_set["output"]["expected"]
@@ -369,6 +373,9 @@ class EcPerformance(models.Model):
     output_recovery_throughput_max = models.IntegerField(verbose_name="Recovery Throughput max")
     output_recovery_throughput_avg = models.IntegerField(verbose_name="Recovery Throughput avg")
 
+    def __str__(self):
+        return str(self.__dict__)
+
     '''
      min_ndata=8 
      max_ndata=8 
@@ -376,6 +383,105 @@ class EcPerformance(models.Model):
      max_nparity=4 
      min_stridelen=4096 max_stridelen=4096 numthreads=1
     '''
+
+class BcopyPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_iterations = models.IntegerField(verbose_name="Iterations", default=10)
+    input_coherent = models.TextField(verbose_name="Coherent/Non", default="Coherent", choices=[(0, "Coherent"), (1, "Non-coherent")])
+    input_plain = models.TextField(verbose_name="Plain/DMA", default="Plain", choices=[(0, "Plain"), (1, "DMA")])
+    input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
+    output_latency_units = models.TextField(verbose_name="Latency units")
+    output_latency_min = models.IntegerField(verbose_name="Latency min")
+    output_latency_max = models.IntegerField(verbose_name="Latency max")
+    output_latency_avg = models.IntegerField(verbose_name="Latency max")
+    input_latency_perf_name = models.TextField(verbose_name="Latency perf name")
+    output_average_bandwith = models.IntegerField(verbose_name="Average Bandwidth in Gbps")
+    input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
+class BcopyFloodDmaPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_n = models.IntegerField(verbose_name="N", default=0, choices=[(0, "1"), (1, "2"), (2, "4"), (3, "8"), (4, "16"), (5, "32"), (6, "64")])
+    input_size = models.IntegerField(verbose_name="Size in KB", choices=[(0, "4"), (1, "8"), (2, "16"), (3, "32"), (4, "64")])
+    output_latency_units = models.TextField(verbose_name="Latency units")
+    output_latency_min = models.IntegerField(verbose_name="Latency min")
+    output_latency_max = models.IntegerField(verbose_name="Latency max")
+    output_latency_avg = models.IntegerField(verbose_name="Latency avg")
+    input_latency_perf_name = models.TextField(verbose_name="Latency perf name")
+    output_average_bandwith = models.IntegerField(verbose_name="Average Bandwidth in Gbps")
+    input_average_bandwith_perf_name = models.TextField(verbose_name="Average Bandwidth perf name")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
+class LsvZipCryptoPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=20, default="lsv_test", choices=[(0, "lsv_test")])
+    output_filter_type_xts_encrypt_latency_ns_max = models.IntegerField(verbose_name="Enc: Latency max")
+    output_filter_type_xts_encrypt_latency_ns_avg = models.IntegerField(verbose_name="Enc: Latency avg")
+    output_filter_type_xts_encrypt_latency_ns_min = models.IntegerField(verbose_name="Enc: Latency min")
+    output_filter_type_xts_encrypt_iops = models.IntegerField(verbose_name="Enc: IOPS")
+    output_filter_type_xts_encrypt_avg_op_bw_mbps = models.IntegerField(verbose_name="Enc: BW avg")
+    output_filter_type_xts_encrypt_total_op_bw_mbps = models.IntegerField(verbose_name="Enc: BW total")
+    output_filter_type_xts_decrypt_latency_ns_max = models.IntegerField(verbose_name="Dec: Latency max")
+    output_filter_type_xts_decrypt_latency_ns_avg = models.IntegerField(verbose_name="Dec: Latency avg")
+    output_filter_type_xts_decrypt_latency_ns_min = models.IntegerField(verbose_name="Dec: Latency min")
+    output_filter_type_xts_decrypt_iops = models.IntegerField(verbose_name="Dec: IOPS")
+    output_filter_type_xts_decrypt_avg_op_bw_mbps = models.IntegerField(verbose_name="Dec: BW avg")
+    output_filter_type_xts_decrypt_total_op_bw_mbps = models.IntegerField(verbose_name="Dec: Total BW")
+    output_filter_type_deflate_latency_ns_max = models.IntegerField(verbose_name="Deflate: Latency max")
+    output_filter_type_deflate_latency_ns_avg = models.IntegerField(verbose_name="Deflate: Latency avg")
+    output_filter_type_deflate_latency_ns_min = models.IntegerField(verbose_name="Deflate: Latency min")
+    output_filter_type_deflate_iops = models.IntegerField(verbose_name="Deflate: IOPS")
+    output_filter_type_deflate_avg_op_bw_mbps = models.IntegerField(verbose_name="Deflate: BW avg")
+    output_filter_type_deflate_total_op_bw_mbps = models.IntegerField(verbose_name="Deflate: BW total")
+    output_filter_type_inflate_latency_ns_max = models.IntegerField(verbose_name="Inflate: Latency max")
+    output_filter_type_inflate_latency_ns_avg = models.IntegerField(verbose_name="Inflate: Latency avg")
+    output_filter_type_inflate_latency_ns_min = models.IntegerField(verbose_name="Inflate: Latency min")
+    output_filter_type_inflate_iops = models.IntegerField(verbose_name="Inflate: IOPS")
+    output_filter_type_inflate_avg_op_bw_mbps = models.IntegerField(verbose_name="Inflate: BW avg")
+    output_filter_type_inflate_total_op_bw_mbps = models.IntegerField(verbose_name="Inflate: BW total ")
+    output_lsv_read_latency_ns_max = models.IntegerField(verbose_name="LSV read: Latency max")
+    output_lsv_read_latency_ns_avg = models.IntegerField(verbose_name="LSV read: Latency avg")
+    output_lsv_read_latency_ns_min = models.IntegerField(verbose_name="LSV read: Latency min")
+    output_lsv_read_iops = models.IntegerField(verbose_name="LSV read: IOPS")
+    output_lsv_read_avg_op_bw_mbps = models.IntegerField(verbose_name="LSV read: BW avg")
+    output_lsv_read_total_op_bw_mbps = models.IntegerField(verbose_name="LSV read: BW total")
+    output_lsv_write_latency_ns_max = models.IntegerField(verbose_name="LSV write: Latency max")
+    output_lsv_write_latency_ns_avg = models.IntegerField(verbose_name="LSV write: Latency avg")
+    output_lsv_write_latency_ns_min = models.IntegerField(verbose_name="LSV write: Latency min")
+    output_lsv_write_iops = models.IntegerField(verbose_name="LSV write: IOPS")
+    output_lsv_write_avg_op_bw_mbps = models.IntegerField(verbose_name="LSV write: BW avg")
+    output_lsv_write_total_op_bw_mbps = models.IntegerField(verbose_name="LSV write: BW total")
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
+class BcopyPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = BcopyPerformance
+        fields = "__all__"
+
+class BcopyFloodDmaPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = BcopyFloodDmaPerformance
+        fields = "__all__"
+
+class LsvZipCryptoPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = LsvZipCryptoPerformance
+        fields = "__all__"
 
 ANALYTICS_MAP = {
     "Performance1": {
@@ -437,6 +543,30 @@ ANALYTICS_MAP = {
         "component": "general",
         "verbose_name": "EC Performance"
 
+    },
+    "BcopyPerformance": {
+        "model": BcopyPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "BCopy Performance"
+    },
+    "BcopyFloodDmaPerformance": {
+        "model": BcopyFloodDmaPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "BCopy Flood DMA Performance"
+    },
+    "JenkinsJobIdMap": {
+        "model": JenkinsJobIdMap,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "Jenkids Job Id map"
+    },
+    "LsvZipCryptoPerformance": {
+        "model": LsvZipCryptoPerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "LSV Zip Crypto Performance"
     }
 }
 
