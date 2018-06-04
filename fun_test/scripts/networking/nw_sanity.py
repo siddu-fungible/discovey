@@ -68,13 +68,6 @@ class FunControlPlaneSanity(FunTestScript):
                  target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]), filename=artifact_file_name)
 
-        # cleanup log/trace files
-        for f in os.listdir(self.target_workspace):
-            for pattern in ['trace', 'psim', 'ptf', 'nutest']:
-                if re.search(pattern, f):
-                    os.remove(os.path.join(self.target_workspace, f))
-                    break
- 
         self.docker_host.destroy_container(
             container_name=self.container_name,
             ignore_error=True)

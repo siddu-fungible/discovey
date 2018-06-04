@@ -263,7 +263,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 generator_config_handle = self.stc_manager.get_generator_config(generator_handle=generator)
                 fun_test.test_assert(generator_config_handle, "Get Generator Config for %s " % generator)
                 self.stc_manager.stc.config(generator_config_handle, **attributes)
-                generator_config_obj.spirent_handle = generator
+                generator_config_obj.spirent_handle = generator_config_handle
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))
