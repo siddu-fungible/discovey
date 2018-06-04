@@ -289,7 +289,9 @@ set_qos_ingress_pg_map_parser.add_argument('-map_list', nargs='+', help="QoS ing
                                            default=None)
 # QoS Pfc sub commands
 set_qos_pfc_parser = set_nu_qos_parsers.add_parser('pfc', help="QoS PFC Config")
-set_qos_pfc_parser.add_argument('enable', type=int, help="QoS PFC Enable")
+set_qos_pfc_parsers = set_qos_pfc_parser.add_subparsers(title="subcommands", help="")
+set_qos_pfc_enable_parser = set_qos_pfc_parsers.add_parser('enable', help="QoS PFC Enable")
+set_qos_pfc_disable_parser = set_qos_pfc_parsers.add_parser('disable', help="QoS PFC Disable")
 
 # QoS arb cfg sub commands
 set_qos_arb_cfg_parser = set_nu_qos_parsers.add_parser('arb_cfg', help="QoS arb cfg Config")
