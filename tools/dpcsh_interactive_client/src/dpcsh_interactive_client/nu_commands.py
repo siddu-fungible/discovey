@@ -719,7 +719,6 @@ class PeekCommands(object):
                 if not first_iteration:
                     if result_list:
                         result = result_list[0]
-                    if result_list:
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
                             tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter', 'Counter diff'])
@@ -970,100 +969,137 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             # self.dpc_client.disconnect()
 
-    def _display_all_erp_stats(self, grep_regex, global_prev_result=None, nu_prev_result=None, hnu_prev_result=None):
+    def _display_all_erp_stats(self, grep_regex, global_prev_result=None, nu_prev_result=None, hnu_prev_result=None,
+                               nuflex_prev_result=None):
         try:
+            first_iteration = True
             while True:
                 try:
-                    global_result = self.dpc_client.execute(verb='peek', arg_list=["stats/erp/global"])
-                    hnu_result = self.dpc_client.execute(verb='peek', arg_list=["stats/erp/hnu"])
-                    nu_result = self.dpc_client.execute(verb='peek', arg_list=["stats/erp/nu"])
+                    result = self.dpc_client.execute(verb='peek', arg_list=['stats/erp'])
+                    if result:
+                        global_result = result['global']
+                        hnu_result = result['hnu']
+                        nu_result = result['nu']
+                        # Assuming NU Flex result has list of only single dict in it
+                        if result['nuflex']:
+                            nuflex_result = result['nuflex'][0]
+                        else:
+                            nuflex_result = {}
                     master_table_obj = PrettyTable()
                     master_table_obj.border = False
                     master_table_obj.align = 'l'
 
-                    if global_prev_result or nu_prev_result or hnu_prev_result:
-                        global_diff_result = self._get_difference(result=global_result, prev_result=global_prev_result)
-                        nu_diff_result = self._get_difference(result=nu_result, prev_result=nu_prev_result)
-                        hnu_diff_result = self._get_difference(result=hnu_result, prev_result=hnu_prev_result)
+                    if not first_iteration:
+                        if global_prev_result or nu_prev_result or hnu_prev_result or nuflex_prev_result:
+                            global_diff_result = self._get_difference(result=global_result,
+                                                                      prev_result=global_prev_result)
+                            nu_diff_result = self._get_difference(result=nu_result, prev_result=nu_prev_result)
+                            hnu_diff_result = self._get_difference(result=hnu_result, prev_result=hnu_prev_result)
+                            nuflex_diff_result = self._get_difference(result=nuflex_result,
+                                                                      prev_result=nuflex_prev_result)
 
-                        global_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                        global_table_obj.align = 'l'
-                        nu_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                        nu_table_obj.align = 'l'
-                        hnu_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                        hnu_table_obj.align = 'l'
-                        for key in global_result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
+                            global_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            global_table_obj.align = 'l'
+                            nu_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            nu_table_obj.align = 'l'
+                            hnu_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            hnu_table_obj.align = 'l'
+                            nuflex_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            nuflex_table_obj.align = 'l'
+                            for key in global_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        global_table_obj.add_row([key, global_result[key], global_diff_result[key]])
+                                else:
                                     global_table_obj.add_row([key, global_result[key], global_diff_result[key]])
-                            else:
-                                global_table_obj.add_row([key, global_result[key], global_diff_result[key]])
-                        if global_table_obj.rowcount > 0:
-                            master_table_obj.add_column('ERP Global Result', [global_table_obj])
+                            if global_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP Global Result', [global_table_obj])
 
-                        for key in nu_result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
+                            for key in nu_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        nu_table_obj.add_row([key, nu_result[key], nu_diff_result[key]])
+                                else:
                                     nu_table_obj.add_row([key, nu_result[key], nu_diff_result[key]])
-                            else:
-                                nu_table_obj.add_row([key, nu_result[key], nu_diff_result[key]])
-                        if nu_table_obj.rowcount > 0:
-                            master_table_obj.add_column('ERP NU Result', [nu_table_obj])
+                            if nu_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP NU Result', [nu_table_obj])
 
-                        for key in hnu_result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
+                            for key in hnu_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        hnu_table_obj.add_row([key, hnu_result[key], hnu_diff_result[key]])
+                                else:
                                     hnu_table_obj.add_row([key, hnu_result[key], hnu_diff_result[key]])
-                            else:
-                                hnu_table_obj.add_row([key, hnu_result[key], hnu_diff_result[key]])
-                        if hnu_table_obj.rowcount > 0:
-                            master_table_obj.add_column('ERP HNU Result', [hnu_table_obj])
-                    else:
-                        global_table_obj = PrettyTable(['Field Name', 'Counters'])
-                        global_table_obj.align = 'l'
-                        nu_table_obj = PrettyTable(['Field Name', 'Counters'])
-                        nu_table_obj.align = 'l'
-                        hnu_table_obj = PrettyTable(['Field Name', 'Counters'])
-                        hnu_table_obj.align = 'l'
-                        for key in global_result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
+                            if hnu_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP HNU Result', [hnu_table_obj])
+
+                            for key in nuflex_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        nuflex_table_obj.add_row([key, nuflex_result[key], nuflex_diff_result[key]])
+                                else:
+                                    nuflex_table_obj.add_row([key, nuflex_result[key], nuflex_diff_result[key]])
+                            if nuflex_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP NU Flex Result', [nuflex_table_obj])
+                        else:
+                            global_table_obj = PrettyTable(['Field Name', 'Counters'])
+                            global_table_obj.align = 'l'
+                            nu_table_obj = PrettyTable(['Field Name', 'Counters'])
+                            nu_table_obj.align = 'l'
+                            hnu_table_obj = PrettyTable(['Field Name', 'Counters'])
+                            hnu_table_obj.align = 'l'
+                            nuflex_table_obj = PrettyTable(['Field Name', 'Counters'])
+                            nuflex_table_obj.align = 'l'
+                            for key in global_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        global_table_obj.add_row([key, global_result[key]])
+                                else:
                                     global_table_obj.add_row([key, global_result[key]])
-                            else:
-                                global_table_obj.add_row([key, global_result[key]])
-                        if global_table_obj.rowcount > 0:
-                            master_table_obj.add_column('ERP Global Result', [global_table_obj])
+                            if global_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP Global Result', [global_table_obj])
 
-                        for key in nu_result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
+                            for key in nu_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        nu_table_obj.add_row([key, nu_result[key]])
+                                else:
                                     nu_table_obj.add_row([key, nu_result[key]])
-                            else:
-                                nu_table_obj.add_row([key, nu_result[key]])
-                        if nu_table_obj.rowcount > 0:
-                            master_table_obj.add_column('ERP NU Result', [nu_table_obj])
+                            if nu_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP NU Result', [nu_table_obj])
 
-                        for key in hnu_result:
-                            if grep_regex:
-                                if re.search(grep_regex, key, re.IGNORECASE):
+                            for key in hnu_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        hnu_table_obj.add_row([key, hnu_result[key]])
+                                else:
                                     hnu_table_obj.add_row([key, hnu_result[key]])
-                            else:
-                                hnu_table_obj.add_row([key, hnu_result[key]])
-                        if hnu_table_obj.rowcount > 0:
-                            master_table_obj.add_column('ERP HNU Result', [hnu_table_obj])
+                            if hnu_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP HNU Result', [hnu_table_obj])
 
-                    global_prev_result = global_result
-                    nu_prev_result = nu_result
-                    hnu_prev_result = hnu_result
-                    print master_table_obj
-                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                            for key in nuflex_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        nuflex_table_obj.add_row([key, nuflex_result[key]])
+                                else:
+                                    nuflex_table_obj.add_row([key, nuflex_result[key]])
+                            if nuflex_table_obj.rowcount > 0:
+                                master_table_obj.add_column('ERP NU Flex Result', [nuflex_table_obj])
+
+                        global_prev_result = global_result
+                        nu_prev_result = nu_result
+                        hnu_prev_result = hnu_result
+                        nuflex_prev_result = nuflex_result
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    first_iteration = False
                 except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
+                    # self.dpc_client.disconnect()
                     break
         except Exception as ex:
             print "ERROR: %s" % str(ex)
-            self.dpc_client.disconnect()
+            # self.dpc_client.disconnect()
 
     def peek_vp_stats(self, grep_regex=None):
         cmd = "stats/vppkts"
@@ -1088,18 +1124,63 @@ class PeekCommands(object):
     def peek_erp_stats(self, cmd_type, grep_regex=None):
         if cmd_type == "global":
             cmd = "stats/erp/global"
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
         elif cmd_type == "hnu":
             cmd = "stats/erp/hnu"
-        else:
-            cmd = "stats/erp/nu"
-        if cmd_type == "all":
-            self._display_all_erp_stats(grep_regex=grep_regex)
-        else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        elif cmd_type == "all":
+            self._display_all_erp_stats(grep_regex=grep_regex)
+        elif cmd_type == 'nu':
+            cmd = "stats/erp/nu"
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        else:
+            try:
+                prev_result_list = None
+                first_iteration = True
+                while True:
+                    try:
+                        cmd = "stats/erp/nuflex"
+                        result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                        if not first_iteration:
+                            if result_list:
+                                if prev_result_list:
+                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    for result in sorted(result_list):
+                                        diff_result = self._get_difference(result=result,
+                                                                           prev_result=prev_result_list[0])
+                                        for key in sorted(result):
+                                            if grep_regex:
+                                                if re.search(grep_regex, key, re.IGNORECASE):
+                                                    table_obj.add_row([key, result[key], diff_result[key]])
+                                            else:
+                                                table_obj.add_row([key, result[key], diff_result[key]])
+                                else:
+                                    table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    table_obj.align = 'l'
+                                    for result in sorted(result_list):
+                                        for key in sorted(result):
+                                            if grep_regex:
+                                                if re.search(grep_regex, key, re.IGNORECASE):
+                                                    table_obj.add_row([key, result[key]])
+                                            else:
+                                                table_obj.add_row([key, result[key]])
+                                prev_result_list = result_list
+                                print table_obj
+                                print "\n########################  %s ########################\n" % \
+                                      str(self._get_timestamp())
+                                time.sleep(TIME_INTERVAL)
+                            else:
+                                print "Empty Result"
+                    except KeyboardInterrupt:
+                        break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
 
     def peek_parser_nu_stats(self, grep_regex=None):
         try:
             prev_result = None
+            first_iteration = False
             while True:
                 try:
                     cmd = "stats/prsr/nu"
@@ -1108,43 +1189,45 @@ class PeekCommands(object):
                     master_table_obj.align = 'l'
                     master_table_obj.border = False
                     master_table_obj.header = False
-                    if result:
-                        if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            for key in sorted(result):
-                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
-                                table_obj.align = 'l'
-                                for _key in sorted(result[key]):
-                                    if grep_regex:
-                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                    if not first_iteration:
+                        if result:
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                for key in sorted(result):
+                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    for _key in sorted(result[key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, _key, re.IGNORECASE):
+                                                table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                        else:
                                             table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                    else:
-                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
-                        else:
-                            for key in sorted(result):
-                                table_obj = PrettyTable(['Field Name', 'Counter'])
-                                table_obj.align = 'l'
-                                for _key in sorted(result[key]):
-                                    if grep_regex:
-                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                    master_table_obj.add_row([key, table_obj])
+                            else:
+                                for key in sorted(result):
+                                    table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    table_obj.align = 'l'
+                                    for _key in sorted(result[key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, _key, re.IGNORECASE):
+                                                table_obj.add_row([_key, result[key][_key]])
+                                        else:
                                             table_obj.add_row([_key, result[key][_key]])
-                                    else:
-                                        table_obj.add_row([_key, result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
-                    else:
-                        print "Empty Result"
+                                    master_table_obj.add_row([key, table_obj])
+                        else:
+                            print "Empty Result"
 
-                    prev_result = result
-                    print master_table_obj
-                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
-                    time.sleep(TIME_INTERVAL)
+                        prev_result = result
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    first_iteration = False
                 except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
+                    # self.dpc_client.disconnect()
                     break
         except Exception as ex:
             print "ERROR: %s" % str(ex)
-            self.dpc_client.disconnect()
+            # self.dpc_client.disconnect()
 
     def peek_parser_hnu_stats(self, grep_regex=None):
         # TODO: Currently this cmd is crashing on palladium. Implement it later
@@ -1153,4 +1236,68 @@ class PeekCommands(object):
     def peek_wred_ecn_stats(self, port_num, queue_num, grep_regex=None):
         cmd = ["get", "wred_ecn_stats", {"port": port_num, "queue": queue_num}]
         self._display_stats(cmd=cmd, verb='qos', grep_regex=grep_regex)
+
+    def peek_sfg_stats(self, stats_type, grep_regex=None):
+        if stats_type == "nu":
+            cmd = "stats/sfg/nu"
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        elif stats_type == "hnu":
+            cmd = "stats/sfg/hnu"
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        else:
+            try:
+                first_iteration = True
+                prev_result = None
+                while True:
+                    try:
+                        cmd = "stats/sfg"
+                        result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                        master_table_obj = PrettyTable()
+                        master_table_obj.align = 'l'
+                        master_table_obj.border = False
+                        master_table_obj.header = True
+                        if not first_iteration:
+                            if result:
+                                if prev_result:
+                                    diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                    for key in sorted(result):
+                                        table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                        for _key in sorted(result[key]):
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                            else:
+                                                table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                        master_table_obj.add_column(key, [table_obj])
+                                else:
+                                    for key in sorted(result):
+                                        table_obj = PrettyTable(['Field Name', 'Counter'])
+                                        for _key in sorted(result[key]):
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                                    table_obj.add_row([_key, result[key][_key]])
+                                            else:
+                                                table_obj.add_row([_key, result[key][_key]])
+
+                                        master_table_obj.add_column(key, [table_obj])
+                                prev_result = result
+                                print master_table_obj
+                                print "\n########################  %s ########################\n" % \
+                                      str(self._get_timestamp())
+                                time.sleep(TIME_INTERVAL)
+                        first_iteration = False
+                    except KeyboardInterrupt:
+                        break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+
+
+
+
+
+
+
+
+
+
 

@@ -116,7 +116,8 @@ class DpcClient(object):
                 try:
                     json_output = json.loads(actual_output.strip())
                 except:
-                    print("Unable to parse JSON data")
+                    if self.verbose:
+                        print("Unable to parse JSON data")
                     json_output = output
                 result = json_output
 

@@ -544,9 +544,12 @@ peek_erp_global_stats_parser.add_argument('-grep', help="Grep regex pattern", de
 # Erp HNu stats
 peek_erp_hnu_stats_parser = peek_erp_stats_parsers.add_parser('hnu', help="Peek HNU erp stats")
 peek_erp_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
-# Erp HU stats
+# Erp NU stats
 peek_erp_nu_stats_parser = peek_erp_stats_parsers.add_parser('nu', help="Peek HU erp stats")
 peek_erp_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+# Erp NU Flex stats
+peek_erp_nu_flex_stats_parser = peek_erp_stats_parsers.add_parser('nuflex', help="Peek NU Flex erp stats")
+peek_erp_nu_flex_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # Parser NU stats
 peek_prp_stats_parser = peek_stats_parsers.add_parser('parser', help="NU Peek Parser Stats")
@@ -564,3 +567,15 @@ peek_wred_ecn_stats_parser.add_argument('port_num', type=int, help="Port Num")
 peek_wred_ecn_stats_parser.add_argument('queue_num', type=int, help="Queue Num")
 peek_wred_ecn_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# Peek NU SFG Stats
+peek_sfg_stats_parser = peek_stats_parsers.add_parser('sfg', help="Peek SFG Stats")
+peek_sfg_stats_parsers = peek_sfg_stats_parser.add_subparsers(title='subcommands', help="")
+# All SFG stats
+peek_all_sfg_stats_parser = peek_sfg_stats_parsers.add_parser('all', help="Peek All SFG stats (NU, HNU)")
+peek_all_sfg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+# Nu SFG stats
+peek_nu_sfg_stats_parser = peek_sfg_stats_parsers.add_parser('nu', help="Peek NU SFG stats")
+peek_nu_sfg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+# Hnu SFG stats
+peek_hnu_sfg_stats_parser = peek_sfg_stats_parsers.add_parser('hnu', help="Peek HNU SFG stats")
+peek_hnu_sfg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
