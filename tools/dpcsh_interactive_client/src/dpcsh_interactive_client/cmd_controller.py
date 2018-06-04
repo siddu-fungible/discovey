@@ -329,9 +329,11 @@ class CmdController(Cmd):
         port_num = args.port_num
         self._qos_cmd_obj.ingress_priority_to_pg_map(port_num=port_num, update=False)
 
-    def set_qos_pfc(self, args):
-        enable = args.enable
-        self._qos_cmd_obj.pfc(enable=enable, update=True)
+    def set_qos_pfc_enable(self, args):
+        self._qos_cmd_obj.pfc(enable=True, update=True)
+
+    def set_qos_pfc_disable(self, args):
+        self._qos_cmd_obj.pfc(update=True, disable=True)
 
     def get_qos_pfc(self, args):
         self._qos_cmd_obj.pfc(update=False)
@@ -501,7 +503,8 @@ class CmdController(Cmd):
     get_qos_ingress_pg_parser.set_defaults(func=get_qos_ingress_pg)
     set_qos_ingress_pg_map_parser.set_defaults(func=set_qos_ingress_pg_map)
     get_qos_ingress_pg_map_parser.set_defaults(func=get_qos_ingress_pg_map)
-    set_qos_pfc_parser.set_defaults(func=set_qos_pfc)
+    set_qos_pfc_enable_parser.set_defaults(func=set_qos_pfc_enable)
+    set_qos_pfc_disable_parser.set_defaults(func=set_qos_pfc_disable)
     get_qos_pfc_parser.set_defaults(func=get_qos_pfc)
     set_qos_arb_cfg_parser.set_defaults(func=set_qos_arb_cfg)
     get_qos_arb_cfg_parser.set_defaults(func=get_qos_arb_cfg)
