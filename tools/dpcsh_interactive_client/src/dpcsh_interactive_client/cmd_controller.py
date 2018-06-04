@@ -397,7 +397,11 @@ class CmdController(Cmd):
 
     def peek_nu_erp_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='hu', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_erp_stats(cmd_type='nu', grep_regex=grep_regex)
+
+    def peek_nuflex_erp_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_erp_stats(cmd_type='nuflex', grep_regex=grep_regex)
 
     def peek_nu_parser_stats(self, args):
         grep_regex = args.grep
@@ -412,6 +416,18 @@ class CmdController(Cmd):
         queue_num = args.queue_num
         grep_regex = args.grep
         self._peek_cmd_obj.peek_wred_ecn_stats(port_num=port_num, queue_num=queue_num, grep_regex=grep_regex)
+
+    def peek_nu_all_sfg_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_sfg_stats(stats_type='all', grep_regex=grep_regex)
+
+    def peek_nu_sfg_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_sfg_stats(stats_type='nu', grep_regex=grep_regex)
+
+    def peek_hnu_sfg_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_sfg_stats(stats_type='hnu', grep_regex=grep_regex)
 
     # Set handler functions for the sub commands
 
@@ -503,9 +519,13 @@ class CmdController(Cmd):
     peek_erp_global_stats_parser.set_defaults(func=peek_global_erp_stats)
     peek_erp_hnu_stats_parser.set_defaults(func=peek_hnu_erp_stats)
     peek_erp_nu_stats_parser.set_defaults(func=peek_nu_erp_stats)
+    peek_erp_nu_flex_stats_parser.set_defaults(func=peek_nuflex_erp_stats)
     peek_parser_nu_stats_parser.set_defaults(func=peek_nu_parser_stats)
     peek_parser_hnu_stats_parser.set_defaults(func=peek_hnu_parser_stats)
     peek_wred_ecn_stats_parser.set_defaults(func=peek_nu_qos_wred_ecn_stats)
+    peek_all_sfg_stats_parser.set_defaults(func=peek_nu_all_sfg_stats)
+    peek_nu_sfg_stats_parser.set_defaults(func=peek_nu_sfg_stats)
+    peek_hnu_sfg_stats_parser.set_defaults(func=peek_hnu_sfg_stats)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
@@ -533,18 +553,20 @@ class CmdController(Cmd):
 
     @with_argparser(base_peek_parser)
     def do_peek(self, args):
-        # pdb.set_trace()
         func = getattr(args, 'func', None)
         if func is not None:
             func(self, args)
         else:
             self.do_help('peek')
 
+    def __del__(self):
+        self.dpc_client.disconnect()
+
 
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.23.102", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
