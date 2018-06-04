@@ -141,7 +141,10 @@ class MetricChart(models.Model):
                             if self.positive:
                                 data_set_combined_goodness += (float(output_value) / expected_value) * 100
                             else:
-                                data_set_combined_goodness += (float(expected_value) / output_value) * 100
+                                if output_value:
+                                    data_set_combined_goodness += (float(expected_value) / output_value) * 100
+                                else:
+                                    print "ERROR: {}, {}, {}".format(self.chart_name, self.metric_model_name, last_record) 
                     goodness_values.append(data_set_combined_goodness/len(data_sets))
                 status_values.append(reduce(lambda x, y: x and y, data_set_statuses))
 
