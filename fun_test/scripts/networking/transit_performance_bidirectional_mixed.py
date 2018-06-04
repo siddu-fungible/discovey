@@ -2,11 +2,14 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, Ethernet2Header, GeneratorConfig, AnalyzerConfig
 from collections import OrderedDict
+from lib.host.network_controller import NetworkController
+from helper import *
 
 stream_port_obj_dict = OrderedDict()
 performance_data = OrderedDict()
 latency_results = None
 jitter_results = None
+DUT_PORTS = []
 
 
 class NuTransitPerformance(FunTestScript):
@@ -30,6 +33,8 @@ class NuTransitPerformance(FunTestScript):
         global template_obj
         global performance_data
         global performance_inputs
+        global DUT_PORTS
+        global network_controller_obj
 
         template_obj = SpirentEthernetTrafficTemplate(session_name="performance_bidirectional")
         result = template_obj.setup(no_of_ports_needed=self.NO_OF_PORTS)
@@ -42,7 +47,10 @@ class NuTransitPerformance(FunTestScript):
         gateway = template_obj.stc_manager.dut_config['gateway1']
         destination_ip2 = template_obj.stc_manager.dut_config['destination_ip2']
         source_ip2 = "192.85.1.2"
+        DUT_PORTS = template_obj.stc_manager.dut_config['port_nos']
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+        dpc_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
+        dpc_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
 
         checkpoint = "Change MTU for interface %s to %d" % (str(result['interface_obj_list'][0]), self.MTU)
         for interface_obj in result['interface_obj_list']:
@@ -109,6 +117,8 @@ class NuTransitPerformance(FunTestScript):
             result = template_obj.deactivate_stream_blocks(stream_obj_list=stream_objects)
             fun_test.test_assert(result, checkpoint)
 
+        network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
+
     def cleanup(self):
         template_obj.cleanup()
         mode = template_obj.stc_manager.dut_config['mode']
@@ -159,30 +169,28 @@ class NuTransitLatencyTest(FunTestCase):
                                                  time_stamp_latch_mode=GeneratorConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
 
         port1_analyzer_config = AnalyzerConfig(timestamp_latch_mode=AnalyzerConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
-
+        '''
         port2_generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                                  duration=self.traffic_duration,
                                                  duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
                                                  time_stamp_latch_mode=GeneratorConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
 
         port2_analyzer_config = AnalyzerConfig(timestamp_latch_mode=AnalyzerConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
-
-        self.generator_port_obj_dict[self.ports[0]] = port1_generator_config
-        self.generator_port_obj_dict[self.ports[1]] = port2_generator_config
-
-        self.analyzer_port_obj_dict[self.ports[0]] = port1_analyzer_config
-        self.analyzer_port_obj_dict[self.ports[1]] = port2_analyzer_config
+        '''
 
         for port in self.ports:
             checkpoint = "Create Generator Config for %s port" % port
             result = template_obj.configure_generator_config(port_handle=port,
-                                                             generator_config_obj=self.generator_port_obj_dict[port])
+                                                             generator_config_obj=port1_generator_config)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             checkpoint = "Create Analyzer Config for %s port" % port
             result = template_obj.configure_analyzer_config(port_handle=port,
-                                                            analyzer_config_obj=self.analyzer_port_obj_dict[port])
+                                                            analyzer_config_obj=port1_analyzer_config)
             fun_test.simple_assert(result, checkpoint)
+
+            self.generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
+            self.analyzer_port_obj_dict[port] = template_obj.stc_manager.get_analyzer(port_handle=port)
 
         checkpoint = "Subscribe to all results"
         self.subscribe_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
@@ -190,6 +198,12 @@ class NuTransitLatencyTest(FunTestCase):
 
         self.expected_latency_data = performance_data
         self.tolerance_percent = performance_inputs['mixed_size']['tolerance_percent']
+
+        checkpoint = "Clear FPG port stats on DUT"
+        for port_num in DUT_PORTS:
+            result = network_controller_obj.clear_port_stats(port_num=port_num)
+            fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
 
     def run(self):
         port1 = self.ports[0]
@@ -219,7 +233,7 @@ class NuTransitLatencyTest(FunTestCase):
 
         checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % self.traffic_duration
         result = template_obj.enable_generator_configs(generator_configs=[
-            self.generator_port_obj_dict[port1].spirent_handle, self.generator_port_obj_dict[port2].spirent_handle])
+            self.generator_port_obj_dict[port1], self.generator_port_obj_dict[port2]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
@@ -241,6 +255,51 @@ class NuTransitLatencyTest(FunTestCase):
             latency_results[key] = {'pps_count': rate_result['pps_count'][key],
                                     'throughput_count': rate_result['throughput_count'][key]}
         fun_test.sleep("Waiting for traffic to complete", seconds=self.traffic_duration)
+
+        checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (DUT_PORTS[0],
+                                                                                               DUT_PORTS[1])
+        port1_result = network_controller_obj.peek_fpg_port_stats(port_num=DUT_PORTS[0])
+        fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % DUT_PORTS[0])
+        port2_result = network_controller_obj.peek_fpg_port_stats(port_num=DUT_PORTS[1])
+        fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % DUT_PORTS[1])
+
+        frames_transmitted = get_dut_output_stats_value(result_stats=port1_result, stat_type=FRAMES_TRANSMITTED_OK)
+        frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_RECEIVED_OK)
+
+        fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
+                                      message=checkpoint)
+
+        checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (DUT_PORTS[1],
+                                                                                               DUT_PORTS[0])
+        frames_transmitted = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_TRANSMITTED_OK)
+        frames_received = get_dut_output_stats_value(result_stats=port1_result, stat_type=FRAMES_RECEIVED_OK)
+
+        fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
+                                      message=checkpoint)
+
+        # Ensure NO error are seen on DUT port 1
+
+        if_in_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=IF_IN_ERRORS)
+        fun_test.test_assert_expected(expected=None, actual=if_in_err_count,
+                                      message="Ensure no IN error count on DUT port %d" % DUT_PORTS[0])
+        if_out_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=IF_OUT_ERRORS)
+        fun_test.test_assert_expected(expected=None, actual=if_out_err_count,
+                                      message="Ensure no OUT error count on DUT port %d" % DUT_PORTS[0])
+        fcs_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=FRAME_CHECK_SEQUENCE_ERROR)
+        fun_test.test_assert_expected(expected=None, actual=fcs_err_count,
+                                      message="Ensure no FCS errors seen on DUT port %d" % DUT_PORTS[0])
+
+        # Ensure NO error are seen on DUT port 2
+
+        if_in_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=IF_IN_ERRORS)
+        fun_test.test_assert_expected(expected=None, actual=if_in_err_count,
+                                      message="Ensure no IN error count on DUT port %d" % DUT_PORTS[1])
+        if_out_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=IF_OUT_ERRORS)
+        fun_test.test_assert_expected(expected=None, actual=if_out_err_count,
+                                      message="Ensure no OUT error count on DUT port %d" % DUT_PORTS[1])
+        fcs_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAME_CHECK_SEQUENCE_ERROR)
+        fun_test.test_assert_expected(expected=None, actual=fcs_err_count,
+                                      message="Ensure no FCS errors seen on DUT port %d" % DUT_PORTS[1])
 
         for stream_objs in all_stream_objects:
             frame_size = str(stream_objs[0].FixedFrameLength)
@@ -269,13 +328,13 @@ class NuTransitLatencyTest(FunTestCase):
             key = "frame_%s" % stream_objs[0].FixedFrameLength
             latency_results[key].update(latency_count=latency_result[key])
 
-        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1].spirent_handle
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1]
         analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port1, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
         result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
         fun_test.test_assert(expression=result['result'], message=checkpoint)
 
-        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port2].spirent_handle
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port2]
         analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
         result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
@@ -338,30 +397,28 @@ class NuTransitJitterTest(FunTestCase):
                                                  time_stamp_latch_mode=GeneratorConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
 
         port1_analyzer_config = AnalyzerConfig(timestamp_latch_mode=AnalyzerConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
-
+        '''
         port2_generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                                  duration=self.traffic_duration,
                                                  duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
                                                  time_stamp_latch_mode=GeneratorConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
 
         port2_analyzer_config = AnalyzerConfig(timestamp_latch_mode=AnalyzerConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
-
-        self.generator_port_obj_dict[self.ports[0]] = port1_generator_config
-        self.generator_port_obj_dict[self.ports[1]] = port2_generator_config
-
-        self.analyzer_port_obj_dict[self.ports[0]] = port1_analyzer_config
-        self.analyzer_port_obj_dict[self.ports[1]] = port2_analyzer_config
+        '''
 
         for port in self.ports:
             checkpoint = "Create Generator Config for %s port" % port
             result = template_obj.configure_generator_config(port_handle=port,
-                                                             generator_config_obj=self.generator_port_obj_dict[port])
+                                                             generator_config_obj=port1_generator_config)
             fun_test.test_assert(expression=result, message=checkpoint)
 
             checkpoint = "Create Analyzer Config for %s port" % port
             result = template_obj.configure_analyzer_config(port_handle=port,
-                                                            analyzer_config_obj=self.analyzer_port_obj_dict[port])
+                                                            analyzer_config_obj=port1_analyzer_config)
             fun_test.test_assert(result, checkpoint)
+
+            self.generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
+            self.analyzer_port_obj_dict[port] = template_obj.stc_manager.get_analyzer(port_handle=port)
 
         checkpoint = "Subscribe to Tx Stream Block results"
         tx_subscribe = template_obj.subscribe_tx_results(parent=template_obj.stc_manager.project_handle)
@@ -417,7 +474,7 @@ class NuTransitJitterTest(FunTestCase):
 
         checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % self.traffic_duration
         result = template_obj.enable_generator_configs(generator_configs=[
-            self.generator_port_obj_dict[port1].spirent_handle, self.generator_port_obj_dict[port2].spirent_handle])
+            self.generator_port_obj_dict[port1], self.generator_port_obj_dict[port2]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
@@ -458,13 +515,13 @@ class NuTransitJitterTest(FunTestCase):
             fun_test.simple_assert(expression=jitter_result['result'], message=checkpoint)
             jitter_results[key].update(jitter_count=jitter_result[key])
 
-        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1].spirent_handle
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port1]
         analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port1, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
         result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
         fun_test.test_assert(expression=result['result'], message=checkpoint)
 
-        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port2].spirent_handle
+        checkpoint = "Ensure no errors are seen for port %s" % self.analyzer_port_obj_dict[port2]
         analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
         result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
