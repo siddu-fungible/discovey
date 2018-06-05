@@ -172,12 +172,15 @@ class SpirentSetup(FunTestScript):
 class TestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test all frame size ",
+                              summary="Test all frame size in incremental way",
                               steps="""
-                        3. Start traffic and subscribe to tx and rx results
-                        4. Compare Tx and Rx results for frame count
-                        5. Check for error counters. there must be no error counter
-                        6. Verify number of frames received is more than max frame length
+                        1. Start traffic and subscribe to tx and rx results
+                        2. Compare Tx and Rx results for frame count
+                        3. Check for error counters. there must be no error counter
+                        4. Check dut ingress and egress frame count match
+                        5. Check OctetStats from dut and spirent
+                        6. Check EtherOctets from dut and spirent.
+                        7. Check Counter for each octet range
                         """)
 
     def setup(self):
@@ -437,44 +440,6 @@ class TestCase1(FunTestCase):
                                                   message="Ensure correct value is seen for %s octet in %s of "
                                                           "dut port %s" % (key2, key1, key))
 
-        '''
-        fun_test.test_assert_expected(expected=expected_octet_counters['64'], actual=int(dut_port_1_rx_octet_64),
-                                      message="Ensure rx dut stats has correct count for octet 64")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['64'], actual=int(dut_port_2_tx_octet_64),
-                                      message="Ensure tx dut stats has correct count for octet 64")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['127'], actual=int(dut_port_1_rx_octet_65_127),
-                                      message="Ensure rx dut stats has correct count for octet 65-127")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['127'], actual=int(dut_port_2_tx_octet_65_127),
-                                      message="Ensure tx dut stats has correct count for octet 65-127")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['255'], actual=int(dut_port_1_rx_octet_128_255),
-                                      message="Ensure rx dut stats has correct count for octet 128-255")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['255'], actual=int(dut_port_2_tx_octet_128_255),
-                                      message="Ensure tx dut stats has correct count for octet 128-255")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['511'], actual=int(dut_port_1_rx_octet_256_511),
-                                      message="Ensure rx dut stats has correct count for octet 256-511")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['511'], actual=int(dut_port_2_tx_octet_256_511),
-                                      message="Ensure tx dut stats has correct count for octet 256-511")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['1023'], actual=int(dut_port_1_rx_octet_512_1023),
-                                      message="Ensure rx dut stats has correct count for octet 512-1023")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['1023'], actual=int(dut_port_2_tx_octet_512_1023),
-                                      message="Ensure tx dut stats has correct count for octet 512-1023")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['1518'], actual=int(dut_port_1_rx_octet_1024_1518),
-                                      message="Ensure rx dut stats has correct count for octet 1024-1518")
-
-        fun_test.test_assert_expected(expected=expected_octet_counters['1518'], actual=int(dut_port_2_tx_octet_1024_1518),
-                                      message="Ensure tx dut stats has correct count for octet 1024-1518")
-        '''
-
 class TestCase2(FunTestCase):
     def describe(self):
         self.set_test_details(id=2,
@@ -483,6 +448,8 @@ class TestCase2(FunTestCase):
                         1. Start traffic and subscribe to tx and rx results
                         2. Compare Tx and Rx results for frame count for each stream
                         3. Check for error counters. there must be no error counter
+                        4. Check ok frames on dut ingress and egress counter match and spirent
+                        5. Check psw stats for fwd_frv, ct_pkt, ifpg_pkt, fpg_pkt 
                         """)
 
     def setup(self):
@@ -598,28 +565,44 @@ class TestCase2(FunTestCase):
 
         fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
                                       message="Ensure frames transmitted from DUT and counter on spirent match")
-
         '''
+        # Fetch psw global stats
         psw_stats = network_controller_obj.peek_psw_global_stats()
-        fun_test.simple_assert(psw_stats, message="Ensure psw stats are received")
+        fetch_list = []
+        different = False
+        fwd_frv = 'fwd_frv'
+        ct_pkt = 'ct_pkt'
+        fetch_list = [fwd_frv, ct_pkt]
+        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
+        dut_port_2_fpg_value = get_fpg_port_value(dut_port_2)
+        if not dut_port_1_fpg_value == dut_port_2_fpg_value:
+            different = True
+            ifpg1 = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+            fpg1 = 'fpg' + str(dut_port_1_fpg_value) + '_pkt'
+            ifpg2 = 'ifpg' + str(dut_port_2_fpg_value) + '_pkt'
+            fpg2 = 'fpg' + str(dut_port_2_fpg_value) + '_pkt'
+            fetch_list_1 = [ifpg1, fpg1, ifpg2, fpg2]
+            fetch_list.extend(fetch_list_1)
+        else:
+            fetch_list.append('ifpg' + str(dut_port_1_fpg_value) + '_pkt')
+            fetch_list.append('fpg' + str(dut_port_1_fpg_value) + '_pkt')
 
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['fwd_frv']),
-                                      message="Check all packets are seen in fwd_frv")
+        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+        if different:
+            ifpg = int(psw_fetched_output[ifpg1]) + int(psw_fetched_output[ifpg2])
+            del psw_fetched_output[ifpg1]
+            del psw_fetched_output[ifpg2]
+            fpg = int(psw_fetched_output[fpg1]) + int(psw_fetched_output[fpg2])
+            del psw_fetched_output[fpg1]
+            del psw_fetched_output[fpg2]
+            psw_fetched_output['ifpg'] = ifpg
+            psw_fetched_output['fpg'] = fpg
 
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['ifpg1_pkt']),
-                                      message="Check all packets are seen in ifpg1_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['output']['fpg1_pkt']),
-                                      message="Check all packets are seen in fpg1_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['prm']['ct_pkt']),
-                                      message="Check all packets are seen in ct_pkt")
+        for key in fetch_list:
+            fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
+                                          actual=psw_fetched_output[key],
+                                          message="Check counter %s in psw global stats" % key)
         '''
-
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
