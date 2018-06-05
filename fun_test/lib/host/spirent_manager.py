@@ -919,6 +919,25 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def configure_arp(self, streamblock_obj, header_obj):
+        result = False
+        try:
+            attributes = streamblock_obj.get_attributes_dict()
+            header_attributes = header_obj.get_attributes_dict()
+            frame_config = self.get_streamblock_frame_config(streamblock_obj._spirent_handle)
+            if frame_config:
+                streamblock_obj.FrameConfig = frame_config
+                attributes['FrameConfig'] = frame_config
+                self.stc.config(streamblock_obj._spirent_handle, **attributes)
+            handle = self.stc.create(header_obj.HEADER_TYPE, under=streamblock_obj._spirent_handle, **header_attributes)
+            if handle:
+                header_obj._spirent_handle = handle
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
 
 if __name__ == "__main__":
     stc_manager = SpirentManager()
