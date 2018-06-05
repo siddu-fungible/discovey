@@ -605,13 +605,15 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def pfc(self, enable=None, update=True):
+    def pfc(self, enable=None, update=True, disable=None):
         try:
             get_cmd_args = ['get', 'pfc']
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
                 if enable:
-                    config["enable"] = enable
+                    config["enable"] = 1
+                elif disable:
+                    config['enable'] = 0
                 set_cmd_args = ['set', 'pfc', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result

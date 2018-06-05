@@ -895,7 +895,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def configure_priority_flow_control_header(self, stream_obj, destination_mac, source_mac, length="8808",
+    def configure_priority_flow_control_header(self, stream_obj, destination_mac="01:80:c2:00:00:02",
+                                               source_mac="00:10:94:00:00:02", length="8808",
                                                preamble="55555555555555d5", op_code="0101", time0="", time1="",
                                                time2="", time3="", time4="", time5="", time6="", time7="",
                                                class_enable_vector=False, ls_octet="00000000", ms_octet="00000000"):

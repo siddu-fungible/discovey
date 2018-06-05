@@ -180,6 +180,9 @@ class TestCase1(FunTestCase):
                         1. Active streams CRC error with 64B frame size on both ports
                         2. Execute generator traffic on both ports
                         3. All frames must be dropped and Rx count of spirent must be 0
+                        4. Check dut inress for FrameCheckSequence and InError count with spirent tx
+                        5. Check dut egress does not transmit
+                        6. Check psw stats main_pkt_drop_eop, fwd_frv, cpr_feop_pkt, cpr_sop_drop_pkt
                         """)
 
     def setup(self):
@@ -300,29 +303,40 @@ class TestCase1(FunTestCase):
                                       message="Ensure all packets are shown in %s" % ETHER_STATS_PKTS_64_OCTETS)
         fun_test.test_assert_expected(expected=int(tx_results_2['FrameCount']), actual=int(dut_port_2_rx_octets_64),
                                       message="Ensure all packets are shown in %s" % ETHER_STATS_PKTS_64_OCTETS)
-
         '''
+        # Fetch psw global stats
         psw_stats = network_controller_obj.peek_psw_global_stats()
         fun_test.simple_assert(psw_stats, message="Ensure psw stats are received")
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['cpr_feop_pkt']),
-                                      message="Check all packets are seen in cpr_feop_pkt")
+        fetch_list = []
+        different = False
+        fwd_frv = 'fwd_frv'
+        main_pkt_drop_eop = 'main_pkt_drop_eop'
+        cpr_feop_pkt = 'cpr_feop_pkt'
+        cpr_sop_drop_pkt = 'cpr_sop_drop_pkt'
+        fetch_list = [fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, cpr_sop_drop_pkt]
+        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
+        dut_port_2_fpg_value = get_fpg_port_value(dut_port_2)
+        if not dut_port_1_fpg_value == dut_port_2_fpg_value:
+            different = True
+            ifpg1 = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+            ifpg2 = 'ifpg' + str(dut_port_2_fpg_value) + '_pkt'
+            fetch_list_1 = [ifpg1, ifpg2]
+            fetch_list.extend(fetch_list_1)
+        else:
+            fetch_list.append('ifpg' + str(dut_port_1_fpg_value) + '_pkt')
+            fetch_list.append('fpg' + str(dut_port_1_fpg_value) + '_pkt')
 
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['cpr_sop_drop_pkt']),
-                                      message="Check all packets are seen in cpr_sop_drop_pkt")
+        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+        if different:
+            ifpg = int(psw_fetched_output[ifpg1]) + int(psw_fetched_output[ifpg2])
+            del psw_fetched_output[ifpg1]
+            del psw_fetched_output[ifpg2]
+            psw_fetched_output['ifpg'] = ifpg
 
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['fwd_frv']),
-                                      message="Check all packets are seen in fwd_frv")
-
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['ifpg1_pkt']),
-                                      message="Check all packets are seen in ifpg1_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['main_pkt_drop_eop']),
-                                      message="Check all packets are seen in main_pkt_drop_eop")
+        for key in fetch_list:
+            fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
+                                          actual=psw_fetched_output[key],
+                                          message="Check counter %s in psw global stats" % key)
         '''
 
 class TestCase2(FunTestCase):
@@ -333,6 +347,8 @@ class TestCase2(FunTestCase):
                         1. Active streams CRC error with 1500B frame size on both ports
                         2. Execute generator traffic on both ports
                         3. Frames must not be dropped but be sent with CRC errors
+                        4. Check dut ingress and egress frames ok must match and spirent.
+                        5. Check psw stats ct_pkt, fpg1_err_pkt,fpg1_pkt, ifpg1_pkt, fwd_frv, cpr_feop_pkt
                         """)
 
     def setup(self):
@@ -459,31 +475,48 @@ class TestCase2(FunTestCase):
         fun_test.test_assert_expected(expected=int(tx_results_2["FrameCount"]), actual=int(dut_port_2_in_error),
                                       message="Check in error count on rx dut port")
         '''
+        # Fetch psw global stats
         psw_stats = network_controller_obj.peek_psw_global_stats()
-        fun_test.simple_assert(psw_stats, message="Ensure psw stats are received")
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['cpr_feop_pkt']),
-                                      message="Check all packets are seen in cpr_feop_pkt")
+        fetch_list = []
+        different = False
+        fwd_frv = 'fwd_frv'
+        ct_pkt = 'ct_pkt'
+        cpr_feop_pkt = 'cpr_feop_pkt'
+        fetch_list = [fwd_frv, ct_pkt]
+        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
+        dut_port_2_fpg_value = get_fpg_port_value(dut_port_2)
+        if not dut_port_1_fpg_value == dut_port_2_fpg_value:
+            different = True
+            ifpg1 = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+            fpg1 = 'fpg' + str(dut_port_1_fpg_value) + '_pkt'
+            fpg1_err = 'fpg' + str(dut_port_1_fpg_value) + '_err_pkt'
+            ifpg2 = 'ifpg' + str(dut_port_2_fpg_value) + '_pkt'
+            fpg2 = 'fpg' + str(dut_port_2_fpg_value) + '_pkt'
+            fpg2_err = 'fpg' + str(dut_port_2_fpg_value) + '_err_pkt'
+            fetch_list_1 = [ifpg1, fpg1, ifpg2, fpg2, fpg1_err, fpg2_err]
+            fetch_list.extend(fetch_list_1)
+        else:
+            fetch_list.append('ifpg' + str(dut_port_1_fpg_value) + '_pkt')
+            fetch_list.append('fpg' + str(dut_port_1_fpg_value) + '_pkt')
+            fetch_list.append('fpg' + str(dut_port_1_fpg_value) + '_err_pkt')
 
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['fwd_frv']),
-                                      message="Check all packets are seen in fwd_frv")
+        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+        if different:
+            ifpg = int(psw_fetched_output[ifpg1]) + int(psw_fetched_output[ifpg2])
+            del psw_fetched_output[ifpg1]
+            del psw_fetched_output[ifpg2]
+            fpg = int(psw_fetched_output[fpg1]) + int(psw_fetched_output[fpg2])
+            del psw_fetched_output[fpg1]
+            del psw_fetched_output[fpg2]
+            fpg_err = int(psw_fetched_output[fpg1_err]) + int(psw_fetched_output[fpg2_err])
+            psw_fetched_output['ifpg'] = ifpg
+            psw_fetched_output['fpg'] = fpg
+            psw_fetched_output['fpg_err'] = fpg_err
 
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['input']['ifpg1_pkt']),
-                                      message="Check all packets are seen in ifpg1_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['output']['fpg1_pkt']),
-                                      message="Check all packets are seen in fpg1_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['output']['fpg1_err_pkt']),
-                                      message="Check all packets are seen in fpg1_err_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                      actual=int(psw_stats['prm']['ct_pkt']),
-                                      message="Check all packets are seen in ct_pkt")
+        for key in fetch_list:
+            fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
+                                          actual=psw_fetched_output[key],
+                                          message="Check counter %s in psw global stats" % key)
         '''
 
 class TestCase3(FunTestCase):
@@ -494,6 +527,7 @@ class TestCase3(FunTestCase):
                         1. Active streams which have wrong preamble both ports
                         2. Execute generator traffic on both ports
                         3. All frames must be dropped and Rx count of spirent must be 0
+                        4. Check dut egress for not transmitted frame
                         """)
 
     def setup(self):
@@ -586,6 +620,7 @@ class TestCase4(FunTestCase):
                         1. Active streams with incorrect SFD both ports
                         2. Execute generator traffic on both ports
                         3. All frames must be dropped and Rx count of spirent must be 0
+                        4. Check dut egress for not transmitted frame
                         """)
 
     def setup(self):
@@ -678,6 +713,7 @@ class TestCase5(FunTestCase):
                         1. Active streams with IP checksum error on both ports
                         2. Execute generator traffic on both ports
                         3. All frames must be dropped and Rx count of spirent must be 0
+                        4. Check dut egress for not transmitted frame
                         """)
 
     def setup(self):
@@ -769,9 +805,6 @@ class TestCase5(FunTestCase):
         fun_test.test_assert_expected(expected=int(tx_results_2["FrameCount"]), actual=int(dut_port_2_receive),
                                       message="Check frames are received by dut ingress port")
 
-        # TODO: Chcek psw stats
-        # TODO: poke syslog level 3
-
 
 class TestCase6(FunTestCase):
     def describe(self):
@@ -781,6 +814,7 @@ class TestCase6(FunTestCase):
                         1. Active streams with IP total header error on both ports
                         2. Execute generator traffic on both ports
                         3. All frames must be dropped and Rx count of spirent must be 0
+                        4. Check dut egress for not transmitted frame
                         """)
 
     def setup(self):
@@ -871,9 +905,6 @@ class TestCase6(FunTestCase):
         fun_test.test_assert_expected(expected=int(tx_results_2["FrameCount"]), actual=int(dut_port_2_receive),
                                       message="Check frames are received by dut ingress port")
 
-        # TODO: REFACTOR
-        # TODO: Check parser stats
-
 
 class TestCase7(FunTestCase):
     def describe(self):
@@ -883,6 +914,7 @@ class TestCase7(FunTestCase):
                         1. Active streams with bad IP version on both ports
                         2. Execute generator traffic on both ports
                         3. All frames must be dropped and Rx count of spirent must be 0
+                        4. Check dut egress for not transmitted frame
                         """)
 
     def setup(self):
@@ -972,7 +1004,6 @@ class TestCase7(FunTestCase):
 
         fun_test.test_assert_expected(expected=int(tx_results_2["FrameCount"]), actual=int(dut_port_2_receive),
                                       message="Check frames are received by dut ingress port")
-
         #TODO: Set to 0 or 1
 
 
@@ -984,6 +1015,7 @@ class TestCase8(FunTestCase):
                         1. Active streams with TTL error in ip header on both ports
                         2. Execute generator traffic on both ports
                         3. All frames must be dropped and Rx count of spirent must be 0
+                        4. Check dut egress for not transmitted frame
                         """)
 
     def setup(self):
@@ -1082,7 +1114,9 @@ class TestCase9(FunTestCase):
                               steps="""
                         1. Active all streams on both ports including good and bad
                         2. Execute generator traffic on both ports
-                        3. All good frames must be received correclty 
+                        3. All good frames must be received correclty
+                        4. Check dut ingress and egress to match number of frames
+                        5. Check for erros other than fcs error generated by 1500B stream
                         """)
 
     def setup(self):
@@ -1248,11 +1282,11 @@ class TestCase9(FunTestCase):
 
 if __name__ == "__main__":
     ts = SpirentSetup()
-    #ts.add_test_case(TestCase1())
-    #ts.add_test_case(TestCase2())
-    #ts.add_test_case(TestCase3())
-    #ts.add_test_case(TestCase4())
-    #ts.add_test_case(TestCase5())
+    ts.add_test_case(TestCase1())
+    ts.add_test_case(TestCase2())
+    ts.add_test_case(TestCase3())
+    ts.add_test_case(TestCase4())
+    ts.add_test_case(TestCase5())
     ts.add_test_case(TestCase6())
     ts.add_test_case(TestCase7())
     ts.add_test_case(TestCase8())
