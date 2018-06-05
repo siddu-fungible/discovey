@@ -7,6 +7,23 @@ from collections import OrderedDict
 
 
 class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
+    diff_serv_dscp_values = {'best_effort': {'dscp_value': '000000', 'decimal_value': '0', 'dscp_high': '0', 'dscp_low': '0'},
+                             'AF11': {'dscp_value': '001010', 'decimal_value': '10', 'dscp_high': '1', 'dscp_low': '2'},
+                             'AF12': {'dscp_value': '001100', 'decimal_value': '12', 'dscp_high': '1', 'dscp_low': '4'},
+                             'AF13': {'dscp_value': '001110', 'decimal_value': '14', 'dscp_high': '1', 'dscp_low': '6'},
+                             'AF21': {'dscp_value': '010010', 'decimal_value': '18', 'dscp_high': '2', 'dscp_low': '2'},
+                             'AF22': {'dscp_value': '010100', 'decimal_value': '20', 'dscp_high': '2', 'dscp_low': '4'},
+                             'AF23': {'dscp_value': '010110', 'decimal_value': '22', 'dscp_high': '2', 'dscp_low': '6'},
+                             'AF31': {'dscp_value': '011010', 'decimal_value': '26', 'dscp_high': '3', 'dscp_low': '2'},
+                             'AF32': {'dscp_value': '011100', 'decimal_value': '28', 'dscp_high': '3', 'dscp_low': '4'},
+                             'AF33': {'dscp_value': '011110', 'decimal_value': '30', 'dscp_high': '3', 'dscp_low': '6'},
+                             'AF41': {'dscp_value': '100010', 'decimal_value': '34', 'dscp_high': '4', 'dscp_low': '2'},
+                             'AF42': {'dscp_value': '100100', 'decimal_value': '36', 'dscp_high': '4', 'dscp_low': '4'},
+                             'AF43': {'dscp_value': '100110', 'decimal_value': '38', 'dscp_high': '4', 'dscp_low': '6'},
+                             'EF': {'dscp_value': '101110', 'decimal_value': '46', 'dscp_high': '5', 'dscp_low': '6'},
+                             'CS6': {'dscp_value': '110000', 'decimal_value': '48', 'dscp_high': '6', 'dscp_low': '0'},
+                             'CS7': {'dscp_value': '111000', 'decimal_value': '56', 'dscp_high': '7', 'dscp_low': '0'}}
+
     def __init__(self, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE, dut_type=SpirentManager.DUT_TYPE_PALLADIUM):
         TrafficGeneratorTemplate.__init__(self)
         self.chassis_type = chassis_type
@@ -15,6 +32,84 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
             self.stc_manager = SpirentManager(chassis_type=self.chassis_type, dut_type=self.dut_type)
         except Exception as ex:
             fun_test.critical(str(ex))
+
+    def get_diff_serv_dscp_value(self, input_type, input_list=[], meaning=False, dscp_value=False, decimal_value=False,
+                                 dscp_high=False, dscp_low=False):
+        output = {}
+        MEANING = "meaning"
+        DSCP_VALUE = "dscp_value"
+        DECIMAL_VALUE = "decimal_value"
+        DSCP_HIGH = "dscp_high"
+        DSCP_LOW = "dscp_low"
+
+        try:
+            def get_other_values(input_type, input_list):
+                result = {}
+                for item in input_list:
+                    result[item] = {}
+                    for key, val in self.diff_serv_dscp_values.iteritems():
+                        if str(val[input_type]) == str(item):
+                            result[item][MEANING] = key
+                            result[item].update(val)
+                            del result[item][input_type]
+                            break
+                return result
+
+            if input_type == MEANING:
+                for item in input_list:
+                    output[item] = self.diff_serv_dscp_values[item]
+            elif input_type == DSCP_VALUE or input_type == DECIMAL_VALUE:
+                output = get_other_values(input_type=input_type, input_list=input_list)
+
+            for key, val in output.iteritems():
+                if not meaning:
+                    if val.has_key(MEANING):
+                        del val[MEANING]
+                if not dscp_value:
+                    if val.has_key(DSCP_VALUE):
+                        del val[DSCP_VALUE]
+                if not decimal_value:
+                    if val.has_key(DECIMAL_VALUE):
+                        del val[DECIMAL_VALUE]
+                if not dscp_high:
+                    if val.has_key(DSCP_HIGH):
+                        del val[DSCP_HIGH]
+                if not dscp_low:
+                    if val.has_key(DSCP_LOW):
+                        del val[DSCP_LOW]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def get_diff_serv_dscp_value_from_meaning(self, meaning_list, dscp_value=False, decimal_value=False, dscp_high=False, dscp_low=False):
+        result = {}
+        try:
+            result = self.get_diff_serv_dscp_value(input_type='meaning', input_list=meaning_list, dscp_low=dscp_low,
+                                                   dscp_value=dscp_value, decimal_value=decimal_value,
+                                                   dscp_high=dscp_high)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_diff_serv_dscp_value_from_dscp_value(self,  dscp_value_list, meaning=False, decimal_value=False, dscp_high=False, dscp_low=False):
+        result = {}
+        try:
+            result = self.get_diff_serv_dscp_value(input_type='dscp_value', input_list=dscp_value_list, dscp_low=dscp_low,
+                                                   meaning=meaning, decimal_value=decimal_value,
+                                                   dscp_high=dscp_high)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_diff_serv_dscp_value_from_decimal_value(self,  decimal_value_list, meaning=False, dscp_value=False, dscp_high=False, dscp_low=False):
+        result = {}
+        try:
+            result = self.get_diff_serv_dscp_value(input_type='decimal_value', input_list=decimal_value_list, dscp_low=dscp_low,
+                                                   meaning=meaning, dscp_value=dscp_value,
+                                                   dscp_high=dscp_high)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def read_json_file_contents(self, file_path):
         contents = {}
@@ -293,6 +388,8 @@ class Ethernet2Header(object):
     HEADER_TYPE = "ethernet:EthernetII"
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     INTERNET_IP_ETHERTYPE = "0800"
+    ARP_ETHERTYPE = "0806"
+    BROADCAST_MAC = "FF:FF:FF:FF:FF:FF"
 
     def __init__(self, destination_mac="00:00:01:00:00:01", ether_type=INTERNET_IP_ETHERTYPE,
                  preamble="55555555555555d5", source_mac="00:10:94:00:00:02"):
@@ -674,6 +771,7 @@ class Capture(object):
     TX_MODE = 'TX_MODE'
     RX_MODE = 'RX_MODE'
     TX_RX_MODE = 'TX_RX_MODE'
+    _spirent_handle = None
 
     def __init__(self, abort_save_task=False, buffer_mode=WRAP, capture_filter_mode=FRAMECONTENT,
                  current_filter_bytes_used=0, current_filters_used=0, current_task=IDLE, elapsed_time='0:00:00',
@@ -724,3 +822,44 @@ class Capture(object):
         self._spirent_handle = handle
 
 
+class ARP(object):
+    HEADER_TYPE = "arp:ARP"
+    ETHERNET = '0001'
+    ARP_OPERATION_UNKNOWN = 0
+    ARP_OPERATION_REQUEST = 1
+    ARP_OPERATION_REPLY = 2
+    INTERNET_IP = '0800'
+    _spirent_handle = None
+
+    def __init__(self, hardware=ETHERNET, hardware_address_length=6, protocol_address_length=4, name=None,
+                 operation=ARP_OPERATION_REQUEST, protocol=INTERNET_IP, sender_hw_address='00:00:01:00:00:02',
+                 sender_ip_address='192.85.1.2', target_hw_address='00:00:00:00:00:00', target_ip_address='0.0.0.0'):
+        self.hardware = hardware
+        self.ihAddr = hardware_address_length
+        self.ipAddr = protocol_address_length
+        self.Name = name
+        self.operation = operation
+        self.protocol = protocol
+        self.senderHwAddr = sender_hw_address
+        self.senderPAddr = sender_ip_address
+        self.targetHwAddr = target_hw_address
+        self.targetPAddr = target_ip_address
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
