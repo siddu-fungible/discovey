@@ -1,8 +1,9 @@
 ----------------------------------------
 -- script-name: FCP.lua
 --
--- author: Amit Surana <amit.surana at fungible dot com>
--- Copyright (c) 2018, Amit Surana
+-- Created by Amit Surana <amit.surana at fungible dot com> on 2018-05-29
+-- Copyright (c) 2018 Fungble Inc. All rights reserved.
+--
 
 
 local debug_level = {
@@ -124,12 +125,12 @@ local gph_4b          = ProtoField.uint32("FUN_FCP.gph", "GPH Marix", base.HEX, 
 local gph_8b          = ProtoField.uint64("FUN_FCP.gph", "GPH Marix", base.HEX, nil)
 local timestamp       = ProtoField.uint32("FUN_FCP.timestamp", "Timestamp", base.DEC, nil)
 
-local spi     		  = ProtoField.uint8("FUN_FCP.spi", "Security SPI", base.DEC, nil)
+local spi             = ProtoField.uint8("FUN_FCP.spi", "Security SPI", base.DEC, nil)
 local alen            = ProtoField.uint8("FUN_FCP.alen", "Security Alen", base.DEC, nil)
-local iv_0 		   	  = ProtoField.uint24("FUN_FCP.iv0", "Security IV0", base.DEC, nil)
-local iv_1			  = ProtoField.uint24("FUN_FCP.iv1", "Security IV1", base.DEC, nil)
-local icv_0 		  = ProtoField.uint24("FUN_FCP.icv0", "Security ICV0", base.DEC, nil)
-local icv_1			  = ProtoField.uint24("FUN_FCP.icv1", "Security ICV1", base.DEC, nil)
+local iv_0 	      = ProtoField.uint24("FUN_FCP.iv0", "Security IV0", base.DEC, nil)
+local iv_1	      = ProtoField.uint24("FUN_FCP.iv1", "Security IV1", base.DEC, nil)
+local icv_0 	      = ProtoField.uint24("FUN_FCP.icv0", "Security ICV0", base.DEC, nil)
+local icv_1	      = ProtoField.uint24("FUN_FCP.icv1", "Security ICV1", base.DEC, nil)
 
 fcp_protocol.fields = { ver, type, next_proto, rsvd, flags, flags_security, flags_timestamp,
                         flags_gph, tunnel_num, queue, weight, scale, rbn, gbn, dbn,
@@ -167,10 +168,6 @@ function fcp_protocol.dissector(buffer, pinfo, tree)
   flags_subtree:add(flags_timestamp,  buffer(1,1))
   flags_subtree:add(flags_gph,        buffer(1,1))
   
-  -- subtree:add(rsvd,             buffer(1,1))
-  -- subtree:add(flags_security,   buffer(1,1))
-  -- subtree:add(flags_timestamp,  buffer(1,1))
-  -- subtree:add(flags_gph,        buffer(1,1))
   subtree:add(tunnel_num, 		buffer(2,2))
   subtree:add(queue,      		buffer(4,1))
   
@@ -241,7 +238,7 @@ function fcp_protocol.dissector(buffer, pinfo, tree)
 end
   
 local tcp_port = DissectorTable.get("udp.port")
-tcp_port:add(57005, fcp_protocol)
+tcp_port:add(7085, fcp_protocol)
 
 
 
