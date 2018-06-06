@@ -59,6 +59,14 @@ class NuTransitPerformance(FunTestScript):
             fun_test.simple_assert(mtu_update_result, checkpoint)
         fun_test.add_checkpoint(checkpoint)
 
+        network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
+
+        checkpoint = "Change DUT ports MTU to %d" % self.MTU
+        for port_num in DUT_PORTS:
+            mtu_changed = network_controller_obj.set_port_mtu(port_num=port_num, mtu_value=self.MTU)
+            fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port_num, self.MTU))
+        fun_test.add_checkpoint(checkpoint)
+
         checkpoint = "Read Performance expected data for fixed size scenario"
         file_path = fun_test.get_script_parent_directory() + "/" + self.PERFORMANCE_DATA_FILE_NAME
         performance_data = template_obj.read_json_file_contents(file_path=file_path)
@@ -116,8 +124,6 @@ class NuTransitPerformance(FunTestScript):
             checkpoint = "Deactivate All Streams under %s" % port
             result = template_obj.deactivate_stream_blocks(stream_obj_list=stream_objects)
             fun_test.test_assert(result, checkpoint)
-
-        network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
 
     def cleanup(self):
         template_obj.cleanup()

@@ -52,6 +52,14 @@ class NuTransitPerformance(FunTestScript):
         dpc_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
         dpc_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
 
+        network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
+
+        checkpoint = "Change DUT ports MTU to %d" % self.MTU
+        for port_num in DUT_PORTS:
+            mtu_changed = network_controller_obj.set_port_mtu(port_num=port_num, mtu_value=self.MTU)
+            fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port_num, self.MTU))
+        fun_test.add_checkpoint(checkpoint)
+
         checkpoint = "Change MTU for interface %s to %d" % (str(result['interface_obj_list'][0]), self.MTU)
         for interface_obj in result['interface_obj_list']:
             interface_obj.Mtu = self.MTU
@@ -105,7 +113,6 @@ class NuTransitPerformance(FunTestScript):
             checkpoint = "Deactivate All Streams under %s" % self.port
             result = template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
             fun_test.test_assert(result, checkpoint)
-        network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
 
     def cleanup(self):
         template_obj.cleanup()

@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
-    StreamBlock, GeneratorConfig
+    StreamBlock, GeneratorConfig, Ethernet2Header, ARP
 from lib.host.network_controller import NetworkController
 from helper import *
 
@@ -23,16 +23,16 @@ class SpirentSetup(FunTestScript):
         template_obj = SpirentEthernetTrafficTemplate(session_name="mac-sanity")
         fun_test.test_assert(template_obj, "Create template object")
 
-        # Create network controller object
-        dpcsh_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
-        dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
-        network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
-
         result = template_obj.setup(no_of_ports_needed=num_ports)
         fun_test.test_assert(result['result'], "Configure setup")
 
         port_1 = result['port_list'][0]
         port_2 = result['port_list'][1]
+
+        # Create network controller object
+        dpcsh_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
+        dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
+        network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
         srcMac = template_obj.stc_manager.dut_config['source_mac1']
         destMac = template_obj.stc_manager.dut_config['destination_mac1']
@@ -78,7 +78,7 @@ class TestCase1(FunTestCase):
                         4. subscribe to tx and rx results on streamblock
                         4. Compare Tx and Rx results for frame count. Both must be same
                         5. Check for error counters. there must be no error counter
-                        6. Verify frame count is as expected
+                        6. Verify frame count matches on dut ingress and egress
                         """)
 
     def setup(self):
@@ -191,6 +191,9 @@ class TestCase2(FunTestCase):
                         3. Start traffic and subscribe to tx and rx results and analyzer results
                         4. Received frame count from analyzer port must be 0
                         5. Dropped frame count from analyzer port must be equal to the frames transmitted
+                        6. Ensure undersize frames are received on dut ingress
+                        7. Check psw global stats for cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, 
+                        ifpg_pkt
                         """)
 
     def setup(self):
@@ -279,8 +282,6 @@ class TestCase2(FunTestCase):
         fun_test.test_assert_expected(actual=int(rx_port_analyzer_results['TotalFrameCount']), expected=frames_received,
                                       message="Ensure no frame is received")
 
-        # TODO: Undersized frames fpg 6
-
         dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
         dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
@@ -294,26 +295,18 @@ class TestCase2(FunTestCase):
                                       message="Ensure all packets are marked undersize on rx port of dut")
         '''
         psw_stats = network_controller_obj.peek_psw_global_stats()
-        fun_test.simple_assert(psw_stats, message="Ensure psw stats are received")
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                      actual=int(psw_stats['input']['cpr_feop_pkt']),
-                                      message="Check all packets are seen in cpr_feop_pkt")
+        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
+        ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+        cpr_feop_pkt = 'cpr_feop_pkt'
+        cpr_sop_drop_pkt = 'cpr_sop_drop_pkt'
+        fwd_frv = 'fwd_frv'
+        main_pkt_drop_eop = 'main_pkt_drop_eop'
+        fetch_list = [cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, ifpg_pkt]
 
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                      actual=int(psw_stats['input']['cpr_sop_drop_pkt']),
-                                      message="Check all packets are seen in cpr_sop_drop_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                      actual=int(psw_stats['input']['fwd_frv']),
-                                      message="Check all packets are seen in fwd_frv")
-
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                      actual=int(psw_stats['input']['ifpg1_pkt']),
-                                      message="Check all packets are seen in ifpg1_pkt")
-
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                      actual=int(psw_stats['input']['main_pkt_drop_eop']),
-                                      message="Check all packets are seen in main_pkt_drop_eop")
+        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+        for key in fetch_list:
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=psw_fetched_output[key],
+                                          message="Check counter %s in psw global stats" % key)
         '''
 
 class TestCase3(FunTestCase):
@@ -329,8 +322,9 @@ class TestCase3(FunTestCase):
                         2. Configure generator with duration=max - min frame length
                         3. Start traffic and subscribe to tx and rx results and analyzer results
                         4. Runts must be dropped and good frames must be received
-                        5. Ensure count of good frames received is correct.
-                        6. Ensure runts are not received.
+                        5. Ensure count of good frames + undersize generated match tx of stream.
+                        6. Ensure runts are not transmitted from dut egress.
+                        7. Ensure dut egress receives undersize frames
                         """)
 
     def setup(self):
@@ -421,11 +415,6 @@ class TestCase3(FunTestCase):
         fun_test.log("Tx Generator resukts %s" % tx_port_generator_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
 
-        # Verify rx frame count from palladium
-        # Verify dropped count from palladium
-        # TODO: 0.218 * tx results are good frames and received
-        # Observed 0.1411 of tx results
-
         fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
                                       actual=int(tx_port_generator_results['GeneratorUndersizeFrameCount']) +
                                              int(rx_port_analyzer_results['TotalFrameCount']),
@@ -450,10 +439,98 @@ class TestCase3(FunTestCase):
                                       actual=int(dut_port_1_undersize_pkts),
                                       message="Ensure packets are marked undersize on rx port of dut")
 
+class TestCase4(FunTestCase):
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Test DUT broadcast frames",
+                              steps="""
+                        1. Create an Ethernet frame having destination mac as FF:FF:FF:FF:FF:FF
+                        2. Add an arp into the streamblock
+                        3. Execute traffic for 10 seconds
+                        4. Check if arp is received at other end
+                        5. Check DUT stats for frames with broadcast
+                        """)
+
+    def setup(self):
+        # Clear port results on DUT
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        duration_seconds = 10
+        fun_test.log("Creating streamblock")
+        streamblock = StreamBlock(fixed_frame_length=64, insert_signature=False,
+                                  load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=10,
+                                  fill_type=StreamBlock.FILL_TYPE_PRBS)
+        config_streamblock = template_obj.configure_stream_block(stream_block_obj=streamblock, port_handle=port_1)
+        fun_test.test_assert(config_streamblock, " Created streamblock %s" % streamblock._spirent_handle)
+
+        fun_test.log("Adding ethernet frame")
+        ethernet = Ethernet2Header(destination_mac=Ethernet2Header.BROADCAST_MAC,
+                                   ether_type=Ethernet2Header.ARP_ETHERTYPE)
+        config_ethernet = template_obj.stc_manager.configure_frame_stack(stream_block_handle=streamblock._spirent_handle,
+                                                                         header_obj=ethernet)
+        fun_test.test_assert(config_ethernet, "Ethernet frame added to streamblock")
+
+        fun_test.log("Adding ARP into streamblock")
+        arp = ARP()
+        config_arp = template_obj.stc_manager.configure_frame_stack(stream_block_handle=streamblock._spirent_handle,
+                                                                    header_obj=arp)
+        fun_test.test_assert(config_arp, "ARP added to streamblock %s" % streamblock._spirent_handle)
+
+        # Execute traffic
+        start = template_obj.enable_generator_configs(generator_configs=gen_obj)
+        fun_test.test_assert(start, "Starting generator config")
+
+        # Sleep until traffic is executed
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+
+        project = template_obj.stc_manager.get_project_handle()
+        subscribe_results = template_obj.subscribe_to_all_results(parent=project)
+        fun_test.test_assert(subscribe_results['result'], "Subscribing to results")
+        del subscribe_results['result']
+
+        result_dict = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_results,
+                                                                         streamblock_handle_list=[
+                                                                             streamblock._spirent_handle],
+                                                                         tx_result=True, rx_result=False)
+
+        port_dict = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_results,
+                                                                port_handle_list=[port_2],
+                                                                analyzer_result=True)
+
+        # Fetch results from dut
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+
+        dut_port_1_broadcast_receive = get_dut_output_stats_value(dut_port_1_results, IF_IN_BROADCAST_PKTS, tx=False)
+        dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
+        
+        # Currently getting dropped
+        # TODO: Change later
+        
+        expected_rx_count = 0
+        fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']),
+                                      actual=int(dut_port_1_good_receive),
+                                      message="Ensure frames are received as good")
+
+        
+        fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']), 
+                                      actual=int(dut_port_1_broadcast_receive),
+                                      message="Ensure frames are received as broadcast on dut port %s" % dut_port_1)
+
 
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
     ts.add_test_case(TestCase3())
+    ts.add_test_case(TestCase4())
     ts.run()
