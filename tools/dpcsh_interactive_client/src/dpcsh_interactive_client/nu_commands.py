@@ -120,7 +120,7 @@ class PortCommands(object):
     def port_pfc_quanta(self, port_num, shape, class_num=None, quanta=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if quanta and class_num:
+            if quanta:
                 arg_dict = {"class": class_num, "quanta": quanta}
                 arg_list = ["pfcqset", cmd_arg_dict, arg_dict]
             else:
@@ -133,7 +133,7 @@ class PortCommands(object):
     def port_pfc_threshold(self, port_num, shape, class_num=None, threshold=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if threshold and class_num:
+            if threshold:
                 arg_dict = {"class": class_num, "threshold": threshold}
                 arg_list = ["pfctset", cmd_arg_dict, arg_dict]
             else:
@@ -278,7 +278,8 @@ class QosCommands(object):
     def _display_qos_config(self, config_dict, column_list=['Field Name', 'Value']):
         try:
             table_obj = PrettyTable(column_list)
-            for key in config_dict:
+            table_obj.align = "l"
+            for key in sorted(config_dict):
                 table_obj.add_row([key, config_dict[key]])
             print table_obj
         except Exception as ex:
@@ -607,9 +608,8 @@ class QosCommands(object):
 
     def pfc(self, enable=None, update=True, disable=None):
         try:
-            get_cmd_args = ['get', 'pfc']
-            config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
+                config = {}
                 if enable:
                     config["enable"] = 1
                 elif disable:
@@ -618,6 +618,8 @@ class QosCommands(object):
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
+                get_cmd_args = ['get', 'pfc']
+                config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
                 self._display_qos_config(config_dict=config)
         except Exception as ex:
             print "ERROR: %s" % str(ex)

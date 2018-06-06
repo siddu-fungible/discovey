@@ -22,10 +22,9 @@ class DpcClient(object):
                     continue
 
     def _read(self):
-        chunk = 4096
-
+        chunk = 1024
         output = ""
-        while not output.endswith("\n"):
+        while not output.endswith('\n'):
             try:
                 buffer = self.sock.recv(chunk)
             except socket.error, e:
@@ -38,7 +37,7 @@ class DpcClient(object):
                     sys.exit(1)
             else:
                 output += buffer
-        return output
+        return output.rstrip('\n')
 
     def connect(self, ensure_connect=False):
         if not self.sock:
@@ -98,8 +97,6 @@ class DpcClient(object):
         result = None
         output = ""
         try:
-            if not self.sock:
-                self.connect(ensure_connect=False)
             if arg_list:
                 if type(arg_list) is not list:
                     jdict = {"verb": verb, "arguments": [arg_list], "tid": 0}
