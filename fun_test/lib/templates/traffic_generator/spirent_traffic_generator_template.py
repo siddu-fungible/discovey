@@ -471,6 +471,40 @@ class Ipv4Header(object):
         self.__dict__.update(**kwargs)
 
 
+class Ipv6Header(object):
+    HEADER_TYPE = "ipv6:IPv6"
+    NEXT_HEADER_TCP = 6
+    NEXT_HEADER_UDP = 17
+    _spirent_handle = None
+
+    def __init__(self, destination_address="2000::1", destination_prefix_length=64, flow_label=0, gateway="::0",
+                 hop_limit=255, name="", next_header=NEXT_HEADER_TCP, payload_length=0,
+                 prefix_length=64,source_address="2000::2", traffic_class=0, version=6):
+        self.destAddr = destination_address
+        self.destPrefixLength = destination_prefix_length
+        self.flowLabel = flow_label
+        self.gateway = gateway
+        self.hopLimit = hop_limit
+        self.Name = name
+        self.nextHeader = next_header
+        self.payloadLength = payload_length
+        self.prefixLength = prefix_length
+        self.sourceAddr = source_address
+        self.trafficClass = traffic_class
+        self.version = version
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
 class EthernetCopperInterface(object):
     SPEED_UNKNOWN = "SPEED_UNKNOWN"
     SPEED_1G = "SPEED_1G"
