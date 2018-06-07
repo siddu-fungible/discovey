@@ -216,12 +216,25 @@ class SbpZynqSetupTemplate:
         fun_test.test_assert_expected(expected=0, actual=localhost.exit_status(), message="Git pull")
         return self.container_asset
 
+    def get_start_certificate(self, container_ip="127.0.0.1",
+                             container_ssh_port="3220",
+                             container_ssh_username="root",
+                             container_ssh_password="fun123",
+                             source_path="/build-sbp/software/devtools/firmware/start_certificate.bin",
+                              target_path="/tmp/start_certificate.bin"):
+        fun_test.scp(source_ip=container_ip,
+                     source_port=container_ssh_port,
+                     source_username=container_ssh_username,
+                     source_password=container_ssh_password,
+                     source_file_path=source_path, target_file_path=target_path)
+
+
     def setup_developer_cert(self,
                              key_size=2048,
                              private_key_filename=DEVELOPER_PRIVATE_KEY_FILE,
                              cert_filename=DEVELOPER_CERT_FILE,
                              tamper_flags="00000000",
-                             debugger_flags="0000FF00",
+                             debugger_flags="FFFFFFFF",
                              serial_number="00000000000000000000000000000000",
                              serial_number_mask="00000000000000000000000000000000",
                              signing_key="fpk2",
@@ -301,7 +314,7 @@ class SbpZynqSetupTemplate:
         self.host.command('cmake {} -DBUILD_ESECURE_UNITTESTS=0 -DBOARD_ADDRESS={}'.format(self.local_repository,
                                                                                            self.zynq_board_ip))
         if make:
-            output = self.host.command("make")
+            output = self.host.command("make", timeout=120)
             fun_test.test_assert("[100%] Built target eSecure_platform_tests" in output,
                                  "[100%] Built target eSecure_platform_tests")
         return True

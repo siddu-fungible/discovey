@@ -1,12 +1,13 @@
 from lib.system.fun_test import fun_test
 from lib.host.linux import Linux
 import sys
+import re
 import struct
 import binascii
 from lib.templates.system.sbp_template import SbpZynqSetupTemplate
 
 
-WRITE32_PATH = "/home/root/write32/write32.elf"
+WRITE32_PATH = "/tmp/write32.elf"
 CODESCAPE_DIR = "/home/john/.local/opt/imgtec/Codescape-8.6"
 CODESCAPE_LIB_RELATIVE_PATHS = [".",
                                 "lib/python2.7/site-packages/sitepackages.zip",
@@ -296,12 +297,44 @@ class SbpChallengeTemplate():
 
     def setup_board(self):
         board = Linux(host_ip=self.board_ip, ssh_username="root", ssh_password="password")
+        fun_test.scp(source_file_path=fun_test.get_script_parent_directory() + "/write32.elf", target_ip=self.board_ip, target_port=22, target_username="root", target_password="fun123", target_file_path=WRITE32_PATH)
         command = "{} 0x40074 1".format(WRITE32_PATH)
         board.command(command)
 
+    def setup_start_certificate(self):
+        import os
+        # os.system("head -c 4096 </dev/urandom >/tmp/start_certificate.bin")
+
+        sd.esecure_inject_certificate(certificate="/tmp/start_certificate.bin")
+
+
+    def load_otp(otpfilename):
+        otp = open(otpfilename).read().splitlines()
+        otp_str = ""
+        for word in otp:
+            bytes = [word[i:i + 2] for i in range(0, len(word), 2)]
+            otp_str += "".join(bytes[::-1])
+        otpcm = otp_str[:otpcm_size * 2]
+        otpsm = otp_str[otpcm_size * 2:]
+        return otpcm, otpsm
+
+    def test3(self):
+        # check dbg grant
+        # sd.dump_id_regs()
+        otpcmr = Buffer(size=48, cmt="CM OTP")
+        self.chal_cmd("DiagReadOTP-CM", outputs=[otpcmr])
+        otpcmr.print_words()
+        # import pdb; pdb.set_trace()
+        #
+        # print "OTP CM: {}".format(otpcmr.addr)
+
+
     def test2(self):
         sd.esecure_enable_debug(developer_key=SbpZynqSetupTemplate.DEVELOPER_PRIVATE_KEY_FILE,
-                                developer_certificate=SbpZynqSetupTemplate.DEVELOPER_CERT_FILE, dbg_grant=0x0000FF00, key_password="fun123", verbose=True)
+                                developer_certificate=SbpZynqSetupTemplate.DEVELOPER_CERT_FILE,
+                                dbg_grant=0x0000FF00,
+                                key_password="fun123", verbose=True)
+
     def test(self):
         sd.probe(self.probe_name, self.probe_ip, force_disconnect=True)
         # output = sd.esecure_print_status()
@@ -349,9 +382,9 @@ class SbpChallengeTemplate():
         print "chalrx: {}".format(cmt)
         result = ""
         data = sd.esecure_read()
-        # result += struct.pack('<I', data)
+        result += struct.pack('<I', data)
 
-        for i in range(size - 1):
+        for i in range((data - 4)/4):  # Sub size of header, divide by size of word
             read_data = sd.esecure_read()
             result += struct.pack('<I', read_data)
         return result
@@ -395,24 +428,32 @@ class SbpChallengeTemplate():
             for output in outputs:
                 size += output.size * 8 / 32  # convert to bits, then divide by size of word
         data = self.chalrx(size | (status << 16), "Header (%d bytes, status = %d)" % (size, status))
+        print len(data)
+        data_len = len(data)
+        num_words = data_len/4
+        all_words = list(struct.unpack('<{}I'.format(num_words), data))
+        header = all_words[0]
+        # f = "<"
+        # for i in range(data_len/4):
+        #    f += "{}I".format(i)
+
         # Outputs
         if status == 0:
-            # all_outputs = list(struct.unpack('<{}I'.format(size), data))
-            f = "<"
-            for output in outputs:
-                num = output.size * 8 / 32
-                f += "{}I".format(num)
-            unpacked_outputs = list(struct.unpack(f, data))
-            #for unpacked_output in unpacked_outputs:
-            #    print hex(unpacked_output)
-            unpacked_index = 0
+            unpacked_index = 1 # Skip header
             for index, output in enumerate(outputs):
                 num = output.size * 8 / 32
                 temp = ""
                 for i in range(num):
-                    temp += struct.pack('<I', unpacked_outputs[unpacked_index])
+                    temp += struct.pack('<I', all_words[unpacked_index])
                     unpacked_index += 1
                 output.addr = temp #struct.unpack('<{}I'.format(num), temp)
+            extra = ""
+            for w in all_words[unpacked_index:]:
+                print "Extra: %0x" % (w)
+                parts = re.findall("[0-9a-f]{2}", hex(w).lstrip("0x"))
+                extra += "".join([x.decode("hex") for x in parts])[::-1]
+            print "Extra: {}".format(extra)
+
 
             # for output in outputs:
             #     # ch2mem(output.addr, output.size * 8, output.cmt)

@@ -451,3 +451,30 @@ def esecure_enable_debug(developer_key,developer_certificate,dbg_grant,key_passw
     print "Status: " + decode_cmd_status(status)
 
     return status
+
+
+@command()
+def esecure_inject_certificate(certificate, customer=False):
+   ''' Inject a start certificate into SBP for debugging
+   Necessary only in secure mode when the PUF-ROM cannot be loaded from the ROM
+   '''
+   prepare_target()
+   check_for_esecure()
+   start_cert = read(certificate)
+
+   command = 0xFE0A0001 if customer else 0xFE0A0000
+
+   # total length = 4 /length/ + 4 /command/ + start_cert
+   msglen = 4 + 4 + len(start_cert)
+
+   if DEBUG: print "writing: " + hex(msglen)
+   esecure_write(msglen)
+   if DEBUG: print "writing: " + hex(command)
+   esecure_write(command)
+   esecure_write_bytes(start_cert)
+
+   status = esecure_read()
+
+   print "Status: " + decode_cmd_status(status)
+
+   return status

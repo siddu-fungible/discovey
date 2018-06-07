@@ -18,7 +18,7 @@ class ContainerSetup(FunTestScript):
 
     def setup(self):
         self.docker_host = AssetManager().get_any_docker_host()
-        self.container_asset = SbpZynqSetupTemplate(host=None, zynq_board_ip=None).setup_container(git_pull=False)
+        # self.container_asset = SbpZynqSetupTemplate(host=None, zynq_board_ip=None).setup_container(git_pull=False)
 
     def cleanup(self):
         container_asset = fun_test.shared_variables["container_asset"]
@@ -37,31 +37,33 @@ class TestCase1(FunTestCase):
 
     def run(self):
 
-        container_asset = fun_test.shared_variables["container_asset"]
-
+        # container_asset = fun_test.shared_variables["container_asset"]
+        '''
         linux_obj = Linux(host_ip=container_asset["host_ip"],
                           ssh_username=container_asset["mgmt_ssh_username"],
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
+        '''
+        linux_obj = Linux(host_ip="127.0.0.1", ssh_username="root", ssh_password="fun123", ssh_port=3220,)
         sbp_setup = SbpZynqSetupTemplate(host=linux_obj, zynq_board_ip=ZYNC_BOARD_IP)
-        fun_test.test_assert(sbp_setup.setup(), "Setup")
+        # fun_test.test_assert(sbp_setup.setup(), "Setup")
         developer_cert = SbpZynqSetupTemplate.DEVELOPER_CERT_FILE
         developer_private_key = SbpZynqSetupTemplate.DEVELOPER_PRIVATE_KEY_FILE
+
+
+        # i = 0
+
+        fun_test.test_assert(sbp_setup.enroll(), "Enrollment")
+        stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
+        stimuli_file = "{}/cmd_AES_CBC.py".format(stimuli_dir)
         sbp_setup.setup_developer_cert(cert_filename=developer_cert, private_key_filename=developer_private_key)
+
+        sbp_setup.run_test_py(secure_boot=True, stimuli_file=stimuli_file),
 
         sbp_challenge_template = SbpChallengeTemplate(board_ip=ZYNC_BOARD_IP, probe_ip=PROBE_IP, probe_name=PROBE_NAME)
         sbp_challenge_template.setup_board()
         sbp_challenge_template.test()
         sbp_challenge_template.test2()
-        i = 0
-
-
-
-        # stimuli_dir = "{}/validation/stimuli/short".format(SbpZynqSetupTemplate.LOCAL_REPOSITORY_DIR)
-        # stimuli_file = "{}/cmd_AES*.py".format(stimuli_dir)
-
-        # fun_test.test_assert(sbp_setup.run_test_py(secure_boot=False, stimuli_file=stimuli_file),
-        #                     message="Run test py")
 
     def cleanup(self):
         self.container_asset = fun_test.shared_variables["container_asset"]
