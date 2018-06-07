@@ -573,7 +573,7 @@ class QosCommands(object):
             config['pg'] = pg_num
             if update:
                 if min_thr:
-                    config["min"] = min_thr
+                    config["min_thr"] = min_thr
                 if shared_thr:
                     config['shared_thr'] = shared_thr
                 if headroom_thr:
