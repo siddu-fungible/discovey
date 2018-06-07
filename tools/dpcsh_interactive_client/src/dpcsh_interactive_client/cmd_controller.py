@@ -339,7 +339,7 @@ class CmdController(Cmd):
         self._qos_cmd_obj.pfc(update=False)
 
     def set_qos_arb_cfg(self, args):
-        enable = args.enable
+        enable = args.en
         self._qos_cmd_obj.arb_cfg(en=enable, update=True)
 
     def get_qos_arb_cfg(self, args):

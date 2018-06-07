@@ -13,7 +13,7 @@ class PortCommands(object):
     def port_mtu(self, port_num, shape, mtu=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if mtu:
+            if mtu is not None:
                 mtu_dict = {"mtu": mtu}
                 arg_list = ["mtuset", cmd_arg_dict, mtu_dict]
             else:
@@ -70,7 +70,7 @@ class PortCommands(object):
     def port_pause_quanta(self, port_num, shape, quanta=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if quanta:
+            if quanta is not None:
                 arg_dict = {"quanta": quanta}
                 arg_list = ["lpqset", cmd_arg_dict, arg_dict]
             else:
@@ -83,7 +83,7 @@ class PortCommands(object):
     def port_pause_threshold(self, port_num, shape, threshold=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if threshold:
+            if threshold is not None:
                 arg_dict = {"threshold": threshold}
                 arg_list = ["lptset", cmd_arg_dict, arg_dict]
             else:
@@ -120,7 +120,7 @@ class PortCommands(object):
     def port_pfc_quanta(self, port_num, shape, class_num=None, quanta=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if quanta:
+            if quanta is not None:
                 arg_dict = {"class": class_num, "quanta": quanta}
                 arg_list = ["pfcqset", cmd_arg_dict, arg_dict]
             else:
@@ -133,7 +133,7 @@ class PortCommands(object):
     def port_pfc_threshold(self, port_num, shape, class_num=None, threshold=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if threshold:
+            if threshold is not None:
                 arg_dict = {"class": class_num, "threshold": threshold}
                 arg_list = ["pfctset", cmd_arg_dict, arg_dict]
             else:
@@ -158,7 +158,7 @@ class PortCommands(object):
     def ptp_peer_delay(self, port_num, shape, delay=None):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            if delay:
+            if delay is not None:
                 arg_dict = {"delay": delay}
                 arg_list = ["ptppeerdelayset", cmd_arg_dict, arg_dict]
             else:
@@ -246,25 +246,25 @@ class QosCommands(object):
             get_cmd_arg_list = ['get', 'egress_buffer_pool']
             buffer_config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_arg_list)
             if update_config:
-                if sf_thr:
+                if sf_thr is not None:
                     buffer_config['sf_thr'] = sf_thr
-                if sx_thr:
+                if sx_thr is not None:
                     buffer_config['sx_thr'] = sx_thr
-                if df_thr:
+                if df_thr is not None:
                     buffer_config['df_thr'] = df_thr
-                if dx_thr:
+                if dx_thr is not None:
                     buffer_config['dx_thr'] = dx_thr
-                if fcp_thr:
+                if fcp_thr is not None:
                     buffer_config['fcp_thr'] = fcp_thr
-                if nonfcp_thr:
+                if nonfcp_thr is not None:
                     buffer_config['nonfcp_thr'] = nonfcp_thr
-                if sample_copy_thr:
+                if sample_copy_thr is not None:
                     buffer_config['sample_copy_thr'] = sample_copy_thr
-                if sf_xoff_thr:
+                if sf_xoff_thr is not None:
                     buffer_config['sf_xoff_thr'] = sf_xoff_thr
-                if fcp_xoff_thr:
+                if fcp_xoff_thr is not None:
                     buffer_config['fcp_xoff_thr'] = fcp_xoff_thr
-                if nonfcp_xoff_thr:
+                if nonfcp_xoff_thr is not None:
                     buffer_config['nonfcp_xoff_thr'] = nonfcp_xoff_thr
 
                 set_cmd_arg_list = ['set', 'egress_buffer_pool', buffer_config]
@@ -291,9 +291,9 @@ class QosCommands(object):
             buffer_config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_arg_list)
             buffer_config['port'] = port_num
             if update_config:
-                if min_thr:
+                if min_thr is not None:
                     buffer_config['min_thr'] = min_thr
-                if shared_thr:
+                if shared_thr is not None:
                     buffer_config['shared_thr'] = shared_thr
 
                 set_cmd_arg_list = ['set', 'egress_port_buffer', buffer_config]
@@ -313,17 +313,17 @@ class QosCommands(object):
             buffer_config['port'] = port_num
             buffer_config['queue'] = queue
             if update_config:
-                if min_thr:
+                if min_thr is not None:
                     buffer_config['min_thr'] = min_thr
-                if static_shared_thr_green:
+                if static_shared_thr_green is not None:
                     buffer_config['static_shared_thr_green'] = static_shared_thr_green
-                if dynamic_enable:
+                if dynamic_enable is not None:
                     buffer_config['dynamic_enable'] = dynamic_enable
-                if shared_thr_alpha:
+                if shared_thr_alpha is not None:
                     buffer_config['shared_thr_alpha'] = shared_thr_alpha
-                if shared_thr_offset_yellow:
+                if shared_thr_offset_yellow is not None:
                     buffer_config['shared_thr_offset_yellow'] = shared_thr_offset_yellow
-                if shared_thr_offset_red:
+                if shared_thr_offset_red is not None:
                     buffer_config['shared_thr_offset_red'] = shared_thr_offset_red
 
                 set_cmd_arg_list = ['set', 'egress_queue_buffer', buffer_config]
@@ -339,13 +339,13 @@ class QosCommands(object):
             get_cmd_args = ['get', 'ecn_glb_sh_thresh']
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
-                if en:
+                if en is not None:
                     config['en'] = en
-                if green:
+                if green is not None:
                     config['green'] = green
-                if red:
+                if red is not None:
                     config['red'] = red
-                if yellow:
+                if yellow is not None:
                     config['yellow'] = yellow
 
                 set_cmd_args = ['set', 'ecn_glb_sh_thresh', config]
@@ -362,11 +362,11 @@ class QosCommands(object):
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prof_num'] = prof_num
             if update:
-                if min_thr:
+                if min_thr is not None:
                     config['min_thr'] = min_thr
-                if max_thr:
+                if max_thr is not None:
                     config['max_thr'] = max_thr
-                if ecn_prob_index:
+                if ecn_prob_index is not None:
                     config['ecn_prob_index'] = ecn_prob_index
 
                 set_cmd_args = ['set', 'ecn_profile', config]
@@ -383,7 +383,7 @@ class QosCommands(object):
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prob_idx'] = prob_idx
             if update:
-                if prob:
+                if prob is not None:
                     config['prob'] = prob
                 set_cmd_args = ['set', 'ecn_prob', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -399,11 +399,11 @@ class QosCommands(object):
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prof_num'] = prof_num
             if update:
-                if min_thr:
+                if min_thr is not None:
                     config['min_thr'] = min_thr
-                if max_thr:
+                if max_thr is not None:
                     config['max_thr'] = max_thr
-                if wred_prob_index:
+                if wred_prob_index is not None:
                     config['wred_prob_index'] = wred_prob_index
 
                 set_cmd_args = ['set', 'wred_profile', config]
@@ -420,7 +420,7 @@ class QosCommands(object):
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prob_idx'] = prob_idx
             if update:
-                if prob:
+                if prob is not None:
                     config['prob'] = prob
                 set_cmd_args = ['set', 'wred_prob', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -438,15 +438,15 @@ class QosCommands(object):
             config['port'] = port_num
             config['queue'] = queue_num
             if update:
-                if wred_en:
+                if wred_en is not None:
                     config['wred_en'] = wred_en
-                if wred_weight:
+                if wred_weight is not None:
                     config['wred_weight'] = wred_weight
-                if wred_prof_num:
+                if wred_prof_num is not None:
                     config['wred_prof_num'] = wred_prof_num
-                if ecn_en:
+                if ecn_en is not None:
                     config['ecn_en'] = ecn_en
-                if ecn_prof_num:
+                if ecn_prof_num is not None:
                     config['ecn_prof_num'] = ecn_prof_num
 
                 set_cmd_args = ['set', 'wred_queue_config', config]
@@ -462,12 +462,12 @@ class QosCommands(object):
             get_cmd_args = ['get', 'wred_avg_q_config']
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
-                if q_avg_en:
-                    config["q_avg_en"] = q_avg_en
-                    del config['avg_en']
-                if cap_avg_sz:
+                if q_avg_en is not None:
+                    config["avg_en"] = q_avg_en
+                    # del config['avg_en']
+                if cap_avg_sz is not None:
                     config['cap_avg_sz'] = cap_avg_sz
-                if avg_period:
+                if avg_period is not None:
                     config['avg_period'] = avg_period
                 set_cmd_args = ['set', 'wred_avg_q_config', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -534,11 +534,11 @@ class QosCommands(object):
             shaper_config = result['shaper']
             shaper_config['port'] = port_num
             shaper_config['queue'] = queue_num
-            if shaper_enable:
+            if shaper_enable is not None:
                 shaper_config['shaper_enable'] = shaper_enable
-            if min_rate:
+            if min_rate is not None:
                 shaper_config['min_rate'] = min_rate
-            if max_rate:
+            if max_rate is not None:
                 shaper_config['max_rate'] = max_rate
 
             set_cmd_args = ['set', 'scheduler_config', 'shaper', shaper_config]
@@ -554,9 +554,9 @@ class QosCommands(object):
             strict_priority_config = result['strict_priority']
             strict_priority_config['port'] = port_num
             strict_priority_config['queue'] = queue_num
-            if strict_priority_enable:
+            if strict_priority_enable is not None:
                 strict_priority_config['strict_priority_enable'] = strict_priority_enable
-            if extra_bandwidth:
+            if extra_bandwidth is not None:
                 strict_priority_config['extra_bandwidth'] = extra_bandwidth
             set_cmd_args = ['set', 'scheduler_config', 'shaper', strict_priority_config]
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -572,15 +572,15 @@ class QosCommands(object):
             config['port'] = port_num
             config['pg'] = pg_num
             if update:
-                if min_thr:
+                if min_thr is not None:
                     config["min_thr"] = min_thr
-                if shared_thr:
+                if shared_thr is not None:
                     config['shared_thr'] = shared_thr
-                if headroom_thr:
+                if headroom_thr is not None:
                     config['headroom_thr'] = headroom_thr
-                if xoff_enable:
+                if xoff_enable is not None:
                     config['xoff_enable'] = xoff_enable
-                if shared_xon_thr:
+                if shared_xon_thr is not None:
                     config['shared_xon_thr'] = shared_xon_thr
                 set_cmd_args = ['set', 'ingress_priority_group', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -596,8 +596,8 @@ class QosCommands(object):
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['port'] = port_num
             if update:
-                if map_list:
-                    config["map"] = map_list
+                if map_list is not None:
+                    config["map"] = [int(x) for x in map_list]
                 set_cmd_args = ['set', 'priority_to_pg_map', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
@@ -610,9 +610,9 @@ class QosCommands(object):
         try:
             if update:
                 config = {}
-                if enable:
+                if enable is not None:
                     config["enable"] = 1
-                elif disable:
+                elif disable is not None:
                     config['enable'] = 0
                 set_cmd_args = ['set', 'pfc', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -629,7 +629,7 @@ class QosCommands(object):
             get_cmd_args = ['get', 'arb_cfg']
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
-                if en:
+                if en is not None:
                     config["en"] = en
                 set_cmd_args = ['set', 'arb_cfg', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -646,7 +646,7 @@ class QosCommands(object):
             config['port'] = port_num
             config['pg'] = pg
             if update:
-                if status:
+                if status is not None:
                     config["status"] = status
                 set_cmd_args = ['set', 'xoff_status', config]
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
