@@ -46,6 +46,7 @@ class SpirentManager(object):
         self.dut_type = dut_type
         self.interface_mode = interface_mode
         self.dpcsh_server_config = {}
+        self.ip_version = 4
         if fun_test.local_settings:
             self.chassis_type = fun_test.get_local_setting("spirent_chassis_type")
             self.dut_type = fun_test.get_local_setting("dut_type")
@@ -53,6 +54,7 @@ class SpirentManager(object):
             self.dut_config = fun_test.get_local_setting(self.dut_type)
             self.interface_mode = fun_test.get_local_setting("interface_mode")
             self.dpcsh_server_config = fun_test.get_local_setting("dpcsh_server")
+            self.ip_version = fun_test.get_local_setting("ip_version")
         self.chassis_ip = self._get_chassis_ip_by_chassis_type()
 
     def health(self, session_name="TestSession"):
@@ -348,6 +350,9 @@ class SpirentManager(object):
     def configure_ip_address(self, streamblock, source, destination, gateway, ip_version=IP_VERSION_4):
         result = False
         try:
+            if self.ip_version == 6:
+                ip_version = self.IP_VERSION_6
+
             self.stc.create(ip_version, under=streamblock, sourceAddr=source, destAddr=destination,
                             gateway=gateway)
             result = True
@@ -361,7 +366,7 @@ class SpirentManager(object):
             attributes = header_obj.get_attributes_dict()
             fun_test.debug("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
             if not update:
-                handle = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,  **attributes)
+                handle = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle, **attributes)
             else:
                 child = header_obj.HEADER_TYPE.lower()
                 child_type = 'children-' + child
@@ -788,6 +793,15 @@ class SpirentManager(object):
         try:
             output = self.stc.perform("DeleteCommand", ConfigList=object_handle_list)
             fun_test.simple_assert(output['State'] == "COMPLETED", "Delete objects")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def delete_handle(self, handle):
+        result = False
+        try:
+            self.stc.delete(handle=handle)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

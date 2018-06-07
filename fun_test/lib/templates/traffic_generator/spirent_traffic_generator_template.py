@@ -485,7 +485,6 @@ class Ipv6Header(object):
         self.flowLabel = flow_label
         self.gateway = gateway
         self.hopLimit = hop_limit
-        self.Name = name
         self.nextHeader = next_header
         self.payloadLength = payload_length
         self.prefixLength = prefix_length

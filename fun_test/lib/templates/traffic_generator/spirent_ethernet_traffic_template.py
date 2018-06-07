@@ -108,7 +108,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return result
 
     def configure_stream_block(self, stream_block_obj, port_handle=None, update=False, frame_stack_obj_list=[]):
-        result = False
+        result = {}
         try:
             attributes = stream_block_obj.get_attributes_dict()
             if update:
@@ -131,7 +131,30 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 spirent_handle = self.stc_manager.create_stream_block(port=port_handle, attributes=attributes)
                 fun_test.test_assert(spirent_handle, message="Create Stream Block: %s" % spirent_handle)
                 stream_block_obj._spirent_handle = spirent_handle  # Setting Spirent handle to our object
-                result = True
+                ethernet_header_obj = Ethernet2Header()
+                if self.stc_manager.ip_version == 4:
+                    ipv4_header_obj = Ipv4Header()
+                    result["status"] = True
+                    result["ethernet_header_obj"] = ethernet_header_obj
+                    result["ip_header_obj"] = ipv4_header_obj
+                else:
+                    ipv6_header_obj = Ipv6Header()
+                    fun_test.simple_assert(self.stc_manager.apply_configuration(),
+                                           "Apply Configuration after creating %s" % stream_block_obj._spirent_handle)
+                    header = self.stc_manager.stc.get(spirent_handle, "children").split()[1]
+                    fun_test.debug("Default IPv4 Handle: %s" % header)
+
+                    fun_test.test_assert(self.stc_manager.delete_handle(handle=header),
+                                         "Delete Default IPv4 header: %s" % header)
+
+                    v6_header_created = self.stc_manager.configure_frame_stack(stream_block_handle=
+                                                                               stream_block_obj._spirent_handle,
+                                                                               header_obj=ipv6_header_obj)
+                    fun_test.test_assert(v6_header_created, "Append IPv6 header under %s" %
+                                         stream_block_obj._spirent_handle)
+                    result["status"] = True
+                    result["ethernet_header_obj"] = ethernet_header_obj
+                    result["ip_header_obj"] = ipv6_header_obj
         except Exception as ex:
             result = False
             fun_test.critical(str(ex))
