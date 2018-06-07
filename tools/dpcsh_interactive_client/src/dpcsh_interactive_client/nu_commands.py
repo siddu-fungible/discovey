@@ -334,6 +334,22 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
+    def egress_queue_to_priority_map(self, port_num, map_list=None, update=True):
+        try:
+            get_cmd_args = ['get', 'queue_to_priority_map', {"port": port_num}]
+            config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
+            config['port'] = port_num
+            if update:
+                if map_list:
+                    config["map"] = [int(x) for x in map_list] 
+                set_cmd_args = ['set', 'queue_to_priority_map', config]
+                result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
+                print result
+            else:
+                self._display_qos_config(config_dict=config)
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
     def ecn_glb_sh_threshold(self, en=None, green=None, red=None, yellow=None, update=True):
         try:
             get_cmd_args = ['get', 'ecn_glb_sh_thresh']

@@ -177,6 +177,15 @@ class CmdController(Cmd):
         queue = args.queue
         self._qos_cmd_obj.egress_queue_buffer(port_num=port_num, update_config=False, queue=queue)
 
+    def set_qos_egress_priority_map(self, args):
+        port_num = args.port_num
+        map_list = args.map_list
+        self._qos_cmd_obj.egress_queue_to_priority_map(port_num=port_num, map_list=map_list, update=True)
+
+    def get_qos_egress_priority_map(self, args):
+        port_num = args.port_num
+        self._qos_cmd_obj.egress_queue_to_priority_map(port_num=port_num, update=False)
+
     def set_qos_ecn_glb_sh_threshold(self, args):
         en = args.en
         green = args.green
@@ -478,6 +487,8 @@ class CmdController(Cmd):
     get_qos_egress_port_buffer_parser.set_defaults(func=get_qos_egress_port_buffer)
     set_qos_egress_queue_buffer_parser.set_defaults(func=set_qos_egress_queue_buffer)
     get_qos_egress_queue_buffer_parser.set_defaults(func=get_qos_egress_queue_buffer)
+    set_qos_egress_priority_map_parser.set_defaults(func=set_qos_egress_priority_map)
+    get_qos_egress_priority_map_parser.set_defaults(func=get_qos_egress_priority_map)
     get_qos_ecn_glb_sh_thresh_parser.set_defaults(func=get_qos_ecn_glb_sh_threshold)
     set_qos_ecn_glb_sh_thresh_parser.set_defaults(func=set_qos_ecn_glb_sh_threshold)
     set_qos_ecn_profile_parser.set_defaults(func=set_qos_ecn_profile)

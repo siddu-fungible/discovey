@@ -182,6 +182,16 @@ set_qos_egress_queue_buffer_parser.add_argument('-shared_thr_offset_yellow', typ
 set_qos_egress_queue_buffer_parser.add_argument('-shared_thr_offset_red', type=int,
                                                 help="Egress Queue Buffer shared_thr_offset_red",
                                                 default=None)
+
+set_qos_egress_priority_map_parser = set_qos_egress_parsers.add_parser('queue_to_priority_map', help="QoS egress priority map")
+set_qos_egress_priority_map_parser.add_argument('port_num', type=int, help="Port Num")
+set_qos_egress_priority_map_parser.add_argument('-map_list', nargs='+', help="QoS egress map list E.g [1, 2, 3....N] \n "
+                                                                        "Where n is number of queues, n = 16 for "
+                                                                        "FPG ports and n = 8 for EPG ports \n"
+                                                                        "Please specify space separated list for E.g \n"
+                                                                        "set nu qos egress queue_to_priority_map 6 -map-list 1 2 3 4 5 6 7 7",
+                                           default=None)
+
 # QoS ECN sub commands
 set_qos_ecn_parser = set_nu_qos_parsers.add_parser('ecn', help="QoS ECN Config")
 set_qos_ecn_parsers = set_qos_ecn_parser.add_subparsers(title='subcommands', help="")
@@ -287,7 +297,7 @@ set_qos_ingress_pg_map_parser.add_argument('-map_list', nargs='+', help="QoS ing
                                                                         "Where n is number of priorities, n = 16 for "
                                                                         "FPG ports and n = 8 for EPG ports \n"
                                                                         "Please specify space separated list for E.g \n"
-                                                                        "set nu qos ingress priority_to_pg_map 6 -map 1 2 3 4 5 6 7 7",
+                                                                        "set nu qos ingress priority_to_pg_map 6 -map-list 1 2 3 4 5 6 7 7",
                                            default=None)
 # QoS Pfc sub commands
 set_qos_pfc_parser = set_nu_qos_parsers.add_parser('pfc', help="QoS PFC Config")
@@ -398,6 +408,9 @@ get_qos_egress_port_buffer_parser.add_argument('port_num', type=int, help="Egres
 get_qos_egress_queue_buffer_parser = get_qos_egress_parsers.add_parser('queue_buffer', help="QoS Egress Queue Buffer")
 get_qos_egress_queue_buffer_parser.add_argument('port_num', type=int, help="Egress Port Num")
 get_qos_egress_queue_buffer_parser.add_argument('queue', type=int, help="Egress Queue Num")
+
+get_qos_egress_priority_map_parser = get_qos_egress_parsers.add_parser('queue_to_priority_map', help="QoS egress queue map")
+get_qos_egress_priority_map_parser.add_argument('port_num', type=int, help="Port Num")
 
 # QoS ECN sub commands
 get_qos_ecn_parser = get_nu_qos_parsers.add_parser('ecn', help="QoS ECN Config")
