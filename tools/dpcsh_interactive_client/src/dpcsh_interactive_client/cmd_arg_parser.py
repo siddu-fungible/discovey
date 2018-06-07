@@ -285,7 +285,9 @@ set_qos_ingress_pg_map_parser = set_qos_ingress_parsers.add_parser('priority_to_
 set_qos_ingress_pg_map_parser.add_argument('port_num', type=int, help="Port Num")
 set_qos_ingress_pg_map_parser.add_argument('-map_list', nargs='+', help="QoS ingress map list E.g [1, 2, 3....N] \n "
                                                                         "Where n is number of priorities, n = 16 for "
-                                                                        "FPG ports and n = 8 for EPG ports ",
+                                                                        "FPG ports and n = 8 for EPG ports \n"
+                                                                        "Please specify space separated list for E.g \n"
+                                                                        "set nu qos ingress priority_to_pg_map 6 -map 1 2 3 4 5 6 7 7",
                                            default=None)
 # QoS Pfc sub commands
 set_qos_pfc_parser = set_nu_qos_parsers.add_parser('pfc', help="QoS PFC Config")
