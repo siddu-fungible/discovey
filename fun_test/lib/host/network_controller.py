@@ -1024,3 +1024,19 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def set_qos_pfc(self, enable):
+        result = False
+        try:
+            if enable:
+                value = 1
+            else:
+                value = 0
+            qos_cmd = ['set', {"enable": value}]
+            result = self.json_execute(verb=self.VERB_TYPE_QOS, data=qos_cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Enable qos pfc")
+            fun_test.debug("Output: %s" % result['data'])
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
