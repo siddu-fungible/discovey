@@ -763,6 +763,22 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def get_port_pfc_results(self, port_handle, subscribe_handle):
+        result = {}
+        try:
+            analyzer_handle = self.stc.get(port_handle, "children-Analyzer")
+            res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
+            for output in res_handle_list:
+                regex = re.compile("pfcportresults.")
+                if re.match(regex, output):
+                    parent = self.stc.get(output, "parent")
+                    if parent == analyzer_handle:
+                        result = self.stc.get(output)
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def clear_all_port_results(self, port_list):
         result = False
         try:
@@ -868,7 +884,8 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def fetch_port_results(self, subscribe_result, port_handle_list=[], generator_result=False, analyzer_result=False):
+    def fetch_port_results(self, subscribe_result, port_handle_list=[], generator_result=False, analyzer_result=False,
+                           pfc_result=False, diff_serv_result=False):
         result = {}
         try:
             for port_handle in port_handle_list:
@@ -881,6 +898,10 @@ class SpirentManager(object):
                     output = self.get_rx_port_analyzer_results(port_handle, subscribe_result['analyzer_subscribe'])
                     result[port_handle]['analyzer_result'] = output
                     fun_test.log("Fetched analyzer_result for port %s" % port_handle)
+                if pfc_result:
+                    output = self.get_port_pfc_results(port_handle, subscribe_result['pfc_subscribe'])
+                    result[port_handle]['pfc_result'] = output
+                    fun_test.log("Fetched pfc_result for port %s" % port_handle)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
