@@ -429,6 +429,37 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result_handle
 
+    def subscribe_diff_serv_results(self,  parent, config_type="Analyzer", result_type="DiffServResults",
+                                    view_attribute_list=None):
+        result_handle = None
+        try:
+            fun_test.log("Subscribing to diff serv results on %s" % parent)
+            pass
+            op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
+                                                           result_type=result_type,
+                                                           view_attribute_list=view_attribute_list)
+            fun_test.simple_assert(op_handle, "Getting diffServ subscribe handle")
+            result_handle = op_handle
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result_handle
+
+    def subscribe_pfc_results(self,  parent, config_type="Port", result_type="PfcResults",
+                              view_attribute_list=None):
+        result_handle = None
+        try:
+            fun_test.log("Subscribing to pfc results on %s" % parent)
+            pass
+            op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
+                                                           result_type=result_type,
+                                                           view_attribute_list=view_attribute_list)
+            fun_test.simple_assert(op_handle, "Getting pfc subscribe handle")
+            result_handle = op_handle
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result_handle
+
+
     def subscribe_generator_results(self,  parent, config_type="Generator", result_type="GeneratorPortResults",
                                     view_attribute_list=None):
         result_handle = None
@@ -508,7 +539,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def subscribe_to_all_results(self, parent):
+    def subscribe_to_all_results(self, parent, diff_serv=False, pfc=False):
         result = {'result': False}
         try:
             fun_test.debug("Subscribing to tx results")
@@ -540,6 +571,18 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             analyzer_subscribe = self.subscribe_analyzer_results(parent=parent)
             fun_test.simple_assert(analyzer_subscribe, "Check analyzer subscribed")
             result['analyzer_subscribe'] = analyzer_subscribe
+
+            if diff_serv:
+                fun_test.debug("Subscribing to diff serv results")
+                diff_serv_subscribe = self.subscribe_diff_serv_results(parent=parent)
+                fun_test.simple_assert(diff_serv_subscribe, "Check diff serv subscribe")
+                result['diff_serv_subscribe'] = diff_serv_subscribe
+
+            if pfc:
+                fun_test.debug("Subscribing to pfc results")
+                pfc_subscribe = self.subscribe_pfc_results(parent=parent)
+                fun_test.simple_assert(pfc_subscribe, "Check pfc subscribe")
+                result['pfc_subscribe'] = pfc_subscribe
 
             result['result'] = True
         except Exception as ex:
@@ -918,23 +961,25 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def configure_priority_flow_control_header(self, stream_obj, destination_mac="01:80:c2:00:00:02",
+    def configure_priority_flow_control_header(self, stream_obj, destination_mac="01:80:c2:00:00:01",
                                                source_mac="00:10:94:00:00:02", length="8808",
                                                preamble="55555555555555d5", op_code="0101", time0="", time1="",
                                                time2="", time3="", time4="", time5="", time6="", time7="",
-                                               class_enable_vector=False, ls_octet="00000000", ms_octet="00000000"):
+                                               class_enable_vector=False, ls_octet="00000000", ms_octet="00000000",
+                                               reserved=''):
         result = {}
         result['result'] = False
         try:
-            ethernet_header_obj = Ethernet8023MacControlHeader(destination_mac=destination_mac,
+            ethernet_header_obj = MacControlHeader(destination_mac=destination_mac,
                                                                source_mac=source_mac, length=length, preamble=preamble)
             pfc_header_obj = PriorityFlowControlHeader(op_code=op_code, time0=time0, time1=time1, time2=time2,
-                                                       time3=time3, time4=time4, time5=time5, time6=time6, time7=time7)
-            fun_test.log("Creating Priority Flow Control Frame with Ethernet 802.3 Mac Control header")
+                                                       time3=time3, time4=time4, time5=time5, time6=time6, time7=time7,
+                                                       reserved=reserved)
+            fun_test.log("Creating Priority Flow Control Frame with Mac Control header")
             header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=ethernet_header_obj)
             result['ethernet8023_mac_control_header_obj'] = ethernet_header_obj
-            fun_test.test_assert(header_created, "Create Ethernet 802.3 Mac Control header for %s" %
+            fun_test.test_assert(header_created, "Create Mac Control header for %s" %
                                  stream_obj.spirent_handle)
             header_created = self.stc_manager.configure_pfc_header(
                 stream_block_handle=stream_obj.spirent_handle,
@@ -963,6 +1008,36 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=custom_byte_pattern_obj)
             fun_test.test_assert(header_created, "Create Pause Mac Control header for %s" % stream_obj.spirent_handle)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_diffserv(self, ip_header_obj, streamblock_obj, dscp_high='0',
+                           dscp_low='0', name=None, reserved='00'):
+        result = False
+        try:
+            fun_test.log("Creating tos_diffServ obj")
+            # Get latest ip handle
+            child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
+            new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                 child_type=child_type)[0]
+            ip_header_obj._spirent_handle = new_ip_handle
+            tos_diffserv_obj = TosDiffServ()
+            tosdiffserv_handle = self.stc_manager.stc.create(tos_diffserv_obj.HEADER_TYPE.lower(),
+                                                             under=new_ip_handle)
+
+            fun_test.simple_assert(tosdiffserv_handle, "Created tosdiffServ under ip header")
+            tos_diffserv_obj._spirent_handle = tosdiffserv_handle
+            fun_test.log("Adding diff serv under tosdiffServ")
+            diff_serv_obj = DiffServ(dscp_high=dscp_high, dscp_low=dscp_low, name=name, reserved=reserved)
+            diff_serv_handle = self.stc_manager.stc.create(diff_serv_obj.HEADER_TYPE, under=tosdiffserv_handle,
+                                                           dscpHigh=dscp_high, dscpLow=dscp_low, reserved=reserved,
+                                                           Name=name)
+            fun_test.simple_assert(diff_serv_handle, "Diff serv handle created")
+            diff_serv_obj._spirent_handle = diff_serv_handle
+            self.stc_manager.stc.perform("StreamBlockUpdate", StreamBlock=streamblock_obj._spirent_handle)
+            fun_test.simple_assert(self.stc_manager.apply_configuration(), "Apply configuration with dscp values")
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
