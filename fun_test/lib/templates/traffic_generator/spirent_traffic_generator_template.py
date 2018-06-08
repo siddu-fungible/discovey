@@ -710,6 +710,29 @@ class Ethernet8023MacControlHeader(object):
         self.__dict__.update(**kwargs)
 
 
+class MacControlHeader(object):
+    HEADER_TYPE = "ethernetpause:MacControl"
+    _spirent_handle = None
+
+    def __init__(self, destination_mac="00:00:01:00:00:01", source_mac="00:10:94:00:00:02", length="8808",
+                 preamble="55555555555555d5"):
+        self.dstMac = destination_mac
+        self.srcMac = source_mac
+        self.lengthType = length
+        self.preamble = preamble
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
 class PauseMacControlHeader(object):
     HEADER_TYPE = "ethernetpause:PauseMacControl"
     _spirent_handle = None
@@ -877,6 +900,77 @@ class ARP(object):
         self.senderPAddr = sender_ip_address
         self.targetHwAddr = target_hw_address
         self.targetPAddr = target_ip_address
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class DiffServ(object):
+    HEADER_TYPE = "diffServ"
+    _spirent_handle = None
+
+    def __init__(self, dscp_high=0, dscp_low=0, name=None, reserved='00'):
+        self.dscpHigh = dscp_high
+        self.dscpLow = dscp_low
+        self.Name = name
+        self.reserved = reserved
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class Tos(object):
+    HEADER_TYPE = "tos"
+    NETWORK_CONTROL = 7
+    INTERNETWORK_CONTROL = 6
+    CRITIC_ECP = 5
+    FLASH_OVERRIDE = 4
+    FLASH = 3
+    IMEEDIATE = 2
+    PRIORITY = 1
+    ROUTINE = 0
+    _spirent_handle = None
+
+    def __init__(self, d_bit=0, m_bit=0, name=None, precedence=ROUTINE, r_bit=0, reserved=0, t_bit=0):
+        self.dBit = d_bit
+        self.mBit = m_bit
+        self.Name = name
+        self.precedence = precedence
+        self.rBit = r_bit
+        self.reserved = reserved
+        self.tBit = t_bit
 
     def get_attributes_dict(self):
         attributes = {}
