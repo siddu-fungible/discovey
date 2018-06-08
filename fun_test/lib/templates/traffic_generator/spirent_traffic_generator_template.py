@@ -921,6 +921,33 @@ class ARP(object):
         self._spirent_handle = handle
 
 
+class TosDiffServ(object):
+    HEADER_TYPE = "tosDiffServ"
+    _spirent_handle = None
+
+    def __init__(self, name=None):
+        self.name = name
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
 class DiffServ(object):
     HEADER_TYPE = "diffServ"
     _spirent_handle = None
