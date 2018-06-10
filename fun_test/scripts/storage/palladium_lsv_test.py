@@ -73,6 +73,11 @@ class FunTestCase1(FunTestCase):
                     value = m.group("value")
                     units = m.group("units")
                     metric_name = m.group("metric_name").lower()
+                    allowed_prefixes = ["FILTER_TYPE_XTS", "FILTER_TYPE_INFLATE", "FILTER_TYPE_DEFLATE", "lsv_read",
+                                        "lsv_write"]
+                    allowed_prefixes = [x[: 5].lower() for x in allowed_prefixes]
+                    if metric_name[: 5] not in allowed_prefixes:
+                        continue
                     try:  # Either a raw value or json value
                         j = json.loads(value)
                         for key, value in j.iteritems():
