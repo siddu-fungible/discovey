@@ -22,7 +22,7 @@ class DpcClient(object):
                     continue
 
     def _read(self):
-        chunk = 1024
+        chunk = 4096
         output = ""
         while not output.endswith('\n'):
             try:
@@ -97,6 +97,7 @@ class DpcClient(object):
         result = None
         output = ""
         try:
+            self.connect(ensure_connect=False)
             if arg_list:
                 if type(arg_list) is not list:
                     jdict = {"verb": verb, "arguments": [arg_list], "tid": 0}
