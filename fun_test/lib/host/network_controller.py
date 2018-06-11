@@ -7,6 +7,7 @@ class NetworkController(DpcshClient):
     VERB_TYPE_PORT = 'port'
     VERB_TYPE_QOS = 'qos'
     VERB_TYPE_PEEK = 'peek'
+    VERB_TYPE_POKE = 'poke'
     SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN = "dwrr"
     SCHEDULER_TYPE_SHAPER = "shaper"
     SCHEDULER_TYPE_STRICT_PRIORITY = " strict_priority"
@@ -1040,3 +1041,17 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def disable_syslog(self, level=3):
+        result = False
+        try:
+            cmd = ["params/syslog/level", level]
+            fun_test.debug("Disabe syslogs on level %s" % level)
+            result = self.json_execute(verb=self.VERB_TYPE_POKE, data=cmd,
+                                       command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(result['status'], message="Disable syslog")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
