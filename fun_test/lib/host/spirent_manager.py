@@ -335,7 +335,7 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type,
+    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type='0800',
                               frame_type=ETHERNETII_FRAME):
         result = False
         try:
