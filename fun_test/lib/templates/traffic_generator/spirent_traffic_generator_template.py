@@ -24,12 +24,12 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                              'CS6': {'dscp_value': '110000', 'decimal_value': '48', 'dscp_high': '6', 'dscp_low': '0'},
                              'CS7': {'dscp_value': '111000', 'decimal_value': '56', 'dscp_high': '7', 'dscp_low': '0'}}
 
-    def __init__(self, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE, dut_type=SpirentManager.DUT_TYPE_PALLADIUM):
+    def __init__(self, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         TrafficGeneratorTemplate.__init__(self)
         self.chassis_type = chassis_type
-        self.dut_type = dut_type
+        self.spirent_config = spirent_config
         try:
-            self.stc_manager = SpirentManager(chassis_type=self.chassis_type, dut_type=self.dut_type)
+            self.stc_manager = SpirentManager(chassis_type=self.chassis_type, spirent_config=self.spirent_config)
         except Exception as ex:
             fun_test.critical(str(ex))
 

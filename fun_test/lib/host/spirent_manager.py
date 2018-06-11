@@ -30,8 +30,7 @@ class SpirentManager(object):
     RESULT_VIEW_MODE_JITTER = "JITTER"
     TIMED_REFRESH_RESULT_VIEW_MODE = "PERIODIC"
 
-    def __init__(self, chassis_type=VIRTUAL_CHASSIS_TYPE, dut_type=DUT_TYPE_PALLADIUM,
-                 interface_mode=DUT_INTERFACE_MODE):
+    def __init__(self, spirent_config, chassis_type=VIRTUAL_CHASSIS_TYPE):
         try:
             stc_private_install_dir = fun_test.get_environment_variable(variable="STC_PRIVATE_INSTALL_DIR")
             if not stc_private_install_dir:
@@ -41,20 +40,8 @@ class SpirentManager(object):
             raise FunTestLibException("Unable to initialized Spirent Manager: %s" % str(ex))
         self.project_handle = None
         self.host_config = {}
-        self.dut_config = {}
         self.chassis_type = chassis_type
-        self.dut_type = dut_type
-        self.interface_mode = interface_mode
-        self.dpcsh_server_config = {}
-        self.ip_version = 4
-        if fun_test.local_settings:
-            self.chassis_type = fun_test.get_local_setting("spirent_chassis_type")
-            self.dut_type = fun_test.get_local_setting("dut_type")
-            self.host_config['test_module'] = fun_test.get_local_setting(self.chassis_type)
-            self.dut_config = fun_test.get_local_setting(self.dut_type)
-            self.interface_mode = fun_test.get_local_setting("interface_mode")
-            self.dpcsh_server_config = fun_test.get_local_setting("dpcsh_server")
-            self.ip_version = fun_test.get_local_setting("ip_version")
+        self.spirent_config = spirent_config
         self.chassis_ip = self._get_chassis_ip_by_chassis_type()
 
     def health(self, session_name="TestSession"):
@@ -335,26 +322,25 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type='0800',
+    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type,
                               frame_type=ETHERNETII_FRAME):
         result = False
         try:
             fun_test.debug("Adding Mac Address for %s Stream" % str(streamblock))
-            self.stc.create(frame_type, under=streamblock, srcMac=source_mac, dstMac=destination_mac,
-                            etherType=ethernet_type)
+            handle = self.get_object_children(streamblock)[0]
+            self.stc.config(handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
+            # self.stc.create(frame_type, under=streamblock, srcMac=source_mac, dstMac=destination_mac,
+            #                etherType=ethernet_type)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def configure_ip_address(self, streamblock, source, destination, gateway, ip_version=IP_VERSION_4):
+    def configure_ip_address(self, streamblock, source, destination, gateway=None, ip_version=IP_VERSION_4):
         result = False
         try:
-            if self.ip_version == 6:
-                ip_version = self.IP_VERSION_6
-
-            self.stc.create(ip_version, under=streamblock, sourceAddr=source, destAddr=destination,
-                            gateway=gateway)
+            handle = self.get_object_children(handle=streamblock)[1]
+            self.stc.config(handle, sourceAddr=source, destAddr=destination)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

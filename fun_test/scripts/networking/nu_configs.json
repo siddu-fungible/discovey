@@ -1,0 +1,50 @@
+[
+  {
+    "name": "palladium_configs",
+    "type": "palladium",
+    "ports": [6, 7],
+    "dpcsh_tcp_proxy_ip": "10.1.21.120",
+    "dpcsh_tcp_proxy_port": 40221,
+    "interface_mode": "25G"
+  },
+
+  {
+    "name": "spirent_configs",
+    "type": "spirent_traffic_generator",
+    "virtual": {
+        "slot_no": 1,
+        "port_nos": [
+          1,
+          2
+        ],
+        "interface_type": "EthernetCopper"
+    },
+    "physical": {
+        "slot_no": 2,
+        "port_nos": [
+          1,
+          2
+        ],
+        "interface_type": "Ethernet10GigFiber"
+    },
+    "l3_config": {
+        "ipv4": {
+          "source_ip1": "206.1.1.2",
+          "destination_ip1": "50.0.3.1",
+          "source_ip2": "192.85.1.2",
+          "destination_ip2": "50.0.2.1",
+          "gateway": "192.85.1.1"
+        },
+        "ipv6": {
+          "source_ip1": "1001::10:10:1:1",
+          "destination_ip1": "2001::50:0:3:1",
+          "source_ip2": "1001::10:10:2:1",
+          "destination_ip2": "2001::50:0:2:1"
+        }
+    },
+    "l2_config": {
+        "source_mac": "",
+        "destination_mac": "00:DE:AD:BE:EF:00"
+    }
+  }
+]
