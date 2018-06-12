@@ -85,7 +85,8 @@ def create_deflate_block(block_type, literals):
         | BFINAL(1b) | BTYPE(2b) | Compressed data | Huf code for 256 |
         +------------+-----------+-----------------+------------------+
         """
-        code = '01'
+        #code = '01'
+        code = '11' # Invalid BTYPE
         end_of_block = '0000000'
         lit_code_arr = []
         for lit in literals_reversed:
@@ -124,10 +125,12 @@ def create_deflate_block(block_type, literals):
         final_block.append(int(deflate_header, 2))
 
         length = bin(len(literals))[2:].zfill(16)
+        #length = bin(0)[2:].zfill(16)   # Corrupting LEN
         final_block.append(int(length[-8:], 2))
         final_block.append(int(length[-16:-8], 2))
 
-        nlength = bin(len(literals) ^ 0xffff)[2:]
+        #nlength = bin(len(literals) ^ 0xffff)[2:]
+        nlength = bin(0)[2:].zfill(16)  # Corrupting NLEN
         final_block.append(int(nlength[-8:], 2))
         final_block.append(int(nlength[-16:-8], 2))
 
@@ -234,6 +237,9 @@ def decode_gzip_header(file):
                         index += 1
                     else:
                         break
+                # Add terminating zero chr
+                fname.append(chr(indata[index]))
+                header.append(indata[index])
                 decoded["fname"] = "".join(fname)
                 index += 1
             if fcomment_set:
@@ -276,6 +282,131 @@ def decode_gzip_header(file):
     return (decoded, header, trailer)
 
 
+def decode_lzma_header(file):
+    """
+    :param file:
+    :return:
+    $ hexdump a.txt.lzma-hdr
+    0000000 00 30 7f fc 00 00
+    0000006
+
+    Header Info: https://svn.python.org/projects/external/xz-5.0.3/doc/lzma-file-format.txt
+    """
+
+    with open(file, 'r') as infile:
+        indata = bytearray(infile.read())
+
+    print "Hexdump of entire file:\t%s" % binascii.hexlify(indata)
+
+    # Parsing the gzip file header; Reference - http://www.zlib.org/rfc-gzip.html#file-format
+    decoded = {}
+    properties = {}
+    index = 0
+
+    """
+    # Header is 13 bytes
+    +----------------------------------+----------------+---------------------+
+    |Properties (LC+LP*9+PB*9*5) (1B)  | Historysz (4B) | Uncompressedsz (8B)|
+    +----------------------------------+----------------+---------------------+
+    """
+    header = indata[index:index+13]
+
+    prop = indata[index]
+    properties["pb"] = prop / (9 * 5)
+    prop -= properties["pb"] * 9 * 5
+    properties["lp"] = prop / 9
+    properties["lc"] = prop - properties["lp"] * 9
+
+    index = 1
+    # History sz in little endian
+    print binascii.hexlify((indata[index:index + 4]))
+    print int(binascii.hexlify((indata[index:index+4])), 16)
+    print bin(int(binascii.hexlify(indata[index:index+4]), 16))[2:].zfill(4*8)
+    historysz = (indata[index:index + 4])[::-1]
+    decoded["historysz"] = int(binascii.hexlify(historysz), 16)
+
+    index = 5
+
+    # Uncompressed sz in little endian
+    print binascii.hexlify(indata[index:index+8])
+    print int(binascii.hexlify(indata[index:index+8]), 16)
+    print bin(int(binascii.hexlify(indata[index:index+8]), 16))[2:].zfill(8 * 8)
+    uncompressedsz = (indata[index:index+8])[::-1]
+    decoded["uncompressedsz"] = int(binascii.hexlify(uncompressedsz), 16)
+
+    # Compressed block
+    index = 13
+    decoded["compressed_block"] = indata[index:]
+
+    trailer = None
+
+    return decoded, properties, header, trailer
+
+def create_lzma_block(properties_dict, historysz, uncompressedsz, compressed_block):
+    """
+    # Header is 13 bytes
+    +----------------------------------+----------------+---------------------+
+    |Properties (LC+LP*9+PB*9*5) (1B)  | Historysz (4B) | Uncompressedsz (8B)|
+    +----------------------------------+----------------+---------------------+
+    """
+
+    final_block = bytearray()
+
+    # Calculate and add properties
+    properties = ((properties_dict["pb"] * 5) + properties_dict["lp"]) * 9 + \
+                 properties_dict["lc"]
+
+    properties = bin(properties)[2:].zfill(8)
+    properties = int(properties, 2)
+    properties = binascii.unhexlify(hex(properties)[2:])
+    final_block.extend(properties)
+    #final_block.extend(bin(properties)[2:].zfill(8))
+
+    # Add historysz
+    history = struct.pack('<I', historysz)
+    history = binascii.hexlify(history)
+    history = bin(int(history, 16))[2:].zfill(4*8)
+    history = int(history, 2)
+    history = hex(history)[2:].zfill(8)
+    history = binascii.unhexlify(history)
+    #final_block.append(int(history[start:end].zfill(8), 2))
+    final_block.extend(history)
+
+    # Add uncompressedsz
+    if uncompressedsz <= 4294967295:
+        uncompressed = struct.pack('<I', uncompressedsz)
+        uncompressed = binascii.hexlify(uncompressed)
+        uncompressed = bin(int(uncompressed, 16))[2:].zfill(8*8)
+        uncompressed = int(uncompressed, 2)
+        uncompressed = (hex(uncompressed)[2:])[::-1].zfill(16)[::-1]
+        uncompressed = binascii.unhexlify(uncompressed)
+        #final_block.extend(bin(uncompressedsz)[2:].zfill(8*8))
+        final_block.extend(uncompressed)
+    else:
+        uncompressed = binascii.unhexlify('ffffffffffffffff')
+        final_block.extend(uncompressed)
+
+    # Finally add compressed block
+    compressed = binascii.hexlify(compressed_block)
+    compressed = bin(int(compressed, 16))[2:]
+    final_block.extend(compressed_block)
+
+    return final_block
+
+
+def read_compressor_status():
+    filepath = "/Users/radhika/F1-Project/accel/accel-compression/text/"
+    filename = "compressor.status"
+
+    with open(filepath + filename, "rb") as status_file:
+        status = bytearray(status_file.read())
+
+    # Error
+    # for b in status[16:24]:
+    #     print bin(b)[2:]
+    print [bin(b)[2:].zfill(8) for b in status[16:20]]
+
+
 if __name__ == '__main__':
     """
     print generate_static_huffman(0, 143, '00110000', print_ascii=True)
@@ -283,19 +414,34 @@ if __name__ == '__main__':
     # print generate_static_huffman(256, 279, '0000000')
     # print generate_static_huffman(280, 287, '11000000')
     print generate_static_huffman(0, 31, '00000')
-    
-    raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/stored.deflate"
-    decoded, header, trailer = decode_gzip_header(raw_infile)
+    """
+    #raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/stored.deflate"
+    raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/artificial/aaa.txt.lzma"
+    outdecoded, outproperties, outheader, outtrailer = decode_lzma_header(raw_infile)
 
     # print decoded
-    print "Header:\t%s" % (binascii.hexlify(header) if header is not None else None)
-    print "Compressed block:\t%s" % (binascii.hexlify(decoded["compressed_block"]))
-    print "Trailer:\t%s" % (binascii.hexlify(trailer) if trailer is not None else None)
+    print "Header:\t%s" % (binascii.hexlify(outheader) if outheader is not None else None)
+    for key, val in outproperties.iteritems():
+        print "%s => %d" % (key, val)
+    print "History size:\t%d" % outdecoded["historysz"]
+    print "Uncompressed size:\t%d" % outdecoded["uncompressedsz"]
+    print "Compressed block:\t%s" % (binascii.hexlify(outdecoded["compressed_block"]))
+    print "Trailer:\t%s" % (binascii.hexlify(outtrailer) if outtrailer is not None else None)
 
-    # hex_compressed_data = binascii.hexlify(decoded["compressed_block"])
+    # Create lzma file
+    with open("/tmp/create_iter.txt.lzma", "wb+") as out:
+        result = create_lzma_block(outproperties,
+                                   outdecoded["historysz"],
+                                   outdecoded["uncompressedsz"],
+                                   outdecoded["compressed_block"])
+        if result:
+            out.write(struct.pack('%dB' % len(result), *result))
+
+    """
+    # hex_compressed_data = binascii.hexlify(outdecoded["compressed_block"])
     # print bin(int(hex_compressed_data, 16))[2:]
 
-    # compressed_data = decoded["compressed_block"]
+    # compressed_data = outdecoded["compressed_block"]
     # reordered_bits = []
     # for b in compressed_data:
     #     reordered_bits.append(reorder_bits(bin(b)[2:].zfill(8)))
@@ -308,18 +454,29 @@ if __name__ == '__main__':
     #     reordered_bits.append(reorder_bits(byte))
     # print ''.join(reordered_bits)
     """
-
+    """
     ascii_str = []
     # Pass ASCII literals from 0 to 143
-    for i in range(0, 144):
+    #for i in range(0, 144):
+    for i in range(65, 91):
         ascii_str.append(chr(i))
+
+    print len(''.join(ascii_str))
 
     # Create plain txt file
     with open("/tmp/ascii_str.txt", "wb+") as data:
         data.write(''.join(ascii_str))
 
     # Create deflate file
-    with open("/tmp/ascii_str.deflate", "wb+") as out:
+    with open("/tmp/ascii_str_stored.deflate", "wb+") as out:
         result = create_deflate_block('stored', ''.join(ascii_str))
         if result:
             out.write(struct.pack('%dB' % len(result), *result))
+
+    with open("/tmp/ascii_str_fixed.deflate", "wb+") as out:
+        result = create_deflate_block('fixed', ''.join(ascii_str))
+        if result:
+            out.write(struct.pack('%dB' % len(result), *result))
+
+    read_compressor_status()
+    """
