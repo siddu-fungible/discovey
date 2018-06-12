@@ -701,7 +701,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             if not expected_latency_count:
                 # TODO: Later on we need to integrate RFC 2544 standards for benchmarking
-                pass
+                # If existing record not found for given frame size dump the result as it is for now
+                result['frame_%s' % stream_obj.FixedFrameLength] = {'avg': float(rx_result['AvgLatency']),
+                                                                    'min': float(rx_result['MinLatency']),
+                                                                    'max': float(rx_result['MaxLatency'])}
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
                 frame_size = str(stream_obj.FixedFrameLength)
@@ -761,7 +764,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             if not expected_jitter_count:
                 # TODO: Later on we need to integrate RFC 2544 standards for benchmarking
-                pass
+                result['frame_%s' % stream_obj.FixedFrameLength] = {'avg': float(rx_result['AvgJitter']),
+                                                                    'min': float(rx_result['MinJitter']),
+                                                                    'max': float(rx_result['MaxJitter'])}
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
                 frame_size = str(stream_obj.FixedFrameLength)
