@@ -283,8 +283,9 @@ input:checked + .slider:before {
 }
 
 .card {
-    box-shadow: 16px 16px 16px 0 rgba(0,0,0,0.2);
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.2);
     transition: 0.3s;
+    padding-top: 10px;
 }
 
 .card:hover {
