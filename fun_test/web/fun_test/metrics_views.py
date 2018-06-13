@@ -9,7 +9,8 @@ from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
-from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer, LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
+from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
+from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
 from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
