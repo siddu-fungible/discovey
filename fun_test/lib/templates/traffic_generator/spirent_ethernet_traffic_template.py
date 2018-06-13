@@ -6,61 +6,56 @@ from prettytable import PrettyTable
 
 class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
-    def __init__(self, session_name):
-        SpirentTrafficGeneratorTemplate.__init__(self)
+    def __init__(self, session_name, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
+        SpirentTrafficGeneratorTemplate.__init__(self, spirent_config=spirent_config, chassis_type=chassis_type)
         self.session_name = session_name
+        self.stc_connected = False
 
     def setup(self, no_of_ports_needed):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
         try:
-            fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
-                                 message="Health of Spirent Test Center")
+            if not self.stc_connected:
+                fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
+                                     message="Health of Spirent Test Center")
+                self.stc_connected = True
 
-            if fun_test.local_settings:
-                fun_test.log("%s Config: %s" % (self.stc_manager.dut_type, self.stc_manager.dut_config))
-                no_of_ports_in_config = len(self.stc_manager.host_config['test_module']["port_nos"])
-                fun_test.debug("Ports Needed: %d    Ports found in local config: %d" % (no_of_ports_needed,
-                                                                                        no_of_ports_in_config))
-                fun_test.test_assert(no_of_ports_needed <= no_of_ports_in_config,
-                                     message="Ensure no of ports needed to run script exists in local config.")
+            no_of_ports_in_config = len(self.spirent_config[self.chassis_type]["port_nos"])
+            fun_test.debug("Ports Needed: %d    Ports found in nu config: %d" % (no_of_ports_needed,
+                                                                                 no_of_ports_in_config))
+            fun_test.test_assert(no_of_ports_needed <= no_of_ports_in_config,
+                                 message="Ensure no of ports needed to run script exists in nu config.")
 
-                chassis_info = self.stc_manager.get_test_module_info()
-                slot_found = False
-                for module in chassis_info['module_info']:
-                    if int(module['Index']) == self.stc_manager.host_config['test_module']['slot_no'] and \
-                            int(module['PortCount']) >= no_of_ports_needed:
-                        slot_found = True
-                        #status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
-                        #fun_test.simple_assert(status, "Ports are not free. Please check")
+            chassis_info = self.stc_manager.get_test_module_info()
+            slot_found = False
+            for module in chassis_info['module_info']:
+                if int(module['Index']) == self.spirent_config[self.chassis_type]['slot_no'] and \
+                        int(module['PortCount']) >= no_of_ports_needed:
+                    slot_found = True
+                    #status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
+                    #fun_test.simple_assert(status, "Ports are not free. Please check")
 
-                fun_test.test_assert(slot_found, "Ensure slot num mentioned in config exists on STC")
+            fun_test.simple_assert(slot_found, "Ensure slot num mentioned in config exists on STC")
 
-                project_handle = self.stc_manager.create_project(project_name=self.session_name)
-                fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
-                physical_interface_type = str(self.stc_manager.host_config['test_module']['interface_type'])
+            project_handle = self.stc_manager.create_project(project_name=self.session_name)
+            fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
+            physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
 
-                for port_no in self.stc_manager.host_config['test_module']['port_nos']:
-                    port_location = "//%s/%s/%s" % (self.stc_manager.chassis_ip,
-                                                    self.stc_manager.host_config['test_module']['slot_no'], port_no)
-                    port_handle = self.stc_manager.create_port(location=port_location)
-                    fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
-                    result['port_list'].append(port_handle)
-                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
-                                                                   port_handle=port_handle)
-                    fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
-                                                                                             port_handle))
-                    result['interface_obj_list'].append(interface_obj)
+            for port_no in self.spirent_config[self.chassis_type]['port_nos']:
+                port_location = "//%s/%s/%s" % (self.stc_manager.chassis_ip,
+                                                self.spirent_config[self.chassis_type]['slot_no'], port_no)
+                port_handle = self.stc_manager.create_port(location=port_location)
+                fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
+                result['port_list'].append(port_handle)
+                interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
+                                                               port_handle=port_handle)
+                fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
+                                                                                         port_handle))
+                result['interface_obj_list'].append(interface_obj)
 
-                # Attach ports method take care of applying configuration
-                fun_test.test_assert(self.stc_manager.attach_ports(), message="Attach Ports")
-                result['result'] = True
-            else:
-                pass
-            # TODO: Currently we are using local settings to get slot/port no based on chassis_type and also
-            # TODO: reading dut_config such as source_mac, dest_mac etc.
-            # TODO: This will get changed later on once we finalized the topology that we need to run our script with
-            # TODO: exact script input
+            # Attach ports method take care of applying configuration
+            fun_test.test_assert(self.stc_manager.attach_ports(), message="Attach Ports")
+            result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -107,7 +102,21 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def configure_stream_block(self, stream_block_obj, port_handle=None, update=False, frame_stack_obj_list=[]):
+    def change_ports_mtu(self, interface_obj_list, mtu_value):
+        result = False
+        try:
+            for interface_obj in interface_obj_list:
+                checkpoint = "Change MTU for interface %s to %d" % (str(interface_obj), mtu_value)
+                interface_obj.Mtu = mtu_value
+                mtu_update_result = self.configure_physical_interface(interface_obj=interface_obj)
+                fun_test.simple_assert(mtu_update_result, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_stream_block(self, stream_block_obj, port_handle=None, update=False, frame_stack_obj_list=[],
+                               ip_header_version=4):
         result = {}
         try:
             attributes = stream_block_obj.get_attributes_dict()
@@ -131,27 +140,27 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 spirent_handle = self.stc_manager.create_stream_block(port=port_handle, attributes=attributes)
                 fun_test.test_assert(spirent_handle, message="Create Stream Block: %s" % spirent_handle)
                 stream_block_obj._spirent_handle = spirent_handle  # Setting Spirent handle to our object
+                fun_test.simple_assert(self.stc_manager.apply_configuration(),
+                                       "Apply Configuration after creating %s" % stream_block_obj._spirent_handle)
                 ethernet_header_obj = Ethernet2Header()
-                if self.stc_manager.ip_version == 4:
+                if ip_header_version == 4:
                     ipv4_header_obj = Ipv4Header()
                     result["status"] = True
                     result["ethernet_header_obj"] = ethernet_header_obj
                     result["ip_header_obj"] = ipv4_header_obj
                 else:
                     ipv6_header_obj = Ipv6Header()
-                    fun_test.simple_assert(self.stc_manager.apply_configuration(),
-                                           "Apply Configuration after creating %s" % stream_block_obj._spirent_handle)
                     header = self.stc_manager.stc.get(spirent_handle, "children").split()[1]
                     fun_test.debug("Default IPv4 Handle: %s" % header)
 
-                    fun_test.test_assert(self.stc_manager.delete_handle(handle=header),
-                                         "Delete Default IPv4 header: %s" % header)
+                    fun_test.simple_assert(self.stc_manager.delete_handle(handle=header),
+                                           "Delete Default IPv4 header: %s" % header)
 
                     v6_header_created = self.stc_manager.configure_frame_stack(stream_block_handle=
                                                                                stream_block_obj._spirent_handle,
                                                                                header_obj=ipv6_header_obj)
-                    fun_test.test_assert(v6_header_created, "Append IPv6 header under %s" %
-                                         stream_block_obj._spirent_handle)
+                    fun_test.simple_assert(v6_header_created, "Append IPv6 header under %s" %
+                                           stream_block_obj._spirent_handle)
                     result["status"] = True
                     result["ethernet_header_obj"] = ethernet_header_obj
                     result["ip_header_obj"] = ipv6_header_obj
@@ -530,11 +539,19 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def delete_streamblocks(self, streamblock_handle_list):
+    def delete_streamblocks(self, streamblock_handle_list=None, stream_obj_list=None):
         result = False
         try:
-            fun_test.debug("Deleting list of objects %s" % streamblock_handle_list)
-            result = self.stc_manager.delete_objects(streamblock_handle_list)
+            handles = []
+            if stream_obj_list:
+                for stream_obj in stream_obj_list:
+                    handles.append(stream_obj.spirent_handle)
+            elif streamblock_handle_list:
+                handles = streamblock_handle_list
+            else:
+                raise FunTestLibException("Please provide either streamblock handle list or stream block obj list")
+            fun_test.debug("Deleting list of objects %s" % handles)
+            result = self.stc_manager.delete_objects(handles)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -684,7 +701,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             if not expected_latency_count:
                 # TODO: Later on we need to integrate RFC 2544 standards for benchmarking
-                pass
+                # If existing record not found for given frame size dump the result as it is for now
+                result['frame_%s' % stream_obj.FixedFrameLength] = {'avg': float(rx_result['AvgLatency']),
+                                                                    'min': float(rx_result['MinLatency']),
+                                                                    'max': float(rx_result['MaxLatency'])}
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
                 frame_size = str(stream_obj.FixedFrameLength)
@@ -744,7 +764,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             if not expected_jitter_count:
                 # TODO: Later on we need to integrate RFC 2544 standards for benchmarking
-                pass
+                result['frame_%s' % stream_obj.FixedFrameLength] = {'avg': float(rx_result['AvgJitter']),
+                                                                    'min': float(rx_result['MinJitter']),
+                                                                    'max': float(rx_result['MaxJitter'])}
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
                 frame_size = str(stream_obj.FixedFrameLength)

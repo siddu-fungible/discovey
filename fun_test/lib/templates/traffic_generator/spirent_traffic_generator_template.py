@@ -24,12 +24,12 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                              'CS6': {'dscp_value': '110000', 'decimal_value': '48', 'dscp_high': '6', 'dscp_low': '0'},
                              'CS7': {'dscp_value': '111000', 'decimal_value': '56', 'dscp_high': '7', 'dscp_low': '0'}}
 
-    def __init__(self, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE, dut_type=SpirentManager.DUT_TYPE_PALLADIUM):
+    def __init__(self, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         TrafficGeneratorTemplate.__init__(self)
         self.chassis_type = chassis_type
-        self.dut_type = dut_type
+        self.spirent_config = spirent_config
         try:
-            self.stc_manager = SpirentManager(chassis_type=self.chassis_type, dut_type=self.dut_type)
+            self.stc_manager = SpirentManager(chassis_type=self.chassis_type, spirent_config=self.spirent_config)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -132,7 +132,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None):
+    def populate_performance_counters_json(self, ip_version, mode, file_name, latency_results=None, jitter_results=None):
         file_created = False
         records = []
         try:
@@ -140,6 +140,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                 record = OrderedDict()
                 record['mode'] = mode
                 record['version'] = fun_test.get_version()
+                record['ip_version'] = ip_version
                 record['timestamp'] = get_current_time()
                 frame_size = int(key.split('_')[1])
                 record['frame_size'] = frame_size
@@ -390,6 +391,7 @@ class Ethernet2Header(object):
     INTERNET_IP_ETHERTYPE = "0800"
     ARP_ETHERTYPE = "0806"
     BROADCAST_MAC = "FF:FF:FF:FF:FF:FF"
+    INTERNET_IPV6_ETHERTYPE = "86DD"
 
     def __init__(self, destination_mac="00:00:01:00:00:01", ether_type=INTERNET_IP_ETHERTYPE,
                  preamble="55555555555555d5", source_mac="00:10:94:00:00:02"):
@@ -475,10 +477,11 @@ class Ipv6Header(object):
     HEADER_TYPE = "ipv6:IPv6"
     NEXT_HEADER_TCP = 6
     NEXT_HEADER_UDP = 17
+    NO_NEXT_HEADER = 59
     _spirent_handle = None
 
     def __init__(self, destination_address="2000::1", destination_prefix_length=64, flow_label=0, gateway="::0",
-                 hop_limit=255, name="", next_header=NEXT_HEADER_TCP, payload_length=0,
+                 hop_limit=255, name="", next_header=NO_NEXT_HEADER, payload_length=0,
                  prefix_length=64,source_address="2000::2", traffic_class=0, version=6):
         self.destAddr = destination_address
         self.destPrefixLength = destination_prefix_length

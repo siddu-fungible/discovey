@@ -98,6 +98,7 @@ class SpirentSetup(FunTestScript):
                 current_streamblock_obj = StreamBlock()
                 current_streamblock_obj.Load = 0.5
                 current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_MEGABITS_PER_SECOND
+                current_streamblock_obj.FillType = current_streamblock_obj.FILL_TYPE_PRBS
                 current_ethernet_obj = Ethernet2Header(destination_mac=destination_mac1, source_mac=source_mac1)
                 current_ipv4_obj = Ipv4Header(destination_address=current_destination_ip,
                                               source_address=current_source_ip)
@@ -1269,9 +1270,9 @@ class TestCase9(FunTestCase):
         port_2_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
         port_1_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
 
-        if port_2_errors['FcsErrorFrameCount'] == tx_crc_results_1['FrameCount']:
+        if (port_2_errors['FcsErrorFrameCount'] == tx_crc_results_1['FrameCount']) and len(port_2_errors) == 2:
             port_2_errors['result'] = True
-        if port_1_errors['FcsErrorFrameCount'] == tx_crc_results_2['FrameCount']:
+        if (port_1_errors['FcsErrorFrameCount'] == tx_crc_results_2['FrameCount']) and len(port_1_errors) == 2:
             port_1_errors['result'] = True
 
         fun_test.test_assert(port_2_errors['result'],

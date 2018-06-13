@@ -47,6 +47,12 @@ class DpcClient(object):
             if ensure_connect:
                 self.ensure_connect()
 
+    def read(self):
+        json = self._read()
+        while (not json) or (json.count('{') != json.count('}')) or (json.count('[') != json.count(']')):
+            json += self._read()
+        return json
+
     def disconnect(self):
         if self.sock:
             self.sock.close()
@@ -108,7 +114,7 @@ class DpcClient(object):
 
             command = "{}\n".format(json.dumps(jdict))
             self.sendall(command)
-            output = self._read()
+            output = self.read()
             if output:
                 actual_output = self._parse_actual_output(output=output)
                 try:
