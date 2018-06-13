@@ -477,10 +477,11 @@ class Ipv6Header(object):
     HEADER_TYPE = "ipv6:IPv6"
     NEXT_HEADER_TCP = 6
     NEXT_HEADER_UDP = 17
+    NO_NEXT_HEADER = 56
     _spirent_handle = None
 
     def __init__(self, destination_address="2000::1", destination_prefix_length=64, flow_label=0, gateway="::0",
-                 hop_limit=255, name="", next_header=NEXT_HEADER_UDP, payload_length=0,
+                 hop_limit=255, name="", next_header=NO_NEXT_HEADER, payload_length=0,
                  prefix_length=64,source_address="2000::2", traffic_class=0, version=6):
         self.destAddr = destination_address
         self.destPrefixLength = destination_prefix_length

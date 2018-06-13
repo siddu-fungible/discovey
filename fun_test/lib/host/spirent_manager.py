@@ -340,7 +340,10 @@ class SpirentManager(object):
         result = False
         try:
             handle = self.get_object_children(handle=streamblock)[1]
-            self.stc.config(handle, sourceAddr=source, destAddr=destination)
+            if gateway:
+                self.stc.config(handle, sourceAddr=source, destAddr=destination, gateway=gateway)
+            else:
+                self.stc.config(handle, sourceAddr=source, destAddr=destination)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
