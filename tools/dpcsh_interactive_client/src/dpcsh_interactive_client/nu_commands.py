@@ -543,20 +543,28 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def scheduler_config_shaper(self, port_num, queue_num, shaper_enable=None, min_rate=None, max_rate=None):
+    def scheduler_config_shaper(self, port_num, queue_num, shaper_enable=None, shaper_type=None, shaper_rate=None, shaper_threshold=None):
         try:
+            print port_num, queue_num, shaper_enable, shaper_type, shaper_rate, shaper_threshold
             get_cmd_args = ['get', 'scheduler_config', {'port': port_num, 'queue': queue_num}]
             result = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             shaper_config = result['shaper']
             shaper_config['port'] = port_num
             shaper_config['queue'] = queue_num
-            if shaper_enable is not None:
-                shaper_config['shaper_enable'] = shaper_enable
-            if min_rate is not None:
-                shaper_config['min_rate'] = min_rate
-            if max_rate is not None:
-                shaper_config['max_rate'] = max_rate
-
+            if shaper_type == 0:
+                if shaper_enable is not None:
+                    shaper_config['cr_en'] = shaper_enable
+                if shaper_rate is not None:
+                    shaper_config['cr_rate'] = shaper_rate
+                if shaper_threshold is not None:
+                    shaper_config['cr_thresh'] = shaper_threshold
+            if shaper_type == 1:
+                if shaper_enable is not None:
+                    shaper_config['pr_en'] = shaper_enable
+                if shaper_rate is not None:
+                    shaper_config['pr_rate'] = shaper_rate
+                if shaper_threshold is not None:
+                    shaper_config['pr_thresh'] = shaper_threshold
             set_cmd_args = ['set', 'scheduler_config', 'shaper', shaper_config]
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
             print result

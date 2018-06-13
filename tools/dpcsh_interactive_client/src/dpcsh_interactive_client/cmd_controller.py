@@ -265,25 +265,7 @@ class CmdController(Cmd):
     def get_qos_wred_avg_q_config(self, args):
         self._qos_cmd_obj.wred_avg_q_config(update=False)
 
-    def get_qos_scheduler_config_dwrr(self, args):
-        port_num = args.port_num
-        queue = args.queue
-        self._qos_cmd_obj.get_scheduler_config(port_num=port_num, queue_num=queue,
-                                               scheduler_type=QosCommands.SCHEDULER_TYPE_DWRR)
-
-    def get_qos_scheduler_config_shaper(self, args):
-        port_num = args.port_num
-        queue = args.queue
-        self._qos_cmd_obj.get_scheduler_config(port_num=port_num, queue_num=queue,
-                                               scheduler_type=QosCommands.SCHEDULER_TYPE_SHAPER)
-
-    def get_qos_scheduler_config_strict_priority(self, args):
-        port_num = args.port_num
-        queue = args.queue
-        self._qos_cmd_obj.get_scheduler_config(port_num=port_num, queue_num=queue,
-                                               scheduler_type=QosCommands.SCHEDULER_TYPE_STRICT)
-
-    def get_qos_scheduler_config_all(self, args):
+    def get_qos_scheduler_config(self, args):
         port_num = args.port_num
         queue = args.queue
         self._qos_cmd_obj.get_scheduler_config(port_num=port_num, queue_num=queue)
@@ -297,11 +279,15 @@ class CmdController(Cmd):
     def set_qos_scheduler_config_shaper(self, args):
         port_num = args.port_num
         queue = args.queue
-        shaper_enable = args.shaper_enable
-        min_rate = args.min_rate
-        max_rate = args.max_rate
-        self._qos_cmd_obj.scheduler_config_shaper(port_num=port_num, queue_num=queue, shaper_enable=shaper_enable,
-                                                  max_rate=max_rate, min_rate=min_rate)
+        shaper_enable = args.enable
+        shaper_type = args.type
+        shaper_rate = args.rate
+        shaper_threshold = args.thresh
+        self._qos_cmd_obj.scheduler_config_shaper(port_num=port_num, queue_num=queue,
+                                                  shaper_enable=shaper_enable,
+                                                  shaper_type=shaper_type,
+                                                  shaper_rate=shaper_rate,
+                                                  shaper_threshold=shaper_threshold)
 
     def set_qos_scheduler_config_strict_priority(self, args):
         port_num = args.port_num
@@ -509,10 +495,7 @@ class CmdController(Cmd):
     get_qos_wred_avg_queue_config_parser.set_defaults(func=get_qos_wred_avg_q_config)
     set_qos_wred_queue_config_parser.set_defaults(func=set_qos_wred_queue_config)
     get_qos_wred_queue_config_parser.set_defaults(func=get_qos_wred_queue_config)
-    get_qos_scheduler_dwrr_parser.set_defaults(func=get_qos_scheduler_config_dwrr)
-    get_qos_scheduler_shaper_parser.set_defaults(func=get_qos_scheduler_config_shaper)
-    get_qos_scheduler_strict_priority_parser.set_defaults(func=get_qos_scheduler_config_strict_priority)
-    get_qos_scheduler_config_parser.set_defaults(func=get_qos_scheduler_config_all)
+    get_qos_scheduler_config_parser.set_defaults(func=get_qos_scheduler_config)
     set_qos_scheduler_dwrr_parser.set_defaults(func=set_qos_scheduler_config_dwrr)
     set_qos_scheduler_shaper_parser.set_defaults(func=set_qos_scheduler_config_shaper)
     set_qos_scheduler_strict_priority_parser.set_defaults(func=set_qos_scheduler_config_strict_priority)
