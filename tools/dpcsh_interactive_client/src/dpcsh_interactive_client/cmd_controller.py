@@ -376,6 +376,12 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_psw_stats(port_num=port_num, queue_list=queues, grep_regex=grep_regex)
 
+    def peek_meter_stats(self, args):
+        bank = args.bank
+        index = args.index
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_meter_stats(bank=bank, index=index, grep_regex=grep_regex)
+
     def peek_vp_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_vp_stats(grep_regex=grep_regex)
@@ -525,6 +531,7 @@ class CmdController(Cmd):
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
     peek_psw_stats_parser.set_defaults(func=peek_psw_stats)
+    peek_meter_stats_parser.set_defaults(func=peek_meter_stats)
     peek_vp_stats_parser.set_defaults(func=peek_vp_stats)
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_stats)
     peek_wro_stats_parser.set_defaults(func=peek_wro_stats)

@@ -796,6 +796,49 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
+    def peek_meter_stats(self, bank, index, grep_regex=None):
+        prev_result = {}
+        while True:
+            try:
+                cmd = "stats/meter/nu/bank/%d/meter[%d]" % (bank, index)
+                result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                print "--------------> Meter %d  <--------------" % index
+                if result:
+                    if prev_result:
+                        diff_result = self._get_difference(result=result, prev_result=prev_result)
+                        table_obj = PrettyTable(['Color', 'Bytes', 'Bytes Diff', 'Packet', 'Packet Diff'])
+                        for key in sorted(result):
+                            if grep_regex:
+                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                    table_obj.add_row([key, result[key]['bytes'],
+                                                       diff_result[key]['bytes'],
+                                                       result[key]['pkts'],
+                                                       diff_result[key]['pkts']])
+                            else:
+                                table_obj.add_row([key, result[key]['bytes'],
+                                                   diff_result[key]['bytes'],
+                                                   result[key]['pkts'],
+                                                   diff_result[key]['pkts']])
+                    else:
+                        table_obj = PrettyTable(['Color', 'Bytes', 'Packet'])
+                        for key in sorted(result):
+                            if grep_regex:
+                                if re.search(grep_regex, key, re.IGNORECASE):
+                                    table_obj.add_row([key, result[key]['bytes'], result[key]['pkts']])
+                            else:
+                                table_obj.add_row([key, result[key]['bytes'], result[key]['pkts']])
+                prev_result = result
+                print table_obj
+                print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                time.sleep(TIME_INTERVAL)
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
+                break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
+                break
+                
     def peek_psw_stats(self, port_num=None, queue_list=None, grep_regex=None):
         prev_result = None
         while True:
