@@ -1,12 +1,19 @@
 from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
-    StreamBlock, GeneratorConfig
+    StreamBlock, GeneratorConfig, Ethernet2Header
 from lib.host.network_controller import NetworkController
 from helper import *
+from nu_config_manager import *
 
 
 num_ports = 2
 loads_file = "interface_loads.json"
+min_frame_lenggth = 64
+max_frame_length = 16380
+mtu = max_frame_length
+generator_step = max_frame_length
+duration_seconds = 240
+step_size = 1
 
 
 class SpirentSetup(FunTestScript):
@@ -22,16 +29,24 @@ class SpirentSetup(FunTestScript):
                 """)
 
     def setup(self):
-        global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, streamblock_obj_1, streamblock_obj_2, \
-        gen_obj_1, gen_obj_2, duration_seconds, subscribe_results, dut_port_2, dut_port_1, network_controller_obj
+        global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, \
+            gen_obj_1, gen_obj_2, duration_seconds, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
+            dut_config, spirent_config
+
+        dut_type = fun_test.get_local_setting(setting="dut_type")
+        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type)
+
+        chassis_type = fun_test.get_local_setting(setting="chassis_type")
+        spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_frame_size")
+        template_obj = SpirentEthernetTrafficTemplate(session_name="mac-sanity", spirent_config=spirent_config,
+                                                      chassis_type=chassis_type)
         fun_test.test_assert(template_obj, "Create template object")
 
         # Create network controller object
-        dpcsh_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
-        dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
+        dpcsh_server_ip = dut_config["dpcsh_tcp_proxy_ip"]
+        dpcsh_server_port = dut_config['dpcsh_tcp_proxy_port']
         network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
         result = template_obj.setup(no_of_ports_needed=num_ports)
@@ -40,6 +55,10 @@ class SpirentSetup(FunTestScript):
         port_1 = result['port_list'][0]
         port_2 = result['port_list'][1]
 
+        dut_port_1 = dut_config['ports'][0]
+        dut_port_2 = dut_config['ports'][1]
+
+        '''
         srcMac = template_obj.stc_manager.dut_config['source_mac1']
         destMac = template_obj.stc_manager.dut_config['destination_mac1']
         srcIp = template_obj.stc_manager.dut_config['source_ip1']
@@ -49,18 +68,7 @@ class SpirentSetup(FunTestScript):
         dut_port_2 = template_obj.stc_manager.dut_config['port_nos'][1]
         gateway = template_obj.stc_manager.dut_config['gateway1']
         interface_mode = template_obj.stc_manager.interface_mode
-
-        #  Read loads from file
-        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
-        output = fun_test.parse_file_to_json(file_path)
-        Load = output[interface_mode]["incremental_load_mbps"]
-        ether_type = "0800"
-        min_frame_lenggth = 64
-        max_frame_length = 16380
-        mtu = max_frame_length
-        generator_step = max_frame_length
-        duration_seconds = 240
-        step_size = 1
+        '''
 
         # Set Mtu
         interface_1_obj = result['interface_obj_list'][0]
@@ -78,62 +86,6 @@ class SpirentSetup(FunTestScript):
         fun_test.test_assert(mtu_1, " Set mtu on DUT port %s" % dut_port_1)
         mtu_2 = network_controller_obj.set_port_mtu(port_num=dut_port_2, mtu_value=mtu)
         fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
-
-        # Create streamblock 1
-        streamblock_obj_1 = StreamBlock()
-        streamblock_obj_1.LoadUnit = streamblock_obj_1.LOAD_UNIT_MEGABITS_PER_SECOND
-        streamblock_obj_1.Load = Load
-        streamblock_obj_1.FillType = streamblock_obj_1.FILL_TYPE_PRBS
-        streamblock_obj_1.InsertSig = True
-        streamblock_obj_1.FrameLengthMode = streamblock_obj_1.FRAME_LENGTH_MODE_INCR
-        streamblock_obj_1.MinFrameLength = min_frame_lenggth
-        streamblock_obj_1.MaxFrameLength = max_frame_length
-        streamblock_obj_1.StepFrameLength = step_size
-
-        streamblock1 = template_obj.configure_stream_block(streamblock_obj_1, port_1)
-        fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % port_1)
-
-        # Adding source and destination ip
-        ether = template_obj.stc_manager.configure_mac_address(streamblock=streamblock_obj_1.spirent_handle,
-                                                               source_mac=srcMac,
-                                                               destination_mac=destMac,
-                                                               ethernet_type=ether_type)
-        fun_test.test_assert(ether, "Adding source and destination mac")
-
-        # Adding Ip address and gateway
-        ip = template_obj.stc_manager.configure_ip_address(streamblock=streamblock_obj_1.spirent_handle,
-                                                           source=srcIp,
-                                                           destination=destIp,
-                                                           gateway=gateway)
-        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
-
-        # Create streamblock 2
-        streamblock_obj_2 = StreamBlock()
-        streamblock_obj_2.LoadUnit = streamblock_obj_2.LOAD_UNIT_MEGABITS_PER_SECOND
-        streamblock_obj_2.Load = Load
-        streamblock_obj_2.FillType = streamblock_obj_2.FILL_TYPE_PRBS
-        streamblock_obj_2.InsertSig = True
-        streamblock_obj_2.FrameLengthMode = streamblock_obj_2.FRAME_LENGTH_MODE_INCR
-        streamblock_obj_2.MinFrameLength = min_frame_lenggth
-        streamblock_obj_2.MaxFrameLength = max_frame_length
-        streamblock_obj_2.StepFrameLength = step_size
-
-        streamblock2 = template_obj.configure_stream_block(streamblock_obj_2, port_2)
-        fun_test.test_assert(streamblock2, "Creating streamblock on port %s" % port_2)
-
-        # Adding source and destination ip
-        ether = template_obj.stc_manager.configure_mac_address(streamblock=streamblock_obj_2.spirent_handle,
-                                                               source_mac=srcMac,
-                                                               destination_mac=destMac,
-                                                               ethernet_type=ether_type)
-        fun_test.test_assert(ether, "Adding source and destination mac")
-
-        # Adding Ip address and gateway
-        ip = template_obj.stc_manager.configure_ip_address(streamblock=streamblock_obj_2.spirent_handle,
-                                                           source=srcIp,
-                                                           destination=destIp2,
-                                                           gateway=gateway)
-        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
         # Configure Generator
         gen_config_obj = GeneratorConfig()
@@ -169,10 +121,13 @@ class SpirentSetup(FunTestScript):
         fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
 
 
-class TestCase1(FunTestCase):
+class IPv4IncrementalTestCase1(FunTestCase):
+    streamblock_obj_1 = None
+    streamblock_obj_2 = None
+
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test all frame size in incremental way",
+                              summary="Test all frame size in incremental way (IPv4)",
                               steps="""
                         1. Start traffic and subscribe to tx and rx results
                         2. Compare Tx and Rx results for frame count
@@ -191,7 +146,78 @@ class TestCase1(FunTestCase):
         clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
+        #  Read loads from file
+        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        output = fun_test.parse_file_to_json(file_path)
+        load = output[dut_config['interface_mode']]["incremental_load_mbps"]
+        l2_config = spirent_config["l2_config"]
+        l3_config = spirent_config["l3_config"]["ipv4"]
+        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+
+        # Create streamblock 1
+        self.streamblock_obj_1 = StreamBlock()
+        self.streamblock_obj_1.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_1.Load = load
+        self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_1.InsertSig = True
+        self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
+        self.streamblock_obj_1.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_1.MaxFrameLength = max_frame_length
+        self.streamblock_obj_1.StepFrameLength = step_size
+
+        streamblock1 = template_obj.configure_stream_block(self.streamblock_obj_1, port_1)
+        fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % port_1)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                           source=l3_config['source_ip1'],
+                                                           destination=l3_config['destination_ip1'],
+                                                           gateway=l3_config['gateway'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+        # Create streamblock 2
+        self.streamblock_obj_2 = StreamBlock()
+        self.streamblock_obj_2.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_2.Load = load
+        self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_2.InsertSig = True
+        self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
+        self.streamblock_obj_2.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_2.MaxFrameLength = max_frame_length
+        self.streamblock_obj_2.StepFrameLength = step_size
+
+        streamblock2 = template_obj.configure_stream_block(self.streamblock_obj_2, port_2)
+        fun_test.test_assert(streamblock2, "Creating streamblock on port %s" % port_2)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                           source=l3_config['source_ip2'],
+                                                           destination=l3_config['destination_ip2'],
+                                                           gateway=l3_config['gateway'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
     def cleanup(self):
+        fun_test.log("In testcase cleanup")
+
+        fun_test.log("Deleting streamblock %s and %s" % (self.streamblock_obj_1.spirent_handle,
+                                                         self.streamblock_obj_2.spirent_handle))
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.streamblock_obj_1.spirent_handle,
+                                                                  self.streamblock_obj_2.spirent_handle])
+
         for key in subscribe_results.iterkeys():
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
@@ -206,31 +232,31 @@ class TestCase1(FunTestCase):
         # Get results for streamblock 1
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_obj_1.spirent_handle))
+                                                                            self.streamblock_obj_1.spirent_handle))
         tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_obj_1.spirent_handle,
+            stream_block_handle=self.streamblock_obj_1.spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log(
             "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                            streamblock_obj_1.spirent_handle))
+                                                                            self.streamblock_obj_1.spirent_handle))
         rx_results_1 = template_obj.stc_manager.get_rx_stream_block_results(
-            stream_block_handle=streamblock_obj_1.spirent_handle,
+            stream_block_handle=self.streamblock_obj_1.spirent_handle,
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         # Get streambllock 2 results
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_obj_2.spirent_handle))
+                                                                            self.streamblock_obj_2.spirent_handle))
         tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_obj_2.spirent_handle,
+            stream_block_handle=self.streamblock_obj_2.spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log(
             "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                            streamblock_obj_2.spirent_handle))
+                                                                            self.streamblock_obj_2.spirent_handle))
         rx_results_2 = template_obj.stc_manager.get_rx_stream_block_results(
-            stream_block_handle=streamblock_obj_2.spirent_handle,
+            stream_block_handle=self.streamblock_obj_2.spirent_handle,
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -249,9 +275,9 @@ class TestCase1(FunTestCase):
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
-                             "Check FrameCount for streamblock %s" % streamblock_obj_1.spirent_handle)
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
-                             "Check FrameCount for streamblock %s" % streamblock_obj_2.spirent_handle)
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
 
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
@@ -259,11 +285,13 @@ class TestCase1(FunTestCase):
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
 
-        fun_test.test_assert(int(rx_results_1['FrameCount']) >= int(streamblock_obj_1.MaxFrameLength),
-                             "Ensure more than %s packets are received on port2" % str(streamblock_obj_1.MaxFrameLength))
+        fun_test.test_assert(int(rx_results_1['FrameCount']) >= int(self.streamblock_obj_1.MaxFrameLength),
+                             "Ensure more than %s packets are received on port2" %
+                             str(self.streamblock_obj_1.MaxFrameLength))
 
-        fun_test.test_assert(int(rx_results_2['FrameCount']) >= int(streamblock_obj_1.MaxFrameLength),
-                             "Ensure more than %s packets are received on port1" % str(streamblock_obj_1.MaxFrameLength))
+        fun_test.test_assert(int(rx_results_2['FrameCount']) >= int(self.streamblock_obj_1.MaxFrameLength),
+                             "Ensure more than %s packets are received on port1" %
+                             str(self.streamblock_obj_1.MaxFrameLength))
 
         dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
@@ -440,10 +468,108 @@ class TestCase1(FunTestCase):
                                                   message="Ensure correct value is seen for %s octet in %s of "
                                                           "dut port %s" % (key2, key1, key))
 
-class TestCase2(FunTestCase):
+
+class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Test all frame size in incremental way (IPv6)",
+                              steps="""
+                              1. Start traffic and subscribe to tx and rx results
+                              2. Compare Tx and Rx results for frame count
+                              3. Check for error counters. there must be no error counter
+                              4. Check dut ingress and egress frame count match
+                              5. Check OctetStats from dut and spirent
+                              6. Check EtherOctets from dut and spirent.
+                              7. Check Counter for each octet range
+                              """)
+
+    def setup(self):
+        # Clear port results on DUT
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+
+        #  Read loads from file
+        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        output = fun_test.parse_file_to_json(file_path)
+        load = output[dut_config['interface_mode']]["incremental_load_mbps"]
+        l2_config = spirent_config["l2_config"]
+        l3_config = spirent_config["l3_config"]["ipv6"]
+        ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
+
+        # Create streamblock 1
+        self.streamblock_obj_1 = StreamBlock()
+        self.streamblock_obj_1.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_1.Load = load
+        self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_1.InsertSig = True
+        self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
+        self.streamblock_obj_1.MinFrameLength = 78
+        self.streamblock_obj_1.MaxFrameLength = max_frame_length
+        self.streamblock_obj_1.StepFrameLength = step_size
+
+        streamblock1 = template_obj.configure_stream_block(stream_block_obj=self.streamblock_obj_1,
+                                                           port_handle=port_1, ip_header_version=6)
+        fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % port_1)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                           source=l3_config['source_ip1'],
+                                                           destination=l3_config['destination_ip1'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+        # Create streamblock 2
+        self.streamblock_obj_2 = StreamBlock()
+        self.streamblock_obj_2.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_2.Load = load
+        self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_2.InsertSig = True
+        self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
+        self.streamblock_obj_2.MinFrameLength = 78
+        self.streamblock_obj_2.MaxFrameLength = max_frame_length
+        self.streamblock_obj_2.StepFrameLength = step_size
+
+        streamblock2 = template_obj.configure_stream_block(stream_block_obj=self.streamblock_obj_2,
+                                                           port_handle=port_2, ip_header_version=6)
+        fun_test.test_assert(streamblock2, "Creating streamblock on port %s" % port_2)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                           source=l3_config['source_ip2'],
+                                                           destination=l3_config['destination_ip2'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+    def run(self):
+        super(IPv6IncrementalTestCase1, self).run()
+
+    def cleanup(self):
+        super(IPv6IncrementalTestCase1, self).cleanup()
+
+
+class IPv4RandomTestCase2(FunTestCase):
+    streamblock_obj_1 = None
+    streamblock_obj_2 = None
+
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test large random frame size",
+                              summary="Test large random frame size (IPv4)",
                               steps="""
                         1. Start traffic and subscribe to tx and rx results
                         2. Compare Tx and Rx results for frame count for each stream
@@ -453,19 +579,6 @@ class TestCase2(FunTestCase):
                         """)
 
     def setup(self):
-        streamblock_obj_1.FrameLengthMode = streamblock_obj_1.FRAME_LENGTH_MODE_RANDOM
-        streamblock_obj_2.FrameLengthMode = streamblock_obj_2.FRAME_LENGTH_MODE_RANDOM
-
-        streamblock1 = template_obj.stc_manager.stc.config(streamblock_obj_1.spirent_handle,
-                                                           FrameLengthMode=streamblock_obj_1.FrameLengthMode)
-        fun_test.log("Update streamblock %s on port %s" % (streamblock_obj_1.spirent_handle,
-                                                                                    port_1))
-
-        streamblock2 = template_obj.stc_manager.stc.config(streamblock_obj_2.spirent_handle,
-                                                           FrameLengthMode=streamblock_obj_2.FrameLengthMode)
-        fun_test.log("Update streamblock %s on port %s" % (streamblock_obj_2.spirent_handle,
-                                                                                    port_2))
-
         # Clear port results on DUT
         clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
@@ -473,7 +586,78 @@ class TestCase2(FunTestCase):
         clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
+        #  Read loads from file
+        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        output = fun_test.parse_file_to_json(file_path)
+        load = output[dut_config['interface_mode']]["incremental_load_mbps"]
+        l2_config = spirent_config["l2_config"]
+        l3_config = spirent_config["l3_config"]["ipv4"]
+        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+
+        # Create streamblock 1
+        self.streamblock_obj_1 = StreamBlock()
+        self.streamblock_obj_1.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_1.Load = load
+        self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_1.InsertSig = True
+        self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
+        self.streamblock_obj_1.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_1.MaxFrameLength = max_frame_length
+        self.streamblock_obj_1.StepFrameLength = step_size
+
+        streamblock1 = template_obj.configure_stream_block(self.streamblock_obj_1, port_1)
+        fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % port_1)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                           source=l3_config['source_ip1'],
+                                                           destination=l3_config['destination_ip1'],
+                                                           gateway=l3_config['gateway'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+        # Create streamblock 2
+        self.streamblock_obj_2 = StreamBlock()
+        self.streamblock_obj_2.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_2.Load = load
+        self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_2.InsertSig = True
+        self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
+        self.streamblock_obj_2.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_2.MaxFrameLength = max_frame_length
+        self.streamblock_obj_2.StepFrameLength = step_size
+
+        streamblock2 = template_obj.configure_stream_block(self.streamblock_obj_2, port_2)
+        fun_test.test_assert(streamblock2, "Creating streamblock on port %s" % port_2)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                           source=l3_config['source_ip2'],
+                                                           destination=l3_config['destination_ip2'],
+                                                           gateway=l3_config['gateway'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
     def cleanup(self):
+        fun_test.log("In testcase cleanup")
+
+        fun_test.log("Deleting streamblock %s and %s" % (self.streamblock_obj_1.spirent_handle,
+                                                         self.streamblock_obj_2.spirent_handle))
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.streamblock_obj_1.spirent_handle,
+                                                                  self.streamblock_obj_2.spirent_handle])
+
         for key in subscribe_results.iterkeys():
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
@@ -489,31 +673,31 @@ class TestCase2(FunTestCase):
         # Get results for streamblock 1
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_obj_1.spirent_handle))
+                                                                            self.streamblock_obj_1.spirent_handle))
         tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_obj_1.spirent_handle,
+            stream_block_handle=self.streamblock_obj_1.spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log(
             "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                            streamblock_obj_1.spirent_handle))
+                                                                            self.streamblock_obj_1.spirent_handle))
         rx_results_1 = template_obj.stc_manager.get_rx_stream_block_results(
-            stream_block_handle=streamblock_obj_1.spirent_handle,
+            stream_block_handle=self.streamblock_obj_1.spirent_handle,
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         # Get streambllock 2 results
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_obj_2.spirent_handle))
+                                                                            self.streamblock_obj_2.spirent_handle))
         tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_obj_2.spirent_handle,
+            stream_block_handle=self.streamblock_obj_2.spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log(
             "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                            streamblock_obj_2.spirent_handle))
+                                                                            self.streamblock_obj_2.spirent_handle))
         rx_results_2 = template_obj.stc_manager.get_rx_stream_block_results(
-            stream_block_handle=streamblock_obj_2.spirent_handle,
+            stream_block_handle=self.streamblock_obj_2.spirent_handle,
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -532,9 +716,9 @@ class TestCase2(FunTestCase):
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
-                             "Check FrameCount for streamblock %s" % streamblock_obj_1.spirent_handle)
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
-                             "Check FrameCount for streamblock %s" % streamblock_obj_2.spirent_handle)
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
 
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
@@ -603,8 +787,112 @@ class TestCase2(FunTestCase):
                                           actual=psw_fetched_output[key],
                                           message="Check counter %s in psw global stats" % key)
         '''
+
+
+class IPv6RandomTestCase2(IPv4RandomTestCase2):
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Test large random frame size (IPv6)",
+                              steps="""
+                              1. Start traffic and subscribe to tx and rx results
+                              2. Compare Tx and Rx results for frame count for each stream
+                              3. Check for error counters. there must be no error counter
+                              4. Check ok frames on dut ingress and egress counter match and spirent
+                              5. Check psw stats for fwd_frv, ct_pkt, ifpg_pkt, fpg_pkt 
+                              """)
+
+    def setup(self):
+        # Clear port results on DUT
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+
+        #  Read loads from file
+        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        output = fun_test.parse_file_to_json(file_path)
+        load = output[dut_config['interface_mode']]["incremental_load_mbps"]
+        l2_config = spirent_config["l2_config"]
+        l3_config = spirent_config["l3_config"]["ipv6"]
+        ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
+
+        # Create streamblock 1
+        self.streamblock_obj_1 = StreamBlock()
+        self.streamblock_obj_1.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_1.Load = load
+        self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_1.InsertSig = True
+        self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
+        self.streamblock_obj_1.MinFrameLength = 78
+        self.streamblock_obj_1.MaxFrameLength = max_frame_length
+        self.streamblock_obj_1.StepFrameLength = step_size
+
+        streamblock1 = template_obj.configure_stream_block(stream_block_obj=self.streamblock_obj_1,
+                                                           port_handle=port_1, ip_header_version=6)
+        fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % port_1)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                           source=l3_config['source_ip1'],
+                                                           destination=l3_config['destination_ip1'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+        # Create streamblock 2
+        self.streamblock_obj_2 = StreamBlock()
+        self.streamblock_obj_2.LoadUnit = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+        self.streamblock_obj_2.Load = load
+        self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
+        self.streamblock_obj_2.InsertSig = True
+        self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
+        self.streamblock_obj_2.MinFrameLength = 78
+        self.streamblock_obj_2.MaxFrameLength = max_frame_length
+        self.streamblock_obj_2.StepFrameLength = step_size
+
+        streamblock2 = template_obj.configure_stream_block(stream_block_obj=self.streamblock_obj_2,
+                                                           port_handle=port_2, ip_header_version=6)
+        fun_test.test_assert(streamblock2, "Creating streamblock on port %s" % port_2)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
+                                                           source=l3_config['source_ip2'],
+                                                           destination=l3_config['destination_ip2'])
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+    def run(self):
+        super(IPv6RandomTestCase2, self).run()
+
+    def cleanup(self):
+        super(IPv6RandomTestCase2, self).cleanup()
+
+
 if __name__ == "__main__":
+    test_case_mode = fun_test.get_local_setting(setting='ip_version')
     ts = SpirentSetup()
-    ts.add_test_case(TestCase1())
-    ts.add_test_case(TestCase2())
+    if test_case_mode == 6:
+        ts.add_test_case(IPv6IncrementalTestCase1())
+        ts.add_test_case(IPv6RandomTestCase2())
+    elif test_case_mode == 4:
+        ts.add_test_case(IPv4IncrementalTestCase1())
+        ts.add_test_case((IPv4RandomTestCase2()))
+    else:
+        ts.add_test_case(IPv4IncrementalTestCase1())
+        ts.add_test_case(IPv4RandomTestCase2())
+        ts.add_test_case(IPv6IncrementalTestCase1())
+        ts.add_test_case(IPv6RandomTestCase2())
     ts.run()

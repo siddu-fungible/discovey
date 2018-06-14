@@ -327,8 +327,14 @@ class SpirentManager(object):
         result = False
         try:
             fun_test.debug("Adding Mac Address for %s Stream" % str(streamblock))
-            handle = self.get_object_children(streamblock)[0]
-            self.stc.config(handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
+            handles = self.get_object_children(streamblock)
+            ethernet_handle = None
+            for handle in handles:
+                if re.search(r'ethernet.*', handle, re.IGNORECASE):
+                    fun_test.log("Handle Fetched: %s" % handle)
+                    ethernet_handle = handle
+                    break
+            self.stc.config(ethernet_handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
             # self.stc.create(frame_type, under=streamblock, srcMac=source_mac, dstMac=destination_mac,
             #                etherType=ethernet_type)
             result = True
@@ -339,11 +345,17 @@ class SpirentManager(object):
     def configure_ip_address(self, streamblock, source, destination, gateway=None, ip_version=IP_VERSION_4):
         result = False
         try:
-            handle = self.get_object_children(handle=streamblock)[1]
+            handles = self.get_object_children(handle=streamblock)
+            ip_handle = None
+            for handle in handles:
+                if re.search(r'ip.*', handle, re.IGNORECASE):
+                    fun_test.log("Handle Fetched: %s" % handle)
+                    ip_handle = handle
+                    break
             if gateway:
-                self.stc.config(handle, sourceAddr=source, destAddr=destination, gateway=gateway)
+                self.stc.config(ip_handle, sourceAddr=source, destAddr=destination, gateway=gateway)
             else:
-                self.stc.config(handle, sourceAddr=source, destAddr=destination)
+                self.stc.config(ip_handle, sourceAddr=source, destAddr=destination)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
