@@ -714,6 +714,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 expected_threshold_latency = self._calculate_threshold_count(
                     count=expected_latency_count['latency_avg'],
                     tolerance_percent=tolerance_percent)
+                fun_test.log("Expected Avg latency: %s us Frame Size: %s" % (str(expected_threshold_latency),
+                                                                             frame_size))
                 fun_test.log("Avg Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
                                                                             frame_size, str(rx_result['AvgLatency'])))
                 fun_test.test_assert(expression=float(rx_result['AvgLatency']) <= float(expected_threshold_latency),
@@ -725,7 +727,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 expected_threshold_latency = self._calculate_threshold_count(
                     count=expected_latency_count['latency_min'],
                     tolerance_percent=tolerance_percent)
-
+                fun_test.log("Expected Min latency: %s us Frame Size: %s" % (str(expected_threshold_latency),
+                                                                             frame_size))
                 fun_test.log("Min Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
                                                                             frame_size, str(rx_result['MinLatency'])))
                 fun_test.test_assert(expression=float(rx_result['MinLatency']) <= float(expected_threshold_latency),
@@ -737,7 +740,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 expected_threshold_latency = self._calculate_threshold_count(
                     count=expected_latency_count['latency_max'],
                     tolerance_percent=tolerance_percent)
-
+                fun_test.log("Expected Max latency: %s us Frame Size: %s" % (str(expected_threshold_latency),
+                                                                             frame_size))
                 fun_test.log("Max Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
                                                                             frame_size, str(rx_result['MaxLatency'])))
                 fun_test.test_assert(expression=float(rx_result['MaxLatency']) <= float(expected_threshold_latency),
@@ -775,6 +779,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
                     count=expected_jitter_count['jitter_avg'], tolerance_percent=tolerance_percent)
+                fun_test.log("Expected Avg jitter: %s us Frame Size: %s" % (str(expected_threshold_jitter),
+                                                                            frame_size))
                 fun_test.log("Avg Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['AvgJitter'])))
                 fun_test.test_assert(expression=float(rx_result['AvgJitter']) <= float(expected_threshold_jitter),
@@ -785,6 +791,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
                     count=expected_jitter_count['jitter_min'], tolerance_percent=tolerance_percent)
+                fun_test.log("Expected Min jitter: %s us Frame Size: %s" % (str(expected_threshold_jitter),
+                                                                            frame_size))
                 fun_test.log("Min Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['MinJitter'])))
                 fun_test.test_assert(expression=float(rx_result['MinJitter']) <= float(expected_threshold_jitter),
@@ -795,6 +803,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
                     count=expected_jitter_count['jitter_max'], tolerance_percent=tolerance_percent)
+                fun_test.log("Expected Max jitter: %s us Frame Size: %s" % (str(expected_threshold_jitter),
+                                                                            frame_size))
                 fun_test.log("Max Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['MaxJitter'])))
                 fun_test.test_assert(expression=float(rx_result['MaxJitter']) <= float(expected_threshold_jitter),

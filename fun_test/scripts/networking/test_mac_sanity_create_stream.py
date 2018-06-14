@@ -751,8 +751,8 @@ if __name__ == "__main__":
 
     if test_case_mode == 6:
         ts.add_test_case(IPv6GoodFrameTestCase1())
-        ts.add_test_case(IPv6RuntTestCase2())
-        ts.add_test_case(IPv6GoodRuntTestCase3())
+        # ts.add_test_case(IPv6RuntTestCase2())
+        # ts.add_test_case(IPv6GoodRuntTestCase3())
     elif test_case_mode == 4:
         ts.add_test_case(IPv4GoodFrameTestCase1())
         ts.add_test_case(IPv4RuntTestCase2())
@@ -763,8 +763,8 @@ if __name__ == "__main__":
         ts.add_test_case(IPv4GoodRuntTestCase3())
 
         ts.add_test_case(IPv6GoodFrameTestCase1())
-        ts.add_test_case(IPv6RuntTestCase2())
-        ts.add_test_case(IPv6GoodRuntTestCase3())
+        # ts.add_test_case(IPv6RuntTestCase2())
+        # ts.add_test_case(IPv6GoodRuntTestCase3())
 
     ts.add_test_case(BroadcastTestCase4())
     ts.run()
