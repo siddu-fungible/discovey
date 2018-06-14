@@ -259,12 +259,11 @@ set_qos_scheduler_dwrr_parser.add_argument('weight', type=int, help="Weight")
 set_qos_scheduler_shaper_parser = set_qos_scheduler_parsers.add_parser('shaper', help="QoS Scheduler Shaper Config")
 set_qos_scheduler_shaper_parser.add_argument('port_num', type=int, help="Port Num")
 set_qos_scheduler_shaper_parser.add_argument('queue', type=int, help="Queue Num")
-set_qos_scheduler_shaper_parser.add_argument('-shaper_enable', type=int, help="QoS Scheduler Shaper enable",
-                                             default=None)
-set_qos_scheduler_shaper_parser.add_argument('-min_rate', type=int, help="QoS Scheduler Shaper min rate",
-                                             default=None)
-set_qos_scheduler_shaper_parser.add_argument('-max_rate', type=int, help="QoS Scheduler Shaper max rate",
-                                             default=None)
+set_qos_scheduler_shaper_parser.add_argument('-enable', type=int, help="Shaper enable/disable")
+set_qos_scheduler_shaper_parser.add_argument('-type', type=int, help="Shaper type. 0=min_rate, 1=max_rate")
+set_qos_scheduler_shaper_parser.add_argument('-rate', type=int, help="Shaper rate in bits")
+set_qos_scheduler_shaper_parser.add_argument('-thresh', type=int, help="Shaper Threshold")
+
 # Strict priority
 set_qos_scheduler_strict_priority_parser = set_qos_scheduler_parsers.add_parser('strict_priority',
                                                                                 help="QoS Scheduler Strict "
@@ -441,28 +440,7 @@ get_qos_wred_queue_config_parser.add_argument('queue', type=int, help="Queue Num
 get_qos_wred_avg_queue_config_parser = get_qos_wred_parsers.add_parser('avg_q_config', help="QoS WRED Avg Queue Config")
 
 # QoS Scheduler sub commands
-get_qos_scheduler_parser = get_nu_qos_parsers.add_parser('scheduler', help="QoS Scheduler Config")
-get_qos_scheduler_parsers = get_qos_scheduler_parser.add_subparsers(title='subcommands', help="")
-
-# dwrr
-get_qos_scheduler_dwrr_parser = get_qos_scheduler_parsers.add_parser('dwrr', help="QoS Scheduler dwrr Config")
-get_qos_scheduler_dwrr_parser.add_argument('port_num', type=int, help="Port Num")
-get_qos_scheduler_dwrr_parser.add_argument('queue', type=int, help="Queue Num")
-
-# Shaper
-get_qos_scheduler_shaper_parser = get_qos_scheduler_parsers.add_parser('shaper', help="QoS Scheduler Shaper Config")
-get_qos_scheduler_shaper_parser.add_argument('port_num', type=int, help="Port Num")
-get_qos_scheduler_shaper_parser.add_argument('queue', type=int, help="Queue Num")
-
-# Strict priority
-get_qos_scheduler_strict_priority_parser = get_qos_scheduler_parsers.add_parser('strict_priority',
-                                                                                help="QoS Scheduler Strict "
-                                                                                     "Priority Config")
-get_qos_scheduler_strict_priority_parser.add_argument('port_num', type=int, help="Port Num")
-get_qos_scheduler_strict_priority_parser.add_argument('queue', type=int, help="Queue Num")
-
-# Get All scheduler
-get_qos_scheduler_config_parser = get_qos_scheduler_parsers.add_parser('all', help="QoS Scheduler config")
+get_qos_scheduler_config_parser = get_nu_qos_parsers.add_parser('scheduler', help="QoS Scheduler Config")
 get_qos_scheduler_config_parser.add_argument('port_num', type=int, help="Port Num")
 get_qos_scheduler_config_parser.add_argument('queue', type=int, help="Queue Num")
 
@@ -519,6 +497,12 @@ base_peek_parser = ArgumentParser(prog="peek")
 base_peek_subparsers = base_peek_parser.add_subparsers(title="subcommands", help="")
 peek_stats_parser = base_peek_subparsers.add_parser('stats', help="Peek stats")
 peek_stats_parsers = peek_stats_parser.add_subparsers(title="subcommands", help="")
+
+# Meter stats
+peek_meter_stats_parser = peek_stats_parsers.add_parser('meter', help="NU Meter Stats")
+peek_meter_stats_parser.add_argument('-bank', type=int, help="Meter bank")
+peek_meter_stats_parser.add_argument('-index', type=int, help="Meter Index")
+peek_meter_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # Fpg stats
 peek_fpg_stats_parser = peek_stats_parsers.add_parser('fpg', help="NU Peek FPG Port stats")

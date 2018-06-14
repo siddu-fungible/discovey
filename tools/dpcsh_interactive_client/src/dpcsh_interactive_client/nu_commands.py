@@ -543,20 +543,18 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def scheduler_config_shaper(self, port_num, queue_num, shaper_enable=None, min_rate=None, max_rate=None):
+    def scheduler_config_shaper(self, port_num, queue_num, shaper_enable=None, shaper_type=0, shaper_rate=None, shaper_threshold=None):
         try:
-            get_cmd_args = ['get', 'scheduler_config', {'port': port_num, 'queue': queue_num}]
-            result = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
-            shaper_config = result['shaper']
+            shaper_config = {}
             shaper_config['port'] = port_num
             shaper_config['queue'] = queue_num
+            shaper_config['type'] = shaper_type
             if shaper_enable is not None:
-                shaper_config['shaper_enable'] = shaper_enable
-            if min_rate is not None:
-                shaper_config['min_rate'] = min_rate
-            if max_rate is not None:
-                shaper_config['max_rate'] = max_rate
-
+                shaper_config['en'] = shaper_enable
+            if shaper_rate is not None:
+                shaper_config['rate'] = shaper_rate
+            if shaper_threshold is not None:
+                shaper_config['thresh'] = shaper_threshold
             set_cmd_args = ['set', 'scheduler_config', 'shaper', shaper_config]
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
             print result
@@ -796,6 +794,49 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
+    def peek_meter_stats(self, bank, index, grep_regex=None):
+        prev_result = {}
+        while True:
+            try:
+                cmd = "stats/meter/nu/bank/%d/meter[%d]" % (bank, index)
+                result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                print "--------------> Meter %d  <--------------" % index
+                if result:
+                    if prev_result:
+                        diff_result = self._get_difference(result=result, prev_result=prev_result)
+                        table_obj = PrettyTable(['Color', 'Bytes', 'Bytes Diff', 'Packet', 'Packet Diff'])
+                        for key in sorted(result):
+                            if grep_regex:
+                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                    table_obj.add_row([key, result[key]['bytes'],
+                                                       diff_result[key]['bytes'],
+                                                       result[key]['pkts'],
+                                                       diff_result[key]['pkts']])
+                            else:
+                                table_obj.add_row([key, result[key]['bytes'],
+                                                   diff_result[key]['bytes'],
+                                                   result[key]['pkts'],
+                                                   diff_result[key]['pkts']])
+                    else:
+                        table_obj = PrettyTable(['Color', 'Bytes', 'Packet'])
+                        for key in sorted(result):
+                            if grep_regex:
+                                if re.search(grep_regex, key, re.IGNORECASE):
+                                    table_obj.add_row([key, result[key]['bytes'], result[key]['pkts']])
+                            else:
+                                table_obj.add_row([key, result[key]['bytes'], result[key]['pkts']])
+                prev_result = result
+                print table_obj
+                print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                time.sleep(TIME_INTERVAL)
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
+                break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
+                break
+                
     def peek_psw_stats(self, port_num=None, queue_list=None, grep_regex=None):
         prev_result = None
         while True:
