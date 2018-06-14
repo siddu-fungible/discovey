@@ -80,7 +80,7 @@ class SuiteWorker(Thread):
         build_url = self.job_build_url
 
         # Setup the suites own logger
-        local_scheduler_logger = logging.getLogger("scheduler_log.txt")
+        local_scheduler_logger = logging.getLogger("scheduler_log_{}.txt".format(self.job_id))
         local_scheduler_logger.setLevel(logging.INFO)
         handler = logging.handlers.RotatingFileHandler(self.job_dir + "/scheduler.log.txt", maxBytes=TEN_MB,
                                                        backupCount=5)
