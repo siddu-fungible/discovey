@@ -179,6 +179,8 @@ class SuiteWorker(Thread):
             scheduler_logger.debug("{:50} {} {}".format(script_path,
                                                         str(script_metrics["result"]),
                                                         str(script_metrics["crashed"])))
+
+        handler.close()
         if not self.suite_shutdown:
             if "repeat" in self.job_spec and self.job_spec["repeat"]:
                 queue_job(job_spec=self.job_spec)
