@@ -46,6 +46,24 @@
                 "label": "EC 8:4 Throughput",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "Voltest: Latency",
+                "metric_model_name": "EcVolPerformance",
+                "leaf": true,
+                "name": "Voltest: Latency",
+                "label": "Voltest: Latency",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Voltest: IOPS",
+                "metric_model_name": "EcVolPerformance",
+                "leaf": true,
+                "name": "Voltest: IOPS",
+                "label": "Voltest: IOPS",
+                "children": [],
+                "weight": 1
               }
             ],
             "weight": 1
