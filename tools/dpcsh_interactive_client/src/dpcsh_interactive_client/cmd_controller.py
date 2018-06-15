@@ -356,11 +356,17 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_fpg_stats(port_num=port_num, grep_regex=grep_regex)
 
-    def peek_psw_stats(self, args):
+    def peek_psw_nu_stats(self, args):
         port_num = args.port_num
         queues = args.queues
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_psw_stats(port_num=port_num, queue_list=queues, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_psw_stats(mode='nu', port_num=port_num, queue_list=queues, grep_regex=grep_regex)
+
+    def peek_psw_hnu_stats(self, args):
+        port_num = args.port_num
+        queues = args.queues
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_psw_stats(mode='hnu', port_num=port_num, queue_list=queues, grep_regex=grep_regex)
 
     def peek_meter_stats(self, args):
         bank = args.bank
@@ -513,7 +519,8 @@ class CmdController(Cmd):
 
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
-    peek_psw_stats_parser.set_defaults(func=peek_psw_stats)
+    peek_psw_nu_stats_parser.set_defaults(func=peek_psw_nu_stats)
+    peek_psw_hnu_stats_parser.set_defaults(func=peek_psw_hnu_stats)
     peek_meter_stats_parser.set_defaults(func=peek_meter_stats)
     peek_vp_stats_parser.set_defaults(func=peek_vp_stats)
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_stats)

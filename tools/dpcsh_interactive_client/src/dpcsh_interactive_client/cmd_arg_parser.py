@@ -511,9 +511,18 @@ peek_fpg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=N
 
 # PSW Stats
 peek_psw_stats_parser = peek_stats_parsers.add_parser('psw', help="NU Peek PSW Stats")
-peek_psw_stats_parser.add_argument('-port_num', type=int, help="Port num", default=None)
-peek_psw_stats_parser.add_argument('-queues', nargs='+', help="Queue List", default=None)
-peek_psw_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_psw_stats_parsers = peek_psw_stats_parser.add_subparsers(title='subcommands', help="")
+
+peek_psw_nu_stats_parser = peek_psw_stats_parsers.add_parser('nu', help="NU Peek PSW Stats")
+peek_psw_hnu_stats_parser = peek_psw_stats_parsers.add_parser('hnu', help="NU Peek PSW Stats")
+
+peek_psw_nu_stats_parser.add_argument('-port_num', type=int, help="Port num", default=None)
+peek_psw_nu_stats_parser.add_argument('-queues', nargs='+', help="Queue List", default=None)
+peek_psw_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_psw_hnu_stats_parser.add_argument('-port_num', type=int, help="Port num", default=None)
+peek_psw_hnu_stats_parser.add_argument('-queues', nargs='+', help="Queue List", default=None)
+peek_psw_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # VP Stats
 peek_vp_stats_parser = peek_stats_parsers.add_parser('vppkts', help="NU Peek VP Stats")

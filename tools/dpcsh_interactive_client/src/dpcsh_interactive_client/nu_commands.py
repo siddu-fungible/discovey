@@ -837,16 +837,16 @@ class PeekCommands(object):
                 self.dpc_client.disconnect()
                 break
                 
-    def peek_psw_stats(self, port_num=None, queue_list=None, grep_regex=None):
+    def peek_psw_stats(self, mode='nu', port_num=None, queue_list=None, grep_regex=None):
         prev_result = None
         while True:
             try:
                 is_global = False
-                if not port_num:
+                if port_num is None:
                     is_global = True
-                    cmd = "stats/psw/global"
+                    cmd = "stats/psw/%s/global" % mode
                 else:
-                    cmd = "stats/psw/port/[%d]" % port_num
+                    cmd = "stats/psw/%s/port/[%d]" % (mode, port_num)
                 master_table_obj = PrettyTable()
                 master_table_obj.border = False
                 master_table_obj.align = 'l'
@@ -979,7 +979,7 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
                 break
-
+     
     def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek"):
         try:
             while True:
