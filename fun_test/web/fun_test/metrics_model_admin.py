@@ -7,7 +7,7 @@ from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack
 from web.fun_test.metrics_models import UnitTestPerformance
 from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFloodDmaPerformance
-from web.fun_test.metrics_models import LsvZipCryptoPerformance
+from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -63,4 +63,8 @@ class BcopyFloodDmaPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(LsvZipCryptoPerformance)
 class LsvZipCryptoPerformanceAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(EcVolPerformance)
+class EcVolPerformanceAdmin(admin.ModelAdmin):
     pass

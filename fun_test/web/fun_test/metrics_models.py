@@ -421,6 +421,15 @@ class BcopyFloodDmaPerformance(models.Model):
         return str(self.__dict__)
 
 
+class EcVolPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=20, default="voltest", choices=[(0, "voltest")])
+    output_ecvol_ec_stats_latency_ns_max = models.IntegerField(verbose_name="Latency max")
+    output_ecvol_ec_stats_latency_ns_avg = models.IntegerField(verbose_name="Latency avg")
+    output_ecvol_ec_stats_latency_ns_min = models.IntegerField(verbose_name="Latency min")
+    output_ecvol_ec_stats_iops = models.IntegerField(verbose_name="IOPS")
+
+
 class LsvZipCryptoPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="lsv_test", choices=[(0, "lsv_test")])
@@ -484,6 +493,12 @@ class LsvZipCryptoPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
         model = LsvZipCryptoPerformance
+        fields = "__all__"
+
+class EcVolPerformanceSerialzer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = EcVolPerformance
         fields = "__all__"
 
 ANALYTICS_MAP = {
@@ -570,6 +585,12 @@ ANALYTICS_MAP = {
         "module": "storage",
         "component": "general",
         "verbose_name": "LSV Zip Crypto Performance"
+    },
+    "EcVolPerformance": {
+        "model": EcVolPerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "EC Vol Performance"
     }
 }
 

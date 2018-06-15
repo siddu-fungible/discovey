@@ -135,6 +135,13 @@
             border-radius: 1.5px;
 
         }
+    table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 0.5px solid black;
+}
 
     </style>
     <div class="content" ng-controller="metricsSummaryController">
@@ -142,8 +149,8 @@
             <div>
 
                 <table class="table table-nonfluid">
-                    <tr style="border: 0">
-                        <td colspan="4" style="border: 0">
+                    <tr>
+                        <td colspan="4" >
                             <button style="float: right; background-color: white" class="btn" ng-if="collapsedAll"
                                     ng-click="expandAllNodes()"><i class="fa fa-expand"></i> Expand all
                             </button>
