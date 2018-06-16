@@ -412,8 +412,8 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sequential write and then read by failing m number of data volumes in n = k+m "
-                                      "EC volume",
+                              summary="Sequential write and then read of random data by failing m number of data "
+                                      "volumes in n = k+m EC volume",
                               steps="""
         1. Run the outer loop from ndata_partition_start_range to ndata_partition_end_range. Say it as k
         2. Run the inner loop from nparity_start_range = min(int(ndata / 4) + 1, self.max_parity) to 

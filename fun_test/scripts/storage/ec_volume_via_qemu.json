@@ -1,7 +1,7 @@
 {
   "RndDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 16,
-    "ndata_partition_end_range": 16,
+    "ndata_partition_start_range": 10,
+    "ndata_partition_end_range": 10,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
@@ -28,8 +28,8 @@
     "check_lsv_stats": 0
   },
   "ZeroDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 16,
-    "ndata_partition_end_range": 16,
+    "ndata_partition_start_range": 10,
+    "ndata_partition_end_range": 10,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
@@ -52,7 +52,7 @@
     "output_data": "/tmp/output",
     "dataset_size": 262144,
     // Head room needed for the LS volume in percentage
-    "lsv_pct": 0.32,
+    "lsv_pct": 0.52,
     "check_lsv_stats": 0
   }
 }
