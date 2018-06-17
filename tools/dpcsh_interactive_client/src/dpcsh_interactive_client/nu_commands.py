@@ -35,14 +35,6 @@ class PortCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def clear_port_stats(self, port_num, shape):
-        try:
-            cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            result = self.dpc_client.execute(verb="port", arg_list=["clearstats", cmd_arg_dict])
-            print result
-        except Exception as ex:
-            print "ERROR: %s" % str(ex)
-
     def enable_disable_link_pause(self, port_num, shape, enable=True):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
@@ -670,6 +662,50 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
+class NuClearCommands(object):
+
+    def __init__(self, dpc_client):
+        self.dpc_client = dpc_client
+
+    def clear_nu_port_stats(self, port_num, shape):
+        try:
+            cmd_arg_dict = {"portnum": port_num, "shape": shape}
+            result = self.dpc_client.execute(verb="port", arg_list=["clearstats", cmd_arg_dict])
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_fwd_stats(self):
+        try:
+            cmd = ["clear", "fwd"] 
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_erp_stats(self):
+        try:
+            cmd = ["clear", "erp"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_parser_stats(self):
+        try:
+            cmd = ["clear", "prsr"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_all_stats(self):
+        try:
+            cmd = ["clear"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
 
 class PeekCommands(object):
 

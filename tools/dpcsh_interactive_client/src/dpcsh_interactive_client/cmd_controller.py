@@ -15,6 +15,7 @@ class CmdController(Cmd):
         self._sys_cmd_obj = SystemCommands(dpc_client=self.dpc_client)
         self._qos_cmd_obj = QosCommands(dpc_client=self.dpc_client)
         self._peek_cmd_obj = PeekCommands(dpc_client=self.dpc_client)
+        self._clear_cmd_obj = NuClearCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -39,9 +40,6 @@ class CmdController(Cmd):
 
     def disable_port(self, args):
         self._port_cmd_obj.enable_disable_port(port_num=args.port_num, shape=args.shape, enable=False)
-
-    def clear_port_stats(self, args):
-        self._port_cmd_obj.clear_port_stats(port_num=args.port_num, shape=args.shape)
 
     def enable_port_link_pause(self, args):
         self._port_cmd_obj.enable_disable_link_pause(port_num=args.port_num, shape=args.shape)
@@ -430,6 +428,21 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_sfg_stats(stats_type='hnu', grep_regex=grep_regex)
 
+    def clear_nu_port_stats(self, args):
+        self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
+
+    def clear_nu_fwd_stats(self, args):
+        self._clear_cmd_obj.clear_nu_fwd_stats()
+
+    def clear_nu_erp_stats(self, args):
+        self._clear_cmd_obj.clear_nu_erp_stats()
+
+    def clear_nu_parser_stats(self, args):
+        self._clear_cmd_obj.clear_nu_parser_stats()
+
+    def clear_nu_all_stats(self, args):
+        self._clear_cmd_obj.clear_nu_all_stats()
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -437,7 +450,6 @@ class CmdController(Cmd):
     get_port_mtu_parser.set_defaults(func=get_port_mtu)
     set_port_enable_parser.set_defaults(func=enable_port)
     set_port_disable_parser.set_defaults(func=disable_port)
-    clear_port_stats_parser.set_defaults(func=clear_port_stats)
     set_port_pause_enable_parser.set_defaults(func=enable_port_link_pause)
     set_port_pause_disable_parser.set_defaults(func=disable_port_link_pause)
     set_port_pause_tx_enable_parser.set_defaults(func=enable_port_tx_link_pause)
@@ -527,6 +539,13 @@ class CmdController(Cmd):
     peek_wred_ecn_stats_parser.set_defaults(func=peek_nu_qos_wred_ecn_stats)
     peek_nu_sfg_stats_parser.set_defaults(func=peek_nu_sfg_stats)
     peek_hnu_sfg_stats_parser.set_defaults(func=peek_hnu_sfg_stats)
+
+    # -------------- Clear Command Handlers ----------------
+    clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
+    clear_nu_fwd_stats_parser.set_defaults(func=clear_nu_fwd_stats)
+    clear_nu_erp_stats_parser.set_defaults(func=clear_nu_erp_stats)
+    clear_nu_parser_stats_parser.set_defaults(func=clear_nu_parser_stats)
+    clear_nu_all_stats_parser.set_defaults(func=clear_nu_all_stats)   
 
     @with_argparser(base_set_parser)
     def do_set(self, args):

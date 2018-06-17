@@ -485,10 +485,26 @@ base_clear_subparsers = base_clear_parser.add_subparsers(title="subcommands", he
 clear_stats_parser = base_clear_subparsers.add_parser('stats', help="Clear stats")
 
 # Clear NU stats sub commands
-clear_port_subparsers = clear_stats_parser.add_subparsers(title='subcommands', help="")
-clear_port_stats_parser = clear_port_subparsers.add_parser('port', help="Clear Port Stats")
-clear_port_stats_parser.add_argument('port_num', type=int, help="port num")
-clear_port_stats_parser.add_argument('shape', type=int, help="shape")
+clear_nu_subparsers = clear_stats_parser.add_subparsers(title='subcommands', help="")
+clear_nu_stats_parser = clear_nu_subparsers.add_parser('nu', help="Clear NU stats")
+clear_nu_stats_subparsers = clear_nu_stats_parser.add_subparsers(title='subcommands', help="")
+
+# Clear Port Stats
+clear_nu_port_stats_parser = clear_nu_stats_subparsers.add_parser('port', help="Clear Port Stats")
+clear_nu_port_stats_parser.add_argument('port_num', type=int, help="port num")
+clear_nu_port_stats_parser.add_argument('shape', type=int, help="shape")
+
+# Clear FWD stats
+clear_nu_fwd_stats_parser = clear_nu_stats_subparsers.add_parser('fwd', help="Clear FWD Stats")
+
+# Clear ERP stats
+clear_nu_erp_stats_parser = clear_nu_stats_subparsers.add_parser('erp', help="Clear ERP Stats")
+
+# Clear Parser stats 
+clear_nu_parser_stats_parser = clear_nu_stats_subparsers.add_parser('parser', help="Clear Parser Stats")
+
+# Clear ALL NU stats
+clear_nu_all_stats_parser = clear_nu_stats_subparsers.add_parser('all', help="Clear ALL Stats")
 
 # ============================================================================================================
 
