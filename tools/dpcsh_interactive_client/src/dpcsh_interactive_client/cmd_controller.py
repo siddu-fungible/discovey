@@ -392,13 +392,9 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_bam_stats(grep_regex=grep_regex)
 
-    def peek_all_erp_stats(self, args):
+    def peek_fwd_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='all', grep_regex=grep_regex)
-
-    def peek_global_erp_stats(self, args):
-        grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='global', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_fwd_stats(grep_regex=grep_regex)
 
     def peek_hnu_erp_stats(self, args):
         grep_regex = args.grep
@@ -408,9 +404,9 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_erp_stats(cmd_type='nu', grep_regex=grep_regex)
 
-    def peek_nuflex_erp_stats(self, args):
+    def peek_flex_erp_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='nuflex', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_erp_stats(cmd_type='flex', grep_regex=grep_regex)
 
     def peek_nu_parser_stats(self, args):
         grep_regex = args.grep
@@ -425,10 +421,6 @@ class CmdController(Cmd):
         queue_num = args.queue_num
         grep_regex = args.grep
         self._peek_cmd_obj.peek_wred_ecn_stats(port_num=port_num, queue_num=queue_num, grep_regex=grep_regex)
-
-    def peek_nu_all_sfg_stats(self, args):
-        grep_regex = args.grep
-        self._peek_cmd_obj.peek_sfg_stats(stats_type='all', grep_regex=grep_regex)
 
     def peek_nu_sfg_stats(self, args):
         grep_regex = args.grep
@@ -526,15 +518,13 @@ class CmdController(Cmd):
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_stats)
     peek_wro_stats_parser.set_defaults(func=peek_wro_stats)
     peek_bam_stats_parser.set_defaults(func=peek_bam_stats)
-    peek_erp_all_stats_parser.set_defaults(func=peek_all_erp_stats)
-    peek_erp_global_stats_parser.set_defaults(func=peek_global_erp_stats)
+    peek_fwd_stats_parser.set_defaults(func=peek_fwd_stats)
     peek_erp_hnu_stats_parser.set_defaults(func=peek_hnu_erp_stats)
     peek_erp_nu_stats_parser.set_defaults(func=peek_nu_erp_stats)
-    peek_erp_nu_flex_stats_parser.set_defaults(func=peek_nuflex_erp_stats)
+    peek_erp_flex_stats_parser.set_defaults(func=peek_flex_erp_stats)
     peek_parser_nu_stats_parser.set_defaults(func=peek_nu_parser_stats)
     peek_parser_hnu_stats_parser.set_defaults(func=peek_hnu_parser_stats)
     peek_wred_ecn_stats_parser.set_defaults(func=peek_nu_qos_wred_ecn_stats)
-    peek_all_sfg_stats_parser.set_defaults(func=peek_nu_all_sfg_stats)
     peek_nu_sfg_stats_parser.set_defaults(func=peek_nu_sfg_stats)
     peek_hnu_sfg_stats_parser.set_defaults(func=peek_hnu_sfg_stats)
 

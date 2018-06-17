@@ -1021,6 +1021,7 @@ class PeekCommands(object):
                         time.sleep(TIME_INTERVAL)
                     else:
                         print "Empty Result"
+                        time.sleep(TIME_INTERVAL)
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1177,24 +1178,23 @@ class PeekCommands(object):
         cmd = "stats/bam"
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
+    def peek_fwd_stats(self, grep_regex=None):
+        cmd = "stats/fwd/flex"
+        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+
     def peek_erp_stats(self, cmd_type, grep_regex=None):
-        if cmd_type == "global":
-            cmd = "stats/erp/global"
+        if cmd_type == "hnu":
+            cmd = "stats/erp/hnu/global"
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        elif cmd_type == "hnu":
-            cmd = "stats/erp/hnu"
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        elif cmd_type == "all":
-            self._display_all_erp_stats(grep_regex=grep_regex)
         elif cmd_type == 'nu':
-            cmd = "stats/erp/nu"
+            cmd = "stats/erp/nu/global"
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
         else:
             try:
                 prev_result_list = None
                 while True:
                     try:
-                        cmd = "stats/erp/nuflex"
+                        cmd = "stats/erp/flex"
                         result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                         if result_list:
                             if prev_result_list:
