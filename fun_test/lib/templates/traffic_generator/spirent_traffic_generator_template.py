@@ -208,6 +208,38 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return file_created
 
+    def start_default_capture_save_locally(self, port_handle, sleep_time=5):
+        result = {}
+        result['result'] = False
+        result['capture_obj'] = None
+        result['pcap_file_path'] = None
+        try:
+            capture_obj = Capture()
+            start_capture = self.stc_manager.start_capture_command(capture_obj=capture_obj, port_handle=port_handle)
+            fun_test.test_assert(start_capture, "Started capture on port %s" % port_handle)
+            result['capture_obj'] = capture_obj
+
+            fun_test.sleep("Letting captures to happen", seconds=sleep_time)
+
+            stop_capture = self.stc_manager.stop_capture_command(capture_obj._spirent_handle)
+            fun_test.test_assert(stop_capture, "Stopped capture on port %s" % port_handle)
+
+            file = fun_test.get_temp_file_name()
+            file_name = file + '.pcap'
+            file_path = SYSTEM_TMP_DIR
+            pcap_file_path = file_path + "/" + file_name
+
+            saved = self.stc_manager.save_capture_data_command(capture_handle=capture_obj._spirent_handle,
+                                                               file_name=file_name, file_name_path=file_path)
+            fun_test.test_assert(saved, "Saved pcap %s to local machine" % pcap_file_path)
+
+            fun_test.simple_assert(os.path.exists(pcap_file_path), message="Check pcap file exists locally")
+            result['pcap_file_path'] = pcap_file_path
+            result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
 
 class StreamBlock(object):
     ENDPOINT_MAPPING_ONE_TO_ONE = "ONE_TO_ONE"
