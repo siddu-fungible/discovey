@@ -21,6 +21,7 @@ qemu_tgz_url=
 modules_tgz_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
 functrlp_tgz_url=http://$dochub_fungible_local/doc/jenkins/funcontrolplane/latest/functrlp.tgz
 sdk_url=
+kernel_url=
     
 QEMU_TGZ_NAME=qemu.tgz
 DPCSH_TGZ_NAME=dpcsh.tgz
@@ -28,8 +29,9 @@ FUNOS_TGZ_NAME=funos.posix-base.tgz
 DPCSH_NAME=dpcsh
 FUNOS_POSIX_NAME=funos-posix
 QEMU_DIRECTORY=qemu
+KERNEL_NAME=bzImage
 
-while getopts d:f:q:m:c:s:h: name
+while getopts d:f:q:m:c:s:h:k: name
 do
     case $name in
     d)    dpcsh_tgz_url="$OPTARG";;
@@ -39,10 +41,15 @@ do
     c)    functrlp_tgz_url="$OPTARG";;
     h)    dochub_fungible_local="$OPTARG";;
     s)    sdk_url="$OPTARG";;
-    ?)    printf "Usage: %s: [-d dpcsh tgz url] [-f funos tgz url] [-q qemu tgz url] [-m modules tgz url] [-c functrlp tgz url] [-h dochub ip] [-s sdk url]\n" $0
+    k)    kernel_url="$OPTARG";;
+    ?)    printf "Usage: %s: [-d dpcsh tgz url] [-f funos tgz url] [-q qemu tgz url] [-m modules tgz url] [-c functrlp tgz url] [-h dochub ip] [-s sdk url] [-k kernel url]\n" $0
           exit 2;;
     esac
 done
+
+if [ -z "$kernel_url" ]; then
+	kernel_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/latest/x86_64/${KERNEL_NAME}
+fi
 
 if [ -z "$sdk_url" ]; then
     sdk_url=http://$dochub_fungible_local/doc/jenkins/funsdk/latest/Linux
@@ -99,8 +106,17 @@ if [ ! -z "$qemu_tgz_url" ]; then
     QEMU_NAME=qemu-system-x86_64
     chmod 777 $qemu_bin_directory/$QEMU_NAME
     export PATH=$PATH:$qemu_bin_directory
-
 fi
+
+if [ ! -z "$kernel_url" ]; then
+	printf "Kernel URL: $kernel_url\n"
+	echo "-------------------------"
+	echo "Pulling the latest Kernel"
+	echo "-------------------------"
+	curl_fetch $kernel_url
+	mv $KERNEL_NAME ${QEMU_DIRECTORY}/
+fi
+
 if [ ! -z "$modules_tgz_url" ]; then
     printf "Modules tgz url: $modules_tgz_url\n"
     curl_fetch $modules_tgz_url
