@@ -52,10 +52,11 @@ psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx
 
 
 def __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_value):
+    result = None
     output = result_stats[0]
     for key in output.iterkeys():
-        if len(key.split('_')) > 4:
-            if stat_type == key.split('_')[4] and class_value == key.split('_')[5]:
+        if len(key.split('_')) > 5:
+            if stat_type == key.split('_')[4] and str(class_value) == key.split('_')[5]:
                 if tx and 'TX' == key.split('_')[3]:
                     result = output[key]
                     break
@@ -109,7 +110,7 @@ def get_fpg_port_value(dut_port_number):
         return result
 
 
-def get_psw_global_stats_values(psw_stats_output = {}, key_list=[]):
+def get_psw_global_stats_values(psw_stats_output={}, key_list=[]):
     result = {}
     try:
         for key in key_list:
