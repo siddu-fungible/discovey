@@ -4,6 +4,7 @@ from lib.templates.traffic_generator.traffic_generator_template import TrafficGe
 from lib.host.spirent_manager import SpirentManager
 import json
 from collections import OrderedDict
+import os
 
 
 class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
