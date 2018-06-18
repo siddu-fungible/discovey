@@ -511,10 +511,11 @@ class QosCommands(object):
                 table_obj = PrettyTable(["Scheduler Type", "Config"])
                 for key in result:
                     inner_table_obj = PrettyTable(['Config', 'Value'])
+                    inner_table_obj.align = 'l'
                     config = result[key]
                     config['port_num'] = port_num
                     config['queue'] = queue_num
-                    for _key in config:
+                    for _key in sorted(config):
                         inner_table_obj.add_row([_key, config[_key]])
                     table_obj.add_row([key, inner_table_obj])
                 print table_obj
