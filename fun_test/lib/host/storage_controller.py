@@ -32,7 +32,7 @@ class StorageController(DpcshClient):
                                   "remote_ip": remote_ip}}
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
 
-    def volume_attach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=4, command_duration=3):
+    def volume_attach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=2, command_duration=3):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
