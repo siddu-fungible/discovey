@@ -15,6 +15,7 @@ import signal
 from web.fun_test.web_interface import get_homepage_url
 import pexpect
 from uuid import getnode as get_mac
+from uuid import uuid4
 import getpass
 from threading import Thread
 from inspect import getargspec
@@ -855,6 +856,17 @@ class FunTest:
             self.critical(critical_str)
 
         return transfer_complete
+
+    def get_temp_file_name(self):
+        return str(uuid4())
+
+    def get_temp_file_path(self, file_name):
+        full_path = SYSTEM_TMP_DIR + "/" + file_name
+        return full_path
+
+    def remove_file(self, file_path):
+        os.remove(file_path)
+        return True
 
 
 fun_test = FunTest()
