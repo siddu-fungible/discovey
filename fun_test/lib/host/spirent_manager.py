@@ -322,7 +322,7 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type,
+    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type='0800',
                               frame_type=ETHERNETII_FRAME):
         result = False
         try:
@@ -920,22 +920,28 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def start_capture_command(self, capture_handle, real_time_decoder_location="", real_time_host_name='127.0.0.1',
+    def start_capture_command(self, capture_obj, port_handle, real_time_decoder_location="", real_time_host_name='127.0.0.1',
                               real_time_tcp_port='2006'):
-        result = None
+        result = False
         try:
-            self.stc.perform("CaptureStartCommand", CaptureProxyId=capture_handle,
-                             RealTimeDecoderLocation=real_time_decoder_location, RealTimeHostName=real_time_host_name,
-                             RealTimeTcpPort=real_time_tcp_port)
+            output = self.configure_capture(capture_obj, port_handle)
+            fun_test.simple_assert(output, "Configuring capture on port %s" % port_handle)
+            fun_test.log("Starting capture start command")
+            output = self.stc.perform("CaptureStartCommand", CaptureProxyId=capture_obj._spirent_handle,
+                                      RealTimeDecoderLocation=real_time_decoder_location,
+                                      RealTimeHostName=real_time_host_name,
+                                      RealTimeTcpPort=real_time_tcp_port)
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Start capture")
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
     def stop_capture_command(self, capture_handle):
-        result = None
+        result = False
         try:
-            self.stc.perform("CaptureStopCommand", CaptureProxyId=capture_handle)
+            output = self.stc.perform("CaptureStopCommand", CaptureProxyId=capture_handle)
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Stop capture")
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -944,12 +950,14 @@ class SpirentManager(object):
     def save_capture_data_command(self, capture_handle, file_name, file_name_path, append_suffix_to_file_name=False,
                                   end_frame_index='0', file_name_format='PCAP', start_frame_index='0'):
 
-        result = None
+        result = False
         try:
-            self.stc.perform("CaptureDataSaveCommand", CaptureProxyId=capture_handle,
-                             AppendSuffixToFileName=append_suffix_to_file_name, EndFrameIndex=end_frame_index,
-                             FileName=file_name, FileNamePath=file_name_path, FileNameFormat=file_name_format,
-                             StartFrameIndex=start_frame_index)
+            output = self.stc.perform("CaptureDataSaveCommand", CaptureProxyId=capture_handle,
+                                      AppendSuffixToFileName=append_suffix_to_file_name, EndFrameIndex=end_frame_index,
+                                      FileName=file_name, FileNamePath=file_name_path, FileNameFormat=file_name_format,
+                                      StartFrameIndex=start_frame_index)
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Saved capture %s at path %s" %
+                                   (file_name, file_name_path))
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
