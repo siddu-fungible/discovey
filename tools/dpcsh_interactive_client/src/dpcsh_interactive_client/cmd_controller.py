@@ -15,6 +15,7 @@ class CmdController(Cmd):
         self._sys_cmd_obj = SystemCommands(dpc_client=self.dpc_client)
         self._qos_cmd_obj = QosCommands(dpc_client=self.dpc_client)
         self._peek_cmd_obj = PeekCommands(dpc_client=self.dpc_client)
+        self._clear_cmd_obj = NuClearCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -39,9 +40,6 @@ class CmdController(Cmd):
 
     def disable_port(self, args):
         self._port_cmd_obj.enable_disable_port(port_num=args.port_num, shape=args.shape, enable=False)
-
-    def clear_port_stats(self, args):
-        self._port_cmd_obj.clear_port_stats(port_num=args.port_num, shape=args.shape)
 
     def enable_port_link_pause(self, args):
         self._port_cmd_obj.enable_disable_link_pause(port_num=args.port_num, shape=args.shape)
@@ -392,13 +390,9 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_bam_stats(grep_regex=grep_regex)
 
-    def peek_all_erp_stats(self, args):
+    def peek_fwd_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='all', grep_regex=grep_regex)
-
-    def peek_global_erp_stats(self, args):
-        grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='global', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_fwd_stats(grep_regex=grep_regex)
 
     def peek_hnu_erp_stats(self, args):
         grep_regex = args.grep
@@ -408,9 +402,9 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_erp_stats(cmd_type='nu', grep_regex=grep_regex)
 
-    def peek_nuflex_erp_stats(self, args):
+    def peek_flex_erp_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='nuflex', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_erp_stats(cmd_type='flex', grep_regex=grep_regex)
 
     def peek_nu_parser_stats(self, args):
         grep_regex = args.grep
@@ -426,10 +420,6 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_wred_ecn_stats(port_num=port_num, queue_num=queue_num, grep_regex=grep_regex)
 
-    def peek_nu_all_sfg_stats(self, args):
-        grep_regex = args.grep
-        self._peek_cmd_obj.peek_sfg_stats(stats_type='all', grep_regex=grep_regex)
-
     def peek_nu_sfg_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_sfg_stats(stats_type='nu', grep_regex=grep_regex)
@@ -438,6 +428,21 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_sfg_stats(stats_type='hnu', grep_regex=grep_regex)
 
+    def clear_nu_port_stats(self, args):
+        self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
+
+    def clear_nu_fwd_stats(self, args):
+        self._clear_cmd_obj.clear_nu_fwd_stats()
+
+    def clear_nu_erp_stats(self, args):
+        self._clear_cmd_obj.clear_nu_erp_stats()
+
+    def clear_nu_parser_stats(self, args):
+        self._clear_cmd_obj.clear_nu_parser_stats()
+
+    def clear_nu_all_stats(self, args):
+        self._clear_cmd_obj.clear_nu_all_stats()
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -445,7 +450,6 @@ class CmdController(Cmd):
     get_port_mtu_parser.set_defaults(func=get_port_mtu)
     set_port_enable_parser.set_defaults(func=enable_port)
     set_port_disable_parser.set_defaults(func=disable_port)
-    clear_port_stats_parser.set_defaults(func=clear_port_stats)
     set_port_pause_enable_parser.set_defaults(func=enable_port_link_pause)
     set_port_pause_disable_parser.set_defaults(func=disable_port_link_pause)
     set_port_pause_tx_enable_parser.set_defaults(func=enable_port_tx_link_pause)
@@ -526,17 +530,22 @@ class CmdController(Cmd):
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_stats)
     peek_wro_stats_parser.set_defaults(func=peek_wro_stats)
     peek_bam_stats_parser.set_defaults(func=peek_bam_stats)
-    peek_erp_all_stats_parser.set_defaults(func=peek_all_erp_stats)
-    peek_erp_global_stats_parser.set_defaults(func=peek_global_erp_stats)
+    peek_fwd_stats_parser.set_defaults(func=peek_fwd_stats)
     peek_erp_hnu_stats_parser.set_defaults(func=peek_hnu_erp_stats)
     peek_erp_nu_stats_parser.set_defaults(func=peek_nu_erp_stats)
-    peek_erp_nu_flex_stats_parser.set_defaults(func=peek_nuflex_erp_stats)
+    peek_erp_flex_stats_parser.set_defaults(func=peek_flex_erp_stats)
     peek_parser_nu_stats_parser.set_defaults(func=peek_nu_parser_stats)
     peek_parser_hnu_stats_parser.set_defaults(func=peek_hnu_parser_stats)
     peek_wred_ecn_stats_parser.set_defaults(func=peek_nu_qos_wred_ecn_stats)
-    peek_all_sfg_stats_parser.set_defaults(func=peek_nu_all_sfg_stats)
     peek_nu_sfg_stats_parser.set_defaults(func=peek_nu_sfg_stats)
     peek_hnu_sfg_stats_parser.set_defaults(func=peek_hnu_sfg_stats)
+
+    # -------------- Clear Command Handlers ----------------
+    clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
+    clear_nu_fwd_stats_parser.set_defaults(func=clear_nu_fwd_stats)
+    clear_nu_erp_stats_parser.set_defaults(func=clear_nu_erp_stats)
+    clear_nu_parser_stats_parser.set_defaults(func=clear_nu_parser_stats)
+    clear_nu_all_stats_parser.set_defaults(func=clear_nu_all_stats)   
 
     @with_argparser(base_set_parser)
     def do_set(self, args):

@@ -35,14 +35,6 @@ class PortCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def clear_port_stats(self, port_num, shape):
-        try:
-            cmd_arg_dict = {"portnum": port_num, "shape": shape}
-            result = self.dpc_client.execute(verb="port", arg_list=["clearstats", cmd_arg_dict])
-            print result
-        except Exception as ex:
-            print "ERROR: %s" % str(ex)
-
     def enable_disable_link_pause(self, port_num, shape, enable=True):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
@@ -519,10 +511,11 @@ class QosCommands(object):
                 table_obj = PrettyTable(["Scheduler Type", "Config"])
                 for key in result:
                     inner_table_obj = PrettyTable(['Config', 'Value'])
+                    inner_table_obj.align = 'l'
                     config = result[key]
                     config['port_num'] = port_num
                     config['queue'] = queue_num
-                    for _key in config:
+                    for _key in sorted(config):
                         inner_table_obj.add_row([_key, config[_key]])
                     table_obj.add_row([key, inner_table_obj])
                 print table_obj
@@ -670,6 +663,50 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
+class NuClearCommands(object):
+
+    def __init__(self, dpc_client):
+        self.dpc_client = dpc_client
+
+    def clear_nu_port_stats(self, port_num, shape):
+        try:
+            cmd_arg_dict = {"portnum": port_num, "shape": shape}
+            result = self.dpc_client.execute(verb="port", arg_list=["clearstats", cmd_arg_dict])
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_fwd_stats(self):
+        try:
+            cmd = ["clear", "fwd"] 
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_erp_stats(self):
+        try:
+            cmd = ["clear", "erp"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_parser_stats(self):
+        try:
+            cmd = ["clear", "prsr"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_all_stats(self):
+        try:
+            cmd = ["clear"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
 
 class PeekCommands(object):
 
@@ -1021,6 +1058,7 @@ class PeekCommands(object):
                         time.sleep(TIME_INTERVAL)
                     else:
                         print "Empty Result"
+                        time.sleep(TIME_INTERVAL)
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1177,24 +1215,23 @@ class PeekCommands(object):
         cmd = "stats/bam"
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
+    def peek_fwd_stats(self, grep_regex=None):
+        cmd = "stats/fwd/flex"
+        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+
     def peek_erp_stats(self, cmd_type, grep_regex=None):
-        if cmd_type == "global":
-            cmd = "stats/erp/global"
+        if cmd_type == "hnu":
+            cmd = "stats/erp/hnu/global"
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        elif cmd_type == "hnu":
-            cmd = "stats/erp/hnu"
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        elif cmd_type == "all":
-            self._display_all_erp_stats(grep_regex=grep_regex)
         elif cmd_type == 'nu':
-            cmd = "stats/erp/nu"
+            cmd = "stats/erp/nu/global"
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
         else:
             try:
                 prev_result_list = None
                 while True:
                     try:
-                        cmd = "stats/erp/nuflex"
+                        cmd = "stats/erp/flex"
                         result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                         if result_list:
                             if prev_result_list:
