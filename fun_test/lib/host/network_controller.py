@@ -894,14 +894,18 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_psw_port_stats(self, port_num, queue_num):
+    def peek_psw_port_stats(self, port_num, queue_num=None):
         stats = None
         try:
-            stats_cmd = "stats/psw/port/[%d]/q_%d" % (port_num, queue_num)
-            fun_test.debug("Getting PSW stats for port %d for queue %d" % (port_num, queue_num))
+            if queue_num:
+                stats_cmd = "stats/psw/port/[%d]/q_%s" % (port_num, queue_num)
+                fun_test.debug("Getting PSW stats for port %d for queue %s" % (port_num, queue_num))
+            else:
+                stats_cmd = "stats/psw/port/[%d]" % port_num
+                fun_test.debug("Getting PSW stats for port %d" % port_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d for queue %d" %
-                                                                        (port_num, queue_num))
+            fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
+                                                                        (port_num))
             fun_test.debug("PSW port %d stats: %s" % (port_num, result['data']))
             stats = result['data']
         except Exception as ex:
@@ -1033,7 +1037,7 @@ class NetworkController(DpcshClient):
                 value = 1
             else:
                 value = 0
-            qos_cmd = ['set', {"enable": value}]
+            qos_cmd = ['set', 'pfc', {"enable": value}]
             result = self.json_execute(verb=self.VERB_TYPE_QOS, data=qos_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Enable qos pfc")
             fun_test.debug("Output: %s" % result['data'])
