@@ -20,13 +20,14 @@ class NetworkController(DpcshClient):
         self.verbose = verbose
         # self._echo_hello()
 
-    def _echo_hello(self):
+    def echo_hello(self):
+        output = None
         try:
             cmd = "Hello"
-            self.json_execute(verb="echo", data=cmd)
+            output = self.json_execute(verb="echo", data=[cmd])
         except Exception as ex:
             fun_test.critical(str(ex))
-        return True
+        return output
 
     def enable_port(self, port_num, shape=0):
         port_enabled = False
