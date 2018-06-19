@@ -1280,35 +1280,35 @@ class PeekCommands(object):
                     master_table_obj = PrettyTable()
                     master_table_obj.align = 'l'
                     master_table_obj.border = False
-                    master_table_obj.header = False
-                    if result:
+                    global_result = result['global']
+                    if global_result:
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            for key in sorted(result):
+                            for key in sorted(global_result):
                                 table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                                 table_obj.align = 'l'
-                                for _key in sorted(result[key]):
+                                for _key in sorted(global_result[key]):
                                     if grep_regex:
                                         if re.search(grep_regex, _key, re.IGNORECASE):
-                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                            table_obj.add_row([_key, global_result[key][_key], diff_result[key][_key]])
                                     else:
-                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
+                                        table_obj.add_row([_key, global_result[key][_key], diff_result[key][_key]])
+                                master_table_obj.add_column(key, [table_obj])
                         else:
-                            for key in sorted(result):
+                            for key in sorted(global_result):
                                 table_obj = PrettyTable(['Field Name', 'Counter'])
                                 table_obj.align = 'l'
-                                for _key in sorted(result[key]):
+                                for _key in sorted(global_result[key]):
                                     if grep_regex:
                                         if re.search(grep_regex, _key, re.IGNORECASE):
-                                            table_obj.add_row([_key, result[key][_key]])
+                                            table_obj.add_row([_key, global_result[key][_key]])
                                     else:
-                                        table_obj.add_row([_key, result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
+                                        table_obj.add_row([_key, global_result[key][_key]])
+                                master_table_obj.add_column(key, [table_obj])
                     else:
                         print "Empty Result"
 
-                    prev_result = result
+                    prev_result = global_result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
                     time.sleep(TIME_INTERVAL)
