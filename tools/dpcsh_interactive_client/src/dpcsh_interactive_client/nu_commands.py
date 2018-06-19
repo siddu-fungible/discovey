@@ -1280,10 +1280,11 @@ class PeekCommands(object):
                     master_table_obj = PrettyTable()
                     master_table_obj.align = 'l'
                     master_table_obj.border = False
+                    master_table_obj.header = False
                     global_result = result['global']
                     if global_result:
                         if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            diff_result = self._get_difference(result=global_result, prev_result=prev_result)
                             for key in sorted(global_result):
                                 table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                                 table_obj.align = 'l'
