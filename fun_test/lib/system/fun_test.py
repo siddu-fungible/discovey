@@ -804,18 +804,28 @@ class FunTest:
         # target_port, source_file_path, target_username, target_ip, target_file_path)
         the_password = source_password
         if target_ip:
-            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive,
+            scp_command = "scp {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive,
                                                                                             target_port,
                                                                                             source_file_path,
                                                                                             target_username,
                                                                                             target_ip,
                                                                                             target_file_path)
-            target_password = the_password
+            the_password = target_password
         elif source_ip:
-            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(recursive, source_port,
+            scp_command = "scp {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(recursive, source_port,
                                                                                             source_username,
                                                                                             source_ip,
                                                                                             source_file_path,
+                                                                                            target_file_path)
+
+        if target_ip and source_ip:
+            scp_command = "scp {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}@{}:{}".format(recursive,
+                                                                                            source_port,
+                                                                                            source_username,
+                                                                                            source_ip,
+                                                                                            source_file_path,
+                                                                                            target_username,
+                                                                                            target_ip,
                                                                                             target_file_path)
 
         handle = pexpect.spawn(scp_command, env={"TERM": "dumb"}, maxread=4096)
@@ -831,6 +841,7 @@ class FunTest:
         max_loop_count = 10
 
         attempt = 0
+        source_password_sent = False
         try:
             while attempt < max_retry_count and not transfer_complete:
                 current_loop_count = 0
@@ -838,7 +849,13 @@ class FunTest:
                     try:
                         i = handle.expect(expects.values(), timeout=timeout)
                         if i == 0:
-                            fun_test.debug("Sending: %s" % target_password)
+                            if target_ip and source_ip:  # Remote to remote scp
+                                if not source_password_sent:
+                                    the_password = source_password
+                                    source_password_sent = True
+                                else:
+                                    the_password = target_password
+                            fun_test.debug("Sending: %s" % the_password)
                             handle.sendline(the_password)
                             current_loop_count += 1
                         if i == 2:
