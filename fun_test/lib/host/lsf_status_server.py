@@ -41,6 +41,10 @@ class LsfStatusServer:
         return self._get(url=url)
 
     def add_palladium_job_info(self, job_info):
+        try:
+            self.get_job_by_id(job_id=job_info["job_id"])
+        except:
+            pass
         result = {}
         if "completion_date" in job_info:
             completion_date = "20" + job_info["completion_date"]
