@@ -1293,7 +1293,7 @@ class PeekCommands(object):
                                             table_obj.add_row([_key, global_result[key][_key], diff_result[key][_key]])
                                     else:
                                         table_obj.add_row([_key, global_result[key][_key], diff_result[key][_key]])
-                                master_table_obj.add_column(key, [table_obj])
+                                master_table_obj.add_row([key, table_obj])
                         else:
                             for key in sorted(global_result):
                                 table_obj = PrettyTable(['Field Name', 'Counter'])
@@ -1304,7 +1304,7 @@ class PeekCommands(object):
                                             table_obj.add_row([_key, global_result[key][_key]])
                                     else:
                                         table_obj.add_row([_key, global_result[key][_key]])
-                                master_table_obj.add_column(key, [table_obj])
+                                master_table_obj.add_row([key, table_obj])
                     else:
                         print "Empty Result"
 
