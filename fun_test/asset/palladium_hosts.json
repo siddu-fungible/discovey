@@ -1,0 +1,12 @@
+[
+  {
+    "name": "palladium_host1",
+    "type": "PALLADIUM_NETWORKING_HOST",
+    "boot_up_server_ip": "server101",
+    "model": "Networking1",
+    "design": "rel_052518_svn61241",
+    "dpcsh_tcp_proxy_ip": "server120",
+    "dpcsh_tcp_proxy_port": 40221,
+    "dpcsh_usb": "ttyUSB6"
+  }
+]
