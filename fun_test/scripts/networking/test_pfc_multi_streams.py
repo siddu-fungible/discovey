@@ -3,6 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header, Capture
 from lib.utilities.pcap_parser import PcapParser
 from lib.host.network_controller import NetworkController
+from nu_config_manager import nu_config_obj
 from helper import *
 import re
 
@@ -51,6 +52,11 @@ priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_o
                  'priority_15': {'priority_val': 15, 'ls_octet': '00000000', 'ms_octet': '10000000',
                                  'quanta_val': {'0': '0' * multiplyer, 'F': 'F' * multiplyer}, 'dscp_high': '1', 'dscp_low': '7'}}
 
+priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_octet': '00000000',
+                                'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '0'},
+                 'priority_1': {'priority_val': 1, 'ls_octet': '00000010', 'ms_octet': '00000000',
+                                'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '1'}}
+
 
 priority_list = [val['priority_val'] for val in priority_dict.itervalues()]
 
@@ -75,17 +81,27 @@ def get_key_to_change(class_dict, priority_val):
     return result
 
 
-def find_spirent_rx_counters_stopped(streamblock_handle_list, template_obj, subscribe_result):
+def find_spirent_rx_counters_stopped(template_obj, subscribe_result, streamblock_handle_list=None, pfc_stream=False,
+                                     port_handle=None):
     result_dict = {}
     value_dict = {}
     for i in range(2):
-        value_dict[i] = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_result,
-                                                                           streamblock_handle_list=streamblock_handle_list,
-                                                                           rx_result=True)
+        if not pfc_stream:
+            value_dict[i] = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_result,
+                                                                               streamblock_handle_list=streamblock_handle_list,
+                                                                               rx_result=True)
+        else:
+            value_dict[i] = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_result,
+                                                                               port_handle_list=[port_handle],
+                                                                               analyzer_result=True)
     for stream in streamblock_handle_list:
         result_dict[stream] = None
-        old_rx_counter = int(value_dict[0][stream]['rx_result']['FrameCount'])
-        new_rx_counter = int(value_dict[1][stream]['rx_result']['FrameCount'])
+        if not pfc_stream:
+            old_rx_counter = int(value_dict[0][stream]['rx_result']['FrameCount'])
+            new_rx_counter = int(value_dict[1][stream]['rx_result']['FrameCount'])
+        else:
+            old_rx_counter = int(value_dict[0][port_handle]['analyzer_result']['TotalFrameCount'])
+            new_rx_counter = int(value_dict[1][port_handle]['analyzer_result']['TotalFrameCount'])
 
         fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (stream, old_rx_counter,
                                                                                      new_rx_counter))
@@ -97,9 +113,12 @@ def find_spirent_rx_counters_stopped(streamblock_handle_list, template_obj, subs
     return result_dict
 
 
-def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port):
+def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port, tx=False):
     output_dict = {}
     try:
+        stat_type = CBFC_PAUSE_FRAMES_RECEIVED
+        if tx:
+            stat_type = CBFC_PAUSE_FRAMES_TRANSMITTED
         out = network_controller_obj.clear_port_stats(dut_port)
         fun_test.simple_assert(out, "Clear port stats on dut port %s" % dut_port)
         fun_test.sleep('Stats clear', seconds=2)
@@ -108,8 +127,8 @@ def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port):
 
         for priority in priority_list:
             output_dict[priority] = False
-            value = get_dut_output_stats_value(stats, stat_type=CBFC_PAUSE_FRAMES_RECEIVED,
-                                               tx=False, class_value=priority)
+            value = get_dut_output_stats_value(stats, stat_type=stat_type,
+                                               tx=tx, class_value=priority)
             if value:
                 fun_test.log("Value seen for priority %s is %s" % (priority, value))
                 output_dict[priority] = True
@@ -198,20 +217,27 @@ class SpirentSetup(FunTestScript):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
             dut_port_1
 
+        dut_type = fun_test.get_local_setting(setting="dut_type")
+        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type)
+
+        chassis_type = fun_test.get_local_setting(setting="chassis_type")
+        spirent_config = nu_config_obj.read_traffic_generator_config()
+
         good_load = 100
         pfc_load = 10
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_multi_stream")
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_multi_stream", spirent_config=spirent_config,
+                                                      chassis_type=chassis_type)
         fun_test.test_assert(template_obj, "Create template object")
 
-        destination_mac1 = template_obj.stc_manager.dut_config['destination_mac1']
-        destination_ip1 = template_obj.stc_manager.dut_config['destination_ip1']
-        dut_port_1 = template_obj.stc_manager.dut_config['port_nos'][0]
-        dut_port_2 = template_obj.stc_manager.dut_config['port_nos'][1]
+        destination_mac1 = spirent_config['l2_config']['destination_mac']
+        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        dut_port_1 = dut_config['ports'][0]
+        dut_port_2 = dut_config['ports'][1]
 
         # Create network controller object
-        dpcsh_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
-        dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
+        dpcsh_server_ip = dut_config['dpcsh_tcp_proxy_ip']
+        dpcsh_server_port = int(dut_config['dpcsh_tcp_proxy_port'])
         network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
         set_qos_ingress = network_controller_obj.set_qos_ingress_priority_group(port_num=dut_port_1,
@@ -301,37 +327,36 @@ class SpirentSetup(FunTestScript):
 
             else:
                 for key, val in priority_dict.iteritems():
-                    if val['priority_val'] == 0:
-                        # Create stream on port 2
-                        pfc_streamblock_objs[key] = {}
-                        create_streamblock_2 = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=pfc_load,
-                                                           fixed_frame_length=64, insert_signature=False)
-                        streamblock_2 = template_obj.configure_stream_block(create_streamblock_2, port_handle=port_2)
-                        fun_test.test_assert(streamblock_2, message="Creating pfc streamblock with priority %s on port "
-                                                                    "%s" % (key, port_2))
+                    # Create stream on port 2
+                    pfc_streamblock_objs[key] = {}
+                    create_streamblock_2 = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=pfc_load,
+                                                       fixed_frame_length=64, insert_signature=False)
+                    streamblock_2 = template_obj.configure_stream_block(create_streamblock_2, port_handle=port_2)
+                    fun_test.test_assert(streamblock_2, message="Creating pfc streamblock with priority %s on port "
+                                                                "%s" % (key, port_2))
 
-                        if val['priority_val'] >= 8:
-                            reserved = val['quanta_val']['F']
-                        else:
-                            reserved = ''
-                        out = template_obj.configure_priority_flow_control_header(create_streamblock_2,
-                                                                                  class_enable_vector=True,
-                                                                                  time0=default_quanta,
-                                                                                  time1=default_quanta,
-                                                                                  time3=default_quanta,
-                                                                                  time4=default_quanta,
-                                                                                  time5=default_quanta,
-                                                                                  time6=default_quanta,
-                                                                                  time2=default_quanta,
-                                                                                  time7=default_quanta,
-                                                                                  ls_octet=val['ls_octet'],
-                                                                                  ms_octet=val['ms_octet'],
-                                                                                  reserved=reserved)
-                        fun_test.test_assert(out['result'], message="Added frame stack")
-                        pfc_streamblock_objs[key]['streamblock_obj'] = create_streamblock_2
-                        pfc_streamblock_objs[key]['pfc_header_obj'] = out['pfc_header_obj']
-                        pfc_stream_obj_list.append(create_streamblock_2)
-                        pfc_stream_list.append(create_streamblock_2._spirent_handle)
+                    if val['priority_val'] >= 8:
+                        reserved = val['quanta_val']['F']
+                    else:
+                        reserved = ''
+                    out = template_obj.configure_priority_flow_control_header(create_streamblock_2,
+                                                                              class_enable_vector=True,
+                                                                              time0=default_quanta,
+                                                                              time1=default_quanta,
+                                                                              time3=default_quanta,
+                                                                              time4=default_quanta,
+                                                                              time5=default_quanta,
+                                                                              time6=default_quanta,
+                                                                              time2=default_quanta,
+                                                                              time7=default_quanta,
+                                                                              ls_octet=val['ls_octet'],
+                                                                              ms_octet=val['ms_octet'],
+                                                                              reserved=reserved)
+                    fun_test.test_assert(out['result'], message="Added frame stack")
+                    pfc_streamblock_objs[key]['streamblock_obj'] = create_streamblock_2
+                    pfc_streamblock_objs[key]['pfc_header_obj'] = out['pfc_header_obj']
+                    pfc_stream_obj_list.append(create_streamblock_2)
+                    pfc_stream_list.append(create_streamblock_2._spirent_handle)
         # Applying configuration
         apply = template_obj.stc_manager.apply_configuration()
         fun_test.test_assert(apply, "Applying Generator config")
@@ -350,7 +375,6 @@ class SpirentSetup(FunTestScript):
         # Cleanup spirent session
         fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
 
-        # TODO: Disable pfc on both ports on DUT
         disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
         disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2)
@@ -358,8 +382,17 @@ class SpirentSetup(FunTestScript):
 
 
 class TestCase1(FunTestCase):
-    current_priority_value = 0
+    final_quanta_value = 0
+    current_priority_value = 1
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time1=str(self.final_quanta_value))
+        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+
+        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time1=default_quanta)
+        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
 
     def describe(self):
         self.set_test_details(id=1,
@@ -409,12 +442,16 @@ class TestCase1(FunTestCase):
         for key in subscribe_results.iterkeys():
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
+        if self.pcap_file_path_1:
+            fun_test.remove_file(file_path=self.pcap_file_path_1)
+
     def run(self):
-        final_quanta_value = 0
         sleep_time = 5
         result_dict = {}
         spirent_rx_counters = 'spirent_rx_counters'
-        fpg_cbfcpause_counters = 'fpg_cbfcpause_counters'
+        spirent_pfc_rx_counter = 'spirent_pfc_rx_counter'
+        fpg_cbfcpause_counters_tx = 'fpg_cbfcpause_counters_tx'
+        fpg_cbfcpause_counters_rx = 'fpg_cbfcpause_counters_rx'
         psw_port_pg_counters = 'psw_port_pg_counters'
         psw_port_q_counters = 'psw_port_q_counters'
         dequeue = 'dequeue'
@@ -442,14 +479,23 @@ class TestCase1(FunTestCase):
 
         fun_test.sleep("Letting pfc stream get started", seconds=sleep_time)
 
-        fun_test.log("Fetch spirent rx counter results")
+        fun_test.log("Fetch spirent rx counter results for all good streams")
         result_dict[self.current_priority_value][spirent_rx_counters] = \
             find_spirent_rx_counters_stopped(streamblock_handle_list=good_stream_list, template_obj=template_obj,
                                              subscribe_result=subscribe_results)
 
-        fun_test.log("Fetch fpg stats")
-        result_dict[self.current_priority_value][fpg_cbfcpause_counters] = \
+        result_dict[self.current_priority_value][spirent_pfc_rx_counter] = \
+            find_spirent_rx_counters_stopped(port_handle=port_1,
+                                             template_obj=template_obj,
+                                             subscribe_result=subscribe_results)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
+        result_dict[self.current_priority_value][fpg_cbfcpause_counters_tx] = \
             get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
+        result_dict[self.current_priority_value][fpg_cbfcpause_counters_rx] = \
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
 
         fun_test.log("Get psw port group enqueue dequeue counters")
         result_dict[self.current_priority_value][psw_port_pg_counters] = \
@@ -463,7 +509,8 @@ class TestCase1(FunTestCase):
 
         # ASSERTS
         spirent_counters_dict = result_dict[self.current_priority_value][spirent_rx_counters]
-        fpg_counters_dict = result_dict[self.current_priority_value][fpg_cbfcpause_counters]
+        fpg_counters_dict_2 = result_dict[self.current_priority_value][fpg_cbfcpause_counters_tx]
+        fpg_counters_dict_1 = result_dict[self.current_priority_value][fpg_cbfcpause_counters_rx]
         pg_queue_counters_dict = result_dict[self.current_priority_value][psw_port_pg_counters]
         q_queue_counters_dict = result_dict[self.current_priority_value][psw_port_q_counters]
 
@@ -481,12 +528,24 @@ class TestCase1(FunTestCase):
                                              "for stream %s when pfc is started for priority %s" %
                                              (stream, self.current_priority_value))
 
+        # Check spirent pfc rx is not stopped
+        fun_test.test_assert(not result_dict[self.current_priority_value][spirent_pfc_rx_counter],
+                             message="Ensure spirent port %s is getting pfc frames from dut port %s" % (port_1,
+                                                                                                        dut_port_1))
+
         for priority in priority_list:
             if self.current_priority_value == priority:
-                fun_test.test_assert(fpg_counters_dict[priority], message="Ensure fpg mac stats seen for "
+                fun_test.test_assert(fpg_counters_dict_2[priority], message="Ensure fpg mac stats seen for "
                                                                           "queue with priority %s when pfc "
-                                                                          "stream for %s was sent"
-                                                                          % (priority, self.current_priority_value))
+                                                                          "stream for %s was received by dut port %s"
+                                                                          % (priority, self.current_priority_value, 
+                                                                             dut_port_2))
+
+                fun_test.test_assert(fpg_counters_dict_1[priority], message="Ensure fpg mac stats seen for "
+                                                                            "queue with priority %s when pfc "
+                                                                            "stream for %s was sent from dut port %s"
+                                                                            % (priority, self.current_priority_value, 
+                                                                               dut_port_1))
 
                 fun_test.test_assert(not pg_queue_counters_dict[priority][dequeue],
                                      message="Ensure dequeue is not happening for queue q_%s when pfc with "
@@ -505,9 +564,17 @@ class TestCase1(FunTestCase):
                                              "priority %s was sent" % (priority, self.current_priority_value))
 
             else:
-                fun_test.test_assert(not fpg_counters_dict[priority], message="Ensure counter values of queue %s "
-                                                                              "were not seen when pfc with priority"
-                                                                              " %s was sent")
+                fun_test.test_assert(not fpg_counters_dict_2[priority], message="Ensure counter values of queue %s "
+                                                                              "were not seen on dut port %s when pfc with priority"
+                                                                              " %s was sent" 
+                                                                                % (priority, dut_port_2,
+                                                                                   self.current_priority_value))
+
+                fun_test.test_assert(not fpg_counters_dict_1[priority], message="Ensure counter values of queue %s "
+                                                                                "were not seen on dut port %s when pfc with priority"
+                                                                                " %s was sent"
+                                                                                % (priority, dut_port_1,
+                                                                                   self.current_priority_value))
 
                 fun_test.test_assert(pg_queue_counters_dict[priority][dequeue],
                                      message="Ensure dequeue is happening for queue q_%s when pfc with "
@@ -545,8 +612,21 @@ class TestCase1(FunTestCase):
             find_spirent_rx_counters_stopped(streamblock_handle_list=good_stream_list, template_obj=template_obj,
                                              subscribe_result=subscribe_results)
 
+        output_dict[self.current_priority_value][spirent_pfc_rx_counter] = \
+            find_spirent_rx_counters_stopped(port_handle=port_1,
+                                             template_obj=template_obj,
+                                             subscribe_result=subscribe_results)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
+        output_dict[self.current_priority_value][fpg_cbfcpause_counters_tx] = \
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
+        output_dict[self.current_priority_value][fpg_cbfcpause_counters_rx] = \
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
+
         fun_test.log("Fetch fpg stats")
-        output_dict[self.current_priority_value][fpg_cbfcpause_counters] = \
+        output_dict[self.current_priority_value][fpg_cbfcpause_counters_tx] = \
             get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
 
         fun_test.log("Get psw port group enqueue dequeue counters")
@@ -560,7 +640,8 @@ class TestCase1(FunTestCase):
                                                   dut_port=dut_port_2)
 
         spirent_counters_dict = output_dict[self.current_priority_value][spirent_rx_counters]
-        fpg_counters_dict = output_dict[self.current_priority_value][fpg_cbfcpause_counters]
+        fpg_counters_dict_2 = result_dict[self.current_priority_value][fpg_cbfcpause_counters_tx]
+        fpg_counters_dict_1 = result_dict[self.current_priority_value][fpg_cbfcpause_counters_rx]
         pg_queue_counters_dict = output_dict[self.current_priority_value][psw_port_pg_counters]
         q_queue_counters_dict = output_dict[self.current_priority_value][psw_port_q_counters]
 
@@ -569,10 +650,23 @@ class TestCase1(FunTestCase):
                                                                  "when pfc is stopped"
                                                                  " for priority %s" % (key, self.current_priority_value))
 
+        # Check spirent pfc rx is  stopped
+        fun_test.test_assert(result_dict[self.current_priority_value][spirent_pfc_rx_counter],
+                             message="Esnure spirent port %s is not getting pfc frames from dut port %s" % (port_1,
+                                                                                                        dut_port_1))
+
         for priority in priority_list:
-            fun_test.test_assert(not fpg_counters_dict[priority], message="Ensure counter values of queue %s "
-                                                                          "were not seen when pfc with priority"
-                                                                          " %s was stopped")
+            fun_test.test_assert(not fpg_counters_dict_2[priority], message="Ensure fpg mac stats not seen for "
+                                                                        "queue with priority %s when pfc "
+                                                                        "stream for %s was stopped by dut port %s"
+                                                                        % (priority, self.current_priority_value,
+                                                                           dut_port_2))
+
+            fun_test.test_assert(not fpg_counters_dict_1[priority], message="Ensure fpg mac stats not seen for "
+                                                                        "queue with priority %s when pfc "
+                                                                        "stream for %s was stopped from dut port %s"
+                                                                        % (priority, self.current_priority_value,
+                                                                           dut_port_1))
 
             fun_test.test_assert(not pg_queue_counters_dict[priority][dequeue],
                                  message="Ensure dequeue is happening for queue q_%s when pfc with "
@@ -606,17 +700,20 @@ class TestCase1(FunTestCase):
 
             fun_test.test_assert(os.path.exists(self.pcap_file_path_1), message="Check pcap file exists locally")
 
-            pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-            output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time0=str(final_quanta_value))
-            fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
-
-            first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time0=default_quanta)
-            fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+            self.pcap_output()
 
 
 class TestCase2(TestCase1):
     current_priority_value = 2
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time2=str(self.final_quanta_value))
+        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+
+        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time2=default_quanta)
+        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
 
     def describe(self):
         self.set_test_details(id=2,
@@ -655,6 +752,14 @@ class TestCase3(TestCase1):
     current_priority_value = 3
     priority_key = 'priority_%s' % current_priority_value
 
+    def pcap_output(self):
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time3=str(self.final_quanta_value))
+        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+
+        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time3=default_quanta)
+        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+
     def describe(self):
         self.set_test_details(id=3,
                               summary="Test DUT with pfc enabled for priority %s" % self.priority_key,
@@ -691,6 +796,14 @@ class TestCase3(TestCase1):
 class TestCase4(TestCase1):
     current_priority_value = 4
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time4=str(self.final_quanta_value))
+        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+
+        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time4=default_quanta)
+        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
 
     def describe(self):
         self.set_test_details(id=4,
@@ -729,6 +842,14 @@ class TestCase5(TestCase1):
     current_priority_value = 5
     priority_key = 'priority_%s' % current_priority_value
 
+    def pcap_output(self):
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time5=str(self.final_quanta_value))
+        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+
+        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time5=default_quanta)
+        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+
     def describe(self):
         self.set_test_details(id=5,
                               summary="Test DUT with pfc enabled for priority %s" % self.priority_key,
@@ -765,6 +886,14 @@ class TestCase5(TestCase1):
 class TestCase6(TestCase1):
     current_priority_value = 6
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time6=str(self.final_quanta_value))
+        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+
+        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time6=default_quanta)
+        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
 
     def describe(self):
         self.set_test_details(id=6,
@@ -803,6 +932,14 @@ class TestCase7(TestCase1):
     current_priority_value = 7
     priority_key = 'priority_%s' % current_priority_value
 
+    def pcap_output(self):
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time7=str(self.final_quanta_value))
+        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+
+        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time7=default_quanta)
+        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+
     def describe(self):
         self.set_test_details(id=7,
                               summary="Test DUT with pfc enabled for priority %s" % self.priority_key,
@@ -839,6 +976,9 @@ class TestCase7(TestCase1):
 class TestCase8(TestCase1):
     current_priority_value = 8
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pass
 
     def describe(self):
         self.set_test_details(id=8,
@@ -877,6 +1017,9 @@ class TestCase9(TestCase1):
     current_priority_value = 9
     priority_key = 'priority_%s' % current_priority_value
 
+    def pcap_output(self):
+        pass
+
     def describe(self):
         self.set_test_details(id=9,
                               summary="Test DUT with pfc enabled for priority %s" % self.priority_key,
@@ -913,6 +1056,9 @@ class TestCase9(TestCase1):
 class TestCase10(TestCase1):
     current_priority_value = 10
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pass
 
     def describe(self):
         self.set_test_details(id=10,
@@ -951,6 +1097,9 @@ class TestCase11(TestCase1):
     current_priority_value = 11
     priority_key = 'priority_%s' % current_priority_value
 
+    def pcap_output(self):
+        pass
+
     def describe(self):
         self.set_test_details(id=11,
                               summary="Test DUT with pfc enabled for priority %s" % self.priority_key,
@@ -987,6 +1136,9 @@ class TestCase11(TestCase1):
 class TestCase12(TestCase1):
     current_priority_value = 12
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pass
 
     def describe(self):
         self.set_test_details(id=12,
@@ -1025,6 +1177,9 @@ class TestCase13(TestCase1):
     current_priority_value = 13
     priority_key = 'priority_%s' % current_priority_value
 
+    def pcap_output(self):
+        pass
+
     def describe(self):
         self.set_test_details(id=13,
                               summary="Test DUT with pfc enabled for priority %s" % self.priority_key,
@@ -1062,6 +1217,9 @@ class TestCase14(TestCase1):
     current_priority_value = 14
     priority_key = 'priority_%s' % current_priority_value
 
+    def pcap_output(self):
+        pass
+
     def describe(self):
         self.set_test_details(id=14,
                               summary="Test DUT with pfc enabled for priority %s" % self.priority_key,
@@ -1098,6 +1256,9 @@ class TestCase14(TestCase1):
 class TestCase15(TestCase1):
     current_priority_value = 15
     priority_key = 'priority_%s' % current_priority_value
+
+    def pcap_output(self):
+        pass
 
     def describe(self):
         self.set_test_details(id=15,
@@ -1188,7 +1349,9 @@ class TestCase16(FunTestCase):
         sleep_time = 5
         result_dict = {}
         spirent_rx_counters = 'spirent_rx_counters'
-        fpg_cbfcpause_counters = 'fpg_cbfcpause_counters'
+        spirent_pfc_rx_counter = 'spirent_pfc_rx_counter'
+        fpg_cbfcpause_counters_tx = 'fpg_cbfcpause_counters_tx'
+        fpg_cbfcpause_counters_rx = 'fpg_cbfcpause_counters_rx'
         psw_port_pg_counters = 'psw_port_pg_counters'
         psw_port_q_counters = 'psw_port_q_counters'
         dequeue = 'dequeue'
@@ -1224,9 +1387,18 @@ class TestCase16(FunTestCase):
             find_spirent_rx_counters_stopped(streamblock_handle_list=good_stream_list, template_obj=template_obj,
                                              subscribe_result=subscribe_results)
 
-        fun_test.log("Fetch fpg stats")
-        result_dict[fpg_cbfcpause_counters] = \
+        result_dict[spirent_pfc_rx_counter] = \
+            find_spirent_rx_counters_stopped(port_handle=port_1,
+                                             template_obj=template_obj,
+                                             subscribe_result=subscribe_results)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
+        result_dict[fpg_cbfcpause_counters_tx] = \
             get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
+        result_dict[fpg_cbfcpause_counters_rx] = \
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
 
         fun_test.log("Get psw port group enqueue dequeue counters")
         result_dict[psw_port_pg_counters] = \
@@ -1240,7 +1412,8 @@ class TestCase16(FunTestCase):
 
         #ASSERTS
         spirent_counters_dict = result_dict[spirent_rx_counters]
-        fpg_counters_dict = result_dict[fpg_cbfcpause_counters]
+        fpg_counters_dict_2 = result_dict[fpg_cbfcpause_counters_tx]
+        fpg_counters_dict_1 = result_dict[fpg_cbfcpause_counters_rx]
         pg_queue_counters_dict = result_dict[psw_port_pg_counters]
         q_queue_counters_dict = result_dict[psw_port_q_counters]
 
@@ -1254,11 +1427,21 @@ class TestCase16(FunTestCase):
                                      message="Ensure rx counters are stopped for stream %s as pfc with priority "
                                              "%s is enabled" % (current_good_stream_handle, current_priority_value))
 
-                fun_test.test_assert(fpg_counters_dict[current_priority_value], message="Ensure fpg mac stats seen for "
-                                                                                        "queue with priority %s when pfc "
-                                                                                        "stream for %s was sent"
-                                                                                        % (current_priority_value,
-                                                                                           current_pfc_stream_handle))
+                fun_test.test_assert(result_dict[spirent_pfc_rx_counter],
+                                     message="Ensure spirent port %s is getting pfc frames from dut port %s"
+                                             % (port_1, dut_port_1))
+
+                fun_test.test_assert(fpg_counters_dict_2[current_priority_value],
+                                     message="Ensure fpg mac stats seen for queue with priority %s when pfc "
+                                             "stream for %s was received by dut port %s"
+                                             % (current_priority_value, current_priority_value,
+                                                dut_port_2))
+
+                fun_test.test_assert(fpg_counters_dict_1[current_priority_value],
+                                     message="Ensure fpg mac stats seen for queue with priority %s when pfc stream "
+                                             "for %s was sent from dut port %s" % (
+                                     current_priority_value, current_priority_value, dut_port_1))
+
                 fun_test.test_assert(not pg_queue_counters_dict[current_priority_value][dequeue],
                                      message="Ensure pg_dequeue is not happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (current_priority_value, current_priority_value))
@@ -1271,8 +1454,8 @@ class TestCase16(FunTestCase):
                                      message="Ensure q_dequeue is not happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (current_priority_value, current_priority_value))
 
-                fun_test.test_assert(not q_queue_counters_dict[current_priority_value][enqueue],
-                                     message="Ensure q_enqueue is not happening for queue q_%s when pfc with "
+                fun_test.test_assert(q_queue_counters_dict[current_priority_value][enqueue],
+                                     message="Ensure q_enqueue is happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (current_priority_value, current_priority_value))
             else:
                 fun_test.test_assert(not spirent_counters_dict[current_good_stream_handle],
@@ -1280,9 +1463,17 @@ class TestCase16(FunTestCase):
                                              "for stream %s when pfc is started for priority %s" %
                                              (current_good_stream_handle, current_priority_value))
 
-                fun_test.test_assert(not fpg_counters_dict[current_priority_value],
-                                     message="Ensure queue counter in mac stats are not started as pfc was not started"
-                                             "for %s stream" % current_pfc_stream_handle)
+                fun_test.test_assert(not fpg_counters_dict_2[current_priority_value],
+                                     message="Ensure fpg mac stats not seen for "
+                                             "queue %s when priority on dut port %s"
+                                             % (current_priority_value,
+                                                dut_port_2))
+
+                fun_test.test_assert(not fpg_counters_dict_1[current_priority_value],
+                                     message="Ensure fpg mac stats not seen for "
+                                             "queue %s with priority on dut port %s"
+                                             % (current_priority_value,
+                                                dut_port_1))
 
                 fun_test.test_assert(pg_queue_counters_dict[current_priority_value][dequeue],
                                      message="Ensure pg_dequeue is happening for queue q_%s when pfc with "
@@ -1313,9 +1504,18 @@ class TestCase16(FunTestCase):
             find_spirent_rx_counters_stopped(streamblock_handle_list=good_stream_list, template_obj=template_obj,
                                              subscribe_result=subscribe_results)
 
-        fun_test.log("Fetch fpg stats")
-        output_dict[fpg_cbfcpause_counters] = \
+        output_dict[spirent_pfc_rx_counter] = \
+            find_spirent_rx_counters_stopped(port_handle=port_1,
+                                             template_obj=template_obj,
+                                             subscribe_result=subscribe_results)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
+        output_dict[fpg_cbfcpause_counters_tx] = \
             get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+
+        fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
+        output_dict[fpg_cbfcpause_counters_rx] = \
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
 
         fun_test.log("Get psw port group enqueue dequeue counters")
         output_dict[psw_port_pg_counters] = \
@@ -1328,7 +1528,8 @@ class TestCase16(FunTestCase):
                                                   dut_port=dut_port_2)
 
         spirent_counters_dict = output_dict[spirent_rx_counters]
-        fpg_counters_dict = output_dict[fpg_cbfcpause_counters]
+        fpg_counters_dict_2 = result_dict[fpg_cbfcpause_counters_tx]
+        fpg_counters_dict_1 = result_dict[fpg_cbfcpause_counters_rx]
         pg_queue_counters_dict = output_dict[psw_port_pg_counters]
         q_queue_counters_dict = output_dict[psw_port_q_counters]
 
@@ -1336,10 +1537,22 @@ class TestCase16(FunTestCase):
             fun_test.test_assert(not spirent_counters_dict[key], "Ensure rx on spirent is happening for stream %s "
                                                                  "when pfc is stopped" % key)
 
+        fun_test.test_assert(result_dict[spirent_pfc_rx_counter],
+                             message="Ensure spirent port %s is not getting pfc frames from dut port %s" % (port_1,
+                                                                                                            dut_port_1))
+
         for priority in priority_list:
-            fun_test.test_assert(fpg_counters_dict[priority], message="Ensure counter values of queue %s "
-                                                                          "were seen when pfc with priority"
-                                                                          " %s was sent")
+            fun_test.test_assert(not fpg_counters_dict_2[priority], message="Ensure fpg mac stats not seen for "
+                                                                            "queue with priority %s when pfc "
+                                                                            "stream was stopped by dut port %s"
+                                                                            % (priority,
+                                                                               dut_port_2))
+
+            fun_test.test_assert(not fpg_counters_dict_1[priority], message="Ensure fpg mac stats not seen for "
+                                                                            "queue with priority %s when pfc "
+                                                                            "stream was stopped from dut port %s"
+                                                                            % (priority,
+                                                                               dut_port_1))
 
             fun_test.test_assert(pg_queue_counters_dict[priority][dequeue],
                                  message="Ensure dequeue is happening for queue q_%s " % priority)
