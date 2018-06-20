@@ -23,6 +23,7 @@ IF_OUT_ERRORS = "ifOutErrors"
 IF_OUT_UCAST_PKTS = "ifOutUcastPkts"
 IF_IN_BROADCAST_PKTS = "ifInBroadcastPkts"
 CBFC_PAUSE_FRAMES_RECEIVED = "CBFCPAUSEFramesReceived"
+CBFC_PAUSE_FRAMES_TRANSMITTED = "CBFCPAUSEFramesTransmitted"
 FRAME_CHECK_SEQUENCE_ERROR = "aFrameCheckSequenceErrors"
 CLASS_0 = "0"
 
