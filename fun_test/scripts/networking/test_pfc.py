@@ -4,6 +4,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
 from lib.host.network_controller import  NetworkController
 from helper import *
 from lib.utilities.pcap_parser import PcapParser
+from nu_config_manager import nu_config_obj
 
 num_ports = 2
 streamblock_objs = {}
@@ -33,15 +34,22 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
             dut_port_1
+        dut_type = fun_test.get_local_setting(setting="dut_type")
+        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type)
+
+        chassis_type = fun_test.get_local_setting(setting="chassis_type")
+        spirent_config = nu_config_obj.read_traffic_generator_config()
+
         good_stream_load = 250
         pfc_load = 10
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc")
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc", chassis_type=chassis_type,
+                                                      spirent_config=spirent_config)
         fun_test.test_assert(template_obj, "Create template object")
 
         # Create network controller object
-        dpcsh_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
-        dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
+        dpcsh_server_ip = dut_config['dpcsh_tcp_proxy_ip']
+        dpcsh_server_port = int(dut_config['dpcsh_tcp_proxy_port'])
         network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
         result = template_obj.setup(no_of_ports_needed=num_ports)
@@ -51,13 +59,13 @@ class SpirentSetup(FunTestScript):
         port_1 = port_obj_list[0]
         port_2 = port_obj_list[1]
 
-        source_mac1 = template_obj.stc_manager.dut_config['source_mac1']
-        destination_mac1 = template_obj.stc_manager.dut_config['destination_mac1']
-        destination_ip1 = template_obj.stc_manager.dut_config['destination_ip1']
-        source_ip1 = template_obj.stc_manager.dut_config['source_ip1']
-        dut_port_1 = template_obj.stc_manager.dut_config['port_nos'][0]
-        dut_port_2 = template_obj.stc_manager.dut_config['port_nos'][1]
-        gateway = template_obj.stc_manager.dut_config['gateway1']
+        source_mac1 = spirent_config['l2_config']['source_mac']
+        destination_mac1 = spirent_config['l2_config']['destination_mac']
+        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        dut_port_1 = dut_config['ports'][0]
+        dut_port_2 = dut_config['ports'][1]
+        source_ip1 = spirent_config['l3_config']['ipv4']['source_ip1']
+        gateway = spirent_config['l3_config']['ipv4']['gateway']
 
         # Configure Generator
         for port in port_obj_list:
@@ -743,6 +751,8 @@ class TestCase4(FunTestCase):
             dut_port_2_good_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
 
             dut_port_2_pause_receive = get_dut_output_stats_value(dut_port_2_results, CBFC_PAUSE_FRAMES_RECEIVED,
+                                                                  tx=False, class_value=CLASS_0)
+            dut_port_1_pause_transmit = get_dut_output_stats_value(dut_port_1_results, CBFC_PAUSE_FRAMES_TRANSMITTED,
                                                                   tx=True, class_value=CLASS_0)
             dut_port_1_q00_pg_enqueue_pkts = dut_port_1_psw_results['q_00']['count']['pg_enq']['pkts']
             dut_port_1_q00_pg_dequeue_pkts = dut_port_1_psw_results['q_00']['count']['pg_deq']['pkts']
@@ -810,6 +820,10 @@ class TestCase4(FunTestCase):
                                      message="Ensure tx counter for %s stream is not stopped on dut" %
                                              pfc_stream_handle)
 
+                fun_test.test_assert(int(dut_port_1_pause_transmit) > int(old_dut_port_1_pause_transmit),
+                                     message="Ensure tx of pfc from dut port %s is not stopped" %
+                                             pfc_stream_handle)
+
                 fun_test.test_assert(int(dut_port_1_q00_pg_enqueue_pkts) > int(old_dut_port_1_psw_pg_enqueue_pkts),
                                      "Ensure enqueue of packets is happening in q_00")
 
@@ -833,6 +847,7 @@ class TestCase4(FunTestCase):
             old_dut_port_1_good_receive = dut_port_1_good_receive
             old_dut_port_2_good_transmit = dut_port_2_good_transmit
             old_dut_port_2_pause_receive = dut_port_2_pause_receive
+            old_dut_port_1_pause_transmit = dut_port_1_pause_transmit
             old_dut_port_1_psw_pg_enqueue_pkts = dut_port_1_q00_pg_enqueue_pkts
             old_dut_port_1_psw_pg_dequeue_pkts = dut_port_1_q00_pg_dequeue_pkts
             old_dut_port_2_psw_q_enqueue_pkts = dut_port_2_q00_q_enqueue_pkts
