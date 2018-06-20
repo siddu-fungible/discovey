@@ -132,7 +132,8 @@ class QemuStorageTemplate(object):
 
     @fun_test.safe
     def stop_dpc_server(self, funq_setup_path="/usr/local/bin", funq_setup_name="funq-setup",
-                        dpc_srv_path="/usr/local/bin", dpc_srv_name="dpc", dpcsh_tcp_proxy_name=F1.DPCSH_PROCESS_NAME):
+                        dpc_srv_path="/usr/local/bin", dpc_srv_name="dpc", dpcsh_tcp_proxy_name=F1.DPCSH_PROCESS_NAME,
+                        signal=2):
 
         # Stopping the dpcsh TCP proxy server running outside the qemu host
         current_dpcsh_tcp_proxy_process_id = self.dut.get_process_id(dpcsh_tcp_proxy_name)
@@ -146,7 +147,7 @@ class QemuStorageTemplate(object):
         # Stopping the dpc server running inside the qemu host
         current_dpc_srv_process_id = self.host.get_process_id(dpc_srv_name)
         if current_dpc_srv_process_id:
-            self.host.kill_process(process_id=current_dpc_srv_process_id)
+            self.host.kill_process(process_id=current_dpc_srv_process_id, signal=signal)
             new_dpc_srv_process_id = self.host.get_process_id(dpc_srv_name)
             fun_test.simple_assert(not new_dpc_srv_process_id, "Stopped DPC Server")
         else:
@@ -234,6 +235,7 @@ class QemuStorageTemplate(object):
         disconnect = True
 
         # Rebooting the host
+        self.stop_dpc_server()
         try:
             self.host.command(command="reboot", timeout=timeout)
         except Exception as ex:

@@ -1,7 +1,7 @@
 {
   "RndDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 10,
-    "ndata_partition_end_range": 10,
+    "ndata_partition_start_range": 8,
+    "ndata_partition_end_range": 8,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
@@ -28,8 +28,8 @@
     "check_lsv_stats": 0
   },
   "ZeroDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 10,
-    "ndata_partition_end_range": 10,
+    "ndata_partition_start_range": 8,
+    "ndata_partition_end_range": 8,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
