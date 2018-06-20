@@ -29,13 +29,16 @@ class DpcshProxy(object):
     def start(self):
         result = False
         env_cmd = 'setenv LD_LIBRARY_PATH "/project/tools/glibc-2.14/lib"'
-        run_cmd = 'nohup ./dpcsh  -D /dev/{} --tcp_proxy {} &'.format(self.usb, self.port)
+        run_cmd = 'nohup ./dpcsh  -D /dev/{} --tcp_proxy {} > /tmp/start_dpc.out & '.format(self.usb, self.port)
         try:
             self.linux.command(env_cmd)
             self.pid = self.linux.command(run_cmd).strip().split(' ')[-1]
             result = True
         except Exception as ex:
-            fun_test.critical(str(ex))
+            if re.search(r'Timeout\s+exceeded.*', str(ex), re.IGNORECASE):
+                result = True
+            else:
+                fun_test.critical(str(ex))
         return result
 
     def stop(self):
@@ -224,6 +227,31 @@ class Palladium(object):
             output = self.linux.command(cmd)
         except Exception as ex:
             fun_test.critical(str(ex))
+
+    def ensure_boards_released(self):
+        result = True
+        cmd = "test_server -json"
+        try:
+            output = self.linux.command(cmd, timeout=180)
+            json_output = None
+            for i, v in enumerate(output.split('\n')):
+                if v.strip() == '{':
+                    json_output = '\n'.join(output.split('\n')[i:])
+                    break
+            cluster_info = json.loads(json_output)
+
+            cluster_3 = cluster_info['Clusters'][2]
+            cluster_4 = cluster_info['Clusters'][3]
+
+            for cluster in [cluster_3, cluster_4]:
+                for slot in cluster['LogicDrawer']:
+                    if slot['Domains'][0]['Owner'] == 'regression' and slot['Domains'][0]['Design'] == 'RESERVED':
+                        fun_test.log("Boards are not released by user %s" % REGRESSION_USER)
+                        result = False
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def cleanup_job(self):
         result = False

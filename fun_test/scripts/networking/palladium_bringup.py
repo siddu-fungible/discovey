@@ -20,6 +20,11 @@ class PalladiumBringup(FunTestScript):
         """)
 
     def setup(self):
+        fun_test.log("In script setup")
+
+    def run(self):
+        fun_test.log("In palladium bring up run")
+
         self.config = parse_file_to_json(ASSET_DIR + PALLADIUM_HOST_FILE)[0]
         fun_test.log("Palladium Host Config: %s" % self.config)
 
@@ -41,9 +46,6 @@ class PalladiumBringup(FunTestScript):
         fun_test.test_assert(result, checkpoint)
 
         self.is_cleanup_needed = False
-
-    def run(self):
-        fun_test.log("In palladium bring up run")
 
         checkpoint = "Ensure dpcsh started in TCP proxy mode"
         result = self.dpcsh_proxy_obj.ensure_started()

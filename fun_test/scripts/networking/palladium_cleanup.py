@@ -19,6 +19,10 @@ class PalladiumCleanup(FunTestScript):
 
     def setup(self):
         fun_test.log("In script setup")
+
+    def run(self):
+        fun_test.log("In script run")
+
         self.config = parse_file_to_json(ASSET_DIR + PALLADIUM_HOST_FILE)[0]
         fun_test.log("Palladium Host Config: %s" % self.config)
 
@@ -30,9 +34,6 @@ class PalladiumCleanup(FunTestScript):
                                           port=self.config['dpcsh_tcp_proxy_port'],
                                           usb=self.config['dpcsh_usb'])
 
-    def run(self):
-        fun_test.log("In script run")
-
         checkpoint = "Halt FunOS by executing dpc_shutdown cmd"
         result = self.dpcsh_proxy_obj.run_dpc_shutdown()
         fun_test.test_assert(result, checkpoint)
@@ -43,6 +44,8 @@ class PalladiumCleanup(FunTestScript):
 
         checkpoint = "Ensure boards are released by the user"
         # TODO: Confirm boards are released by regression user. Extend palladium host lib for this
+        result = self.palladium_boot_up_obj.ensure_boards_released()
+        fun_test.test_assert(result, checkpoint)
 
         checkpoint = "Stop Dpcproxy"
         result = self.dpcsh_proxy_obj.stop()
