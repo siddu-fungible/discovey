@@ -152,24 +152,15 @@ class GenerateCSR(FunTestCase):
         except Exception as ex:
             TEST_STATUS = False
             fun_test.critical(str(ex))
-        '''
-        linux_obj.disconnect()
-        print 'test'
-        linux_obj = Linux(host_ip=container_asset["host_ip"],
-                          ssh_username=container_asset["mgmt_ssh_username"],
-                          ssh_password=container_asset["mgmt_ssh_password"],
-                          ssh_port=container_asset["mgmt_ssh_port"])
-        '''
 
-        #cmd_list = ["reset", "ls -lrt {} | nawk '{print $5}'".format(CSR_CFG)]
-        cmd_list = ['reset']
+        cmd_list = ["reset", "ls -lrt {}".format(CSR_CFG)]
         for cmd in cmd_list:
             output = linux_obj.command(cmd)
-        #if re.search('No such file', output) or int(output) == 0:
-        #    TEST_STATUS = False
-        #fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
+        if re.search('No such file', output):
+            TEST_STATUS = False
+        fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
 
-        cmd_list = ["sudo echo ']}' >> /tmp/csr_override.cfg",
+        cmd_list = ["echo ']}' >> /tmp/csr_override.cfg",
                     'cp {} {}'.format(CSR_CFG, CSR_FUNOS)]
         try:
             for cmd in cmd_list:
@@ -177,7 +168,6 @@ class GenerateCSR(FunTestCase):
         except Exception as ex:
             TEST_STATUS = False
             fun_test.critical(str(ex))
-
 
     def cleanup(self):
         pass
@@ -204,8 +194,9 @@ class BuildPalladiumImage(FunTestCase):
         TEST_STATUS = True
         BUILD_STATUS = "No such file or directory"
         PALLADIUM_IMG = 'funos-f1-palladium.install.bz2'
-        PALLADIUM_IMG_PATH = '{}/FunOS/build/{}'.format(target_workspace, PALLADIUM_IMG)
         PALLADIUM_IMG_UNZIP = 'funos-f1-palladium.install'
+        PALLADIUM_IMG_PATH = '{}/FunOS/build/{}'.format(target_workspace, PALLADIUM_IMG)
+        PALLADIUM_IMG_UNZIP_PATH = '{}/FunOS/build/{}'.format(target_workspace, PALLADIUM_IMG_UNZIP) 
         HOST = 'server101'
         DEBUG = ''
         DPC_UART = '--dpc_uart'
@@ -231,9 +222,8 @@ class BuildPalladiumImage(FunTestCase):
         if re.search(BUILD_STATUS, output):
             TEST_STATUS = False
 
-        cmd_list = ['scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_PATH, REGRESSION_USER, HOST, REGRESSION_USER),
-                    'rm -rf /home/{}/image/{}'.format(REGRESSION_USER, PALLADIUM_IMG_UNZIP),
-                    'bzip2 -d /home/{}/image/{}'.format(REGRESSION_USER, PALLADIUM_IMG)]
+        cmd_list = ['bzip2 -d {}'.format(PALLADIUM_IMG_PATH)
+                    'scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_UNZIP_PATH, REGRESSION_USER, HOST, REGRESSION_USER)]
 
         try:
             for cmd in cmd_list:
@@ -251,7 +241,7 @@ class BuildPalladiumImage(FunTestCase):
 
 if __name__ == "__main__":
     ts = FunCPContainerInit() 
-    '''
+    
     for tc in (FunCPFunOSBuilder,
                GenerateCSR,
                BuildPalladiumImage,
@@ -262,4 +252,5 @@ if __name__ == "__main__":
                BuildPalladiumImage,
                ):
         ts.add_test_case(tc())
+    '''
     ts.run()
