@@ -20,7 +20,7 @@ class FunCPContainerInit(FunTestScript):
         f1_hostname = "parser"
         f1_image_name = "nw-reg-user:v1"
         self.target_workspace = "/workspace"
-        entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/builder.sh".format(self.target_workspace)
+        entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(self.target_workspace)
         environment_variables = {"DOCKER": True,
                                  "WORKSPACE": workspace}
         home_mount = "/home/{0}:/home/{0}".format(user)
@@ -144,7 +144,7 @@ class GenerateCSR(FunTestCase):
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
 
-        cmd_list = ['bash', 'rm -rf {}'.format(CSR_CFG),
+        cmd_list = ['bash', 'sudo rm -rf {}'.format(CSR_CFG),
                     'sudo -E {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -s -d'.format(target_workspace)]
         try:
             for cmd in cmd_list:
@@ -152,14 +152,24 @@ class GenerateCSR(FunTestCase):
         except Exception as ex:
             TEST_STATUS = False
             fun_test.critical(str(ex))
+        '''
+        linux_obj.disconnect()
+        print 'test'
+        linux_obj = Linux(host_ip=container_asset["host_ip"],
+                          ssh_username=container_asset["mgmt_ssh_username"],
+                          ssh_password=container_asset["mgmt_ssh_password"],
+                          ssh_port=container_asset["mgmt_ssh_port"])
+        '''
 
-        cmd = "ls -lrt {} | nawk '{print $5}'".format(CSR_CFG)
-        output = linux_obj.command(cmd)
-        if re.search('No such file', output) or int(output) == 0:
-            TEST_STATUS = False
-        fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
+        #cmd_list = ["reset", "ls -lrt {} | nawk '{print $5}'".format(CSR_CFG)]
+        cmd_list = ['reset']
+        for cmd in cmd_list:
+            output = linux_obj.command(cmd)
+        #if re.search('No such file', output) or int(output) == 0:
+        #    TEST_STATUS = False
+        #fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
 
-        cmd_list = ["echo ']}' >> {}".format(CSR_CFG),
+        cmd_list = ["sudo echo ']}' >> /tmp/csr_override.cfg",
                     'cp {} {}'.format(CSR_CFG, CSR_FUNOS)]
         try:
             for cmd in cmd_list:
@@ -241,8 +251,14 @@ class BuildPalladiumImage(FunTestCase):
 
 if __name__ == "__main__":
     ts = FunCPContainerInit() 
+    '''
     for tc in (FunCPFunOSBuilder,
                GenerateCSR,
+               BuildPalladiumImage,
+               ):
+        ts.add_test_case(tc())
+    '''
+    for tc in (GenerateCSR,
                BuildPalladiumImage,
                ):
         ts.add_test_case(tc())
