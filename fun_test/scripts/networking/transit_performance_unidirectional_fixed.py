@@ -94,7 +94,7 @@ class NuTransitPerformance(FunTestScript):
             fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Read Performance expected data for fixed size scenario"
-        file_path = fun_test.get_script_parent_directory() + "/" + self.EXPECTED_PERFORMANCE_DATA_FILE_NAME
+        file_path = LOGS_DIR + "/" + self.EXPECTED_PERFORMANCE_DATA_FILE_NAME
         performance_data = template_obj.read_json_file_contents(file_path=file_path)
         fun_test.simple_assert(expression=performance_data, message=checkpoint)
 
