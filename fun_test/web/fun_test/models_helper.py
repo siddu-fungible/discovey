@@ -210,7 +210,7 @@ def _get_suite_executions(execution_id=None,
             elif te_result == RESULTS["IN_PROGRESS"]:
                 num_in_progress += 1
 
-            if save_test_case_info and not finalized:
+            if save_test_case_info:
                 suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
                                                           "test_case_id": test_case_execution.test_case_id,
                                                           "result": test_case_execution.result})
