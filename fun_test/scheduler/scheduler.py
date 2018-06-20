@@ -45,6 +45,7 @@ class SuiteWorker(Thread):
         self.current_script_process = None
 
         self.suite_shutdown = False
+        self.abort_on_failure_requested = False
 
     def shutdown_suite(self):
         job_id = self.job_spec["job_id"]
@@ -117,8 +118,13 @@ class SuiteWorker(Thread):
         suite_execution.suite_path = self.job_spec["suite_name"]
         suite_execution.save()
 
-        for script_path in script_paths:
-
+        self.abort_on_failure_requested = False
+        last_script_path = ""
+        for script_item in suite_spec:
+            script_path = SCRIPTS_DIR + "/" + script_item["path"]
+            last_script_path = script_path
+            if self.abort_on_failure_requested:
+                continue
             if self.suite_shutdown:
                 scheduler_logger.critical("{}: SUITE shutdown requested".format(self.job_id))
                 local_scheduler_logger.critical("SUITE shutdown requested")
@@ -158,17 +164,31 @@ class SuiteWorker(Thread):
             script_result = False
             if self.current_script_process.returncode == 0:
                 script_result = True
+            else:
+                if "abort_suite_on_failure" in script_item and script_item["abort_suite_on_failure"]:
+                    self.abort_on_failure_requested = True
+                    models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
+                    error_message = "Abort Requested on failure for: {}".format(script_path)
+                    scheduler_logger.critical(error_message)
+                    local_scheduler_logger.critical(error_message)
+
             self.local_scheduler_logger.info("Executed: {}".format(script_path))
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
+
         self.local_scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         scheduler_logger.info("Job Id: {} complete".format(self.job_id))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
-        # if suite_execution.result == RESULTS["IN_PROGRESS"]:  # fun_test probably crashed
-        #    suite_execution = models_helper.update_suite_execution(result=RESULTS["ABORTED"],
-        #                                                           suite_execution_id=suite_execution_id)
-        #    scheduler_logger.critical("ABORTED")
 
-        #    models_helper.finalize_suite_execution(suite_execution_id=suite_execution_id)
+        if self.abort_on_failure_requested:
+            models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
+            error_message = "Abort Requested on failure for: {}".format(last_script_path)
+            scheduler_logger.critical(error_message)
+            local_scheduler_logger.critical(error_message)
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.job_id)
+            suite_execution.result = RESULTS["ABORTED"]
+            suite_execution.finalized = True
+            suite_execution.save()
+
         suite_execution.completed_time = get_current_time()
         suite_execution.save()
 
