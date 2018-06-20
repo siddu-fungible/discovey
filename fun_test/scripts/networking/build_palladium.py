@@ -240,9 +240,10 @@ class BuildPalladiumImage(FunTestCase):
 
 
 if __name__ == "__main__":
-    ts = FunControlPlaneSanity()
-    for tc in (NwSanitySimpleL3Integration,
-               NwSanityPRV
+    ts = FunCPContainerInit() 
+    for tc in (FunCPFunOSBuilder,
+               GenerateCSR,
+               BuildPalladiumImage,
                ):
         ts.add_test_case(tc())
     ts.run()
