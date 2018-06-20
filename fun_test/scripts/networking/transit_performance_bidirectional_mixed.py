@@ -67,7 +67,7 @@ class NuTransitPerformance(FunTestScript):
                                                                mtu_value=self.MTU)
         fun_test.test_assert(mtu_changed_on_spirent, checkpoint)
 
-        if chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
 
             checkpoint = "Change DUT ports MTU to %d" % self.MTU
@@ -199,7 +199,7 @@ class NuTransitLatencyIPv4Test(FunTestCase):
 
         self.expected_latency_data = performance_data
 
-        if chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
             checkpoint = "Clear FPG port stats on DUT"
             for port_num in dut_config['ports']:
                 result = network_controller_obj.clear_port_stats(port_num=port_num)
@@ -449,7 +449,7 @@ class NuTransitLatencyIPv6Test(NuTransitLatencyIPv4Test):
 
         self.expected_latency_data = performance_data
 
-        if chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
             checkpoint = "Clear FPG port stats on DUT"
             for port_num in dut_config['ports']:
                 result = network_controller_obj.clear_port_stats(port_num=port_num)
@@ -584,7 +584,7 @@ class NuTransitJitterTest(FunTestCase):
                                   "rx_summary_subscribe": rx_summary_subscribe,
                                   "analyzer_subscribe": analyzer_subscribe}
 
-        if chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
             checkpoint = "Clear FPG port stats on DUT"
             for port_num in dut_config['ports']:
                 result = network_controller_obj.clear_port_stats(port_num=port_num)
@@ -802,7 +802,7 @@ class NuTransitJitterIPv6Test(NuTransitJitterTest):
                                   "rx_summary_subscribe": rx_summary_subscribe,
                                   "analyzer_subscribe": analyzer_subscribe}
 
-        if chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
             checkpoint = "Clear FPG port stats on DUT"
             for port_num in dut_config['ports']:
                 result = network_controller_obj.clear_port_stats(port_num=port_num)

@@ -13,7 +13,7 @@ class NuConfigManager(object):
     CHASSIS_TYPE_VIRTUAL = "virtual"
     TRAFFIC_GENERATOR_TYPE_SPIRENT = "spirent_traffic_generator"
 
-    def __int__(self, chassis_type):
+    def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
         self.chassis_type = chassis_type
 
     def _get_nu_configs(self):
@@ -25,9 +25,11 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return all_configs
 
-    def read_dut_config(self, dut_type=DUT_TYPE_PALLADIUM):
+    def read_dut_config(self, dut_type=None):
         result = {}
         try:
+            if not dut_type:
+                dut_type = self.DUT_TYPE_PALLADIUM
             configs = self._get_nu_configs()
             fun_test.simple_assert(configs, "Failed to read config spec")
             for config in configs:
