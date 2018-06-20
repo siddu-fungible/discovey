@@ -128,6 +128,8 @@ class FunTestCase1(FunTestCase):
                                                             output_recovery_throughput_max=ec_recovery_throughput_max,
                                                             output_recovery_throughput_avg=ec_recovery_throughput_avg
                                                             )
+
+                '''
                 chart_name = "EC 8:4 Latency"
                 metric_model_name = "EcPerformance"
                 model = EcPerformance
@@ -165,7 +167,8 @@ class FunTestCase1(FunTestCase):
 
                         except:
                             issues_found += 1
-
+                '''
+                '''
                 chart_name = "EC 8:4 Throughput"
                 metric_model_name = "EcPerformance"
                 model = EcPerformance
@@ -203,7 +206,7 @@ class FunTestCase1(FunTestCase):
 
                         except:
                             issues_found += 1
-
+                '''
         fun_test.test_assert_expected(expected=0, actual=issues_found, message="Number of issues found")
 
 

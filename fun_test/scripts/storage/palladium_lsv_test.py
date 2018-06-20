@@ -104,23 +104,8 @@ class FunTestCase1(FunTestCase):
                 d[key] = value
 
             if stats_found:
+                fun_test.log('Addinng Metrics for job-id: {}'.format(job_id))
                 MetricHelper(model=LsvZipCryptoPerformance).add_entry(**d)
-            '''
-            if stats_found:
-                MetricHelper(model=BcopyPerformance).add_entry(input_date_time=dt,
-                                                               input_plain=plain,
-                                                               input_coherent=coherent,
-                                                               input_size=size,
-                                                               input_iterations=iterations,
-                                                               output_latency_units=latency_units,
-                                                               output_latency_min=latency_min,
-                                                               output_latency_max=latency_max,
-                                                               output_latency_avg=latency_avg,
-                                                               input_latency_perf_name=latency_perf_name,
-                                                               output_average_bandwith=average_bandwidth,
-                                                               input_average_bandwith_perf_name=average_bandwidth_perf_name
-                                                               )
-            '''
 
         fun_test.test_assert_expected(expected=0, actual=issues_found, message="Number of issues found")
 
