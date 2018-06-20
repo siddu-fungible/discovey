@@ -11,7 +11,7 @@ class PalladiumCleanup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="""
-        1. Halt FunOS based on the version
+        1. Halt FunOS by executing dpc_shutdown cmd
         2. Cleanup palladium resources and release boards
         3. Ensure boards are released by the user
         4. Stop DpcProxy
@@ -33,8 +33,9 @@ class PalladiumCleanup(FunTestScript):
     def run(self):
         fun_test.log("In script run")
 
-        checkpoint = "Halt FunOS based on the version"
-        # TODO: Get FunOS version and halt accordingly
+        checkpoint = "Halt FunOS by executing dpc_shutdown cmd"
+        result = self.dpcsh_proxy_obj.run_dpc_shutdown()
+        fun_test.test_assert(result, checkpoint)
 
         checkpoint = "Cleanup palladium resources and release boards"
         result = self.palladium_boot_up_obj.cleanup_job()
