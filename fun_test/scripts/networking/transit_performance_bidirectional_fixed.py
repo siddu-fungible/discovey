@@ -663,7 +663,7 @@ class NuTransitJitterTest(FunTestCase):
             template_obj.delete_streamblocks(stream_obj_list=stream_port_obj_dict[port])
 
         mode = dut_config['interface_mode']
-        output_file_path = fun_test.get_script_parent_directory() + "/nu_transit_performance_data_bidirectional.json"
+        output_file_path = LOGS_DIR + "/nu_transit_performance_data_bidirectional.json"
         template_obj.populate_performance_counters_json(mode=mode,
                                                         ip_version="IPv4",
                                                         latency_results=latency_results,
@@ -791,7 +791,7 @@ class NuTransitJitterIPv6Test(NuTransitJitterTest):
             template_obj.delete_streamblocks(stream_obj_list=stream_port_obj_dict[port])
 
         mode = dut_config['interface_mode']
-        output_file_path = fun_test.get_script_parent_directory() + "/nu_transit_performance_data_bidirectional.json"
+        output_file_path = LOGS_DIR + "/nu_transit_performance_data_bidirectional.json"
         template_obj.populate_performance_counters_json(mode=mode,
                                                         ip_version="IPv6",
                                                         latency_results=latency_results,
