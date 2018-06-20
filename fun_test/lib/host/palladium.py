@@ -63,6 +63,14 @@ class DpcshProxy(object):
             fun_test.critical(str(ex))
         return result
 
+    def run_dpc_shutdown(self):
+        result = False
+        try:
+            result = self.network_controller_obj.dpc_shutdown()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
 
 class Palladium(object):
 

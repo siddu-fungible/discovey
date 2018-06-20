@@ -29,6 +29,18 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return output
 
+    def dpc_shutdown(self):
+        result = False
+        try:
+            cmd = "dpc_shutdown"
+            # Sometimes dpc_shutdown cmd takes 2-3 min to execute
+            output = self.json_execute(verb=cmd, command_duration=180)
+            if output['status']:
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def enable_port(self, port_num, shape=0):
         port_enabled = False
         try:
