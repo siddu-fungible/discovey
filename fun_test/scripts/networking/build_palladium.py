@@ -16,8 +16,8 @@ class FunCPContainerInit(FunTestScript):
         user = REGRESSION_USER
         user_passwd = REGRESSION_USER_PASSWORD
         workspace = dirname(abspath(dirname(abspath(FUN_TEST_DIR))))
-        self.container_name = "parser"
-        f1_hostname = "parser"
+        self.container_name = "funcp"
+        f1_hostname = "funcp"
         f1_image_name = "nw-reg-user:v1"
         self.target_workspace = "/workspace"
         entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(self.target_workspace)
@@ -158,7 +158,6 @@ class GenerateCSR(FunTestCase):
             output = linux_obj.command(cmd)
         if re.search('No such file', output):
             TEST_STATUS = False
-        fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
 
         cmd_list = ["echo ']}' >> /tmp/csr_override.cfg",
                     'cp {} {}'.format(CSR_CFG, CSR_FUNOS)]
@@ -168,6 +167,8 @@ class GenerateCSR(FunTestCase):
         except Exception as ex:
             TEST_STATUS = False
             fun_test.critical(str(ex))
+
+        fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
 
     def cleanup(self):
         pass
@@ -222,7 +223,7 @@ class BuildPalladiumImage(FunTestCase):
         if re.search(BUILD_STATUS, output):
             TEST_STATUS = False
 
-        cmd_list = ['bzip2 -d {}'.format(PALLADIUM_IMG_PATH)
+        cmd_list = ['bzip2 -d {}'.format(PALLADIUM_IMG_PATH),
                     'scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_UNZIP_PATH, REGRESSION_USER, HOST, REGRESSION_USER)]
 
         try:
@@ -247,10 +248,4 @@ if __name__ == "__main__":
                BuildPalladiumImage,
                ):
         ts.add_test_case(tc())
-    '''
-    for tc in (GenerateCSR,
-               BuildPalladiumImage,
-               ):
-        ts.add_test_case(tc())
-    '''
     ts.run()
