@@ -103,7 +103,7 @@ class FunCPFunOSBuilder(FunTestCase):
         output = linux_obj.command(command="ls -ll {}/FunControlPlane/build".format(target_workspace))
         if re.search(BUILD_STATUS, output):
             TEST_STATUS = False
-        fun_test.test_assert(TEST_STATUS, "FunCP Built Successfully")
+        fun_test.test_assert(TEST_STATUS, "Build FunCP")
 
         cmd_list = ["bash", "cd {}/FunOS".format(target_workspace), "make -j8 MACHINE=posix"]
         for cmd in cmd_list:
@@ -111,7 +111,7 @@ class FunCPFunOSBuilder(FunTestCase):
         output = linux_obj.command(command="ls -al {}/FunOS/build".format(target_workspace))
         if re.search(BUILD_STATUS, output):
             TEST_STATUS = False
-        fun_test.test_assert(TEST_STATUS, "FunOS Built Successfully")
+        fun_test.test_assert(TEST_STATUS, "Build FunOS")
 
     def cleanup(self):
         pass
@@ -170,7 +170,7 @@ class GenerateCSR(FunTestCase):
                 TEST_STATUS = False
                 fun_test.critical(str(ex))
 
-        fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
+        fun_test.test_assert(TEST_STATUS, "Generate CSR")
 
     def cleanup(self):
         pass
@@ -202,7 +202,7 @@ class BuildPalladiumImage(FunTestCase):
         PALLADIUM_IMG_UNZIP_PATH = '{}/FunOS/build/{}'.format(target_workspace, PALLADIUM_IMG_UNZIP) 
         HOST = 'server101'
         DEBUG = ''
-        DPC_UART = '--dpc_uart'
+        DPC_UART = '--dpc-uart'
         MAKE_CMD = 'make MACHINE=f1-palladium BOOTARGS="app=port_test ' \
                    '--hwdebug {} {} --csr-replay --no-halt" install > ' \
                    '{}/palladium_build.log'.format(DEBUG, DPC_UART, target_workspace)
@@ -234,7 +234,7 @@ class BuildPalladiumImage(FunTestCase):
                 TEST_STATUS = False
                 fun_test.critical(str(ex))
 
-        fun_test.test_assert(TEST_STATUS, "Palladium Image Built and SCPd Successfully")
+        fun_test.test_assert(TEST_STATUS, "Build Palladium Image")
 
 
     def cleanup(self):
