@@ -32,9 +32,6 @@ class PalladiumBringup(FunTestScript):
                                      port=config['dpcsh_tcp_proxy_port'],
                                      usb=config['dpcsh_usb'])
 
-    def run(self):
-        fun_test.log("In palladium bring up run")
-
     def cleanup(self):
         fun_test.log("In script cleanup")
 
