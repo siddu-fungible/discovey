@@ -158,15 +158,17 @@ class GenerateCSR(FunTestCase):
             output = linux_obj.command(cmd)
         if re.search('No such file', output):
             TEST_STATUS = False
-
-        cmd_list = ["echo ']}' >> /tmp/csr_override.cfg",
-                    'cp {} {}'.format(CSR_CFG, CSR_FUNOS)]
-        try:
-            for cmd in cmd_list:
-                linux_obj.command(cmd)
-        except Exception as ex:
-            TEST_STATUS = False
-            fun_test.critical(str(ex))
+        else:
+            cmd_list = ["echo ']}' >> /tmp/csr_override.cfg",
+                        'cp {} {}'.format(CSR_CFG, CSR_FUNOS),
+                        'sudo pkill funos-posix',
+                        'sudo pkill qemu']
+            try:
+                for cmd in cmd_list:
+                    linux_obj.command(cmd)
+            except Exception as ex:
+                TEST_STATUS = False
+                fun_test.critical(str(ex))
 
         fun_test.test_assert(TEST_STATUS, "CSR File Generated Successfully")
 
@@ -213,7 +215,7 @@ class BuildPalladiumImage(FunTestCase):
         cmd_list = ['cd {}/FunOS'.format(target_workspace), MAKE_CMD]
         try:
             for cmd in cmd_list:
-                linux_obj.command(cmd, timeout=600)
+                linux_obj.command(cmd, timeout=1200)
         except Exception as ex:
             TEST_STATUS = False
             fun_test.critical(str(ex))
@@ -222,16 +224,15 @@ class BuildPalladiumImage(FunTestCase):
             command="ls -al {}".format(PALLADIUM_IMG_PATH))
         if re.search(BUILD_STATUS, output):
             TEST_STATUS = False
-
-        cmd_list = ['bzip2 -d {}'.format(PALLADIUM_IMG_PATH),
-                    'scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_UNZIP_PATH, REGRESSION_USER, HOST, REGRESSION_USER)]
-
-        try:
-            for cmd in cmd_list:
-                linux_obj.command(cmd, timeout=60)
-        except Exception as ex:
-            TEST_STATUS = False
-            fun_test.critical(str(ex))
+        else:
+            cmd_list = ['bzip2 -d {}'.format(PALLADIUM_IMG_PATH),
+                        'scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_UNZIP_PATH, REGRESSION_USER, HOST, REGRESSION_USER)]
+            try:
+                for cmd in cmd_list:
+                    linux_obj.command(cmd, timeout=60)
+            except Exception as ex:
+                TEST_STATUS = False
+                fun_test.critical(str(ex))
 
         fun_test.test_assert(TEST_STATUS, "Palladium Image Built and SCPd Successfully")
 
@@ -242,7 +243,7 @@ class BuildPalladiumImage(FunTestCase):
 
 if __name__ == "__main__":
     ts = FunCPContainerInit() 
-    
+     
     for tc in (FunCPFunOSBuilder,
                GenerateCSR,
                BuildPalladiumImage,
