@@ -477,6 +477,27 @@ class LsvZipCryptoPerformance(models.Model):
         return s
 
 
+class NuTransitPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_frame_size = models.IntegerField(verbose_name="Fixed Frame Size Test", choices=[(0, 1500), (1, 1000), (2, 200), (3, 9000), (4, 16380), (5, 64)])
+    input_throughput = models.FloatField(verbose_name="Throughput in Mbps")
+    output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
+    output_latency_max = models.FloatField(verbose_name="Latency Max in us")
+    output_latency_min = models.FloatField(verbose_name="Latency Min in us")
+    output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
+    output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
+    output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
+
+    output_pps = models.IntegerField(verbose_name="Packets per sec", default=0)
+    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=10, choices=[(0, "25G"), (1, "50G"), (2, "100G")])
+    input_version = models.CharField(verbose_name="Version", max_length=50)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class BcopyPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
@@ -499,6 +520,12 @@ class EcVolPerformanceSerialzer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
         model = EcVolPerformance
+        fields = "__all__"
+
+class NuTransitPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = NuTransitPerformance
         fields = "__all__"
 
 ANALYTICS_MAP = {
@@ -591,6 +618,12 @@ ANALYTICS_MAP = {
         "module": "storage",
         "component": "general",
         "verbose_name": "EC Vol Performance"
+    },
+    "NuTransitPerformance": {
+        "model": NuTransitPerformance,
+        "module": "networking",
+        "component": "general",
+        "verbose_name": "NU Transit Performance"
     }
 }
 

@@ -44,11 +44,16 @@ function FunMetricChartController($scope, commonService, $attrs) {
     };
 
     $scope.cleanValue = (key, value) => {
-        if (key === "input_date_time" && (ctrl.xaxisFormatter)) {
-            return ctrl.xaxisFormatter()(value);
-        } else {
-            return value;
+        try {
+            if (key === "input_date_time" && (ctrl.xaxisFormatter) && ctrl.xaxisFormatter()()) {
+                return ctrl.xaxisFormatter()(value);
+            } else {
+                return value;
+            }
+        } catch (e) {
+
         }
+
     };
 
 
@@ -169,10 +174,17 @@ function FunMetricChartController($scope, commonService, $attrs) {
                 }
 
                 let keySet = new Set();
+                /*
                 let firstDataSet = allDataSets[0];
                 firstDataSet.forEach((oneRecord) => {
                     keySet.add(oneRecord.input_date_time.toString());
+                });*/
+                allDataSets.forEach((oneDataSet) => {
+                    oneDataSet.forEach((oneRecord) => {
+                        keySet.add(oneRecord.input_date_time.toString());
+                    });
                 });
+
                 let keyList = Array.from(keySet);
                 keyList.sort();
                 $scope.series = keyList; $scope.shortenKeyList(keyList);
