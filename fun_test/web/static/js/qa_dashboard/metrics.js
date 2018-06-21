@@ -179,7 +179,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
 
                 // lets validate all inputs
                 $scope.addDataSet["inputs"].forEach((oneField) => {
-                    if(!oneField.selectedChoice && oneField.name !== "input_date_time") {
+                    if(!oneField.selectedChoice && oneField.name !== "input_date_time" && oneField.choices.length) {
                         let message = "Please select a choice for " + oneField.name;
                         alert(message);
                         error = true;
