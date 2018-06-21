@@ -54,8 +54,6 @@ class TestCase1(FunTestCase):
     def setup(self):
         fun_test.log("In test case setup")
 
-    def run(self):
-
         checkpoint = "Halt FunOS by executing dpc_shutdown cmd"
         result = dpcsh_proxy_obj.run_dpc_shutdown()
         fun_test.test_assert(result, checkpoint)
@@ -71,6 +69,9 @@ class TestCase1(FunTestCase):
         checkpoint = "Stop Dpcproxy"
         result = dpcsh_proxy_obj.stop()
         fun_test.test_assert(result, checkpoint)
+
+    def run(self):
+        fun_test.log("In test case run")
 
     def cleanup(self):
         fun_test.log("In test case cleanup")

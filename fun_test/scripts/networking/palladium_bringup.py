@@ -53,7 +53,6 @@ class TestCase1(FunTestCase):
     def setup(self):
         fun_test.log("In test case setup")
 
-    def run(self):
         global is_cleanup_needed
 
         checkpoint = "Boot up palladium with FunOS design %s Model %s" % (config['design'],
@@ -70,6 +69,9 @@ class TestCase1(FunTestCase):
         checkpoint = "Ensure dpcsh started in TCP proxy mode"
         result = dpcsh_proxy_obj.ensure_started()
         fun_test.test_assert(result, checkpoint)
+
+    def run(self):
+        fun_test.log("In test case run")
 
     def cleanup(self):
         if not is_cleanup_needed:
