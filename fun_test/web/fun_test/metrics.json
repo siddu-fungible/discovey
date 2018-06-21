@@ -12,7 +12,17 @@
         "leaf": false,
         "name": "Networking",
         "label": "Networking",
-        "children": [],
+        "children": [
+          {
+                "info": "NU Transit: Latency",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU Transit: Latency",
+                "label": "NU Transit: Latency",
+                "children": [],
+                "weight": 1
+          }
+        ],
         "weight": 1
       },
       {
