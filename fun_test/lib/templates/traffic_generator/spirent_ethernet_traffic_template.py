@@ -11,47 +11,59 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         self.session_name = session_name
         self.stc_connected = False
 
-    def setup(self, no_of_ports_needed):
+    def setup(self, no_of_ports_needed=2, port_mapper_dict={}):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
+        project_handle = self.stc_manager.create_project(project_name=self.session_name)
+        fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
+        physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
+
+        if not self.stc_connected:
+            fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
+                                 message="Health of Spirent Test Center")
+            self.stc_connected = True
+
         try:
-            if not self.stc_connected:
-                fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
-                                     message="Health of Spirent Test Center")
-                self.stc_connected = True
+            if port_mapper_dict:
+                for key, val in port_mapper_dict.iteritems():
+                    port_location = "//%s/%s" % (self.stc_manager.chassis_ip, key)
+                    port_handle = self.stc_manager.create_port(location=port_location)
+                    fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
+                    result['port_list'].append(port_handle)
+                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
+                                                                   port_handle=port_handle)
+                    fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
+                                                                                             port_handle))
+                    result['interface_obj_list'].append(interface_obj)
+            else:
+                no_of_ports_in_config = len(self.spirent_config[self.chassis_type]["ports"])
+                fun_test.debug("Ports Needed: %d    Ports found in nu config: %d" % (no_of_ports_needed,
+                                                                                     no_of_ports_in_config))
+                fun_test.test_assert(no_of_ports_needed <= no_of_ports_in_config,
+                                     message="Ensure no of ports needed to run script exists in nu config.")
 
-            no_of_ports_in_config = len(self.spirent_config[self.chassis_type]["port_nos"])
-            fun_test.debug("Ports Needed: %d    Ports found in nu config: %d" % (no_of_ports_needed,
-                                                                                 no_of_ports_in_config))
-            fun_test.test_assert(no_of_ports_needed <= no_of_ports_in_config,
-                                 message="Ensure no of ports needed to run script exists in nu config.")
+                chassis_info = self.stc_manager.get_test_module_info()
+                slot_found = False
+                for module in chassis_info['module_info']:
+                    if int(module['Index']) == self.spirent_config[self.chassis_type]['slot_no'] and \
+                            int(module['PortCount']) >= no_of_ports_needed:
+                        slot_found = True
+                        #status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
+                        #fun_test.simple_assert(status, "Ports are not free. Please check")
 
-            chassis_info = self.stc_manager.get_test_module_info()
-            slot_found = False
-            for module in chassis_info['module_info']:
-                if int(module['Index']) == self.spirent_config[self.chassis_type]['slot_no'] and \
-                        int(module['PortCount']) >= no_of_ports_needed:
-                    slot_found = True
-                    #status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
-                    #fun_test.simple_assert(status, "Ports are not free. Please check")
+                fun_test.simple_assert(slot_found, "Ensure slot num mentioned in config exists on STC")
 
-            fun_test.simple_assert(slot_found, "Ensure slot num mentioned in config exists on STC")
-
-            project_handle = self.stc_manager.create_project(project_name=self.session_name)
-            fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
-            physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
-
-            for port_no in self.spirent_config[self.chassis_type]['port_nos']:
-                port_location = "//%s/%s/%s" % (self.stc_manager.chassis_ip,
-                                                self.spirent_config[self.chassis_type]['slot_no'], port_no)
-                port_handle = self.stc_manager.create_port(location=port_location)
-                fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
-                result['port_list'].append(port_handle)
-                interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
-                                                               port_handle=port_handle)
-                fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
-                                                                                         port_handle))
-                result['interface_obj_list'].append(interface_obj)
+                for port_no in self.spirent_config[self.chassis_type]['ports']:
+                    port_location = "//%s/%s/%s" % (self.stc_manager.chassis_ip,
+                                                    self.spirent_config[self.chassis_type]['slot_no'], port_no)
+                    port_handle = self.stc_manager.create_port(location=port_location)
+                    fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
+                    result['port_list'].append(port_handle)
+                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
+                                                                   port_handle=port_handle)
+                    fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
+                                                                                             port_handle))
+                    result['interface_obj_list'].append(interface_obj)
 
             # Attach ports method take care of applying configuration
             fun_test.test_assert(self.stc_manager.attach_ports(), message="Attach Ports")
