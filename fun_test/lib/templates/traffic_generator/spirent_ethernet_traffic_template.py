@@ -53,7 +53,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
                 fun_test.simple_assert(slot_found, "Ensure slot num mentioned in config exists on STC")
 
-                for port_no in self.spirent_config[self.chassis_type]['ports']:
+                for port_no in self.spirent_config[self.chassis_type]['ports'][:no_of_ports_needed]:
                     port_location = "//%s/%s/%s" % (self.stc_manager.chassis_ip,
                                                     self.spirent_config[self.chassis_type]['slot_no'], port_no)
                     port_handle = self.stc_manager.create_port(location=port_location)
