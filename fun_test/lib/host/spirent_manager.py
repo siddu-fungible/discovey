@@ -362,7 +362,7 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_frame_stack(self, stream_block_handle, header_obj, update=False, delete_header=None):
+    def configure_frame_stack(self, stream_block_handle, header_obj, update=False, delete_header=[]):
         result = False
         try:
             attributes = header_obj.get_attributes_dict()
@@ -371,8 +371,8 @@ class SpirentManager(object):
                 if delete_header:
                     existing_headers = self.get_object_children(handle=stream_block_handle)
                     fun_test.log("Headers found in %s: %s" % (stream_block_handle, existing_headers))
-                    for header in existing_headers:
-                        if delete_header.lower() in header:
+                    for header in delete_header:
+                        if header.lower() in existing_headers:
                             fun_test.log("Deleting Header: %s" % header)
                             self.delete_handle(handle=header)
                             break
