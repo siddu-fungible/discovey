@@ -3,6 +3,7 @@ from fun_settings import *
 from lib.system.utils import parse_file_to_json
 from lib.utilities.StcPython import StcPython
 import re
+import inspect
 
 
 class SpirentManager(object):
@@ -976,6 +977,33 @@ class SpirentManager(object):
             handle = self.stc.create(header_obj.HEADER_TYPE, under=streamblock_obj._spirent_handle, **header_attributes)
             if handle:
                 header_obj._spirent_handle = handle
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_range_modifier(self, range_modifier_obj, streamblock_obj, header_obj, header_attribute):
+        result = False
+        header_handle = None
+        assigned_header_name = None
+        try:
+            attributes = header_obj.__dict__.keys()
+            fun_test.simple_assert(header_attribute in attributes, "Attribute %s not found in header obj %s. "
+                                                                   "Available values are %s" % (header_attribute,
+                                                                                                header_obj, attributes))
+            header_type=header_obj.HEADER_TYPE.lower()
+            header_type = 'children-' + header_type
+            header_handle = self.get_object_children(handle=streamblock_obj._spirent_handle, child_type=header_type)[0]
+            fun_test.simple_assert(header_handle, "Header handle not found for header %s in streamblock %s"
+                                   % (header_obj.HEADER_TYPE, streamblock_obj._spirent_handle))
+            range_attributes = range_modifier_obj.get_attributes_dict()
+            assigned_header_name = self.stc.get(header_handle, "name")
+            fun_test.simple_assert(assigned_header_name, "Header name not found for %s" % header_handle)
+            range_attributes['OffsetReference'] = assigned_header_name + '.' + header_attribute
+            output = self.stc.create(range_modifier_obj.HEADER_TYPE, under=streamblock_obj._spirent_handle,
+                                     **range_attributes)
+            fun_test.simple_assert(output, "range modifier not created")
             if self.apply_configuration():
                 result = True
         except Exception as ex:
