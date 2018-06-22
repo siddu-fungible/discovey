@@ -778,6 +778,8 @@ class TestCase4(FunTestCase):
                              (old_dut_port_2_good_transmit, dut_port_2_good_transmit))
                 fun_test.log("Values of tx for pfc stream on spirent are:- Old: %s ; New: %s" %
                              (old_dut_port_2_pause_receive, dut_port_2_pause_receive))
+                fun_test.log("Values of rx for pfc stream from dut to spirent are:- Old: %s ; New: %s" %
+                             (old_dut_port_1_pause_transmit, dut_port_1_pause_transmit))
                 fun_test.log("Values of enqueue in q00 of %s port of psw port stats are:- Old: %s ; New: %s" %
                              (dut_port_1, old_dut_port_1_psw_pg_enqueue_pkts, dut_port_1_q00_pg_enqueue_pkts))
                 fun_test.log("Values of deque in q00 of %s port of psw port stats are:- Old: %s ; New: %s" %
@@ -936,7 +938,7 @@ class TestCase4(FunTestCase):
         file_path = SYSTEM_TMP_DIR
         self.pcap_file_path_1 = file_path + "/" + file_name_1
 
-        saved = template_obj.stc_manager.save_capture_da11ta_command(capture_handle=capture_obj._spirent_handle,
+        saved = template_obj.stc_manager.save_capture_data_command(capture_handle=capture_obj._spirent_handle,
                                                                    file_name=file_name_1,
                                                                    file_name_path=file_path)
         fun_test.test_assert(saved, "Saved pcap %s to local machine" % self.pcap_file_path_1)
@@ -949,6 +951,7 @@ class TestCase4(FunTestCase):
 
         first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time0=self.quanta)
         fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % self.quanta)
+
 
 class TestCase5(FunTestCase):
     def describe(self):

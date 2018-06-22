@@ -20,7 +20,8 @@ class FunCPContainerInit(FunTestScript):
         f1_hostname = "funcp"
         f1_image_name = "nw-reg-user:v1"
         self.target_workspace = "/workspace"
-        entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(self.target_workspace)
+        arguments = '-f master -o master -n default'
+        entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh {}".format(self.target_workspace, arguments)
         environment_variables = {"DOCKER": True,
                                  "WORKSPACE": workspace}
         home_mount = "/home/{0}:/home/{0}".format(user)
@@ -249,4 +250,10 @@ if __name__ == "__main__":
                BuildPalladiumImage,
                ):
         ts.add_test_case(tc())
+    '''
+    for tc in (GenerateCSR,
+               BuildPalladiumImage,
+               ):
+        ts.add_test_case(tc())
+    '''
     ts.run()
