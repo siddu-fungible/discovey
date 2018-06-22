@@ -71,7 +71,7 @@ class TestCase1(FunTestCase):
         fun_test.log("In test case run")
 
     def cleanup(self):
-        if not is_cleanup_needed:
+        if is_cleanup_needed:
             palladium_boot_up_obj.cleanup_job()
 
 
