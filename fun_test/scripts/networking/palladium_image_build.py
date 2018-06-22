@@ -20,7 +20,7 @@ class FunCPContainerInit(FunTestScript):
         f1_hostname = "funcp"
         f1_image_name = "nw-reg-user:v1"
         self.target_workspace = "/workspace"
-        arguments = '-f master -o master -n /workspace/nutest.json'
+        arguments = '-f master -o master -n default'
         entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh {}".format(self.target_workspace, arguments)
         environment_variables = {"DOCKER": True,
                                  "WORKSPACE": workspace}
