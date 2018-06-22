@@ -27,7 +27,10 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
 
     def __init__(self, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         TrafficGeneratorTemplate.__init__(self)
-        self.chassis_type = chassis_type
+        if not chassis_type:
+            self.chassis_type = SpirentManager.PHYSICAL_CHASSIS_TYPE
+        else:
+            self.chassis_type = chassis_type
         self.spirent_config = spirent_config
         try:
             self.stc_manager = SpirentManager(chassis_type=self.chassis_type, spirent_config=self.spirent_config)
@@ -1034,6 +1037,168 @@ class Tos(object):
         self.rBit = r_bit
         self.reserved = reserved
         self.tBit = t_bit
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+        
+        
+class UDP(object):
+    HEADER_TYPE = "udp:UDP"
+    TCPMUX = 1
+    _spirent_handle = None
+    
+    def __init__(self, checksum='', destination_port=1024, length=0, name=None, source_port=1024):
+        self.checksum = checksum
+        self.destPort = destination_port
+        self.length = length
+        self.Name = name
+        self.sourcePort = source_port
+        
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+        
+        
+class TCP(object):
+    HEADER_TYPE = "tcp:TCP"
+    TCPMUX = 1
+    _spirent_handle = None
+    
+    def __init__(self, ack_bit='1', ack_num=234567, checksum='', cwr_bit='0', destination_port=1024, ecn_bit='0', 
+                 finish_bit='0', offset=5, push_bit='0', reserved='0000', reset_bit='0', seq_num=123456,
+                 source_port=1024, sync_bit='0',urgent_bit='0', urgent_pointer=0, window=4096):
+        self.window = window
+        self.urgentPtr = urgent_pointer
+        self.urgBit = urgent_bit
+        self.synBit = sync_bit
+        self.sourcePort = source_port
+        self.seqNum = seq_num
+        self.rstBit = reset_bit
+        self.reserved = reserved
+        self.pshBit = push_bit
+        self.offset = offset
+        self.finBit = finish_bit
+        self.ecnBit = ecn_bit
+        self.destPort = destination_port
+        self.cwrBit = cwr_bit
+        self.checksum = checksum
+        self.ackNum = ack_num
+        self.ackBit = ack_bit
+        
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class VxLAN(object):
+    HEADER_TYPE = "vxlan:VxLAN"
+    _spirent_handle = None
+
+    def __init__(self, auto_select_udp_src_port=1, enable_vm_arp_sending_for_evpn_learning=0, evpn_learning_enabled=0,
+                 flags=8, multicast_group_address='255.0.0.1', reserve_done=0, reserved_two=0,
+                 resolved_ipv4_address='0.0.0.0', source_vtep_interface_address='0.0.0.0', source_vtep_router_id='0.0.0.0',
+                 traffic_control_flags=0, use_target_ip_for_vm_arp=0, vni=0, vxlanIpAddressMode=0):
+        self.vxlanIpAddressMode = vxlanIpAddressMode
+        self.vni = vni
+        self.useTargetIpForVmArp = use_target_ip_for_vm_arp
+        self.trafficControlFlags = traffic_control_flags
+        self.srcVtepRouterId = source_vtep_router_id
+        self.srcVtepinterfaceAddr = source_vtep_interface_address
+        self.resolvedIpv4Addr = resolved_ipv4_address
+        self.reservedtwo = reserved_two
+        self.reservedone = reserve_done
+        self.multicastGroupAddr = multicast_group_address
+        self.flags = flags
+        self.evpnLearningEnabled = evpn_learning_enabled
+        self.enableVmArpSendingForEvpnLearning = enable_vm_arp_sending_for_evpn_learning
+        self.autoSelectUdpSrcPort = auto_select_udp_src_port
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class RangeModifier(object):
+    HEADER_TYPE = 'RangeModifier'
+    NATIVE = 'NATIVE'
+    BYTE = 'BYTE'
+    INCR = 'INCR'
+    DECR = 'DECR'
+    SHUFFLE = 'SHUFFLE'
+
+    def __init__(self, data='00', data_type=NATIVE, enable_stream=False, mask='65535', modifier_mode=INCR, offset='0',
+                 offset_reference='', recycle_count='0', repeat_count='0', step_value='01'):
+        self.StepValue = step_value
+        self.RepeatCount = repeat_count
+        self.RecycleCount = recycle_count
+        self.OffsetReference = offset_reference
+        self.Offset = offset
+        self.ModifierMode = modifier_mode
+        self.Mask = mask
+        self.EnableStream = enable_stream
+        self.DataType = data_type
+        self.Data = data
 
     def get_attributes_dict(self):
         attributes = {}
