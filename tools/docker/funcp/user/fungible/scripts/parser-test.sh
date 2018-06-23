@@ -37,14 +37,41 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-sudo rm -rf FunSDK-cache funnel-as sonic-swss-common qemu_image FunOS FunControlPlane FunSDK psim* nv* tra*
+#sudo rm -rf FunSDK-cache funnel-as sonic-swss-common qemu_image FunOS FunControlPlane FunSDK psim* nv* tra*
+sudo rm -rf psim* nv* tra*
 
-git clone -b $FUNCPBR git@github.com:fungible-inc/FunControlPlane.git
-git clone -b $FUNOSBR git@github.com:fungible-inc/FunOS.git
-git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
+if [ $FUNCPBR ]; then
+    sudo rm -rf $WORKSPACE/FunControlPlane
+    git clone -b $FUNCPBR git@github.com:fungible-inc/FunControlPlane.git
+else
+    if [ ! -d $WORKSPACE/FunControlPlane ]; then
+        git clone git@github.com:fungible-inc/FunControlPlane.git
+    else
+        cd $WORKSPACE/FunControlPlane
+        git pull
+    fi
+fi
+if [ $FUNOSBR ]; then
+    sudo rm -rf $WORKSPACE/FunOS
+    git clone -b $FUNOSBR git@github.com:fungible-inc/FunOS.git
+else
+    if [ ! -d $WORKSPACE/FunOS ]; then
+        git clone git@github.com:fungible-inc/FunOS.git
+    else
+        cd $WORKSPACE/FunOS
+        git pull
+    fi
+fi
 
-if [ "$NUTEST" != "default" ]; then
-    echo "came here"
+if [ ! -d $WORKSPACE/FunSDK ]; then
+    git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
+else
+    cd $WORKSPACE/FunSDK
+    git pull
+fi
+
+if [ "$NUTEST" ]; then
+    echo ">>>>>>>>>>>>copying nutest.json"
     cp $NUTEST $WORKSPACE/FunControlPlane/networking/asicd/libnu/test/
 fi
 
