@@ -13,7 +13,7 @@ HOME_DIR = "/home/{}".format(REGRESSION_USER)
 
 class DpcshProxy(object):
 
-    def __init__(self, ip='server120', port=40221, usb='ttyUSB7', dpc_bin_path='image',
+    def __init__(self, ip='server120', port=40221, usb='ttyUSB6', dpc_bin_path='image',
                  user=REGRESSION_USER, password=REGRESSION_USER_PASSWORD):
 
         self.ip = ip
