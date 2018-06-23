@@ -262,12 +262,9 @@ class Palladium(object):
 
     def _cleanup_run_dir(self):
         
-        cmd_list = ['rm -rf {}/*'.format(self.rdp), 'rm -rf {}/*'.format(self.odp)]
-        try:
-            for cmd in cmd_list:
-                self.linux.command(cmd)
-        except Exception as ex:
-            fun_test.critical(str(ex)) 
+        cmd_list = ['rm -rf {}/*'.format(self.rdp_dir), 'rm -rf {}/*'.format(self.odp_dir)]
+        for cmd in cmd_list:
+            self.linux.command(cmd)
 
     def cleanup_job(self):
         result = False
