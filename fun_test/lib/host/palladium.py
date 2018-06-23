@@ -142,11 +142,16 @@ class Palladium(object):
         result = False
         cmd = 'nohup runZ1 -d {} -rdp {} -odp {} -m {} -rev {} -ue &'.format\
             (self.image_dir, self.rdp_dir, self.odp_dir, self.model, self.design)
-        
+       
+        self._cleanup_run_dir()
+ 
         try:
-            if not self._is_available():
-                raise Exception("Boards/TPODs not available. Can't proceed...")
-            
+            timer = FunTimer(max_time=3600)
+            while not timer.is_expired():
+                if self._is_available():
+                    break
+                else:
+                    fun_test.sleep("Waiting for Boards/TPOD to be free...sleeping 60 secs", seconds=60)
             try:
                 self.pid = self.linux.command(cmd).strip().split(' ')[-1]
             except Exception as ex:
@@ -182,7 +187,7 @@ class Palladium(object):
         return result
 
     def _is_booted(self):
-        timer = FunTimer(max_time=600)
+        timer = FunTimer(max_time=900)
         design_loaded = False
         search_str = 'source init.qel'
         cmd = "grep --text '{}' {}/{}/emu.log".format(search_str, self.rdp_dir, self.model, include_last_line=True)
@@ -196,6 +201,7 @@ class Palladium(object):
 
     def _get_reservation_key(self):
 
+        return 99999 
         cmd = 'test_server -json'
         try:
             output = self.linux.command(cmd, timeout=180)
@@ -222,6 +228,7 @@ class Palladium(object):
         return None 
 
     def _release_reservation(self):
+        return
         cmd = 'test_server -rmkey {}'.format(self.reservation_key)
         try:
             output = self.linux.command(cmd)
@@ -253,15 +260,18 @@ class Palladium(object):
             fun_test.critical(str(ex))
         return result
 
+    def _cleanup_run_dir(self):
+        
+        cmd_list = ['rm -rf {}/*'.format(self.rdp), 'rm -rf {}/*'.format(self.odp)]
+        try:
+            for cmd in cmd_list:
+                self.linux.command(cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex)) 
+
     def cleanup_job(self):
         result = False
         cmd_list = ['pkill perl', 'pkill startup1', 'pkill xeDebug', 'pkill ncsim', 'pkill DBEngine_rpcbin']
-        # cmd1 = 'pkill perl'
-        # cmd2 = 'pkill startup1'
-        # cmd3 = 'pkill xeDebug'
-        # cmd4 = 'pkill ncsim'
-        # cmd5 = 'pkill DBEngine_rpcbin'
-
         try:
             for cmd in cmd_list:
                 self.linux.command(cmd)
