@@ -12,7 +12,7 @@ class SpirentSetup(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
                 1. Create Spirent template
-                2. Connect chassis, labserver and licenseserver
+                2. Connect chassis, lab server and license server
                 3. Attach Ports
                 """)
 
@@ -86,13 +86,16 @@ class IPv4GoodFrameTestCase1(FunTestCase):
         self.set_test_details(id=1,
                               summary="Creating good IPv4 streamblock",
                               steps="""
-                        1. Create streamblock with load=500 and loadunit=fps and framelength as random
-                        2. Configure generator with duration=30
-                        3. Start traffic for specified duration 
-                        4. subscribe to tx and rx results on streamblock
-                        4. Compare Tx and Rx results for frame count. Both must be same
-                        5. Check for error counters. there must be no error counter
-                        6. Verify frame count matches on dut ingress and egress
+                        1. Create streamblock with following settings
+                           a. Load: 500
+                           b. Load Unit: Frames Per Seconds
+                           c. Payload Fill Type: PRBS
+                           d. Insert Signature 
+                           e. Frame Size: Random Min: 74 and Max: 1500
+                        2. Start traffic for 30 secs  
+                        3. Compare Tx and Rx results for frame count of Spirent. Both must be same
+                        4. Check for error counters. there must be no error counter
+                        5. Verify frame count matches on dut ingress and egress
                         """)
 
     def setup(self):
@@ -201,13 +204,16 @@ class IPv6GoodFrameTestCase1(IPv4GoodFrameTestCase1):
         self.set_test_details(id=1,
                               summary="Creating good IPv6 streamblock",
                               steps="""
-                              1. Create streamblock with load=500 and loadunit=fps and framelength as random
-                              2. Configure generator with duration=30
-                              3. Start traffic for specified duration 
-                              4. subscribe to tx and rx results on streamblock
-                              4. Compare Tx and Rx results for frame count. Both must be same
-                              5. Check for error counters. there must be no error counter
-                              6. Verify frame count matches on dut ingress and egress
+                              1. Create streamblock with following settings
+                                 a. Load: 500
+                                 b. Load Unit: Frames Per Seconds
+                                 c. Payload Fill Type: PRBS
+                                 d. Insert Signature 
+                                 e. Frame Size: Random Min: 78 and Max: 1500
+                              2. Start traffic for 30 secs  
+                              3. Compare Tx and Rx results for frame count of Spirent. Both must be same
+                              4. Check for error counters. there must be no error counter
+                              5. Verify frame count matches on dut ingress and egress
                               """)
 
     def setup(self):
@@ -265,13 +271,16 @@ class IPv4RuntTestCase2(FunTestCase):
         self.set_test_details(id=2,
                               summary="Creating runt IPv4 streamblock",
                               steps="""
-                        1. Create streamblock with load=500 and loadunit=fps and frame length between 40 and 60
-                        2. Configure generator with duration=30
-                        3. Start traffic and subscribe to tx and rx results and analyzer results
-                        4. Received frame count from analyzer port must be 0
-                        5. Dropped frame count from analyzer port must be equal to the frames transmitted
-                        6. Ensure undersize frames are received on dut ingress
-                        7. Check psw global stats for cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, 
+                        1. Create streamblock with following settings
+                           a. Load: 500 fps
+                           b. Payload Fill Type: PRBS
+                           c. Insert Signature
+                           d. Frame Size Mode: Random Min: 40 and Max:60
+                        2. Start traffic for 30 secs 
+                        3. Received frame count from analyzer port must be 0
+                        4. Dropped frame count from analyzer port must be equal to the frames transmitted
+                        5. Ensure undersize frames are received on dut ingress
+                        6. Check psw global stats for cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, 
                         ifpg_pkt
                         """)
 
@@ -398,13 +407,16 @@ class IPv6RuntTestCase2(IPv4RuntTestCase2):
         self.set_test_details(id=2,
                               summary="Creating runt IPv6 streamblock",
                               steps="""
-                              1. Create streamblock with load=500 and loadunit=fps and frame length between 40 and 60
-                              2. Configure generator with duration=30
-                              3. Start traffic and subscribe to tx and rx results and analyzer results
-                              4. Received frame count from analyzer port must be 0
-                              5. Dropped frame count from analyzer port must be equal to the frames transmitted
-                              6. Ensure undersize frames are received on dut ingress
-                              7. Check psw global stats for cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, 
+                              1. Create streamblock with following settings
+                                 a. Load: 500 fps
+                                 b. Payload Fill Type: PRBS
+                                 c. Insert Signature
+                                 d. Frame Size Mode: Random Min: 58 and Max:75
+                              2. Start traffic for 30 secs 
+                              3. Received frame count from analyzer port must be 0
+                              4. Dropped frame count from analyzer port must be equal to the frames transmitted
+                              5. Ensure undersize frames are received on dut ingress
+                              6. Check psw global stats for cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, 
                               ifpg_pkt=
                               """)
 
@@ -463,14 +475,16 @@ class IPv4GoodRuntTestCase3(FunTestCase):
         self.set_test_details(id=3,
                               summary="Creating good and runt IPv4 streamblock",
                               steps="""
-                        1. Create streamblock with load=1 fps and frame length between 40 and 70 and 
-                           incremental step size of 1
-                        2. Configure generator with duration=max - min frame length
-                        3. Start traffic and subscribe to tx and rx results and analyzer results
-                        4. Runts must be dropped and good frames must be received
-                        5. Ensure count of good frames + undersize generated match tx of stream.
-                        6. Ensure runts are not transmitted from dut egress.
-                        7. Ensure dut egress receives undersize frames
+                        1. Create streamblock with following settings
+                           a. Load: 21000 fps
+                           b. Payload Fill Type: PRBS
+                           c. Insert signature
+                           d. Frame Size Mode: Random Min: 40 Max: 70
+                        2. Start traffic for 30 secs 
+                        3. Runts must be dropped and good frames must be received
+                        4. Ensure count of good frames + undersize generated match tx of stream.
+                        5. Ensure runts are not transmitted from dut egress.
+                        6. Ensure dut egress receives undersize frames
                         """)
 
     def setup(self):
@@ -595,14 +609,16 @@ class IPv6GoodRuntTestCase3(IPv4GoodRuntTestCase3):
         self.set_test_details(id=3,
                               summary="Creating good and runt IPv6 streamblock",
                               steps="""
-                              1. Create streamblock with load=1 fps and frame length between 40 and 70 and 
-                                 incremental step size of 1
-                              2. Configure generator with duration=max - min frame length
-                              3. Start traffic and subscribe to tx and rx results and analyzer results
-                              4. Runts must be dropped and good frames must be received
-                              5. Ensure count of good frames + undersize generated match tx of stream.
-                              6. Ensure runts are not transmitted from dut egress.
-                              7. Ensure dut egress receives undersize frames
+                              1. Create streamblock with following settings
+                                 a. Load: 21000 fps
+                                 b. Payload Fill Type: PRBS
+                                 c. Insert signature
+                                 d. Frame Size Mode: Random Min: 58 Max: 75 
+                              2. Start traffic for 30 secs 
+                              3. Runts must be dropped and good frames must be received
+                              4. Ensure count of good frames + undersize generated match tx of stream.
+                              5. Ensure runts are not transmitted from dut egress.
+                              6. Ensure dut egress receives undersize frames
                               """)
 
     def setup(self):
@@ -664,11 +680,15 @@ class BroadcastTestCase4(FunTestCase):
         self.set_test_details(id=4,
                               summary="Test DUT broadcast frames",
                               steps="""
-                        1. Create an Ethernet frame having destination mac as FF:FF:FF:FF:FF:FF
-                        2. Add an arp into the streamblock
-                        3. Execute traffic for 10 seconds
-                        4. Check if arp is received at other end
-                        5. Check DUT stats for frames with broadcast
+                        1. Create with following settings
+                           a. Load: 10 fps
+                           b. Frame Size: 64 
+                           c. Payload Fill Type: PRBS
+                           d. Insert Signature False
+                           e. Headers: EthernetII and ARP
+                        2. Execute traffic for 10 seconds
+                        3. Check if arp is received at other end
+                        4. Check DUT stats for frames with broadcast
                         """)
 
     def setup(self):

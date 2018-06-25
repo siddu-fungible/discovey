@@ -129,14 +129,19 @@ class IPv4IncrementalTestCase1(FunTestCase):
         self.set_test_details(id=1,
                               summary="Test all frame size in incremental way (IPv4)",
                               steps="""
-                        1. Start traffic and subscribe to tx and rx results
-                        2. Compare Tx and Rx results for frame count
-                        3. Check for error counters. there must be no error counter
-                        4. Check dut ingress and egress frame count match
-                        5. Check OctetStats from dut and spirent
-                        6. Check EtherOctets from dut and spirent.
-                        7. Check Counter for each octet range
-                        """)
+                        1. Create Streams with following settings
+                           a. Load: 5 Mbps
+                           b. Payload Fill Type: PRBS
+                           c. Insert Signature True
+                           d. Frame Size Mode: Incremental Min: %d Max: %d
+                        2. Start traffic for %d secs 
+                        3. Compare Tx and Rx results for frame count
+                        4. Check for error counters. there must be no error counter
+                        5. Check dut ingress and egress frame count match
+                        6. Check OctetStats from dut and spirent
+                        7. Check EtherOctets from dut and spirent.
+                        8. Check Counter for each octet range
+                        """ % (min_frame_lenggth, max_frame_length, duration_seconds))
 
     def setup(self):
         # Clear port results on DUT
@@ -475,14 +480,19 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
         self.set_test_details(id=1,
                               summary="Test all frame size in incremental way (IPv6)",
                               steps="""
-                              1. Start traffic and subscribe to tx and rx results
-                              2. Compare Tx and Rx results for frame count
-                              3. Check for error counters. there must be no error counter
-                              4. Check dut ingress and egress frame count match
-                              5. Check OctetStats from dut and spirent
-                              6. Check EtherOctets from dut and spirent.
-                              7. Check Counter for each octet range
-                              """)
+                              1. Create Streams with following settings
+                                 a. Load: 5 Mbps
+                                 b. Payload Fill Type: PRBS
+                                 c. Insert Signature True
+                                 d. Frame Size Mode: Incremental Min: %d Max: %d
+                              2. Start traffic for %d secs 
+                              3. Compare Tx and Rx results for frame count
+                              4. Check for error counters. there must be no error counter
+                              5. Check dut ingress and egress frame count match
+                              6. Check OctetStats from dut and spirent
+                              7. Check EtherOctets from dut and spirent.
+                              8. Check Counter for each octet range
+                              """ % (78, max_frame_length, duration_seconds))
 
     def setup(self):
         # Clear port results on DUT
@@ -571,12 +581,17 @@ class IPv4RandomTestCase2(FunTestCase):
         self.set_test_details(id=2,
                               summary="Test large random frame size (IPv4)",
                               steps="""
-                        1. Start traffic and subscribe to tx and rx results
-                        2. Compare Tx and Rx results for frame count for each stream
-                        3. Check for error counters. there must be no error counter
-                        4. Check ok frames on dut ingress and egress counter match and spirent
-                        5. Check psw stats for fwd_frv, ct_pkt, ifpg_pkt, fpg_pkt 
-                        """)
+                        1. Create Streams with following settings
+                           a. Load: 5 Mbps
+                           b. Payload Fill Type: PRBS
+                           c. Insert signature True
+                           d. Frame Size Mode: Random min: %d max: %d step: %d
+                        2. Start traffic for %d secs 
+                        3. Compare Tx and Rx results for frame count for each stream
+                        4. Check for error counters. there must be no error counter
+                        5. Check ok frames on dut ingress and egress counter match and spirent
+                        6. Check psw stats for fwd_frv, ct_pkt, ifpg_pkt, fpg_pkt 
+                        """ % (min_frame_lenggth, max_frame_length, step_size, duration_seconds))
 
     def setup(self):
         # Clear port results on DUT
@@ -795,12 +810,17 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
         self.set_test_details(id=2,
                               summary="Test large random frame size (IPv6)",
                               steps="""
-                              1. Start traffic and subscribe to tx and rx results
-                              2. Compare Tx and Rx results for frame count for each stream
-                              3. Check for error counters. there must be no error counter
-                              4. Check ok frames on dut ingress and egress counter match and spirent
-                              5. Check psw stats for fwd_frv, ct_pkt, ifpg_pkt, fpg_pkt 
-                              """)
+                              1. Create Streams with following settings
+                                 a. Load: 5 Mbps
+                                 b. Payload Fill Type: PRBS
+                                 c. Insert signature True
+                                 d. Frame Size Mode: Random min: %d max: %d step: %d
+                              2. Start traffic for %d secs 
+                              3. Compare Tx and Rx results for frame count for each stream
+                              4. Check for error counters. there must be no error counter
+                              5. Check ok frames on dut ingress and egress counter match and spirent
+                              6. Check psw stats for fwd_frv, ct_pkt, ifpg_pkt, fpg_pkt 
+                              """ % (78, max_frame_length, step_size, duration_seconds))
 
     def setup(self):
         # Clear port results on DUT
@@ -889,7 +909,7 @@ if __name__ == "__main__":
         ts.add_test_case(IPv6RandomTestCase2())
     elif test_case_mode == 4:
         ts.add_test_case(IPv4IncrementalTestCase1())
-        ts.add_test_case((IPv4RandomTestCase2()))
+        ts.add_test_case(IPv4RandomTestCase2())
     else:
         ts.add_test_case(IPv4IncrementalTestCase1())
         ts.add_test_case(IPv4RandomTestCase2())
