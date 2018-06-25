@@ -959,6 +959,49 @@ class ARP(object):
     def spirent_handle(self, handle):
         self._spirent_handle = handle
 
+    
+class RARP(object):
+    HEADER_TYPE = "arp:RARP"
+    ETHERNET = "0001"
+    RARP_OPERATION_UNKNOWN = 0
+    RARP_OPERATION_REQUEST = 3
+    RARP_OPERATION_REPLY = 4
+    INTERNET_IP = '0800'
+    _spirent_handle = None
+
+    def __init__(self, hardware=ETHERNET, hardware_address_length=6, protocol_address_length=4, name=None,
+                 operation=RARP_OPERATION_REQUEST, protocol=INTERNET_IP, sender_hw_address='00:00:01:00:00:02',
+                 sender_ip_address='192.85.1.2', target_hw_address='00:00:00:00:00:00', target_ip_address='0.0.0.0'):
+        self.hardware = hardware
+        self.ihAddr = hardware_address_length
+        self.ipAddr = protocol_address_length
+        self.Name = name
+        self.operation = operation
+        self.protocol = protocol
+        self.senderHwAddr = sender_hw_address
+        self.senderPAddr = sender_ip_address
+        self.targetHwAddr = target_hw_address
+        self.targetPAddr = target_ip_address
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
 
 class TosDiffServ(object):
     HEADER_TYPE = "tosDiffServ"
