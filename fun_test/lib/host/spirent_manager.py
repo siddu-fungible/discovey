@@ -372,10 +372,10 @@ class SpirentManager(object):
                     existing_headers = self.get_object_children(handle=stream_block_handle)
                     fun_test.log("Headers found in %s: %s" % (stream_block_handle, existing_headers))
                     for header in delete_header:
-                        if header.lower() in existing_headers:
-                            fun_test.log("Deleting Header: %s" % header)
-                            self.delete_handle(handle=header)
-                            break
+                        for handle in existing_headers:
+                            if header.lower() in handle:
+                                fun_test.log("Deleting Header: %s" % handle)
+                                self.delete_handle(handle=handle)
                 handle = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle, **attributes)
             else:
                 child = header_obj.HEADER_TYPE.lower()
@@ -386,6 +386,21 @@ class SpirentManager(object):
                 header_obj._spirent_handle = handle
             if self.apply_configuration():
                 result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def delete_frame_headers(self, header_types, stream_block_handle):
+        result = False
+        try:
+            headers = self.get_object_children(handle=stream_block_handle)
+            fun_test.debug("Headers found in %s: %s" % (stream_block_handle, headers))
+            for header in header_types:
+                for handle in headers:
+                    if header.lower() in handle:
+                        fun_test.log("Deleting Header: %s" % handle)
+                        self.delete_handle(handle=handle)
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
