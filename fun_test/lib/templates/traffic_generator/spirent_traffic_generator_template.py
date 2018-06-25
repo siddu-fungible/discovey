@@ -428,6 +428,7 @@ class Ethernet2Header(object):
     ARP_ETHERTYPE = "0806"
     RARP_ETHERTYPE = "8035"
     LLDP_ETHERTYPE = "88CC"
+    PTP_ETHERTYPE = "88F7"
     BROADCAST_MAC = "FF:FF:FF:FF:FF:FF"
     LLDP_MAC = "01:80:C2:00:00:0E"
     INTERNET_IPV6_ETHERTYPE = "86DD"
@@ -438,6 +439,134 @@ class Ethernet2Header(object):
         self.etherType = ether_type
         self.preamble = preamble
         self.srcMac = source_mac
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpFollowUpHeader(object):
+    HEADER_TYPE = "ptp:FollowUp"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpTimeStampHeader(object):
+    HEADER_TYPE = "ptp:Timestamp"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpSyncHeader(object):
+    HEADER_TYPE = "ptp:Sync"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpDelayReqHeader(object):
+    HEADER_TYPE = "ptp:DelayReq"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
 
     def get_attributes_dict(self):
         attributes = {}

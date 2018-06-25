@@ -1087,8 +1087,36 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
+    def configure_ptp_header(self, header_obj, stream_block_handle, create_header=False, delete_header_type="ipv4"):
+        result = False
+        try:
+            # TODO: Delete IPv4 Header
+            attributes = header_obj.get_attributes_dict()
+            if create_header:
+                existing_headers = self.stc_manager.get_object_children(stream_block_handle)
+                fun_test.debug("headers found in %s: %s" % (stream_block_handle, existing_headers))
+                for header in existing_headers:
+                    if delete_header_type in header:
+                        fun_test.log("Deleting Header: %s" % header)
+                        self.stc_manager.delete_handle(header)
+                        break
+                fun_test.log("Creating %s Header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
+                handle = self.stc_manager.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,
+                                                     Name=attributes['Name'])
+                fun_test.simple_assert(handle, "Handle Created")
 
+            child = header_obj.HEADER_TYPE.lower()
+            child_type = 'children-' + child
+            parent_handle = self.stc_manager.get_object_children(stream_block_handle, child_type=child_type)[0]
+            # child_handle = self.stc_manager.get_object_children(parent_handle)
+            # print child_handle
+            fun_test.log("Updating %s Header under %s" % (parent_handle, stream_block_handle))
+            handle = self.stc_manager.stc.create("ptpHeader", under=parent_handle, **attributes)
+            fun_test.simple_assert(handle, "Handle updated")
 
-
-
+            if self.stc_manager.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
