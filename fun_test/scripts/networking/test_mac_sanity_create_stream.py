@@ -173,18 +173,21 @@ class IPv4GoodFrameTestCase1(FunTestCase):
         rx_port_analyzer_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
 
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s" % rx_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
+        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results,rx_results), "Check FrameCount")
 
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters")
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -363,19 +366,22 @@ class IPv4RuntTestCase2(FunTestCase):
         tx_port_generator_results = template_obj.stc_manager.get_generator_port_results(
             port_handle=port_1, subscribe_handle=self.subscribe_results['generator_subscribe'])
 
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s" % rx_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
         fun_test.log("Tx Port Generator Results %s" % tx_port_generator_results)
+        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         # Check frame counts
         frames_received = 0
         fun_test.test_assert_expected(actual=int(rx_port_analyzer_results['TotalFrameCount']), expected=frames_received,
                                       message="Ensure no frame is received")
 
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
 
         dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -573,10 +579,15 @@ class IPv4GoodRuntTestCase3(FunTestCase):
         rx_port_analyzer_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
 
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s " % rx_results)
         fun_test.log("Tx Generator resukts %s" % tx_port_generator_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
+        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
                                       actual=int(tx_port_generator_results['GeneratorUndersizeFrameCount']) +
@@ -586,7 +597,6 @@ class IPv4GoodRuntTestCase3(FunTestCase):
         fun_test.test_assert_expected(expected=0, actual=int(rx_port_analyzer_results['FcsErrorFrameCount']),
                                       message="Ensure no FCS errors are seen")
 
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -594,7 +604,6 @@ class IPv4GoodRuntTestCase3(FunTestCase):
                                       expected=int(rx_port_analyzer_results['TotalFrameCount']),
                                       message="Ensure frames transmitted is None")
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
 
         dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)

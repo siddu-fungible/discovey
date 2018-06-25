@@ -843,12 +843,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 rx_result = self.stc_manager.get_rx_stream_block_results(
                     stream_block_handle=stream_obj.spirent_handle,
                     subscribe_handle=rx_subscribe_handle, summary=True)
+                fun_test.log("TX Results: %s" % rx_result)
                 fun_test.simple_assert(expression=rx_result, message=checkpoint)
 
                 checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
                 tx_result = self.stc_manager.get_tx_stream_block_results(
                     stream_block_handle=stream_obj.spirent_handle,
                     subscribe_handle=tx_subscribe_handle)
+                fun_test.log("RX Results: %s" % tx_result)
                 fun_test.simple_assert(expression=tx_result, message=checkpoint)
 
                 checkpoint = "Ensure Tx FrameCount is equal to Rx FrameCount for %d frame size (%s)" % (

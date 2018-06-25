@@ -247,8 +247,10 @@ class NuTransitIPv4LatencyTest(FunTestCase):
         checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (dut_config['ports'][0],
                                                                                                dut_config['ports'][1])
         port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
+        fun_test.log("DUT Port %d Results: %s" % (dut_config['ports'][0], port1_result))
         fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
         port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
+        fun_test.log("DUT Port %d Results: %s" % (dut_config['ports'][1], port2_result))
         fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
 
         frames_transmitted = get_dut_output_stats_value(result_stats=port1_result, stat_type=FRAMES_TRANSMITTED_OK)

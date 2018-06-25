@@ -272,12 +272,17 @@ class IPv4IncrementalTestCase1(FunTestCase):
         rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
         fun_test.log("Rx 2 Results %s" % rx_results_2)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_1)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
+        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
                              "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
@@ -298,9 +303,7 @@ class IPv4IncrementalTestCase1(FunTestCase):
                              "Ensure more than %s packets are received on port1" %
                              str(self.streamblock_obj_1.MaxFrameLength))
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
@@ -723,12 +726,17 @@ class IPv4RandomTestCase2(FunTestCase):
         rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
         fun_test.log("Rx 2 Results %s" % rx_results_2)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_1)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
+        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
                              "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
@@ -741,9 +749,7 @@ class IPv4RandomTestCase2(FunTestCase):
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
