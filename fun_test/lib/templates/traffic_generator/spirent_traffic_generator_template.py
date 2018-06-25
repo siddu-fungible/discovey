@@ -426,7 +426,10 @@ class Ethernet2Header(object):
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     INTERNET_IP_ETHERTYPE = "0800"
     ARP_ETHERTYPE = "0806"
+    RARP_ETHERTYPE = "8035"
+    LLDP_ETHERTYPE = "88CC"
     BROADCAST_MAC = "FF:FF:FF:FF:FF:FF"
+    LLDP_MAC = "01:80:C2:00:00:0E"
     INTERNET_IPV6_ETHERTYPE = "86DD"
 
     def __init__(self, destination_mac="00:00:01:00:00:01", ether_type=INTERNET_IP_ETHERTYPE,
@@ -959,7 +962,7 @@ class ARP(object):
     def spirent_handle(self, handle):
         self._spirent_handle = handle
 
-    
+
 class RARP(object):
     HEADER_TYPE = "arp:RARP"
     ETHERNET = "0001"
