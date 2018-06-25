@@ -20,7 +20,9 @@ class FunCPContainerInit(FunTestScript):
         f1_hostname = "funcp"
         f1_image_name = "nw-reg-user:v1"
         self.target_workspace = "/workspace"
-        arguments = '-f master -o master -n default'
+        # TODO Need a better way of passing these arguments to the entrypoint script; from a JSON prolly.
+        #arguments = '-f asurana/funcp -o asurana/funos -n {}/nutest.json'.format(self.target_workspace)
+        arguments = ''
         entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh {}".format(self.target_workspace, arguments)
         environment_variables = {"DOCKER": True,
                                  "WORKSPACE": workspace}
@@ -226,7 +228,7 @@ class BuildPalladiumImage(FunTestCase):
         if re.search(BUILD_STATUS, output):
             TEST_STATUS = False
         else:
-            cmd_list = ['bzip2 -d {}'.format(PALLADIUM_IMG_PATH),
+            cmd_list = ['bzip2 -dk {}'.format(PALLADIUM_IMG_PATH),
                         'scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_UNZIP_PATH, REGRESSION_USER, HOST, REGRESSION_USER)]
             try:
                 for cmd in cmd_list:
@@ -250,10 +252,4 @@ if __name__ == "__main__":
                BuildPalladiumImage,
                ):
         ts.add_test_case(tc())
-    '''
-    for tc in (GenerateCSR,
-               BuildPalladiumImage,
-               ):
-        ts.add_test_case(tc())
-    '''
     ts.run()

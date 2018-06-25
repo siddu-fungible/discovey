@@ -56,7 +56,7 @@ class DpcshProxy(object):
         try:
             timer = FunTimer(max_time=900)
             while not timer.is_expired():
-                fun_test.sleep("DPCsh to come up", seconds=180)
+                fun_test.sleep("DPCsh to come up", seconds=60)
                 output = self.network_controller_obj.echo_hello()
                 if output:
                     fun_test.log("Successfully started dpcsh echoed hello output: %s" % output)
@@ -201,6 +201,7 @@ class Palladium(object):
 
     def _get_reservation_key(self):
 
+        # Fake a reservation key to workaround Cadence bug
         return 99999 
         cmd = 'test_server -json'
         try:
@@ -228,6 +229,8 @@ class Palladium(object):
         return None 
 
     def _release_reservation(self):
+        
+        # Fake release of reservation key to workaround Cadence bug
         return
         cmd = 'test_server -rmkey {}'.format(self.reservation_key)
         try:
