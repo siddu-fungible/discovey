@@ -498,11 +498,64 @@ class NuTransitPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+
+class VoltestPerformance(models.Model):
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=20, default="voltest", choices=[(0, "voltest")])
+    output_VOL_TYPE_BLK_LSV_write_latency_max = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_write_latency_max")
+    output_VOL_TYPE_BLK_LSV_write_latency_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_write_latency_avg")
+    output_VOL_TYPE_BLK_LSV_write_latency_min = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_write_latency_min")
+    output_VOL_TYPE_BLK_LSV_write_IOPS = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_write_IOPS")
+    output_VOL_TYPE_BLK_LSV_write_Bandwidth = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_write_Bandwidth")
+    output_VOL_TYPE_BLK_LSV_read_latency_max = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_read_latency_max")
+    output_VOL_TYPE_BLK_LSV_read_latency_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_read_latency_avg")
+    output_VOL_TYPE_BLK_LSV_read_latency_min = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_read_latency_min")
+    output_VOL_TYPE_BLK_LSV_read_IOPS = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_read_IOPS")
+    output_VOL_TYPE_BLK_LSV_read_Bandwidth = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_read_Bandwidth")
+    output_FILTER_TYPE_XTS_ENCRYPT_latency_max = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_ENCRYPT_latency_max")
+    output_FILTER_TYPE_XTS_ENCRYPT_latency_avg = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_ENCRYPT_latency_avg")
+    output_FILTER_TYPE_XTS_ENCRYPT_latency_min = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_ENCRYPT_latency_min")
+    output_FILTER_TYPE_XTS_ENCRYPT_IOPS = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_ENCRYPT_IOPS")
+    output_FILTER_TYPE_XTS_ENCRYPT_Bandwidth = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_ENCRYPT_Bandwidth")
+    output_FILTER_TYPE_XTS_DECRYPT_latency_max = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_DECRYPT_latency_max")
+    output_FILTER_TYPE_XTS_DECRYPT_latency_avg = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_DECRYPT_latency_avg")
+    output_FILTER_TYPE_XTS_DECRYPT_latency_min = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_DECRYPT_latency_min")
+    output_FILTER_TYPE_XTS_DECRYPT_IOPS = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_DECRYPT_IOPS")
+    output_FILTER_TYPE_XTS_DECRYPT_Bandwidth = models.IntegerField(verbose_name="output_FILTER_TYPE_XTS_DECRYPT_Bandwidth")
+    output_FILTER_TYPE_DEFLATE_latency_max = models.IntegerField(verbose_name="output_FILTER_TYPE_DEFLATE_latency_max")
+    output_FILTER_TYPE_DEFLATE_latency_avg = models.IntegerField(verbose_name="output_FILTER_TYPE_DEFLATE_latency_avg")
+    output_FILTER_TYPE_DEFLATE_latency_min = models.IntegerField(verbose_name="output_FILTER_TYPE_DEFLATE_latency_min")
+    output_FILTER_TYPE_DEFLATE_IOPS = models.IntegerField(verbose_name="output_FILTER_TYPE_DEFLATE_IOPS")
+    output_FILTER_TYPE_DEFLATE_Bandwidth = models.IntegerField(verbose_name="output_FILTER_TYPE_DEFLATE_Bandwidth")
+    output_FILTER_TYPE_INFLATE_latency_max = models.IntegerField(verbose_name="output_FILTER_TYPE_INFLATE_latency_max")
+    output_FILTER_TYPE_INFLATE_latency_avg = models.IntegerField(verbose_name="output_FILTER_TYPE_INFLATE_latency_avg")
+    output_FILTER_TYPE_INFLATE_latency_min = models.IntegerField(verbose_name="output_FILTER_TYPE_INFLATE_latency_min")
+    output_FILTER_TYPE_INFLATE_IOPS = models.IntegerField(verbose_name="output_FILTER_TYPE_INFLATE_IOPS")
+    output_FILTER_TYPE_INFLATE_Bandwidth = models.IntegerField(verbose_name="output_FILTER_TYPE_INFLATE_Bandwidth")
+    output_VOL_TYPE_BLK_EC_write_latency_max = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_latency_max")
+    output_VOL_TYPE_BLK_EC_write_latency_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_latency_avg")
+    output_VOL_TYPE_BLK_EC_write_latency_min = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_latency_min")
+    output_VOL_TYPE_BLK_EC_write_IOPS = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_IOPS")
+    output_VOL_TYPE_BLK_EC_write_Bandwidth = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_Bandwidth")
+    output_VOL_TYPE_BLK_EC_read_latency_max = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_latency_max")
+    output_VOL_TYPE_BLK_EC_read_latency_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_latency_avg")
+    output_VOL_TYPE_BLK_EC_read_latency_min = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_latency_min")
+    output_VOL_TYPE_BLK_EC_read_IOPS = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_IOPS")
+    output_VOL_TYPE_BLK_EC_read_Bandwidth = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth")
+
 class BcopyPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
         model = BcopyPerformance
         fields = "__all__"
+
+
+class VoltestPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = VoltestPerformance
+        fields = "__all__"
+
 
 class BcopyFloodDmaPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
