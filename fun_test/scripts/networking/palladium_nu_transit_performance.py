@@ -53,6 +53,8 @@ class FunTestCase1(FunTestCase):
                 # s = "2018-05-07 23:52:39.562324"
 
                 dt = parse_datetime(data_entry["timestamp"])
+                dt = datetime(year=dt.year, month=dt.month, day=dt.day, hour=dt.hour, minute=dt.minute)
+                # dt.replace()
                 metrics["input_frame_size"] = data_entry["frame_size"]
                 metrics["output_latency_avg"] = data_entry["latency_avg"]
                 metrics["output_latency_min"] = data_entry["latency_min"]
