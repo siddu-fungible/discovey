@@ -480,7 +480,7 @@ class LsvZipCryptoPerformance(models.Model):
 class NuTransitPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.IntegerField(verbose_name="Fixed Frame Size Test", choices=[(0, 1500), (1, 1000), (2, 200), (3, 9000), (4, 16380), (5, 64)])
-    input_throughput = models.FloatField(verbose_name="Throughput in Mbps")
+    output_throughput = models.FloatField(verbose_name="Throughput in Mbps")
     output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
     output_latency_min = models.FloatField(verbose_name="Latency Min in us")

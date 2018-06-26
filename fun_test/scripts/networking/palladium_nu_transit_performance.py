@@ -60,7 +60,8 @@ class FunTestCase1(FunTestCase):
                 metrics["output_latency_min"] = data_entry["latency_min"]
                 metrics["output_latency_max"] = data_entry["latency_max"]
                 metrics["output_pps"] = data_entry["pps"]
-                metrics["input_throughput"] = float(data_entry["throughput"].replace("Mbps", "").strip())
+                metrics["output_throughput"] = float(data_entry["throughput"])
+                # metrics["input_throughput"] = float(data_entry["throughput"].replace("Mbps", "").strip())
                 metrics["input_mode"] = data_entry["mode"].upper()
                 metrics["output_jitter_min"] = data_entry.get("jitter_min", 0)
                 metrics["output_jitter_max"] = data_entry.get("jitter_max", 0)
