@@ -1,0 +1,8 @@
+[
+  {"path": "networking/palladium_image_build.py", "abort_suite_on_failure": true},
+  {"path": "networking/palladium_bringup.py", "abort_suite_on_failure": true},
+  {"path": "networking/test_all_frame_size.py"},
+  {"path": "networking/test_mac_sanity_create_stream.py"},
+  {"path": "networking/palladium_cleanup.py"}
+
+]
