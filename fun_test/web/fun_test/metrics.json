@@ -21,6 +21,15 @@
                 "label": "NU Transit: Latency",
                 "children": [],
                 "weight": 1
+          },
+          {     
+                "info": "NU Transit: Throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU Transit: Throughput",
+                "label": "NU Transit: Throughput",
+                "children": [],
+                "weight": 1
           }
         ],
         "weight": 1
