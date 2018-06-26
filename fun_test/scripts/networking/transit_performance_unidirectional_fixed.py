@@ -31,9 +31,9 @@ jitter_results = None
 NU_CONFIG_SPEC = fun_test.get_script_parent_directory() + "/networking" + "/nu_configs.json"
 TOLERANCE_PERCENT = 10
 TRAFFIC_DURATION = 60
-IPV4_FRAMES = [200, 1000, 1500, 3000, 9000, 16380]
+IPV4_FRAMES = [64, 200, 1000, 1500, 3000, 9000]
 IPV6_FRAMES = [78, 200, 1000, 1500, 3000, 9000]
-LOAD = 15
+LOAD = 13
 chassis_type = None
 
 
