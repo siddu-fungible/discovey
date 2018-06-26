@@ -8,7 +8,7 @@ from web.fun_test.metrics_models import VoltestPerformance
 from datetime import datetime
 
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
-STORAGE_PERFORMANCE_TEST_TAG = "storage_performance"
+STORAGE_PERFORMANCE_TEST_TAG = "voltest_performance"
 TOLERANCE_PERCENTAGE = 5
 
 
@@ -85,6 +85,12 @@ class FunTestCase1(FunTestCase):
                                             "VOL_TYPE_BLK_EC_read"]
                     if metric_name not in allowed_metric_names:
                         continue
+
+                    if "andwidth" in metric_type.lower():
+                        if "avg_op_bw_mbps" in line:
+                            metric_type += "_avg"
+                        elif "total_op_bw_mbps":
+                            metric_type += "_total"
 
                     try:  # Either a raw value or json value
                         j = json.loads(value)
