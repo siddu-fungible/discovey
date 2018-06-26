@@ -28,6 +28,7 @@
         <thead class="qa-thead">
         <tr>
             <th>Name</th>
+            <th>Field</th>
             <th>Min</th>
             <th>Max</th>
             <th>Expected</th>
@@ -35,6 +36,9 @@
 
         </thead>
         <tr ng-repeat="dataSet in previewDataSets track by $index">
+            <td>
+                {{ dataSet.name }}
+            </td>
             <td>
                 {{ dataSet.output.name }}
             </td>
@@ -53,22 +57,27 @@
 
 
 
-    <div ng-if="editing" class="panel panel-default col-lg-10 col-xl-6 col-xxl-6" style="padding-top: 10px">
+    <div ng-if="editing" class="col-lg-10 col-xl-6 col-xxl-6" style="padding-top: 10px">
         <div class="panel-body">
             <div class="row">
                 <div align="right">
+                <!--div align="right"-->
                     <a href="#edit-panel" ng-click="dismiss()">x close</a>
                 </div>
                 <div class="col-lg-10 col-xl-10 pull-left">
                     <table id="edit-panel" class="table table-nonfluid table-borderless"
                            ng-repeat="dataSet in previewDataSets track by $index">
                         <tr>
-                            <th>Output</th>
+                            <th>Name</th>
+                            <th>Field</th>
                             <th>Min</th>
                             <th>Max</th>
                             <th>Expected</th>
                         </tr>
                         <tr>
+                            <td>
+                                {{ dataSet.name }}
+                            </td>
                             <td>
                                 {{ dataSet.output.name }}
                             </td>
