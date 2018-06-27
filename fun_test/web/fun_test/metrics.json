@@ -14,22 +14,22 @@
         "label": "Networking",
         "children": [
           {
-                "info": "NU Transit: Latency",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU Transit: Latency",
-                "label": "NU Transit: Latency",
-                "children": [],
-                "weight": 1
+            "info": "NU Transit: Latency",
+            "metric_model_name": "NuTransitPerformance",
+            "leaf": true,
+            "name": "NU Transit: Latency",
+            "label": "NU Transit: Latency",
+            "children": [],
+            "weight": 1
           },
-          {     
-                "info": "NU Transit: Throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU Transit: Throughput",
-                "label": "NU Transit: Throughput",
-                "children": [],
-                "weight": 1
+          {
+            "info": "NU Transit: Throughput",
+            "metric_model_name": "NuTransitPerformance",
+            "leaf": true,
+            "name": "NU Transit: Throughput",
+            "label": "NU Transit: Throughput",
+            "children": [],
+            "weight": 1
           }
         ],
         "weight": 1
@@ -42,143 +42,209 @@
         "label": "Storage",
         "children": [
           {
-            "info": "Erasure coding",
+            "info": "Volume Type",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "Erasure coding",
-            "label": "Erasure coding",
+            "name": "Volume Type",
+            "label": "Volume Type",
             "children": [
               {
-                "info": "EC 8:4 Latency",
-                "metric_model_name": "EcPerformance",
-                "leaf": true,
-                "name": "EC 8:4 Latency",
-                "label": "EC 8:4 Latency",
-                "children": [],
+                "info": "LSV",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "LSV",
+                "label": "LSV",
+                "children": [
+                  {
+                    "info": "BLK_LSV: Latency",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "BLK_LSV: Latency",
+                    "label": "BLK_LSV: Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "BLK_LSV: Bandwidth",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "BLK_LSV: Bandwidth",
+                    "label": "BLK_LSV: Bandwidth",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "BLK_LSV: IOPS",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "BLK_LSV: IOPS",
+                    "label": "BLK_LSV: IOPS",
+                    "children": [],
+                    "weight": 1
+                  }
+                ],
                 "weight": 1
               },
               {
-                "info": "EC 8:4 Throughput",
-                "metric_model_name": "EcPerformance",
-                "leaf": true,
-                "name": "EC 8:4 Throughput",
-                "label": "EC 8:4 Throughput",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Voltest: Latency",
-                "metric_model_name": "EcVolPerformance",
-                "leaf": true,
-                "name": "Voltest: Latency",
-                "label": "Voltest: Latency",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Voltest: IOPS",
-                "metric_model_name": "EcVolPerformance",
-                "leaf": true,
-                "name": "Voltest: IOPS",
-                "label": "Voltest: IOPS",
-                "children": [],
+                "info": "EC",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "EC",
+                "label": "EC",
+                "children": [
+                  {
+                    "info": "BLK_EC: Latency",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "BLK_EC: Latency",
+                    "label": "BLK_EC: Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "BLK_EC: Bandwidth",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "BLK_EC: Bandwidth",
+                    "label": "BLK_EC: Bandwidth",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "BLK_EC: IOPS",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "BLK_EC: IOPS",
+                    "label": "BLK_EC: IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "EC 8:4 Latency",
+                    "metric_model_name": "EcPerformance",
+                    "leaf": true,
+                    "name": "EC 8:4 Latency",
+                    "label": "EC 8:4 Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "EC 8:4 Throughput",
+                    "metric_model_name": "EcPerformance",
+                    "leaf": true,
+                    "name": "EC 8:4 Throughput",
+                    "label": "EC 8:4 Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ECVOL: Latency",
+                    "metric_model_name": "EcVolPerformance",
+                    "leaf": true,
+                    "name": "ECVOL: Latency",
+                    "label": "ECVOL: Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ECVOL: IOPS",
+                    "metric_model_name": "EcVolPerformance",
+                    "leaf": true,
+                    "name": "ECVOL: IOPS",
+                    "label": "ECVOL: IOPS",
+                    "children": [],
+                    "weight": 1
+                  }
+                ],
                 "weight": 1
               }
             ],
             "weight": 1
           },
           {
-            "info": "LSV",
+            "info": "Filter",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "LSV",
-            "label": "LSV",
+            "name": "Filter",
+            "label": "Filter",
             "children": [
               {
-                "info": "LSV: IOPS",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "LSV: IOPS",
-                "label": "LSV: IOPS",
-                "children": [],
+                "info": "Block Crypto",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Block Crypto",
+                "label": "Block Crypto",
+                "children": [
+                  {
+                    "info": "XTS: Latency",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "XTS: Latency",
+                    "label": "XTS: Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "XTS: Bandwidth",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "XTS: Bandwidth",
+                    "label": "XTS: Bandwidth",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "XTS: IOPS",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "XTS: IOPS",
+                    "label": "XTS: IOPS",
+                    "children": [],
+                    "weight": 1
+                  }
+                ],
                 "weight": 1
               },
               {
-                "info": "LSV: Op Bandwidth",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "LSV: Op Bandwidth",
-                "label": "LSV: Op Bandwidth",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "LSV: Latency",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "LSV: Latency",
-                "label": "LSV: Latency",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Filter: XTS IOPS",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "Filter: XTS IOPS",
-                "label": "Filter: XTS IOPS",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Filter: XTS Op Bandwidth",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "Filter: XTS Op Bandwidth",
-                "label": "Filter: XTS Op Bandwidth",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Filter: XTS Latency",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "Filter: XTS Latency",
-                "label": "Filter: XTS Latency",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Filter: Zip IOPS",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "Filter: Zip IOPS",
-                "label": "Filter: Zip IOPS",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Filter: Zip Op Bandwidth",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "Filter: Zip Op Bandwidth",
-                "label": "Filter: Zip Op Bandwidth",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Filter: Zip Latency",
-                "metric_model_name": "LsvZipCryptoPerformance",
-                "leaf": true,
-                "name": "Filter: Zip Latency",
-                "label": "Filter: Zip Latency",
-                "children": [],
+                "info": "Block Compress",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Block Compress",
+                "label": "Block Compress",
+                "children": [
+                  {
+                    "info": "ZIP: Latency",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "ZIP: Latency",
+                    "label": "ZIP: Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ZIP: Bandwidth",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "ZIP: Bandwidth",
+                    "label": "ZIP: Bandwidth",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ZIP: IOPS",
+                    "metric_model_name": "VoltestPerformance",
+                    "leaf": true,
+                    "name": "ZIP: IOPS",
+                    "label": "ZIP: IOPS",
+                    "children": [],
+                    "weight": 1
+                  }
+                ],
                 "weight": 1
               }
             ],
             "weight": 1
           }
-
         ],
         "weight": 1
       },
@@ -188,34 +254,17 @@
         "leaf": false,
         "name": "Accelerators",
         "label": "Accelerators",
-        "children": [          {
-            "info": "Erasure coding",
+        "children": [
+          {
+            "info": "EC",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "Erasure coding",
-            "label": "Erasure coding",
-            "children": [
-              {
-                "info": "EC 8:4 Latency",
-                "metric_model_name": "EcPerformance",
-                "leaf": true,
-                "name": "EC 8:4 Latency",
-                "label": "EC 8:4 Latency",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "EC 8:4 Throughput",
-                "metric_model_name": "EcPerformance",
-                "leaf": true,
-                "name": "EC 8:4 Throughput",
-                "label": "EC 8:4 Throughput",
-                "children": [],
-                "weight": 1
-              }
-            ],
-            "weight": 1
-          }],
+            "name": "EC",
+            "label": "EC",
+            "weight": 1,
+            "reference": true
+          }
+        ],
         "weight": 1
       },
       {
@@ -278,7 +327,6 @@
                 "children": [],
                 "leaf": true,
                 "weight": 1
-
               },
               {
                 "name": "Bcopy: Plain: Avg Latency",

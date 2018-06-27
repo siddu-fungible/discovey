@@ -614,3 +614,18 @@ peek_nu_sfg_stats_parser.add_argument('-grep', help="Grep regex pattern", defaul
 # Hnu SFG stats
 peek_hnu_sfg_stats_parser = peek_sfg_stats_parsers.add_parser('hnu', help="Peek HNU SFG stats")
 peek_hnu_sfg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# Per VP stats
+peek_per_vp_stats_parser = peek_stats_parsers.add_parser('per_vp', help="Peek Per VP Stats")
+peek_per_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# nwqm stats
+peek_nwqm_stats_parser = peek_stats_parsers.add_parser('nwqm', help="Peek nwqm stats")
+peek_nwqm_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
+
+# Nu mpg stats
+peek_mpg_stats_parser = peek_stats_parsers.add_parser('mpg', help='Peek mpg stats')
+
+# Nu per vppkts
+peek_pervppkts_stats_parser = peek_stats_parsers.add_parser('pervppkts', help='Peek per vppkts stats')
+peek_pervppkts_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
