@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+import re
 
 FRAMES_RECEIVED_OK = "aFramesReceivedOK"
 FRAMES_TRANSMITTED_OK = "aFramesTransmittedOK"
@@ -16,7 +17,7 @@ ETHER_STATS_PKTS_128_TO_255_OCTETS = "etherStatsPkts128to255Octets"
 ETHER_STATS_PKTS_256_TO_511_OCTETS = "etherStatsPkts256to511Octets"
 ETHER_STATS_PKTS_512_TO_1023_OCTETS = "etherStatsPkts512to1023Octets"
 ETHER_STATS_PKTS_1024_TO_1518_OCTETS = "etherStatsPkts1024to1518Octets"
-ETHER_STATS_PKTS_1519_TO_MAX_OCTETS = "etherStatsPkts15189toMaxctets"
+ETHER_STATS_PKTS_1519_TO_MAX_OCTETS = "etherStatsPkts1519toMaxOctets"
 IF_IN_ERRORS = "ifInErrors"
 IF_IN_UCAST_PKTS = "ifInUcastPkts"
 IF_OUT_ERRORS = "ifOutErrors"
@@ -26,6 +27,11 @@ CBFC_PAUSE_FRAMES_RECEIVED = "CBFCPAUSEFramesReceived"
 CBFC_PAUSE_FRAMES_TRANSMITTED = "CBFCPAUSEFramesTransmitted"
 FRAME_CHECK_SEQUENCE_ERROR = "aFrameCheckSequenceErrors"
 CLASS_0 = "0"
+VP_PACKETS_TOTAL_IN = "vp_packets_total_in"
+VP_PACKETS_TOTAL_OUT = "vp_packets_total_out"
+VP_PACKETS_OUT_HU = "vp_packets_out_hu"
+VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
+ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED = "count_for_all_non_fcp_packets_received"
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -108,7 +114,7 @@ def get_fpg_port_value(dut_port_number):
             result = int(dut_port_number) / operator_value
     except Exception as ex:
         fun_test.critical(str(ex))
-        return result
+    return result
 
 
 def get_psw_global_stats_values(psw_stats_output={}, key_list=[]):
@@ -124,6 +130,51 @@ def get_psw_global_stats_values(psw_stats_output={}, key_list=[]):
                             break
             else:
                 fun_test.log("Key %s not found in psw_stats_counter_name" % key)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def parse_result_dict(result_dict):
+    result = {}
+    try:
+        for key, val in result_dict.iteritems():
+            new_key = re.sub('[()]', '', key)
+            new_key = new_key.replace(' ', '_').lower()
+            result[new_key] = val
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_vp_pkts_stats_values(network_controller_obj):
+    result = None
+    try:
+        output = network_controller_obj.peek_vp_packets()
+        fun_test.simple_assert(output, "Ensure vp packet stats are grepped")
+        result = parse_result_dict(output)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_bam_stats_values(network_controller_obj=None):
+    result = None
+    try:
+        output = network_controller_obj.peek_bam_stats()
+        fun_test.simple_assert(output, "Ensure bam stats are grepped")
+        result = parse_result_dict(output)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_erp_stats_values(network_controller_obj=None, hnu=False, flex=False):
+    result = None
+    try:
+        output = network_controller_obj.peek_erp_global_stats(hnu=hnu, flex=flex)
+        fun_test.simple_assert(output, "Ensure bam stats are grepped")
+        result = parse_result_dict(output)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
