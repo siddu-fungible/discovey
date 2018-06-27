@@ -928,7 +928,7 @@ class NetworkController(DpcshClient):
     def peek_psw_global_stats(self):
         stats = None
         try:
-            stats_cmd = "stats/psw/global"
+            stats_cmd = "stats/psw/nu"
             fun_test.debug("Getting PSW global stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get PSW global stats")
@@ -1005,10 +1005,14 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_erp_global_stats(self):
+    def peek_erp_global_stats(self, hnu=False, flex=False):
         stats = None
         try:
-            stats_cmd = "stats/erp/global"
+            stats_cmd = "stats/erp/nu/global"
+            if hnu:
+                stats_cmd = "stats/erp/hnu/global"
+            if flex:
+                stats_cmd = "stats/erp/flex/global"
             fun_test.debug("Getting ERP global stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get ERP global stats")
@@ -1072,3 +1076,30 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
+    def peek_bam_stats(self):
+        stats = None
+        try:
+            cmd = "stats/bam"
+            fun_test.debug("Getting bam stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get bam stats")
+            fun_test.debug("BAM stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_parser_stats(self, hnu=False):
+        stats = None
+        try:
+            cmd = "stats/prsr/nu"
+            if hnu:
+                cmd = "stats/prsr/hnu"
+            fun_test.debug("Getting parser stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get parser stats")
+            fun_test.debug("parser stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
