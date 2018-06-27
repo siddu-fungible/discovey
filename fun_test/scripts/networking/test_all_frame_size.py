@@ -253,6 +253,8 @@ class IPv4IncrementalTestCase1(FunTestCase):
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+
         # Execute traffic
         start = template_obj.enable_generator_configs(generator_configs=[gen_obj_1, gen_obj_2])
         fun_test.test_assert(start, "Starting generator config")
@@ -301,6 +303,8 @@ class IPv4IncrementalTestCase1(FunTestCase):
         dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
 
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
@@ -309,25 +313,6 @@ class IPv4IncrementalTestCase1(FunTestCase):
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
         fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
         fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
-
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
-
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
-
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
-
-        fun_test.test_assert(int(rx_results_1['FrameCount']) >= int(self.streamblock_obj_1.MaxFrameLength),
-                             "Ensure more than %s packets are received on port2" %
-                             str(self.streamblock_obj_1.MaxFrameLength))
-
-        fun_test.test_assert(int(rx_results_2['FrameCount']) >= int(self.streamblock_obj_1.MaxFrameLength),
-                             "Ensure more than %s packets are received on port1" %
-                             str(self.streamblock_obj_1.MaxFrameLength))
 
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
@@ -440,10 +425,14 @@ class IPv4IncrementalTestCase1(FunTestCase):
                                  }
 
         second_last_counter = 1519
-        max_counter_value = self.generator_step_size - second_last_counter
-        first_counter_value = 128 - self.min_frame_size
-        expected_octet_counters = {'127': first_counter_value, '255': 128, '511': 256, '1023': 512, '1518': 495,
+        max_counter_value = max_frame_length - second_last_counter
+        expected_octet_counters = {'64': 1, '127': 63, '255': 128, '511': 256, '1023': 512, '1518': 495,
                                    'max': max_counter_value}
+
+        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
+        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
 
         fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
                                       message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
@@ -503,6 +492,12 @@ class IPv4IncrementalTestCase1(FunTestCase):
                     fun_test.test_assert_expected(expected=expected_octet_counters[key2], actual=int(val2),
                                                   message="Ensure correct value is seen for %s octet in %s of "
                                                           "dut port %s" % (key2, key1, key))
+
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
+
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
 
 
 class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
@@ -737,6 +732,7 @@ class IPv4RandomTestCase2(FunTestCase):
 
     def run(self):
         # Execute traffic
+        psw_stats = network_controller_obj.peek_psw_global_stats()
 
         start = template_obj.enable_generator_configs(generator_configs=[gen_obj_1, gen_obj_2])
         fun_test.test_assert(start, "Starting generator config")
@@ -797,17 +793,6 @@ class IPv4RandomTestCase2(FunTestCase):
         fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
         fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
-
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
-
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
-
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
@@ -815,6 +800,11 @@ class IPv4RandomTestCase2(FunTestCase):
         dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
         dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
         dut_port_2_receive = get_dut_output_stats_value(dut_port_2_results, FRAMES_RECEIVED_OK, tx=False)
+
+        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
+        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
+                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
 
         fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
                                       message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
@@ -829,6 +819,12 @@ class IPv4RandomTestCase2(FunTestCase):
 
         fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
                                       message="Ensure frames transmitted from DUT and counter on spirent match")
+
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
+
+        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
+        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
         '''
         fetch_list = []
         different = False
@@ -981,6 +977,7 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
 if __name__ == "__main__":
     test_case_mode = fun_test.get_local_setting(setting='ip_version')
     ts = SpirentSetup()
+    test_case_mode = test_case_mode if test_case_mode else 4
     if test_case_mode == 6:
         ts.add_test_case(IPv6IncrementalTestCase1())
         ts.add_test_case(IPv6RandomTestCase2())
