@@ -551,8 +551,17 @@ peek_fcp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=N
 
 # WRO Stats
 peek_wro_stats_parser = peek_stats_parsers.add_parser('wro', help="NU Peek WRO Stats")
-peek_wro_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
-peek_wro_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_wro_stats_parsers = peek_wro_stats_parser.add_subparsers(title='subcommands', help="")
+
+# WRO NU stats
+peek_wro_nu_stats_parser = peek_wro_stats_parsers.add_parser('nu', help="Peek NU wro stats")
+peek_wro_nu_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
+peek_wro_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# WRO HNU stats
+peek_wro_hnu_stats_parser = peek_wro_stats_parsers.add_parser('hnu', help="Peek NU wro stats")
+peek_wro_hnu_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
+peek_wro_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # bam stats
 peek_bam_stats_parser = peek_stats_parsers.add_parser('bam', help="NU Peek bam Stats")
