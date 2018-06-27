@@ -49,17 +49,22 @@ else
     else
         cd $WORKSPACE/FunControlPlane
         git pull
+        cd $WORKSPACE
     fi
 fi
+echo "FUNOS dir"
 if [ $FUNOSBR ]; then
     sudo rm -rf $WORKSPACE/FunOS
     git clone -b $FUNOSBR git@github.com:fungible-inc/FunOS.git
 else
     if [ ! -d $WORKSPACE/FunOS ]; then
+        echo ">>>> cloning FunOS"
         git clone git@github.com:fungible-inc/FunOS.git
     else
+        echo ">>>> updating FunOS"
         cd $WORKSPACE/FunOS
         git pull
+        cd $WORKSPACE
     fi
 fi
 
@@ -68,6 +73,7 @@ if [ ! -d $WORKSPACE/FunSDK ]; then
 else
     cd $WORKSPACE/FunSDK
     git pull
+    cd $WORKSPACE
 fi
 
 if [ "$NUTEST" ]; then
