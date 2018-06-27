@@ -138,20 +138,20 @@
                     "weight": 1
                   },
                   {
-                    "info": "Voltest: Latency",
+                    "info": "ECVOL: Latency",
                     "metric_model_name": "EcVolPerformance",
                     "leaf": true,
-                    "name": "Voltest: Latency",
-                    "label": "Voltest: Latency",
+                    "name": "ECVOL: Latency",
+                    "label": "ECVOL: Latency",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "Voltest: IOPS",
+                    "info": "ECVOL: IOPS",
                     "metric_model_name": "EcVolPerformance",
                     "leaf": true,
-                    "name": "Voltest: IOPS",
-                    "label": "Voltest: IOPS",
+                    "name": "ECVOL: IOPS",
+                    "label": "ECVOL: IOPS",
                     "children": [],
                     "weight": 1
                   }
