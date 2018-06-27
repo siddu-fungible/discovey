@@ -777,6 +777,7 @@ class BroadcastTestCase4(FunTestCase):
 if __name__ == "__main__":
     test_case_mode = fun_test.get_local_setting(setting="ip_version")
     ts = SpirentSetup()
+    test_case_mode = test_case_mode if test_case_mode else 4
 
     if test_case_mode == 6:
         ts.add_test_case(IPv6GoodFrameTestCase1())
