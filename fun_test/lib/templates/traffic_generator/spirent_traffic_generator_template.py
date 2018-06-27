@@ -145,7 +145,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                 record = OrderedDict()
                 record['mode'] = mode.upper()
                 record['version'] = fun_test.get_version()
-                record['ip_version'] = ip_version
+                # record['ip_version'] = ip_version
                 record['timestamp'] = timestamp
                 frame_size = int(key.split('_')[1])
                 record['frame_size'] = frame_size
