@@ -609,7 +609,7 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
         config_obj = template_obj.configure_generator_config(port_handle=port_2,
                                                              generator_config_obj=gen_config_obj)
         fun_test.test_assert(config_obj,
-                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_2))
 
     def run(self):
         super(IPv6IncrementalTestCase1, self).run()
@@ -969,7 +969,7 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
         config_obj = template_obj.configure_generator_config(port_handle=port_2,
                                                              generator_config_obj=gen_config_obj)
         fun_test.test_assert(config_obj,
-                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_2))
 
     def run(self):
         super(IPv6RandomTestCase2, self).run()
