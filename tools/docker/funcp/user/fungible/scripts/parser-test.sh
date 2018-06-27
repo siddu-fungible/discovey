@@ -72,6 +72,7 @@ fi
 
 if [ "$NUTEST" ]; then
     echo ">>>>>>>>>>>>copying nutest.json"
+    echo "cp $NUTEST $WORKSPACE/FunControlPlane/networking/asicd/libnu/test/"
     cp $NUTEST $WORKSPACE/FunControlPlane/networking/asicd/libnu/test/
 fi
 

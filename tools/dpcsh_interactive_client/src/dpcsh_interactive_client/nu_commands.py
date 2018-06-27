@@ -1205,10 +1205,11 @@ class PeekCommands(object):
             cmd = "stats/fcp/tunnel[%d]" % tunnel_id
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_wro_stats(self, tunnel_id=None, grep_regex=None):
-        cmd = "stats/wro/global"
+    def peek_wro_stats(self, cmd_type, tunnel_id=None, grep_regex=None):
         if tunnel_id:
-            cmd = "stats/wro/tunnel[%d]" % tunnel_id
+            cmd = "stats/wro/%s/tunnel[%d]" % (cmd_type, tunnel_id)
+        else:
+            cmd = "stats/wro/%s/global" % cmd_type
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
     def peek_bam_stats(self, grep_regex=None):
