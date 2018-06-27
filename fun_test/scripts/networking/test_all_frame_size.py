@@ -977,7 +977,7 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
 if __name__ == "__main__":
     test_case_mode = fun_test.get_local_setting(setting='ip_version')
     ts = SpirentSetup()
-    test_case_mode = test_case_mode if test_case_mode else 4
+    test_case_mode = test_case_mode if test_case_mode else 6
     if test_case_mode == 6:
         ts.add_test_case(IPv6IncrementalTestCase1())
         ts.add_test_case(IPv6RandomTestCase2())
