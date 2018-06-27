@@ -433,6 +433,21 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_sfg_stats(stats_type='hnu', grep_regex=grep_regex)
 
+    def peek_per_vp_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_stats_per_vp(grep_regex=grep_regex)
+
+    def peek_nwqm_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_nwqm_stats(grep_regex=grep_regex)
+
+    def peek_mpg_stats(self, args):
+        self._peek_cmd_obj.peek_mpg_stats()
+
+    def peek_pervppkts_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_pervppkts_stats(grep_regex=grep_regex)
+
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
 
@@ -545,6 +560,10 @@ class CmdController(Cmd):
     peek_wred_ecn_stats_parser.set_defaults(func=peek_nu_qos_wred_ecn_stats)
     peek_nu_sfg_stats_parser.set_defaults(func=peek_nu_sfg_stats)
     peek_hnu_sfg_stats_parser.set_defaults(func=peek_hnu_sfg_stats)
+    peek_per_vp_stats_parser.set_defaults(func=peek_per_vp_stats)
+    peek_nwqm_stats_parser.set_defaults(func=peek_nwqm_stats)
+    peek_mpg_stats_parser.set_defaults(func=peek_mpg_stats)
+    peek_pervppkts_stats_parser.set_defaults(func=peek_pervppkts_stats)
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
@@ -592,7 +611,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.23.102", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
