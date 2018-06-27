@@ -176,6 +176,9 @@ class IPv4GoodFrameTestCase1(FunTestCase):
         dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
 
+        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+        dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
+
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s" % rx_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
@@ -189,9 +192,6 @@ class IPv4GoodFrameTestCase1(FunTestCase):
 
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
-
-        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
 
         fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
                                       message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
@@ -581,6 +581,8 @@ class IPv4GoodRuntTestCase3(FunTestCase):
 
         dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
         dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+        dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
 
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s " % rx_results)
@@ -599,14 +601,12 @@ class IPv4GoodRuntTestCase3(FunTestCase):
 
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
-        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
         fun_test.test_assert_expected(actual=int(dut_port_2_transmit),
                                       expected=int(rx_port_analyzer_results['TotalFrameCount']),
                                       message="Ensure frames transmitted is None")
 
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
 
-        dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
         fun_test.test_assert_expected(expected=int(tx_port_generator_results['GeneratorUndersizeFrameCount']),
                                       actual=int(dut_port_1_undersize_pkts),
                                       message="Ensure packets are marked undersize on rx port of dut")
