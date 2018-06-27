@@ -31,6 +31,9 @@ VP_PACKETS_TOTAL_IN = "vp_packets_total_in"
 VP_PACKETS_TOTAL_OUT = "vp_packets_total_out"
 VP_PACKETS_OUT_HU = "vp_packets_out_hu"
 VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
+VP_PACKETS_OUT_ETP = "vp_packets_out_etp"
+VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
+VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
 ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED = "count_for_all_non_fcp_packets_received"
 
 
@@ -117,19 +120,48 @@ def get_fpg_port_value(dut_port_number):
     return result
 
 
-def get_psw_global_stats_values(psw_stats_output={}, key_list=[]):
+def get_psw_global_stats_values(psw_stats_output={}, input=False, input_key_list=[], output=False, output_key_list=[],
+                                prm=False, prm_key_list=[]):
     result = {}
     try:
-        for key in key_list:
-            result[key] = None
-            if psw_global_stats_counter_names.has_key(key):
-                for key1, val1 in psw_stats_output.iteritems():
-                    for key2, val2 in val1.iteritems():
-                        if key2 == key:
-                            result[key] = val2
-                            break
-            else:
-                fun_test.log("Key %s not found in psw_stats_counter_name" % key)
+        if input:
+            result['input'] = {}
+            for key in input_key_list:
+                result['input'][key] = None
+                if psw_global_stats_counter_names.has_key(key):
+                    parsed_psw_stats_output = psw_stats_output['global']['input']
+                    for key1, val1 in parsed_psw_stats_output.iteritems():
+                            if key1 == key:
+                                result['input'][key] = val1
+                                break
+                else:
+                    fun_test.log("Key %s not found input section in psw_stats_counter_name" % key)
+
+        if output:
+            result['output'] = {}
+            for key in output_key_list:
+                result['output'][key] = None
+                if psw_global_stats_counter_names.has_key(key):
+                    parsed_psw_stats_output = psw_stats_output['global']['output']
+                    for key1, val1 in parsed_psw_stats_output.iteritems():
+                            if key1 == key:
+                                result['output'][key] = val1
+                                break
+                else:
+                    fun_test.log("Key %s not found output section in psw_stats_counter_name" % key)
+        if prm:
+            result['prm'] = {}
+            for key in prm_key_list:
+                result['prm'][key] = None
+                if psw_global_stats_counter_names.has_key(key):
+                    parsed_psw_stats_output = psw_stats_output['global']['prm']
+                    for key1, val1 in parsed_psw_stats_output.iteritems():
+                            if key1 == key:
+                                result['prm'][key] = val1
+                                break
+                else:
+                    fun_test.log("Key %s not found prm section in psw_stats_counter_name" % key)
+
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
@@ -175,6 +207,21 @@ def get_erp_stats_values(network_controller_obj=None, hnu=False, flex=False):
         output = network_controller_obj.peek_erp_global_stats(hnu=hnu, flex=flex)
         fun_test.simple_assert(output, "Ensure bam stats are grepped")
         result = parse_result_dict(output)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def validate_parser_stats(parser_result, compare_value, check_list_keys=[]):
+    result = False
+    try:
+        stat_counter_list = ['prv_sent', 'eop_cnt', 'sop_cnt']
+        for key in check_list_keys:
+            current_dict = parser_result['global'][key]
+            for counter in stat_counter_list:
+                fun_test.test_assert_expected(expected=compare_value, actual=int(current_dict[counter]),
+                                              message="Check %s stats for %s in parser nu stats" % (counter, key))
+        result = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
