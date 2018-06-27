@@ -8,12 +8,42 @@ from nu_config_manager import *
 
 num_ports = 2
 loads_file = "interface_loads.json"
-min_frame_lenggth = 64
-max_frame_length = 16380
+min_frame_length_ipv4 = 64
+min_frame_length_ipv6 = 78
+max_frame_length = 9000
 mtu = max_frame_length
-generator_step = max_frame_length
+generator_step_ipv4 = max_frame_length - min_frame_length_ipv4
+generator_step_ipv6 = max_frame_length - min_frame_length_ipv6
 duration_seconds = 240
 step_size = 1
+
+
+def get_nearest_key(dict, max_frame_length):
+    nearest_small_key = 0
+    for key in dict.keys():
+
+        if key != 'max' and int(key) < max_frame_length:
+            current_difference = max_frame_length - int(key)
+            if current_difference < max_frame_length - nearest_small_key:
+                nearest_small_key = int(key)
+    return nearest_small_key
+
+
+def get_modified_dictionary(dict, nearest_key, max_frame_length):
+    output_dict = {}
+    if nearest_key == 1518:
+        output_dict = dict
+        output_dict['max'] = max_frame_length - 1518
+    else:
+        for key, val in dict.iteritems():
+            if key == 'max':
+                pass
+            elif int(key) < nearest_key:
+                output_dict[key] = val
+            elif int(key) == nearest_key:
+                new_val = max_frame_length - int(key)
+                output_dict[key] = new_val
+    return output_dict
 
 
 class SpirentSetup(FunTestScript):
@@ -31,7 +61,7 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, \
             gen_obj_1, gen_obj_2, duration_seconds, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config
+            dut_config, spirent_config, gen_config_obj
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type)
@@ -89,11 +119,10 @@ class SpirentSetup(FunTestScript):
 
         # Configure Generator
         gen_config_obj = GeneratorConfig()
-        gen_config_obj.Duration = duration_seconds
         gen_config_obj.SchedulingMode = gen_config_obj.SCHEDULING_MODE_RATE_BASED
         gen_config_obj.DurationMode = gen_config_obj.DURATION_MODE_STEP
         gen_config_obj.AdvancedInterleaving = True
-        gen_config_obj.StepSize = generator_step
+        gen_config_obj.StepSize = generator_step_ipv4
 
         # Apply generator config on port 1
         gen_obj_1 = template_obj.stc_manager.get_generator(port_handle=port_1)
@@ -124,24 +153,21 @@ class SpirentSetup(FunTestScript):
 class IPv4IncrementalTestCase1(FunTestCase):
     streamblock_obj_1 = None
     streamblock_obj_2 = None
+    min_frame_size = min_frame_length_ipv4
+    generator_step_size = generator_step_ipv4
 
     def describe(self):
         self.set_test_details(id=1,
                               summary="Test all frame size in incremental way (IPv4)",
                               steps="""
-                        1. Create Streams with following settings
-                           a. Load: 5 Mbps
-                           b. Payload Fill Type: PRBS
-                           c. Insert Signature True
-                           d. Frame Size Mode: Incremental Min: %d Max: %d
-                        2. Start traffic for %d secs 
-                        3. Compare Tx and Rx results for frame count
-                        4. Check for error counters. there must be no error counter
-                        5. Check dut ingress and egress frame count match
-                        6. Check OctetStats from dut and spirent
-                        7. Check EtherOctets from dut and spirent.
-                        8. Check Counter for each octet range
-                        """ % (min_frame_lenggth, max_frame_length, duration_seconds))
+                        1. Start traffic and subscribe to tx and rx results
+                        2. Compare Tx and Rx results for frame count
+                        3. Check for error counters. there must be no error counter
+                        4. Check dut ingress and egress frame count match
+                        5. Check OctetStats from dut and spirent
+                        6. Check EtherOctets from dut and spirent.
+                        7. Check Counter for each octet range
+                        """)
 
     def setup(self):
         # Clear port results on DUT
@@ -166,7 +192,7 @@ class IPv4IncrementalTestCase1(FunTestCase):
         self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_1.InsertSig = True
         self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
-        self.streamblock_obj_1.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_1.MinFrameLength = min_frame_length_ipv4
         self.streamblock_obj_1.MaxFrameLength = max_frame_length
         self.streamblock_obj_1.StepFrameLength = step_size
 
@@ -194,7 +220,7 @@ class IPv4IncrementalTestCase1(FunTestCase):
         self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_2.InsertSig = True
         self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
-        self.streamblock_obj_2.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_2.MinFrameLength = min_frame_length_ipv4
         self.streamblock_obj_2.MaxFrameLength = max_frame_length
         self.streamblock_obj_2.StepFrameLength = step_size
 
@@ -413,9 +439,11 @@ class IPv4IncrementalTestCase1(FunTestCase):
                                              'max': dut_port_2_tx_octet_1519_max}}
                                  }
 
-        expected_octet_counters = {'64': 1, '127': 63, '255': 128, '511': 256, '1023': 1024, '1518': 495, 'max': 14862}
-
-        # TODO: add for greater than 1518
+        second_last_counter = 1519
+        max_counter_value = self.generator_step_size - second_last_counter
+        first_counter_value = 128 - self.min_frame_size
+        expected_octet_counters = {'127': first_counter_value, '255': 128, '511': 256, '1023': 512, '1518': 495,
+                                   'max': max_counter_value}
 
         fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
                                       message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
@@ -478,6 +506,8 @@ class IPv4IncrementalTestCase1(FunTestCase):
 
 
 class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
+    min_frame_size = min_frame_length_ipv6
+    generator_step_size = generator_step_ipv6
 
     def describe(self):
         self.set_test_details(id=1,
@@ -520,7 +550,7 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
         self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_1.InsertSig = True
         self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
-        self.streamblock_obj_1.MinFrameLength = 78
+        self.streamblock_obj_1.MinFrameLength = min_frame_length_ipv6
         self.streamblock_obj_1.MaxFrameLength = max_frame_length
         self.streamblock_obj_1.StepFrameLength = step_size
 
@@ -548,7 +578,7 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
         self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_2.InsertSig = True
         self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_INCR
-        self.streamblock_obj_2.MinFrameLength = 78
+        self.streamblock_obj_2.MinFrameLength = min_frame_length_ipv6
         self.streamblock_obj_2.MaxFrameLength = max_frame_length
         self.streamblock_obj_2.StepFrameLength = step_size
 
@@ -569,6 +599,18 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
                                                            destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
+        # Setting generator config
+        gen_config_obj.StepSize = self.generator_step_size
+        config_obj = template_obj.configure_generator_config(port_handle=port_1,
+                                                             generator_config_obj=gen_config_obj)
+        fun_test.test_assert(config_obj,
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
+
+        config_obj = template_obj.configure_generator_config(port_handle=port_2,
+                                                             generator_config_obj=gen_config_obj)
+        fun_test.test_assert(config_obj,
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
+
     def run(self):
         super(IPv6IncrementalTestCase1, self).run()
 
@@ -579,6 +621,8 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
 class IPv4RandomTestCase2(FunTestCase):
     streamblock_obj_1 = None
     streamblock_obj_2 = None
+    min_frame_size = min_frame_length_ipv4
+    generator_step_size = generator_step_ipv4
 
     def describe(self):
         self.set_test_details(id=2,
@@ -594,7 +638,7 @@ class IPv4RandomTestCase2(FunTestCase):
                         4. Check for error counters. there must be no error counter
                         5. Check ok frames on dut ingress and egress counter match and spirent
                         6. Check psw stats for fwd_frv, ct_pkt, ifpg_pkt, fpg_pkt 
-                        """ % (min_frame_lenggth, max_frame_length, step_size, duration_seconds))
+                        """ % (min_frame_length_ipv4, max_frame_length, step_size, duration_seconds))
 
     def setup(self):
         # Clear port results on DUT
@@ -619,7 +663,7 @@ class IPv4RandomTestCase2(FunTestCase):
         self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_1.InsertSig = True
         self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
-        self.streamblock_obj_1.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_1.MinFrameLength = min_frame_length_ipv4
         self.streamblock_obj_1.MaxFrameLength = max_frame_length
         self.streamblock_obj_1.StepFrameLength = step_size
 
@@ -647,7 +691,7 @@ class IPv4RandomTestCase2(FunTestCase):
         self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_2.InsertSig = True
         self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
-        self.streamblock_obj_2.MinFrameLength = min_frame_lenggth
+        self.streamblock_obj_2.MinFrameLength = min_frame_length_ipv4
         self.streamblock_obj_2.MaxFrameLength = max_frame_length
         self.streamblock_obj_2.StepFrameLength = step_size
 
@@ -667,6 +711,18 @@ class IPv4RandomTestCase2(FunTestCase):
                                                            destination=l3_config['destination_ip2'],
                                                            gateway=l3_config['gateway'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+        # Setting generator config
+        gen_config_obj.StepSize = self.generator_step_size
+        config_obj = template_obj.configure_generator_config(port_handle=port_1,
+                                                             generator_config_obj=gen_config_obj)
+        fun_test.test_assert(config_obj,
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
+
+        config_obj = template_obj.configure_generator_config(port_handle=port_2,
+                                                             generator_config_obj=gen_config_obj)
+        fun_test.test_assert(config_obj,
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
 
     def cleanup(self):
         fun_test.log("In testcase cleanup")
@@ -729,6 +785,9 @@ class IPv4RandomTestCase2(FunTestCase):
         dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
         dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
 
+        # Fetch psw global stats
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
@@ -771,8 +830,6 @@ class IPv4RandomTestCase2(FunTestCase):
         fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
                                       message="Ensure frames transmitted from DUT and counter on spirent match")
         '''
-        # Fetch psw global stats
-        psw_stats = network_controller_obj.peek_psw_global_stats()
         fetch_list = []
         different = False
         fwd_frv = 'fwd_frv'
@@ -811,6 +868,8 @@ class IPv4RandomTestCase2(FunTestCase):
 
 
 class IPv6RandomTestCase2(IPv4RandomTestCase2):
+    min_frame_size = min_frame_length_ipv6
+    generator_step_size = generator_step_ipv6
 
     def describe(self):
         self.set_test_details(id=2,
@@ -851,7 +910,7 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
         self.streamblock_obj_1.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_1.InsertSig = True
         self.streamblock_obj_1.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
-        self.streamblock_obj_1.MinFrameLength = 78
+        self.streamblock_obj_1.MinFrameLength = min_frame_length_ipv6
         self.streamblock_obj_1.MaxFrameLength = max_frame_length
         self.streamblock_obj_1.StepFrameLength = step_size
 
@@ -879,7 +938,7 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
         self.streamblock_obj_2.FillType = StreamBlock.FILL_TYPE_PRBS
         self.streamblock_obj_2.InsertSig = True
         self.streamblock_obj_2.FrameLengthMode = StreamBlock.FRAME_LENGTH_MODE_RANDOM
-        self.streamblock_obj_2.MinFrameLength = 78
+        self.streamblock_obj_2.MinFrameLength = min_frame_length_ipv6
         self.streamblock_obj_2.MaxFrameLength = max_frame_length
         self.streamblock_obj_2.StepFrameLength = step_size
 
@@ -899,6 +958,18 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
                                                            source=l3_config['source_ip2'],
                                                            destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+        # Setting generator config
+        gen_config_obj.StepSize = self.generator_step_size
+        config_obj = template_obj.configure_generator_config(port_handle=port_1,
+                                                             generator_config_obj=gen_config_obj)
+        fun_test.test_assert(config_obj,
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
+
+        config_obj = template_obj.configure_generator_config(port_handle=port_2,
+                                                             generator_config_obj=gen_config_obj)
+        fun_test.test_assert(config_obj,
+                             "Updating generator config step to %s on port %s" % (self.generator_step_size, port_1))
 
     def run(self):
         super(IPv6RandomTestCase2, self).run()
