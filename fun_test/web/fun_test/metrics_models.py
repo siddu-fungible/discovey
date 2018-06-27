@@ -685,6 +685,12 @@ ANALYTICS_MAP = {
         "module": "networking",
         "component": "general",
         "verbose_name": "NU Transit Performance"
+    },
+    "VoltestPerformance": {
+        "model": VoltestPerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "Voltest Performance"
     }
 }
 
