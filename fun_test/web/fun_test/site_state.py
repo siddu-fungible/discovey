@@ -90,6 +90,9 @@ class SiteState():
         if "children" in metric:
             children = metric["children"]
         description = "TBD"
+
+        if "Erasure" in metric["name"]:
+            i = 0
         try:
             metric_model_name = "MetricContainer"
 
@@ -98,6 +101,7 @@ class SiteState():
             if "info" in metric:
                 description = metric["info"]
             m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
+            m.save()
             if description:
                 m.description = description
                 m.save()
@@ -109,21 +113,24 @@ class SiteState():
                             description=description)
             m.save()
 
-        m.children = "[]"
-        m.save()
 
-
-        for child in children:
-            c = self._do_register_metric(metric=child)
-            if c:
-                m.add_child(child_id=c.metric_id)
-                child_weight = 0
-                if "weight" in child:
-                    child_weight = child["weight"]
-                m.add_child_weight(child_id=c.metric_id, weight=child_weight)
-                if "leaf" in child and child["leaf"]:
-                    all_metrics_chart.add_child(child_id=c.metric_id)
-                    all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=0)
+        if "reference" in metric and metric["reference"]:
+            pass
+        else:
+            m.children = "[]"
+            m.children_weights = "{}"
+            m.save()
+            for child in children:
+                c = self._do_register_metric(metric=child)
+                if c:
+                    m.add_child(child_id=c.metric_id)
+                    child_weight = 0
+                    if "weight" in child:
+                        child_weight = child["weight"]
+                    m.add_child_weight(child_id=c.metric_id, weight=child_weight)
+                    if "leaf" in child and child["leaf"]:
+                        all_metrics_chart.add_child(child_id=c.metric_id)
+                        all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=0)
 
         return m
 
