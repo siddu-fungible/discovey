@@ -5,6 +5,14 @@ from prettytable import PrettyTable
 
 
 class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
+    ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP = 1
+    ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP = 2
+    ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP = 3
+    ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP = 4
+    ETH_IPV6_UDP_VXLAN_ETH_IPV4_TCP = 5
+    ETH_IPV6_UDP_VXLAN_ETH_IPV4_UDP = 6
+    ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP = 7
+    ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP = 8
 
     def __init__(self, session_name, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         SpirentTrafficGeneratorTemplate.__init__(self, spirent_config=spirent_config, chassis_type=chassis_type)
@@ -26,9 +34,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             if port_mapper_dict:
                 for key, val in port_mapper_dict.iteritems():
-                    port_location = "//%s/%s" % (self.stc_manager.chassis_ip, key)
-                    port_handle = self.stc_manager.create_port(location=port_location)
-                    fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
+                    #port_location = "//%s/%s" % (self.stc_manager.chassis_ip, key)
+                    port_handle = self.stc_manager.create_port(location=key)
+                    fun_test.test_assert(port_handle, "Create Port: %s" % key)
                     result['port_list'].append(port_handle)
                     interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
                                                                    port_handle=port_handle)
@@ -1118,6 +1126,87 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
             if self.stc_manager.apply_configuration():
                 result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def create_overlay_frame_stack(self, streamblock_obj, header_list=[], headers_created=False):
+        result = OrderedDict()
+        result['result'] = False
+        try:
+            fun_test.simple_assert(header_list, "Headers are not provided to be created in streamblock")
+            header_obj_list = []
+            underlay_list = header_list[0:header_list.index(VxLAN)]
+            overlay_list = header_list[header_list.index(VxLAN):]
+            spirent_configs = self.spirent_config
+
+            # Clear streamblock
+            self.stc_manager.stc.config(streamblock_obj._spirent_handle, FrameConfig='')
+
+            if headers_created:
+                header_obj_list = header_list
+            else:
+                for header in underlay_list:
+                    if header == Ethernet2Header:
+                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'])
+                        header_obj_list.append(eth_obj)
+                    if header == Ipv4Header:
+                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_config']['ipv4']['destination_ip1'])
+                        header_obj_list.append(ipv4_obj)
+                    if header == Ipv6Header:
+                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_config']['ipv6']['destination_ip1'])
+                        header_obj_list.append(ipv6_obj)
+                    if header == UDP:
+                        udp_obj = UDP()
+                        header_obj_list.append(udp_obj)
+                for header in overlay_list:
+                    if header == VxLAN:
+                        vxlan_obj = VxLAN()
+                        header_obj_list.append(vxlan_obj)
+                    if header == Ipv4Header:
+                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip1'])
+                        header_obj_list.append(ipv4_obj)
+                    if header == Ipv6Header:
+                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip1'])
+                        header_obj_list.append(ipv6_obj)
+                    if header == UDP:
+                        udp_obj = UDP()
+                        header_obj_list.append(udp_obj)
+                    if header == TCP:
+                        tcp_obj = TCP()
+                        header_obj_list.append(tcp_obj)
+
+            for header_obj in header_obj_list:
+                output = self.stc_manager.configure_frame_stack(stream_block_handle=streamblock_obj._spirent_handle,
+                                                                header_obj=header_obj)
+                fun_test.test_assert(output['result'], "Added header %s to framestack" % header_obj.HEADER_TYPE)
+                result[header_obj] = header_obj
+            result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_overlay_frame_stack(self, streamblock_obj, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP):
+        try:
+            if overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, TCP]
+            elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, UDP]
+            elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, TCP]
+            elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, UDP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV4_TCP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, TCP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV4_UDP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, UDP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, TCP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, UDP]
+
+            result = self.create_overlay_frame_stack(header_list=header_list, streamblock_obj=streamblock_obj)
+
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
