@@ -38,6 +38,7 @@ class PalladiumCleanup(FunTestScript):
         
 
 class TestCase1(FunTestCase):
+    dpcsh_cmd_failure = True
     
     def describe(self):
         self.set_test_details(id=1, summary="Release Palladium boards and stop dpcsh",
@@ -54,6 +55,8 @@ class TestCase1(FunTestCase):
         checkpoint = "Halt FunOS by executing dpc_shutdown cmd"
         result = dpcsh_proxy_obj.run_dpc_shutdown()
         fun_test.test_assert(result, checkpoint)
+
+        self.dpcsh_cmd_failure = False
 
         checkpoint = "Cleanup palladium resources and release boards"
         result = palladium_boot_up_obj.cleanup_job()
@@ -72,6 +75,11 @@ class TestCase1(FunTestCase):
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        if self.dpcsh_cmd_failure:
+            fun_test.log("Force Cleanup...")
+            palladium_boot_up_obj.cleanup_job()
+            palladium_boot_up_obj.ensure_boards_released()
+            dpcsh_proxy_obj.stop()
 
 
 if __name__ == '__main__':
