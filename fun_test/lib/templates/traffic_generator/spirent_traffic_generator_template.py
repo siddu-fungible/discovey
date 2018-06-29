@@ -1252,6 +1252,7 @@ class Tos(object):
 class UDP(object):
     HEADER_TYPE = "udp:UDP"
     TCPMUX = 1
+    CHECKSUM_ERROR = '65535'
     _spirent_handle = None
     
     def __init__(self, checksum='', destination_port=1024, length=0, name=None, source_port=1024):
@@ -1285,6 +1286,7 @@ class TCP(object):
     HEADER_TYPE = "tcp:TCP"
     TCPMUX = 1
     DESTINATION_PORT_BGP = 179
+    CHECKSUM_ERROR = '65535'
     _spirent_handle = None
     
     def __init__(self, ack_bit='1', ack_num=234567, checksum='', cwr_bit='0', destination_port=1024, ecn_bit='0', 

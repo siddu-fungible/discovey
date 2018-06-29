@@ -76,6 +76,14 @@ else
     cd $WORKSPACE
 fi
 
+if [ ! -d $WORKSPACE/fungible-host-drivers ]; then
+    git clone git@github.com:fungible-inc/fungible-host-drivers.git
+else
+    cd $WORKSPACE/fungible-host-drivers
+    git pull
+    cd $WORKSPACE
+fi
+
 if [ "$NUTEST" ]; then
     echo ">>>>>>>>>>>>copying nutest.json"
     echo "cp $NUTEST $WORKSPACE/FunControlPlane/networking/asicd/libnu/test/"
