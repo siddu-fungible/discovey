@@ -1092,16 +1092,16 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def configure_ptp_header(self, header_obj, stream_block_handle, create_header=False, delete_header_type="ipv4"):
         result = False
         try:
-            # TODO: Delete IPv4 Header
             attributes = header_obj.get_attributes_dict()
             if create_header:
-                existing_headers = self.stc_manager.get_object_children(stream_block_handle)
-                fun_test.debug("headers found in %s: %s" % (stream_block_handle, existing_headers))
-                for header in existing_headers:
-                    if delete_header_type in header:
-                        fun_test.log("Deleting Header: %s" % header)
-                        self.stc_manager.delete_handle(header)
-                        break
+                if delete_header_type:
+                    existing_headers = self.stc_manager.get_object_children(stream_block_handle)
+                    fun_test.debug("headers found in %s: %s" % (stream_block_handle, existing_headers))
+                    for header in existing_headers:
+                        if delete_header_type in header:
+                            fun_test.log("Deleting Header: %s" % header)
+                            self.stc_manager.delete_handle(header)
+                            break
                 fun_test.log("Creating %s Header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
                 handle = self.stc_manager.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,
                                                      Name=attributes['Name'])

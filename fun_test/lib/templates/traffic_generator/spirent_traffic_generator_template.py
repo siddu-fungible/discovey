@@ -434,7 +434,8 @@ class Ethernet2Header(object):
     OSPF_MULTICAST_MAC_1 = "01:00:5E:00:00:05"
     OSPF_MULTICAST_MAC_2 = "01:00:5E:00:00:06"
     PIM_MULTICAST_MAC = "01:00:5E:00:00:0D"
-    LLDP_MAC = "01:80:C2:00:00:0E"
+    LLDP_MULTICAST_MAC = "01:80:C2:00:00:0E"
+    PTP_MULTICAST_MAC = "01:1B:19:00:00:00"
     INTERNET_IPV6_ETHERTYPE = "86DD"
 
     def __init__(self, destination_mac="00:00:01:00:00:01", ether_type=INTERNET_IP_ETHERTYPE,
@@ -615,12 +616,16 @@ class Ipv4Header(object):
     PROTOCOL_TYPE_OSPFIGP = 89
     PROTOCOL_TYPE_PIM = 103
     PROTOCOL_TYPE_TCP = 6
+    PROTOCOL_TYPE_IGMP = 2
+    PROTOCOL_TYPE_UDP = 17
     HEADER_TYPE = "ipv4:IPv4"
     CHECKSUM_ERROR = '65535'
     TOTAL_HEADER_LENGTH_ERROR = '65535'
     OSPF_MULTICAST_IP_1 = "224.0.0.5"
     OSPF_MULTICAST_IP_2 = "224.0.0.6"
     PIM_MULTICAST_IP = "224.0.0.13"
+    PTP_SYNC_MULTICAST_IP = "224.0.1.129"
+    PTP_DELAY_MULTICAST_IP = "224.0.0.107"
 
     def __init__(self, checksum=0, destination_address="192.0.0.1", dest_prefix_length=24,
                  frag_offset=0, gateway="192.85.0.1", identification=0, ihl=5, prefix_length=24,
@@ -1411,7 +1416,7 @@ class IcmpEchoRequestHeader(object):
     HEADER_TYPE = "icmp:IcmpEchoRequest"
     ECHO_REQUEST_TYPE = 8
 
-    def __init__(self, checksum=0, code=0, echo_data="0000", identifier=0, name=None, sequence_num=0,
+    def __init__(self, checksum='', code=0, echo_data="0000", identifier=0, name=None, sequence_num=0,
                  icmp_type=ECHO_REQUEST_TYPE):
         self.checksum = checksum
         self.code = code
@@ -1452,7 +1457,7 @@ class Ospfv2HelloHeader(object):
         self.Name = name
         self.networkMask = network_mask
         self.routerDeadInterval = router_dead_interval
-        self.routerDeadPriority = router_dead_priority
+        self.routerPriority = router_dead_priority
 
     def get_attributes_dict(self):
         attributes = {}
@@ -1525,4 +1530,39 @@ class Pimv4HelloHeader(object):
     @spirent_handle.setter
     def spirent_handle(self, handle):
         self._spirent_handle = handle
+
+
+class Igmpv1Header(object):
+    HEADER_TYPE = "igmp:igmpv1"
+    MESSAGE_TYPE_V1_QUERY = 1
+    MESSAGE_TYPE_V1_REPORT = 2
+
+    def __init__(self, checksum='', group_address="225.0.0.1", name=None, message_type=MESSAGE_TYPE_V1_REPORT,
+                 unused=0, version=1):
+        self.checksum = checksum
+        self.groupAddress = group_address
+        self.Name = name
+        self.type = message_type
+        self.unused = unused
+        self.version = version
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
 

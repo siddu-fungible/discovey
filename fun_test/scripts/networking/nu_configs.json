@@ -30,7 +30,8 @@
           "source_ip2": "192.85.1.2",
           "destination_ip2": "50.0.2.1",
           "gateway": "192.85.1.1",
-          "hnu_destination_ip1": "18.0.5.2"
+          "hnu_destination_ip1": "18.0.5.2",
+          "cc_destination_ip1": "20.1.1.2"
         },
         "ipv6": {
           "source_ip1": "1001::10:10:1:1",
