@@ -43,7 +43,9 @@ class SpirentManager(object):
         self.host_config = {}
         self.chassis_type = chassis_type
         self.spirent_config = spirent_config
-        self.chassis_ip = self._get_chassis_ip_by_chassis_type()
+        # self.chassis_ip = self._get_chassis_ip_by_chassis_type()
+        self.chassis_ip = None  # After dut_spirent_map change we don't need to use this
+        self._read_spirent_config()
 
     def health(self, session_name="TestSession"):
         health_result = {"result": False, "error_message": None}
