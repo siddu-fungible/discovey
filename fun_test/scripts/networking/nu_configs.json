@@ -84,5 +84,24 @@
         "destination_port": 1024
       }
     }
+  },
+  {
+    "name": "dut_spirent_map",
+    "transit_flow": {
+      "FPG6": "10.1.23.143/2/1",
+      "FPG7": "10.1.23.143/2/2"
+    },
+    "cc_flow": {
+      "FPG_CC": {"FPG6": "10.1.23.143/2/1", "FPG8": "10.1.23.140/1/1"},
+      "CC_FPG": {},
+      "HU_CC": {},
+      "HNU_CC": {}
+    },
+    "vp_flow": {
+      "FPG_HNU": {},
+      "HNU_FPG": {}
+    }
+
+
   }
 ]

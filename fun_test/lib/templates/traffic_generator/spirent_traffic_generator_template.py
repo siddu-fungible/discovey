@@ -140,6 +140,8 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         file_created = False
         records = []
         try:
+            if len(latency_results) == 0 or len(jitter_results) == 0:
+                return True
             timestamp = get_current_time()
             for key in latency_results:
                 record = OrderedDict()

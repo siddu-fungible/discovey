@@ -3,11 +3,10 @@
     "name": "spirent_test_center",
     "version": "4.81.2726",
     "type": "TRAFFIC_GENERATOR",
-    "virtual_chassis_ip": "10.1.23.137",
-    "physical_chassis_ip": "10.1.23.143",
+    "chassis_ips": ["10.1.23.137", "10.1.23.138", "10.1.23.140", "10.1.23.139", "10.1.23.143"],
     "lab_server_ip": "10.1.20.153",
     "license_server_ip": "10.1.23.148",
-    "free_slots": [1]   // TODO: For now if configure_ports() is true while loading existing config it will use this slots
+    "free_slots": [1]
   },
   {
     "name": "ixia"

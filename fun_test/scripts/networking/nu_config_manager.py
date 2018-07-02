@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 class NuConfigManager(object):
     NU_CONFIGS_SPEC = SCRIPTS_DIR + "/networking/nu_configs.json"
+    SPIRENT_TRAFFIC_GENERATOR_ASSETS = ASSET_DIR + "/traffic_generator_hosts.json"
     DUT_TYPE_QFX = "qfx"
     DUT_TYPE_F1 = "f1"
     DUT_TYPE_PALLADIUM = "palladium"
@@ -13,6 +14,14 @@ class NuConfigManager(object):
     CHASSIS_TYPE_PHYSICAL = "physical"
     CHASSIS_TYPE_VIRTUAL = "virtual"
     TRAFFIC_GENERATOR_TYPE_SPIRENT = "spirent_traffic_generator"
+    TRANSIT_FLOW_TYPE = "transit_flow"
+    CC_FLOW_TYPE = "cc_flow"
+    VP_FLOW_TYPE = "vp_flow"
+    FLOW_DIRECTION_FPG_CC = "FPG_CC"
+    FLOW_DIRECTION_CC_FPG = "CC_FPG"
+    FLOW_DIRECTION_HU_CC = "HU_CC"
+    FLOW_DIRECTION_HNU_CC = "HNU_CC"
+    FLOW_DIRECTION_FPG_HNU = "FPG_HNU"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
         self._get_chassis_type()
@@ -45,6 +54,33 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def read_dut_spirent_map(self):
+        result = {}
+        try:
+            configs = self._get_nu_configs()
+            fun_test.simple_assert(configs, "Failed to read config spec")
+            for config in configs:
+                if config["name"] == "dut_spirent_map":
+                    result = config
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def read_traffic_generator_asset(self):
+        spirent_config = {}
+        try:
+            configs = parse_file_to_json(file_name=self.SPIRENT_TRAFFIC_GENERATOR_ASSETS)
+            fun_test.simple_assert(expression=configs, message="Read Config File")
+            for config in configs:
+                if config['name'] == "spirent_test_center":
+                    spirent_config = config
+                    break
+            fun_test.debug("Found: %s" % spirent_config)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return spirent_config
+
     def read_traffic_generator_config(self, traffic_generator_type=TRAFFIC_GENERATOR_TYPE_SPIRENT):
         result = {}
         try:
@@ -57,7 +93,7 @@ class NuConfigManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-
+    '''
     def _do_port_mapping(self, num_ports, chassis_configs, dut_configs, fpg_ports=False, hnu_ports=False):
         result = {}
         try:
@@ -83,25 +119,58 @@ class NuConfigManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+    '''
 
-    def get_spirent_dut_port_mapper(self, dut_type=DUT_TYPE_PALLADIUM,
-                                   num_fpg_ports=2, num_hnu_ports=0):
-        chassis_type = self._get_chassis_type()
+    def get_spirent_dut_port_mapper(self, flow_type=TRANSIT_FLOW_TYPE, no_of_ports_needed=2,
+                                    cc_flow_direction=FLOW_DIRECTION_FPG_CC, vp_flow_direction=FLOW_DIRECTION_FPG_HNU):
         result = OrderedDict()
         try:
-            spirent_traffic_configs = self.read_traffic_generator_config()
-            chassis_configs = spirent_traffic_configs[chassis_type]
-            dut_configs = self.read_dut_config(dut_type=dut_type)
+            dut_spirent_map = self.read_dut_spirent_map()
+            spirent_assets = self.read_traffic_generator_asset()
+            if flow_type == self.TRANSIT_FLOW_TYPE:
+                fun_test.log("Fetching NU Transit Flow Map")
+                fun_test.simple_assert(len(dut_spirent_map[flow_type]) >= no_of_ports_needed,
+                                       "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
+                                       (no_of_ports_needed, len(dut_spirent_map[flow_type])))
+                count = 0
+                for key, value in sorted(dut_spirent_map[flow_type].items()):
+                    if count == no_of_ports_needed:
+                        break
+                    fun_test.debug("FPG Port: %s connected to Spirent Port: %s" % (key, value))
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
 
-            if num_fpg_ports:
-                output = self._do_port_mapping(num_ports=num_fpg_ports, chassis_configs=chassis_configs,
-                                               dut_configs=dut_configs, fpg_ports=True)
-                result.update(output)
-            if num_hnu_ports:
-                output = self._do_port_mapping(num_ports=num_hnu_ports, chassis_configs=chassis_configs,
-                                               dut_configs=dut_configs, hnu_ports=True)
-                result.update(output)
-
+            elif flow_type == self.CC_FLOW_TYPE:
+                fun_test.log("Fetching NU CC path map. Traffic Direction: %s" % cc_flow_direction)
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][cc_flow_direction]) >= no_of_ports_needed,
+                                       "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
+                                       (no_of_ports_needed, len(dut_spirent_map[flow_type][cc_flow_direction])))
+                count = 0
+                for key, value in sorted(dut_spirent_map[flow_type][cc_flow_direction].iteritems()):
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
+            elif flow_type == self.VP_FLOW_TYPE:
+                fun_test.log("Fetching NU VP path map. Traffic Direction: %s" % vp_flow_direction)
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][vp_flow_direction]) >= no_of_ports_needed,
+                                       "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
+                                       (no_of_ports_needed, len(dut_spirent_map[flow_type][vp_flow_direction])))
+                count = 0
+                for key, value in sorted(dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
