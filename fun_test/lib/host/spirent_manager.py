@@ -1016,6 +1016,24 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def update_header_options(self, header_obj, option_obj, stream_block_handle):
+        result = False
+        try:
+            header_handles = self.get_object_children(handle=stream_block_handle)
+            for header_handle in header_handles:
+                if re.search(header_obj.HEADER_TYPE, header_handle, re.IGNORECASE):
+                    attributes = option_obj.get_attributes_dict()
+                    options_handle = self.get_object_children(handle=header_handle)[2]
+                    new_options_handle = self.stc.create(option_obj.PARENT_HEADER_OPTION, under=options_handle)
+                    self.stc.create(option_obj.OPTION_TYPE, under=new_options_handle, **attributes)
+                    break
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+
 
 if __name__ == "__main__":
     stc_manager = SpirentManager()
