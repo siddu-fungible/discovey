@@ -21,7 +21,7 @@ class FunCPContainerInit(FunTestScript):
         f1_image_name = "nw-reg-user:v1"
         self.target_workspace = "/workspace"
         # TODO Need a better way of passing these arguments to the entrypoint script; from a JSON prolly.
-        #arguments = '-f asurana/funcp -o asurana/funos -n {}/nutest.json'.format(self.target_workspace)
+        #arguments = '-n {}/nutest.json'.format(self.target_workspace)
         arguments = ''
         entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh {}".format(self.target_workspace, arguments)
         environment_variables = {"DOCKER": True,
@@ -100,7 +100,7 @@ class FunCPFunOSBuilder(FunTestCase):
                           ssh_password=container_asset["mgmt_ssh_password"],
                           ssh_port=container_asset["mgmt_ssh_port"])
 
-        cmd_list = ["bash", "cd {}/FunControlPlane".format(target_workspace), "make -j8"]
+        cmd_list = ["bash", "cd {}/FunControlPlane".format(target_workspace), "make clean", "make -j8"]
         for cmd in cmd_list:
             linux_obj.command(cmd, timeout=600)
         output = linux_obj.command(command="ls -ll {}/FunControlPlane/build".format(target_workspace))
@@ -108,7 +108,7 @@ class FunCPFunOSBuilder(FunTestCase):
             TEST_STATUS = False
         fun_test.test_assert(TEST_STATUS, "Build FunCP")
 
-        cmd_list = ["bash", "cd {}/FunOS".format(target_workspace), "make -j8 MACHINE=posix"]
+        cmd_list = ["bash", "cd {}/FunOS".format(target_workspace), "make clean", "make -j8 MACHINE=posix"]
         for cmd in cmd_list:
             linux_obj.command(cmd, timeout=600)
         output = linux_obj.command(command="ls -al {}/FunOS/build".format(target_workspace))
@@ -231,7 +231,7 @@ class BuildPalladiumImage(FunTestCase):
             cmd_list = ['bzip2 -dk {}'.format(PALLADIUM_IMG_PATH),
                         'scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_UNZIP_PATH, REGRESSION_USER, HOST, REGRESSION_USER)]
             try:
-                for cmd in cmd_list:
+                for cmd in cmd_list[0]:
                     linux_obj.command(cmd, timeout=60)
             except Exception as ex:
                 TEST_STATUS = False
