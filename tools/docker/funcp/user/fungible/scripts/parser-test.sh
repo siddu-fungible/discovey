@@ -48,6 +48,7 @@ else
         git clone git@github.com:fungible-inc/FunControlPlane.git
     else
         cd $WORKSPACE/FunControlPlane
+        git stash
         git pull
         cd $WORKSPACE
     fi
@@ -63,6 +64,7 @@ else
     else
         echo ">>>> updating FunOS"
         cd $WORKSPACE/FunOS
+        git stash
         git pull
         cd $WORKSPACE
     fi
@@ -72,6 +74,7 @@ if [ ! -d $WORKSPACE/FunSDK ]; then
     git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
 else
     cd $WORKSPACE/FunSDK
+    git stash
     git pull
     cd $WORKSPACE
 fi
@@ -80,6 +83,7 @@ if [ ! -d $WORKSPACE/fungible-host-drivers ]; then
     git clone git@github.com:fungible-inc/fungible-host-drivers.git
 else
     cd $WORKSPACE/fungible-host-drivers
+    git stash
     git pull
     cd $WORKSPACE
 fi
