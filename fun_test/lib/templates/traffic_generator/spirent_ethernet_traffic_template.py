@@ -1171,12 +1171,13 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def configure_overlay_frame_stack(self, port, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP):
+    def configure_overlay_frame_stack(self, port, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP, streamblock_obj=None):
         result = {}
         try:
-            streamblock_obj = StreamBlock(fixed_frame_length=148)
-            stream = self.configure_stream_block(stream_block_obj=streamblock_obj, port_handle=port)
-            fun_test.simple_assert(stream, "Creating streamblock for overlay")
+            if not streamblock_obj:
+                streamblock_obj = StreamBlock(fixed_frame_length=148)
+                stream = self.configure_stream_block(stream_block_obj=streamblock_obj, port_handle=port)
+                fun_test.simple_assert(stream, "Creating streamblock for overlay")
             if overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP:
                 header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, TCP]
             elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP:
