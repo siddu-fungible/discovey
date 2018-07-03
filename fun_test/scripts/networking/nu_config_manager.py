@@ -22,6 +22,7 @@ class NuConfigManager(object):
     FLOW_DIRECTION_HU_CC = "HU_CC"
     FLOW_DIRECTION_HNU_CC = "HNU_CC"
     FLOW_DIRECTION_FPG_HNU = "FPG_HNU"
+    FLOW_DIRECTION_HNU_FPG = "HNU_FPG"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
         self._get_chassis_type()
@@ -30,17 +31,26 @@ class NuConfigManager(object):
         self.chassis_type = self.CHASSIS_TYPE_PHYSICAL
         return self.chassis_type
 
+    def _parse_file_to_json_in_order(self, file_name):
+        result = None
+        try:
+            with open(file_name, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents, object_pairs_hook=OrderedDict)
+        except Exception as ex:
+            scheduler_logger.critical(str(ex))
+        return result
+
     def _get_nu_configs(self):
         all_configs = []
         try:
-            all_configs = parse_file_to_json(file_name=self.NU_CONFIGS_SPEC)
+            all_configs = self._parse_file_to_json_in_order(file_name=self.NU_CONFIGS_SPEC)
             fun_test.simple_assert(all_configs, "Read Configs")
         except Exception as ex:
             fun_test.critical(str(ex))
         return all_configs
 
-    def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, cc_flow_direction=FLOW_DIRECTION_FPG_CC,
-                        vp_flow_direction=FLOW_DIRECTION_FPG_HNU):
+    def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, flow_direction=None):
         result = {}
         try:
             if not dut_type:
@@ -59,11 +69,20 @@ class NuConfigManager(object):
                     if m:
                         result['ports'].append(int(m.group(1)))
             elif flow_type == self.CC_FLOW_TYPE:
+                if flow_direction:
+                    cc_flow_direction = flow_direction
+                else:
+                    cc_flow_direction = self.FLOW_DIRECTION_FPG_CC
+
                 for key, value in sorted(dut_spirent_map[flow_type][cc_flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
             elif flow_type == self.VP_FLOW_TYPE:
+                if flow_direction:
+                    vp_flow_direction = flow_direction
+                else:
+                    vp_flow_direction = self.FLOW_DIRECTION_FPG_HNU
                 for key, value in sorted(dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
@@ -73,13 +92,13 @@ class NuConfigManager(object):
         return result
 
     def read_dut_spirent_map(self):
-        result = {}
+        result = OrderedDict()
         try:
             configs = self._get_nu_configs()
             fun_test.simple_assert(configs, "Failed to read config spec")
             for config in configs:
                 if config["name"] == "dut_spirent_map":
-                    result = config
+                    result.update(config)
                     break
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -88,7 +107,7 @@ class NuConfigManager(object):
     def read_traffic_generator_asset(self):
         spirent_config = {}
         try:
-            configs = parse_file_to_json(file_name=self.SPIRENT_TRAFFIC_GENERATOR_ASSETS)
+            configs = self._parse_file_to_json_in_order(file_name=self.SPIRENT_TRAFFIC_GENERATOR_ASSETS)
             fun_test.simple_assert(expression=configs, message="Read Config File")
             for config in configs:
                 if config['name'] == "spirent_test_center":
@@ -140,7 +159,7 @@ class NuConfigManager(object):
     '''
 
     def get_spirent_dut_port_mapper(self, flow_type=TRANSIT_FLOW_TYPE, no_of_ports_needed=2,
-                                    cc_flow_direction=FLOW_DIRECTION_FPG_CC, vp_flow_direction=FLOW_DIRECTION_FPG_HNU):
+                                    flow_direction=None):
         result = OrderedDict()
         try:
             dut_spirent_map = self.read_dut_spirent_map()
@@ -162,6 +181,10 @@ class NuConfigManager(object):
                     count += 1
 
             elif flow_type == self.CC_FLOW_TYPE:
+                if flow_direction:
+                    cc_flow_direction = flow_direction
+                else:
+                    cc_flow_direction = self.FLOW_DIRECTION_FPG_CC
                 fun_test.log("Fetching NU CC path map. Traffic Direction: %s" % cc_flow_direction)
                 fun_test.simple_assert(len(dut_spirent_map[flow_type][cc_flow_direction]) >= no_of_ports_needed,
                                        "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
@@ -176,12 +199,16 @@ class NuConfigManager(object):
                     result[key] = value
                     count += 1
             elif flow_type == self.VP_FLOW_TYPE:
+                if flow_direction:
+                    vp_flow_direction = flow_direction
+                else:
+                    vp_flow_direction = self.FLOW_DIRECTION_FPG_HNU
                 fun_test.log("Fetching NU VP path map. Traffic Direction: %s" % vp_flow_direction)
                 fun_test.simple_assert(len(dut_spirent_map[flow_type][vp_flow_direction]) >= no_of_ports_needed,
                                        "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
                                        (no_of_ports_needed, len(dut_spirent_map[flow_type][vp_flow_direction])))
                 count = 0
-                for key, value in sorted(dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
+                for key, value in dut_spirent_map[flow_type][vp_flow_direction].iteritems():
                     if count == no_of_ports_needed:
                         break
                     chassis_ip = value.split('/')[0]
