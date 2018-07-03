@@ -437,6 +437,7 @@ class Ethernet2Header(object):
     OSPF_MULTICAST_MAC_2 = "01:00:5E:00:00:06"
     PIM_MULTICAST_MAC = "01:00:5E:00:00:0D"
     LLDP_MULTICAST_MAC = "01:80:C2:00:00:0E"
+    ETHERNET_FLOW_CONTROL_MAC = "01:80:C2:00:00:01"
     PTP_MULTICAST_MAC = "01:1B:19:00:00:00"
     ETHERNET_FLOW_CONTROL_MAC = "01:80:C2:00:00:01"
     INTERNET_IPV6_ETHERTYPE = "86DD"
@@ -1571,5 +1572,87 @@ class Igmpv1Header(object):
     @spirent_handle.setter
     def spirent_handle(self, handle):
         self._spirent_handle = handle
+
+
+class IPv4HeaderOptionTimestamp(object):
+    PARENT_HEADER_OPTION = "IPv4HeaderOption"
+    OPTION_TYPE = "timestamp"
+    OPTION_TYPE_TIMESTAMP = 68
+
+    def __init__(self, flag=0, length=5, name=None, overflow=0, pointer=0, timestamp="",
+                 option_type=OPTION_TYPE_TIMESTAMP):
+        self.flag = flag
+        self.length = length
+        self.Name = name
+        self.overflow = overflow
+        self.pointer = pointer
+        self.timestamp = timestamp
+        self.type = option_type
+
+    def get_attributes_dict(self):
+        return vars(self)
+
+
+class IPv4HeaderOptionLooseSourceRoute(object):
+    PARENT_HEADER_OPTION = "IPv4HeaderOption"
+    OPTION_TYPE = "looseSrcRoute"
+    OPTION_TYPE_LOOSE_SRC_ROUTE = 131
+
+    def __init__(self, length=0, name=None, pointer=4, option_type=OPTION_TYPE_LOOSE_SRC_ROUTE):
+        self.length = length
+        self.Name = name
+        self.pointer = pointer
+        self.type = option_type
+
+    def get_attributes_dict(self):
+        return vars(self)
+
+
+class DhcpClientMessageHeader(object):
+    HEADER_TYPE = "dhcp:Dhcpclientmsg"
+
+    def __init__(self, boot_file_name='', boot_p_flag='8000', client_address='192.85.1.2',
+                 client_hw_pad='', client_mac='00:00:01:00:00:02', elapsed=0, haddrlen=6, hardware_type=1, hops=0,
+                 magic_cookie=63825363, message_type=1, name=None, next_server_address='0.0.0.0',
+                 relay_agent_address='0.0.0.0', server_host_name='', xid=1, your_address='0.0.0.0'):
+        self.bootfilename = boot_file_name
+        self.bootpflags = boot_p_flag
+        self.clientAddr = client_address
+        self.clientHWPad = client_hw_pad
+        self.elapsed = elapsed
+        self.haddrLen = haddrlen
+        self.hardwareType = hardware_type
+        self.hops = hops
+        self.magiccookie = magic_cookie
+        self.messageType = message_type
+        self.Name = name
+        self.nextservAddr = next_server_address
+        self.relayagentAddr = relay_agent_address
+        self.serverhostname = server_host_name
+        self.xid = xid
+        self.yourAddr = your_address
+
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+
 
 
