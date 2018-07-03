@@ -1116,9 +1116,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             overlay_list = header_list[header_list.index(VxLAN):]
             spirent_configs = self.spirent_config
 
-            # Clear streamblock
-            self.stc_manager.stc.config(streamblock_obj._spirent_handle, FrameConfig='')
-
             if headers_created:
                 header_obj_list = header_list
             else:
@@ -1128,9 +1125,15 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
                         ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_config']['ipv4']['destination_ip1'])
+                        current_index = header_list.index(header)
+                        ipv4_obj.protocol = ipv4_obj.PROTOCOL_TYPE_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
                         header_obj_list.append(ipv4_obj)
                     elif header == Ipv6Header:
                         ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_config']['ipv6']['destination_ip1'])
+                        current_index = header_list.index(header)
+                        ipv6_obj.nextHeader = ipv6_obj.NEXT_HEADER_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
                         header_obj_list.append(ipv6_obj)
                     elif header == UDP:
                         udp_obj = UDP()
@@ -1143,10 +1146,16 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'])
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
-                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip1'])
+                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip2'])
+                        current_index = header_list.index(header)
+                        ipv4_obj.protocol = ipv4_obj.PROTOCOL_TYPE_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
                         header_obj_list.append(ipv4_obj)
                     elif header == Ipv6Header:
-                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip1'])
+                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip2'])
+                        current_index = header_list.index(header)
+                        ipv6_obj.nextHeader = ipv6_obj.NEXT_HEADER_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
                         header_obj_list.append(ipv6_obj)
                     elif header == UDP:
                         udp_obj = UDP()
@@ -1200,9 +1209,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def update_overlay_frame_header(self, streamblock_obj, header_obj, overlay=True):
+    def update_overlay_frame_header(self, streamblock_obj, header_obj, updated_header_attributes_dict={}, overlay=True):
         result = False
         try:
+            fun_test.simple_assert(updated_header_attributes_dict, "Empty attributes sent for update")
             child_type = 'children-' + header_obj.HEADER_TYPE.lower()
             child_handle_list = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
                                                                      child_type=child_type)
@@ -1211,9 +1221,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             if overlay:
                 if len(child_handle_list) > 1:
                     child_handle = child_handle_list[1]
-            header_attributes = header_obj.get_attributes_dict()
             fun_test.log("Modifying atrributes on handle %s" % child_handle)
-            self.stc_manager.stc.config(child_handle, **header_attributes)
+            self.stc_manager.stc.config(child_handle, **updated_header_attributes_dict)
             fun_test.simple_assert(self.stc_manager.apply_configuration(), message="Changed attributes of header")
             result = True
         except Exception as ex:
