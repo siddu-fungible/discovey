@@ -1103,3 +1103,18 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return stats
+
+    def peek_per_vppkts_stats(self, hnu=False):
+        stats = None
+        try:
+            cmd = "stats/vpperpkts"
+            if hnu:
+                cmd = "stats/prsr/hnu"
+            fun_test.debug("Getting vp per pkt")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
+            fun_test.debug("parser stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
