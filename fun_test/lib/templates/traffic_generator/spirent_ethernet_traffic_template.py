@@ -22,8 +22,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         self.stc_connected = False
 
     def setup(self, no_of_ports_needed, flow_type=NuConfigManager.TRANSIT_FLOW_TYPE,
-              cc_flow_direction=NuConfigManager.FLOW_DIRECTION_FPG_CC,
-              vp_flow_direction=NuConfigManager.FLOW_DIRECTION_FPG_HNU):
+              flow_direction=None):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
         project_handle = self.stc_manager.create_project(project_name=self.session_name)
@@ -38,8 +37,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
                                                                   flow_type=flow_type,
-                                                                  cc_flow_direction=cc_flow_direction,
-                                                                  vp_flow_direction=vp_flow_direction)
+                                                                  flow_direction=flow_direction)
             for key, val in ports_map.iteritems():
                 fun_test.log("Using %s -----> %s" % (key, val))
                 port_handle = self.stc_manager.create_port(location=val)
