@@ -54,6 +54,8 @@ class FunTestCase1(FunTestCase):
             jenkins_build_number = past_job["jenkins_build_number"]
             branch_funsdk = past_job["branch_funsdk"]
             git_commit = past_job["git_commit"]
+            if "software_date" not in past_job:
+                continue
             software_date = past_job["software_date"]
             if "completion_date" not in past_job:
                 continue 
