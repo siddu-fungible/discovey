@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from collections import OrderedDict
-
+import re
 
 class NuConfigManager(object):
     NU_CONFIGS_SPEC = SCRIPTS_DIR + "/networking/nu_configs.json"
@@ -39,7 +39,8 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return all_configs
 
-    def read_dut_config(self, dut_type=None):
+    def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, cc_flow_direction=FLOW_DIRECTION_FPG_CC,
+                        vp_flow_direction=FLOW_DIRECTION_FPG_HNU):
         result = {}
         try:
             if not dut_type:
@@ -50,6 +51,23 @@ class NuConfigManager(object):
                 if config["type"] == dut_type:
                     result = config
                     break
+            dut_spirent_map = self.read_dut_spirent_map()
+            result['ports'] = []
+            if flow_type == self.TRANSIT_FLOW_TYPE:
+                for key, value in sorted(dut_spirent_map[flow_type].items()):
+                    m = re.search(r'(\d+)', key)
+                    if m:
+                        result['ports'].append(int(m.group(1)))
+            elif flow_type == self.CC_FLOW_TYPE:
+                for key, value in sorted(dut_spirent_map[flow_type][cc_flow_direction].iteritems()):
+                    m = re.search(r'(\d+)', key)
+                    if m:
+                        result['ports'].append(int(m.group(1)))
+            elif flow_type == self.VP_FLOW_TYPE:
+                for key, value in sorted(dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
+                    m = re.search(r'(\d+)', key)
+                    if m:
+                        result['ports'].append(int(m.group(1)))
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

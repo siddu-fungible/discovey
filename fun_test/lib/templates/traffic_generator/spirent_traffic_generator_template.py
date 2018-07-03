@@ -1632,7 +1632,6 @@ class DhcpClientMessageHeader(object):
         self.xid = xid
         self.yourAddr = your_address
 
-
     def get_attributes_dict(self):
         attributes = {}
         for key in vars(self):

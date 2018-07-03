@@ -1033,6 +1033,23 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def update_control_flags(self, stream_block_obj, header_obj, df_bit=0, mf_bit=0, reserved=0):
+        result = False
+        try:
+            header_handles = self.get_object_children(handle=stream_block_obj.spirent_handle)
+            for header_handle in header_handles:
+                if re.search(header_obj.HEADER_TYPE, header_handle, re.IGNORECASE):
+                    flags_handle = self.get_object_children(handle=header_handle)[1]
+                    handle = self.stc.config(flags_handle, dfBit=df_bit, mfBit=mf_bit, reserved=reserved)
+                    break
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+
+
 
 
 if __name__ == "__main__":
