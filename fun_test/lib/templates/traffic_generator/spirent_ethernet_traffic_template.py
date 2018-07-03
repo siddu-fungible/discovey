@@ -1109,7 +1109,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return result
 
     def create_overlay_frame_stack(self, streamblock_obj, header_list=[], headers_created=False):
-        result = OrderedDict()
+        result = {}
         result['result'] = False
         try:
             fun_test.simple_assert(header_list, "Headers are not provided to be created in streamblock")
@@ -1128,44 +1128,55 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     if header == Ethernet2Header:
                         eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'])
                         header_obj_list.append(eth_obj)
-                    if header == Ipv4Header:
+                    elif header == Ipv4Header:
                         ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_config']['ipv4']['destination_ip1'])
                         header_obj_list.append(ipv4_obj)
-                    if header == Ipv6Header:
+                    elif header == Ipv6Header:
                         ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_config']['ipv6']['destination_ip1'])
                         header_obj_list.append(ipv6_obj)
-                    if header == UDP:
+                    elif header == UDP:
                         udp_obj = UDP()
                         header_obj_list.append(udp_obj)
                 for header in overlay_list:
                     if header == VxLAN:
                         vxlan_obj = VxLAN()
                         header_obj_list.append(vxlan_obj)
-                    if header == Ipv4Header:
+                    elif header == Ethernet2Header:
+                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'])
+                        header_obj_list.append(eth_obj)
+                    elif header == Ipv4Header:
                         ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip1'])
                         header_obj_list.append(ipv4_obj)
-                    if header == Ipv6Header:
+                    elif header == Ipv6Header:
                         ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip1'])
                         header_obj_list.append(ipv6_obj)
-                    if header == UDP:
+                    elif header == UDP:
                         udp_obj = UDP()
                         header_obj_list.append(udp_obj)
-                    if header == TCP:
+                    elif header == TCP:
                         tcp_obj = TCP()
                         header_obj_list.append(tcp_obj)
+                    else:
+                        raise Exception("Header %s not found in overlay options" % header.HEADER_TYPE)
 
             for header_obj in header_obj_list:
+                delete_header = []
+                if header_obj is header_obj_list[0]:
+                    delete_header = [Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE]
                 output = self.stc_manager.configure_frame_stack(stream_block_handle=streamblock_obj._spirent_handle,
-                                                                header_obj=header_obj)
-                fun_test.test_assert(output['result'], "Added header %s to framestack" % header_obj.HEADER_TYPE)
-                result[header_obj] = header_obj
+                                                                header_obj=header_obj, delete_header=delete_header)
+                fun_test.test_assert(output, "Added header %s to framestack" % header_obj.HEADER_TYPE)
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def configure_overlay_frame_stack(self, streamblock_obj, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP):
+    def configure_overlay_frame_stack(self, port, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP):
+        result = {}
         try:
+            streamblock_obj = StreamBlock(fixed_frame_length=148)
+            stream = self.configure_stream_block(stream_block_obj=streamblock_obj, port_handle=port)
+            fun_test.simple_assert(stream, "Creating streamblock for overlay")
             if overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP:
                 header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, TCP]
             elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP:
@@ -1183,8 +1194,29 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP:
                 header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, UDP]
 
-            result = self.create_overlay_frame_stack(header_list=header_list, streamblock_obj=streamblock_obj)
+            result['streamblock_obj'] = streamblock_obj
+            result.update(self.create_overlay_frame_stack(header_list=header_list, streamblock_obj=streamblock_obj))
 
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def update_overlay_frame_header(self, streamblock_obj, header_obj, overlay=True):
+        result = False
+        try:
+            child_type = 'children-' + header_obj.HEADER_TYPE.lower()
+            child_handle_list = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)
+            fun_test.simple_assert(child_handle_list, "Fetch all header handles")
+            child_handle = child_handle_list[0]
+            if overlay:
+                if len(child_handle_list) > 1:
+                    child_handle = child_handle_list[1]
+            header_attributes = header_obj.get_attributes_dict()
+            fun_test.log("Modifying atrributes on handle %s" % child_handle)
+            self.stc_manager.stc.config(child_handle, **header_attributes)
+            fun_test.simple_assert(self.stc_manager.apply_configuration(), message="Changed attributes of header")
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
