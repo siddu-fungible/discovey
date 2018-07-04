@@ -46,7 +46,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
 
         $scope.numGridColumns = 5;
         if(angular.element($window).width() <=1441) {
-            $scope.numGridColumns = 2;
+            $scope.numGridColumns = 3;
         }
 
         $scope.mode = null;
@@ -364,6 +364,10 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             chart_name: node.chartName
         };
 
+
+        if (node.chartName === "All metrics") {
+            return;
+        }
         return commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
             let flattenedLeaves = {};
             $scope.flattenLeaves("", flattenedLeaves, leaves);
