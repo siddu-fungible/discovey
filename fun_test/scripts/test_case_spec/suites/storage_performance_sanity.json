@@ -5,5 +5,6 @@
   {"path": "storage/replica_volume_performance.py"},
   {"path": "storage/palladium_ec_performance.py"},
   {"path": "storage/palladium_lsv_test.py"},
-  {"path": "storage/palladium_ec_vol.py"}
+  {"path": "storage/palladium_ec_vol.py"},
+  {"path": "storage/palladium_voltest_performance.py"}
 ]

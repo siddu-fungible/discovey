@@ -74,6 +74,27 @@ class MetricChart(models.Model):
     def get_last_record(self, number_of_records=1):
         return self.filter(number_of_records=number_of_records)
 
+    def get_leaves(self):
+        data = {}
+        data["name"] = self.chart_name
+        data["metric_model_name"] = self.metric_model_name
+        if not self.leaf:
+            data["children"] = []
+            data["leaf"] = False
+        else:
+            data["leaf"] = True
+        children = json.loads(self.children)
+        if not self.leaf:
+            if len(children):
+                for child in children:
+                    child_metric = MetricChart.objects.get(metric_id=child)
+                    child_leaves = child_metric.get_leaves()
+                    data["children"].append(child_leaves)
+        else:
+            data["id"] = self.metric_id
+
+        return data
+
     def get_status(self, number_of_records=5):
         goodness_values = []
         status_values = []

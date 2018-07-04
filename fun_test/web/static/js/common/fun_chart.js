@@ -406,7 +406,7 @@
                             })
                         }
                         /*$timeout($scope.updatePlot, 10);*/
-                    }, 1000);
+                    }, 10);
 
                 }
             }, true);

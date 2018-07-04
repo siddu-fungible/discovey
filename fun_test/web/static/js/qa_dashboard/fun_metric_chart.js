@@ -39,7 +39,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
                 return ctrl.tooltipFormatter()(x, y);
             };
         }
-        console.log(ctrl.showingTable);
+        //console.log(ctrl.showingTable);
         /*$scope.pointClickCallback = ctrl.pointClickCallback;*/
     };
 
@@ -79,9 +79,12 @@ function FunMetricChartController($scope, commonService, $attrs) {
         payload["metric_model_name"] = ctrl.modelName;
         payload["chart_name"] = ctrl.chartName;
         // Fetch chart info
+        $scope.status = "Fetching chart info";
         commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
             $scope.chartInfo = chartInfo;
+            $scope.status = "idle";
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo, null)
+
         })
     };
 
@@ -150,8 +153,9 @@ function FunMetricChartController($scope, commonService, $attrs) {
         if(!chartName) {
             return;
         }
-
+        $scope.status = "Fetch table meta-data";
         commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
+            $scope.status = "idle";
             $scope.tableInfo = tableInfo;
             let payload = {};
             payload["metric_model_name"] = metricModelName;
@@ -167,7 +171,9 @@ function FunMetricChartController($scope, commonService, $attrs) {
             }
             $scope.filterDataSets = filterDataSets;
 
+            $scope.status = "Fetch data";
             commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
+                $scope.status = "idle";
                 if(allDataSets.length === 0) {
                     $scope.values = null;
                     return;
@@ -192,6 +198,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
                 let chartDataSets = [];
                 let dataSetIndex = 0;
                 $scope.allData = allDataSets;
+                $scope.status = "Preparing chart data-sets";
                 allDataSets.forEach((oneDataSet) => {
 
                     let oneChartDataArray = [];
@@ -225,6 +232,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
                     chartDataSets.push(oneChartDataSet);
                     dataSetIndex++;
                 });
+                $scope.status = "idle";
                 $scope.values = chartDataSets;
             });
         });

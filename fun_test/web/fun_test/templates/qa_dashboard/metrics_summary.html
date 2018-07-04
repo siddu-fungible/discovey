@@ -259,6 +259,22 @@
                 <div style="cursor: text" ng-bind-html="inner.nonAtomicMetricInfo"
                      ng-click="editDescriptionClick()"></div>
                 <br>
+                <br>
+                <div class="closed-section"></div>
+                <table class="table" ng-if="grid">
+                    <tr ng-repeat="row in grid">
+                        <td ng-repeat="node in row">
+                            <editable-metric-chart
+                                    chart-name="node.name"
+                                    model-name="node.metricModelName"
+                                    xaxis-formatter="xAxisFormatter"
+                                    tooltip-formatter="tooltipFormatter"
+                                    atomic="atomic" chart-only="true">
+                            </editable-metric-chart>
+                        </td>
+                    </tr>
+                </table>
+                <br>
                 <div class="closed-section"></div>
                 <h5>Children</h5>
                 <div ng-if="currentNode">
@@ -301,6 +317,8 @@
                 </div>
             </div>
         </div>
+
+
 
     </div>
     {% endverbatim %}

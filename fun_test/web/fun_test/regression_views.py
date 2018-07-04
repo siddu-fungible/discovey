@@ -343,3 +343,7 @@ def update_test_case_execution(request):
         logger.critical(str(ex))
 
     return HttpResponse(json.dumps(result))
+
+
+def test(request):
+    return render(request, 'qa_dashboard/test.html', locals())

@@ -93,6 +93,7 @@ common_urls = [
 
 metric_urls = [
     url(r'^$', metrics_views.index),
+    url(r'^get_leaves', metrics_views.get_leaves),
     url(r'^metrics_list', metrics_views.metrics_list),
     url(r'^describe_table/(.*)$', metrics_views.describe_table),
     url(r'^chart_list$', metrics_views.chart_list),
@@ -112,7 +113,8 @@ metric_urls = [
     url(r'^metric_info$', metrics_views.metric_info),
     url(r'^atomic/(.*)/(.*)$', metrics_views.atomic),
     url(r'^update_child_weight$', metrics_views.update_child_weight),
-    url(r'^table_view/(.*)$', metrics_views.table_view)
+    url(r'^table_view/(.*)$', metrics_views.table_view),
+    url(r'^test$', metrics_views.test)
 ]
 
 urlpatterns = [

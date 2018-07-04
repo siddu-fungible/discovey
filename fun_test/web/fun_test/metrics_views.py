@@ -23,6 +23,15 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 def index(request):
     return render(request, 'qa_dashboard/metrics.html', locals())
 
+@csrf_exempt
+@api_safe_json_response
+def get_leaves(request):
+    request_json = json.loads(request.body)
+    metric_model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+    leaves = chart.get_leaves()
+    return leaves
 
 @api_safe_json_response
 def metrics_list(request):
@@ -324,3 +333,8 @@ def data(request):
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
     return data
+
+
+@csrf_exempt
+def test(request):
+    return render(request, 'qa_dashboard/test.html', locals())

@@ -1,4 +1,5 @@
-<div align="right">
+<fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
+<div align="right" ng-if="!$ctrl.chartOnly">
     <button ng-if="!$ctrl.atomic" class="btn" style="background-color: white" ng-click="openAtomicTab()"><i class="fa fa-external-link"></i> Open in tab</button>
     <button class="btn" style="background-color: white" ng-if="!showingTable" ng-click="showTable()"><i class="fa fa-table"></i> Show Tables</button>
     <button class="btn" style="background-color: white" ng-if="showingTable" ng-click="hideTable()"><i class="fa fa-table"></i> Hide Tables</button>

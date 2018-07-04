@@ -353,7 +353,50 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         $scope.inner.nonAtomicMetricInfo = node.info;
         $scope.currentNode = null;
         $scope.currentNode = node;
-        let i = 0;
+        let payload = {
+            metric_model_name: "MetricContainer",
+            chart_name: node.chartName
+        };
+
+        return commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
+            let flattenedLeaves = {};
+            $scope.flattenLeaves("", flattenedLeaves, leaves);
+            $scope.numGridColumns = 5;
+            $scope.prepareGridNodes(flattenedLeaves);
+
+        });
+
+    };
+
+    $scope.flattenLeaves = function (parentName, flattenedLeaves, node) {
+        let myName = node.name;
+        if (parentName !== "") {
+            myName = parentName + " > " + node.name;
+        }
+        if (!node.leaf) {
+            node.children.forEach((child) => {
+                $scope.flattenLeaves(myName, flattenedLeaves, child);
+            });
+        } else {
+            node.lineage = parentName;
+            let newNode = {name: node.name, id: node.id, metricModelName: node.metric_model_name};
+            flattenedLeaves[newNode.id] = newNode;
+        }
+    };
+
+    $scope.prepareGridNodes = (flattenedNodes) => {
+        $scope.grid = [];
+        let rowIndex = 0;
+        Object.keys(flattenedNodes).forEach((key) => {
+            if ($scope.grid.length - 1 < rowIndex) {
+                $scope.grid.push([]);
+            }
+            $scope.grid[rowIndex].push(flattenedNodes[key]);
+            if ($scope.grid[rowIndex].length === $scope.numGridColumns) {
+                rowIndex++;
+            }
+
+        });
     };
 
     $scope._setupGoodnessTrend = (node) => {

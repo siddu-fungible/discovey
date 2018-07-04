@@ -5,6 +5,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window) {
     let ctrl = this;
 
     ctrl.$onInit = () => {
+        $scope.status = "loading";
         $scope.editing = false;
         $scope.chartName = ctrl.chartName;
         $scope.modelName = ctrl.modelName;
@@ -60,9 +61,13 @@ function EditableMetricChartController($scope, commonService, $attrs, $window) {
 
 
     $scope.describeTable = () => {
-
+        $scope.status = "Fetch Table Metadata";
+        if (!ctrl.modelName) {
+            return;
+        }
         $scope.inputs = [];
         return commonService.apiGet("/metrics/describe_table/" + ctrl.modelName, "fetchMetricsData").then(function (tableInfo) {
+            $scope.status = "idle";
             $scope.tableInfo = tableInfo;
             angular.forEach($scope.tableInfo, (fieldInfo, field) => {
                 let oneField = {};
@@ -99,6 +104,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window) {
         payload["metric_model_name"] = ctrl.modelName;
         payload["chart_name"] = ctrl.chartName;
         if ($scope.chartName) {
+            $scope.status = "Fetching chart info";
             commonService.apiPost("/metrics/chart_info", payload, "EditableMetricChartController: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;
                 $scope.y1AxisTitle = chartInfo.y1_axis_title;
@@ -107,6 +113,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window) {
                 $scope.inner.currentDescription = $scope.chartInfo.description;
                 $scope.negativeGradient = !$scope.chartInfo.positive;
                 $scope.leaf = $scope.chartInfo.leaf;
+                $scope.status = "idle";
             });
         } else {
 
@@ -233,7 +240,8 @@ angular.module('qa-dashboard').component("editableMetricChart", {
         pointClickCallback: '&',
         xaxisFormatter: '&',
         tooltipFormatter: '&',
-        atomic: '<'
+        atomic: '<',
+        chartOnly: '<'
     },
     controller: EditableMetricChartController
 });
