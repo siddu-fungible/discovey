@@ -77,7 +77,8 @@ class SpirentSetup(FunTestScript):
         # Create network controller object
         dpcsh_server_ip = dut_config["dpcsh_tcp_proxy_ip"]
         dpcsh_server_port = dut_config['dpcsh_tcp_proxy_port']
-        network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
+        if dut_config['enable_dpcsh']:
+            network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
         result = template_obj.setup(no_of_ports_needed=num_ports)
         fun_test.test_assert(result['result'], "Configure setup")
@@ -112,10 +113,11 @@ class SpirentSetup(FunTestScript):
         fun_test.test_assert(set_mtu_2, "Set mtu on %s " % interface_2_obj)
 
         # Set mtu on DUT
-        mtu_1 = network_controller_obj.set_port_mtu(port_num=dut_port_1, mtu_value=mtu)
-        fun_test.test_assert(mtu_1, " Set mtu on DUT port %s" % dut_port_1)
-        mtu_2 = network_controller_obj.set_port_mtu(port_num=dut_port_2, mtu_value=mtu)
-        fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
+        if dut_config['enable_dpcsh']:
+            mtu_1 = network_controller_obj.set_port_mtu(port_num=dut_port_1, mtu_value=mtu)
+            fun_test.test_assert(mtu_1, " Set mtu on DUT port %s" % dut_port_1)
+            mtu_2 = network_controller_obj.set_port_mtu(port_num=dut_port_2, mtu_value=mtu)
+            fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
 
         # Configure Generator
         gen_config_obj = GeneratorConfig()
@@ -171,11 +173,12 @@ class IPv4IncrementalTestCase1(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
         file_path = fun_test.get_script_parent_directory() + "/" + loads_file
@@ -253,7 +256,8 @@ class IPv4IncrementalTestCase1(FunTestCase):
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        psw_stats = network_controller_obj.peek_psw_global_stats()
+        if dut_config['enable_dpcsh']:
+            psw_stats = network_controller_obj.peek_psw_global_stats()
 
         # Execute traffic
         start = template_obj.enable_generator_configs(generator_configs=[gen_obj_1, gen_obj_2])
@@ -300,10 +304,14 @@ class IPv4IncrementalTestCase1(FunTestCase):
         rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
-
-        psw_stats = network_controller_obj.peek_psw_global_stats()
+        dut_port_1_results = None
+        dut_port_2_results = None
+        if dut_config['enable_dpcsh']:
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            psw_stats = network_controller_obj.peek_psw_global_stats()
+            fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+            fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
@@ -311,187 +319,187 @@ class IPv4IncrementalTestCase1(FunTestCase):
         fun_test.log("Rx 2 Results %s" % rx_results_2)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_1)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
-        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
-        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
-        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+        if dut_config['enable_dpcsh']:
+            fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
+            fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
-        dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
-        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
-        dut_port_2_receive = get_dut_output_stats_value(dut_port_2_results, FRAMES_RECEIVED_OK, tx=False)
+            dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
+            dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+            dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
+            dut_port_2_receive = get_dut_output_stats_value(dut_port_2_results, FRAMES_RECEIVED_OK, tx=False)
 
-        # ether stats pkts
-        dut_port_1_rx_eth_stats_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS, tx=False)
-        dut_port_2_rx_eth_stats_pkts = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS, tx=False)
-        dut_port_1_tx_eth_stats_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS)
-        dut_port_2_tx_eth_stats_pkts = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS)
+            # ether stats pkts
+            dut_port_1_rx_eth_stats_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS, tx=False)
+            dut_port_2_rx_eth_stats_pkts = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS, tx=False)
+            dut_port_1_tx_eth_stats_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS)
+            dut_port_2_tx_eth_stats_pkts = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS)
 
-        # Octet count
-        dut_port_1_rx_octet_stats = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_OCTETS, tx=False)
-        dut_port_1_tx_octet_stats = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_OCTETS)
-        dut_port_2_rx_octet_stats = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_OCTETS, tx=False)
-        dut_port_2_tx_octet_stats = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_OCTETS)
+            # Octet count
+            dut_port_1_rx_octet_stats = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_OCTETS, tx=False)
+            dut_port_1_tx_octet_stats = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_OCTETS)
+            dut_port_2_rx_octet_stats = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_OCTETS, tx=False)
+            dut_port_2_tx_octet_stats = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_OCTETS)
 
-        # Get rx octet range
-        dut_port_1_rx_octet_64 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_64_OCTETS, tx=False)
-        dut_port_1_rx_octet_65_127 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_65_TO_127_OCTETS,
-                                                                tx=False)
-        dut_port_1_rx_octet_128_255 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_128_TO_255_OCTETS,
-                                                                 tx=False)
-        dut_port_1_rx_octet_256_511 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_256_TO_511_OCTETS,
-                                                                 tx=False)
-        dut_port_1_rx_octet_512_1023 = get_dut_output_stats_value(dut_port_1_results,
-                                                                  ETHER_STATS_PKTS_512_TO_1023_OCTETS,
-                                                                  tx=False)
-        dut_port_1_rx_octet_1024_1518 = get_dut_output_stats_value(dut_port_1_results,
-                                                                   ETHER_STATS_PKTS_1024_TO_1518_OCTETS,
-                                                                   tx=False)
-        dut_port_1_rx_octet_1519_max = get_dut_output_stats_value(dut_port_1_results,
-                                                                  ETHER_STATS_PKTS_1519_TO_MAX_OCTETS,
-                                                                  tx=False)
+            # Get rx octet range
+            dut_port_1_rx_octet_64 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_64_OCTETS, tx=False)
+            dut_port_1_rx_octet_65_127 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_65_TO_127_OCTETS,
+                                                                    tx=False)
+            dut_port_1_rx_octet_128_255 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_128_TO_255_OCTETS,
+                                                                     tx=False)
+            dut_port_1_rx_octet_256_511 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_256_TO_511_OCTETS,
+                                                                     tx=False)
+            dut_port_1_rx_octet_512_1023 = get_dut_output_stats_value(dut_port_1_results,
+                                                                      ETHER_STATS_PKTS_512_TO_1023_OCTETS,
+                                                                      tx=False)
+            dut_port_1_rx_octet_1024_1518 = get_dut_output_stats_value(dut_port_1_results,
+                                                                       ETHER_STATS_PKTS_1024_TO_1518_OCTETS,
+                                                                       tx=False)
+            dut_port_1_rx_octet_1519_max = get_dut_output_stats_value(dut_port_1_results,
+                                                                      ETHER_STATS_PKTS_1519_TO_MAX_OCTETS,
+                                                                      tx=False)
 
-        dut_port_2_rx_octet_64 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_64_OCTETS, tx=False)
-        dut_port_2_rx_octet_65_127 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_65_TO_127_OCTETS,
-                                                                tx=False)
-        dut_port_2_rx_octet_128_255 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_128_TO_255_OCTETS,
-                                                                 tx=False)
-        dut_port_2_rx_octet_256_511 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_256_TO_511_OCTETS,
-                                                                 tx=False)
-        dut_port_2_rx_octet_512_1023 = get_dut_output_stats_value(dut_port_2_results,
-                                                                  ETHER_STATS_PKTS_512_TO_1023_OCTETS,
-                                                                  tx=False)
-        dut_port_2_rx_octet_1024_1518 = get_dut_output_stats_value(dut_port_2_results,
-                                                                   ETHER_STATS_PKTS_1024_TO_1518_OCTETS,
-                                                                   tx=False)
-        dut_port_2_rx_octet_1519_max = get_dut_output_stats_value(dut_port_2_results,
-                                                                  ETHER_STATS_PKTS_1519_TO_MAX_OCTETS,
-                                                                  tx=False)
+            dut_port_2_rx_octet_64 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_64_OCTETS, tx=False)
+            dut_port_2_rx_octet_65_127 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_65_TO_127_OCTETS,
+                                                                    tx=False)
+            dut_port_2_rx_octet_128_255 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_128_TO_255_OCTETS,
+                                                                     tx=False)
+            dut_port_2_rx_octet_256_511 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_256_TO_511_OCTETS,
+                                                                     tx=False)
+            dut_port_2_rx_octet_512_1023 = get_dut_output_stats_value(dut_port_2_results,
+                                                                      ETHER_STATS_PKTS_512_TO_1023_OCTETS,
+                                                                      tx=False)
+            dut_port_2_rx_octet_1024_1518 = get_dut_output_stats_value(dut_port_2_results,
+                                                                       ETHER_STATS_PKTS_1024_TO_1518_OCTETS,
+                                                                       tx=False)
+            dut_port_2_rx_octet_1519_max = get_dut_output_stats_value(dut_port_2_results,
+                                                                      ETHER_STATS_PKTS_1519_TO_MAX_OCTETS,
+                                                                      tx=False)
 
-        # Get tx octet range
-        dut_port_1_tx_octet_64 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_64_OCTETS)
-        dut_port_1_tx_octet_65_127 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_65_TO_127_OCTETS)
-        dut_port_1_tx_octet_128_255 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_128_TO_255_OCTETS)
-        dut_port_1_tx_octet_256_511 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_256_TO_511_OCTETS)
-        dut_port_1_tx_octet_512_1023 = get_dut_output_stats_value(dut_port_1_results,
-                                                                  ETHER_STATS_PKTS_512_TO_1023_OCTETS)
-        dut_port_1_tx_octet_1024_1518 = get_dut_output_stats_value(dut_port_1_results,
-                                                                   ETHER_STATS_PKTS_1024_TO_1518_OCTETS)
-        dut_port_1_tx_octet_1519_max = get_dut_output_stats_value(dut_port_1_results,
-                                                                  ETHER_STATS_PKTS_1519_TO_MAX_OCTETS)
+            # Get tx octet range
+            dut_port_1_tx_octet_64 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_64_OCTETS)
+            dut_port_1_tx_octet_65_127 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_65_TO_127_OCTETS)
+            dut_port_1_tx_octet_128_255 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_128_TO_255_OCTETS)
+            dut_port_1_tx_octet_256_511 = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_PKTS_256_TO_511_OCTETS)
+            dut_port_1_tx_octet_512_1023 = get_dut_output_stats_value(dut_port_1_results,
+                                                                      ETHER_STATS_PKTS_512_TO_1023_OCTETS)
+            dut_port_1_tx_octet_1024_1518 = get_dut_output_stats_value(dut_port_1_results,
+                                                                       ETHER_STATS_PKTS_1024_TO_1518_OCTETS)
+            dut_port_1_tx_octet_1519_max = get_dut_output_stats_value(dut_port_1_results,
+                                                                      ETHER_STATS_PKTS_1519_TO_MAX_OCTETS)
 
-        dut_port_2_tx_octet_64 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_64_OCTETS)
-        dut_port_2_tx_octet_65_127 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_65_TO_127_OCTETS)
-        dut_port_2_tx_octet_128_255 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_128_TO_255_OCTETS)
-        dut_port_2_tx_octet_256_511 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_256_TO_511_OCTETS)
-        dut_port_2_tx_octet_512_1023 = get_dut_output_stats_value(dut_port_2_results,
-                                                                  ETHER_STATS_PKTS_512_TO_1023_OCTETS)
-        dut_port_2_tx_octet_1024_1518 = get_dut_output_stats_value(dut_port_2_results,
-                                                                   ETHER_STATS_PKTS_1024_TO_1518_OCTETS)
-        dut_port_2_tx_octet_1519_max = get_dut_output_stats_value(dut_port_2_results,
-                                                                  ETHER_STATS_PKTS_1519_TO_MAX_OCTETS)
+            dut_port_2_tx_octet_64 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_64_OCTETS)
+            dut_port_2_tx_octet_65_127 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_65_TO_127_OCTETS)
+            dut_port_2_tx_octet_128_255 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_128_TO_255_OCTETS)
+            dut_port_2_tx_octet_256_511 = get_dut_output_stats_value(dut_port_2_results, ETHER_STATS_PKTS_256_TO_511_OCTETS)
+            dut_port_2_tx_octet_512_1023 = get_dut_output_stats_value(dut_port_2_results,
+                                                                      ETHER_STATS_PKTS_512_TO_1023_OCTETS)
+            dut_port_2_tx_octet_1024_1518 = get_dut_output_stats_value(dut_port_2_results,
+                                                                       ETHER_STATS_PKTS_1024_TO_1518_OCTETS)
+            dut_port_2_tx_octet_1519_max = get_dut_output_stats_value(dut_port_2_results,
+                                                                      ETHER_STATS_PKTS_1519_TO_MAX_OCTETS)
 
-        dut_octet_range_stats = {dut_port_1:
-                                     {'RX': {'64': dut_port_1_rx_octet_64,
-                                             '127': dut_port_1_rx_octet_65_127,
-                                             '255': dut_port_1_rx_octet_128_255,
-                                             '511': dut_port_1_rx_octet_256_511,
-                                             '1023': dut_port_1_rx_octet_512_1023,
-                                             '1518': dut_port_1_rx_octet_1024_1518,
-                                             'max': dut_port_1_rx_octet_1519_max},
-                                      'TX': {'64': dut_port_1_tx_octet_64,
-                                             '127': dut_port_1_tx_octet_65_127,
-                                             '255': dut_port_1_tx_octet_128_255,
-                                             '511': dut_port_1_tx_octet_256_511,
-                                             '1023': dut_port_1_tx_octet_512_1023,
-                                             '1518': dut_port_1_tx_octet_1024_1518,
-                                             'max': dut_port_1_tx_octet_1519_max}},
-                                 dut_port_2:
-                                     {'RX': {'64': dut_port_2_rx_octet_64,
-                                             '127': dut_port_2_rx_octet_65_127,
-                                             '255': dut_port_2_rx_octet_128_255,
-                                             '511': dut_port_2_rx_octet_256_511,
-                                             '1023': dut_port_2_rx_octet_512_1023,
-                                             '1518': dut_port_2_rx_octet_1024_1518,
-                                             'max': dut_port_2_rx_octet_1519_max},
-                                      'TX': {'64': dut_port_2_tx_octet_64,
-                                             '127': dut_port_2_tx_octet_65_127,
-                                             '255': dut_port_2_tx_octet_128_255,
-                                             '511': dut_port_2_tx_octet_256_511,
-                                             '1023': dut_port_2_tx_octet_512_1023,
-                                             '1518': dut_port_2_tx_octet_1024_1518,
-                                             'max': dut_port_2_tx_octet_1519_max}}
-                                 }
+            dut_octet_range_stats = {dut_port_1:
+                                         {'RX': {'64': dut_port_1_rx_octet_64,
+                                                 '127': dut_port_1_rx_octet_65_127,
+                                                 '255': dut_port_1_rx_octet_128_255,
+                                                 '511': dut_port_1_rx_octet_256_511,
+                                                 '1023': dut_port_1_rx_octet_512_1023,
+                                                 '1518': dut_port_1_rx_octet_1024_1518,
+                                                 'max': dut_port_1_rx_octet_1519_max},
+                                          'TX': {'64': dut_port_1_tx_octet_64,
+                                                 '127': dut_port_1_tx_octet_65_127,
+                                                 '255': dut_port_1_tx_octet_128_255,
+                                                 '511': dut_port_1_tx_octet_256_511,
+                                                 '1023': dut_port_1_tx_octet_512_1023,
+                                                 '1518': dut_port_1_tx_octet_1024_1518,
+                                                 'max': dut_port_1_tx_octet_1519_max}},
+                                     dut_port_2:
+                                         {'RX': {'64': dut_port_2_rx_octet_64,
+                                                 '127': dut_port_2_rx_octet_65_127,
+                                                 '255': dut_port_2_rx_octet_128_255,
+                                                 '511': dut_port_2_rx_octet_256_511,
+                                                 '1023': dut_port_2_rx_octet_512_1023,
+                                                 '1518': dut_port_2_rx_octet_1024_1518,
+                                                 'max': dut_port_2_rx_octet_1519_max},
+                                          'TX': {'64': dut_port_2_tx_octet_64,
+                                                 '127': dut_port_2_tx_octet_65_127,
+                                                 '255': dut_port_2_tx_octet_128_255,
+                                                 '511': dut_port_2_tx_octet_256_511,
+                                                 '1023': dut_port_2_tx_octet_512_1023,
+                                                 '1518': dut_port_2_tx_octet_1024_1518,
+                                                 'max': dut_port_2_tx_octet_1519_max}}
+                                     }
 
-        second_last_counter = 1519
-        max_counter_value = max_frame_length - second_last_counter
-        expected_octet_counters = {'64': 1, '127': 63, '255': 128, '511': 256, '1023': 512, '1518': 495,
-                                   'max': max_counter_value}
+            second_last_counter = 1519
+            max_counter_value = max_frame_length - second_last_counter
+            expected_octet_counters = {'64': 1, '127': 63, '255': 128, '511': 256, '1023': 512, '1518': 495,
+                                       'max': max_counter_value}
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
                              "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
                              "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
-                                      message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
-                                              % (dut_port_1, dut_port_2))
+        if dut_config['enable_dpcsh']:
+            fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
+                                          message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
+                                                  % (dut_port_1, dut_port_2))
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_receive), actual=int(dut_port_1_transmit),
-                                      message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
-                                              % (dut_port_2, dut_port_1))
+            fun_test.test_assert_expected(expected=int(dut_port_2_receive), actual=int(dut_port_1_transmit),
+                                          message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
+                                                  % (dut_port_2, dut_port_1))
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
-                                      message="Ensure frames transmitted from DUT and counter on spirent match")
+            fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
+                                          message="Ensure frames transmitted from DUT and counter on spirent match")
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
-                                      message="Ensure frames transmitted from DUT and counter on spirent match")
+            fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
+                                          message="Ensure frames transmitted from DUT and counter on spirent match")
 
-        # Check ether stats pkts
-        fun_test.test_assert_expected(expected=int(dut_port_1_rx_eth_stats_pkts),
-                                      actual=int(dut_port_2_tx_eth_stats_pkts),
-                                      message="Ensure eth stat pkts received by DUT port %s are transmitted "
-                                              "by DUT port %s" % (dut_port_1, dut_port_2))
+            # Check ether stats pkts
+            fun_test.test_assert_expected(expected=int(dut_port_1_rx_eth_stats_pkts),
+                                          actual=int(dut_port_2_tx_eth_stats_pkts),
+                                          message="Ensure eth stat pkts received by DUT port %s are transmitted "
+                                                  "by DUT port %s" % (dut_port_1, dut_port_2))
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_tx_eth_stats_pkts),
-                                      actual=int(rx_results_1['FrameCount']),
-                                      message="Ensure eth stat pkts transmitted from DUT and counter on spirent match")
+            fun_test.test_assert_expected(expected=int(dut_port_2_tx_eth_stats_pkts),
+                                          actual=int(rx_results_1['FrameCount']),
+                                          message="Ensure eth stat pkts transmitted from DUT and counter on spirent match")
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_rx_eth_stats_pkts),
-                                      actual=int(dut_port_1_tx_eth_stats_pkts),
-                                      message="Ensure eth stat pkts received by DUT port %s are transmitted "
-                                              "by DUT port %s" % (dut_port_2, dut_port_1))
+            fun_test.test_assert_expected(expected=int(dut_port_2_rx_eth_stats_pkts),
+                                          actual=int(dut_port_1_tx_eth_stats_pkts),
+                                          message="Ensure eth stat pkts received by DUT port %s are transmitted "
+                                                  "by DUT port %s" % (dut_port_2, dut_port_1))
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_tx_eth_stats_pkts),
-                                      actual=int(rx_results_2['FrameCount']),
-                                      message="Ensure eth stat pkts transmitted from DUT and counter on spirent match")
+            fun_test.test_assert_expected(expected=int(dut_port_1_tx_eth_stats_pkts),
+                                          actual=int(rx_results_2['FrameCount']),
+                                          message="Ensure eth stat pkts transmitted from DUT and counter on spirent match")
 
-        # Check octet counts
-        fun_test.test_assert_expected(expected=int(dut_port_1_rx_octet_stats), actual=int(dut_port_2_tx_octet_stats),
-                                      message="Ensure correct ether stats octets are seen on both DUT ports")
+            # Check octet counts
+            fun_test.test_assert_expected(expected=int(dut_port_1_rx_octet_stats), actual=int(dut_port_2_tx_octet_stats),
+                                          message="Ensure correct ether stats octets are seen on both DUT ports")
 
-        fun_test.test_assert_expected(expected=int(tx_results_1['OctetCount']), actual=int(rx_results_1['OctetCount']),
-                                      message="Ensure octet counts match on spirent rx and tx")
+            fun_test.test_assert_expected(expected=int(tx_results_1['OctetCount']), actual=int(rx_results_1['OctetCount']),
+                                          message="Ensure octet counts match on spirent rx and tx")
 
-        fun_test.test_assert_expected(expected=int(rx_results_1['OctetCount']), actual=int(dut_port_2_tx_octet_stats),
-                                      message="Ensure octets hsown on tx port of DUT matches rx of spirent")
+            fun_test.test_assert_expected(expected=int(rx_results_1['OctetCount']), actual=int(dut_port_2_tx_octet_stats),
+                                          message="Ensure octets hsown on tx port of DUT matches rx of spirent")
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_rx_octet_stats), actual=int(dut_port_1_tx_octet_stats),
-                                      message="Ensure correct ether stats octets are seen on both DUT ports")
+            fun_test.test_assert_expected(expected=int(dut_port_2_rx_octet_stats), actual=int(dut_port_1_tx_octet_stats),
+                                          message="Ensure correct ether stats octets are seen on both DUT ports")
 
-        fun_test.test_assert_expected(expected=int(tx_results_2['OctetCount']), actual=int(rx_results_2['OctetCount']),
-                                      message="Ensure octet counts match on spirent rx and tx")
+            fun_test.test_assert_expected(expected=int(tx_results_2['OctetCount']), actual=int(rx_results_2['OctetCount']),
+                                          message="Ensure octet counts match on spirent rx and tx")
 
-        fun_test.test_assert_expected(expected=int(rx_results_2['OctetCount']), actual=int(dut_port_1_tx_octet_stats),
-                                      message="Ensure octets hsown on tx port of DUT matches rx of spirent")
+            fun_test.test_assert_expected(expected=int(rx_results_2['OctetCount']), actual=int(dut_port_1_tx_octet_stats),
+                                          message="Ensure octets hsown on tx port of DUT matches rx of spirent")
 
-        for key, val in dut_octet_range_stats.iteritems():    # DUT level
-            for key1, val1 in val.iteritems():                # RX, TX level
-                for key2, val2 in val1.iteritems():           # Octet level
-                    fun_test.test_assert_expected(expected=expected_octet_counters[key2], actual=int(val2),
-                                                  message="Ensure correct value is seen for %s octet in %s of "
-                                                          "dut port %s" % (key2, key1, key))
+            for key, val in dut_octet_range_stats.iteritems():    # DUT level
+                for key1, val1 in val.iteritems():                # RX, TX level
+                    for key2, val2 in val1.iteritems():           # Octet level
+                        fun_test.test_assert_expected(expected=expected_octet_counters[key2], actual=int(val2),
+                                                      message="Ensure correct value is seen for %s octet in %s of "
+                                                              "dut port %s" % (key2, key1, key))
 
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
@@ -637,11 +645,12 @@ class IPv4RandomTestCase2(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
         file_path = fun_test.get_script_parent_directory() + "/" + loads_file
@@ -732,8 +741,6 @@ class IPv4RandomTestCase2(FunTestCase):
 
     def run(self):
         # Execute traffic
-        psw_stats = network_controller_obj.peek_psw_global_stats()
-
         start = template_obj.enable_generator_configs(generator_configs=[gen_obj_1, gen_obj_2])
         fun_test.test_assert(start, "Starting generator config")
 
@@ -778,11 +785,13 @@ class IPv4RandomTestCase2(FunTestCase):
         rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
-
-        # Fetch psw global stats
-        psw_stats = network_controller_obj.peek_psw_global_stats()
+        dut_port_1_results = None
+        dut_port_2_results = None
+        if dut_config['enable_dpcsh']:
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+            fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
@@ -790,35 +799,34 @@ class IPv4RandomTestCase2(FunTestCase):
         fun_test.log("Rx 2 Results %s" % rx_results_2)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_1)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
-        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
-        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
-        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+        if dut_config['enable_dpcsh']:
+            fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
+            fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
-        dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
-        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
-        dut_port_2_receive = get_dut_output_stats_value(dut_port_2_results, FRAMES_RECEIVED_OK, tx=False)
+            dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
+            dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+            dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
+            dut_port_2_receive = get_dut_output_stats_value(dut_port_2_results, FRAMES_RECEIVED_OK, tx=False)
 
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
+            fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
+                                 "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
+            fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
+                                 "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
-                                      message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
-                                              % (dut_port_1, dut_port_2))
+            fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
+                                          message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
+                                                  % (dut_port_1, dut_port_2))
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_receive), actual=int(dut_port_1_transmit),
-                                      message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
-                                              % (dut_port_2, dut_port_1))
+            fun_test.test_assert_expected(expected=int(dut_port_2_receive), actual=int(dut_port_1_transmit),
+                                          message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
+                                                  % (dut_port_2, dut_port_1))
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
-                                      message="Ensure frames transmitted from DUT and counter on spirent match")
+            fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
+                                          message="Ensure frames transmitted from DUT and counter on spirent match")
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
-                                      message="Ensure frames transmitted from DUT and counter on spirent match")
+            fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
+                                          message="Ensure frames transmitted from DUT and counter on spirent match")
 
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")

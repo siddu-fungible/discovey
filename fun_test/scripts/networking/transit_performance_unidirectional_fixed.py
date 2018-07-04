@@ -2,7 +2,7 @@
 Results Header Dict
 { "frame_size": {"is_input": true, "description": "Fixed Frame Size Test"},
   "test_type": {"is_input": false, "description": "Unidirectional Test"},
-  "throughput": {"is_input": true, "description": "Throughput in Mbps"},
+  "throughput": {"is_input": false, "description": "Throughput in Mbps"},
   "latency": {"is_input": false, "description": "Latency in us"},
   "jitter": {"is_input": false, "description": "Jitter in us"},
   "pps": {"is_input": false, "description": "Packets per secs"},
@@ -84,7 +84,7 @@ class NuTransitPerformance(FunTestScript):
                                                                mtu_value=self.MTU)
         fun_test.test_assert(mtu_changed_on_spirent, checkpoint)
 
-        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
 
             checkpoint = "Change DUT ports MTU to %d" % self.MTU
@@ -210,7 +210,7 @@ class NuTransitLatencyIPv4Test(FunTestCase):
 
         self.expected_latency_data = performance_data
 
-        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG port stats on DUT"
             for port_num in dut_config['ports']:
                 result = network_controller_obj.clear_port_stats(port_num=port_num)
@@ -248,44 +248,48 @@ class NuTransitLatencyIPv4Test(FunTestCase):
             fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
             fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
 
-            checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (
-                dut_config['ports'][0], dut_config['ports'][1])
-            port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
-            fun_test.log("Port %d Results: %s" % (dut_config['ports'][0], port1_result))
-            fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
-            port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
-            fun_test.log("Port %d Results: %s" % (dut_config['ports'][1], port2_result))
-            fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
+            if dut_config['enable_dpcsh']:
+                checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (
+                    dut_config['ports'][0], dut_config['ports'][1])
+                port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
+                fun_test.log("Port %d Results: %s" % (dut_config['ports'][0], port1_result))
+                fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
+                port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
+                fun_test.log("Port %d Results: %s" % (dut_config['ports'][1], port2_result))
+                fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
 
-            frames_transmitted = get_dut_output_stats_value(result_stats=port1_result, stat_type=FRAMES_TRANSMITTED_OK)
-            frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_RECEIVED_OK)
+                frames_transmitted = get_dut_output_stats_value(result_stats=port1_result,
+                                                                stat_type=FRAMES_TRANSMITTED_OK)
+                frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_RECEIVED_OK)
 
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
+                fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
+                                              message=checkpoint)
 
-            # Ensure NO error are seen on DUT port 1
+                # Ensure NO error are seen on DUT port 1
 
-            if_in_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=IF_IN_ERRORS)
-            fun_test.test_assert_expected(expected=None, actual=if_in_err_count,
-                                          message="Ensure no IN error count on DUT port %d" % dut_config['ports'][0])
-            if_out_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=IF_OUT_ERRORS)
-            fun_test.test_assert_expected(expected=None, actual=if_out_err_count,
-                                          message="Ensure no OUT error count on DUT port %d" % dut_config['ports'][0])
-            fcs_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=FRAME_CHECK_SEQUENCE_ERROR)
-            fun_test.test_assert_expected(expected=None, actual=fcs_err_count,
-                                          message="Ensure no FCS errors seen on DUT port %d" % dut_config['ports'][0])
+                if_in_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=IF_IN_ERRORS)
+                fun_test.test_assert_expected(expected=None, actual=if_in_err_count,
+                                              message="Ensure no IN error count on DUT port %d" % dut_config['ports'][0])
+                if_out_err_count = get_dut_output_stats_value(result_stats=port1_result, stat_type=IF_OUT_ERRORS)
+                fun_test.test_assert_expected(expected=None, actual=if_out_err_count,
+                                              message="Ensure no OUT error count on DUT port %d" % dut_config['ports'][0])
+                fcs_err_count = get_dut_output_stats_value(result_stats=port1_result,
+                                                           stat_type=FRAME_CHECK_SEQUENCE_ERROR)
+                fun_test.test_assert_expected(expected=None, actual=fcs_err_count,
+                                              message="Ensure no FCS errors seen on DUT port %d" % dut_config['ports'][0])
 
-            # Ensure NO error are seen on DUT port 2
+                # Ensure NO error are seen on DUT port 2
 
-            if_in_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=IF_IN_ERRORS)
-            fun_test.test_assert_expected(expected=None, actual=if_in_err_count,
-                                          message="Ensure no IN error count on DUT port %d" % dut_config['ports'][1])
-            if_out_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=IF_OUT_ERRORS)
-            fun_test.test_assert_expected(expected=None, actual=if_out_err_count,
-                                          message="Ensure no OUT error count on DUT port %d" % dut_config['ports'][1])
-            fcs_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAME_CHECK_SEQUENCE_ERROR)
-            fun_test.test_assert_expected(expected=None, actual=fcs_err_count,
-                                          message="Ensure no FCS errors seen on DUT port %d" % dut_config['ports'][1])
+                if_in_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=IF_IN_ERRORS)
+                fun_test.test_assert_expected(expected=None, actual=if_in_err_count,
+                                              message="Ensure no IN error count on DUT port %d" % dut_config['ports'][1])
+                if_out_err_count = get_dut_output_stats_value(result_stats=port2_result, stat_type=IF_OUT_ERRORS)
+                fun_test.test_assert_expected(expected=None, actual=if_out_err_count,
+                                              message="Ensure no OUT error count on DUT port %d" % dut_config['ports'][1])
+                fcs_err_count = get_dut_output_stats_value(result_stats=port2_result,
+                                                           stat_type=FRAME_CHECK_SEQUENCE_ERROR)
+                fun_test.test_assert_expected(expected=None, actual=fcs_err_count,
+                                              message="Ensure no FCS errors seen on DUT port %d" % dut_config['ports'][1])
 
             checkpoint = "Validate Latency Results"
             latency_result = template_obj.validate_performance_result(
@@ -348,7 +352,7 @@ class NuTransitLatencyIpv6Test(NuTransitLatencyIPv4Test):
                               9. Ensure no errors are seen 
                               10. Validate latency numbers for each streams under each port
                               11. Deactivate current stream
-                                      """)
+                              """)
 
     def setup(self):
         ports = template_obj.stc_manager.get_port_list()
@@ -409,7 +413,7 @@ class NuTransitLatencyIpv6Test(NuTransitLatencyIPv4Test):
 
         self.expected_latency_data = performance_data
 
-        if template_obj.chassis_type == NuConfigManager.CHASSIS_TYPE_PHYSICAL:
+        if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG port stats on DUT"
             for port_num in dut_config['ports']:
                 result = network_controller_obj.clear_port_stats(port_num=port_num)
@@ -604,7 +608,7 @@ class NuTransitJitterTest(FunTestCase):
 
         mode = dut_config['interface_mode']
         output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, ip_version="Ipv4",
+        template_obj.populate_performance_counters_json(mode=mode, ip_version="IPv4",
                                                         latency_results=latency_results,
                                                         jitter_results=jitter_results,
                                                         file_name=output_file_path)
@@ -727,6 +731,8 @@ class NuTransitJitterIPv6Test(NuTransitJitterTest):
 if __name__ == "__main__":
     test_case_mode = fun_test.get_local_setting(setting="ip_version")
     ts = NuTransitPerformance()
+    test_case_mode = test_case_mode if test_case_mode else 4
+
     if test_case_mode == 6:
         ts.add_test_case(NuTransitLatencyIpv6Test())
         ts.add_test_case(NuTransitJitterIPv6Test())

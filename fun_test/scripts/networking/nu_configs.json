@@ -6,7 +6,8 @@
     "hnu_ports": [10],
     "dpcsh_tcp_proxy_ip": "10.1.21.120",
     "dpcsh_tcp_proxy_port": 40221,
-    "interface_mode": "25G"
+    "interface_mode": "25G",
+    "enable_dpcsh": false
   },
   {
     "name": "spirent_configs",
@@ -92,7 +93,7 @@
       "FPG7": "10.1.23.143/2/2"
     },
     "cc_flow": {
-      "FPG_CC": {"FPG6": "10.1.23.143/2/1", "FPG8": "10.1.23.140/1/1"},
+      "FPG_CC": {"FPG6": "10.1.23.143/2/1", "FPG7": "10.1.23.143/2/2", "FPG8": "10.1.23.140/1/1"},
       "CC_FPG": {},
       "HU_CC": {},
       "HNU_CC": {}

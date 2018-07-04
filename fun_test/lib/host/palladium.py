@@ -187,7 +187,7 @@ class Palladium(object):
         return result
 
     def _is_booted(self):
-        timer = FunTimer(max_time=900)
+        timer = FunTimer(max_time=1800)
         design_loaded = False
         search_str = 'source init.qel'
         cmd = "grep --text '{}' {}/{}/emu.log".format(search_str, self.rdp_dir, self.model, include_last_line=True)
