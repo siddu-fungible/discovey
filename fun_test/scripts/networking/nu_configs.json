@@ -6,7 +6,8 @@
     "hnu_ports": [10],
     "dpcsh_tcp_proxy_ip": "10.1.21.120",
     "dpcsh_tcp_proxy_port": 40221,
-    "interface_mode": "25G"
+    "interface_mode": "25G",
+    "enable_dpcsh": false
   },
   {
     "name": "spirent_configs",

@@ -34,7 +34,17 @@ VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
 VP_PACKETS_OUT_ETP = "vp_packets_out_etp"
 VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
+VP_PACKETS_CONTROL_T2C_COUNT = "vp_packets_control_t2c"
+VP_PACKETS_CC_OUT = "vp_packets_out_cc"
 ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED = "count_for_all_non_fcp_packets_received"
+ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE = "count_for_efp_to_wqm_decrement_pulse"
+ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT = "count_for_efp_to_wro_descriptors_sent"
+ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS = "count_for_erp0_to_efp_error_interface_flits"
+ERP_COUNT_FOR_EFP_FCP_VLD = "count_for_efp_to_fcp_vld"
+WRO_IN_NFCP_PKTS = "wroin_nfcp_pkts"
+WRO_IN_PKTS = "wroin_pkts"
+WRO_OUT_WUS = "wroout_wus"
+WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -207,6 +217,17 @@ def get_erp_stats_values(network_controller_obj=None, hnu=False, flex=False):
         output = network_controller_obj.peek_erp_global_stats(hnu=hnu, flex=flex)
         fun_test.simple_assert(output, "Ensure bam stats are grepped")
         result = parse_result_dict(output)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_wro_global_stats_values(network_controller_obj=None):
+    result = None
+    try:
+        wro_stats = network_controller_obj.peek_wro_global_stats()
+        fun_test.simple_assert(wro_stats, "Ensure WRO Global stats fetched")
+        result = parse_result_dict(wro_stats)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result

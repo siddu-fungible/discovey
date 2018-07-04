@@ -40,7 +40,8 @@ class SpirentSetup(FunTestScript):
         # Create network controller object
         dpcsh_server_ip = dut_config["dpcsh_tcp_proxy_ip"]
         dpcsh_server_port = dut_config['dpcsh_tcp_proxy_port']
-        network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
+        if dut_config['enable_dpcsh']:
+            network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
         '''
         srcMac = spirent_config[chassis_type][""]
@@ -100,11 +101,12 @@ class IPv4GoodFrameTestCase1(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         l2_config = spirent_config["l2_config"]
         l3_config = spirent_config["l3_config"]["ipv4"]
@@ -173,32 +175,38 @@ class IPv4GoodFrameTestCase1(FunTestCase):
         rx_port_analyzer_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_1_results = None
+        dut_port_2_results = None
+        dut_port_2_transmit = None
+        dut_port_1_receive = None
+        if dut_config['enable_dpcsh']:
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
 
-        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
+            dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+            dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
+
+            fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+            fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s" % rx_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
-        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
-        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.test_assert(template_obj.compare_result_attribute(tx_results,rx_results), "Check FrameCount")
 
         zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters")
+        if dut_config['enable_dpcsh']:
+            fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
+            fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
-        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+            fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
+                                          message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
+                                                  % (dut_port_1, dut_port_2))
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
-                                      message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
-                                              % (dut_port_1, dut_port_2))
-
-        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results['FrameCount']),
-                                      message="Ensure frames transmitted from DUT and counter on spirent match")
+            fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results['FrameCount']),
+                                          message="Ensure frames transmitted from DUT and counter on spirent match")
 
 
 class IPv6GoodFrameTestCase1(IPv4GoodFrameTestCase1):
@@ -221,11 +229,12 @@ class IPv6GoodFrameTestCase1(IPv4GoodFrameTestCase1):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         l2_config = spirent_config["l2_config"]
         l3_config = spirent_config["l3_config"]["ipv6"]
@@ -289,11 +298,12 @@ class IPv4RuntTestCase2(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         load = 500
         self.streamblock_obj = StreamBlock()
@@ -366,45 +376,48 @@ class IPv4RuntTestCase2(FunTestCase):
         tx_port_generator_results = template_obj.stc_manager.get_generator_port_results(
             port_handle=port_1, subscribe_handle=self.subscribe_results['generator_subscribe'])
 
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_2_results = None
+        dut_port_1_results = None
+        if dut_config['enable_dpcsh']:
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+            fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s" % rx_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
         fun_test.log("Tx Port Generator Results %s" % tx_port_generator_results)
-        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
-        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         # Check frame counts
         frames_received = 0
         fun_test.test_assert_expected(actual=int(rx_port_analyzer_results['TotalFrameCount']), expected=frames_received,
                                       message="Ensure no frame is received")
 
-        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
-        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+            fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
 
-        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        fun_test.test_assert(not dut_port_2_transmit, "Ensure frames transmitted is None")
+            dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+            fun_test.test_assert(not dut_port_2_transmit, "Ensure frames transmitted is None")
 
-        dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(dut_port_1_undersize_pkts),
-                                      message="Ensure all packets are marked undersize on rx port of dut")
-        '''
-        psw_stats = network_controller_obj.peek_psw_global_stats()
-        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
-        ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
-        cpr_feop_pkt = 'cpr_feop_pkt'
-        cpr_sop_drop_pkt = 'cpr_sop_drop_pkt'
-        fwd_frv = 'fwd_frv'
-        main_pkt_drop_eop = 'main_pkt_drop_eop'
-        fetch_list = [cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, ifpg_pkt]
+            dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(dut_port_1_undersize_pkts),
+                                          message="Ensure all packets are marked undersize on rx port of dut")
 
-        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
-        for key in fetch_list:
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=psw_fetched_output[key],
-                                          message="Check counter %s in psw global stats" % key)
-        '''
+            psw_stats = network_controller_obj.peek_psw_global_stats()
+            dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
+            ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+            cpr_feop_pkt = 'cpr_feop_pkt'
+            cpr_sop_drop_pkt = 'cpr_sop_drop_pkt'
+            fwd_frv = 'fwd_frv'
+            main_pkt_drop_eop = 'main_pkt_drop_eop'
+            fetch_list = [cpr_sop_drop_pkt, fwd_frv, main_pkt_drop_eop, cpr_feop_pkt, ifpg_pkt]
+
+            psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+            for key in fetch_list:
+                fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=psw_fetched_output[key],
+                                              message="Check counter %s in psw global stats" % key)
 
 
 class IPv6RuntTestCase2(IPv4RuntTestCase2):
@@ -427,12 +440,13 @@ class IPv6RuntTestCase2(IPv4RuntTestCase2):
                               """)
 
     def setup(self):
-        # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            # Clear port results on DUT
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         load = 500
         self.streamblock_obj = StreamBlock()
@@ -495,11 +509,12 @@ class IPv4GoodRuntTestCase3(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         load = 21000
         self.streamblock_obj = StreamBlock()
@@ -578,18 +593,23 @@ class IPv4GoodRuntTestCase3(FunTestCase):
         fun_test.log("Fetching tx port results for subscribed object %s" % self.subscribe_results['analyzer_subscribe'])
         rx_port_analyzer_results = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=port_2, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
-
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
+        dut_port_2_results = None
+        dut_port_1_results = None
+        dut_port_2_transmit = None
+        dut_port_1_undersize_pkts = None
+        if dut_config['enable_dpcsh']:
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
+            dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS,
+                                                                   tx=False)
+            fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
+            fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.log("Tx Results %s " % tx_results)
         fun_test.log("Rx Results %s " % rx_results)
         fun_test.log("Tx Generator resukts %s" % tx_port_generator_results)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results)
-        fun_test.log("DUT Port 1 Results: %s" % dut_port_1_results)
-        fun_test.log("DUT Port 2 Results: %s" % dut_port_2_results)
 
         fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
                                       actual=int(tx_port_generator_results['GeneratorUndersizeFrameCount']) +
@@ -598,18 +618,18 @@ class IPv4GoodRuntTestCase3(FunTestCase):
 
         fun_test.test_assert_expected(expected=0, actual=int(rx_port_analyzer_results['FcsErrorFrameCount']),
                                       message="Ensure no FCS errors are seen")
+        if dut_config['enable_dpcsh']:
+            fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
-        fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
+            fun_test.test_assert_expected(actual=int(dut_port_2_transmit),
+                                          expected=int(rx_port_analyzer_results['TotalFrameCount']),
+                                          message="Ensure frames transmitted is None")
 
-        fun_test.test_assert_expected(actual=int(dut_port_2_transmit),
-                                      expected=int(rx_port_analyzer_results['TotalFrameCount']),
-                                      message="Ensure frames transmitted is None")
+            fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
 
-        fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-
-        fun_test.test_assert_expected(expected=int(tx_port_generator_results['GeneratorUndersizeFrameCount']),
-                                      actual=int(dut_port_1_undersize_pkts),
-                                      message="Ensure packets are marked undersize on rx port of dut")
+            fun_test.test_assert_expected(expected=int(tx_port_generator_results['GeneratorUndersizeFrameCount']),
+                                          actual=int(dut_port_1_undersize_pkts),
+                                          message="Ensure packets are marked undersize on rx port of dut")
 
 
 class IPv6GoodRuntTestCase3(IPv4GoodRuntTestCase3):
@@ -701,12 +721,13 @@ class BroadcastTestCase4(FunTestCase):
                         """)
 
     def setup(self):
-        # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+        if dut_config['enable_dpcsh']:
+            # Clear port results on DUT
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
         pass
@@ -753,25 +774,25 @@ class BroadcastTestCase4(FunTestCase):
         port_dict = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_results,
                                                                 port_handle_list=[port_2],
                                                                 analyzer_result=True)
+        if dut_config['enable_dpcsh']:
+            # Fetch results from dut
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
 
-        # Fetch results from dut
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_1_broadcast_receive = get_dut_output_stats_value(dut_port_1_results, IF_IN_BROADCAST_PKTS, tx=False)
+            dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
 
-        dut_port_1_broadcast_receive = get_dut_output_stats_value(dut_port_1_results, IF_IN_BROADCAST_PKTS, tx=False)
-        dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
-        
-        # Currently getting dropped
-        # TODO: Change later
-        
-        expected_rx_count = 0
-        fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']),
-                                      actual=int(dut_port_1_good_receive),
-                                      message="Ensure frames are received as good")
+            # Currently getting dropped
+            # TODO: Change later
 
-        fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']), 
-                                      actual=int(dut_port_1_broadcast_receive),
-                                      message="Ensure frames are received as broadcast on dut port %s" % dut_port_1)
+            expected_rx_count = 0
+            fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']),
+                                          actual=int(dut_port_1_good_receive),
+                                          message="Ensure frames are received as good")
+
+            fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']),
+                                          actual=int(dut_port_1_broadcast_receive),
+                                          message="Ensure frames are received as broadcast on dut port %s" % dut_port_1)
 
 
 if __name__ == "__main__":
@@ -796,5 +817,5 @@ if __name__ == "__main__":
         # ts.add_test_case(IPv6RuntTestCase2())
         # ts.add_test_case(IPv6GoodRuntTestCase3())
 
-    ts.add_test_case(BroadcastTestCase4())
+    # ts.add_test_case(BroadcastTestCase4())
     ts.run()
