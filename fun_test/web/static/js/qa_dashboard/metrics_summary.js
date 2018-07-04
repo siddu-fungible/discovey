@@ -44,7 +44,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
 
         ];
 
-        $scope.numGridColumns = 5;
+        $scope.numGridColumns = 4;
         if(angular.element($window).width() <=1441) {
             $scope.numGridColumns = 3;
         }
