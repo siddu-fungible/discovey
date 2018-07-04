@@ -1,6 +1,6 @@
 'use strict';
 
-function MetricsSummaryController($scope, commonService, $timeout) {
+function MetricsSummaryController($scope, commonService, $timeout, $window) {
     let ctrl = this;
 
     this.$onInit = function () {
@@ -43,6 +43,12 @@ function MetricsSummaryController($scope, commonService, $timeout) {
             }
 
         ];
+
+        $scope.numGridColumns = 5;
+        if(angular.element($window).width() <=1441) {
+            $scope.numGridColumns = 2;
+        }
+
         $scope.mode = null;
         $scope.fetchJenkinsJobIdMap();
 
@@ -361,8 +367,9 @@ function MetricsSummaryController($scope, commonService, $timeout) {
         return commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
             let flattenedLeaves = {};
             $scope.flattenLeaves("", flattenedLeaves, leaves);
-            $scope.numGridColumns = 5;
+
             $scope.prepareGridNodes(flattenedLeaves);
+            console.log(angular.element($window).width());
 
         });
 
