@@ -58,8 +58,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
     def cleanup(self):
         try:
-            self.stc_manager.disconnect_session()
-            self.stc_manager.disconnect_lab_server()
+            if self.spirent_config['connect_via_lab_server']:
+                self.stc_manager.disconnect_session()
+                self.stc_manager.disconnect_lab_server()
             # self.stc_manager.disconnect_chassis()
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1147,13 +1148,19 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
                         ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip2'])
-                        current_index = header_list.index(header)
+                        index_list = [i for i, n in enumerate(header_list) if n == header]
+                        current_index = index_list[0]
+                        if len(index_list) == 2:
+                            current_index = index_list[1]
                         ipv4_obj.protocol = ipv4_obj.PROTOCOL_TYPE_TCP if 'tcp' in header_list[
                             current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
                         header_obj_list.append(ipv4_obj)
                     elif header == Ipv6Header:
                         ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip2'])
-                        current_index = header_list.index(header)
+                        index_list = [i for i, n in enumerate(header_list) if n == header]
+                        current_index = index_list[0]
+                        if len(index_list) == 2:
+                            current_index = index_list[1]
                         ipv6_obj.nextHeader = ipv6_obj.NEXT_HEADER_TCP if 'tcp' in header_list[
                             current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
                         header_obj_list.append(ipv6_obj)
