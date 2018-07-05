@@ -2867,6 +2867,168 @@ class TestCcIPv4OverlayIhlError(TestCcEthernetArpRequest):
         fun_test.add_checkpoint(checkpoint)
 
 
+class TestCcIpv4Isis1(TestCcEthernetArpRequest):
+    stream_obj = None
+    generator_handle = None
+    generator_config_obj = None
+    subscribed_results = None
+
+    def describe(self):
+        self.set_test_details(id=30, summary="Test CC IPv4 ISIS_1",
+                              steps="""
+                              1. Create a stream with EthernetII and  IPv4 headers under port %s
+                                 a. Frame Size Mode: %s Frame Size: %d 
+                                 b. load: %d load Unit: %s
+                                 c. Include signature field
+                                 d. Payload Fill type: Constant
+                              2. Configure %s generator with following settings
+                                 a. Set Duration %d secs 
+                                 b. Scheduling mode to Rate based
+                              3. Subscribe to all results
+                              4. Clear DUT stats before running traffic
+                              5. Start traffic 
+                              6. Dump all the stats in logs
+                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx == Rx on DUT
+                              9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
+                              10. From VP stats, validate VP total IN == VP total OUT
+                              11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
+                                  sent, ERP0 to EFP error interface flits, all non FCP packets received, 
+                                  EFP to FCP vld should be equal to spirent TX 
+                              12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
+                                  WROWU_CNT_VPP should be equal to spirent TX  
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1,
+                                     TRAFFIC_DURATION))
+
+    def setup(self):
+        l3_config = spirent_config['l3_config']['ipv4']
+        checkpoint = "Create a stream with EthernetII and  IPv4 headers under port %s" % port1
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
+                                      fixed_frame_length=FRAME_SIZE,
+                                      frame_length_mode=FRAME_LENGTH_MODE,
+                                      insert_signature=True,
+                                      load=LOAD, load_unit=LOAD_UNIT)
+        result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
+        fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
+
+        ether_obj = Ethernet2Header(destination_mac=Ethernet2Header.ISIS_MULTICAST_MAC_1,
+                                    ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ether_obj, update=True)
+        fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
+
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'])
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ipv4_header_obj, update=True)
+        fun_test.test_assert(result, checkpoint)
+
+        checkpoint = "Configure Generator Config for port %s" % port1
+        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
+                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
+                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
+        result = template_obj.configure_generator_config(port_handle=port1,
+                                                         generator_config_obj=self.generator_config_obj)
+        fun_test.simple_assert(result, "Create Generator config")
+        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
+        fun_test.test_assert(self.generator_handle, checkpoint)
+
+        checkpoint = "Subscribe to all results"
+        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
+        fun_test.test_assert(self.subscribed_results, checkpoint)
+
+    def run(self):
+        super(TestCcIpv4Isis1, self).run()
+
+    def cleanup(self):
+        fun_test.log("In test case cleanup")
+
+        checkpoint = "Delete %s " % self.stream_obj.spirent_handle
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+
+class TestCcIpv4Isis2(TestCcEthernetArpRequest):
+    stream_obj = None
+    generator_handle = None
+    generator_config_obj = None
+    subscribed_results = None
+
+    def describe(self):
+        self.set_test_details(id=31, summary="Test CC IPv4 ISIS_2",
+                              steps="""
+                              1. Create a stream with EthernetII and  IPv4 headers under port %s
+                                 a. Frame Size Mode: %s Frame Size: %d 
+                                 b. load: %d load Unit: %s
+                                 c. Include signature field
+                                 d. Payload Fill type: Constant
+                              2. Configure %s generator with following settings
+                                 a. Set Duration %d secs 
+                                 b. Scheduling mode to Rate based
+                              3. Subscribe to all results
+                              4. Clear DUT stats before running traffic
+                              5. Start traffic 
+                              6. Dump all the stats in logs
+                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx == Rx on DUT
+                              9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
+                              10. From VP stats, validate VP total IN == VP total OUT
+                              11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
+                                  sent, ERP0 to EFP error interface flits, all non FCP packets received, 
+                                  EFP to FCP vld should be equal to spirent TX 
+                              12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
+                                  WROWU_CNT_VPP should be equal to spirent TX  
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1,
+                                     TRAFFIC_DURATION))
+
+    def setup(self):
+        l3_config = spirent_config['l3_config']['ipv4']
+        checkpoint = "Create a stream with EthernetII and  IPv4 headers under port %s" % port1
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
+                                      fixed_frame_length=FRAME_SIZE,
+                                      frame_length_mode=FRAME_LENGTH_MODE,
+                                      insert_signature=True,
+                                      load=LOAD, load_unit=LOAD_UNIT)
+        result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
+        fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
+
+        ether_obj = Ethernet2Header(destination_mac=Ethernet2Header.ISIS_MULTICAST_MAC_2,
+                                    ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ether_obj, update=True)
+        fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
+
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'])
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ipv4_header_obj, update=True)
+        fun_test.test_assert(result, checkpoint)
+
+        checkpoint = "Configure Generator Config for port %s" % port1
+        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
+                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
+                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
+        result = template_obj.configure_generator_config(port_handle=port1,
+                                                         generator_config_obj=self.generator_config_obj)
+        fun_test.simple_assert(result, "Create Generator config")
+        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
+        fun_test.test_assert(self.generator_handle, checkpoint)
+
+        checkpoint = "Subscribe to all results"
+        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
+        fun_test.test_assert(self.subscribed_results, checkpoint)
+
+    def run(self):
+        super(TestCcIpv4Isis2, self).run()
+
+    def cleanup(self):
+        fun_test.log("In test case cleanup")
+
+        checkpoint = "Delete %s " % self.stream_obj.spirent_handle
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+
 class TestCcIPv4VersionError(TestCcEthernetArpRequest):
     stream_obj = None
     generator_handle = None
@@ -4282,6 +4444,8 @@ if __name__ == '__main__':
         ts.add_test_case(TestCcIpChecksumError())
         ts.add_test_case(TestCcIpv4Dhcp())
         ts.add_test_case(TestCcFSFError())
+        ts.add_test_case(TestCcIpv4Isis1())
+        ts.add_test_case(TestCcIpv4Isis2())
         ts.add_test_case(TestCcIPv4VersionError())
         ts.add_test_case(TestCcIPv4InternetHeaderLengthError())
         ts.add_test_case(TestCcIPv4FlagZeroError())
