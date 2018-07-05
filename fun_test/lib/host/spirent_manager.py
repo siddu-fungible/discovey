@@ -51,9 +51,10 @@ class SpirentManager(object):
         health_result = {"result": False, "error_message": None}
         fun_test.debug("Determining health of Spirent Application and Lab Server. Checking availability of ports")
         try:
-            fun_test.test_assert(self.get_api_version(), "Get STC API Version")
-            fun_test.test_assert(self.connect_lab_server(session_name=session_name), "Connect to Lab Server")
-            fun_test.test_assert(self.connect_license_manager(), "Connect to License Server")
+            if self.spirent_config['connect_via_lab_server']:
+                fun_test.test_assert(self.get_api_version(), "Get STC API Version")
+                fun_test.test_assert(self.connect_lab_server(session_name=session_name), "Connect to Lab Server")
+                fun_test.test_assert(self.connect_license_manager(), "Connect to License Server")
             health_result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
