@@ -2275,8 +2275,8 @@ class TestCcIpChecksumError(FunTestCase):
         fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(rx_results['FrameCount']),
                                       message=checkpoint)
 
-        checkpoint = "Ensure no errors are seen on spirent"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
+        checkpoint = "Ensure checksum errors are seen on spirent"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_results)
         checksum_error_seen = False
         if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 2:
             checksum_error_seen = True
@@ -2364,6 +2364,7 @@ class TestCcIpv4Dhcp(TestCcEthernetArpRequest):
     generator_handle = None
     generator_config_obj = None
     subscribed_results = None
+    frame_size = 306
 
     def describe(self):
         self.set_test_details(id=24, summary="Test CC IPv4 DHCP",
@@ -2389,12 +2390,12 @@ class TestCcIpv4Dhcp(TestCcEthernetArpRequest):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX
-                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                              """ % (port1, FRAME_LENGTH_MODE, self.frame_size, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         checkpoint = "Create a stream with EthernetII and IPv4 and DHCp header option under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
-                                      fixed_frame_length=FRAME_SIZE,
+                                      fixed_frame_length=self.frame_size,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
                                       load=LOAD, load_unit=LOAD_UNIT)
@@ -2530,7 +2531,7 @@ class TestCcFSFError(TestCcEthernetArpRequest):
         fun_test.add_checkpoint(checkpoint)
 
 
-class TestCcOuterChecksumError(TestCcEthernetArpRequest):
+class TestCcOuterChecksumError(FunTestCase):
     stream_obj = None
     generator_handle = None
     generator_config_obj = None
@@ -2566,6 +2567,16 @@ class TestCcOuterChecksumError(TestCcEthernetArpRequest):
                                          TRAFFIC_DURATION))
 
     def setup(self):
+        checkpoint = "Configure Generator Config for port %s" % port1
+        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
+                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
+                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
+        result = template_obj.configure_generator_config(port_handle=port1,
+                                                         generator_config_obj=self.generator_config_obj)
+        fun_test.simple_assert(result, "Create Generator config")
+        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
+        fun_test.test_assert(self.generator_handle, checkpoint)
+
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -2582,25 +2593,173 @@ class TestCcOuterChecksumError(TestCcEthernetArpRequest):
         checkpoint = "Update IPv4 stack with destination IP and checksum error"
         ipv4_header_obj = Ipv4Header(checksum=Ipv4Header.CHECKSUM_ERROR, destination_address="29.1.1.1")
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=False)
+                                                          overlay=False,
+                                                          updated_header_attributes_dict={"checksum": Ipv4Header.CHECKSUM_ERROR,
+                                                                                          "destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
 
         checkpoint = "Subscribe to all results"
         self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
         fun_test.test_assert(self.subscribed_results, checkpoint)
 
     def run(self):
-        super(TestCcOuterChecksumError, self).run()
+        if dut_config['enable_dpcsh']:
+            checkpoint = "Clear FPG stats on all DUT ports"
+            for port in dut_config['ports']:
+                clear_stats = network_controller_obj.clear_port_stats(port_num=port)
+                fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
+            fun_test.add_checkpoint(checkpoint)
+
+            checkpoint = "Get PSW and Parser NU stats before traffic"
+            psw_stats = network_controller_obj.peek_psw_global_stats()
+            parser_stats = network_controller_obj.peek_parser_stats()
+            fun_test.log("PSW Stats: %s \n" % psw_stats)
+            fun_test.log("Parser stats: %s \n" % parser_stats)
+            fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
+        result = template_obj.enable_generator_configs([self.generator_handle])
+        fun_test.test_assert(result, checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+
+        checkpoint = "Ensure Spirent stats fetched"
+        tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
+                                                                          spirent_handle,
+                                                                          subscribe_handle=self.subscribed_results
+                                                                          ['tx_subscribe'])
+
+        rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
+                                                                          spirent_handle,
+                                                                          subscribe_handle=self.subscribed_results
+                                                                          ['rx_subscribe'])
+        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port1,
+                                                                                subscribe_handle=self.subscribed_results
+                                                                                ['analyzer_subscribe'])
+        fun_test.simple_assert(tx_results and rx_results and rx_port_results, checkpoint)
+
+        fun_test.log("Tx Spirent Stats: %s" % tx_results)
+        fun_test.log("Rx Spirent Stats: %s" % rx_results)
+        fun_test.log("Rx Port Stats: %s" % rx_port_results)
+
+        dut_tx_port_stats = None
+        dut_rx_port_stats = None
+        vp_stats = None
+        erp_stats = None
+        wro_stats = None
+        if dut_config['enable_dpcsh']:
+            checkpoint = "Fetch PSW and Parser DUT stats after traffic"
+            psw_stats = network_controller_obj.peek_psw_global_stats()
+            parser_stats = network_controller_obj.peek_parser_stats()
+            fun_test.log("PSW Stats: %s \n" % psw_stats)
+            fun_test.log("Parser stats: %s \n" % parser_stats)
+            fun_test.add_checkpoint(checkpoint)
+
+            checkpoint = "Get FPG port stats for all ports"
+            dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
+            dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
+            fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
+
+            fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
+            fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
+
+            checkpoint = "Fetch VP stats"
+            vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.simple_assert(vp_stats, checkpoint)
+
+            checkpoint = "Fetch ERP NU stats"
+            erp_stats = get_erp_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.simple_assert(erp_stats, checkpoint)
+
+            checkpoint = "Fetch WRO NU stats"
+            wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.simple_assert(wro_stats, checkpoint)
+
+            fun_test.log("VP stats: %s" % vp_stats)
+            fun_test.log("ERP stats: %s" % erp_stats)
+            fun_test.log("WRO stats: %s" % wro_stats)
+
+        # validation asserts
+        # Spirent stats validation
+        checkpoint = "Validate Tx == Rx on spirent"
+        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(rx_results['FrameCount']),
+                                      message=checkpoint)
+
+        checkpoint = "Ensure checksum errors are seen on spirent"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_results)
+        checksum_error_seen = False
+        if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 2:
+            checksum_error_seen = True
+        fun_test.test_assert(expression=checksum_error_seen, message=checkpoint)
+
+        # DUT stats validation
+        if dut_config['enable_dpcsh']:
+            checkpoint = "Validate Tx == Rx on DUT"
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
+                                                         stat_type=FRAMES_RECEIVED_OK)
+
+            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
+                                          message=checkpoint)
+            # VP stats validation
+            checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(vp_stats[VP_PACKETS_CONTROL_T2C_COUNT]), message=checkpoint)
+
+            checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(vp_stats[VP_PACKETS_CC_OUT]), message=checkpoint)
+
+            checkpoint = "Ensure VP total packets IN == VP total packets OUT"
+            fun_test.test_assert_expected(expected=int(vp_stats[VP_PACKETS_TOTAL_IN]),
+                                          actual=int(vp_stats[VP_PACKETS_TOTAL_OUT]),
+                                          message=checkpoint)
+            # ERP stats validation
+            checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]),
+                                          message=checkpoint)
+
+            checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]),
+                                          message=checkpoint)
+
+            checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(erp_stats[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]),
+                                          message=checkpoint)
+
+            checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(erp_stats[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]),
+                                          message=checkpoint)
+
+            checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_FCP_VLD]),
+                                          message=checkpoint)
+            # WRO stats validation
+            checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
+
+            checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
+
+            checkpoint = "From WRO stats, Ensure WRO In packets equal to spirent tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(wro_stats[WRO_IN_PKTS]), message=checkpoint)
+
+            checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(wro_stats[WRO_OUT_WUS]), message=checkpoint)
+
+            checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
+            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
+                                          actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
@@ -2610,13 +2769,12 @@ class TestCcOuterChecksumError(TestCcEthernetArpRequest):
         fun_test.add_checkpoint(checkpoint)
 
 
-class TestCcInnerChecksumError(TestCcEthernetArpRequest):
+class TestCcInnerChecksumError(TestCcOuterChecksumError):
     stream_obj = None
     generator_handle = None
     generator_config_obj = None
     subscribed_results = None
     frame_size = 148
-    load = 40
 
     def describe(self):
         self.set_test_details(id=27, summary="Test CC IPv4 Inner Checksum Error",
@@ -2642,16 +2800,26 @@ class TestCcInnerChecksumError(TestCcEthernetArpRequest):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX   
-                                  """ % (port1, FRAME_LENGTH_MODE, self.frame_size, self.load, LOAD_UNIT, port1,
+                                  """ % (port1, FRAME_LENGTH_MODE, self.frame_size, LOAD, LOAD_UNIT, port1,
                                          TRAFFIC_DURATION))
 
     def setup(self):
+        checkpoint = "Configure Generator Config for port %s" % port1
+        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
+                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
+                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
+        result = template_obj.configure_generator_config(port_handle=port1,
+                                                         generator_config_obj=self.generator_config_obj)
+        fun_test.simple_assert(result, "Create Generator config")
+        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
+        fun_test.test_assert(self.generator_handle, checkpoint)
+
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.load, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -2662,24 +2830,15 @@ class TestCcInnerChecksumError(TestCcEthernetArpRequest):
         checkpoint = "Update IPv4 stack with destination IP"
         ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1")
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=False)
+                                                          overlay=False, updated_header_attributes_dict={"destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
 
         checkpoint = "Update IPv4 stack with Checksum"
         ipv4_header_obj = Ipv4Header(checksum=Ipv4Header.CHECKSUM_ERROR)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=True)
+                                                          overlay=True,
+                                                          updated_header_attributes_dict={"checksum": Ipv4Header.CHECKSUM_ERROR})
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
 
         checkpoint = "Subscribe to all results"
         self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
@@ -2732,6 +2891,16 @@ class TestCcIPv4OverlayVersionError(TestCcEthernetArpRequest):
                                          TRAFFIC_DURATION))
 
     def setup(self):
+        checkpoint = "Configure Generator Config for port %s" % port1
+        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
+                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
+                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
+        result = template_obj.configure_generator_config(port_handle=port1,
+                                                         generator_config_obj=self.generator_config_obj)
+        fun_test.simple_assert(result, "Create Generator config")
+        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
+        fun_test.test_assert(self.generator_handle, checkpoint)
+
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -2748,24 +2917,15 @@ class TestCcIPv4OverlayVersionError(TestCcEthernetArpRequest):
         checkpoint = "Update IPv4 stack with destination IP"
         ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1")
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=False)
+                                                          overlay=False,
+                                                          updated_header_attributes_dict={"destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
 
         checkpoint = "Update IPv4 stack with version = 0"
         ipv4_header_obj = Ipv4Header(version=0)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=True)
+                                                          overlay=True, updated_header_attributes_dict={"version": 0})
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
 
         checkpoint = "Subscribe to all results"
         self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
@@ -2817,6 +2977,16 @@ class TestCcIPv4OverlayIhlError(TestCcEthernetArpRequest):
                                          TRAFFIC_DURATION))
 
     def setup(self):
+        checkpoint = "Configure Generator Config for port %s" % port1
+        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
+                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
+                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
+        result = template_obj.configure_generator_config(port_handle=port1,
+                                                         generator_config_obj=self.generator_config_obj)
+        fun_test.simple_assert(result, "Create Generator config")
+        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
+        fun_test.test_assert(self.generator_handle, checkpoint)
+
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -2833,24 +3003,15 @@ class TestCcIPv4OverlayIhlError(TestCcEthernetArpRequest):
         checkpoint = "Update IPv4 stack with destination IP"
         ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1")
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=False)
+                                                          overlay=False,
+                                                          updated_header_attributes_dict={"destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
 
         checkpoint = "Update IPv4 stack with ihl = 3"
         ipv4_header_obj = Ipv4Header(ihl=3)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=True)
+                                                          overlay=True, updated_header_attributes_dict={"ihl": 3})
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
 
         checkpoint = "Subscribe to all results"
         self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
@@ -2918,7 +3079,7 @@ class TestCcIpv4Isis1(TestCcEthernetArpRequest):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'])
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['destination_ip1'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
@@ -2999,7 +3160,7 @@ class TestCcIpv4Isis2(TestCcEthernetArpRequest):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'])
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['destination_ip1'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
@@ -4411,6 +4572,7 @@ if __name__ == '__main__':
         FLOW_DIRECTION = flow_type
 
         ts = SetupSpirent()
+        '''
         # Ethernet CC
         ts.add_test_case(TestCcEthernetArpRequest())
         ts.add_test_case(TestCcEthernetArpResponse())
@@ -4435,32 +4597,37 @@ if __name__ == '__main__':
         ts.add_test_case(TestCcIPv4TtlError1())
         ts.add_test_case(TestCcIPv4TtlError2())
         ts.add_test_case(TestCcIPv4TtlError3())
+        
         ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
         ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
-
+        
         # Unicast CC
         ts.add_test_case(TestCcEthArpRequestUnicast())
         
         ts.add_test_case(TestCcIpChecksumError())
+
         ts.add_test_case(TestCcIpv4Dhcp())
         ts.add_test_case(TestCcFSFError())
+        '''
+        # ts.add_test_case(TestCcOuterChecksumError())
+
+        ts.add_test_case(TestCcInnerChecksumError())
+        ts.add_test_case(TestCcIPv4OverlayVersionError())
+        ts.add_test_case(TestCcIPv4OverlayIhlError())
+        '''
         ts.add_test_case(TestCcIpv4Isis1())
         ts.add_test_case(TestCcIpv4Isis2())
         ts.add_test_case(TestCcIPv4VersionError())
         ts.add_test_case(TestCcIPv4InternetHeaderLengthError())
         ts.add_test_case(TestCcIPv4FlagZeroError())
-        ts.add_test_case(TestCcIPv4MTUCase())
-        ts.add_test_case(TestCcOuterChecksumError())
-        ts.add_test_case(TestCcInnerChecksumError())
-        ts.add_test_case(TestCcIPv4OverlayVersionError())
-        ts.add_test_case(TestCcIPv4OverlayIhlError())
+        # ts.add_test_case(TestCcIPv4MTUCase())
 
         ts.add_test_case(TestCcIpv4Version6Error())
-        ts.add_test_case(TestCcGlean())
+        # ts.add_test_case(TestCcGlean())
         ts.add_test_case(TestCcCrcBadVerError())
         ts.add_test_case(TestCcMultiError())
-        ts.add_test_case(TestCcMtuCaseForUs())
+        # ts.add_test_case(TestCcMtuCaseForUs())
         ts.add_test_case(TestCcIPv4Ptp1NotForUs())
         ts.add_test_case(TestCcIPv4Ptp2NotForUs())
-
+        '''
         ts.run()
