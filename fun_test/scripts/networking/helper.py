@@ -181,9 +181,12 @@ def parse_result_dict(result_dict):
     result = {}
     try:
         for key, val in result_dict.iteritems():
-            new_key = re.sub('[()]', '', key)
-            new_key = new_key.replace(' ', '_').lower()
-            result[new_key] = val
+            if isinstance(val, dict):
+                result[key] = parse_result_dict(val)
+            else:
+                new_key = re.sub('[()]', '', key)
+                new_key = new_key.replace(' ', '_').lower()
+                result[new_key] = val
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
@@ -200,7 +203,7 @@ def get_vp_pkts_stats_values(network_controller_obj):
     return result
 
 
-def get_bam_stats_values(network_controller_obj=None):
+def get_bam_stats_values(network_controller_obj):
     result = None
     try:
         output = network_controller_obj.peek_bam_stats()
@@ -211,7 +214,7 @@ def get_bam_stats_values(network_controller_obj=None):
     return result
 
 
-def get_erp_stats_values(network_controller_obj=None, hnu=False, flex=False):
+def get_erp_stats_values(network_controller_obj, hnu=False, flex=False):
     result = None
     try:
         output = network_controller_obj.peek_erp_global_stats(hnu=hnu, flex=flex)
@@ -222,7 +225,7 @@ def get_erp_stats_values(network_controller_obj=None, hnu=False, flex=False):
     return result
 
 
-def get_wro_global_stats_values(network_controller_obj=None):
+def get_wro_global_stats_values(network_controller_obj):
     result = None
     try:
         wro_stats = network_controller_obj.peek_wro_global_stats()
@@ -243,6 +246,17 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[]):
                 fun_test.test_assert_expected(expected=compare_value, actual=int(current_dict[counter]),
                                               message="Check %s stats for %s in parser nu stats" % (counter, key))
         result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_vp_per_pkts_stats_values(network_controller_obj):
+    result = None
+    try:
+        output = network_controller_obj.peek_per_vppkts_stats()
+        fun_test.simple_assert(output, "Ensure vp per packet stats are grepped")
+        result = parse_result_dict(output)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
