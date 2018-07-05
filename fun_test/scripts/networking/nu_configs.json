@@ -12,6 +12,7 @@
   {
     "name": "spirent_configs",
     "type": "spirent_traffic_generator",
+    "connect_via_lab_server": true,
     "virtual": {
         "slot_no": 1,
         "ports": [1, 2],
