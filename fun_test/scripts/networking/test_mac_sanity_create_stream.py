@@ -496,7 +496,7 @@ class IPv4GoodRuntTestCase3(FunTestCase):
                               summary="Creating good and runt IPv4 streamblock",
                               steps="""
                         1. Create streamblock with following settings
-                           a. Load: 21000 fps
+                           a. Load: 20000 fps
                            b. Payload Fill Type: PRBS
                            c. Insert signature
                            d. Frame Size Mode: Random Min: 40 Max: 70
@@ -516,7 +516,7 @@ class IPv4GoodRuntTestCase3(FunTestCase):
             clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
-        load = 21000
+        load = 20000
         self.streamblock_obj = StreamBlock()
         self.streamblock_obj.LoadUnit = self.streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.streamblock_obj.Load = load
@@ -639,7 +639,7 @@ class IPv6GoodRuntTestCase3(IPv4GoodRuntTestCase3):
                               summary="Creating good and runt IPv6 streamblock",
                               steps="""
                               1. Create streamblock with following settings
-                                 a. Load: 21000 fps
+                                 a. Load: 20000 fps
                                  b. Payload Fill Type: PRBS
                                  c. Insert signature
                                  d. Frame Size Mode: Random Min: 58 Max: 75 
@@ -658,7 +658,7 @@ class IPv6GoodRuntTestCase3(IPv4GoodRuntTestCase3):
         clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
-        load = 21000
+        load = 20000
         self.streamblock_obj = StreamBlock()
         self.streamblock_obj.LoadUnit = self.streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.streamblock_obj.Load = load
