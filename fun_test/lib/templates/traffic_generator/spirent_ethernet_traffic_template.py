@@ -527,9 +527,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                    "TcpChecksumErrorCount", "UdpChecksumErrorCount", "DroppedFrameCount",
                                    "DuplicateFrameCount", "OutSeqFrameCount", "LateFrameCount", "ReorderedFrameCount"]
             for counter in error_counters_list:
-                if not rx_results[counter] == '0':
-                    result[counter] = rx_results[counter]
-                    fun_test.log("Error counter seen for %s with value %s" % (counter, rx_results[counter]))
+                if counter in rx_results:
+                    if not rx_results[counter] == '0':
+                        result[counter] = rx_results[counter]
+                        fun_test.log("Error counter seen for %s with value %s" % (counter, rx_results[counter]))
             if len(result) == 1:
                 result['result'] = True
         except Exception as ex:
