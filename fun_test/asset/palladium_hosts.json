@@ -7,6 +7,6 @@
     "design": "rel_052518_svn61241",
     "dpcsh_tcp_proxy_ip": "server120",
     "dpcsh_tcp_proxy_port": 40221,
-    "dpcsh_usb": "ttyUSB7"
+    "dpcsh_usb": "ttyUSB6"
   }
 ]
