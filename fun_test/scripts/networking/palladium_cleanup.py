@@ -1,9 +1,11 @@
 from lib.system.fun_test import *
 from lib.host.palladium import Palladium, DpcshProxy
+from nu_config_manager import nu_config_obj, NuConfigManager
 
 PALLADIUM_HOST_FILE = "/palladium_hosts.json"
 
 config = {}
+dut_config = None
 palladium_boot_up_obj = None
 dpcsh_proxy_obj = None
 
@@ -19,11 +21,13 @@ class PalladiumCleanup(FunTestScript):
         """)
 
     def setup(self):
-        global config, palladium_boot_up_obj, dpcsh_proxy_obj
+        global config, palladium_boot_up_obj, dpcsh_proxy_obj, dut_config
         fun_test.log("In script setup")
         
         config = parse_file_to_json(ASSET_DIR + PALLADIUM_HOST_FILE)[0]
         fun_test.log("Palladium Host Config: %s" % config)
+
+        dut_config = nu_config_obj.read_dut_config(dut_type=NuConfigManager.DUT_TYPE_PALLADIUM)
 
         palladium_boot_up_obj = Palladium(ip=config['boot_up_server_ip'],
                                           model=config['model'],
@@ -52,9 +56,10 @@ class TestCase1(FunTestCase):
     def setup(self):
         fun_test.log("In test case setup")
 
-        checkpoint = "Halt FunOS by executing dpc_shutdown cmd"
-        result = dpcsh_proxy_obj.run_dpc_shutdown()
-        fun_test.test_assert(result, checkpoint)
+        if dut_config['enable_dpcsh']:
+            checkpoint = "Halt FunOS by executing dpc_shutdown cmd"
+            result = dpcsh_proxy_obj.run_dpc_shutdown()
+            fun_test.test_assert(result, checkpoint)
 
         self.dpcsh_cmd_failure = False
 
