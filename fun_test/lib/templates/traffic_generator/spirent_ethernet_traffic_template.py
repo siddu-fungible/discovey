@@ -498,6 +498,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result = False
         try:
             for handle in subscribe_handle_list:
+                if type(handle) == bool:
+                    continue
                 output = self.stc_manager.clear_results_view_command(result_dataset=handle)
                 fun_test.simple_assert(output, message="Clear results for handle %s" % handle)
                 result = True
