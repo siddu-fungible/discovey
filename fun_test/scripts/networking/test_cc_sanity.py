@@ -9,6 +9,9 @@ spirent_config = {}
 network_controller_obj = None
 port1 = None
 port2 = None
+port3 = None
+generator_handle = None 
+subscribed_results = None
 TRAFFIC_DURATION = 10
 cc_path_config = {}
 LOAD = 81
@@ -21,6 +24,7 @@ FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_CC
 
 
 class SetupSpirent(FunTestScript):
+    generator_config_obj = None
 
     def describe(self):
         self.set_test_details(steps="""
@@ -32,8 +36,8 @@ class SetupSpirent(FunTestScript):
 
     def setup(self):
         fun_test.log("In script setup")
-        global template_obj, dut_config, spirent_config, network_controller_obj, port1, port2, cc_path_config, \
-            interface_obj1, interface_obj2
+        global template_obj, dut_config, spirent_config, network_controller_obj, port1, port2, port3, cc_path_config, \
+            interface_obj1, interface_obj2, generator_handle, subscribed_results
         global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE
 
         dut_type = fun_test.get_local_setting('dut_type')
@@ -51,6 +55,7 @@ class SetupSpirent(FunTestScript):
 
         port1 = result['port_list'][0]
         port2 = result['port_list'][1]
+        port3 = result['port_list'][2]
 
         interface_obj1 = result['interface_obj_list'][0]
         interface_obj2 = result['interface_obj_list'][1]
@@ -67,6 +72,20 @@ class SetupSpirent(FunTestScript):
         FRAME_SIZE = cc_path_config['frame_size']
         FRAME_LENGTH_MODE = cc_path_config['frame_length_mode']
 
+        checkpoint = "Configure Generator Config for port %s" % port1
+        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
+                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
+                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
+        result = template_obj.configure_generator_config(port_handle=port1,
+                                                         generator_config_obj=self.generator_config_obj)
+        fun_test.simple_assert(result, "Create Generator config")
+        generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
+        fun_test.test_assert(generator_handle, checkpoint)
+
+        checkpoint = "Subscribe to all results"
+        subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
+        fun_test.test_assert(subscribed_results, checkpoint)
+
     def cleanup(self):
         fun_test.log("In script cleanup")
         template_obj.cleanup()
@@ -74,9 +93,7 @@ class SetupSpirent(FunTestScript):
 
 class TestCcEthernetArpRequest(FunTestCase):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
+    load = 40
 
     def describe(self):
         self.set_test_details(id=1,
@@ -103,7 +120,8 @@ class TestCcEthernetArpRequest(FunTestCase):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX    
-                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.load, LOAD_UNIT, port1, 
+                                     TRAFFIC_DURATION))
 
     def setup(self):
         checkpoint = "Configure a stream with EthernetII and ARP headers under port %s" % port1
@@ -111,7 +129,7 @@ class TestCcEthernetArpRequest(FunTestCase):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=40, load_unit=LOAD_UNIT)
+                                      load=self.load, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -127,20 +145,6 @@ class TestCcEthernetArpRequest(FunTestCase):
                                                                 header_obj=arp_obj, update=False,
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
 
     def run(self):
         if dut_config['enable_dpcsh']:
@@ -158,7 +162,7 @@ class TestCcEthernetArpRequest(FunTestCase):
             fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
-        result = template_obj.enable_generator_configs([self.generator_handle])
+        result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
@@ -166,21 +170,28 @@ class TestCcEthernetArpRequest(FunTestCase):
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['tx_subscribe'])
-
         rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['rx_subscribe'])
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port1,
-                                                                                subscribe_handle=self.subscribed_results
+        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
+                                                                                subscribe_handle=subscribed_results
                                                                                 ['analyzer_subscribe'])
-        fun_test.simple_assert(tx_results and rx_results and rx_port_results, checkpoint)
+        rx_port2_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port2,
+                                                                                 subscribe_handle=subscribed_results
+                                                                                 ['analyzer_subscribe'])
+        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
+                                                                              subscribe_handle=subscribed_results
+                                                                              ['generator_subscribe'])
+        fun_test.simple_assert(rx_port_results and tx_port_results, checkpoint)
 
         fun_test.log("Tx Spirent Stats: %s" % tx_results)
         fun_test.log("Rx Spirent Stats: %s" % rx_results)
+        fun_test.log("Tx Port Stats: %s" % tx_port_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
+        fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
 
         dut_tx_port_stats = None
         dut_rx_port_stats = None
@@ -222,7 +233,15 @@ class TestCcEthernetArpRequest(FunTestCase):
         # validation asserts
         # Spirent stats validation
         checkpoint = "Validate Tx == Rx on spirent"
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(rx_results['FrameCount']),
+        fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
+                                                              int(rx_port_results['TotalFrameCount'])))
+        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
+                                      actual=int(rx_port_results['TotalFrameCount']),
+                                      message=checkpoint)
+
+        checkpoint = "Ensure %s does not received any frames" % port2
+        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
+        fun_test.test_assert_expected(expected=0, actual=int(rx_port2_results['TotalFrameCount']),
                                       message=checkpoint)
 
         checkpoint = "Ensure no errors are seen on spirent"
@@ -301,6 +320,8 @@ class TestCcEthernetArpRequest(FunTestCase):
     def cleanup(self):
         fun_test.log("In test case cleanup")
 
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
@@ -308,9 +329,6 @@ class TestCcEthernetArpRequest(FunTestCase):
 
 class TestCcEthernetArpResponse(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=2,
@@ -363,25 +381,12 @@ class TestCcEthernetArpResponse(TestCcEthernetArpRequest):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcEthernetArpResponse, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -390,9 +395,6 @@ class TestCcEthernetArpResponse(TestCcEthernetArpRequest):
 
 class TestCcEthernetRarp(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=3, summary="Test CC Ethernet RARP (Reverse-ARP)",
@@ -443,25 +445,12 @@ class TestCcEthernetRarp(TestCcEthernetArpRequest):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcEthernetRarp, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -470,9 +459,6 @@ class TestCcEthernetRarp(TestCcEthernetArpRequest):
 
 class TestCcEthernetLLDP(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=4, summary="Test CC Ethernet LLDP (Link Layer Discovery Protocol)",
@@ -501,7 +487,7 @@ class TestCcEthernetLLDP(TestCcEthernetArpRequest):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        checkpoint = "Configure stream with EthernetII under port %s" % port1
+        checkpoint = "Create a stream with EthernetII (EtherType - 88CC)under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
@@ -521,25 +507,13 @@ class TestCcEthernetLLDP(TestCcEthernetArpRequest):
                                                                header_types=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcEthernetLLDP, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -548,9 +522,6 @@ class TestCcEthernetLLDP(TestCcEthernetArpRequest):
 
 class TestCcEthernetPTP(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=5, summary="Test CC Ethernet PTP (Precision Time Protocol)",
@@ -581,7 +552,7 @@ class TestCcEthernetPTP(TestCcEthernetArpRequest):
     def setup(self):
         l2_config = spirent_config['l2_config']
 
-        checkpoint = "Configure stream with EthernetII under port %s" % port1
+        checkpoint = "Create a stream with EthernetII and PTP headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
@@ -605,25 +576,12 @@ class TestCcEthernetPTP(TestCcEthernetArpRequest):
                                                    header_obj=ptp_header_obj, create_header=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcEthernetPTP, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -632,9 +590,6 @@ class TestCcEthernetPTP(TestCcEthernetArpRequest):
 
 class TestCcIPv4ICMP(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=6, summary="Test CC IPv4 ICMP (Internet Control Message Protocol)",
@@ -666,6 +621,7 @@ class TestCcIPv4ICMP(TestCcEthernetArpRequest):
 
     def setup(self):
         l2_config = spirent_config['l2_config']
+        l3_config = spirent_config['l3_config']['ipv4']
 
         checkpoint = "Configure stream with EthernetII, IPv4 and ICMP Echo Request under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -684,7 +640,8 @@ class TestCcIPv4ICMP(TestCcEthernetArpRequest):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_ICMP, destination_address="20.1.1.2")
+        ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_ICMP,
+                                     destination_address=l3_config['cc_destination_ip1'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Update IPv4 header under %s" % self.stream_obj.spirent_handle)
@@ -694,25 +651,13 @@ class TestCcIPv4ICMP(TestCcEthernetArpRequest):
                                                                 header_obj=icmp_echo_req_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4ICMP, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -721,9 +666,6 @@ class TestCcIPv4ICMP(TestCcEthernetArpRequest):
 
 class TestCcIPv4Ospfv2Hello(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=7, summary="Test CC IPv4 OSPF V2 Hello (Open Shortest Path First)",
@@ -780,25 +722,13 @@ class TestCcIPv4Ospfv2Hello(TestCcEthernetArpRequest):
                                                                 header_obj=ospf_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4Ospfv2Hello, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -807,9 +737,6 @@ class TestCcIPv4Ospfv2Hello(TestCcEthernetArpRequest):
 
 class TestCcIPv4Ospfv2LinkStateUpdate(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=8, summary="Test CC IPv4 OSPF V2 Link State Update (Open Shortest Path First)",
@@ -867,25 +794,12 @@ class TestCcIPv4Ospfv2LinkStateUpdate(TestCcEthernetArpRequest):
                                                                 header_obj=ospf_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4Ospfv2LinkStateUpdate, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -894,9 +808,6 @@ class TestCcIPv4Ospfv2LinkStateUpdate(TestCcEthernetArpRequest):
 
 class TestCcIpv4Pim(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=9, summary="Test CC IPv4 PIM (Protocol Independent Multicast)",
@@ -954,25 +865,13 @@ class TestCcIpv4Pim(TestCcEthernetArpRequest):
                                                                 header_obj=pim_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4Pim, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -981,9 +880,6 @@ class TestCcIpv4Pim(TestCcEthernetArpRequest):
 
 class TestCcIpv4BGP(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=10, summary="Test CC IPv4 BGP (Border Gateway Protocol)",
@@ -1009,7 +905,7 @@ class TestCcIpv4BGP(TestCcEthernetArpRequest):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX     
-                                  """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         l2_config = spirent_config['l2_config']
@@ -1042,25 +938,13 @@ class TestCcIpv4BGP(TestCcEthernetArpRequest):
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4BGP, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1069,9 +953,6 @@ class TestCcIpv4BGP(TestCcEthernetArpRequest):
 
 class TestCcIpv4Igmp(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=11, summary="Test CC IPv4 IGMP (Internet Group Management Protocol)",
@@ -1130,25 +1011,12 @@ class TestCcIpv4Igmp(TestCcEthernetArpRequest):
                                                                 header_obj=igmp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4Igmp, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1157,9 +1025,6 @@ class TestCcIpv4Igmp(TestCcEthernetArpRequest):
 
 class TestCcIPv4ForUs(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=12, summary="Test CC IPv4 FOR US",
@@ -1212,25 +1077,12 @@ class TestCcIPv4ForUs(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4ForUs, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1239,9 +1091,6 @@ class TestCcIPv4ForUs(TestCcEthernetArpRequest):
 
 class TestCcIPv4PTP1(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=13, summary="Test CC IPv4 PTP with Destination port 319 with PTP sync",
@@ -1306,25 +1155,12 @@ class TestCcIPv4PTP1(TestCcEthernetArpRequest):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4PTP1, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1333,9 +1169,6 @@ class TestCcIPv4PTP1(TestCcEthernetArpRequest):
 
 class TestCcIPv4PTP2(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=14, summary="Test CC IPv4 PTP with Destination port 320 with PTP sync",
@@ -1400,27 +1233,12 @@ class TestCcIPv4PTP2(TestCcEthernetArpRequest):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4PTP2, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1429,9 +1247,6 @@ class TestCcIPv4PTP2(TestCcEthernetArpRequest):
 
 class TestCcIPv4PTP3(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=15, summary="Test CC IPv4 PTP Sync with UDP",
@@ -1493,25 +1308,12 @@ class TestCcIPv4PTP3(TestCcEthernetArpRequest):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4PTP3, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1520,9 +1322,6 @@ class TestCcIPv4PTP3(TestCcEthernetArpRequest):
 
 class TestCcIPv4PTP4(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=16, summary="Test CC IPv4 PTP Delay Request with UDP",
@@ -1586,25 +1385,12 @@ class TestCcIPv4PTP4(TestCcEthernetArpRequest):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4PTP4, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1613,9 +1399,6 @@ class TestCcIPv4PTP4(TestCcEthernetArpRequest):
 
 class TestCcIPv4TtlError1(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 27
 
     def describe(self):
@@ -1669,25 +1452,13 @@ class TestCcIPv4TtlError1(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4TtlError1, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1696,9 +1467,6 @@ class TestCcIPv4TtlError1(TestCcEthernetArpRequest):
 
 class TestCcIPv4TtlError2(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 27
 
     def describe(self):
@@ -1752,25 +1520,12 @@ class TestCcIPv4TtlError2(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
-        super(TestCcIPv4TtlError2,self).run()
+        super(TestCcIPv4TtlError2, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1779,9 +1534,6 @@ class TestCcIPv4TtlError2(TestCcEthernetArpRequest):
 
 class TestCcIPv4TtlError3(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 27
 
     def describe(self):
@@ -1835,25 +1587,12 @@ class TestCcIPv4TtlError3(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4TtlError3, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1862,9 +1601,6 @@ class TestCcIPv4TtlError3(TestCcEthernetArpRequest):
 
 class TestCcIpv4ErrorTrapIpOpts1(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 40
 
     def describe(self):
@@ -1923,25 +1659,12 @@ class TestCcIpv4ErrorTrapIpOpts1(TestCcEthernetArpRequest):
                                                                 stream_block_handle=self.stream_obj.spirent_handle)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4ErrorTrapIpOpts1, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -1950,9 +1673,6 @@ class TestCcIpv4ErrorTrapIpOpts1(TestCcEthernetArpRequest):
 
 class TestCcIpv4ErrorTrapIpOpts2(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 41
 
     def describe(self):
@@ -2011,25 +1731,12 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcEthernetArpRequest):
                                                                 stream_block_handle=self.stream_obj.spirent_handle)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4ErrorTrapIpOpts2, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -2038,9 +1745,6 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcEthernetArpRequest):
 
 class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 40
 
     def describe(self):
@@ -2094,25 +1798,12 @@ class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
                                                                 header_obj=arp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcEthArpRequestUnicast, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -2121,9 +1812,6 @@ class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
 
 class TestCcIpChecksumError(FunTestCase):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 41
 
     def describe(self):
@@ -2178,20 +1866,6 @@ class TestCcIpChecksumError(FunTestCase):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -2208,7 +1882,7 @@ class TestCcIpChecksumError(FunTestCase):
             fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
-        result = template_obj.enable_generator_configs([self.generator_handle])
+        result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
@@ -2216,21 +1890,29 @@ class TestCcIpChecksumError(FunTestCase):
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['tx_subscribe'])
 
         rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['rx_subscribe'])
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port1,
-                                                                                subscribe_handle=self.subscribed_results
+        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
+                                                                              subscribe_handle=subscribed_results
+                                                                              ['generator_subscribe'])
+        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
+                                                                                subscribe_handle=subscribed_results
                                                                                 ['analyzer_subscribe'])
-        fun_test.simple_assert(tx_results and rx_results and rx_port_results, checkpoint)
+        rx_port2_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port2,
+                                                                                subscribe_handle=subscribed_results
+                                                                                ['analyzer_subscribe'])
+        fun_test.simple_assert(tx_port_results and rx_port2_results and rx_port_results, checkpoint)
 
         fun_test.log("Tx Spirent Stats: %s" % tx_results)
         fun_test.log("Rx Spirent Stats: %s" % rx_results)
+        fun_test.log("Tx Port Stats: %s" % tx_port_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
+        fun_test.log("Rx Port2 Stats: %s" % rx_port2_results)
 
         dut_tx_port_stats = None
         dut_rx_port_stats = None
@@ -2272,7 +1954,15 @@ class TestCcIpChecksumError(FunTestCase):
         # validation asserts
         # Spirent stats validation
         checkpoint = "Validate Tx == Rx on spirent"
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(rx_results['FrameCount']),
+        fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
+                                                              int(rx_port_results['TotalFrameCount'])))
+        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
+                                      actual=int(rx_port_results['TotalFrameCount']),
+                                      message=checkpoint)
+
+        checkpoint = "Ensure %s does not received any frames" % port2
+        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
+        fun_test.test_assert_expected(expected=0, actual=int(rx_port2_results['TotalFrameCount']),
                                       message=checkpoint)
 
         checkpoint = "Ensure checksum errors are seen on spirent"
@@ -2354,6 +2044,8 @@ class TestCcIpChecksumError(FunTestCase):
     def cleanup(self):
         fun_test.log("In test case cleanup")
 
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
@@ -2361,9 +2053,6 @@ class TestCcIpChecksumError(FunTestCase):
 
 class TestCcIpv4Dhcp(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     frame_size = 306
 
     def describe(self):
@@ -2426,25 +2115,12 @@ class TestCcIpv4Dhcp(TestCcEthernetArpRequest):
                                                                 update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4Dhcp, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -2506,25 +2182,12 @@ class TestCcFSFError(TestCcEthernetArpRequest):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcFSFError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -2533,9 +2196,6 @@ class TestCcFSFError(TestCcEthernetArpRequest):
 
 class TestCcOuterChecksumError(FunTestCase):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     frame_size = 148
     load = 40
 
@@ -2567,16 +2227,6 @@ class TestCcOuterChecksumError(FunTestCase):
                                          TRAFFIC_DURATION))
 
     def setup(self):
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -2598,10 +2248,6 @@ class TestCcOuterChecksumError(FunTestCase):
                                                                                           "destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -2618,7 +2264,7 @@ class TestCcOuterChecksumError(FunTestCase):
             fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
-        result = template_obj.enable_generator_configs([self.generator_handle])
+        result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
@@ -2626,20 +2272,28 @@ class TestCcOuterChecksumError(FunTestCase):
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['tx_subscribe'])
 
         rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['rx_subscribe'])
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port1,
-                                                                                subscribe_handle=self.subscribed_results
+        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
+                                                                              subscribe_handle=subscribed_results
+                                                                              ['generator_subscribe'])
+        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
+                                                                                subscribe_handle=subscribed_results
                                                                                 ['analyzer_subscribe'])
-        fun_test.simple_assert(tx_results and rx_results and rx_port_results, checkpoint)
+        rx_port2_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port2,
+                                                                                 subscribe_handle=subscribed_results
+                                                                                 ['analyzer_subscribe'])
+        fun_test.simple_assert(tx_port_results and rx_port2_results and rx_port_results, checkpoint)
 
         fun_test.log("Tx Spirent Stats: %s" % tx_results)
         fun_test.log("Rx Spirent Stats: %s" % rx_results)
+        fun_test.log("Tx Port stats: %s" % tx_port_results)
+        fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
 
         dut_tx_port_stats = None
@@ -2682,12 +2336,21 @@ class TestCcOuterChecksumError(FunTestCase):
         # validation asserts
         # Spirent stats validation
         checkpoint = "Validate Tx == Rx on spirent"
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(rx_results['FrameCount']),
+        fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
+                                                              int(rx_port_results['TotalFrameCount'])))
+        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
+                                      actual=int(rx_port_results['TotalFrameCount']),
+                                      message=checkpoint)
+
+        checkpoint = "Ensure %s does not received any frames" % port2
+        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
+        fun_test.test_assert_expected(expected=0, actual=int(rx_port2_results['TotalFrameCount']),
                                       message=checkpoint)
 
         checkpoint = "Ensure checksum errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_results)
         checksum_error_seen = False
+        print result
         if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 2:
             checksum_error_seen = True
         fun_test.test_assert(expression=checksum_error_seen, message=checkpoint)
@@ -2763,17 +2426,15 @@ class TestCcOuterChecksumError(FunTestCase):
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
 
-class TestCcInnerChecksumError(TestCcOuterChecksumError):
+class TestCcInnerChecksumError(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     frame_size = 148
 
     def describe(self):
@@ -2804,16 +2465,6 @@ class TestCcInnerChecksumError(TestCcOuterChecksumError):
                                          TRAFFIC_DURATION))
 
     def setup(self):
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -2828,27 +2479,29 @@ class TestCcInnerChecksumError(TestCcOuterChecksumError):
         fun_test.test_assert(result['result'], checkpoint)
 
         checkpoint = "Update IPv4 stack with destination IP"
-        ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1")
+        ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1", checksum=Ipv4Header.CHECKSUM_ERROR)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
                                                           overlay=False, updated_header_attributes_dict={"destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
 
         checkpoint = "Update IPv4 stack with Checksum"
-        ipv4_header_obj = Ipv4Header(checksum=Ipv4Header.CHECKSUM_ERROR)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
                                                           overlay=True,
                                                           updated_header_attributes_dict={"checksum": Ipv4Header.CHECKSUM_ERROR})
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
+        checkpoint = "Update UDP with destination_port = 4789"
+        udp_header_obj = UDP(destination_port=4789)
+        result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=udp_header_obj,
+                                                          updated_header_attributes_dict={"destPort": 4789})
+        fun_test.test_assert(result, checkpoint)
 
     def run(self):
         super(TestCcInnerChecksumError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -2857,14 +2510,11 @@ class TestCcInnerChecksumError(TestCcOuterChecksumError):
 
 class TestCcIPv4OverlayVersionError(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     frame_size = 148
     load = 2
 
     def describe(self):
-        self.set_test_details(id=28, summary="Test CC IPv4 Overlay Version (version = 0) Error",
+        self.set_test_details(id=28, summary="Test CC IPv4 Overlay Version (version = 2) Error",
                               steps="""
                               1. Create a stream with Overlay Frame Stack under port %s
                                  a. Frame Size Mode: %s Frame Size: %d 
@@ -2891,16 +2541,6 @@ class TestCcIPv4OverlayVersionError(TestCcEthernetArpRequest):
                                          TRAFFIC_DURATION))
 
     def setup(self):
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -2915,27 +2555,29 @@ class TestCcIPv4OverlayVersionError(TestCcEthernetArpRequest):
         fun_test.test_assert(result['result'], checkpoint)
 
         checkpoint = "Update IPv4 stack with destination IP"
-        ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1")
+        ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1", version=2)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
                                                           overlay=False,
                                                           updated_header_attributes_dict={"destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Update IPv4 stack with version = 0"
-        ipv4_header_obj = Ipv4Header(version=0)
+        checkpoint = "Update IPv4 stack with version = 2"
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
-                                                          overlay=True, updated_header_attributes_dict={"version": 0})
+                                                          overlay=True, updated_header_attributes_dict={"version": 2})
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
+        checkpoint = "Update UDP with destination_port = 4789"
+        udp_header_obj = UDP(destination_port=4789)
+        result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=udp_header_obj,
+                                                          updated_header_attributes_dict={"destPort": 4789})
+        fun_test.test_assert(result, checkpoint)
 
     def run(self):
         super(TestCcIPv4OverlayVersionError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -2944,9 +2586,6 @@ class TestCcIPv4OverlayVersionError(TestCcEthernetArpRequest):
 
 class TestCcIPv4OverlayIhlError(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     frame_size = 148
 
     def describe(self):
@@ -2977,16 +2616,6 @@ class TestCcIPv4OverlayIhlError(TestCcEthernetArpRequest):
                                          TRAFFIC_DURATION))
 
     def setup(self):
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
         checkpoint = "Create a stream with Overlay Frame Stack under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -3001,27 +2630,29 @@ class TestCcIPv4OverlayIhlError(TestCcEthernetArpRequest):
         fun_test.test_assert(result['result'], checkpoint)
 
         checkpoint = "Update IPv4 stack with destination IP"
-        ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1")
+        ipv4_header_obj = Ipv4Header(destination_address="29.1.1.1", ihl=3)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
                                                           overlay=False,
                                                           updated_header_attributes_dict={"destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
 
         checkpoint = "Update IPv4 stack with ihl = 3"
-        ipv4_header_obj = Ipv4Header(ihl=3)
         result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=ipv4_header_obj,
                                                           overlay=True, updated_header_attributes_dict={"ihl": 3})
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
+        checkpoint = "Update UDP with destination_port = 4789"
+        udp_header_obj = UDP(destination_port=4789)
+        result = template_obj.update_overlay_frame_header(streamblock_obj=self.stream_obj, header_obj=udp_header_obj,
+                                                          updated_header_attributes_dict={"destPort": 4789})
+        fun_test.test_assert(result, checkpoint)
 
     def run(self):
         super(TestCcIPv4OverlayIhlError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3030,9 +2661,6 @@ class TestCcIPv4OverlayIhlError(TestCcEthernetArpRequest):
 
 class TestCcIpv4Isis1(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=30, summary="Test CC IPv4 ISIS_1",
@@ -3068,7 +2696,7 @@ class TestCcIpv4Isis1(TestCcEthernetArpRequest):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=LOAD, load_unit=LOAD_UNIT)
+                                      load=10, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -3079,30 +2707,17 @@ class TestCcIpv4Isis1(TestCcEthernetArpRequest):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['destination_ip1'])
+        ipv4_header_obj = Ipv4Header()
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
 
     def run(self):
         super(TestCcIpv4Isis1, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3111,9 +2726,6 @@ class TestCcIpv4Isis1(TestCcEthernetArpRequest):
 
 class TestCcIpv4Isis2(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=31, summary="Test CC IPv4 ISIS_2",
@@ -3165,25 +2777,12 @@ class TestCcIpv4Isis2(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4Isis2, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3192,9 +2791,6 @@ class TestCcIpv4Isis2(TestCcEthernetArpRequest):
 
 class TestCcIPv4VersionError(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=32, summary="Test CC IPv4 Version Error",
@@ -3246,25 +2842,12 @@ class TestCcIPv4VersionError(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4VersionError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3273,9 +2856,6 @@ class TestCcIPv4VersionError(TestCcEthernetArpRequest):
 
 class TestCcIPv4InternetHeaderLengthError(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=33, summary="Test CC IPv4 Internet Header Length Error",
@@ -3307,7 +2887,7 @@ class TestCcIPv4InternetHeaderLengthError(TestCcEthernetArpRequest):
     def setup(self):
         l2_config = spirent_config['l2_config']
         l3_config = spirent_config['l3_config']['ipv4']
-        checkpoint = "Create a stream with EthernetII and IPv4 with Header Length = 4  under port %s " % port1
+        checkpoint = "Create a stream with EthernetII and IPv4 with ihl = 4  under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
@@ -3328,25 +2908,12 @@ class TestCcIPv4InternetHeaderLengthError(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4InternetHeaderLengthError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3355,9 +2922,6 @@ class TestCcIPv4InternetHeaderLengthError(TestCcEthernetArpRequest):
 
 class TestCcIPv4FlagZeroError(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=34, summary="Test CC IPv4 Control Flags Reserved = 1 Error",
@@ -3415,25 +2979,12 @@ class TestCcIPv4FlagZeroError(TestCcEthernetArpRequest):
                                                                header_obj=ipv4_header_obj, reserved=1)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4FlagZeroError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3442,9 +2993,6 @@ class TestCcIPv4FlagZeroError(TestCcEthernetArpRequest):
 
 class TestCcIPv4MTUCase(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     mtu = 10000
     frame_size = mtu
     load = 1
@@ -3514,25 +3062,12 @@ class TestCcIPv4MTUCase(TestCcEthernetArpRequest):
                 fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port, self.mtu))
             fun_test.add_checkpoint(checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIPv4MTUCase, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3541,9 +3076,6 @@ class TestCcIPv4MTUCase(TestCcEthernetArpRequest):
 
 class TestCcIPv4BGPNotForUs(FunTestCase):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     load = 100
 
     def describe(self):
@@ -3603,20 +3135,6 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -3633,7 +3151,7 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
             fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
-        result = template_obj.enable_generator_configs([self.generator_handle])
+        result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
@@ -3641,20 +3159,28 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['tx_subscribe'])
 
         rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['rx_subscribe'])
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port1,
-                                                                                subscribe_handle=self.subscribed_results
+        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
+                                                                              subscribe_handle=subscribed_results
+                                                                              ['generator_subscribe'])
+        rx_port2_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port2,
+                                                                                 subscribe_handle=subscribed_results
+                                                                                 ['analyzer_subscribe'])
+        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
+                                                                                subscribe_handle=subscribed_results
                                                                                 ['analyzer_subscribe'])
-        fun_test.simple_assert(tx_results and rx_results and rx_port_results, checkpoint)
+        fun_test.simple_assert(tx_port_results and rx_port2_results and rx_port_results, checkpoint)
 
         fun_test.log("Tx Spirent Stats: %s" % tx_results)
         fun_test.log("Rx Spirent Stats: %s" % rx_results)
+        fun_test.log("Tx Port Stats: %s" % tx_port_results)
+        fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
 
         dut_tx_port_stats = None
@@ -3697,7 +3223,15 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
         # validation asserts
         # Spirent stats validation
         checkpoint = "Validate Tx == Rx on spirent"
-        fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(rx_results['FrameCount']),
+        fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
+                                                              int(rx_port2_results['TotalFrameCount'])))
+        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
+                                      actual=int(rx_port2_results['TotalFrameCount']),
+                                      message=checkpoint)
+
+        checkpoint = "Ensure %s does not received any frames" % port3
+        fun_test.log("Rx Port 3 FrameCount: %d" % int(rx_port_results['TotalFrameCount']))
+        fun_test.test_assert_expected(expected=0, actual=int(rx_port_results['TotalFrameCount']),
                                       message=checkpoint)
 
         checkpoint = "Ensure no errors are seen on spirent"
@@ -3775,6 +3309,7 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3783,9 +3318,6 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
 
 class TestCcIpv4Version6Error(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     load = 40
 
     def describe(self):
@@ -3841,25 +3373,12 @@ class TestCcIpv4Version6Error(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcIpv4Version6Error, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3868,9 +3387,6 @@ class TestCcIpv4Version6Error(TestCcEthernetArpRequest):
 
 class TestCcGlean(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=38, summary="Test CC IPv4 Glean ",
@@ -3925,25 +3441,12 @@ class TestCcGlean(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcGlean, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -3952,9 +3455,6 @@ class TestCcGlean(TestCcEthernetArpRequest):
 
 class TestCcCrcBadVerError(FunTestCase):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     frame_size = 1500
     load = 1
 
@@ -4012,20 +3512,6 @@ class TestCcCrcBadVerError(FunTestCase):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -4042,7 +3528,7 @@ class TestCcCrcBadVerError(FunTestCase):
             fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
-        result = template_obj.enable_generator_configs([self.generator_handle])
+        result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
@@ -4050,21 +3536,29 @@ class TestCcCrcBadVerError(FunTestCase):
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['tx_subscribe'])
 
         rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
-                                                                          subscribe_handle=self.subscribed_results
+                                                                          subscribe_handle=subscribed_results
                                                                           ['rx_subscribe'])
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port1,
-                                                                                subscribe_handle=self.subscribed_results
+        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
+                                                                              subscribe_handle=subscribed_results
+                                                                              ['generator_subscribe'])
+        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port2,
+                                                                                subscribe_handle=subscribed_results
                                                                                 ['analyzer_subscribe'])
-        fun_test.simple_assert(tx_results and rx_results and rx_port_results, checkpoint)
+        rx_port3_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
+                                                                                 subscribe_handle=subscribed_results
+                                                                                 ['analyzer_subscribe'])
+        fun_test.simple_assert(tx_port_results and rx_port3_results and rx_port_results, checkpoint)
 
         fun_test.log("Tx Spirent Stats: %s" % tx_results)
         fun_test.log("Rx Spirent Stats: %s" % rx_results)
+        fun_test.log("Tx Port Stats: %s" % tx_port_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
+        fun_test.log("Rx Port 3 stats: %s" % rx_port3_results)
 
         dut_tx_port_stats = None
         dut_rx_port_stats = None
@@ -4105,17 +3599,16 @@ class TestCcCrcBadVerError(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        checkpoint = "Validate Tx != Rx on spirent"
-        fun_test.test_assert(int(tx_results['FrameCount']) != int(rx_results['FrameCount']), message=checkpoint)
-        fun_test.test_assert_expected(expected=0, actual=int(rx_results['FrameCount']),
-                                      message="Ensure Spirent Rx count should be 0")
+        checkpoint = "Validate Tx == Rx on spirent"
+        fun_test.log("Tx Frame Count: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
+                                                               int(rx_port3_results['TotalFrameCount'])))
+        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
+                                      actual=int(rx_port3_results['TotalFrameCount']),
+                                      message=checkpoint)
 
         checkpoint = "Ensure no errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
-        dropped_frame_count_seen = False
-        if result['DroppedFrameCount'] > 0:
-            dropped_frame_count_seen = True
-        fun_test.test_assert(expression=dropped_frame_count_seen, message=checkpoint)
+        fun_test.test_assert(expression=result, message=checkpoint)
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
@@ -4188,6 +3681,7 @@ class TestCcCrcBadVerError(FunTestCase):
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -4196,9 +3690,6 @@ class TestCcCrcBadVerError(FunTestCase):
 
 class TestCcMultiError(TestCcIpChecksumError):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     LOAD = 1
 
     def describe(self):
@@ -4233,7 +3724,8 @@ class TestCcMultiError(TestCcIpChecksumError):
         l2_config = spirent_config['l2_config']
         l3_config = spirent_config['l3_config']['ipv4']
 
-        checkpoint = "Create a stream with EthernetII and Ipv4 header option under port %s" % port1
+        checkpoint = "Create a stream with EthernetII and IPv4 Multiple Errors (checksum and ttl=5 ) under port %s" % \
+                     port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
@@ -4255,25 +3747,12 @@ class TestCcMultiError(TestCcIpChecksumError):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcMultiError, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -4282,9 +3761,6 @@ class TestCcMultiError(TestCcIpChecksumError):
 
 class TestCcMtuCaseForUs(TestCcEthernetArpRequest):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
     mtu = 10000
     frame_size = mtu
     load = 1
@@ -4354,25 +3830,12 @@ class TestCcMtuCaseForUs(TestCcEthernetArpRequest):
                 fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port, self.mtu))
             fun_test.add_checkpoint(checkpoint)
 
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
-
     def run(self):
         super(TestCcMtuCaseForUs, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -4381,9 +3844,6 @@ class TestCcMtuCaseForUs(TestCcEthernetArpRequest):
 
 class TestCcIPv4Ptp1NotForUs(TestCcIPv4BGPNotForUs):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=42, summary="Test CC IPv4 PTP1 Not For US",
@@ -4415,8 +3875,7 @@ class TestCcIPv4Ptp1NotForUs(TestCcIPv4BGPNotForUs):
     def setup(self):
         l2_config = spirent_config['l2_config']
         l3_config = spirent_config['l3_config']['ipv4']
-        checkpoint = "Create a stream with EthernetII and IPv4 with Control Flags Reserved = 1 Error " \
-                     "under port %s" % port1
+        checkpoint = "Create a stream with EthernetII and IPv4 UDP and PTP Sync under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
@@ -4442,30 +3901,19 @@ class TestCcIPv4Ptp1NotForUs(TestCcIPv4BGPNotForUs):
                                                                 header_obj=udp_header_obj, update=False)
         fun_test.simple_assert(result, "Configure UDP Header")
 
-        ptp_header_obj = PtpSyncHeader()
-        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
-                                                                header_obj=ptp_header_obj, update=False)
+        ptp_header_obj = PtpSyncHeader(control_field=PtpSyncHeader.CONTROL_FIELD_SYNC,
+                                       message_type=PtpSyncHeader.MESSAGE_TYPE_SYNC)
+        result = template_obj.configure_ptp_header(stream_block_handle=self.stream_obj.spirent_handle,
+                                                   header_obj=ptp_header_obj, create_header=True,
+                                                   delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
 
     def run(self):
         super(TestCcIPv4Ptp1NotForUs, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -4474,9 +3922,6 @@ class TestCcIPv4Ptp1NotForUs(TestCcIPv4BGPNotForUs):
 
 class TestCcIPv4Ptp2NotForUs(TestCcIPv4BGPNotForUs):
     stream_obj = None
-    generator_handle = None
-    generator_config_obj = None
-    subscribed_results = None
 
     def describe(self):
         self.set_test_details(id=43, summary="Test CC IPv4 PTP1 Not For US",
@@ -4508,8 +3953,7 @@ class TestCcIPv4Ptp2NotForUs(TestCcIPv4BGPNotForUs):
     def setup(self):
         l2_config = spirent_config['l2_config']
         l3_config = spirent_config['l3_config']['ipv4']
-        checkpoint = "Create a stream with EthernetII and IPv4 with Control Flags Reserved = 1 Error " \
-                     "under port %s" % port1
+        checkpoint = "Create a stream with EthernetII and IPv4 UDP and PTP Sync under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
@@ -4535,30 +3979,19 @@ class TestCcIPv4Ptp2NotForUs(TestCcIPv4BGPNotForUs):
                                                                 header_obj=udp_header_obj, update=False)
         fun_test.simple_assert(result, "Configure UDP Header")
 
-        ptp_header_obj = PtpSyncHeader()
-        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
-                                                                header_obj=ptp_header_obj, update=False)
+        ptp_header_obj = PtpSyncHeader(control_field=PtpSyncHeader.CONTROL_FIELD_SYNC,
+                                       message_type=PtpSyncHeader.MESSAGE_TYPE_SYNC)
+        result = template_obj.configure_ptp_header(stream_block_handle=self.stream_obj.spirent_handle,
+                                                   header_obj=ptp_header_obj, create_header=True,
+                                                   delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Configure Generator Config for port %s" % port1
-        self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
-                                                    duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                    scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED)
-        result = template_obj.configure_generator_config(port_handle=port1,
-                                                         generator_config_obj=self.generator_config_obj)
-        fun_test.simple_assert(result, "Create Generator config")
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=port1)
-        fun_test.test_assert(self.generator_handle, checkpoint)
-
-        checkpoint = "Subscribe to all results"
-        self.subscribed_results = template_obj.subscribe_to_all_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(self.subscribed_results, checkpoint)
 
     def run(self):
         super(TestCcIPv4Ptp2NotForUs, self).run()
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
 
         checkpoint = "Delete %s " % self.stream_obj.spirent_handle
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
@@ -4566,68 +3999,70 @@ class TestCcIPv4Ptp2NotForUs(TestCcIPv4BGPNotForUs):
 
 
 if __name__ == '__main__':
-    cc_flow_types = nu_config_obj.read_dut_spirent_map()["cc_flow"]
-    for flow_type in cc_flow_types:
-        fun_test.log("<---------------> Validating %s Flow Direction <--------------->" % flow_type)
-        FLOW_DIRECTION = flow_type
+    cc_flow_type = fun_test.get_local_setting(setting="cc_flow")
+    flow_type = cc_flow_type if cc_flow_type else "FPG_CC"
+    fun_test.log("<---------------> Validating %s Flow Direction <--------------->" % flow_type)
+    FLOW_DIRECTION = flow_type
 
-        ts = SetupSpirent()
-        '''
-        # Ethernet CC
-        ts.add_test_case(TestCcEthernetArpRequest())
-        ts.add_test_case(TestCcEthernetArpResponse())
-        ts.add_test_case(TestCcEthernetRarp())
-        ts.add_test_case(TestCcEthernetLLDP())
-        ts.add_test_case(TestCcEthernetPTP())
+    ts = SetupSpirent()
+    # Ethernet CC
 
-        # IPv4 CC
-        ts.add_test_case(TestCcIPv4ICMP())
-        ts.add_test_case(TestCcIPv4Ospfv2Hello())
-        ts.add_test_case(TestCcIPv4Ospfv2LinkStateUpdate())
-        ts.add_test_case(TestCcIpv4Pim())
-        ts.add_test_case(TestCcIpv4BGP())
-        ts.add_test_case(TestCcIpv4Igmp())
-        ts.add_test_case(TestCcIPv4ForUs())
-        ts.add_test_case(TestCcIPv4PTP1())
-        ts.add_test_case(TestCcIPv4PTP2())
-        ts.add_test_case(TestCcIPv4PTP3())
-        ts.add_test_case(TestCcIPv4PTP4())
+    ts.add_test_case(TestCcEthernetArpRequest())
 
-        # Error Traps
-        ts.add_test_case(TestCcIPv4TtlError1())
-        ts.add_test_case(TestCcIPv4TtlError2())
-        ts.add_test_case(TestCcIPv4TtlError3())
-        
-        ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
-        ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
-        
-        # Unicast CC
-        ts.add_test_case(TestCcEthArpRequestUnicast())
-        
-        ts.add_test_case(TestCcIpChecksumError())
+    ts.add_test_case(TestCcEthernetArpResponse())
+    ts.add_test_case(TestCcEthernetRarp())
+    ts.add_test_case(TestCcEthernetLLDP())
+    ts.add_test_case(TestCcEthernetPTP())
 
-        ts.add_test_case(TestCcIpv4Dhcp())
-        ts.add_test_case(TestCcFSFError())
-        '''
-        # ts.add_test_case(TestCcOuterChecksumError())
+    # IPv4 CC
+    ts.add_test_case(TestCcIPv4ICMP())
+    ts.add_test_case(TestCcIPv4Ospfv2Hello())
+    ts.add_test_case(TestCcIPv4Ospfv2LinkStateUpdate())
+    ts.add_test_case(TestCcIpv4Pim())
+    ts.add_test_case(TestCcIpv4BGP())
+    ts.add_test_case(TestCcIpv4Igmp())
+    ts.add_test_case(TestCcIPv4ForUs())
+    ts.add_test_case(TestCcIPv4PTP1())
+    ts.add_test_case(TestCcIPv4PTP2())
+    ts.add_test_case(TestCcIPv4PTP3())
+    ts.add_test_case(TestCcIPv4PTP4())
 
-        ts.add_test_case(TestCcInnerChecksumError())
-        ts.add_test_case(TestCcIPv4OverlayVersionError())
-        ts.add_test_case(TestCcIPv4OverlayIhlError())
-        '''
-        ts.add_test_case(TestCcIpv4Isis1())
-        ts.add_test_case(TestCcIpv4Isis2())
-        ts.add_test_case(TestCcIPv4VersionError())
-        ts.add_test_case(TestCcIPv4InternetHeaderLengthError())
-        ts.add_test_case(TestCcIPv4FlagZeroError())
-        # ts.add_test_case(TestCcIPv4MTUCase())
+    # Error Traps
+    ts.add_test_case(TestCcIPv4TtlError1())
+    ts.add_test_case(TestCcIPv4TtlError2())
+    ts.add_test_case(TestCcIPv4TtlError3())
 
-        ts.add_test_case(TestCcIpv4Version6Error())
-        # ts.add_test_case(TestCcGlean())
-        ts.add_test_case(TestCcCrcBadVerError())
-        ts.add_test_case(TestCcMultiError())
-        # ts.add_test_case(TestCcMtuCaseForUs())
-        ts.add_test_case(TestCcIPv4Ptp1NotForUs())
-        ts.add_test_case(TestCcIPv4Ptp2NotForUs())
-        '''
-        ts.run()
+    ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
+    ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
+
+    # Unicast CC
+    ts.add_test_case(TestCcEthArpRequestUnicast())
+
+    ts.add_test_case(TestCcIpChecksumError())
+
+    ts.add_test_case(TestCcIpv4Dhcp())
+    ts.add_test_case(TestCcFSFError())
+
+    ts.add_test_case(TestCcOuterChecksumError())
+
+    ts.add_test_case(TestCcInnerChecksumError())
+    ts.add_test_case(TestCcIPv4OverlayVersionError())
+    ts.add_test_case(TestCcIPv4OverlayIhlError())
+
+    ts.add_test_case(TestCcIpv4Isis1())
+    ts.add_test_case(TestCcIpv4Isis2())
+    ts.add_test_case(TestCcIPv4VersionError())
+    ts.add_test_case(TestCcIPv4InternetHeaderLengthError())
+    ts.add_test_case(TestCcIPv4FlagZeroError())
+    ts.add_test_case(TestCcIPv4MTUCase())
+
+    ts.add_test_case(TestCcIpv4Version6Error())
+    ts.add_test_case(TestCcGlean())
+
+    ts.add_test_case(TestCcCrcBadVerError())
+    ts.add_test_case(TestCcMultiError())
+    ts.add_test_case(TestCcMtuCaseForUs())
+
+    ts.add_test_case(TestCcIPv4Ptp1NotForUs())
+    ts.add_test_case(TestCcIPv4Ptp2NotForUs())
+    ts.run()
