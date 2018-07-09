@@ -67,6 +67,13 @@ class FunTestThread(Thread):
             self.func()
 
 
+class DatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return super(DatetimeEncoder, obj).default(obj)
+        except TypeError:
+            return str(obj)
+
 class FunTest:
     PASSED = RESULTS["PASSED"]
     FAILED = RESULTS["FAILED"]
@@ -167,7 +174,6 @@ class FunTest:
         script_file_name_without_extension = self.script_file_name.replace(".py", "")
 
         self.test_metrics = collections.OrderedDict()
-
 
         html_log_file = "{}.html".format(script_file_name_without_extension)
         if self.relative_path:
@@ -272,7 +278,8 @@ class FunTest:
                     if "cannot join thread before it is started" not in r_string:
                         fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
                     else:
-                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id), seconds=sleep_time)
+                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
+                                       seconds=sleep_time)
         else:
             fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
             timer = thread_info["timer"]
@@ -447,7 +454,7 @@ class FunTest:
         return module_name in self.logging_selected_modules
 
     def dict_to_json_string(self, d):
-        return json.dumps(d, indent=4)
+        return json.dumps(d, indent=4, cls=DatetimeEncoder)
 
     def log(self,
             message,
@@ -740,8 +747,6 @@ class FunTest:
                 break
         return result
 
-
-
     def inspect(self, module_name):
         result = {}
         result["classes"] = []
@@ -934,6 +939,7 @@ class FunTestScript(object):
                                                                  suite_execution_id=fun_test.suite_execution_id,
                                                                  result=fun_test.IN_PROGRESS,
                                                                  path=fun_test.relative_path)
+            fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
                 new_order = []
                 for entry in self.test_case_order:
@@ -961,8 +967,12 @@ class FunTestScript(object):
 
                 self.test_cases = new_order
 
+            ids = set()
             for test_case in self.test_cases:
                 test_case.describe()
+                if test_case.id in ids:
+                    fun_test.test_assert(False, "Test-case Id: {} is duplicated".format(test_case.id))
+                ids.add(test_case.id)
                 if fun_test.selected_test_case_ids:
                     if test_case.id not in fun_test.selected_test_case_ids:
                         continue
