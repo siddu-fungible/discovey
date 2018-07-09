@@ -27,13 +27,49 @@ class LsfStatusServer:
         url = "{}/?tag={}&format=json".format(self.base_url, tag)
         return self._get(url=url)
 
-    def get_past_jobs_by_tag(self, tag):
+    def get_last_job(self, tag, validate=True):
+        result = {}
+        last_job = {}
+        try:
+            past_jobs = self.get_past_jobs_by_tag(tag=tag, add_info_to_db=True)
+            last_job = past_jobs[0]
+            job_id = last_job["job_id"]
+            fun_test.add_checkpoint("Validating Job: {}".format(job_id))
+            fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
+            if validate:
+                fun_test.add_checkpoint("Fetching return code for: {}".format(job_id))
+                return_code = int(last_job["return_code"])
+                fun_test.test_assert(not return_code, "Valid return code")
+                fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
+            result = last_job
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_past_jobs_by_tag(self, tag, add_info_to_db=True):
         past_jobs = []
         jobs_by_tag_response = self.get_jobs_by_tag(tag=tag)
         if jobs_by_tag_response:
             response_dict = json.loads(jobs_by_tag_response)
             fun_test.log(json.dumps(response_dict, indent=4))
             past_jobs = response_dict["past_jobs"]
+
+        if add_info_to_db:
+            for past_job in past_jobs:
+                job_info = past_job
+                if "completion_date" not in job_info:
+                    fun_test.critical("Job: {} has no field named completion_date".format(job_info["job_id"]))
+                    continue
+                completion_date = "20" + job_info["completion_date"]
+
+                dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
+                self.add_palladium_job_info(job_info=job_info)
+                response = self.get_job_by_id(job_id=job_info["job_id"])
+                response_dict = json.loads(response)
+                fun_test.log(json.dumps(response_dict, indent=4))
+                output_text = response_dict["output_text"]
+                past_job["date_time"] = dt
+                past_job["output_text"] = output_text
         return past_jobs
 
     def get_job_by_id(self, job_id):

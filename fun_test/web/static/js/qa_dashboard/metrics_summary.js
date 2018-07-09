@@ -368,6 +368,8 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         if (node.chartName === "All metrics") {
             return;
         }
+        return; // disable completely for now
+
         return commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
             let flattenedLeaves = {};
             $scope.flattenLeaves("", flattenedLeaves, leaves);

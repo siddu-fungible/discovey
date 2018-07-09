@@ -74,13 +74,6 @@ class FunTestCase1(FunTestCase):
                     metric_name = m.group("metric_name").lower()
                     if not ("ECVOL_EC_STATS_latency_ns".lower() in metric_name or "ECVOL_EC_STATS_iops".lower() in metric_name):
                         continue
-                    '''
-                    allowed_prefixes = ["ECVOL_EC_STATS"]
-                    allowed_prefixes = [x[: 5].lower() for x in allowed_prefixes]
-                    if metric_name[: 5] not in allowed_prefixes:
-                        continue
-                    '''
-
 
                     try:  # Either a raw value or json value
                         j = json.loads(value)
