@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
-
+VOLTEST_TAG = "voltest_performance"
 
 def get_rounded_time():
     dt = get_current_time()
@@ -422,6 +422,7 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
 
 
 class VoltestPerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_TAG
     def describe(self):
         self.set_test_details(id=6,
                               summary="Voltest performance",
