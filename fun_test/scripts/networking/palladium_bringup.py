@@ -65,7 +65,8 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(result, checkpoint)
 
         is_cleanup_needed = False
-        fun_test.sleep("Remove this sleep after dpcsh bug fixed", seconds=900)
+        if not dut_config['enable_dpcsh']:
+            fun_test.sleep("Remove this sleep after dpcsh bug fixed", seconds=600)
 
         if dut_config['enable_dpcsh']:
             checkpoint = "Ensure dpcsh started in TCP proxy mode"
