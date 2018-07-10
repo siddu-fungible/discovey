@@ -26,6 +26,7 @@ class MetricChart(models.Model):
     goodness_cache = models.TextField(default="[]")
     goodness_cache_range = models.IntegerField(default=5)
     goodness_cache_valid = models.BooleanField(default=False)
+    status_cache = models.TextField(default="[]")
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -207,6 +208,7 @@ class MetricChart(models.Model):
         else:
             if self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
                 goodness_values.extend(json.loads(self.goodness_cache))
+                status_values.extend(json.loads(self.status_cache))
             else:
                 leaf_status = True
 
@@ -221,7 +223,7 @@ class MetricChart(models.Model):
                             j = 0
                         last_records_map[data_set_index] = {"records": last_records, "goodness": 0}
                         try:
-                            if last_records and (last_records[-1].status == RESULTS["FAILED"]):
+                            if last_records and (last_records[-1]["status"] == RESULTS["FAILED"]):
                                 leaf_status = False
                         except:
                             pass
@@ -285,6 +287,7 @@ class MetricChart(models.Model):
         self.goodness_cache = json.dumps(goodness_values)
         self.goodness_cache_valid = True
         self.goodness_cache_range = number_of_records
+        self.status_cache = json.dumps(status_values)
         self.save()
         try:
             if goodness_values[-2] > goodness_values[-1]:

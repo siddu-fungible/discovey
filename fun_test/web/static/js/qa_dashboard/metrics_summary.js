@@ -363,10 +363,10 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             //s = "<p><span style='color: green'>&#10003;:</span><b>" + numTrendUp + "</b>" + "&nbsp" ;
             //s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
             if (node.numChildDegrades) {
-                s += "Leaf <span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span><b>" + node.numChildDegrades + "</b></p>";
+                s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + ",&nbsp";
             }
             if (node.numChildrenFailed) {
-                s += "<span style='color: red'><i class='fa fa-close'>:</i></span><b>" + node.numChildrenFailed + "</b></p>";
+                s += "Bld Failed: <span style='color: red'>" + node.numChildrenFailed + "</span>";
             }
         }
         return s;

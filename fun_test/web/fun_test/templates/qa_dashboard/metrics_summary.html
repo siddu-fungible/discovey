@@ -161,10 +161,10 @@
                         </td>
                     </tr-->
                     <tr>
-                        <th>Aspect</th>
-                        <th>Score</th>
-                        <th></th>
-                        <th>Status</th>
+                        <th class="text-center">Aspect</th>
+                        <th class="text-center">Score</th>
+                        <!--th></th-->
+                        <th class="text-center">More Info</th>
 
                     </tr>
                     <tr class="fade-element-in" ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
@@ -184,12 +184,13 @@
                         </span>
                         </td>
                         <td>
-                            <div class="score-label">{{ node.goodness }}</div>
+                            <div class="score-label"><span style="vertical-align: top"
+                                                                                 ng-bind-html="getTrendHtml(node) | unsafe"></span>{{ node.goodness }}</div>
                         </td>
-                        <td>
+                        <!--td>
                             <a href='#' ng-click='showGoodnessTrend(node)'><span style="vertical-align: top"
                                                                                  ng-bind-html="getTrendHtml(node) | unsafe"></span></a>
-                        </td>
+                        </td-->
 
                         <td ng-bind-html="getStatusHtml(node) | unsafe"></td>
                     </tr>
