@@ -231,7 +231,7 @@ class BuildPalladiumImage(FunTestCase):
             cmd_list = ['bzip2 -dk {}'.format(PALLADIUM_IMG_PATH),
                         'scp {} {}@{}://home/{}/image/'.format(PALLADIUM_IMG_UNZIP_PATH, REGRESSION_USER, HOST, REGRESSION_USER)]
             try:
-                for cmd in cmd_list[0]:
+                for cmd in cmd_list:
                     linux_obj.command(cmd, timeout=60)
             except Exception as ex:
                 TEST_STATUS = False
