@@ -44,7 +44,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
 
         ];
 
-        $scope.numGridColumns = 4;
+        $scope.numGridColumns = 2;
         if(angular.element($window).width() <=1441) {
             $scope.numGridColumns = 3;
         }
@@ -384,32 +384,50 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         return s;
     };
 
-    $scope.showNonAtomicMetric = (node) => {
-        $scope.expandNode(node);
-        $scope.mode = "showingNonAtomicMetric";
-        $scope._setupGoodnessTrend(node);
-        $scope.inner.nonAtomicMetricInfo = node.info;
-        $scope.currentNode = null;
-        $scope.currentNode = node;
-        let payload = {
-            metric_model_name: "MetricContainer",
-            chart_name: node.chartName
-        };
-
-
-        if (node.chartName === "All metrics") {
-            return;
+    $scope.isLeafsParent = (node) => {
+        let isLeafParent = false; // Parent of a leaf
+        if (node.hasOwnProperty("childrenGuids")) {
+            node.childrenGuids.forEach((childGuid) => {
+                let child = $scope.flatNodes[$scope.getIndex({guid: childGuid})];
+                if (child.leaf) {
+                    isLeafParent = true;
+                }
+            });
         }
-        return; // disable completely for now
+        return isLeafParent;
+    };
 
-        return commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
-            let flattenedLeaves = {};
-            $scope.flattenLeaves("", flattenedLeaves, leaves);
+    $scope.showNonAtomicMetric = (node) => {
+        $scope.resetGrid();
+        $scope.expandNode(node).then(() => {
 
-            $scope.prepareGridNodes(flattenedLeaves);
-            console.log(angular.element($window).width());
+            $scope.mode = "showingNonAtomicMetric";
+            $scope._setupGoodnessTrend(node);
+            $scope.inner.nonAtomicMetricInfo = node.info;
+            $scope.currentNode = null;
+            $scope.currentNode = node;
+            let payload = {
+                metric_model_name: "MetricContainer",
+                chart_name: node.chartName
+            };
 
+
+            return commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
+                if (node.chartName === "All metrics") {
+                    return;
+                }
+                if (!$scope.isLeafsParent(node)) {
+                    return;
+                }
+                let flattenedLeaves = {};
+                $scope.flattenLeaves("", flattenedLeaves, leaves);
+
+                $scope.prepareGridNodes(flattenedLeaves);
+                console.log(angular.element($window).width());
+
+            });
         });
+
 
     };
 
@@ -427,6 +445,10 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             let newNode = {name: node.name, id: node.id, metricModelName: node.metric_model_name};
             flattenedLeaves[newNode.id] = newNode;
         }
+    };
+
+    $scope.resetGrid = () => {
+        $scope.grid = [];
     };
 
     $scope.prepareGridNodes = (flattenedNodes) => {
@@ -529,7 +551,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             node.childrenGuids = [];
         }
 
-        $scope.fetchMetricInfoById({metricId: childId}).then((data) => {
+        return $scope.fetchMetricInfoById({metricId: childId}).then((data) => {
             if (!alreadyInserted) {
                 let newNode = $scope.getNodeFromData(data);
                 newNode.guid = $scope.guid();
@@ -578,19 +600,22 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
 
     $scope.expandNode = (node, all) => {
         node.collapsed = false;
-
         if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
             let thisNode = node;
             // Fetch children ids
 
-            $scope.fetchMetricInfoById(node).then((data) => {
+            return $scope.fetchMetricInfoById(node).then((data) => {
+                node.hide = false;
                 let childrenIds = JSON.parse(data.children);
-                $scope._insertNewNode(node, childrenIds, all, node.childrenFetched);
-                node.childrenFetched = true;
+                return $scope._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
+                    node.childrenFetched = true;
+                });
+
             });
 
         }
-        node.hide = false;
+        //node.hide = false;
+
     };
 
     $scope.collapseBranch = (node, traversedNodes) => {

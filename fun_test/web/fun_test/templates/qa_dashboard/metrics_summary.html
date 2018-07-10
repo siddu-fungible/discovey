@@ -262,21 +262,24 @@
                 <br>
                 <br>
                 <div class="closed-section"></div>
-                <table class="table" ng-if="grid">
-                    <tr ng-repeat="row in grid">
-                        <td ng-repeat="node in row">
-                            <editable-metric-chart
-                                    chart-name="node.name"
-                                    model-name="node.metricModelName"
-                                    xaxis-formatter="xAxisFormatter"
-                                    tooltip-formatter="tooltipFormatter"
-                                    atomic="atomic" chart-only="true">
-                            </editable-metric-chart>
-                        </td>
-                    </tr>
-                </table>
+                <div ng-if="grid.length">
+                    <table class="table" ng-if="grid">
+                        <tr ng-repeat="row in grid">
+                            <td ng-repeat="node in row" style="width: 50%">
+                                <editable-metric-chart
+                                        chart-name="node.name"
+                                        model-name="node.metricModelName"
+                                        xaxis-formatter="xAxisFormatter"
+                                        tooltip-formatter="tooltipFormatter"
+                                        atomic="atomic" chart-only="true">
+                                </editable-metric-chart>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="closed-section"></div>
+                </div>
+
                 <br>
-                <div class="closed-section"></div>
                 <h5>Children</h5>
                 <div ng-if="currentNode">
                     <table class="table table-nonfluid">
