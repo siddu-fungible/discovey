@@ -285,6 +285,8 @@ class MetricChart(models.Model):
             else:
                 status_values.append(True)
         print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
+        if self.leaf and not leaf_status:
+            goodness_values[-1] = 0
         self.goodness_cache = json.dumps(goodness_values)
         self.goodness_cache_valid = True
         self.goodness_cache_range = number_of_records
@@ -295,8 +297,7 @@ class MetricChart(models.Model):
                 num_degrades += 1
         except:
             num_degrades = 0
-        if self.leaf and not leaf_status:
-            goodness_values[-1] = 0
+
         return {"status_values": status_values,
                 "goodness_values": goodness_values,
                 "children_goodness_map": children_goodness_map,
