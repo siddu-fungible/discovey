@@ -133,6 +133,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             childrenWeights: JSON.parse(data.children_weights),
             children: {},
             lineage: [],
+            numChildDegrades: data.num_child_degrades,
             positive: data.positive,
             numChildrenPassed: data.num_children_passed,
             numChildrenFailed: data.num_children_failed
@@ -170,16 +171,22 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
     };
 
     $scope.evaluateGoodness = (node, goodness_values, children_goodness_map) => {
-        node.goodness = Number(goodness_values[goodness_values.length - 1].toFixed(1));
-        node.goodnessValues = goodness_values;
-        node.childrenGoodnessMap = children_goodness_map;
-        node.trend = "flat";
-        let penultimateGoodness = Number(goodness_values[goodness_values.length - 2].toFixed(1));
-        if (penultimateGoodness > node.goodness) {
-            node.trend = "down";
-        } else if (penultimateGoodness < node.goodness) {
-            node.trend = "up";
+        if (goodness_values.length) {
+            try {
+                node.goodness = Number(goodness_values[goodness_values.length - 1].toFixed(1));
+            } catch (e) {
+            }
+            node.goodnessValues = goodness_values;
+            node.childrenGoodnessMap = children_goodness_map;
+            node.trend = "flat";
+            let penultimateGoodness = Number(goodness_values[goodness_values.length - 2].toFixed(1));
+            if (penultimateGoodness > node.goodness) {
+                node.trend = "down";
+            } else if (penultimateGoodness < node.goodness) {
+                node.trend = "up";
+            }
         }
+
     };
 
     $scope.getLastElement = (array) => {
@@ -320,22 +327,47 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         node.showInfo = !node.showInfo;
     };
 
+    $scope.getConsolidatedTrend = (node) => {
+        let numTrendDown = 0;
+
+        if (node.hasOwnProperty("childrenGuids")) {
+            node.childrenGuids.forEach((childGuid) => {
+                let child = $scope.flatNodes[$scope.getIndex({guid: childGuid})];
+                numTrendDown += $scope.getConsolidatedTrend(child);
+            });
+        } else {
+            if (node.trend === "down") {
+                numTrendDown += 1;
+            }
+        }
+        return numTrendDown;
+    };
+
     $scope.getStatusHtml = (node) => {
         let s = "";
         if (node.leaf) {
             if (node.hasOwnProperty("status")) {
                 if (node.status === true) {
-                    s = "<label class=\"label label-success\">PASSED</label>";
+                    s = "Bld: <label class=\"label label-success\">PASSED</label>";
                 } else {
-                    s = "<label class=\"label label-danger\">FAILED</label>";
+                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
                 }
                 if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
                     s = "<p style='background-color: white' class=\"\">No Data</p>";
                 }
             }
         } else {
-            s = "<p><span style='color: green'>&#10003;:</span><b>" + node.numChildrenPassed + "</b>" + "&nbsp" ;
-            s += "<span style='color: red'><i class='fa fa-close'>:</i></span><b>" + node.numChildrenFailed + "</b></p>"
+
+
+
+            //s = "<p><span style='color: green'>&#10003;:</span><b>" + numTrendUp + "</b>" + "&nbsp" ;
+            //s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
+            if (node.numChildDegrades) {
+                s += "Leaf <span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span><b>" + node.numChildDegrades + "</b></p>";
+            }
+            if (node.numChildrenFailed) {
+                s += "<span style='color: red'><i class='fa fa-close'>:</i></span><b>" + node.numChildrenFailed + "</b></p>";
+            }
         }
         return s;
     };

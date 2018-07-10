@@ -1,5 +1,5 @@
 from django.db import models
-from fun_global import RESULTS
+from fun_global import RESULTS, get_current_time, get_localized_time
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import json
@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 class MetricChart(models.Model):
@@ -23,6 +23,9 @@ class MetricChart(models.Model):
     y1_axis_title = models.TextField(default="")
     y2_axis_title = models.TextField(default="")
     children_weights = models.TextField(default="{}")
+    goodness_cache = models.TextField(default="[]")
+    goodness_cache_range = models.IntegerField(default=5)
+    goodness_cache_valid = models.BooleanField(default=False)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -72,8 +75,8 @@ class MetricChart(models.Model):
                 break
         return result
 
-    def get_last_record(self, number_of_records=1):
-        return self.filter(number_of_records=number_of_records)
+    def get_last_record(self, number_of_records=1, data_set=None):
+        return self.filter(number_of_records=number_of_records, data_set=data_set)
 
     def get_leaves(self):
         data = {}
@@ -96,7 +99,65 @@ class MetricChart(models.Model):
 
         return data
 
+    def get_day_bounds(self, dt):
+        d = self.get_rounded_time(dt)
+        start = d.replace(hour=0, minute=0, second=0)
+        end = d.replace(hour=23, minute=59, second=59)
+        return start, end
+
+    def get_rounded_time(self, dt):
+        rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=23, minute=59)
+        rounded_d = get_localized_time(rounded_d)
+        return rounded_d
+
+    def get_entries_for_day(self, metric, day):
+        bounds = self.get_day_bounds(day)
+        result = metric.objects.filter(input_date_time__range=bounds)
+        # if result.count() > 1:
+        #    result = result.last()
+        return result
+
+    def fixup(self, metric, from_date, to_date):
+        current_date = self.get_rounded_time(to_date)
+        holes = {}
+        day_entries = None
+
+        while current_date >= from_date:
+            entry = self.get_entries_for_day(metric=metric, day=current_date)
+
+            if not entry.count():
+                if current_date in holes:
+                    # fill this hole with last available entry
+                    for day_entry in day_entries:
+                        day_entry.pk = None
+                        day_entry.interpolated = True
+                        day_entry.input_date_time = current_date
+                        day_entry.save()
+                else:
+                    # Lets find the last available entry from here
+                    i = 0
+                    while i < 366: #TODO: Can't find an entry in the last 366 days?
+                        day = current_date - timedelta(days=i)
+                        day_entries = self.get_entries_for_day(metric=metric, day=day)
+                        if day_entries.count():
+                            for day_entry in day_entries:
+                                day_entry.pk = None
+                                day_entry.interpolated = True
+                                day_entry.input_date_time = current_date
+                                day_entry.save()
+                            break
+                        else:
+                            holes[self.get_rounded_time(day)] = False
+                        i = i + 1
+            else:
+                day_entries = None
+            current_date = current_date - timedelta(days=1)  # TODO: if we know the holes jump to the next hole
+
+
+
+
     def get_status(self, number_of_records=5):
+
         goodness_values = []
         status_values = []
         children = json.loads(self.children)
@@ -105,20 +166,30 @@ class MetricChart(models.Model):
         children_goodness_map = {}
         num_children_passed = 0
         num_children_failed = 0
+        num_degrades = 0
+        num_child_degrades = 0
+        if self.chart_name == "Filter":
+            j = 2
         if not self.leaf:
             if len(children):
+                child_degrades = 0
                 for child in children:
                     child_metric = MetricChart.objects.get(metric_id=child)
-                    get_status = child_metric.get_status()
+                    get_status = child_metric.get_status(number_of_records=number_of_records)
                     child_status_values, child_goodness_values = get_status["status_values"], \
                                                                  get_status["goodness_values"]
+                    if child_metric.leaf:
+                        num_child_degrades += get_status["num_degrades"]
+                    else:
+                        num_child_degrades += get_status["num_child_degrades"]
+
                     last_child_status = child_status_values[-1]
                     if last_child_status:
                         num_children_passed += 1
                     else:
                         num_children_failed += 1
 
-                    for i in range(number_of_records):
+                    for i in range(number_of_records - 1):
                         if len(status_values) < (i + 1):
                             status_values.append(True)
                         if len(child_status_values) < (i + 1):
@@ -132,74 +203,130 @@ class MetricChart(models.Model):
                         child_weight = children_weights[child] if child in children_weights else 1
                         goodness_values[i] += child_goodness_values[i] * child_weight
                         children_goodness_map[child] = child_goodness_values
+
         else:
-            last_records = self.get_last_record(number_of_records=number_of_records)
-            data_sets = json.loads(self.data_sets)
-            if len(data_sets):
-                # data_set = data_sets[0]
+            if self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
+                goodness_values.extend(json.loads(self.goodness_cache))
+            else:
+                leaf_status = True
 
-                data_set_statuses = []
-
-                for last_record in last_records:
-                    data_set_combined_goodness = 0
-                    for data_set in data_sets:
-                        max_value = data_set["output"]["max"]
-                        min_value = data_set["output"]["min"]
+                data_sets = json.loads(self.data_sets)
+                if len(data_sets):
+                    # data_set = data_sets[0]
+                    data_set_statuses = []
+                    last_records_map = {}
+                    for data_set_index, data_set in enumerate(data_sets):
+                        last_records = self.get_last_record(number_of_records=number_of_records, data_set=data_set)
+                        if len(last_records) < number_of_records:
+                            j = 0
+                        last_records_map[data_set_index] = {"records": last_records, "goodness": 0}
                         try:
-                            output_name = data_set["output"]["name"]
+                            if last_records and (last_records[-1].status == RESULTS["FAILED"]):
+                                leaf_status = False
                         except:
                             pass
 
-                        if "expected" in data_set["output"]:
-                            expected_value = data_set["output"]["expected"]
-                        else:
-                            expected_value = max_value
-                            if not self.positive:
-                                expected_value = min_value
+                    for day_index in range(number_of_records - 1):
+                        data_set_combined_goodness = 0
+                        for data_set_index, data_set in enumerate(data_sets):
 
-                        output_value = last_record[output_name]
-                        data_set_statuses.append(output_value >= min_value and output_value <= max_value)
-                        if expected_value is not None:
-                            if self.positive:
-                                data_set_combined_goodness += (float(output_value) / expected_value) * 100
-                            else:
-                                if output_value:
-                                    data_set_combined_goodness += (float(expected_value) / output_value) * 100
+                            if last_records_map[data_set_index]["records"]:
+                                try:
+                                    this_days_record = last_records_map[data_set_index]["records"][day_index]
+                                except:
+                                    pass
+                                max_value = data_set["output"]["max"]
+                                min_value = data_set["output"]["min"]
+                                try:
+                                    output_name = data_set["output"]["name"]   #TODO
+                                except:
+                                    pass
+                                if "expected" in data_set["output"]:
+                                    expected_value = data_set["output"]["expected"]
                                 else:
-                                    print "ERROR: {}, {}, {}".format(self.chart_name, self.metric_model_name, last_record) 
-                    goodness_values.append(data_set_combined_goodness/len(data_sets))
-                status_values.append(reduce(lambda x, y: x and y, data_set_statuses))
+                                    expected_value = max_value
+                                    if not self.positive:
+                                        expected_value = min_value
+                                output_value = this_days_record[output_name]
+
+                                data_set_statuses.append(leaf_status)
+                                if expected_value is not None:
+                                    if self.positive:
+                                        data_set_combined_goodness += (float(output_value) / expected_value) * 100
+                                    else:
+                                        if output_value:
+                                            data_set_combined_goodness += (float(expected_value) / output_value) * 100
+                                        else:
+                                            print "ERROR: {}, {}".format(self.chart_name,
+                                                                             self.metric_model_name)
+                        # data_set_combined_goodness = round(data_set_combined_goodness, 1)
+                        goodness_values.append(round(data_set_combined_goodness/len(data_sets), 1))
+
+                    if data_set_statuses:
+                        status_values.append(reduce(lambda x, y: x and y, data_set_statuses))
+                    else:
+                        status_values.append(True)  # Some data-sets may not exist
+
 
         # Fill up missing values
+        '''
         for i in range(number_of_records - len(goodness_values)):
             if len(goodness_values):
                 goodness_values.append(goodness_values[-1])
             else:
                 goodness_values.append(0)
+        '''
         for i in range(number_of_records - len(status_values)):
             if len(status_values):
                 status_values.append(status_values[-1])
             else:
                 status_values.append(True)
         print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
+        self.goodness_cache = json.dumps(goodness_values)
+        self.goodness_cache_valid = True
+        self.goodness_cache_range = number_of_records
+        self.save()
+        try:
+            if goodness_values[-2] > goodness_values[-1]:
+                num_degrades += 1
+        except:
+            num_degrades = 0
         return {"status_values": status_values,
                 "goodness_values": goodness_values,
                 "children_goodness_map": children_goodness_map,
                 "num_children_passed": num_children_passed,
-                "num_children_failed": num_children_failed}
+                "num_children_failed": num_children_failed,
+                "num_degrades": num_degrades,
+                "num_child_degrades": num_child_degrades}
 
-    def filter(self, number_of_records=1):
+    def filter(self, number_of_records=1, data_set=None):
         data = []
-        data_sets = json.loads(self.data_sets)
-        if len(data_sets):
-            data_set = data_sets[0]
+        # data_sets = json.loads(self.data_sets)
+        if data_set:
+            # data_set = data_sets[0]
             inputs = data_set["inputs"]
             model = ANALYTICS_MAP[self.metric_model_name]["model"]
+            today = get_current_time()
+            yesterday = today - timedelta(days=1)
+            yesterday = yesterday.replace(hour=23, minute=59, second=59)
+
+            earlier_day = today - timedelta(days=number_of_records)
+            earlier_day = earlier_day.replace(hour=0, minute=0, second=1)
+
             d = {}
             for input_name, input_value in inputs.iteritems():
+                if d == "input_date_time":
+                    continue
                 d[input_name] = input_value
+            d["input_date_time__range"] = [earlier_day, yesterday]
             try:
-                entries = model.objects.filter(**d).order_by("-input_date_time")[:number_of_records]
+                # entries = model.objects.filter(**d).order_by("-input_date_time")[:number_of_records]
+                entries = model.objects.filter(**d).order_by("-input_date_time")
+                i = entries.count()
+                if entries.count() < (number_of_records - 1):
+                    # let's fix it up
+                    self.fixup(metric=model, from_date=earlier_day, to_date=yesterday)
+                    entries = model.objects.filter(**d).order_by("-input_date_time")
                 entries = reversed(entries)
                 for entry in entries:
                     data.append(model_to_dict(entry))
@@ -305,6 +432,7 @@ class VolumePerformance(models.Model):
 
 
 class AllocSpeedPerformance(models.Model):
+    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
@@ -314,10 +442,12 @@ class AllocSpeedPerformance(models.Model):
     tag = "analytics"
 
     def __str__(self):
-        return "{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded)
+        return "{}..{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded, self.input_date_time)
 
 
 class WuLatencyAllocStack(models.Model):
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     key = models.CharField(max_length=30, verbose_name="Git tag")
     input_app = models.TextField(verbose_name="wu_latency_test: alloc_stack", default="wu_latency_test", choices=[(0, "wu_latency_test")])
@@ -329,6 +459,8 @@ class WuLatencyAllocStack(models.Model):
         return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
 
 class WuLatencyUngated(models.Model):
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     key = models.CharField(max_length=30, verbose_name="Git tag")
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.TextField(verbose_name="wu_latency_test: Ungated WU", default="wu_latency_test", choices=[(0, "wu_latency_test")])
@@ -376,6 +508,7 @@ class GenericSerializer(ModelSerializer):
         pass
 
 class EcPerformance(models.Model):
+    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_ndata_min = models.IntegerField(verbose_name="ndata min", default=8)
@@ -412,6 +545,7 @@ class EcPerformance(models.Model):
     '''
 
 class BcopyPerformance(models.Model):
+    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_iterations = models.IntegerField(verbose_name="Iterations", default=10)
@@ -431,6 +565,7 @@ class BcopyPerformance(models.Model):
 
 
 class BcopyFloodDmaPerformance(models.Model):
+    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_n = models.IntegerField(verbose_name="N", default=0, choices=[(0, "1"), (1, "2"), (2, "4"), (3, "8"), (4, "16"), (5, "32"), (6, "64")])
@@ -448,6 +583,7 @@ class BcopyFloodDmaPerformance(models.Model):
 
 
 class EcVolPerformance(models.Model):
+    interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="voltest", choices=[(0, "voltest")])
@@ -505,6 +641,8 @@ class LsvZipCryptoPerformance(models.Model):
 
 
 class NuTransitPerformance(models.Model):
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.IntegerField(verbose_name="Fixed Frame Size Test", choices=[(0, 1500), (1, 1000), (2, 200), (3, 9000), (4, 16380), (5, 64)])
     output_throughput = models.FloatField(verbose_name="Throughput in Mbps")
@@ -527,6 +665,8 @@ class NuTransitPerformance(models.Model):
 
 
 class VoltestPerformance(models.Model):
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=20, default="voltest", choices=[(0, "voltest")])
     output_VOL_TYPE_BLK_LSV_write_latency_max = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_LSV_write_latency_max", default=-1)

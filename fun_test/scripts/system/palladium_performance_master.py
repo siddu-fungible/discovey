@@ -3,8 +3,8 @@ from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
-
-from web.fun_test.analytics_models_helper import MetricHelper
+from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
+from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache
 import re
 from datetime import datetime
 
@@ -13,7 +13,8 @@ ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 
 def get_rounded_time():
     dt = get_current_time()
-    dt = datetime(year=dt.year, month=dt.month, day=dt.day, hour=dt.hour, minute=dt.minute)
+    dt = datetime(year=dt.year, month=dt.month, day=dt.day, hour=23, minute=59, second=59)
+    dt = get_localized_time(dt)
     return dt
 
 def is_job_from_today(job_dt):
@@ -33,7 +34,7 @@ class MyScript(FunTestScript):
         pass
 
     def cleanup(self):
-        pass
+        invalidate_goodness_cache()
 
 
 class PalladiumPerformanceTc(FunTestCase):
@@ -62,9 +63,10 @@ class PalladiumPerformanceTc(FunTestCase):
         self.job_id = job_id
         return True
 
-    def metrics_to_dict(self, metrics):
+    def metrics_to_dict(self, metrics, result):
         d = {}
         d["input_date_time"] = self.dt
+        d["status"] = result
         for key, value in metrics.iteritems():
             d[key] = value
         return d
@@ -82,12 +84,13 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
         output_one_malloc_free_wu = 0
         output_one_malloc_free_threaded = 0
+        wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = None
+        wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = None
         try:
 
             alloc_speed_test_found = False
             wu_latency_test_found = False
-            wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = None
-            wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = None
+
 
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
@@ -133,6 +136,20 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                                                             output_one_malloc_free_wu=output_one_malloc_free_wu,
                                                             output_one_malloc_free_threaded=output_one_malloc_free_threaded,
                                                             input_date_time=self.dt)
+
+        MetricHelper(model=WuLatencyUngated).add_entry(status=self.result, input_app="wu_latency_test",
+                                                       output_min=wu_ungated_ns_min,
+                                                       output_max=wu_ungated_ns_max,
+                                                       output_avg=wu_ungated_ns_avg,
+                                                       input_date_time=self.dt)
+
+        MetricHelper(model=WuLatencyAllocStack).add_entry(status=self.result,
+                                                          input_app="wu_latency_test",
+                                                          output_min=wu_alloc_stack_ns_min,
+                                                          output_max=wu_alloc_stack_ns_max,
+                                                          output_avg=wu_alloc_stack_ns_avg,
+                                                          input_date_time=self.dt)
+
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class BcopyPerformanceTc(PalladiumPerformanceTc):
@@ -399,7 +416,7 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        d = self.metrics_to_dict(metrics)
+        d = self.metrics_to_dict(metrics, self.result)
         MetricHelper(model=EcVolPerformance).add_entry(**d)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -460,7 +477,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        d = self.metrics_to_dict(metrics)
+        d = self.metrics_to_dict(metrics, self.result)
         MetricHelper(model=VoltestPerformance).add_entry(**d)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 

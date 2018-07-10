@@ -12,6 +12,12 @@ from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
 
 
+def invalidate_goodness_cache():
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        chart.goodness_cache_valid = False
+        chart.save()
+
 class MetricHelper(object):
     def __init__(self, model):
         self.model = model

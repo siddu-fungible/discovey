@@ -1,5 +1,6 @@
 import logging
 import json
+from fun_global import get_localized_time, get_current_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
 from web.web_global import api_safe_json_response
@@ -16,6 +17,7 @@ from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
+from analytics_models_helper import invalidate_goodness_cache
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -161,6 +163,7 @@ def update_child_weight(request):
     children_weights = c.get_children_weights()
     if child_id in children_weights:
         c.add_child_weight(child_id=child_id, weight=weight)
+    invalidate_goodness_cache()
 
 @csrf_exempt
 def summary_page(request):
@@ -174,12 +177,13 @@ def metric_info(request):
     c = MetricChart.objects.get(metric_id=metric_id)
     serialized = MetricChartSerializer(c, many=False)
     serialized_data = serialized.data
-    result = c.get_status(number_of_records=5)
+    result = c.get_status(number_of_records=6)
     serialized_data["goodness_values"] = result["goodness_values"]
     serialized_data["status_values"] = result["status_values"]
     serialized_data["children_goodness_map"] = result["children_goodness_map"]
     serialized_data["num_children_passed"] = result["num_children_passed"]
     serialized_data["num_children_failed"] = result["num_children_failed"]
+    serialized_data["num_child_degrades"] = result["num_child_degrades"]
     return serialized_data
 
 @csrf_exempt
@@ -265,6 +269,7 @@ def update_chart(request):
                         data_sets=json.dumps(data_sets),
                         metric_id=LastMetricId.get_next_id())
         c.save()
+        invalidate_goodness_cache()
     return "Ok"
 
 
@@ -326,9 +331,15 @@ def data(request):
         d = {}
         for input_name, input_value in inputs.iteritems():
             d[input_name] = input_value
+        # skip today's  #TODO
+        # del d["input_date_time"]
+        today = get_current_time()
+        today = today.replace(hour=0, minute=0, second=1)
+        d["input_date_time__lt"] = today
         try:
             result = model.objects.filter(**d)   #unpack, pack
-            #
+
+
             data.append([model_to_dict(x) for x in result])
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
