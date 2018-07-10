@@ -169,6 +169,7 @@ class MetricChart(models.Model):
         num_children_failed = 0
         num_degrades = 0
         num_child_degrades = 0
+        leaf_status = True
         if self.chart_name == "Filter":
             j = 2
         if not self.leaf:
@@ -210,7 +211,6 @@ class MetricChart(models.Model):
                 goodness_values.extend(json.loads(self.goodness_cache))
                 status_values.extend(json.loads(self.status_cache))
             else:
-                leaf_status = True
 
                 data_sets = json.loads(self.data_sets)
                 if len(data_sets):
@@ -262,6 +262,7 @@ class MetricChart(models.Model):
                                             print "ERROR: {}, {}".format(self.chart_name,
                                                                              self.metric_model_name)
                         # data_set_combined_goodness = round(data_set_combined_goodness, 1)
+
                         goodness_values.append(round(data_set_combined_goodness/len(data_sets), 1))
 
                     if data_set_statuses:
@@ -294,6 +295,8 @@ class MetricChart(models.Model):
                 num_degrades += 1
         except:
             num_degrades = 0
+        if self.leaf and not leaf_status:
+            goodness_values[-1] = 0
         return {"status_values": status_values,
                 "goodness_values": goodness_values,
                 "children_goodness_map": children_goodness_map,
