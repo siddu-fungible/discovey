@@ -76,7 +76,7 @@ class IPv4GoodRuntTestCase3(FunTestCase):
                               summary="Creating good and runt IPv4 streamblock",
                               steps="""
                         1. Create streamblock with following settings
-                           a. Load: 18000 fps
+                           a. Load: 17000 fps
                            b. Payload Fill Type: PRBS
                            c. Insert signature
                            d. Frame Size Mode: Random Min: 40 Max: 70
@@ -96,7 +96,7 @@ class IPv4GoodRuntTestCase3(FunTestCase):
             clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
-        load = 18000
+        load = 17000
         self.streamblock_obj = StreamBlock()
         self.streamblock_obj.LoadUnit = self.streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.streamblock_obj.Load = load
