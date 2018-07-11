@@ -336,7 +336,7 @@ class MetricChart(models.Model):
                 i = entries.count()
                 if entries.count() < (number_of_records - 1):
                     # let's fix it up
-                    if model.interpolation_allowed:
+                    if model.objects.first().interpolation_allowed:
                         self.fixup(metric=model, from_date=earlier_day, to_date=yesterday)
                     entries = model.objects.filter(**d).order_by("-input_date_time")
                 entries = reversed(entries)
