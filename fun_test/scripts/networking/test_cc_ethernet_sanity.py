@@ -41,7 +41,7 @@ class SetupSpirent(FunTestScript):
         fun_test.log("In script setup")
         global template_obj, dut_config, spirent_config, network_controller_obj, port1, port2, port3, cc_path_config, \
             interface_obj1, interface_obj2, generator_handle, subscribed_results
-        global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT
+        global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT, TRAFFIC_DURATION
 
         dut_type = fun_test.get_local_setting('dut_type')
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_type=NuConfigManager.CC_FLOW_TYPE,
@@ -76,6 +76,7 @@ class SetupSpirent(FunTestScript):
         LOAD_UNIT = cc_path_config['load_unit']
         FRAME_SIZE = cc_path_config['frame_size']
         FRAME_LENGTH_MODE = cc_path_config['frame_length_mode']
+        TRAFFIC_DURATION = cc_path_config['duration']
 
         checkpoint = "Configure Generator Config for port %s" % port1
         self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
@@ -98,6 +99,8 @@ class SetupSpirent(FunTestScript):
 
 class TestCcEthernetArpRequest(FunTestCase):
     stream_obj = None
+    validate_meter_stats = True
+    meter_id = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -133,7 +136,7 @@ class TestCcEthernetArpRequest(FunTestCase):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=81, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -150,6 +153,7 @@ class TestCcEthernetArpRequest(FunTestCase):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ETH_COPP_ARP_REQ_METER_ID
 
     def run(self):
         if dut_config['enable_dpcsh']:
@@ -203,6 +207,7 @@ class TestCcEthernetArpRequest(FunTestCase):
         vp_stats = None
         erp_stats = None
         wro_stats = None
+        meter_stats = None
         if dut_config['enable_dpcsh']:
             checkpoint = "Fetch PSW and Parser DUT stats after traffic"
             psw_stats = network_controller_obj.peek_psw_global_stats()
@@ -231,18 +236,22 @@ class TestCcEthernetArpRequest(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
+            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
+            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+            fun_test.simple_assert(meter_stats, checkpoint)
+
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
+            fun_test.log("METER stats for id %d : %s" % (self.meter_id, meter_stats))
 
         # validation asserts
         # Spirent stats validation
         checkpoint = "Validate Tx == Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                      actual=int(rx_port_results['TotalFrameCount']),
-                                      message=checkpoint)
+        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
+                             checkpoint)
 
         checkpoint = "Ensure %s does not received any frames" % port2
         fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
@@ -322,6 +331,14 @@ class TestCcEthernetArpRequest(FunTestCase):
             fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
                                           actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
 
+            if self.validate_meter_stats:
+                checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
+                green_pkts = int(meter_stats['green']['pkts'])
+                yellow_pkts = int(meter_stats['yellow']['pkts'])
+                fun_test.log("Green: %d Yellow: %d" % (green_pkts, yellow_pkts))
+                fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
+                                              message=checkpoint)
+
     def cleanup(self):
         fun_test.log("In test case cleanup")
 
@@ -386,6 +403,7 @@ class TestCcEthernetArpResponse(TestCcEthernetArpRequest):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ETH_COPP_ARP_RESP_METER_ID
 
     def run(self):
         super(TestCcEthernetArpResponse, self).run()
@@ -451,6 +469,7 @@ class TestCcEthernetRarp(TestCcEthernetArpRequest):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ETH_COPP_RARP_METER_ID
 
     def run(self):
         super(TestCcEthernetRarp, self).run()
@@ -514,6 +533,7 @@ class TestCcEthernetLLDP(TestCcEthernetArpRequest):
                                                                header_types=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ETH_COPP_LLDP_METER_ID
 
     def run(self):
         super(TestCcEthernetLLDP, self).run()
@@ -584,6 +604,7 @@ class TestCcEthernetPTP(TestCcEthernetArpRequest):
                                                    header_obj=ptp_header_obj, create_header=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ETH_COPP_PTP_METER_ID
 
     def run(self):
         super(TestCcEthernetPTP, self).run()
@@ -651,6 +672,7 @@ class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
                                                                 header_obj=arp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.validate_meter_stats = False
 
     def run(self):
         super(TestCcEthArpRequestUnicast, self).run()
@@ -717,6 +739,7 @@ class TestCcEthernetIsis1(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ETH_COPP_ISIS_1_METER_ID
 
     def run(self):
         super(TestCcEthernetIsis1, self).run()
@@ -783,6 +806,7 @@ class TestCcEthernetIsis2(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ETH_COPP_ISIS_2_METER_ID
 
     def run(self):
         super(TestCcEthernetIsis2, self).run()
@@ -853,6 +877,7 @@ class TestCcGlean(TestCcEthernetArpRequest):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.validate_meter_stats = False
 
     def run(self):
         super(TestCcGlean, self).run()
@@ -978,8 +1003,8 @@ class TestCcEthernetAllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = MIN_RX_PORT_COUNT + len(streams_group)
-        MAX_RX_PORT_COUNT = MAX_RX_PORT_COUNT + len(streams_group)
+        MIN_RX_PORT_COUNT = MIN_RX_PORT_COUNT * len(streams_group)
+        MAX_RX_PORT_COUNT = MAX_RX_PORT_COUNT * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d pps" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
@@ -1082,7 +1107,6 @@ if __name__ == '__main__':
     ts = SetupSpirent()
     # Ethernet CC
     ts.add_test_case(TestCcEthernetArpRequest())
-    '''
     ts.add_test_case(TestCcEthernetArpResponse())
     
     ts.add_test_case(TestCcEthernetRarp())
@@ -1097,8 +1121,8 @@ if __name__ == '__main__':
 
     # Glean
     ts.add_test_case(TestCcGlean())
-    '''
+
     # All together
-    # ts.add_test_case(TestCcEthernetAllTogether())
+    ts.add_test_case(TestCcEthernetAllTogether())
 
     ts.run()

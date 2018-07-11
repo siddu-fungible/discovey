@@ -41,7 +41,7 @@ class SetupSpirent(FunTestScript):
         fun_test.log("In script setup")
         global template_obj, dut_config, spirent_config, network_controller_obj, port1, port2, port3, cc_path_config, \
             interface_obj1, interface_obj2, generator_handle, subscribed_results
-        global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT
+        global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT, TRAFFIC_DURATION
 
         dut_type = fun_test.get_local_setting('dut_type')
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_type=NuConfigManager.CC_FLOW_TYPE,
@@ -76,6 +76,7 @@ class SetupSpirent(FunTestScript):
         FRAME_LENGTH_MODE = cc_path_config['frame_length_mode']
         MIN_RX_PORT_COUNT = cc_path_config['rx_range_min']
         MAX_RX_PORT_COUNT = cc_path_config['rx_range_max']
+        TRAFFIC_DURATION = cc_path_config['duration']
 
         checkpoint = "Configure Generator Config for port %s" % port1
         self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
@@ -98,7 +99,6 @@ class SetupSpirent(FunTestScript):
 
 class TestCcErrorTrapTtlError1(FunTestCase):
     stream_obj = None
-    LOAD = 27
 
     def describe(self):
         self.set_test_details(id=1, summary="Test CC IPv4 TTL Error (TTL = 1)",
@@ -125,7 +125,7 @@ class TestCcErrorTrapTtlError1(FunTestCase):
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX    
                               """ % (
-                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         l2_config = spirent_config['l2_config']
@@ -136,7 +136,7 @@ class TestCcErrorTrapTtlError1(FunTestCase):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.LOAD, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -242,9 +242,8 @@ class TestCcErrorTrapTtlError1(FunTestCase):
         checkpoint = "Validate Tx == Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                      actual=int(rx_port_results['TotalFrameCount']),
-                                      message=checkpoint)
+        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
+                             checkpoint)
 
         checkpoint = "Ensure %s does not received any frames" % port2
         fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
@@ -336,7 +335,6 @@ class TestCcErrorTrapTtlError1(FunTestCase):
 
 class TestCcErrorTrapTtlError2(TestCcErrorTrapTtlError1):
     stream_obj = None
-    LOAD = 27
 
     def describe(self):
         self.set_test_details(id=2, summary="Test CC IPv4 TTL Error (TTL = 0)",
@@ -363,7 +361,7 @@ class TestCcErrorTrapTtlError2(TestCcErrorTrapTtlError1):
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX       
                               """ % (
-                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         l2_config = spirent_config['l2_config']
@@ -374,7 +372,7 @@ class TestCcErrorTrapTtlError2(TestCcErrorTrapTtlError1):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.LOAD, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -405,7 +403,6 @@ class TestCcErrorTrapTtlError2(TestCcErrorTrapTtlError1):
 
 class TestCcErrorTrapTtlError3(TestCcErrorTrapTtlError1):
     stream_obj = None
-    LOAD = 27
 
     def describe(self):
         self.set_test_details(id=3, summary="Test CC IPv4 TTL Error (TTL = 1)",
@@ -432,7 +429,7 @@ class TestCcErrorTrapTtlError3(TestCcErrorTrapTtlError1):
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX       
                               """ % (
-                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         l2_config = spirent_config['l2_config']
@@ -443,7 +440,7 @@ class TestCcErrorTrapTtlError3(TestCcErrorTrapTtlError1):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.LOAD, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -474,7 +471,6 @@ class TestCcErrorTrapTtlError3(TestCcErrorTrapTtlError1):
 
 class TestCcIpv4ErrorTrapIpOpts1(TestCcErrorTrapTtlError1):
     stream_obj = None
-    LOAD = 40
 
     def describe(self):
         self.set_test_details(id=4, summary="Test CC IPv4 OPTS Error (Header Option: timestamp)",
@@ -501,7 +497,7 @@ class TestCcIpv4ErrorTrapIpOpts1(TestCcErrorTrapTtlError1):
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX       
                               """ % (
-                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         l2_config = spirent_config['l2_config']
@@ -512,7 +508,7 @@ class TestCcIpv4ErrorTrapIpOpts1(TestCcErrorTrapTtlError1):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.LOAD, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -548,7 +544,6 @@ class TestCcIpv4ErrorTrapIpOpts1(TestCcErrorTrapTtlError1):
 
 class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
     stream_obj = None
-    LOAD = 41
 
     def describe(self):
         self.set_test_details(id=5, summary="Test CC IPv4 OPTS Error (Header Option: Loose Src Route)",
@@ -575,7 +570,7 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX       
                               """ % (
-                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         l2_config = spirent_config['l2_config']
@@ -586,7 +581,7 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.LOAD, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -622,7 +617,6 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
 
 class TestCcIpChecksumError(FunTestCase):
     stream_obj = None
-    LOAD = 41
 
     def describe(self):
         self.set_test_details(id=6, summary="Test CC IP checksum Error ",
@@ -649,7 +643,7 @@ class TestCcIpChecksumError(FunTestCase):
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX   
                               """ % (
-                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
+                                  port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
         l2_config = spirent_config['l2_config']
@@ -660,7 +654,7 @@ class TestCcIpChecksumError(FunTestCase):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.LOAD, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -768,9 +762,8 @@ class TestCcIpChecksumError(FunTestCase):
         checkpoint = "Validate Tx == Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                      actual=int(rx_port_results['TotalFrameCount']),
-                                      message=checkpoint)
+        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
+                             checkpoint)
 
         checkpoint = "Ensure %s does not received any frames" % port2
         fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
@@ -780,6 +773,7 @@ class TestCcIpChecksumError(FunTestCase):
         checkpoint = "Ensure checksum errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_results)
         checksum_error_seen = False
+        # TODO: Check for dropped frame count
         if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 2:
             checksum_error_seen = True
         fun_test.test_assert(expression=checksum_error_seen, message=checkpoint)
@@ -931,7 +925,6 @@ class TestCcFSFError(TestCcErrorTrapTtlError1):
 class TestCcOuterChecksumError(FunTestCase):
     stream_obj = None
     frame_size = 148
-    load = 40
 
     def describe(self):
         self.set_test_details(id=8, summary="Test CC IPv4 Outer Checksum Error",
@@ -957,7 +950,7 @@ class TestCcOuterChecksumError(FunTestCase):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX   
-                                  """ % (port1, FRAME_LENGTH_MODE, self.frame_size, self.load, LOAD_UNIT, port1,
+                                  """ % (port1, FRAME_LENGTH_MODE, self.frame_size, LOAD, LOAD_UNIT, port1,
                                          TRAFFIC_DURATION))
 
     def setup(self):
@@ -966,7 +959,7 @@ class TestCcOuterChecksumError(FunTestCase):
                                       fixed_frame_length=self.frame_size,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.load, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -1074,9 +1067,8 @@ class TestCcOuterChecksumError(FunTestCase):
         checkpoint = "Validate Tx == Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                      actual=int(rx_port_results['TotalFrameCount']),
-                                      message=checkpoint)
+        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
+                             checkpoint)
 
         checkpoint = "Ensure %s does not received any frames" % port2
         fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
@@ -1250,7 +1242,6 @@ class TestCcInnerChecksumError(TestCcErrorTrapTtlError1):
 class TestCcIPv4OverlayVersionError(TestCcErrorTrapTtlError1):
     stream_obj = None
     frame_size = 148
-    load = 2
 
     def describe(self):
         self.set_test_details(id=10, summary="Test CC IPv4 Overlay Version (version = 2) Error",
@@ -1276,7 +1267,7 @@ class TestCcIPv4OverlayVersionError(TestCcErrorTrapTtlError1):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX   
-                                  """ % (port1, FRAME_LENGTH_MODE, self.frame_size, self.load, LOAD_UNIT, port1,
+                                  """ % (port1, FRAME_LENGTH_MODE, self.frame_size, LOAD, LOAD_UNIT, port1,
                                          TRAFFIC_DURATION))
 
     def setup(self):
@@ -1285,7 +1276,7 @@ class TestCcIPv4OverlayVersionError(TestCcErrorTrapTtlError1):
                                       fixed_frame_length=self.frame_size,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.load, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -1607,7 +1598,6 @@ class TestCcIPv4FlagZeroError(TestCcErrorTrapTtlError1):
 
 class TestCcIpv4Version6Error(TestCcErrorTrapTtlError1):
     stream_obj = None
-    load = 40
 
     def describe(self):
         self.set_test_details(id=15, summary="Test CC IPv4 Version 6 (Ver = 6) Error",
@@ -1634,7 +1624,7 @@ class TestCcIpv4Version6Error(TestCcErrorTrapTtlError1):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX  
-                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.load, LOAD_UNIT, port1,
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1,
                                      TRAFFIC_DURATION))
 
     def setup(self):
@@ -1646,7 +1636,7 @@ class TestCcIpv4Version6Error(TestCcErrorTrapTtlError1):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.load, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -1678,7 +1668,6 @@ class TestCcIpv4Version6Error(TestCcErrorTrapTtlError1):
 class TestCcCrcBadVerError(FunTestCase):
     stream_obj = None
     frame_size = 1500
-    load = 1
 
     def describe(self):
         self.set_test_details(id=16, summary="Test CC IPv4 CRC Bad version error ",
@@ -1705,7 +1694,7 @@ class TestCcCrcBadVerError(FunTestCase):
                                   EFP to FCP vld should be not equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be not equal to spirent TX  
-                              """ % (port1, FRAME_LENGTH_MODE, self.frame_size, self.load,
+                              """ % (port1, FRAME_LENGTH_MODE, self.frame_size, LOAD,
                                      LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
@@ -1718,7 +1707,7 @@ class TestCcCrcBadVerError(FunTestCase):
                                       fixed_frame_length=self.frame_size,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.load, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -1825,9 +1814,8 @@ class TestCcCrcBadVerError(FunTestCase):
         checkpoint = "Validate Tx == Rx on spirent"
         fun_test.log("Tx Frame Count: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                                int(rx_port3_results['TotalFrameCount'])))
-        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                      actual=int(rx_port3_results['TotalFrameCount']),
-                                      message=checkpoint)
+        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
+                             checkpoint)
 
         checkpoint = "Ensure no errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
@@ -1913,7 +1901,6 @@ class TestCcCrcBadVerError(FunTestCase):
 
 class TestCcMultiError(TestCcIpChecksumError):
     stream_obj = None
-    LOAD = 1
 
     def describe(self):
         self.set_test_details(id=17, summary="Test CC IPv4 Multiple Errors (checksum and ttl=5) ",
@@ -1940,7 +1927,7 @@ class TestCcMultiError(TestCcIpChecksumError):
                                   EFP to FCP vld should be equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be equal to spirent TX   
-                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.LOAD, LOAD_UNIT, port1,
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1,
                                      TRAFFIC_DURATION))
 
     def setup(self):
@@ -1953,7 +1940,7 @@ class TestCcMultiError(TestCcIpChecksumError):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.LOAD, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 

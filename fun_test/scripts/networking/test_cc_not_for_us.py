@@ -98,7 +98,6 @@ class SetupSpirent(FunTestScript):
 
 class TestCcIPv4BGPNotForUs(FunTestCase):
     stream_obj = None
-    load = 100
 
     def describe(self):
         self.set_test_details(id=1, summary="Test CC IPv4 BGP Not For US",
@@ -124,7 +123,7 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
                                   EFP to FCP vld should be not equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be not equal to spirent TX   
-                                  """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.load, LOAD_UNIT,
+                                  """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT,
                                          port1, TRAFFIC_DURATION))
 
     def setup(self):
@@ -136,7 +135,7 @@ class TestCcIPv4BGPNotForUs(FunTestCase):
                                       fixed_frame_length=FRAME_SIZE,
                                       frame_length_mode=FRAME_LENGTH_MODE,
                                       insert_signature=True,
-                                      load=self.load, load_unit=LOAD_UNIT)
+                                      load=LOAD, load_unit=LOAD_UNIT)
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
@@ -366,7 +365,7 @@ class TestCcIPv4Ptp1NotForUs(TestCcIPv4BGPNotForUs):
                                   EFP to FCP vld should be not equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be not equal to spirent TX   
-                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.load, LOAD_UNIT,
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT,
                                      port1, TRAFFIC_DURATION))
 
     def setup(self):
@@ -445,7 +444,7 @@ class TestCcIPv4Ptp2NotForUs(TestCcIPv4BGPNotForUs):
                                   EFP to FCP vld should be not equal to spirent TX 
                               12. From WRO NU stats, validate count for WROIN_NFCP_PKTS, WROIN_PKTS, WROOUT_WUS, 
                                   WROWU_CNT_VPP should be not equal to spirent TX   
-                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, self.load, LOAD_UNIT,
+                              """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT,
                                      port1, TRAFFIC_DURATION))
 
     def setup(self):
