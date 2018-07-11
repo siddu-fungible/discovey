@@ -41,28 +41,31 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 sudo rm -rf psim* nv* tra*
 
 if [ $FUNCPBR ]; then
+    echo ">>>> Cloning FunCP branch: $FUNCPBR"
     sudo rm -rf $WORKSPACE/FunControlPlane
     git clone -b $FUNCPBR git@github.com:fungible-inc/FunControlPlane.git
 else
     if [ ! -d $WORKSPACE/FunControlPlane ]; then
+        echo ">>>> Cloning FunCP Master"
         git clone git@github.com:fungible-inc/FunControlPlane.git
     else
+        echo ">>>> Updating FunCP from Master: $FUNCPBR"
         cd $WORKSPACE/FunControlPlane
         git stash
         git pull
         cd $WORKSPACE
     fi
 fi
-echo "FUNOS dir"
 if [ $FUNOSBR ]; then
+    echo ">>>> Cloning FunOS branch: $FUNOSBR"
     sudo rm -rf $WORKSPACE/FunOS
     git clone -b $FUNOSBR git@github.com:fungible-inc/FunOS.git
 else
     if [ ! -d $WORKSPACE/FunOS ]; then
-        echo ">>>> cloning FunOS"
+        echo ">>>> Cloning FunOS Master"
         git clone git@github.com:fungible-inc/FunOS.git
     else
-        echo ">>>> updating FunOS"
+        echo ">>>> Updating FunOS from Master"
         cd $WORKSPACE/FunOS
         git stash
         git pull
@@ -71,8 +74,10 @@ else
 fi
 
 if [ ! -d $WORKSPACE/FunSDK ]; then
+    echo ">>>> Cloning FunSDK Master"
     git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK
 else
+    echo ">>>> Updating FunSDK from Master"
     cd $WORKSPACE/FunSDK
     git stash
     git pull
@@ -80,8 +85,10 @@ else
 fi
 
 if [ ! -d $WORKSPACE/fungible-host-drivers ]; then
+    echo ">>>> Cloning FunHostDrivers Master"
     git clone git@github.com:fungible-inc/fungible-host-drivers.git
 else
+    echo ">>>> Updating FunHostDrivers from Master"
     cd $WORKSPACE/fungible-host-drivers
     git stash
     git pull
