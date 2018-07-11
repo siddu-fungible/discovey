@@ -41,7 +41,7 @@ class SetupSpirent(FunTestScript):
         fun_test.log("In script setup")
         global template_obj, dut_config, spirent_config, network_controller_obj, port1, port2, port3, cc_path_config, \
             interface_obj1, interface_obj2, generator_handle, subscribed_results
-        global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT
+        global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT, TRAFFIC_DURATION
 
         dut_type = fun_test.get_local_setting('dut_type')
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_type=NuConfigManager.CC_FLOW_TYPE,
@@ -76,6 +76,7 @@ class SetupSpirent(FunTestScript):
         FRAME_LENGTH_MODE = cc_path_config['frame_length_mode']
         MIN_RX_PORT_COUNT = cc_path_config['rx_range_min']
         MAX_RX_PORT_COUNT = cc_path_config['rx_range_max']
+        TRAFFIC_DURATION = cc_path_config['duration']
 
         checkpoint = "Configure Generator Config for port %s" % port1
         self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
@@ -98,6 +99,8 @@ class SetupSpirent(FunTestScript):
 
 class TestCcIPv4ICMP(FunTestCase):
     stream_obj = None
+    validate_meter_stats = True
+    meter_id = None
 
     def describe(self):
         self.set_test_details(id=1, summary="Test CC IPv4 ICMP (Internet Control Message Protocol)",
@@ -159,6 +162,7 @@ class TestCcIPv4ICMP(FunTestCase):
                                                                 header_obj=icmp_echo_req_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_ICMP_METER_ID
 
     def run(self):
         if dut_config['enable_dpcsh']:
@@ -212,6 +216,7 @@ class TestCcIPv4ICMP(FunTestCase):
         vp_stats = None
         erp_stats = None
         wro_stats = None
+        meter_stats = None
         if dut_config['enable_dpcsh']:
             checkpoint = "Fetch PSW and Parser DUT stats after traffic"
             psw_stats = network_controller_obj.peek_psw_global_stats()
@@ -240,18 +245,22 @@ class TestCcIPv4ICMP(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
+            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
+            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+            fun_test.simple_assert(meter_stats, checkpoint)
+
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
+            fun_test.log("METER stats for id %d : %s" % (self.meter_id, meter_stats))
 
         # validation asserts
         # Spirent stats validation
         checkpoint = "Validate Tx == Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                      actual=int(rx_port_results['TotalFrameCount']),
-                                      message=checkpoint)
+        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
+                             checkpoint)
 
         checkpoint = "Ensure %s does not received any frames" % port2
         fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
@@ -331,6 +340,14 @@ class TestCcIPv4ICMP(FunTestCase):
             fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
                                           actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
 
+            if self.validate_meter_stats:
+                checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
+                green_pkts = int(meter_stats['green']['pkts'])
+                yellow_pkts = int(meter_stats['yellow']['pkts'])
+                fun_test.log("Green: %d Yellow: %d" % (green_pkts, yellow_pkts))
+                fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
+                                              message=checkpoint)
+
     def cleanup(self):
         fun_test.log("In test case cleanup")
 
@@ -399,6 +416,7 @@ class TestCcIPv4Ospfv2Hello(TestCcIPv4ICMP):
                                                                 header_obj=ospf_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_OSPF_1_METER_ID
 
     def run(self):
         super(TestCcIPv4Ospfv2Hello, self).run()
@@ -472,6 +490,7 @@ class TestCcIPv4Ospfv2LinkStateUpdate(TestCcIPv4ICMP):
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ospf_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
+        self.meter_id = IPV4_COPP_OSPF_2_METER_ID
 
     def run(self):
         super(TestCcIPv4Ospfv2LinkStateUpdate, self).run()
@@ -545,6 +564,7 @@ class TestCcIpv4Pim(TestCcIPv4ICMP):
                                                                 header_obj=pim_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_PIM_METER_ID
 
     def run(self):
         super(TestCcIpv4Pim, self).run()
@@ -619,6 +639,7 @@ class TestCcIpv4BGP(TestCcIPv4ICMP):
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_BGP_METER_ID
 
     def run(self):
         super(TestCcIpv4BGP, self).run()
@@ -693,6 +714,7 @@ class TestCcIpv4Igmp(TestCcIPv4ICMP):
                                                                 header_obj=igmp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_IGMP_METER_ID
 
     def run(self):
         super(TestCcIpv4Igmp, self).run()
@@ -761,6 +783,7 @@ class TestCcIPv4ForUs(TestCcIPv4ICMP):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_FOR_US_METER_ID
 
     def run(self):
         super(TestCcIPv4ForUs, self).run()
@@ -840,6 +863,7 @@ class TestCcIPv4PTP1(TestCcIPv4ICMP):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_PTP_1_METER_ID
 
     def run(self):
         super(TestCcIPv4PTP1, self).run()
@@ -919,6 +943,7 @@ class TestCcIPv4PTP2(TestCcIPv4ICMP):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_PTP_2_METER_ID
 
     def run(self):
         super(TestCcIPv4PTP2, self).run()
@@ -995,6 +1020,7 @@ class TestCcIPv4PTP3(TestCcIPv4ICMP):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_PTP_3_METER_ID
 
     def run(self):
         super(TestCcIPv4PTP3, self).run()
@@ -1073,6 +1099,7 @@ class TestCcIPv4PTP4(TestCcIPv4ICMP):
                                                    create_header=True, delete_header_type=None)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_PTP_4_METER_ID
 
     def run(self):
         super(TestCcIPv4PTP4, self).run()
@@ -1093,7 +1120,7 @@ class TestCcIpv4Dhcp(TestCcIPv4ICMP):
     def describe(self):
         self.set_test_details(id=12, summary="Test CC IPv4 DHCP",
                               steps="""
-                              1. Create a stream with EthernetII and IPv4 and DHCp header option under port %s
+                              1. Create a stream with EthernetII and IPv4 and DHCP header option under port %s
                                  a. Frame Size Mode: %s Frame Size: %d 
                                  b. load: %d load Unit: %s
                                  c. Include signature field
@@ -1118,7 +1145,7 @@ class TestCcIpv4Dhcp(TestCcIPv4ICMP):
                                   port1, FRAME_LENGTH_MODE, self.frame_size, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        checkpoint = "Create a stream with EthernetII and IPv4 and DHCp header option under port %s" % port1
+        checkpoint = "Create a stream with EthernetII and IPv4 and DHCP header option under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
                                       frame_length_mode=FRAME_LENGTH_MODE,
@@ -1151,6 +1178,7 @@ class TestCcIpv4Dhcp(TestCcIPv4ICMP):
                                                                 update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_DHCP_METER_ID
 
     def run(self):
         super(TestCcIpv4Dhcp, self).run()
@@ -1234,6 +1262,7 @@ class TestCcIPv4MTUCase(TestCcIPv4ICMP):
                 mtu_changed = network_controller_obj.set_port_mtu(port_num=port, mtu_value=self.mtu)
                 fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port, self.mtu))
             fun_test.add_checkpoint(checkpoint)
+        self.validate_meter_stats = False
 
     def run(self):
         super(TestCcIPv4MTUCase, self).run()
@@ -1317,6 +1346,7 @@ class TestCcMtuCaseForUs(TestCcIPv4ICMP):
                 mtu_changed = network_controller_obj.set_port_mtu(port_num=port, mtu_value=self.mtu)
                 fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port, self.mtu))
             fun_test.add_checkpoint(checkpoint)
+        self.validate_meter_stats = False
 
     def run(self):
         super(TestCcMtuCaseForUs, self).run()
@@ -1445,8 +1475,8 @@ class TestCcIpv4AllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = MIN_RX_PORT_COUNT + len(streams_group)
-        MAX_RX_PORT_COUNT = MAX_RX_PORT_COUNT + len(streams_group)
+        MIN_RX_PORT_COUNT = MIN_RX_PORT_COUNT * len(streams_group)
+        MAX_RX_PORT_COUNT = MAX_RX_PORT_COUNT * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
