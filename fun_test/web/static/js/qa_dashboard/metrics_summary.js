@@ -46,7 +46,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
 
         $scope.numGridColumns = 2;
         if(angular.element($window).width() <=1441) {
-            $scope.numGridColumns = 3;
+            $scope.numGridColumns = 2;
         }
 
         $scope.mode = null;
@@ -366,7 +366,10 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
                 s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + "";
             }
             if (node.numChildrenFailed) {
-                s += ",&nbspBld Failed: <span style='color: red'>" + node.numChildrenFailed + "</span>";
+                if (node.numChildDegrades) {
+                    s += ",&nbsp";
+                }
+                s += "Bld Failed: <span style='color: red'>" + node.numChildrenFailed + "</span>";
             }
         }
         return s;
@@ -376,9 +379,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         let s = "";
         if (node.hasOwnProperty("trend")) {
             if (node.trend === "up") {
-                s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>";
+                s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>&nbsp";
             } else if (node.trend === "down") {
-                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
+                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>&nbsp;";
             }
         }
         return s;

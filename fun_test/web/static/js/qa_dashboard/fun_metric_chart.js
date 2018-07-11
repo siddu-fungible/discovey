@@ -96,17 +96,21 @@ function FunMetricChartController($scope, commonService, $attrs) {
                 radius: 3
             },
         };
+
+        /*
         if(data < minimum || data > maximum) {
-            result =
-                {
-                    y: data,
-                    marker: {
-                        symbol: 'cross',
-                        lineColor: 'red',
-                        lineWidth: 5
-                    }
+        result =
+            {
+                y: data,
+                marker: {
+                    symbol: 'cross',
+                    lineColor: 'red',
+                    lineWidth: 5
                 }
-        }
+            }
+        }*/
+
+
         return result;
     };
 
@@ -147,6 +151,41 @@ function FunMetricChartController($scope, commonService, $attrs) {
         return relevant;
     };
 
+
+    function sameDay(d1, d2) {
+          return d1.getFullYear() === d2.getUTCFullYear() &&
+            d1.getUTCMonth() === d2.getUTCMonth() &&
+            d1.getUTCDate() === d2.getUTCDate();
+    }
+
+    $scope.fixMissingDates = (dates) => {
+        let firstDate = new Date(dates[0]);
+        let today = new Date();
+        let yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        let lastDate = yesterday;
+
+        let currentDate = firstDate;
+        let datesIndex = 0;
+        let finalDates = [];
+        while (currentDate <= yesterday) {
+
+            //console.log(currentDate);
+            if (sameDay(new Date(dates[datesIndex]), currentDate)) {
+                finalDates.push(dates[datesIndex]);
+                datesIndex++;
+                while (sameDay(new Date(dates[datesIndex]), currentDate) && (datesIndex < dates.length)) {
+                    finalDates.push(dates[datesIndex]);
+                    datesIndex++;
+                }
+            } else {
+                finalDates.push(currentDate.toISOString().replace("T", " "));  // TODO: convert zone correctly
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        let j = 0;
+        return finalDates;
+    };
 
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
@@ -193,10 +232,15 @@ function FunMetricChartController($scope, commonService, $attrs) {
 
                 let keyList = Array.from(keySet);
                 keyList.sort();
-                $scope.series = keyList; $scope.shortenKeyList(keyList);
+                $scope.shortenKeyList(keyList);
+                keyList = $scope.fixMissingDates(keyList);
+                $scope.series = keyList;
+
 
                 let chartDataSets = [];
                 let dataSetIndex = 0;
+
+                /*
                 $scope.allData = allDataSets;
                 $scope.status = "Preparing chart data-sets";
                 allDataSets.forEach((oneDataSet) => {
@@ -232,6 +276,54 @@ function FunMetricChartController($scope, commonService, $attrs) {
                     chartDataSets.push(oneChartDataSet);
                     dataSetIndex++;
                 });
+
+                */
+
+                $scope.allData = allDataSets;
+                $scope.status = "Preparing chart data-sets";
+                allDataSets.forEach((oneDataSet) => {
+
+                    let oneChartDataArray = [];
+                    for(let i = 0; i < keyList.length; i++) {
+                        let output = null;
+
+
+                        let matchingDateFound = false;
+                        for(let j = 0; j < oneDataSet.length; j++) {
+                            let oneRecord = oneDataSet[j];
+                            if(oneRecord.input_date_time.toString() === keyList[i]) {
+                                matchingDateFound = true;
+                                let outputName = filterDataSets[dataSetIndex].output.name;
+                                output = oneRecord[outputName];
+                                if (chartInfo && chartInfo.y1axis_title) {
+                                   $scope.chart1YaxisTitle = chartInfo.y1axis_title;
+                                } else {
+                                   $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                }
+                                if (ctrl.y1AxisTitle) {
+                                    $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
+                                }
+
+
+                                $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
+                                break;
+                            }
+                        }
+
+
+
+                        let thisMinimum = filterDataSets[dataSetIndex].output.min;
+                        let thisMaximum = filterDataSets[dataSetIndex].output.max;
+
+                        oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
+                    }
+                    let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
+                    chartDataSets.push(oneChartDataSet);
+                    dataSetIndex++;
+                });
+
+
+
                 $scope.status = "idle";
                 $scope.values = chartDataSets;
             });

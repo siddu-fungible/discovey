@@ -84,8 +84,8 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
         output_one_malloc_free_wu = 0
         output_one_malloc_free_threaded = 0
-        wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = None
-        wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = None
+        wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = -1
+        wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = -1
         try:
 
             alloc_speed_test_found = False
@@ -158,11 +158,7 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                               summary="Bcopy performance",
                               steps="Steps 1")
 
-    def cleanup(self):
-        print("Testcase cleanup")
-
     def run(self):
-        dt = get_rounded_time()
         plain = ""
         coherent = ""
         size = -1
@@ -241,9 +237,6 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
         self.set_test_details(id=3,
                               summary="bcopy flood performance",
                               steps="Steps 1")
-
-    def cleanup(self):
-        print("Testcase cleanup")
 
     def run(self):
         latency_units = latency_perf_name = average_bandwidth_perf_name = ""

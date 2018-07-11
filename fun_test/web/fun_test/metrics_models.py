@@ -170,7 +170,7 @@ class MetricChart(models.Model):
         num_degrades = 0
         num_child_degrades = 0
         leaf_status = True
-        if self.chart_name == "Filter":
+        if self.chart_name == "Bcopy: Plain: Avg Bandwidth":
             j = 2
         if not self.leaf:
             if len(children):
@@ -207,9 +207,13 @@ class MetricChart(models.Model):
                         children_goodness_map[child] = child_goodness_values
 
         else:
+
             if self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
                 goodness_values.extend(json.loads(self.goodness_cache))
                 status_values.extend(json.loads(self.status_cache))
+
+            # if False:
+            #    pass
             else:
 
                 data_sets = json.loads(self.data_sets)
@@ -332,7 +336,8 @@ class MetricChart(models.Model):
                 i = entries.count()
                 if entries.count() < (number_of_records - 1):
                     # let's fix it up
-                    self.fixup(metric=model, from_date=earlier_day, to_date=yesterday)
+                    if model.interpolation_allowed:
+                        self.fixup(metric=model, from_date=earlier_day, to_date=yesterday)
                     entries = model.objects.filter(**d).order_by("-input_date_time")
                 entries = reversed(entries)
                 for entry in entries:
@@ -439,6 +444,7 @@ class VolumePerformance(models.Model):
 
 
 class AllocSpeedPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
@@ -453,6 +459,7 @@ class AllocSpeedPerformance(models.Model):
 
 
 class WuLatencyAllocStack(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
@@ -466,6 +473,7 @@ class WuLatencyAllocStack(models.Model):
         return "{}..{}..{}..{}".format(self.key, self.output_min, self.output_avg, self.output_max)
 
 class WuLatencyUngated(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     key = models.CharField(max_length=30, verbose_name="Git tag")
@@ -515,6 +523,7 @@ class GenericSerializer(ModelSerializer):
         pass
 
 class EcPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
@@ -552,6 +561,7 @@ class EcPerformance(models.Model):
     '''
 
 class BcopyPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
@@ -572,6 +582,7 @@ class BcopyPerformance(models.Model):
 
 
 class BcopyFloodDmaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
@@ -590,6 +601,7 @@ class BcopyFloodDmaPerformance(models.Model):
 
 
 class EcVolPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
@@ -648,6 +660,7 @@ class LsvZipCryptoPerformance(models.Model):
 
 
 class NuTransitPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=True)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
