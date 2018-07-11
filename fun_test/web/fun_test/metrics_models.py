@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 class MetricChart(models.Model):
+    last_build_status = models.CharField(max_length=15, default=RESULTS["PASSED"])
     data_sets = models.TextField(default="[]")
     chart_name = models.TextField(unique=True)
     metric_model_name = models.TextField(default="Performance1")

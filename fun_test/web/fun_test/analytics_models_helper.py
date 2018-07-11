@@ -93,6 +93,10 @@ class MetricChartHelper(object):
                 break
         return result
 
+    @staticmethod
+    def get_charts_by_model_name(self, metric_model_name):
+        self.charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
+
 
 class Performance1Helper(MetricHelper):
     model = Performance1

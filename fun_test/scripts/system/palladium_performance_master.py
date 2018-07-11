@@ -4,7 +4,7 @@ from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
-from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache
+from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 import re
 from datetime import datetime
 
@@ -21,6 +21,10 @@ def is_job_from_today(job_dt):
     today = get_rounded_time()
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
+def set_last_build_status_for_charts(result, model_name):
+    charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
+    for chart in charts:
+        chart.last_build_status = result
 
 
 class MyScript(FunTestScript):
@@ -131,24 +135,29 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
             self.result = RESULTS["PASSED"]
         except Exception as ex:
             fun_test.critical(str(ex))
-        MetricHelper(model=AllocSpeedPerformance).add_entry(status=self.result,
-                                                            input_app="alloc_speed_test",
-                                                            output_one_malloc_free_wu=output_one_malloc_free_wu,
-                                                            output_one_malloc_free_threaded=output_one_malloc_free_threaded,
-                                                            input_date_time=self.dt)
+        if self.result == fun_test.PASSED:
+            MetricHelper(model=AllocSpeedPerformance).add_entry(status=self.result,
+                                                                input_app="alloc_speed_test",
+                                                                output_one_malloc_free_wu=output_one_malloc_free_wu,
+                                                                output_one_malloc_free_threaded=output_one_malloc_free_threaded,
+                                                                input_date_time=self.dt)
 
-        MetricHelper(model=WuLatencyUngated).add_entry(status=self.result, input_app="wu_latency_test",
-                                                       output_min=wu_ungated_ns_min,
-                                                       output_max=wu_ungated_ns_max,
-                                                       output_avg=wu_ungated_ns_avg,
-                                                       input_date_time=self.dt)
+            MetricHelper(model=WuLatencyUngated).add_entry(status=self.result, input_app="wu_latency_test",
+                                                           output_min=wu_ungated_ns_min,
+                                                           output_max=wu_ungated_ns_max,
+                                                           output_avg=wu_ungated_ns_avg,
+                                                           input_date_time=self.dt)
 
-        MetricHelper(model=WuLatencyAllocStack).add_entry(status=self.result,
-                                                          input_app="wu_latency_test",
-                                                          output_min=wu_alloc_stack_ns_min,
-                                                          output_max=wu_alloc_stack_ns_max,
-                                                          output_avg=wu_alloc_stack_ns_avg,
-                                                          input_date_time=self.dt)
+            MetricHelper(model=WuLatencyAllocStack).add_entry(status=self.result,
+                                                              input_app="wu_latency_test",
+                                                              output_min=wu_alloc_stack_ns_min,
+                                                              output_max=wu_alloc_stack_ns_max,
+                                                              output_avg=wu_alloc_stack_ns_avg,
+                                                              input_date_time=self.dt)
+
+        set_last_build_status_for_charts(result=self.result, model_name="AllocSpeedPerformance")
+        set_last_build_status_for_charts(result=self.result, model_name="WuLatencyUngated")
+        set_last_build_status_for_charts(result=self.result, model_name="WuLatencyAllocStack")
 
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -215,20 +224,21 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
 
         except Exception as ex:
             fun_test.critical(str(ex))
-        MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
-                                                       input_date_time=self.dt,
-                                                       input_plain=plain,
-                                                       input_coherent=coherent,
-                                                       input_size=size,
-                                                       input_iterations=iterations,
-                                                       output_latency_units=latency_units,
-                                                       output_latency_min=latency_min,
-                                                       output_latency_max=latency_max,
-                                                       output_latency_avg=latency_avg,
-                                                       input_latency_perf_name=latency_perf_name,
-                                                       output_average_bandwith=average_bandwidth,
-                                                       input_average_bandwith_perf_name=average_bandwidth_perf_name)
-
+        if self.result == fun_test.PASSED:
+            MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
+                                                           input_date_time=self.dt,
+                                                           input_plain=plain,
+                                                           input_coherent=coherent,
+                                                           input_size=size,
+                                                           input_iterations=iterations,
+                                                           output_latency_units=latency_units,
+                                                           output_latency_min=latency_min,
+                                                           output_latency_max=latency_max,
+                                                           output_latency_avg=latency_avg,
+                                                           input_latency_perf_name=latency_perf_name,
+                                                           output_average_bandwith=average_bandwidth,
+                                                           input_average_bandwith_perf_name=average_bandwidth_perf_name)
+        set_last_build_status_for_charts(result=self.result, model_name="BcopyPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -277,18 +287,20 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
         except Exception as ex:
             fun_test.critical(str(ex))
-        MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
-                                                               input_date_time=self.dt,
-                                                               input_n=n,
-                                                               input_size=size,
-                                                               output_latency_units=latency_units,
-                                                               output_latency_min=latency_min,
-                                                               output_latency_max=latency_max,
-                                                               output_latency_avg=latency_avg,
-                                                               input_latency_perf_name=latency_perf_name,
-                                                               output_average_bandwith=average_bandwidth,
-                                                               input_average_bandwith_perf_name=average_bandwidth_perf_name
-                                                               )
+        if self.result == fun_test.PASSED:
+            MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
+                                                                   input_date_time=self.dt,
+                                                                   input_n=n,
+                                                                   input_size=size,
+                                                                   output_latency_units=latency_units,
+                                                                   output_latency_min=latency_min,
+                                                                   output_latency_max=latency_max,
+                                                                   output_latency_avg=latency_avg,
+                                                                   input_latency_perf_name=latency_perf_name,
+                                                                   output_average_bandwith=average_bandwidth,
+                                                                   input_average_bandwith_perf_name=average_bandwidth_perf_name
+                                                                   )
+        set_last_build_status_for_charts(result=self.result, model_name="BcopyFloodDmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -354,22 +366,23 @@ class EcPerformanceTc(PalladiumPerformanceTc):
 
         except Exception as ex:
             fun_test.critical(str(ex))
-        MetricHelper(model=EcPerformance).add_entry(status=self.result,
-                                                    input_date_time=self.dt,
-                                                    output_encode_latency_min=ec_encode_latency_min,
-                                                    output_encode_latency_max=ec_encode_latency_max,
-                                                    output_encode_latency_avg=ec_encode_latency_avg,
-                                                    output_encode_throughput_min=ec_encode_throughput_min,
-                                                    output_encode_throughput_max=ec_encode_throughput_max,
-                                                    output_encode_throughput_avg=ec_encode_throughput_avg,
-                                                    output_recovery_latency_min=ec_recovery_latency_min,
-                                                    output_recovery_latency_max=ec_recovery_latency_max,
-                                                    output_recovery_latency_avg=ec_recovery_latency_avg,
-                                                    output_recovery_throughput_min=ec_recovery_throughput_min,
-                                                    output_recovery_throughput_max=ec_recovery_throughput_max,
-                                                    output_recovery_throughput_avg=ec_recovery_throughput_avg
-                                                    )
-
+        if self.result == fun_test.PASSED:
+            MetricHelper(model=EcPerformance).add_entry(status=self.result,
+                                                        input_date_time=self.dt,
+                                                        output_encode_latency_min=ec_encode_latency_min,
+                                                        output_encode_latency_max=ec_encode_latency_max,
+                                                        output_encode_latency_avg=ec_encode_latency_avg,
+                                                        output_encode_throughput_min=ec_encode_throughput_min,
+                                                        output_encode_throughput_max=ec_encode_throughput_max,
+                                                        output_encode_throughput_avg=ec_encode_throughput_avg,
+                                                        output_recovery_latency_min=ec_recovery_latency_min,
+                                                        output_recovery_latency_max=ec_recovery_latency_max,
+                                                        output_recovery_latency_avg=ec_recovery_latency_avg,
+                                                        output_recovery_throughput_min=ec_recovery_throughput_min,
+                                                        output_recovery_throughput_max=ec_recovery_throughput_max,
+                                                        output_recovery_throughput_avg=ec_recovery_throughput_avg
+                                                        )
+        set_last_build_status_for_charts(result=self.result, model_name="EcPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class EcVolPerformanceTc(PalladiumPerformanceTc):
@@ -410,7 +423,9 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
             fun_test.critical(str(ex))
 
         d = self.metrics_to_dict(metrics, self.result)
-        MetricHelper(model=EcVolPerformance).add_entry(**d)
+        if self.result == fun_test.PASSED:
+            MetricHelper(model=EcVolPerformance).add_entry(**d)
+        set_last_build_status_for_charts(result=self.result, model_name="EcVolPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -472,7 +487,9 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             fun_test.critical(str(ex))
 
         d = self.metrics_to_dict(metrics, self.result)
-        MetricHelper(model=VoltestPerformance).add_entry(**d)
+        if self.result == fun_test.PASSED:
+            MetricHelper(model=VoltestPerformance).add_entry(**d)
+        set_last_build_status_for_charts(result=self.result, model_name="VoltestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
