@@ -76,7 +76,8 @@ def chart_info(request):
                   "y1_axis_title": chart.y1_axis_title,
                   "y2_axis_title": chart.y2_axis_title,
                   "info": chart.description,
-                  "leaf": chart.leaf}
+                  "leaf": chart.leaf,
+                  "last_build_status": chart.last_build_status}
     return result
 
 @csrf_exempt

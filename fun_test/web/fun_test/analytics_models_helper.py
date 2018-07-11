@@ -94,9 +94,9 @@ class MetricChartHelper(object):
         return result
 
     @staticmethod
-    def get_charts_by_model_name(self, metric_model_name):
-        self.charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
-
+    def get_charts_by_model_name(metric_model_name):
+        charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
+        return charts
 
 class Performance1Helper(MetricHelper):
     model = Performance1

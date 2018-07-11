@@ -136,7 +136,8 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             numChildDegrades: data.num_child_degrades,
             positive: data.positive,
             numChildrenPassed: data.num_children_passed,
-            numChildrenFailed: data.num_children_failed
+            numChildrenFailed: data.num_children_failed,
+            lastBuildStatus: data.last_build_status
 
         };
         $scope.metricMap[newNode.metricId] = {chartName: newNode.chartName};
@@ -160,7 +161,12 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             newNode.trend = "up";
         }*/
 
-        newNode.status = data.status_values[data.status_values.length - 1];
+        //newNode.status = data.status_values[data.status_values.length - 1];
+        if (newNode.lastBuildStatus === "PASSED") {
+            newNode.status = true;
+        } else {
+            newNode.status = false;
+        }
 
         let newNodeChildrenIds = JSON.parse(data.children);
         if (newNodeChildrenIds.length > 0) {
@@ -184,6 +190,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
                 node.trend = "down";
             } else if (penultimateGoodness < node.goodness) {
                 node.trend = "up";
+            }
+            if (Number(goodness_values[goodness_values.length - 1].toFixed(1)) === 0) {
+                node.trend = "down";
             }
         }
 
