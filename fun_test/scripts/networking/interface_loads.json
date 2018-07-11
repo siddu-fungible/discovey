@@ -3,5 +3,7 @@
   "50G": {"bad_frame_load_mbps": "0.2", "good_frame_load_mbps": "20", "incremental_load_mbps": "5"},
   "padding": {"straight": {"positive": "4500001400000000fffdb5e8cf0101023200030100", "1k": "450003e800000000fffdb214cf01010232000301", "100B": "4500006400000000fffdb598cf01010232000301"},
   "reverse":{"positive": "4500001400000000FFFDB6E8CF01010232000201", "1k": "450003E800000000FFFDB314CF01010232000201", "100B": "4500006400000000FFFDB698CF01010232000201"}},
-  "cc_path": {"load": 81, "load_unit": "FRAMES_PER_SECOND", "frame_size": 128, "frame_length_mode": "FIXED"}
+  "cc_path": {"load": 110, "load_unit": "FRAMES_PER_SECOND", "frame_size": 128, "frame_length_mode": "FIXED",
+    "rx_range_min": 80, "rx_range_max": 90
+  }
 }
