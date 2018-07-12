@@ -34,7 +34,7 @@ class SetupSpirent(FunTestScript):
         1. Check health of Spirent. Connect to Lab server
         2. Create ports and attach ports
         3. Read configs 
-        4. In cleanup, disconnect session 
+        4. In cleanup, disconnect session  
         """)
 
     def setup(self):
@@ -99,6 +99,8 @@ class SetupSpirent(FunTestScript):
 
 class TestCcErrorTrapTtlError1(FunTestCase):
     stream_obj = None
+    validate_meter_stats = True
+    meter_id = None
 
     def describe(self):
         self.set_test_details(id=1, summary="Test CC IPv4 TTL Error (TTL = 1)",
@@ -115,8 +117,8 @@ class TestCcErrorTrapTtlError1(FunTestCase):
                               4. Clear DUT stats before running traffic
                               5. Start traffic   
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -152,9 +154,11 @@ class TestCcErrorTrapTtlError1(FunTestCase):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_TTL_ERR_METER_ID
 
     def run(self):
         if dut_config['enable_dpcsh']:
+            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
                 clear_stats = network_controller_obj.clear_port_stats(port_num=port)
@@ -192,7 +196,7 @@ class TestCcErrorTrapTtlError1(FunTestCase):
         tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
                                                                               subscribe_handle=subscribed_results
                                                                               ['generator_subscribe'])
-        fun_test.simple_assert(rx_port_results and tx_port_results, checkpoint)
+        fun_test.simple_assert(rx_port_results and tx_port_results and rx_port2_results, checkpoint)
 
         fun_test.log("Tx Spirent Stats: %s" % tx_results)
         fun_test.log("Rx Spirent Stats: %s" % rx_results)
@@ -205,6 +209,7 @@ class TestCcErrorTrapTtlError1(FunTestCase):
         vp_stats = None
         erp_stats = None
         wro_stats = None
+        meter_stats = None
         if dut_config['enable_dpcsh']:
             checkpoint = "Fetch PSW and Parser DUT stats after traffic"
             psw_stats = network_controller_obj.peek_psw_global_stats()
@@ -233,13 +238,18 @@ class TestCcErrorTrapTtlError1(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
+            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
+            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+            fun_test.simple_assert(meter_stats, checkpoint)
+
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
+            fun_test.log("METER stats for id %d : %s" % (self.meter_id, meter_stats))
 
         # validation asserts
         # Spirent stats validation
-        checkpoint = "Validate Tx == Rx on spirent"
+        checkpoint = "Validate Tx and Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
         fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
@@ -256,14 +266,14 @@ class TestCcErrorTrapTtlError1(FunTestCase):
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx == Rx on DUT"
+            checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
                                                             stat_type=FRAMES_TRANSMITTED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
                                                          stat_type=FRAMES_RECEIVED_OK)
-
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
+            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+                                 checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
             fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
@@ -322,6 +332,18 @@ class TestCcErrorTrapTtlError1(FunTestCase):
             checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
             fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
                                           actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
+            if self.validate_meter_stats:
+                checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
+                green_pkts = int(meter_stats['green']['pkts'])
+                yellow_pkts = int(meter_stats['yellow']['pkts'])
+                red_pkts = int(meter_stats['red']['pkts'])
+                fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
+                fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
+                                              message=checkpoint)
+                checkpoint = "Ensure red pkts are equal to DroppedFrameCount on Spirent Rx results"
+                dropped_frame_count = int(rx_results['DroppedFrameCount'])
+                fun_test.test_assert_expected(expected=dropped_frame_count, actual=red_pkts,
+                                              message=checkpoint)
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
@@ -351,8 +373,8 @@ class TestCcErrorTrapTtlError2(TestCcErrorTrapTtlError1):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -388,6 +410,7 @@ class TestCcErrorTrapTtlError2(TestCcErrorTrapTtlError1):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_TTL_ERR_METER_ID
 
     def run(self):
         super(TestCcErrorTrapTtlError2, self).run()
@@ -419,8 +442,8 @@ class TestCcErrorTrapTtlError3(TestCcErrorTrapTtlError1):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -456,6 +479,7 @@ class TestCcErrorTrapTtlError3(TestCcErrorTrapTtlError1):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_TTL_ERR_METER_ID
 
     def run(self):
         super(TestCcErrorTrapTtlError3, self).run()
@@ -529,6 +553,7 @@ class TestCcIpv4ErrorTrapIpOpts1(TestCcErrorTrapTtlError1):
                                                                 stream_block_handle=self.stream_obj.spirent_handle)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_OPTS_METER_ID
 
     def run(self):
         super(TestCcIpv4ErrorTrapIpOpts1, self).run()
@@ -560,8 +585,8 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -602,6 +627,7 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
                                                                 stream_block_handle=self.stream_obj.spirent_handle)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = IPV4_COPP_OPTS_METER_ID
 
     def run(self):
         super(TestCcIpv4ErrorTrapIpOpts2, self).run()
@@ -617,6 +643,8 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
 
 class TestCcIpChecksumError(FunTestCase):
     stream_obj = None
+    validate_meter_stats = True
+    meter_id = None
 
     def describe(self):
         self.set_test_details(id=6, summary="Test CC IP checksum Error ",
@@ -633,8 +661,8 @@ class TestCcIpChecksumError(FunTestCase):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure IPv4 Checksum error are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure IPv4 Checksum error are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -671,9 +699,11 @@ class TestCcIpChecksumError(FunTestCase):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID
 
     def run(self):
         if dut_config['enable_dpcsh']:
+            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
                 clear_stats = network_controller_obj.clear_port_stats(port_num=port)
@@ -725,6 +755,7 @@ class TestCcIpChecksumError(FunTestCase):
         vp_stats = None
         erp_stats = None
         wro_stats = None
+        meter_stats = None
         if dut_config['enable_dpcsh']:
             checkpoint = "Fetch PSW and Parser DUT stats after traffic"
             psw_stats = network_controller_obj.peek_psw_global_stats()
@@ -753,13 +784,18 @@ class TestCcIpChecksumError(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
+            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
+            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+            fun_test.simple_assert(meter_stats, checkpoint)
+
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
+            fun_test.log("Meter stats for id %d : %s" % (self.meter_id, meter_stats))
 
         # validation asserts
         # Spirent stats validation
-        checkpoint = "Validate Tx == Rx on spirent"
+        checkpoint = "Validate Tx and Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
         fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
@@ -773,8 +809,7 @@ class TestCcIpChecksumError(FunTestCase):
         checkpoint = "Ensure checksum errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_results)
         checksum_error_seen = False
-        # TODO: Check for dropped frame count
-        if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 2:
+        if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 3 and result['DroppedFrameCount'] > 0:
             checksum_error_seen = True
         fun_test.test_assert(expression=checksum_error_seen, message=checkpoint)
 
@@ -785,9 +820,9 @@ class TestCcIpChecksumError(FunTestCase):
                                                             stat_type=FRAMES_TRANSMITTED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
                                                          stat_type=FRAMES_RECEIVED_OK)
-
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
+            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+                                 checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
             fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
@@ -847,6 +882,19 @@ class TestCcIpChecksumError(FunTestCase):
             fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
                                           actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
 
+            if self.validate_meter_stats:
+                checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
+                green_pkts = int(meter_stats['green']['pkts'])
+                yellow_pkts = int(meter_stats['yellow']['pkts'])
+                red_pkts = int(meter_stats['red']['pkts'])
+                fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
+                fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
+                                              message=checkpoint)
+                checkpoint = "Ensure red pkts are equal to DroppedFrameCount on Spirent Rx results"
+                dropped_frame_count = int(rx_results['DroppedFrameCount'])
+                fun_test.test_assert_expected(expected=dropped_frame_count, actual=red_pkts,
+                                              message=checkpoint)
+
     def cleanup(self):
         fun_test.log("In test case cleanup")
 
@@ -875,8 +923,8 @@ class TestCcFSFError(TestCcErrorTrapTtlError1):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -909,6 +957,7 @@ class TestCcFSFError(TestCcErrorTrapTtlError1):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_FSF_METER_ID
 
     def run(self):
         super(TestCcFSFError, self).run()
@@ -925,6 +974,8 @@ class TestCcFSFError(TestCcErrorTrapTtlError1):
 class TestCcOuterChecksumError(FunTestCase):
     stream_obj = None
     frame_size = 148
+    meter_id = None
+    validate_meter_stats = True
 
     def describe(self):
         self.set_test_details(id=8, summary="Test CC IPv4 Outer Checksum Error",
@@ -976,9 +1027,11 @@ class TestCcOuterChecksumError(FunTestCase):
                                                               "destAddr": "29.1.1.1"})
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID
 
     def run(self):
         if dut_config['enable_dpcsh']:
+            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
                 clear_stats = network_controller_obj.clear_port_stats(port_num=port)
@@ -1030,6 +1083,7 @@ class TestCcOuterChecksumError(FunTestCase):
         vp_stats = None
         erp_stats = None
         wro_stats = None
+        meter_stats = None
         if dut_config['enable_dpcsh']:
             checkpoint = "Fetch PSW and Parser DUT stats after traffic"
             psw_stats = network_controller_obj.peek_psw_global_stats()
@@ -1058,13 +1112,18 @@ class TestCcOuterChecksumError(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
+            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
+            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+            fun_test.simple_assert(meter_stats, checkpoint)
+
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
+            fun_test.log("Meter stats for id %d : %s" % (self.meter_id, meter_stats))
 
         # validation asserts
         # Spirent stats validation
-        checkpoint = "Validate Tx == Rx on spirent"
+        checkpoint = "Validate Tx and Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
         fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
@@ -1085,14 +1144,14 @@ class TestCcOuterChecksumError(FunTestCase):
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx == Rx on DUT"
+            checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
                                                             stat_type=FRAMES_TRANSMITTED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
                                                          stat_type=FRAMES_RECEIVED_OK)
-
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
+            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+                                 checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
             fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
@@ -1151,6 +1210,18 @@ class TestCcOuterChecksumError(FunTestCase):
             checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
             fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
                                           actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
+            if self.validate_meter_stats:
+                checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
+                green_pkts = int(meter_stats['green']['pkts'])
+                yellow_pkts = int(meter_stats['yellow']['pkts'])
+                red_pkts = int(meter_stats['red']['pkts'])
+                fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
+                fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
+                                              message=checkpoint)
+                checkpoint = "Ensure red pkts are equal to DroppedFrameCount on Spirent Rx results"
+                dropped_frame_count = int(rx_results['DroppedFrameCount'])
+                fun_test.test_assert_expected(expected=dropped_frame_count, actual=red_pkts,
+                                              message=checkpoint)
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
@@ -1226,6 +1297,7 @@ class TestCcInnerChecksumError(TestCcErrorTrapTtlError1):
                                                           updated_header_attributes_dict={"destPort": 4789})
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID
 
     def run(self):
         super(TestCcInnerChecksumError, self).run()
@@ -1302,6 +1374,7 @@ class TestCcIPv4OverlayVersionError(TestCcErrorTrapTtlError1):
                                                           updated_header_attributes_dict={"destPort": 4789})
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID
 
     def run(self):
         super(TestCcIPv4OverlayVersionError, self).run()
@@ -1378,6 +1451,7 @@ class TestCcIPv4OverlayIhlError(TestCcErrorTrapTtlError1):
                                                           updated_header_attributes_dict={"destPort": 4789})
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID
 
     def run(self):
         super(TestCcIPv4OverlayIhlError, self).run()
@@ -1444,6 +1518,7 @@ class TestCcIPv4VersionError(TestCcErrorTrapTtlError1):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_PRSR_V4_VER_METER_ID
 
     def run(self):
         super(TestCcIPv4VersionError, self).run()
@@ -1511,6 +1586,7 @@ class TestCcIPv4InternetHeaderLengthError(TestCcErrorTrapTtlError1):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_PRSR_IHL_METER_ID
 
     def run(self):
         super(TestCcIPv4InternetHeaderLengthError, self).run()
@@ -1583,6 +1659,7 @@ class TestCcIPv4FlagZeroError(TestCcErrorTrapTtlError1):
                                                                header_obj=ipv4_header_obj, reserved=1)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID
 
     def run(self):
         super(TestCcIPv4FlagZeroError, self).run()
@@ -1652,6 +1729,7 @@ class TestCcIpv4Version6Error(TestCcErrorTrapTtlError1):
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
+        self.meter_id = ERR_TRAP_COPP_PRSR_V6_VER_METER_ID
 
     def run(self):
         super(TestCcIpv4Version6Error, self).run()
@@ -2090,8 +2168,8 @@ class TestCcErrorTrapsAllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = MIN_RX_PORT_COUNT + len(streams_group)
-        MAX_RX_PORT_COUNT = MAX_RX_PORT_COUNT + len(streams_group)
+        MIN_RX_PORT_COUNT = 50 * len(streams_group)
+        MAX_RX_PORT_COUNT = 60 * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
@@ -2110,14 +2188,14 @@ class TestCcErrorTrapsAllTogether(FunTestCase):
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx == Rx on DUT"
+            checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
                                                             stat_type=FRAMES_TRANSMITTED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
                                                          stat_type=FRAMES_RECEIVED_OK)
-
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
+            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+                                 checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
             fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),

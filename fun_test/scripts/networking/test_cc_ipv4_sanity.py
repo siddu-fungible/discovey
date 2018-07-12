@@ -118,8 +118,8 @@ class TestCcIPv4ICMP(FunTestCase):
                               4. Clear DUT stats before running traffic
                               4. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -166,6 +166,7 @@ class TestCcIPv4ICMP(FunTestCase):
 
     def run(self):
         if dut_config['enable_dpcsh']:
+            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
                 clear_stats = network_controller_obj.clear_port_stats(port_num=port)
@@ -256,7 +257,7 @@ class TestCcIPv4ICMP(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        checkpoint = "Validate Tx == Rx on spirent"
+        checkpoint = "Validate Tx and Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
         fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
@@ -273,14 +274,14 @@ class TestCcIPv4ICMP(FunTestCase):
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx == Rx on DUT"
+            checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
                                                             stat_type=FRAMES_TRANSMITTED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
                                                          stat_type=FRAMES_RECEIVED_OK)
-
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
+            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+                                 checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
             fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
@@ -344,8 +345,13 @@ class TestCcIPv4ICMP(FunTestCase):
                 checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
                 green_pkts = int(meter_stats['green']['pkts'])
                 yellow_pkts = int(meter_stats['yellow']['pkts'])
-                fun_test.log("Green: %d Yellow: %d" % (green_pkts, yellow_pkts))
+                red_pkts = int(meter_stats['red']['pkts'])
+                fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
                 fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
+                                              message=checkpoint)
+                checkpoint = "Ensure red pkts are equal to DroppedFrameCount on Spirent Rx results"
+                dropped_frame_count = int(rx_results['DroppedFrameCount'])
+                fun_test.test_assert_expected(expected=dropped_frame_count, actual=red_pkts,
                                               message=checkpoint)
 
     def cleanup(self):
@@ -376,8 +382,8 @@ class TestCcIPv4Ospfv2Hello(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -450,8 +456,8 @@ class TestCcIPv4Ospfv2LinkStateUpdate(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -523,8 +529,8 @@ class TestCcIpv4Pim(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -597,8 +603,8 @@ class TestCcIpv4BGP(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic  
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -672,8 +678,8 @@ class TestCcIpv4Igmp(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -746,8 +752,8 @@ class TestCcIPv4ForUs(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -816,8 +822,8 @@ class TestCcIPv4PTP1(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -896,8 +902,8 @@ class TestCcIPv4PTP2(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -975,8 +981,8 @@ class TestCcIPv4PTP3(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic 
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -1053,8 +1059,8 @@ class TestCcIPv4PTP4(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -1132,8 +1138,8 @@ class TestCcIpv4Dhcp(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -1214,8 +1220,8 @@ class TestCcIPv4MTUCase(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -1298,8 +1304,8 @@ class TestCcMtuCaseForUs(TestCcIPv4ICMP):
                               4. Clear DUT stats before running traffic
                               5. Start traffic
                               6. Dump all the stats in logs
-                              7. Validate Tx == Rx on spirent and ensure no errors are seen.
-                              8. Validate Tx == Rx on DUT
+                              7. Validate Tx and Rx on spirent and ensure no errors are seen.
+                              8. Validate Tx and Rx on DUT
                               9. From VP stats, validate CC OUT and Control T2C counters are equal to spirent TX
                               10. From VP stats, validate VP total IN == VP total OUT
                               11. From ERP stats, Ensure Count for EFP to WQM decrement pulse, EFP to WRO descriptors 
@@ -1401,6 +1407,7 @@ class TestCcIpv4AllTogether(FunTestCase):
     def run(self):
         global MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT
         if dut_config['enable_dpcsh']:
+            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
                 clear_stats = network_controller_obj.clear_port_stats(port_num=port)
@@ -1475,8 +1482,8 @@ class TestCcIpv4AllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = MIN_RX_PORT_COUNT * len(streams_group)
-        MAX_RX_PORT_COUNT = MAX_RX_PORT_COUNT * len(streams_group)
+        MIN_RX_PORT_COUNT = 50 * len(streams_group)
+        MAX_RX_PORT_COUNT = 60 * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
@@ -1499,9 +1506,10 @@ class TestCcIpv4AllTogether(FunTestCase):
                                                             stat_type=FRAMES_TRANSMITTED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
                                                          stat_type=FRAMES_RECEIVED_OK)
+            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+                                 checkpoint)
 
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
             fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
