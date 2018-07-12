@@ -25,6 +25,8 @@ def set_last_build_status_for_charts(result, model_name):
     charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
     for chart in charts:
         chart.last_build_status = result
+        chart.last_build_date = get_current_time()
+        chart.save()
 
 
 class MyScript(FunTestScript):
