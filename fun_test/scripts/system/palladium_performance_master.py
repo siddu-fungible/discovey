@@ -388,6 +388,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class EcVolPerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_TAG
     def describe(self):
         self.set_test_details(id=5,
                               summary="EC Vol performance",
