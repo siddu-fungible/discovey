@@ -15,6 +15,7 @@ from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
 from web.fun_test.models import JenkinsJobIdMap
+from web.fun_test.analytics_models_helper import MetricChartHelper
 
 class MetricHelper(object):
     def __init__(self, model):
@@ -51,7 +52,7 @@ def software_date_to_datetime(software_date):
         s = "{}-{}-{} {}:{}".format(year, month, day, "00", "01")
         return datetime.strptime(s, "%Y-%m-%d %H:%M")
 
-if __name__ == "__main__":
+if __name__ == "__main33__":
     for model in [WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance]:
         entries = model.objects.all()
         for entry in entries:
@@ -72,3 +73,11 @@ if __name__ == "__main__":
             dt = get_localized_time(software_date_to_datetime(jm_entry.software_date))
             jm_entry.completion_date = dt.strftime("%Y-%m-%d %H:%M")
             jm_entry.save()
+
+if __name__ == "__main__":
+    for model in ["WuLatencyUngated", "WuLatencyAllocStack", "AllocSpeedPerformance", "BcopyFloodDmaPerformance", "BcopyPerformance",
+                  "EcVolPerformance", "EcPerformance"]:
+        charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model)
+        for chart in charts:
+            chart.last_build_status = "FAILED"
+            chart.save()
