@@ -1,10 +1,10 @@
 'use strict';
 
-function MetricsSummaryController($scope, commonService, $timeout, $window) {
+function MetricsSummaryController($scope, commonService, $timeout, $window, $q) {
     let ctrl = this;
 
     this.$onInit = function () {
-
+        /*
         $scope.treeModel = [
             {
                 info: "",
@@ -42,7 +42,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
                 ]
             }
 
-        ];
+        ];*/
 
         $scope.numGridColumns = 2;
         if(angular.element($window).width() <=1441) {
@@ -54,10 +54,12 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
 
         $scope.flatNodes = [];
         $scope.metricMap = {};
+        $scope.cachedNodeInfo = {};
         $scope.fetchRootMetricInfo("Total", "MetricContainer").then((data) => {
             let metricId = data.metric_id;
             let p1 = {metric_id: metricId};
             commonService.apiPost('/metrics/metric_info', p1).then((data) => {
+                $scope.populateNodeInfoCache(data);
                 let newNode = $scope.getNodeFromData(data);
                 newNode.guid = $scope.guid();
                 newNode.hide = false;
@@ -75,6 +77,19 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         $scope.inner.nonAtomicMetricInfo = "";
         $scope.currentNodeChildrenGuids = null;
         //console.log($scope.treeModel[0][0].showInfo);
+    };
+
+    $scope.clearNodeInfoCache = () => {
+        $scope.cachedNodeInfo = {};
+    };
+
+    $scope.populateNodeInfoCache = (data) => {
+        angular.forEach(data.children_info, (value, key) => {
+           $scope.cachedNodeInfo[key] = value;
+           angular.forEach(value.children_info, (v2, key2) => {
+               $scope.populateNodeInfoCache(v2);
+           });
+        });
     };
 
 
@@ -254,6 +269,8 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         payload["metric_model_name"] = node.metricModelName;
         payload["chart_name"] = node.chartName;
         payload["description"] = $scope.inner.nonAtomicMetricInfo;
+
+        // TODO: Refresh cache
         commonService.apiPost('/metrics/update_chart', payload, "EditDescription: Submit").then((data) => {
             if (data) {
                 alert("Submitted");
@@ -318,9 +335,13 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         return s;
     };
 
+
     $scope.fetchMetricInfoById = (node) => {
         let thisNode = node;
         let p1 = {metric_id: node.metricId};
+        if (node.metricId in $scope.cachedNodeInfo) {
+            return $q.resolve($scope.cachedNodeInfo[node.metricId]);
+        }
         return commonService.apiPost('/metrics/metric_info', p1).then((data) => {
            return data;
         });
@@ -528,6 +549,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
         payload.weight = info.editingWeight;
         commonService.apiPost('/metrics/update_child_weight', payload).then((data) => {
             info.weight = info.editingWeight;
+            $scope.clearNodeInfoCache();
             if (node.hasOwnProperty("lineage") && node.lineage.length > 0) {
                 $scope.refreshNode($scope.getNode(node.lineage[0]));
             } else {
@@ -601,6 +623,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
     $scope.refreshNode = (node) => {
         let payload = {metric_id: node.metricId};
         commonService.apiPost('/metrics/metric_info', payload).then((data) => {
+            $scope.populateNodeInfoCache(data);
             $scope.evaluateGoodness(node, data.goodness_values, data.children_goodness_map);
             $scope._setupGoodnessTrend(node);
         });
@@ -618,6 +641,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window) {
             // Fetch children ids
 
             return $scope.fetchMetricInfoById(node).then((data) => {
+                console.log("Fetching Metrics Info for node:" + node.metricId);
                 node.hide = false;
                 let childrenIds = JSON.parse(data.children);
                 return $scope._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
