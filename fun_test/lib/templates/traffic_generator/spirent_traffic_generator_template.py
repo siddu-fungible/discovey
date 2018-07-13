@@ -4,6 +4,7 @@ from lib.templates.traffic_generator.traffic_generator_template import TrafficGe
 from lib.host.spirent_manager import SpirentManager
 import json
 from collections import OrderedDict
+from uuid import uuid4
 import os
 
 
@@ -1255,21 +1256,23 @@ class Tos(object):
     @spirent_handle.setter
     def spirent_handle(self, handle):
         self._spirent_handle = handle
-        
-        
+
+
 class UDP(object):
     HEADER_TYPE = "udp:UDP"
     TCPMUX = 1
     CHECKSUM_ERROR = '65535'
     _spirent_handle = None
-    
-    def __init__(self, checksum='', destination_port=1024, length=0, name=None, source_port=1024):
+
+    def __init__(self, checksum='', destination_port=1024, length=0, source_port=1024, name=None):
         self.checksum = checksum
         self.destPort = destination_port
         self.length = length
-        self.Name = name
         self.sourcePort = source_port
-        
+        if not name:
+            name = 'anon_' + str(uuid4()).split('-')[0]
+        self.Name = name
+
     def get_attributes_dict(self):
         attributes = {}
         for key in vars(self):
@@ -1288,18 +1291,19 @@ class UDP(object):
     @spirent_handle.setter
     def spirent_handle(self, handle):
         self._spirent_handle = handle
-        
-        
+
+
 class TCP(object):
     HEADER_TYPE = "tcp:TCP"
     TCPMUX = 1
     DESTINATION_PORT_BGP = 179
     CHECKSUM_ERROR = '65535'
     _spirent_handle = None
-    
-    def __init__(self, ack_bit='1', ack_num=234567, checksum='', cwr_bit='0', destination_port=1024, ecn_bit='0', 
+
+    def __init__(self, ack_bit='1', ack_num=234567, checksum='', cwr_bit='0', destination_port=1024, ecn_bit='0',
                  finish_bit='0', offset=5, push_bit='0', reserved='0000', reset_bit='0', seq_num=123456,
-                 source_port=1024, sync_bit='0',urgent_bit='0', urgent_pointer=0, window=4096):
+                 source_port=1024, sync_bit='0', urgent_bit='0', urgent_pointer=0, window=4096,
+                 name=None):
         self.window = window
         self.urgentPtr = urgent_pointer
         self.urgBit = urgent_bit
@@ -1317,7 +1321,10 @@ class TCP(object):
         self.checksum = checksum
         self.ackNum = ack_num
         self.ackBit = ack_bit
-        
+        if not name:
+            name = 'anon_' + str(uuid4()).split('-')[0]
+        self.Name = name
+
     def get_attributes_dict(self):
         attributes = {}
         for key in vars(self):
