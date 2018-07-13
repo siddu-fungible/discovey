@@ -122,7 +122,7 @@ urlpatterns = [
     url(r'^performance/', metrics_views.summary_page),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
-    url(r'^tools/', include('tools.urls')),
+    # url(r'^tools/', include('tools.urls')),
     url(r'^regression/', include(regression_urls)),
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics

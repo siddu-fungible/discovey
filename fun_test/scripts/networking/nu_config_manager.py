@@ -23,6 +23,8 @@ class NuConfigManager(object):
     FLOW_DIRECTION_HNU_CC = "HNU_CC"
     FLOW_DIRECTION_FPG_HNU = "FPG_HNU"
     FLOW_DIRECTION_HNU_FPG = "HNU_FPG"
+    FLOW_DIRECTION_FPG_HU = "FPG_HU"
+    FLOW_DIRECTION_HU_FPG = "HU_FPG"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
         self._get_chassis_type()

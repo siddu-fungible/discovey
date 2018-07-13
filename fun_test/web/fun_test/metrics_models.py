@@ -297,7 +297,7 @@ class MetricChart(models.Model):
                 status_values.append(status_values[-1])
             else:
                 status_values.append(True)
-        print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
+        # print("Chart_name: {}, Status: {}, Goodness: {}".format(self.chart_name, status_values, goodness_values))
         if self.leaf and not leaf_status:
             goodness_values[-1] = 0
         self.goodness_cache = json.dumps(goodness_values)
@@ -408,7 +408,7 @@ class Performance1(models.Model):
 
 class PerformanceBlt(models.Model):
     key = models.CharField(max_length=30, verbose_name="Build no.")
-    input1_block_size = models.CharField(max_length=10, choices=[(0, "4K"), (1, "8K"), (2, "16K")], verbose_name="Block size")
+    input1_block_size = models.CharField(max_length=20, choices=[(0, "4K"), (1, "8K"), (2, "16K")], verbose_name="Block size")
     input2_mode = models.CharField(max_length=20, choices=[(0, "Read"), (1, "Read-Write")], verbose_name="R/W Mode")
     output1_iops = models.IntegerField(verbose_name="IOPS")
     output2_bw = models.IntegerField(verbose_name="Band-width")
@@ -684,7 +684,7 @@ class NuTransitPerformance(models.Model):
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
 
     output_pps = models.IntegerField(verbose_name="Packets per sec", default=0)
-    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=10, choices=[(0, "25G"), (1, "50G"), (2, "100G")])
+    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, choices=[(0, "25G"), (1, "50G"), (2, "100G")])
     input_version = models.CharField(verbose_name="Version", max_length=50)
 
     def __str__(self):

@@ -449,7 +449,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 if (node.chartName === "All metrics") {
                     return;
                 }
-                return; // Disable for now
+                //return; // Disable for now
                 if (!$scope.isLeafsParent(node)) {
                     return;
                 }
@@ -486,18 +486,19 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     };
 
     $scope.prepareGridNodes = (flattenedNodes) => {
-        $scope.grid = [];
+        let tempGrid = [];
         let rowIndex = 0;
         Object.keys(flattenedNodes).forEach((key) => {
-            if ($scope.grid.length - 1 < rowIndex) {
-                $scope.grid.push([]);
+            if (tempGrid.length - 1 < rowIndex) {
+                tempGrid.push([]);
             }
-            $scope.grid[rowIndex].push(flattenedNodes[key]);
-            if ($scope.grid[rowIndex].length === $scope.numGridColumns) {
+            tempGrid[rowIndex].push(flattenedNodes[key]);
+            if (tempGrid[rowIndex].length === $scope.numGridColumns) {
                 rowIndex++;
             }
 
         });
+        $scope.grid = tempGrid;
     };
 
     $scope._setupGoodnessTrend = (node) => {

@@ -50,7 +50,7 @@ class SuiteExecution(models.Model):
     scheduled_time = models.DateTimeField()
     completed_time = models.DateTimeField()
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
     tags = models.TextField(default="[]")
     version = models.CharField(max_length=50, default="UNKNOWN")
     catalog_reference = models.TextField(null=True, blank=True, default=None)
@@ -72,7 +72,7 @@ class TestCaseExecution(models.Model):
     execution_id = models.IntegerField(unique=True)
     test_case_id = models.IntegerField()
     suite_execution_id = models.IntegerField()
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="NOTRUN")
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="NOTRUN")
     started_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True)
     overridden_result = models.BooleanField(default=False)
@@ -108,7 +108,7 @@ class CatalogSuiteExecution(models.Model):
     owner_email = models.EmailField()
     instance_name = models.CharField(max_length=50, unique=True)
     catalog_name = models.TextField(default="UNKNOWN")
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
     active = models.BooleanField(default=False)
 
     def __str__(self):

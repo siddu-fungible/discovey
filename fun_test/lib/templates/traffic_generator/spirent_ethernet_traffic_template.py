@@ -15,6 +15,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     ETH_IPV6_UDP_VXLAN_ETH_IPV4_UDP = 6
     ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP = 7
     ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP = 8
+    MPLS_ETH_IPV4_UDP_CUST_IPV4_TCP = 9
+    MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP = 10
 
     def __init__(self, session_name, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         SpirentTrafficGeneratorTemplate.__init__(self, spirent_config=spirent_config, chassis_type=chassis_type)
@@ -1110,14 +1112,21 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def create_overlay_frame_stack(self, streamblock_obj, header_list=[], headers_created=False):
+    def create_overlay_frame_stack(self, streamblock_obj, mpls, header_list=[], headers_created=False,
+                                   byte_pattern="00012140"):
         result = {}
         result['result'] = False
         try:
             fun_test.simple_assert(header_list, "Headers are not provided to be created in streamblock")
             header_obj_list = []
-            underlay_list = header_list[0:header_list.index(VxLAN)]
-            overlay_list = header_list[header_list.index(VxLAN):]
+            if not mpls:
+                destination_port = 4789
+                underlay_list = header_list[0:header_list.index(VxLAN)]
+                overlay_list = header_list[header_list.index(VxLAN):]
+            else:
+                destination_port = 6635
+                underlay_list = header_list[0:header_list.index(CustomBytePatternHeader)]
+                overlay_list = header_list[header_list.index(CustomBytePatternHeader):]
             spirent_configs = self.spirent_config
 
             if headers_created:
@@ -1140,12 +1149,15 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                             current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
                         header_obj_list.append(ipv6_obj)
                     elif header == UDP:
-                        udp_obj = UDP()
+                        udp_obj = UDP(destination_port=destination_port)
                         header_obj_list.append(udp_obj)
                 for header in overlay_list:
                     if header == VxLAN:
                         vxlan_obj = VxLAN()
                         header_obj_list.append(vxlan_obj)
+                    elif header == CustomBytePatternHeader:
+                        custom_header_obj = CustomBytePatternHeader(byte_pattern=byte_pattern)
+                        header_obj_list.append(custom_header_obj)
                     elif header == Ethernet2Header:
                         eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'])
                         header_obj_list.append(eth_obj)
@@ -1188,9 +1200,15 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def configure_overlay_frame_stack(self, port, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP, streamblock_obj=None):
+    def configure_overlay_frame_stack(self, port, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP, streamblock_obj=None,
+                                      mpls=False, byte_pattern=None):
         result = {}
         try:
+            if mpls:
+                if overlay_type == self.MPLS_ETH_IPV4_UDP_CUST_IPV4_TCP:
+                    header_list = [Ethernet2Header, Ipv4Header, UDP, CustomBytePatternHeader, Ipv4Header, TCP]
+                elif overlay_type == self.MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP:
+                    header_list = [Ethernet2Header, Ipv4Header, UDP, CustomBytePatternHeader, Ipv4Header, UDP]
             if not streamblock_obj:
                 streamblock_obj = StreamBlock(fixed_frame_length=148)
                 stream = self.configure_stream_block(stream_block_obj=streamblock_obj, port_handle=port)
@@ -1213,7 +1231,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, UDP]
 
             result['streamblock_obj'] = streamblock_obj
-            result.update(self.create_overlay_frame_stack(header_list=header_list, streamblock_obj=streamblock_obj))
+            result.update(self.create_overlay_frame_stack(header_list=header_list, streamblock_obj=streamblock_obj,
+                          mpls=mpls, byte_pattern=byte_pattern))
 
         except Exception as ex:
             fun_test.critical(str(ex))
