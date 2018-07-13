@@ -990,7 +990,8 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_range_modifier(self, range_modifier_obj, streamblock_obj, header_obj, header_attribute):
+    def configure_range_modifier(self, range_modifier_obj, streamblock_obj, header_obj, header_attribute, overlay=False,
+                                 custom_header=False):
         result = False
         header_handle = None
         assigned_header_name = None
@@ -999,9 +1000,14 @@ class SpirentManager(object):
             fun_test.simple_assert(header_attribute in attributes, "Attribute %s not found in header obj %s. "
                                                                    "Available values are %s" % (header_attribute,
                                                                                                 header_obj, attributes))
-            header_type=header_obj.HEADER_TYPE.lower()
+            header_type = header_obj.HEADER_TYPE.lower()
             header_type = 'children-' + header_type
-            header_handle = self.get_object_children(handle=streamblock_obj._spirent_handle, child_type=header_type)[0]
+            header_list = self.get_object_children(handle=streamblock_obj._spirent_handle, child_type=header_type)
+            header_handle = header_list[0]
+            if overlay and len(header_list) > 1:
+                header_handle = header_list[1]
+            elif custom_header:
+                header_handle = header_list[-1]
             fun_test.simple_assert(header_handle, "Header handle not found for header %s in streamblock %s"
                                    % (header_obj.HEADER_TYPE, streamblock_obj._spirent_handle))
             range_attributes = range_modifier_obj.get_attributes_dict()
