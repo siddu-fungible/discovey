@@ -25,6 +25,8 @@ def set_last_build_status_for_charts(result, model_name):
     charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
     for chart in charts:
         chart.last_build_status = result
+        chart.last_build_date = get_current_time()
+        chart.save()
 
 
 class MyScript(FunTestScript):
@@ -386,6 +388,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class EcVolPerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_TAG
     def describe(self):
         self.set_test_details(id=5,
                               summary="EC Vol performance",

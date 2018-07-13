@@ -13,6 +13,7 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 class MetricChart(models.Model):
     last_build_status = models.CharField(max_length=15, default=RESULTS["PASSED"])
+    last_build_date = models.DateTimeField(verbose_name="last_build_date", default=datetime.now)
     data_sets = models.TextField(default="[]")
     chart_name = models.TextField(unique=True)
     metric_model_name = models.TextField(default="Performance1")
@@ -173,12 +174,17 @@ class MetricChart(models.Model):
         leaf_status = True
         if self.chart_name == "Bcopy: Plain: Avg Bandwidth":
             j = 2
+        children_info = {}
         if not self.leaf:
             if len(children):
                 child_degrades = 0
                 for child in children:
                     child_metric = MetricChart.objects.get(metric_id=child)
                     get_status = child_metric.get_status(number_of_records=number_of_records)
+                    serialized = MetricChartSerializer(child_metric, many=False)
+                    serialized_data = serialized.data
+                    serialized_data.update(get_status)
+                    children_info[child] = serialized_data
                     child_status_values, child_goodness_values = get_status["status_values"], \
                                                                  get_status["goodness_values"]
                     if child_metric.leaf:
@@ -212,9 +218,10 @@ class MetricChart(models.Model):
             if self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
                 goodness_values.extend(json.loads(self.goodness_cache))
                 status_values.extend(json.loads(self.status_cache))
-
-            # if False:
-            #    pass
+                '''
+                if False:
+                    pass
+                '''
             else:
 
                 data_sets = json.loads(self.data_sets)
@@ -228,7 +235,8 @@ class MetricChart(models.Model):
                             j = 0
                         last_records_map[data_set_index] = {"records": last_records, "goodness": 0}
                         try:
-                            if last_records and (last_records[-1]["status"] == RESULTS["FAILED"]):
+                            # if last_records and (last_records[-1]["status"] == RESULTS["FAILED"]):
+                            if self.last_build_status != RESULTS["PASSED"]:
                                 leaf_status = False
                         except:
                             pass
@@ -298,7 +306,7 @@ class MetricChart(models.Model):
         self.status_cache = json.dumps(status_values)
         self.save()
         try:
-            if goodness_values[-2] > goodness_values[-1]:
+            if (goodness_values[-2] > goodness_values[-1]) or (goodness_values[-1] == 0):
                 num_degrades += 1
         except:
             num_degrades = 0
@@ -309,7 +317,8 @@ class MetricChart(models.Model):
                 "num_children_passed": num_children_passed,
                 "num_children_failed": num_children_failed,
                 "num_degrades": num_degrades,
-                "num_child_degrades": num_child_degrades}
+                "num_child_degrades": num_child_degrades,
+                "children_info": children_info}
 
     def filter(self, number_of_records=1, data_set=None):
         data = []
