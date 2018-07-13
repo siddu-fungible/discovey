@@ -223,23 +223,24 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
 
                     average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
             self.result = fun_test.PASSED
+            if self.result == fun_test.PASSED:
+                MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
+                                                               input_date_time=self.dt,
+                                                               input_plain=plain,
+                                                               input_coherent=coherent,
+                                                               input_size=size,
+                                                               input_iterations=iterations,
+                                                               output_latency_units=latency_units,
+                                                               output_latency_min=latency_min,
+                                                               output_latency_max=latency_max,
+                                                               output_latency_avg=latency_avg,
+                                                               input_latency_perf_name=latency_perf_name,
+                                                               output_average_bandwith=average_bandwidth,
+                                                               input_average_bandwith_perf_name=average_bandwidth_perf_name)
 
         except Exception as ex:
             fun_test.critical(str(ex))
-        if self.result == fun_test.PASSED:
-            MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
-                                                           input_date_time=self.dt,
-                                                           input_plain=plain,
-                                                           input_coherent=coherent,
-                                                           input_size=size,
-                                                           input_iterations=iterations,
-                                                           output_latency_units=latency_units,
-                                                           output_latency_min=latency_min,
-                                                           output_latency_max=latency_max,
-                                                           output_latency_avg=latency_avg,
-                                                           input_latency_perf_name=latency_perf_name,
-                                                           output_average_bandwith=average_bandwidth,
-                                                           input_average_bandwith_perf_name=average_bandwidth_perf_name)
+
         set_last_build_status_for_charts(result=self.result, model_name="BcopyPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -286,22 +287,23 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
                     average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
 
             self.result = fun_test.PASSED
+            if self.result == fun_test.PASSED:
+                MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
+                                                                       input_date_time=self.dt,
+                                                                       input_n=n,
+                                                                       input_size=size,
+                                                                       output_latency_units=latency_units,
+                                                                       output_latency_min=latency_min,
+                                                                       output_latency_max=latency_max,
+                                                                       output_latency_avg=latency_avg,
+                                                                       input_latency_perf_name=latency_perf_name,
+                                                                       output_average_bandwith=average_bandwidth,
+                                                                       input_average_bandwith_perf_name=average_bandwidth_perf_name
+                                                                       )
 
         except Exception as ex:
             fun_test.critical(str(ex))
-        if self.result == fun_test.PASSED:
-            MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
-                                                                   input_date_time=self.dt,
-                                                                   input_n=n,
-                                                                   input_size=size,
-                                                                   output_latency_units=latency_units,
-                                                                   output_latency_min=latency_min,
-                                                                   output_latency_max=latency_max,
-                                                                   output_latency_avg=latency_avg,
-                                                                   input_latency_perf_name=latency_perf_name,
-                                                                   output_average_bandwith=average_bandwidth,
-                                                                   input_average_bandwith_perf_name=average_bandwidth_perf_name
-                                                                   )
+
         set_last_build_status_for_charts(result=self.result, model_name="BcopyFloodDmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -421,13 +423,14 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
                     except Exception as ex:
                         pass
             self.result = fun_test.PASSED
+            d = self.metrics_to_dict(metrics, self.result)
+            if self.result == fun_test.PASSED:
+                MetricHelper(model=EcVolPerformance).add_entry(**d)
 
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        d = self.metrics_to_dict(metrics, self.result)
-        if self.result == fun_test.PASSED:
-            MetricHelper(model=EcVolPerformance).add_entry(**d)
+
         set_last_build_status_for_charts(result=self.result, model_name="EcVolPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -485,13 +488,13 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
                         fun_test.critical(str(ex))
 
             self.result = fun_test.PASSED
-
+            d = self.metrics_to_dict(metrics, self.result)
+            if self.result == fun_test.PASSED:
+                MetricHelper(model=VoltestPerformance).add_entry(**d)
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        d = self.metrics_to_dict(metrics, self.result)
-        if self.result == fun_test.PASSED:
-            MetricHelper(model=VoltestPerformance).add_entry(**d)
+
         set_last_build_status_for_charts(result=self.result, model_name="VoltestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
