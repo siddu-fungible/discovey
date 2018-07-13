@@ -995,7 +995,7 @@ class NetworkController(DpcshClient):
     def peek_wro_global_stats(self):
         stats = None
         try:
-            stats_cmd = "stats/wro/global"
+            stats_cmd = "stats/wro/nu"
             fun_test.debug("Getting WRO global stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get WRO global stats")
