@@ -79,7 +79,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
         payload["metric_model_name"] = ctrl.modelName;
         payload["chart_name"] = ctrl.chartName;
         // Fetch chart info
-        $scope.status = "Fetching chart info";
+        //$scope.status = "Fetching chart info";
         commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
             $scope.chartInfo = chartInfo;
             $scope.status = "idle";
@@ -159,7 +159,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
     }
 
     $scope.fixMissingDates = (dates) => {
-        let firstDate = new Date(dates[0]);
+        let firstDate = new Date(dates[0].replace(/\s+/g, 'T'));
         let today = new Date();
         let yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
@@ -171,10 +171,10 @@ function FunMetricChartController($scope, commonService, $attrs) {
         while (currentDate <= yesterday) {
 
             //console.log(currentDate);
-            if (sameDay(new Date(dates[datesIndex]), currentDate)) {
+            if ((datesIndex < dates.length) && sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
                 finalDates.push(dates[datesIndex]);
                 datesIndex++;
-                while (sameDay(new Date(dates[datesIndex]), currentDate) && (datesIndex < dates.length)) {
+                while ((datesIndex < dates.length) && sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
                     finalDates.push(dates[datesIndex]);
                     datesIndex++;
                 }
@@ -192,7 +192,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
         if(!chartName) {
             return;
         }
-        $scope.status = "Fetch table meta-data";
+        //$scope.status = "Fetch table meta-data";
         commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
             $scope.status = "idle";
             $scope.tableInfo = tableInfo;
