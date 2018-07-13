@@ -449,7 +449,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 if (node.chartName === "All metrics") {
                     return;
                 }
-                return; // Disable for now
+                //return; // Disable for now
                 if (!$scope.isLeafsParent(node)) {
                     return;
                 }
