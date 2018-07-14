@@ -264,8 +264,8 @@
                 <div class="closed-section"></div>
                 <div ng-if="grid.length">
                     <table class="table" ng-if="grid">
-                        <tr ng-repeat="row in grid">
-                            <td ng-repeat="node in row" style="width: 50%">
+                        <tr ng-repeat="row in grid track by $index">
+                            <td ng-repeat="node in row track by $index" style="width: 50%">
                                 <editable-metric-chart
                                         chart-name="node.name"
                                         model-name="node.metricModelName"

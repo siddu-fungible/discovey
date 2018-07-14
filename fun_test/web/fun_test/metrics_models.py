@@ -424,6 +424,8 @@ class PerformanceIkv(models.Model):
 
 
 class VolumePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
     key = models.CharField(max_length=30, verbose_name="Build no.")
     input_volume = models.TextField(verbose_name="Volume type", choices=[(0, "BLT"), (1, "EC21")])
     input_test = models.TextField(verbose_name="Test type", choices=[(0, "FioSeqWriteSeqReadOnly")])
@@ -695,6 +697,7 @@ class NuTransitPerformance(models.Model):
 
 
 class VoltestPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
