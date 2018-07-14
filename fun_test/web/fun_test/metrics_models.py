@@ -172,8 +172,10 @@ class MetricChart(models.Model):
         num_degrades = 0
         num_child_degrades = 0
         leaf_status = True
-        if self.chart_name == "Bcopy: Plain: Avg Bandwidth":
+        if self.chart_name == "Nucleus":
             j = 2
+        if self.chart_name == "Bcopy: Plain: Avg Bandwidth":
+            j = 3
         children_info = {}
         if not self.leaf:
             if len(children):
@@ -215,13 +217,9 @@ class MetricChart(models.Model):
 
         else:
 
-            if self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
+            if True and self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
                 goodness_values.extend(json.loads(self.goodness_cache))
                 status_values.extend(json.loads(self.status_cache))
-                '''
-                if False:
-                    pass
-                '''
             else:
 
                 data_sets = json.loads(self.data_sets)
@@ -281,7 +279,10 @@ class MetricChart(models.Model):
                     if data_set_statuses:
                         status_values.append(reduce(lambda x, y: x and y, data_set_statuses))
                     else:
-                        status_values.append(True)  # Some data-sets may not exist
+                        if not leaf_status:
+                            status_values.append(False)
+                        else:
+                            status_values.append(True)  # Some data-sets may not exist
 
 
         # Fill up missing values
