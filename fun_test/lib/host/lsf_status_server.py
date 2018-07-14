@@ -65,6 +65,7 @@ class LsfStatusServer:
                 dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
+                response = self.get_job_by_id(job_id=job_info["job_id"]) # Workaround
                 response_dict = json.loads(response)
                 fun_test.log(json.dumps(response_dict, indent=4))
                 output_text = response_dict["output_text"]
