@@ -96,7 +96,7 @@ class IPv4GoodRuntTestCase3(FunTestCase):
             clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
-        load = 17000
+        load = 15000
         self.streamblock_obj = StreamBlock()
         self.streamblock_obj.LoadUnit = self.streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.streamblock_obj.Load = load
