@@ -607,12 +607,12 @@ class TestCcNotForUsAllTogether(FunTestCase):
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
         fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                      actual=int(rx_port_results['TotalFrameCount']),
+                                      actual=int(rx_port2_results['TotalFrameCount']),
                                       message=checkpoint)
 
-        checkpoint = "Ensure %s does not received any frames" % port2
-        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
-        fun_test.test_assert_expected(expected=0, actual=int(rx_port2_results['TotalFrameCount']),
+        checkpoint = "Ensure %s does not received any frames" % port3
+        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port_results['TotalFrameCount']))
+        fun_test.test_assert_expected(expected=0, actual=int(rx_port_results['TotalFrameCount']),
                                       message=checkpoint)
 
         checkpoint = "Ensure no errors are seen on spirent"

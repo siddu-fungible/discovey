@@ -2271,8 +2271,9 @@ if __name__ == '__main__':
 
     # TODO: Commented out this cases as it is causing a system to crash which is affecting further cases.
     # TODO: once fixed uncomment this
-    # ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
-    # ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
+    if flow_type != "HU_CC":
+        ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
+        ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
 
     ts.add_test_case(TestCcIpChecksumError())
 
