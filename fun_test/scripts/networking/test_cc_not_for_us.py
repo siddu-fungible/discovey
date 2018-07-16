@@ -53,7 +53,7 @@ class SetupSpirent(FunTestScript):
         template_obj = SpirentEthernetTrafficTemplate(session_name="cc_path", spirent_config=spirent_config,
                                                       chassis_type=chassis_type)
         result = template_obj.setup(no_of_ports_needed=NUM_PORTS, flow_type=NuConfigManager.CC_FLOW_TYPE,
-                                    flow_direction=NuConfigManager.FLOW_DIRECTION_FPG_CC)
+                                    flow_direction=FLOW_DIRECTION)
         fun_test.test_assert(result['result'], "Ensure Spirent Setup done")
 
         port1 = result['port_list'][0]

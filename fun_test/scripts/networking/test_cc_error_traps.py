@@ -53,7 +53,7 @@ class SetupSpirent(FunTestScript):
         template_obj = SpirentEthernetTrafficTemplate(session_name="cc_path", spirent_config=spirent_config,
                                                       chassis_type=chassis_type)
         result = template_obj.setup(no_of_ports_needed=NUM_PORTS, flow_type=NuConfigManager.CC_FLOW_TYPE,
-                                    flow_direction=NuConfigManager.FLOW_DIRECTION_FPG_CC)
+                                    flow_direction=FLOW_DIRECTION)
         fun_test.test_assert(result['result'], "Ensure Spirent Setup done")
 
         port1 = result['port_list'][0]
@@ -1137,8 +1137,7 @@ class TestCcOuterChecksumError(FunTestCase):
         checkpoint = "Ensure checksum errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_results)
         checksum_error_seen = False
-        print result
-        if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 2:
+        if result['Ipv4ChecksumErrorCount'] > 0 and len(result) == 3 and result['DroppedFrameCount'] > 0:
             checksum_error_seen = True
         fun_test.test_assert(expression=checksum_error_seen, message=checkpoint)
 
@@ -2168,8 +2167,8 @@ class TestCcErrorTrapsAllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = 50 * len(streams_group)
-        MAX_RX_PORT_COUNT = 60 * len(streams_group)
+        MIN_RX_PORT_COUNT = 500 * len(streams_group)
+        MAX_RX_PORT_COUNT = 600 * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
@@ -2270,8 +2269,10 @@ if __name__ == '__main__':
     ts.add_test_case(TestCcErrorTrapTtlError2())
     ts.add_test_case(TestCcErrorTrapTtlError3())
 
-    ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
-    ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
+    # TODO: Commented out this cases as it is causing a system to crash which is affecting further cases.
+    # TODO: once fixed uncomment this
+    # ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
+    # ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
 
     ts.add_test_case(TestCcIpChecksumError())
 
