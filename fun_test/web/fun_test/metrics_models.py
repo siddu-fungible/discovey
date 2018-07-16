@@ -81,6 +81,9 @@ class MetricChart(models.Model):
     def get_last_record(self, number_of_records=1, data_set=None):
         return self.filter(number_of_records=number_of_records, data_set=data_set)
 
+    def get_first_record(self, number_of_records=1, data_set=None):
+        return self.filter(number_of_records=number_of_records, data_set=data_set, chronologically_recent=False)
+
     def get_leaves(self):
         data = {}
         data["name"] = self.chart_name
@@ -113,20 +116,27 @@ class MetricChart(models.Model):
         rounded_d = get_localized_time(rounded_d)
         return rounded_d
 
-    def get_entries_for_day(self, metric, day):
+    def get_entries_for_day(self, metric, day, data_set):
         bounds = self.get_day_bounds(day)
-        result = metric.objects.filter(input_date_time__range=bounds)
+        d = {}
+        d["input_date_time__range"] = bounds
+        inputs = data_set["inputs"]
+        for input_name, input_value in inputs.iteritems():
+            if d == "input_date_time":
+                continue
+            d[input_name] = input_value
+        result = metric.objects.filter(**d)
         # if result.count() > 1:
         #    result = result.last()
         return result
 
-    def fixup(self, metric, from_date, to_date):
+    def fixup(self, metric, from_date, to_date, data_set):
         current_date = self.get_rounded_time(to_date)
         holes = {}
         day_entries = None
 
         while current_date >= from_date:
-            entry = self.get_entries_for_day(metric=metric, day=current_date)
+            entry = self.get_entries_for_day(metric=metric, day=current_date, data_set=data_set)
 
             if not entry.count():
                 if current_date in holes:
@@ -141,7 +151,7 @@ class MetricChart(models.Model):
                     i = 0
                     while i < 366: #TODO: Can't find an entry in the last 366 days?
                         day = current_date - timedelta(days=i)
-                        day_entries = self.get_entries_for_day(metric=metric, day=day)
+                        day_entries = self.get_entries_for_day(metric=metric, day=day, data_set=data_set)
                         if day_entries.count():
                             for day_entry in day_entries:
                                 day_entry.pk = None
@@ -156,11 +166,27 @@ class MetricChart(models.Model):
                 day_entries = None
             current_date = current_date - timedelta(days=1)  # TODO: if we know the holes jump to the next hole
 
-
-
+    def fixup_expected_values(self, data_set):
+        modified = 0
+        # if self.chart_name == "BLK_LSV: Latency":
+        #    j = 0
+        first_record = self.get_first_record(data_set=data_set, number_of_records=100)
+        if not first_record:
+            i = 0
+        else:
+            first_record = first_record[-1]
+            output_name = data_set["output"]["name"]
+            if output_name in first_record:
+                data_set["output"]["expected"] = first_record[output_name]
+                modified = 1
+            j = 0
+            # data_set["expected"] = first_rec
+        # self.data_sets = json.dumps(data_set)
+        # self.save()
+        return modified
 
     def get_status(self, number_of_records=5):
-
+        print ("Get status for: {}".format(self.chart_name))
         goodness_values = []
         status_values = []
         children = json.loads(self.children)
@@ -221,7 +247,7 @@ class MetricChart(models.Model):
                 goodness_values.extend(json.loads(self.goodness_cache))
                 status_values.extend(json.loads(self.status_cache))
             else:
-
+                data_set_mofified = False
                 data_sets = json.loads(self.data_sets)
                 if len(data_sets):
                     # data_set = data_sets[0]
@@ -251,12 +277,14 @@ class MetricChart(models.Model):
                                 max_value = data_set["output"]["max"]
                                 min_value = data_set["output"]["min"]
                                 try:
-                                    output_name = data_set["output"]["name"]   #TODO
+                                    output_name = data_set["output"]["name"]   # TODO
                                 except:
                                     pass
                                 if "expected" in data_set["output"]:
                                     expected_value = data_set["output"]["expected"]
                                 else:
+                                    # let's fix it up
+                                    data_set_mofified = data_set_mofified or self.fixup_expected_values(data_set=data_set)
                                     expected_value = max_value
                                     if not self.positive:
                                         expected_value = min_value
@@ -283,7 +311,9 @@ class MetricChart(models.Model):
                             status_values.append(False)
                         else:
                             status_values.append(True)  # Some data-sets may not exist
-
+                if data_set_mofified:
+                    self.data_sets = json.dumps(data_sets)
+                    self.save()
 
         # Fill up missing values
         '''
@@ -321,7 +351,7 @@ class MetricChart(models.Model):
                 "num_child_degrades": num_child_degrades,
                 "children_info": children_info}
 
-    def filter(self, number_of_records=1, data_set=None):
+    def filter(self, number_of_records=1, data_set=None, chronologically_recent=True):
         data = []
         # data_sets = json.loads(self.data_sets)
         if data_set:
@@ -341,15 +371,18 @@ class MetricChart(models.Model):
                     continue
                 d[input_name] = input_value
             d["input_date_time__range"] = [earlier_day, yesterday]
+            order_by = "-input_date_time"
+            if not chronologically_recent:
+                order_by = "input_date_time"
             try:
                 # entries = model.objects.filter(**d).order_by("-input_date_time")[:number_of_records]
-                entries = model.objects.filter(**d).order_by("-input_date_time")
+                entries = model.objects.filter(**d).order_by(order_by)
                 i = entries.count()
                 if entries.count() < (number_of_records - 1):
                     # let's fix it up
                     if model.objects.first().interpolation_allowed:
-                        self.fixup(metric=model, from_date=earlier_day, to_date=yesterday)
-                    entries = model.objects.filter(**d).order_by("-input_date_time")
+                        self.fixup(metric=model, from_date=earlier_day, to_date=yesterday, data_set=data_set)
+                    entries = model.objects.filter(**d).order_by(order_by)
                 entries = reversed(entries)
                 for entry in entries:
                     data.append(model_to_dict(entry))
