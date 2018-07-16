@@ -71,7 +71,7 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(result, checkpoint)
 
         if not dut_config['enable_dpcsh']:
-            fun_test.sleep("Remove this sleep after dpcsh bug fixed", seconds=60)
+            fun_test.sleep("Remove this sleep after dpcsh bug fixed", seconds=120)
 
     def run(self):
         fun_test.log("In test case run")
