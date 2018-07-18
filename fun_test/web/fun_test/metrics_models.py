@@ -131,7 +131,7 @@ class MetricChart(models.Model):
         return result
 
     def fixup(self, metric, from_date, to_date, data_set):
-        self.remove_duplicates(metric)
+        # self.remove_duplicates(metric)
         current_date = self.get_rounded_time(to_date)
         holes = {}
         day_entries = None
