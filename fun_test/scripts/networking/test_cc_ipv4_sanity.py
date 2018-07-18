@@ -1487,8 +1487,8 @@ class TestCcIpv4AllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = 500 * len(streams_group)
-        MAX_RX_PORT_COUNT = 600 * len(streams_group)
+        MIN_RX_PORT_COUNT = 200 * len(streams_group)
+        MAX_RX_PORT_COUNT = 400 * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
