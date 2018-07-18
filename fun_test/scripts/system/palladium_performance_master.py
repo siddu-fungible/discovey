@@ -287,21 +287,20 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
                     average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
 
+                if self.result == fun_test.PASSED:
+                    MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
+                                                                           input_date_time=self.dt,
+                                                                           input_n=n,
+                                                                           input_size=size,
+                                                                           output_latency_units=latency_units,
+                                                                           output_latency_min=latency_min,
+                                                                           output_latency_max=latency_max,
+                                                                           output_latency_avg=latency_avg,
+                                                                           input_latency_perf_name=latency_perf_name,
+                                                                           output_average_bandwith=average_bandwidth,
+                                                                           input_average_bandwith_perf_name=average_bandwidth_perf_name
+                                                                           )
             self.result = fun_test.PASSED
-            if self.result == fun_test.PASSED:
-                MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
-                                                                       input_date_time=self.dt,
-                                                                       input_n=n,
-                                                                       input_size=size,
-                                                                       output_latency_units=latency_units,
-                                                                       output_latency_min=latency_min,
-                                                                       output_latency_max=latency_max,
-                                                                       output_latency_avg=latency_avg,
-                                                                       input_latency_perf_name=latency_perf_name,
-                                                                       output_average_bandwith=average_bandwidth,
-                                                                       input_average_bandwith_perf_name=average_bandwidth_perf_name
-                                                                       )
-
         except Exception as ex:
             fun_test.critical(str(ex))
 

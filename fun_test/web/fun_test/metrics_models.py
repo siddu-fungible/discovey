@@ -205,7 +205,7 @@ class MetricChart(models.Model):
         leaf_status = True
         if self.chart_name == "Nucleus":
             j = 2
-        if self.chart_name == "NU Transit: Throughput":
+        if self.chart_name == "Bcopy: Flood DMA: Avg Bandwidth":
             j = 3
         children_info = {}
         if not self.leaf:
@@ -376,7 +376,7 @@ class MetricChart(models.Model):
                 "num_child_degrades": num_child_degrades,
                 "children_info": children_info}
 
-    def remove_duplicates(self, model):
+    def remove_duplicates(self, model, from_date, to_date):
         vs = vars(model)
         inputs = []
         outputs = []
@@ -386,12 +386,16 @@ class MetricChart(models.Model):
             if v.startswith("output_"):
                 outputs.append(v)
 
+        inputs["input_date_time__range"] = [from_date, to_date]
         for row in model.objects.all():
             d = {}
             for input in inputs:
                 d[input] = getattr(row, input)
             for output in outputs:
                 d[output] = getattr(row, output)
+            if "input_date_time" in inputs:
+                del d["input_date_time"]
+                d["input_date_time__range"] = [from_date, to_date]
             f = model.objects.filter(**d)
             if f.count() > 1:
                 f.delete()
@@ -421,15 +425,12 @@ class MetricChart(models.Model):
             if not chronologically_recent:
                 order_by = "input_date_time"
             try:
-                # entries = model.objects.filter(**d).order_by("-input_date_time")[:number_of_records]
                 entries = model.objects.filter(**d).order_by(order_by)
-                # if model.objects.first().interpolation_allowed:
-                #    self.remove_duplicates(model)
                 i = entries.count()
                 if i > (number_of_records - 1):
                     entries = model.objects.filter(**d).order_by(order_by)
                     if model.objects.first().interpolation_allowed:
-                        self.remove_duplicates(model)
+                        self.remove_duplicates(model=model, from_date=earlier_day, to_date=today)
                         entries = model.objects.filter(**d).order_by(order_by)
                         i = entries.count()
                 if entries.count() < (number_of_records - 1):
