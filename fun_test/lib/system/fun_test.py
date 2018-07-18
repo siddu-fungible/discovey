@@ -398,43 +398,39 @@ class FunTest:
 
     def critical(self, message):
         message = str(message)
-        tb = sys.exc_info()[2]
-        s = ""
-        stack_found = False
-        if hasattr(tb, "tb_next"):
-            a = tb.tb_next
-            if a:
-                traceback.print_tb(a)
-                f = traceback.format_tb(a)
-                s = "\n".join(f)
-                stack_found = True
-        if not stack_found:
-            s = traceback.format_stack()
-            if "format_stack" in s[-1]:
-                s = s[: -1]
+        exc_type, exc_value, exc_traceback = sys.exc_info()
 
-        asserts_present = None
-        s2 = list(s)
-        s2.reverse()
-        for index, l in enumerate(s2):
-
-            one_assert_found = None
-            for m in ["in test_assert", "in test_assert_expected", "in simple_assert"]:
-                if m in l:
-                    asserts_present = True
-                    one_assert_found = True
-                    break
-            if asserts_present and not one_assert_found:
-                assert_string = l
-                s = s[: len(s) - index]
-                self.log(message="ASSERT Raised by: {}".format(assert_string), level=self.LOG_LEVEL_CRITICAL)
-                break
-
-        stack_s = "".join(s)
-        message = "\nTraceback:\n" + message + "\n" + stack_s
+        tb = traceback.format_tb(exc_traceback)
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
         self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+
+        if exc_traceback:
+            self.log(message="***** Last Exception At *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            last_exception_s = "".join(tb)
+            self.log(message=last_exception_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+        traceback_stack = traceback.format_stack()
+        if traceback_stack:
+            asserts_present = None
+            s2 = list(traceback_stack)
+            s2.reverse()
+            for index, l in enumerate(s2):
+
+                one_assert_found = None
+                for m in ["in test_assert", "in test_assert_expected", "in simple_assert"]:
+                    if m in l:
+                        asserts_present = True
+                        one_assert_found = True
+                        break
+                if asserts_present and not one_assert_found:
+                    assert_string = l
+                    s2 = s2[: len(s2) - index]
+                    self.log(message="ASSERT Raised by: {}".format(assert_string), level=self.LOG_LEVEL_CRITICAL)
+                    break
+            self.log(message="***** Traceback Stack *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            stack_s = "".join(traceback_stack[:-1])
+            self.log(message=stack_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+
 
     def _get_module_name(self, outer_frames):
         module_name = os.path.basename(outer_frames[0][1]).replace(".py", "")
