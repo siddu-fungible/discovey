@@ -657,7 +657,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
                 fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
                     stream_obj.spirent_handle, int(tx_result['FrameRate']), int(rx_result['FrameRate'])))
-                fun_test.simple_assert(expression=int(tx_result['FrameRate']) != 0, message="Tx FrameRate is zero")
+                # fun_test.simple_assert(expression=int(tx_result['FrameRate']) != 0, message="Tx FrameRate is zero")
                 rx_pps_count = self._manipulate_rate_counters(tx_rate_count=int(tx_result['FrameRate']),
                                                               rx_rate_count=int(rx_result['FrameRate']))
                 fun_test.test_assert_expected(expected=int(tx_result['FrameRate']),
@@ -680,7 +680,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
                 result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): int(rx_result['FrameRate'])}
                 if validate_throughput:
-                    result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): rx_bit_rate}
+                    result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): float(rx_bit_rate)}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
