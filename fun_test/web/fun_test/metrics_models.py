@@ -131,10 +131,11 @@ class MetricChart(models.Model):
         return result
 
     def fixup(self, metric, from_date, to_date, data_set):
+        self.remove_duplicates(metric)
         current_date = self.get_rounded_time(to_date)
         holes = {}
         day_entries = None
-
+        new_hole = None
         while current_date >= from_date:
             entry = self.get_entries_for_day(metric=metric, day=current_date, data_set=data_set)
 
@@ -160,7 +161,8 @@ class MetricChart(models.Model):
                                 day_entry.save()
                             break
                         else:
-                            holes[self.get_rounded_time(day)] = False
+                            new_hole = self.get_rounded_time(day)
+                            holes[new_hole] = False
                         i = i + 1
             else:
                 day_entries = None
@@ -185,6 +187,9 @@ class MetricChart(models.Model):
         # self.save()
         return modified
 
+    def is_same_day(self, d1, d2):
+        return (d1.year == d2.year) and (d1.month == d2.month) and (d1.day == d2.day)
+
     def get_status(self, number_of_records=5):
         print ("Get status for: {}".format(self.chart_name))
         goodness_values = []
@@ -200,7 +205,7 @@ class MetricChart(models.Model):
         leaf_status = True
         if self.chart_name == "Nucleus":
             j = 2
-        if self.chart_name == "Bcopy: Plain: Avg Bandwidth":
+        if self.chart_name == "NU Transit: Throughput":
             j = 3
         children_info = {}
         if not self.leaf:
@@ -265,15 +270,35 @@ class MetricChart(models.Model):
                         except:
                             pass
 
+                    today = get_current_time()
+                    from_date = today - timedelta(days=number_of_records - 1)
+
+
+
                     for day_index in range(number_of_records - 1):
+                        current_date = from_date + timedelta(days=day_index)
                         data_set_combined_goodness = 0
                         for data_set_index, data_set in enumerate(data_sets):
 
                             if last_records_map[data_set_index]["records"]:
+                                last_records = last_records_map[data_set_index]["records"]
+                                missing_dates = False
+                                if len(last_records) < (number_of_records - 1):
+                                    missing_dates = True
+
+                                this_days_record = None
                                 try:
-                                    this_days_record = last_records_map[data_set_index]["records"][day_index]
-                                except:
+                                    for last_record in last_records:
+                                        if self.is_same_day(last_record["input_date_time"], current_date):
+
+                                            this_days_record = last_record
+                                except Exception as ex:
                                     pass
+                                if not this_days_record:
+                                    continue
+                                if missing_dates:
+                                    if not self.is_same_day(this_days_record["input_date_time"], current_date):
+                                        continue
                                 max_value = data_set["output"]["max"]
                                 min_value = data_set["output"]["min"]
                                 try:
@@ -351,7 +376,28 @@ class MetricChart(models.Model):
                 "num_child_degrades": num_child_degrades,
                 "children_info": children_info}
 
+    def remove_duplicates(self, model):
+        vs = vars(model)
+        inputs = []
+        outputs = []
+        for v in vs:
+            if v.startswith("input_"):
+                inputs.append(v)
+            if v.startswith("output_"):
+                outputs.append(v)
+
+        for row in model.objects.all():
+            d = {}
+            for input in inputs:
+                d[input] = getattr(row, input)
+            for output in outputs:
+                d[output] = getattr(row, output)
+            f = model.objects.filter(**d)
+            if f.count() > 1:
+                f.delete()
+
     def filter(self, number_of_records=1, data_set=None, chronologically_recent=True):
+
         data = []
         # data_sets = json.loads(self.data_sets)
         if data_set:
@@ -362,7 +408,7 @@ class MetricChart(models.Model):
             yesterday = today - timedelta(days=1)
             yesterday = yesterday.replace(hour=23, minute=59, second=59)
 
-            earlier_day = today - timedelta(days=number_of_records)
+            earlier_day = today - timedelta(days=number_of_records - 1)
             earlier_day = earlier_day.replace(hour=0, minute=0, second=1)
 
             d = {}
@@ -377,7 +423,15 @@ class MetricChart(models.Model):
             try:
                 # entries = model.objects.filter(**d).order_by("-input_date_time")[:number_of_records]
                 entries = model.objects.filter(**d).order_by(order_by)
+                # if model.objects.first().interpolation_allowed:
+                #    self.remove_duplicates(model)
                 i = entries.count()
+                if i > (number_of_records - 1):
+                    entries = model.objects.filter(**d).order_by(order_by)
+                    if model.objects.first().interpolation_allowed:
+                        self.remove_duplicates(model)
+                        entries = model.objects.filter(**d).order_by(order_by)
+                        i = entries.count()
                 if entries.count() < (number_of_records - 1):
                     # let's fix it up
                     if model.objects.first().interpolation_allowed:

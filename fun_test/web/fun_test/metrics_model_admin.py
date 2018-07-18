@@ -73,7 +73,8 @@ class EcVolPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(NuTransitPerformance)
 class NuTransitPerformanceAdmin(admin.ModelAdmin):
-    pass
+    ordering = ('-input_date_time',)
+
 
 @admin.register(VoltestPerformance)
 class VoltestPerformanceAdmin(admin.ModelAdmin):
