@@ -769,7 +769,7 @@ class PeekCommands(object):
                 master_table_obj.border = False
                 master_table_obj.align = 'l'
                 master_table_obj.header = False
-                cmd = "stats/fpg/port/[%d]" % port_num
+                cmd = "stats/fpg/nu/port/[%d]" % port_num
                 result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                 if result_list:
                     result = result_list[0]
