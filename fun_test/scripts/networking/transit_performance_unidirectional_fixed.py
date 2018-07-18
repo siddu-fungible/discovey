@@ -568,7 +568,7 @@ class NuTransitJitterTest(FunTestCase):
             rate_result = template_obj.validate_traffic_rate_results(
                 rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
-                stream_objects=stream_objs, wait_before_fetching_results=False, validate_throughput=False)
+                stream_objects=[stream_obj], wait_before_fetching_results=False, validate_throughput=False)
             fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
 
             fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
@@ -577,7 +577,7 @@ class NuTransitJitterTest(FunTestCase):
             jitter_result = template_obj.validate_performance_result(
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
-                stream_objects=stream_objs, expected_performance_data=self.expected_jitter_data,
+                stream_objects=[stream_obj], expected_performance_data=self.expected_jitter_data,
                 tolerance_percent=TOLERANCE_PERCENT, jitter=True)
             fun_test.simple_assert(expression=jitter_result, message=checkpoint)
 
