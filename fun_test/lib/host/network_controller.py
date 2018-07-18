@@ -449,29 +449,29 @@ class NetworkController(DpcshClient):
                                    nonfcp_xoff_thr=0):
         result = False
         try:
-            # TODO: Check the parameters terminology and change accordingly. Also if 1 value change others also change
-            input_dict = {}
+            egress_buffer_pool = self.get_qos_egress_buffer_pool()
+            fun_test.simple_assert(egress_buffer_pool, "Get Existing settings")
             if sf_thr:
-                input_dict["sf_thr"] = sf_thr
+                egress_buffer_pool["sf_thr"] = sf_thr
             if sx_thr:
-                input_dict["sx_thr"] = sx_thr
+                egress_buffer_pool["sx_thr"] = sx_thr
             if dx_thr:
-                input_dict["dx_thr"] = dx_thr
+                egress_buffer_pool["dx_thr"] = dx_thr
             if df_thr:
-                input_dict["df_thr"] = df_thr
+                egress_buffer_pool["df_thr"] = df_thr
             if fcp_thr:
-                input_dict["fcp_thr"] = fcp_thr
+                egress_buffer_pool["fcp_thr"] = fcp_thr
             if nonfcp_thr:
-                input_dict["nonfcp_thr"] = nonfcp_thr
+                egress_buffer_pool["nonfcp_thr"] = nonfcp_thr
             if sample_copy_thr:
-                input_dict["sample_copy_thr"] = sample_copy_thr
+                egress_buffer_pool["sample_copy_thr"] = sample_copy_thr
             if sf_xoff_thr:
-                input_dict["sf_xoff_thr"] = sf_xoff_thr
+                egress_buffer_pool["sf_xoff_thr"] = sf_xoff_thr
             if fcp_xoff_thr:
-                input_dict["fcp_xoff_thr"] = fcp_xoff_thr
+                egress_buffer_pool["fcp_xoff_thr"] = fcp_xoff_thr
             if nonfcp_xoff_thr:
-                input_dict["nonfcp_xoff_thr"] = nonfcp_xoff_thr
-            egress_buffer_pool_args = ['set', 'egress_buffer_pool', input_dict]
+                egress_buffer_pool["nonfcp_xoff_thr"] = nonfcp_xoff_thr
+            egress_buffer_pool_args = ['set', 'egress_buffer_pool', egress_buffer_pool]
             fun_test.debug("Setting QOS egress buffer pool")
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=egress_buffer_pool_args,
                                                 command_duration=self.COMMAND_DURATION)
@@ -897,7 +897,7 @@ class NetworkController(DpcshClient):
     def peek_fpg_port_stats(self, port_num):
         stats = None
         try:
-            stats_cmd = "stats/fpg/port/[%d]" % port_num
+            stats_cmd = "stats/fpg/nu/port/[%d]" % port_num
             fun_test.debug("Getting FPG stats for port %d" % port_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get FPG stats for port %d" % port_num)
