@@ -211,8 +211,11 @@ class MetricChart(models.Model):
         if not self.leaf:
             if len(children):
                 child_degrades = 0
+                sum_of_child_weights = 0
                 for child in children:
                     child_metric = MetricChart.objects.get(metric_id=child)
+                    child_weight = children_weights[child] if child in children_weights else 1
+                    sum_of_child_weights += child_weight
                     get_status = child_metric.get_status(number_of_records=number_of_records)
                     serialized = MetricChartSerializer(child_metric, many=False)
                     serialized_data = serialized.data
@@ -242,9 +245,13 @@ class MetricChart(models.Model):
                         if len(child_goodness_values) < (i + 1):
                             child_goodness_values.append(0)
 
-                        child_weight = children_weights[child] if child in children_weights else 1
+
+
                         goodness_values[i] += child_goodness_values[i] * child_weight
                         children_goodness_map[child] = child_goodness_values
+                if sum_of_child_weights:
+                    for i in range(number_of_records - 1):
+                        goodness_values[i] = goodness_values[i]/sum_of_child_weights
 
         else:
 
@@ -385,8 +392,6 @@ class MetricChart(models.Model):
                 inputs.append(v)
             if v.startswith("output_"):
                 outputs.append(v)
-
-        inputs["input_date_time__range"] = [from_date, to_date]
         for row in model.objects.all():
             d = {}
             for input in inputs:

@@ -191,6 +191,23 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         return newNode;
     };
 
+    $scope.getSumChildWeights = (children) => {
+        let sumOfWeights = 0;
+        angular.forEach(children, (info, childId) => {
+            sumOfWeights += info.weight;
+        });
+        return sumOfWeights;
+    };
+
+    $scope.getScoreTotal = (currentNode) => {
+        let children = currentNode.children;
+        let scoreTotal = 0;
+        angular.forEach(children, (info, childId) => {
+            scoreTotal += info.weight * $scope.getLastElement(currentNode.childrenGoodnessMap[childId]);
+        });
+        return scoreTotal;
+    };
+
     $scope.evaluateGoodness = (node, goodness_values, children_goodness_map) => {
         if (goodness_values.length) {
             try {
