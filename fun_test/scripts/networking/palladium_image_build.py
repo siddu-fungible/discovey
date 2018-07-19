@@ -140,7 +140,7 @@ class GenerateCSR(FunTestCase):
 
         TEST_STATUS = True
         CSR_CFG = '/tmp/csr_override.cfg'
-        CSR_FUNOS = '{}/FunOS/Configfiles/configs/csr_override.cfg'.format(target_workspace)
+        CSR_FUNSDK = '{}/FunSDK/config/pipeline/csr_override.cfg'.format(target_workspace)
 
         linux_obj = Linux(host_ip=container_asset["host_ip"],
                           ssh_username=container_asset["mgmt_ssh_username"],
@@ -163,7 +163,7 @@ class GenerateCSR(FunTestCase):
             TEST_STATUS = False
         else:
             cmd_list = ["echo ']}' >> /tmp/csr_override.cfg",
-                        'cp {} {}'.format(CSR_CFG, CSR_FUNOS),
+                        'cp {} {}'.format(CSR_CFG, CSR_FUNSDK),
                         'sudo pkill funos-posix',
                         'sudo pkill qemu']
             try:

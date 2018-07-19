@@ -61,7 +61,8 @@ class BcopyPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(BcopyFloodDmaPerformance)
 class BcopyFloodDmaPerformanceAdmin(admin.ModelAdmin):
-    pass
+    ordering = ('-input_date_time',)
+
 
 @admin.register(LsvZipCryptoPerformance)
 class LsvZipCryptoPerformanceAdmin(admin.ModelAdmin):
