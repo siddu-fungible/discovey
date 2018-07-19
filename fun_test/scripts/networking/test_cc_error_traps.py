@@ -13,6 +13,7 @@ port3 = None
 generator_handle = None
 subscribed_results = None
 TRAFFIC_DURATION = 10
+DURATION_SECONDS = 20
 cc_path_config = {}
 LOAD = 110
 LOAD_UNIT = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -176,7 +177,7 @@ class TestCcErrorTrapTtlError1(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
@@ -721,7 +722,7 @@ class TestCcIpChecksumError(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
@@ -1049,7 +1050,7 @@ class TestCcOuterChecksumError(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
@@ -1820,7 +1821,7 @@ class TestCcCrcBadVerError(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
@@ -2110,7 +2111,7 @@ class TestCcErrorTrapsAllTogether(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
         checkpoint = "Ensure Spirent stats fetched"
         rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,

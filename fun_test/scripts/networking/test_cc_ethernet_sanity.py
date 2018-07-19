@@ -13,6 +13,7 @@ port3 = None
 generator_handle = None 
 subscribed_results = None
 TRAFFIC_DURATION = 10
+DURATION_SECONDS = 20
 cc_path_config = {}
 LOAD = 110
 LOAD_UNIT = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -175,7 +176,7 @@ class TestCcEthernetArpRequest(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
@@ -951,7 +952,7 @@ class TestCcEthernetAllTogether(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
         checkpoint = "Ensure Spirent stats fetched"
         rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
@@ -1008,8 +1009,8 @@ class TestCcEthernetAllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = 200 * len(streams_group)
-        MAX_RX_PORT_COUNT = 400 * len(streams_group)
+        MIN_RX_PORT_COUNT = 400 * len(streams_group)
+        MAX_RX_PORT_COUNT = 600 * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d pps" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
