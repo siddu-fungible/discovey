@@ -404,7 +404,7 @@ class IPv4RuntTestCase2(FunTestCase):
             dut_port_1_undersize_pkts = get_dut_output_stats_value(dut_port_1_results, ETHER_STATS_UNDERSIZE_PKTS, tx=False)
             fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=int(dut_port_1_undersize_pkts),
                                           message="Ensure all packets are marked undersize on rx port of dut")
-
+            '''
             psw_stats = network_controller_obj.peek_psw_global_stats()
             dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
             ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
@@ -418,6 +418,7 @@ class IPv4RuntTestCase2(FunTestCase):
             for key in fetch_list:
                 fun_test.test_assert_expected(expected=int(tx_results['FrameCount']), actual=psw_fetched_output[key],
                                               message="Check counter %s in psw global stats" % key)
+            '''
 
 
 class IPv6RuntTestCase2(IPv4RuntTestCase2):
