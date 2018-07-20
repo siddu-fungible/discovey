@@ -137,7 +137,8 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def populate_performance_counters_json(self, ip_version, mode, file_name, latency_results=None, jitter_results=None):
+    def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None,
+                                           flow_type=None):
         file_created = False
         records = []
         try:
@@ -152,6 +153,8 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                 record['timestamp'] = timestamp
                 frame_size = int(key.split('_')[1])
                 record['frame_size'] = frame_size
+                if flow_type:
+                    record['flow_type'] = flow_type
                 if jitter_results:
                     if len(latency_results[key]['latency_count']) > 1:
                         record['throughput'] = float(latency_results[key]['throughput_count'])

@@ -822,7 +822,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
     def validate_performance_result(self, tx_subscribe_handle, rx_subscribe_handle, stream_objects,
                                     jitter=False, expected_performance_data=[],
-                                    tolerance_percent=10):
+                                    tolerance_percent=10, flow_type=None):
         result = {'result': False}
         try:
 
@@ -858,8 +858,12 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         if "_name" in record:
                             continue
                         if record['frame_size'] == stream_obj.FixedFrameLength:
-                            expected_jitter_dict = record
-                            break
+                            if 'flow_type' in record and flow_type == record['flow_type']:
+                                expected_jitter_dict = record
+                                break
+                            else:
+                                expected_jitter_dict = record
+                                break
                     checkpoint = "Validate Jitter Counters"
                     jitter_result = self.validate_jitter_results(rx_result=rx_result,
                                                                  stream_obj=stream_obj,
@@ -873,8 +877,12 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         if '_name' in record:
                             continue
                         if record['frame_size'] == stream_obj.FixedFrameLength:
-                            expected_latency_dict = record
-                            break
+                            if "flow_type" in record and flow_type == record['flow_type']:
+                                expected_latency_dict = record
+                                break
+                            else:
+                                expected_latency_dict = record
+                                break
 
                     checkpoint = "Validate Latency Counters"
                     latency_result = self.validate_latency_results(rx_result=rx_result,
@@ -892,7 +900,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def display_latency_counters(self, result):
         try:
             fun_test.log_disable_timestamps()
-            fun_test.log_section("Nu Transit Performance Latency Counters")
+            fun_test.log_section("NU Performance Latency Counters")
             table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
                                      'Max Latency (us)'])
             for key in result:
@@ -921,7 +929,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def display_jitter_counters(self, result):
         try:
             fun_test.log_disable_timestamps()
-            fun_test.log_section("Nu Transit Performance Jitter Counters")
+            fun_test.log_section("NU Performance Jitter Counters")
             if 'throughput_count' in result:
                 column_list = ['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Jitter (us)', 'Min Jitter (us)',
                                'Max Jitter (us)']
