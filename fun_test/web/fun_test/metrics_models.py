@@ -205,7 +205,7 @@ class MetricChart(models.Model):
         leaf_status = True
         if self.chart_name == "Nucleus":
             j = 2
-        if self.chart_name == "Bcopy: Flood DMA: Avg Bandwidth":
+        if self.chart_name == "BLK_EC: Latency":
             j = 3
         children_info = {}
         if not self.leaf:
@@ -325,10 +325,10 @@ class MetricChart(models.Model):
                                 data_set_statuses.append(leaf_status)
                                 if expected_value is not None:
                                     if self.positive:
-                                        data_set_combined_goodness += (float(output_value) / expected_value) * 100
+                                        data_set_combined_goodness += (float(output_value) / expected_value) * 100 if output_value >= 0 else 0
                                     else:
                                         if output_value:
-                                            data_set_combined_goodness += (float(expected_value) / output_value) * 100
+                                            data_set_combined_goodness += (float(expected_value) / output_value) * 100 if output_value >= 0 else 0
                                         else:
                                             print "ERROR: {}, {}".format(self.chart_name,
                                                                              self.metric_model_name)
