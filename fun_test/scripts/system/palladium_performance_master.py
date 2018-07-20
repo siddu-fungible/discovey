@@ -287,7 +287,6 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
                     average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
 
-                if self.result == fun_test.PASSED:
                     MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
                                                                            input_date_time=self.dt,
                                                                            input_n=n,

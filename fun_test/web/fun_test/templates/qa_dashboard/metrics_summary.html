@@ -315,7 +315,19 @@
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td>Total ~ {{ currentNode.goodness }}</td>
+                            <td>Total ~ {{ getScoreTotal(currentNode) }}</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>Sum of child weights = {{ getSumChildWeights (currentNode.children) }}</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>Score ~ {{getScoreTotal(currentNode)}} / {{ getSumChildWeights (currentNode.children) }} = {{getScoreTotal(currentNode) /  getSumChildWeights (currentNode.children) | number: 1}}</td>
                         </tr>
                     </table>
                 </div>
