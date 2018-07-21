@@ -536,9 +536,18 @@ int fun_prop_set(uint32_t offset, uint8_t size, uint64_t value)
 
 	return 0;
 }
+#define NVME_SQES_LOG2 6
+#define NVME_CC_IOSQES_S 16
+#define NVME_CQES_LOG2 4
+#define NVME_CC_IOCQES_S 20
+#define NVME_CC_ENABLE 1
+#define NVME_CC_ENABLE_VAL (((NVME_SQES_LOG2) << (NVME_CC_IOSQES_S)) | \
+                            ((NVME_CQES_LOG2) << (NVME_CC_IOCQES_S)) | \
+                            (NVME_CC_ENABLE))
 
 int fun_enable_controller()
 {
-	return fun_prop_set(FUN_REG_CC, FABRICS_PROPERTY_ATTRIB_SIZE_4, 1);
+	//return fun_prop_set(FUN_REG_CC, FABRICS_PROPERTY_ATTRIB_SIZE_4, 1);
+	return fun_prop_set(FUN_REG_CC, FABRICS_PROPERTY_ATTRIB_SIZE_4, NVME_CC_ENABLE_VAL);
 }
 
