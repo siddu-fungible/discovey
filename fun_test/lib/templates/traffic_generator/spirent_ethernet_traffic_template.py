@@ -1142,7 +1142,11 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             else:
                 for header in underlay_list:
                     if header == Ethernet2Header:
-                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'])
+                        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+                        if 'ipv6' in underlay_list[1].HEADER_TYPE.lower():
+                            ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
+                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                                                  ether_type=ether_type)
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
                         ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_config']['ipv4']['destination_ip1'])
@@ -1167,7 +1171,11 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         custom_header_obj = CustomBytePatternHeader(byte_pattern=byte_pattern)
                         header_obj_list.append(custom_header_obj)
                     elif header == Ethernet2Header:
-                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'])
+                        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+                        if 'ipv6' in overlay_list[2].HEADER_TYPE.lower():
+                            ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
+                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                                                  ether_type=ether_type)
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
                         ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip2'])
@@ -1209,7 +1217,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return result
 
     def configure_overlay_frame_stack(self, port, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP, streamblock_obj=None,
-                                      mpls=False, byte_pattern=None):
+                                      mpls=False, byte_pattern="00012140", streamblock_frame_length=148):
         result = {}
         try:
             if mpls:
@@ -1218,7 +1226,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 elif overlay_type == self.MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP:
                     header_list = [Ethernet2Header, Ipv4Header, UDP, CustomBytePatternHeader, Ipv4Header, UDP]
             if not streamblock_obj:
-                streamblock_obj = StreamBlock(fixed_frame_length=148)
+                streamblock_obj = StreamBlock(fixed_frame_length=streamblock_frame_length)
                 stream = self.configure_stream_block(stream_block_obj=streamblock_obj, port_handle=port)
                 fun_test.simple_assert(stream, "Creating streamblock for overlay")
             if overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP:
