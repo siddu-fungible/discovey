@@ -255,7 +255,7 @@ class MetricChart(models.Model):
 
         else:
 
-            if False and self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
+            if True and self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
                 goodness_values.extend(json.loads(self.goodness_cache))
                 status_values.extend(json.loads(self.status_cache))
             else:
