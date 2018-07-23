@@ -865,6 +865,13 @@ class VoltestPerformance(models.Model):
     output_VOL_TYPE_BLK_EC_read_Bandwidth_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth avg", default=0)
     output_VOL_TYPE_BLK_EC_read_Bandwidth_total = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth total", default=-1)
 
+
+class ShaxPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = ShaxPerformance
+        fields = "__all__"
+
 class BcopyPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
