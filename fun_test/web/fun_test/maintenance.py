@@ -90,6 +90,7 @@ if __name__ == "__main2__":
 
 
 if __name__ == "__main__":
+    entries = ShaxPerformance.objects.all()
     for entry in entries:
         entry.interpolation_allowed = True
         entry.save()
