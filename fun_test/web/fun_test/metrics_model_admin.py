@@ -8,7 +8,7 @@ from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack
 from web.fun_test.metrics_models import UnitTestPerformance
 from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformance, NuTransitPerformance
-from web.fun_test.metrics_models import VoltestPerformance
+from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance
 
 
 @admin.register(Performance1)
@@ -79,4 +79,8 @@ class NuTransitPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(VoltestPerformance)
 class VoltestPerformanceAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(ShaxPerformance)
+class ShaxPerformanceAdmin(admin.ModelAdmin):
     pass

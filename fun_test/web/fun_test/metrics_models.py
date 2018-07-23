@@ -500,6 +500,26 @@ class Performance1(models.Model):
     tag = "analytics"
 
 
+class ShaxPerformance(models.Model):
+    output_latency_min = models.IntegerField(verbose_name="Latency Min", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="Latency Avg", default=-1)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_algorithm = models.TextField(verbose_name="Algorithm", default="", choices=[[0, "SHA1"], [1, "SHA224"], [2, "SHA256"], [3, "SHA384"], [4, "SHA512"], [5, "SHA3_224"], [6, "SHA3_256"], [7, "SHA3_384"], [8, "SHA3_512"], [9, "SHA1"], [10, "SHA224"], [11, "SHA256"], [12, "SHA384"], [13, "SHA512"], [14, "SHA3_224"], [15, "SHA3_256"], [16, "SHA3_384"], [17, "SHA3_512"]])
+    output_avg_throughput_expected = models.FloatField(verbose_name="Average Throughput expected", default=-1)
+    input_num_hw_threads = models.IntegerField(verbose_name="Number of HW threads", default=-1, choices=[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 1.0], [6, 1.0], [7, 1.0], [8, 1.0], [9, ""], [10, 6.0], [11, 6.0], [12, 6.0], [13, 6.0], [14, 6.0], [15, 6.0], [16, 6.0], [17, ""]])
+    output_iops_expected = models.IntegerField(verbose_name="IOPS", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="Latency Max", default=-1)
+    input_sdk_version = models.TextField(verbose_name="Sdk version", default="")
+    output_iops = models.IntegerField(verbose_name="IOPS", default=-1)
+    output_avg_throughput = models.FloatField(verbose_name="Average Throughput", default=-1)
+    input_effort = models.IntegerField(verbose_name="Effort", default=-1, choices=[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 1.0], [6, 1.0], [7, 1.0], [8, 1.0], [9, 1.0], [10, 1.0], [11, 1.0], [12, 1.0], [13, 1.0], [14, 1.0], [15, 1.0], [16, 1.0], [17, 1.0]])
+    output_latency_expected = models.IntegerField(verbose_name="Latency Expected", default=-1)
+    tag = "analytics"
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+
+
+
 class PerformanceBlt(models.Model):
     key = models.CharField(max_length=30, verbose_name="Build no.")
     input1_block_size = models.CharField(max_length=20, choices=[(0, "4K"), (1, "8K"), (2, "16K")], verbose_name="Block size")
@@ -985,6 +1005,12 @@ ANALYTICS_MAP = {
         "module": "storage",
         "component": "general",
         "verbose_name": "Voltest Performance"
+    },
+    "ShaxPerformance": {
+        "model": ShaxPerformance,
+        "module": "security",
+        "component": "general",
+        "verbose_name": "Shax Performance"
     }
 }
 
