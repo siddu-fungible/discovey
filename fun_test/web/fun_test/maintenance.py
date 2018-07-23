@@ -82,9 +82,14 @@ if __name__ == "__main2__":
             chart.last_build_status = "FAILED"
             chart.save()
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     entries = ShaxPerformance.objects.all().delete()
     for entry in entries:
         entry.interpolation_allowed = True
-        entry.delete()
+        entry.save()
+
+
+if __name__ == "__main__":
+    for entry in entries:
+        entry.interpolation_allowed = True
         entry.save()
