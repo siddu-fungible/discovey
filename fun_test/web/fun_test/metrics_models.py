@@ -205,7 +205,7 @@ class MetricChart(models.Model):
         leaf_status = True
         if self.chart_name == "Nucleus":
             j = 2
-        if self.chart_name == "BLK_EC: Latency":
+        if self.chart_name == "SHA Latency":
             j = 3
         children_info = {}
         if not self.leaf:
@@ -255,7 +255,7 @@ class MetricChart(models.Model):
 
         else:
 
-            if True and self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
+            if False and self.goodness_cache_valid and (number_of_records == self.goodness_cache_range):
                 goodness_values.extend(json.loads(self.goodness_cache))
                 status_values.extend(json.loads(self.status_cache))
             else:
@@ -515,7 +515,7 @@ class ShaxPerformance(models.Model):
     input_effort = models.IntegerField(verbose_name="Effort", default=-1, choices=[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 1.0], [6, 1.0], [7, 1.0], [8, 1.0], [9, 1.0], [10, 1.0], [11, 1.0], [12, 1.0], [13, 1.0], [14, 1.0], [15, 1.0], [16, 1.0], [17, 1.0]])
     output_latency_expected = models.IntegerField(verbose_name="Latency Expected", default=-1)
     tag = "analytics"
-    interpolation_allowed = models.BooleanField(default=False)
+    interpolation_allowed = models.BooleanField(default=True)
     interpolated = models.BooleanField(default=False)
 
 

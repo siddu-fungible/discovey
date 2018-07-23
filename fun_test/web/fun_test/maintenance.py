@@ -12,7 +12,7 @@ django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart
+from web.fun_test.metrics_models import MetricChart, ShaxPerformance
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.analytics_models_helper import MetricChartHelper
@@ -74,10 +74,17 @@ if __name__ == "__main33__":
             jm_entry.completion_date = dt.strftime("%Y-%m-%d %H:%M")
             jm_entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     for model in ["WuLatencyUngated", "WuLatencyAllocStack", "AllocSpeedPerformance", "BcopyFloodDmaPerformance", "BcopyPerformance",
                   "EcVolPerformance", "EcPerformance"]:
         charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model)
         for chart in charts:
             chart.last_build_status = "FAILED"
             chart.save()
+
+if __name__ == "__main__":
+    entries = ShaxPerformance.objects.all().delete()
+    for entry in entries:
+        entry.interpolation_allowed = True
+        entry.delete()
+        entry.save()
