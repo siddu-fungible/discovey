@@ -271,14 +271,18 @@ def get_wro_global_stats_values(network_controller_obj):
     return result
 
 
-def validate_parser_stats(parser_result, compare_value, check_list_keys=[]):
+def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None):
     result = False
     try:
         stat_counter_list = ['prv_sent', 'eop_cnt', 'sop_cnt']
         for key in check_list_keys:
             current_dict = parser_result['global'][key]
             for counter in stat_counter_list:
-                fun_test.test_assert_expected(expected=compare_value, actual=int(current_dict[counter]),
+                actual = int(current_dict[counter])
+                if parser_old_result:
+                    old_dict = parser_old_result['global'][key]
+                    actual = int(current_dict[counter]) - int(old_dict[counter])
+                fun_test.test_assert_expected(expected=compare_value, actual=actual,
                                               message="Check %s stats for %s in parser nu stats" % (counter, key))
         result = True
     except Exception as ex:
@@ -292,6 +296,25 @@ def get_vp_per_pkts_stats_values(network_controller_obj):
         output = network_controller_obj.peek_per_vppkts_stats()
         fun_test.simple_assert(output, "Ensure vp per packet stats are grepped")
         result = parse_result_dict(output)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_diff_stats(old_stats, new_stats, stats_list=[]):
+    result = {}
+    try:
+        if stats_list:
+            for stat in stats_list:
+                fun_test.simple_assert(stat in old_stats, "Stat %s not present in old stats" % stat)
+                fun_test.simple_assert(stat in new_stats, "Stat %s not present in new stats" % stat)
+                result[stat] = int(new_stats[stat]) - int(old_stats[stat])
+        else:
+            for key, val in new_stats.iteritems():
+                if isinstance(val, dict):
+                    result[key] = get_diff_stats(old_stats=old_stats[key], new_stats=new_stats[key])
+                else:
+                    result[key] = int(new_stats[key]) - int(old_stats[key])
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
