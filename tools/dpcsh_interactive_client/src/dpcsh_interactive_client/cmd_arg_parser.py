@@ -516,9 +516,15 @@ peek_stats_parsers = peek_stats_parser.add_subparsers(title="subcommands", help=
 
 # Meter stats
 peek_meter_stats_parser = peek_stats_parsers.add_parser('meter', help="NU Meter Stats")
+peek_meter_stats_parsers = peek_meter_stats_parser.add_subparsers(title='subcommands', help="")
 peek_meter_stats_parser.add_argument('-bank', type=int, help="Meter bank")
 peek_meter_stats_parser.add_argument('-index', type=int, help="Meter Index")
 peek_meter_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+# Erp meter stats
+peek_meter_erp_stats_parser = peek_meter_stats_parsers.add_parser('erp', help='Peek meter erp stats')
+peek_meter_erp_stats_parser.add_argument('-bank', type=int, help="Meter bank")
+peek_meter_erp_stats_parser.add_argument('-index', type=int, help="Meter ID")
+peek_meter_erp_stats_parser.add_argument('-grep', help="Grep regex", default=None)
 
 # Fpg stats
 peek_fpg_stats_parser = peek_stats_parsers.add_parser('fpg', help="NU Peek FPG Port stats")

@@ -730,8 +730,14 @@ class PeekCommands(object):
                 diff_result[key] = {}
                 for _key in result[key]:
                     if key in prev_result and _key in prev_result[key]:
-                        diff_value = result[key][_key] - prev_result[key][_key]
-                        diff_result[key][_key] = diff_value
+                        if type(result[key][_key]) == dict:
+                            diff_result[key][_key] = {}
+                            for inner_key in result[key][_key]:
+                                diff_value = result[key][_key][inner_key] - prev_result[key][_key][inner_key]
+                                diff_result[key][_key][inner_key] = diff_value
+                        else:
+                            diff_value = result[key][_key] - prev_result[key][_key]
+                            diff_result[key][_key] = diff_value
                     else:
                         diff_result[key][_key] = 0
             else:
@@ -832,20 +838,24 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
-    def peek_meter_stats(self, bank, index, grep_regex=None):
+    def peek_meter_stats(self, bank, index, grep_regex=None, erp=False):
         prev_result = {}
         while True:
             try:
-                cmd = "stats/meter/nu/bank/%d/meter[%d]" % (bank, index)
+                if erp:
+                    cmd = "stats/erp/meter/bank/%d/meter/[%d]" % (bank, index)
+                else:
+                    cmd = "stats/meter/nu/bank/%d/meter[%d]" % (bank, index)
                 result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
                 print "--------------> Meter %d  <--------------" % index
+                table_obj = None
                 if result:
                     if prev_result:
                         diff_result = self._get_difference(result=result, prev_result=prev_result)
                         table_obj = PrettyTable(['Color', 'Bytes', 'Bytes Diff', 'Packet', 'Packet Diff'])
                         for key in sorted(result):
                             if grep_regex:
-                                if re.search(grep_regex, _key, re.IGNORECASE):
+                                if re.search(grep_regex, key, re.IGNORECASE):
                                     table_obj.add_row([key, result[key]['bytes'],
                                                        diff_result[key]['bytes'],
                                                        result[key]['pkts'],
@@ -886,20 +896,18 @@ class PeekCommands(object):
                 else:
                     cmd = "stats/psw/%s/port/[%d]" % (mode, port_num)
                 master_table_obj = PrettyTable()
+                master_table_obj.header = False
                 master_table_obj.border = False
                 master_table_obj.align = 'l'
                 result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
-                '''
-                if type(result) == str:
-                    if self.dpc_client.verbose:
-                        print "Executing cmd again as it failed to read full buffer"
-                    result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
-                '''
                 if is_global:
                     if prev_result:
                         diff_result = self._get_difference(result=result, prev_result=prev_result)
                         for key in sorted(result):
-                            table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            if key == 'prm':
+                                table_obj = PrettyTable(['Field Name', 'Counters'])
+                            else:
+                                table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
                             table_obj.align = 'l'
                             table_obj.sortby = 'Field Name'
                             for _key in result[key]:
@@ -907,8 +915,18 @@ class PeekCommands(object):
                                     if re.search(grep_regex, key, re.IGNORECASE):
                                         table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
                                 else:
-                                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                            master_table_obj.add_column(key, [table_obj])
+                                    if type(result[key][_key]) == dict:
+                                        inner_table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                                        inner_table_obj.align = 'l'
+                                        inner_table_obj.sortby = 'Field Name'
+                                        for inner_key in result[key][_key]:
+                                            inner_table_obj.add_row([inner_key, result[key][_key][inner_key],
+                                                                     diff_result[key][_key][inner_key]])
+                                        table_obj.add_row([_key, inner_table_obj])
+                                    else:
+                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                            if table_obj.rowcount > 0:
+                                master_table_obj.add_row([key, table_obj])
                     else:
                         for key in sorted(result):
                             table_obj = PrettyTable(['Field Name', 'Counters'])
@@ -919,8 +937,17 @@ class PeekCommands(object):
                                     if re.search(grep_regex, key, re.IGNORECASE):
                                         table_obj.add_row([_key, result[key][_key]])
                                 else:
-                                    table_obj.add_row([_key, result[key][_key]])
-                            master_table_obj.add_column(key, [table_obj])
+                                    if type(result[key][_key]) == dict:
+                                        inner_table_obj = PrettyTable(['Field Name', 'Counters'])
+                                        inner_table_obj.align = 'l'
+                                        inner_table_obj.sortby = 'Field Name'
+                                        for inner_key in result[key][_key]:
+                                            inner_table_obj.add_row([inner_key, result[key][_key][inner_key]])
+                                        table_obj.add_row([_key, inner_table_obj])
+                                    else:
+                                        table_obj.add_row([_key, result[key][_key]])
+                            if table_obj.rowcount > 0:
+                                master_table_obj.add_row([key, table_obj])
                 else:
                     print "--------------> Port %d  <--------------" % port_num
                     if prev_result:

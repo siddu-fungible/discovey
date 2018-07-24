@@ -372,6 +372,12 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_meter_stats(bank=bank, index=index, grep_regex=grep_regex)
 
+    def peek_erp_meter_stats(self, args):
+        bank = args.bank
+        index = args.index
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_meter_stats(bank=bank, index=index, grep_regex=grep_regex, erp=True)
+
     def peek_vp_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_vp_stats(grep_regex=grep_regex)
@@ -546,6 +552,7 @@ class CmdController(Cmd):
     peek_psw_nu_stats_parser.set_defaults(func=peek_psw_nu_stats)
     peek_psw_hnu_stats_parser.set_defaults(func=peek_psw_hnu_stats)
     peek_meter_stats_parser.set_defaults(func=peek_meter_stats)
+    peek_meter_erp_stats_parser.set_defaults(func=peek_erp_meter_stats)
     peek_vp_stats_parser.set_defaults(func=peek_vp_stats)
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_stats)
     peek_wro_nu_stats_parser.set_defaults(func=peek_wro_nu_stats)
@@ -611,7 +618,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.23.102", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
