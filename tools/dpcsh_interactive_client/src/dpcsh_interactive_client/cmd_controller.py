@@ -551,7 +551,7 @@ class CmdController(Cmd):
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
     peek_psw_nu_stats_parser.set_defaults(func=peek_psw_nu_stats)
     peek_psw_hnu_stats_parser.set_defaults(func=peek_psw_hnu_stats)
-    peek_meter_stats_parser.set_defaults(func=peek_meter_stats)
+    peek_meter_nu_stats_parser.set_defaults(func=peek_meter_stats)
     peek_meter_erp_stats_parser.set_defaults(func=peek_erp_meter_stats)
     peek_vp_stats_parser.set_defaults(func=peek_vp_stats)
     peek_fcp_stats_parser.set_defaults(func=peek_fcp_stats)
