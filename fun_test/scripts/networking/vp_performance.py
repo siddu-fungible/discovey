@@ -280,6 +280,12 @@ class NuVpLatencyIPv4Test(FunTestCase):
             result = template_obj.activate_stream_blocks(stream_obj_list=[stream_obj])
             fun_test.simple_assert(result, checkpoint)
 
+            vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+            per_vp_stats = get_vp_per_pkts_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.simple_assert(vp_stats and per_vp_stats, "Ensure VP stats fetched before traffic")
+            fun_test.log("VP stats: %s" % vp_stats)
+            fun_test.log("Per VP stats: %s" % per_vp_stats)
+
             checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % TRAFFIC_DURATION
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[port1]])
             fun_test.simple_assert(expression=result, message=checkpoint)
@@ -312,14 +318,15 @@ class NuVpLatencyIPv4Test(FunTestCase):
                                               message=checkpoint)
 
                 checkpoint = "Validate VP total IN == total OUT"
-                # TODO: Add diff assert here
-                '''
-                vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-                fun_test.log("VP stats: %s" % vp_stats)
-                fun_test.test_assert_expected(expected=vp_stats[VP_PACKETS_TOTAL_IN],
-                                              actual=vp_stats[VP_PACKETS_TOTAL_OUT],
+                vp_stats_after = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+                fun_test.log("VP stats: %s" % vp_stats_after)
+                vp_stats_diff = get_diff_stats(old_stats=vp_stats, new_stats=vp_stats_after)
+                fun_test.simple_assert(vp_stats_diff, "Ensure VP stats diff fetched")
+
+                fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                              actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                               message=checkpoint)
-                '''
+
                 # TODO: Add per_vp stats validation
 
             checkpoint = "Validate Latency Results"
@@ -577,7 +584,7 @@ class NuVpJitterTest(FunTestCase):
 
 
 if __name__ == "__main__":
-    vp_flow_type = fun_test.get_local_setting(setting="vp_flow")
+    vp_flow_type = nu_config_obj.get_flow_type()
     flow_type = vp_flow_type if vp_flow_type else "FPG_HU"
     fun_test.log("<---------------> Validating %s Flow Direction <--------------->" % flow_type)
     FLOW_DIRECTION = flow_type

@@ -695,7 +695,7 @@ class TestCcNotForUsAllTogether(FunTestCase):
 
 
 if __name__ == '__main__':
-    cc_flow_type = fun_test.get_local_setting(setting="cc_flow")
+    cc_flow_type = nu_config_obj.get_flow_type()
     flow_type = cc_flow_type if cc_flow_type else "FPG_CC"
     fun_test.log("<---------------> Validating %s Flow Direction <--------------->" % flow_type)
     FLOW_DIRECTION = flow_type

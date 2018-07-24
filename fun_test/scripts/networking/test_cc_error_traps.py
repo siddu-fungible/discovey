@@ -2260,7 +2260,7 @@ class TestCcErrorTrapsAllTogether(FunTestCase):
 
 
 if __name__ == '__main__':
-    cc_flow_type = fun_test.get_local_setting(setting="cc_flow")
+    cc_flow_type = nu_config_obj.get_flow_type()
     flow_type = cc_flow_type if cc_flow_type else "FPG_CC"
     fun_test.log("<---------------> Validating %s Flow Direction <--------------->" % flow_type)
     FLOW_DIRECTION = flow_type
@@ -2273,9 +2273,8 @@ if __name__ == '__main__':
     # TODO: Commented out this cases as it is causing a system to crash which is affecting further cases.
     # TODO: once fixed uncomment this
     if flow_type != "HU_CC":
-        pass
-        #ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
-        #ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
+        ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
+        ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
 
     ts.add_test_case(TestCcIpChecksumError())
 

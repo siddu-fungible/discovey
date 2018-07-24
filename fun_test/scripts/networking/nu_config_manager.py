@@ -222,6 +222,19 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def get_flow_type(self):
+        flow_type = None
+        try:
+            configs = nu_config_obj._get_nu_configs()
+            fun_test.simple_assert(configs, "Get NU Configs")
+            for config in configs:
+                if config['name'] == "local_settings":
+                    flow_type = config['flow_type']
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return flow_type
+
 
 
 nu_config_obj = NuConfigManager()
