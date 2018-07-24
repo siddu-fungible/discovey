@@ -843,7 +843,7 @@ class PeekCommands(object):
         while True:
             try:
                 if erp:
-                    cmd = "stats/erp/meter/bank/%d/meter/[%d]" % (bank, index)
+                    cmd = "stats/meter/erp/bank/%d/meter[%d]" % (bank, index)
                 else:
                     cmd = "stats/meter/nu/bank/%d/meter[%d]" % (bank, index)
                 result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
