@@ -900,8 +900,6 @@ class PeekCommands(object):
                 master_table_obj.border = False
                 master_table_obj.align = 'l'
                 result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
-                result['prm']['count']['hwm_nonfcp_cnt'] = 1
-                result['prm']['ct_pkt'] = 100
                 if is_global:
                     if prev_result:
                         diff_result = self._get_difference(result=result, prev_result=prev_result)
