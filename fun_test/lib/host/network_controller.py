@@ -1119,10 +1119,13 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_meter_stats_by_id(self, meter_id, bank=0):
+    def peek_meter_stats_by_id(self, meter_id, bank=0, erp=False):
         stats = None
         try:
-            cmd = "stats/meter/nu/bank/%d/meter[%d]" % (bank, meter_id)
+            if erp:
+                cmd = "stats/meter/erp/bank/%d/meter[%d]" % (bank, meter_id)
+            else:
+                cmd = "stats/meter/nu/bank/%d/meter[%d]" % (bank, meter_id)
             fun_test.debug("Getting meter stats for id %d" % meter_id)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get meter stats for meter id %d" % meter_id)

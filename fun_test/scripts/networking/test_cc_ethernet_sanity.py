@@ -182,12 +182,14 @@ class TestCcEthernetArpRequest(FunTestCase):
 
             wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
 
-            meter_stats_before = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+            if self.meter_id:
+                meter_stats_before = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
 
             fun_test.log("VP stats: %s" % vp_stats_before)
             fun_test.log("ERP stats: %s" % erp_stats_before)
             fun_test.log("WRO stats: %s" % wro_stats_before)
-            fun_test.log("METER stats for id %d : %s" % (self.meter_id, meter_stats_before))
+            if meter_stats_before:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats_before))
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([generator_handle])
@@ -255,14 +257,16 @@ class TestCcEthernetArpRequest(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
-            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
-            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
-            fun_test.simple_assert(meter_stats, checkpoint)
+            if self.meter_id:
+                checkpoint = "Fetch Meter stats for meter id: %s" % str(self.meter_id)
+                meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+                fun_test.simple_assert(meter_stats, checkpoint)
 
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
-            fun_test.log("METER stats for id %d : %s" % (self.meter_id, meter_stats))
+            if meter_stats:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
 
         # validation asserts
         # Spirent stats validation
@@ -366,9 +370,10 @@ class TestCcEthernetArpRequest(FunTestCase):
 
             if self.validate_meter_stats:
                 checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
-                green_pkts = int(meter_stats['green']['pkts'])
-                yellow_pkts = int(meter_stats['yellow']['pkts'])
-                red_pkts = int(meter_stats['red']['pkts'])
+                meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
+                green_pkts = int(meter_stats_diff['green']['pkts'])
+                yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
+                red_pkts = int(meter_stats_diff['red']['pkts'])
                 fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
                 fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
                                               message=checkpoint)
@@ -1037,8 +1042,8 @@ class TestCcEthernetAllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = 200 * len(streams_group)
-        MAX_RX_PORT_COUNT = 400 * len(streams_group)
+        MIN_RX_PORT_COUNT = 600 * len(streams_group)
+        MAX_RX_PORT_COUNT = 800 * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d pps" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
@@ -1059,12 +1064,12 @@ class TestCcEthernetAllTogether(FunTestCase):
         if dut_config['enable_dpcsh']:
             checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                            stat_type=FRAMES_TRANSMITTED_OK)
+                                                            stat_type=FRAMES_RECEIVED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_RECEIVED_OK)
+                                                         stat_type=FRAMES_TRANSMITTED_OK)
             fun_test.log(
                 "DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted), str(frames_received)))
-            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_transmitted <= MAX_RX_PORT_COUNT),
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
                                  checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"

@@ -102,6 +102,7 @@ class TestCcErrorTrapTtlError1(FunTestCase):
     stream_obj = None
     validate_meter_stats = True
     meter_id = None
+    erp = False
 
     def describe(self):
         self.set_test_details(id=1, summary="Test CC IPv4 TTL Error (TTL = 1)",
@@ -158,6 +159,10 @@ class TestCcErrorTrapTtlError1(FunTestCase):
         self.meter_id = IPV4_COPP_TTL_ERR_METER_ID
 
     def run(self):
+        vp_stats_before = None
+        erp_stats_before = None
+        wro_stats_before = None
+        meter_stats_before = None
         if dut_config['enable_dpcsh']:
             # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -172,6 +177,21 @@ class TestCcErrorTrapTtlError1(FunTestCase):
             fun_test.log("PSW Stats: %s \n" % psw_stats)
             fun_test.log("Parser stats: %s \n" % parser_stats)
             fun_test.add_checkpoint(checkpoint)
+
+            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+
+            erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
+
+            wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+
+            if self.meter_id:
+                meter_stats_before = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=self.erp)
+
+            fun_test.log("VP stats: %s" % vp_stats_before)
+            fun_test.log("ERP stats: %s" % erp_stats_before)
+            fun_test.log("WRO stats: %s" % wro_stats_before)
+            if meter_stats_before:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats_before))
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([generator_handle])
@@ -239,14 +259,16 @@ class TestCcErrorTrapTtlError1(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
-            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
-            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
-            fun_test.simple_assert(meter_stats, checkpoint)
+            if self.meter_id:
+                checkpoint = "Fetch Meter stats for meter id: %s" % str(self.meter_id)
+                meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=self.erp)
+                fun_test.simple_assert(meter_stats, checkpoint)
 
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
-            fun_test.log("METER stats for id %d : %s" % (self.meter_id, meter_stats))
+            if meter_stats:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
 
         # validation asserts
         # Spirent stats validation
@@ -269,75 +291,91 @@ class TestCcErrorTrapTtlError1(FunTestCase):
         if dut_config['enable_dpcsh']:
             checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                            stat_type=FRAMES_TRANSMITTED_OK)
+                                                            stat_type=FRAMES_RECEIVED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_RECEIVED_OK)
-            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+                                                         stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted),
+                                                                          str(frames_received)))
             fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
                                  checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(vp_stats[VP_PACKETS_CONTROL_T2C_COUNT]), message=checkpoint)
-
+            vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
+                                           stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
+                                                       VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
+                                          message=checkpoint)
             checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(vp_stats[VP_PACKETS_CC_OUT]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CC_OUT],
+                                          message=checkpoint)
 
             checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=int(vp_stats[VP_PACKETS_TOTAL_IN]),
-                                          actual=int(vp_stats[VP_PACKETS_TOTAL_OUT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                          message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                           message=checkpoint)
             # ERP stats validation
             checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]),
+            erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
+                                            stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
+                                                        ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
+                                                        ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
+                                                        ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
+                                                        ERP_COUNT_FOR_EFP_FCP_VLD])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE],
                                           message=checkpoint)
-
             checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_FCP_VLD]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD],
                                           message=checkpoint)
             # WRO stats validation
             checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
+            wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
-
-            checkpoint = "From WRO stats, Ensure WRO In packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(wro_stats[WRO_IN_PKTS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_NFCP_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(wro_stats[WRO_OUT_WUS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_OUT_WUS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_port_results['GeneratorFrameCount']),
-                                          actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_WU_COUNT_VPP],
+                                          message=checkpoint)
+
             if self.validate_meter_stats:
                 checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
-                green_pkts = int(meter_stats['green']['pkts'])
-                yellow_pkts = int(meter_stats['yellow']['pkts'])
-                red_pkts = int(meter_stats['red']['pkts'])
+                meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
+                green_pkts = int(meter_stats_diff['green']['pkts'])
+                yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
+                red_pkts = int(meter_stats_diff['red']['pkts'])
                 fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
                 fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
                                               message=checkpoint)
@@ -703,6 +741,11 @@ class TestCcIpChecksumError(FunTestCase):
         self.meter_id = ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID
 
     def run(self):
+        vp_stats_before = None
+        erp_stats_before = None
+        wro_stats_before = None
+        meter_stats_before = None
+
         if dut_config['enable_dpcsh']:
             # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -717,6 +760,21 @@ class TestCcIpChecksumError(FunTestCase):
             fun_test.log("PSW Stats: %s \n" % psw_stats)
             fun_test.log("Parser stats: %s \n" % parser_stats)
             fun_test.add_checkpoint(checkpoint)
+
+            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+
+            erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
+
+            wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+
+            if self.meter_id:
+                meter_stats_before = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+
+            fun_test.log("VP stats: %s" % vp_stats_before)
+            fun_test.log("ERP stats: %s" % erp_stats_before)
+            fun_test.log("WRO stats: %s" % wro_stats_before)
+            if meter_stats_before:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats_before))
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([generator_handle])
@@ -767,7 +825,7 @@ class TestCcIpChecksumError(FunTestCase):
 
             checkpoint = "Get FPG port stats for all ports"
             dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
-            dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
+            dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][2])
             fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
 
             fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
@@ -785,14 +843,16 @@ class TestCcIpChecksumError(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
-            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
-            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
-            fun_test.simple_assert(meter_stats, checkpoint)
+            if self.meter_id:
+                checkpoint = "Fetch Meter stats for meter id: %s" % str(self.meter_id)
+                meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+                fun_test.simple_assert(meter_stats, checkpoint)
 
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
-            fun_test.log("Meter stats for id %d : %s" % (self.meter_id, meter_stats))
+            if meter_stats:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
 
         # validation asserts
         # Spirent stats validation
@@ -816,78 +876,93 @@ class TestCcIpChecksumError(FunTestCase):
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx == Rx on DUT"
+            checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                            stat_type=FRAMES_TRANSMITTED_OK)
+                                                            stat_type=FRAMES_RECEIVED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_RECEIVED_OK)
-            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+                                                         stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted),
+                                                                          str(frames_received)))
             fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
                                  checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(vp_stats[VP_PACKETS_CONTROL_T2C_COUNT]), message=checkpoint)
-
+            vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
+                                           stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
+                                                       VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
+                                          message=checkpoint)
             checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(vp_stats[VP_PACKETS_CC_OUT]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CC_OUT],
+                                          message=checkpoint)
 
             checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=int(vp_stats[VP_PACKETS_TOTAL_IN]),
-                                          actual=int(vp_stats[VP_PACKETS_TOTAL_OUT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                          message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                           message=checkpoint)
             # ERP stats validation
             checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]),
+            erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
+                                            stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
+                                                        ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
+                                                        ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
+                                                        ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
+                                                        ERP_COUNT_FOR_EFP_FCP_VLD])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE],
                                           message=checkpoint)
-
             checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_FCP_VLD]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD],
                                           message=checkpoint)
             # WRO stats validation
             checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
+            wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
-
-            checkpoint = "From WRO stats, Ensure WRO In packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(wro_stats[WRO_IN_PKTS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_NFCP_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(wro_stats[WRO_OUT_WUS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_OUT_WUS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_WU_COUNT_VPP],
+                                          message=checkpoint)
 
             if self.validate_meter_stats:
                 checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
-                green_pkts = int(meter_stats['green']['pkts'])
-                yellow_pkts = int(meter_stats['yellow']['pkts'])
-                red_pkts = int(meter_stats['red']['pkts'])
+                meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
+                green_pkts = int(meter_stats_diff['green']['pkts'])
+                yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
+                red_pkts = int(meter_stats_diff['red']['pkts'])
                 fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
                 fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
                                               message=checkpoint)
@@ -959,6 +1034,7 @@ class TestCcFSFError(TestCcErrorTrapTtlError1):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = ERR_TRAP_COPP_FSF_METER_ID
+        self.erp = True
 
     def run(self):
         super(TestCcFSFError, self).run()
@@ -1031,6 +1107,10 @@ class TestCcOuterChecksumError(FunTestCase):
         self.meter_id = ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID
 
     def run(self):
+        vp_stats_before = None
+        erp_stats_before = None
+        wro_stats_before = None
+        meter_stats_before = None
         if dut_config['enable_dpcsh']:
             # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -1045,6 +1125,21 @@ class TestCcOuterChecksumError(FunTestCase):
             fun_test.log("PSW Stats: %s \n" % psw_stats)
             fun_test.log("Parser stats: %s \n" % parser_stats)
             fun_test.add_checkpoint(checkpoint)
+
+            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+
+            erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
+
+            wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+
+            if self.meter_id:
+                meter_stats_before = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=True)
+
+            fun_test.log("VP stats: %s" % vp_stats_before)
+            fun_test.log("ERP stats: %s" % erp_stats_before)
+            fun_test.log("WRO stats: %s" % wro_stats_before)
+            if meter_stats_before:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats_before))
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([generator_handle])
@@ -1095,7 +1190,7 @@ class TestCcOuterChecksumError(FunTestCase):
 
             checkpoint = "Get FPG port stats for all ports"
             dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
-            dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
+            dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][2])
             fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
 
             fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
@@ -1113,14 +1208,16 @@ class TestCcOuterChecksumError(FunTestCase):
             wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
             fun_test.simple_assert(wro_stats, checkpoint)
 
-            checkpoint = "Fetch Meter stats for meter id: %d" % self.meter_id
-            meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
-            fun_test.simple_assert(meter_stats, checkpoint)
+            if self.meter_id:
+                checkpoint = "Fetch Meter stats for meter id: %s" % str(self.meter_id)
+                meter_stats = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=True)
+                fun_test.simple_assert(meter_stats, checkpoint)
 
             fun_test.log("VP stats: %s" % vp_stats)
             fun_test.log("ERP stats: %s" % erp_stats)
             fun_test.log("WRO stats: %s" % wro_stats)
-            fun_test.log("Meter stats for id %d : %s" % (self.meter_id, meter_stats))
+            if meter_stats:
+                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
 
         # validation asserts
         # Spirent stats validation
@@ -1146,75 +1243,91 @@ class TestCcOuterChecksumError(FunTestCase):
         if dut_config['enable_dpcsh']:
             checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                            stat_type=FRAMES_TRANSMITTED_OK)
+                                                            stat_type=FRAMES_RECEIVED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_RECEIVED_OK)
-            fun_test.log("DUT Tx FrameCount: %d DUT Rx FrameCount: %d" % (frames_transmitted, frames_received))
+                                                         stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted),
+                                                                          str(frames_received)))
             fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
                                  checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(vp_stats[VP_PACKETS_CONTROL_T2C_COUNT]), message=checkpoint)
-
+            vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
+                                           stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
+                                                       VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
+                                          message=checkpoint)
             checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(vp_stats[VP_PACKETS_CC_OUT]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CC_OUT],
+                                          message=checkpoint)
 
             checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=int(vp_stats[VP_PACKETS_TOTAL_IN]),
-                                          actual=int(vp_stats[VP_PACKETS_TOTAL_OUT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                          message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                           message=checkpoint)
             # ERP stats validation
             checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]),
+            erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
+                                            stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
+                                                        ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
+                                                        ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
+                                                        ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
+                                                        ERP_COUNT_FOR_EFP_FCP_VLD])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE],
                                           message=checkpoint)
-
             checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_FCP_VLD]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD],
                                           message=checkpoint)
             # WRO stats validation
             checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
+            wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
-
-            checkpoint = "From WRO stats, Ensure WRO In packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(wro_stats[WRO_IN_PKTS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_NFCP_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(wro_stats[WRO_OUT_WUS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_OUT_WUS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_WU_COUNT_VPP],
+                                          message=checkpoint)
+
             if self.validate_meter_stats:
                 checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
-                green_pkts = int(meter_stats['green']['pkts'])
-                yellow_pkts = int(meter_stats['yellow']['pkts'])
-                red_pkts = int(meter_stats['red']['pkts'])
+                meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
+                green_pkts = int(meter_stats_diff['green']['pkts'])
+                yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
+                red_pkts = int(meter_stats_diff['red']['pkts'])
                 fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
                 fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
                                               message=checkpoint)
@@ -1298,6 +1411,7 @@ class TestCcInnerChecksumError(TestCcErrorTrapTtlError1):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID
+        self.erp = True
 
     def run(self):
         super(TestCcInnerChecksumError, self).run()
@@ -1803,6 +1917,11 @@ class TestCcCrcBadVerError(FunTestCase):
         streams_group.append(self.stream_obj)
 
     def run(self):
+        vp_stats_before = None
+        erp_stats_before = None
+        wro_stats_before = None
+        meter_stats_before = None
+
         if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
@@ -1816,6 +1935,16 @@ class TestCcCrcBadVerError(FunTestCase):
             fun_test.log("PSW Stats: %s \n" % psw_stats)
             fun_test.log("Parser stats: %s \n" % parser_stats)
             fun_test.add_checkpoint(checkpoint)
+
+            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+
+            erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
+
+            wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+
+            fun_test.log("VP stats: %s" % vp_stats_before)
+            fun_test.log("ERP stats: %s" % erp_stats_before)
+            fun_test.log("WRO stats: %s" % wro_stats_before)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([generator_handle])
@@ -1901,72 +2030,86 @@ class TestCcCrcBadVerError(FunTestCase):
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx == Rx on DUT"
+            checkpoint = "Validate Tx and Rx on DUT"
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                            stat_type=FRAMES_TRANSMITTED_OK)
+                                                            stat_type=FRAMES_RECEIVED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_RECEIVED_OK)
-
-            fun_test.test_assert(frames_transmitted != frames_received, message=checkpoint)
-            fun_test.test_assert_expected(expected=0, actual=frames_received, message="Ensure DUT Rx count should be 0")
+                                                         stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted),
+                                                                          str(frames_received)))
+            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+                                 checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(vp_stats[VP_PACKETS_CONTROL_T2C_COUNT]), message=checkpoint)
-
+            vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
+                                           stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
+                                                       VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
+                                          message=checkpoint)
             checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(vp_stats[VP_PACKETS_CC_OUT]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_CC_OUT],
+                                          message=checkpoint)
 
             checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(vp_stats[VP_PACKETS_TOTAL_OUT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                          message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                           message=checkpoint)
             # ERP stats validation
             checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]),
+            erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
+                                            stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
+                                                        ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
+                                                        ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
+                                                        ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
+                                                        ERP_COUNT_FOR_EFP_FCP_VLD])
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE],
                                           message=checkpoint)
-
             checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(erp_stats[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED],
                                           message=checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(erp_stats[ERP_COUNT_FOR_EFP_FCP_VLD]),
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD],
                                           message=checkpoint)
             # WRO stats validation
             checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
+            wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=wro_stats[WRO_IN_NFCP_PKTS], message=checkpoint)
-
-            checkpoint = "From WRO stats, Ensure WRO In packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(wro_stats[WRO_IN_PKTS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_IN_NFCP_PKTS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(wro_stats[WRO_OUT_WUS]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_OUT_WUS],
+                                          message=checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
-            fun_test.test_assert_expected(expected=0,
-                                          actual=int(wro_stats[WRO_WU_COUNT_VPP]), message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_received,
+                                          actual=wro_stats_diff['global'][WRO_WU_COUNT_VPP],
+                                          message=checkpoint)
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
