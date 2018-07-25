@@ -900,14 +900,13 @@ class PeekCommands(object):
                 master_table_obj.border = False
                 master_table_obj.align = 'l'
                 result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                result['prm']['count']['hwm_nonfcp_cnt'] = 1
+                result['prm']['ct_pkt'] = 100
                 if is_global:
                     if prev_result:
                         diff_result = self._get_difference(result=result, prev_result=prev_result)
                         for key in sorted(result):
-                            if key == 'prm':
-                                table_obj = PrettyTable(['Field Name', 'Counters'])
-                            else:
-                                table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
                             table_obj.align = 'l'
                             table_obj.sortby = 'Field Name'
                             for _key in result[key]:
@@ -922,7 +921,7 @@ class PeekCommands(object):
                                         for inner_key in result[key][_key]:
                                             inner_table_obj.add_row([inner_key, result[key][_key][inner_key],
                                                                      diff_result[key][_key][inner_key]])
-                                        table_obj.add_row([_key, inner_table_obj])
+                                        table_obj.add_row([_key, inner_table_obj, ""])
                                     else:
                                         table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
                             if table_obj.rowcount > 0:
