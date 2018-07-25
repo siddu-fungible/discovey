@@ -733,8 +733,11 @@ class PeekCommands(object):
                         if type(result[key][_key]) == dict:
                             diff_result[key][_key] = {}
                             for inner_key in result[key][_key]:
-                                diff_value = result[key][_key][inner_key] - prev_result[key][_key][inner_key]
-                                diff_result[key][_key][inner_key] = diff_value
+                                if inner_key in prev_result[key][_key]:
+                                    diff_value = result[key][_key][inner_key] - prev_result[key][_key][inner_key]
+                                    diff_result[key][_key][inner_key] = diff_value
+                                else:
+                                    diff_result[key][_key][inner_key] = 0
                         else:
                             diff_value = result[key][_key] - prev_result[key][_key]
                             diff_result[key][_key] = diff_value
