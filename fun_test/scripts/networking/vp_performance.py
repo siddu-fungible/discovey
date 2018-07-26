@@ -199,7 +199,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             checkpoint = "Configure IP address for %s " % stream_obj.spirent_handle
-            if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 dest_ip = l3_config['vp_destination_ip1']
             else:
                 dest_ip = l3_config['destination_ip2']
@@ -213,7 +213,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 checkpoint = "Configure IP range modifier"
                 modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
                                              step_value="0.0.0.1", mask="255.255.255.255",
@@ -583,8 +583,8 @@ class NuVpJitterTest(FunTestCase):
 
 
 if __name__ == "__main__":
-    cc_flow_type = nu_config_obj.get_local_settings_parameters(flow_type=True)
-    FLOW_DIRECTION = cc_flow_type[nu_config_obj.FLOW_TYPE]
+    cc_flow_type = nu_config_obj.get_local_settings_parameters(flow_direction=True)
+    FLOW_DIRECTION = cc_flow_type[nu_config_obj.FLOW_DIRECTION]
     ts = NuVpPerformance()
     ts.add_test_case(NuVpLatencyIPv4Test())
     ts.add_test_case(NuVpJitterTest())
