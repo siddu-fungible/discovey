@@ -8,7 +8,8 @@ Results Header Dict
   "pps": {"is_input": false, "description": "Packets per secs"},
   "version": {"is_input": false, "description": "DUT version or FunOS version"}
   "mode": {"is_input": true, "description": "Port modes (25, 50 or 100 G)"},
-  "timestamp": {"is_input": false, "description": "Date time of result data"}
+  "timestamp": {"is_input": false, "description": "Date time of result data"},
+  "flow_type": {"is_input": true, "description": "Traffic Direction for e.g FPG_HU or HU_FPG"}
 }
 """
 
@@ -214,7 +215,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
 
             if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 checkpoint = "Configure IP range modifier"
-                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=1,
+                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
                                              step_value="0.0.0.1", mask="255.255.255.255",
                                              data=dest_ip)
                 result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
@@ -280,11 +281,11 @@ class NuVpLatencyIPv4Test(FunTestCase):
             result = template_obj.activate_stream_blocks(stream_obj_list=[stream_obj])
             fun_test.simple_assert(result, checkpoint)
 
-            vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-            per_vp_stats = get_vp_per_pkts_stats_values(network_controller_obj=network_controller_obj)
-            fun_test.simple_assert(vp_stats and per_vp_stats, "Ensure VP stats fetched before traffic")
-            fun_test.log("VP stats: %s" % vp_stats)
-            fun_test.log("Per VP stats: %s" % per_vp_stats)
+            vp_stats = None
+            if dut_config['enable_dpcsh']:
+                vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+                fun_test.simple_assert(vp_stats, "Ensure VP stats fetched before traffic")
+                fun_test.log("VP stats: %s" % vp_stats)
 
             checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % TRAFFIC_DURATION
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[port1]])
@@ -326,8 +327,6 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
                                               actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                               message=checkpoint)
-
-                # TODO: Add per_vp stats validation
 
             checkpoint = "Validate Latency Results"
             latency_result = template_obj.validate_performance_result(
@@ -450,7 +449,7 @@ class NuVpJitterTest(FunTestCase):
 
             if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 checkpoint = "Configure IP range modifier"
-                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=1,
+                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
                                              step_value="0.0.0.1", mask="255.255.255.255",
                                              data=dest_ip)
                 result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,

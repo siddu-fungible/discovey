@@ -121,14 +121,6 @@ class NuTransitPerformance(FunTestScript):
 
     def cleanup(self):
         template_obj.cleanup()
-        '''
-        mode = dut_config['interface_mode']
-        output_file_path = fun_test.get_script_parent_directory() + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode,
-                                                        latency_results=latency_results,
-                                                        jitter_results=jitter_results,
-                                                        file_name=output_file_path)
-        '''
 
 
 class NuTransitLatencyIPv4Test(FunTestCase):
@@ -153,7 +145,7 @@ class NuTransitLatencyIPv4Test(FunTestCase):
                               9. Ensure no errors are seen 
                               10. Validate latency numbers for each streams under each port
                               11. Deactivate current stream  
-                              """)
+                              """ % (IPV4_FRAMES, LOAD))
 
     def setup(self):
         ports = template_obj.stc_manager.get_port_list()
@@ -324,14 +316,6 @@ class NuTransitLatencyIPv4Test(FunTestCase):
 
     def cleanup(self):
         template_obj.delete_streamblocks(stream_obj_list=stream_port_obj_dict[self.port])
-        '''
-        mode = dut_config['interface_mode']
-        output_file_path = fun_test.get_script_parent_directory() + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, ip_version="Ipv4",
-                                                        latency_results=latency_results,
-                                                        jitter_results=None,
-                                                        file_name=output_file_path)
-        '''
 
 
 class NuTransitLatencyIpv6Test(NuTransitLatencyIPv4Test):
@@ -608,7 +592,7 @@ class NuTransitJitterTest(FunTestCase):
 
         mode = dut_config['interface_mode']
         output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, ip_version="IPv4",
+        template_obj.populate_performance_counters_json(mode=mode,
                                                         latency_results=latency_results,
                                                         jitter_results=jitter_results,
                                                         file_name=output_file_path)
@@ -722,7 +706,7 @@ class NuTransitJitterIPv6Test(NuTransitJitterTest):
 
         mode = dut_config['interface_mode']
         output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, ip_version="Ipv6",
+        template_obj.populate_performance_counters_json(mode=mode,
                                                         latency_results=latency_results,
                                                         jitter_results=jitter_results,
                                                         file_name=output_file_path)

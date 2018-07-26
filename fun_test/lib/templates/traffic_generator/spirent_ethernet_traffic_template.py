@@ -825,7 +825,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                     tolerance_percent=10, flow_type=None):
         result = {'result': False}
         try:
-
+            expected_performance_data.reverse()
             key = "frame_%s" % str(stream_objects[0].FixedFrameLength)
             result[key] = []
             for stream_obj in stream_objects:
@@ -858,12 +858,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         if "_name" in record:
                             continue
                         if record['frame_size'] == stream_obj.FixedFrameLength:
-                            if 'flow_type' in record and flow_type == record['flow_type']:
-                                expected_jitter_dict = record
-                                break
+                            if 'flow_type' in record:
+                                if flow_type == record['flow_type']:
+                                    expected_jitter_dict = record
+                                    break
                             else:
-                                expected_jitter_dict = record
-                                break
+                                if 'jitter_avg' in record:
+                                    expected_jitter_dict = record
+                                    break
                     checkpoint = "Validate Jitter Counters"
                     jitter_result = self.validate_jitter_results(rx_result=rx_result,
                                                                  stream_obj=stream_obj,
@@ -877,9 +879,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         if '_name' in record:
                             continue
                         if record['frame_size'] == stream_obj.FixedFrameLength:
-                            if "flow_type" in record and flow_type == record['flow_type']:
-                                expected_latency_dict = record
-                                break
+                            if "flow_type" in record:
+                                if flow_type == record['flow_type']:
+                                    expected_latency_dict = record
+                                    break
                             else:
                                 expected_latency_dict = record
                                 break
