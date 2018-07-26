@@ -24,7 +24,6 @@ NUM_PORTS = 3
 streams_group = []
 MIN_RX_PORT_COUNT = 80
 MAX_RX_PORT_COUNT = 90
-FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_CC
 
 
 class SetupSpirent(FunTestScript):
@@ -1615,10 +1614,8 @@ class TestCcIpv4AllTogether(FunTestCase):
 
 
 if __name__ == '__main__':
-    cc_flow_type = nu_config_obj.get_flow_type()
-    flow_type = cc_flow_type if cc_flow_type else "FPG_CC"
-    fun_test.log("<---------------> Validating %s Flow Direction <--------------->" % flow_type)
-    FLOW_DIRECTION = flow_type
+    cc_flow_type = nu_config_obj.get_local_settings_parameters(flow_direction=True)
+    FLOW_DIRECTION = cc_flow_type[nu_config_obj.FLOW_DIRECTION]
 
     ts = SetupSpirent()
     # IPv4 CC
