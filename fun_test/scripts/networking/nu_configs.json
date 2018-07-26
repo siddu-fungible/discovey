@@ -112,7 +112,7 @@
   },
   {
     "name": "local_settings",
-    "flow_type": "FPG_CC",
+    "flow_direction": "HNU_HNU",
     "ip_version": "4"
   }
 ]
