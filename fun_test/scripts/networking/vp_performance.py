@@ -584,10 +584,8 @@ class NuVpJitterTest(FunTestCase):
 
 
 if __name__ == "__main__":
-    vp_flow_type = nu_config_obj.get_flow_type()
-    flow_type = vp_flow_type if vp_flow_type else "FPG_HU"
-    fun_test.log("<---------------> Validating %s Flow Direction <--------------->" % flow_type)
-    FLOW_DIRECTION = flow_type
+    cc_flow_type = nu_config_obj.get_local_settings_parameters(flow_type=True)
+    FLOW_DIRECTION = cc_flow_type[nu_config_obj.FLOW_TYPE]
     ts = NuVpPerformance()
     ts.add_test_case(NuVpLatencyIPv4Test())
     ts.add_test_case(NuVpJitterTest())
