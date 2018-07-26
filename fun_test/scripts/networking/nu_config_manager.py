@@ -25,6 +25,7 @@ class NuConfigManager(object):
     FLOW_DIRECTION_HNU_FPG = "HNU_FPG"
     FLOW_DIRECTION_FPG_HU = "FPG_HU"
     FLOW_DIRECTION_HU_FPG = "HU_FPG"
+    FLOW_DIRECTION_HNU_HNU = "HNU_HNU"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
         self._get_chassis_type()
@@ -85,7 +86,7 @@ class NuConfigManager(object):
                     vp_flow_direction = flow_direction
                 else:
                     vp_flow_direction = self.FLOW_DIRECTION_FPG_HNU
-                for key, value in sorted(dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
+                for key, value in (dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
