@@ -281,7 +281,10 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[], pars
                 actual = int(current_dict[counter])
                 if parser_old_result:
                     old_dict = parser_old_result['global'][key]
-                    actual = int(current_dict[counter]) - int(old_dict[counter])
+                    if counter in old_dict:
+                        actual = int(current_dict[counter]) - int(old_dict[counter])
+                    else:
+                        actual = int(current_dict[counter])
                 fun_test.test_assert_expected(expected=compare_value, actual=actual,
                                               message="Check %s stats for %s in parser nu stats" % (counter, key))
         result = True
@@ -306,15 +309,19 @@ def get_diff_stats(old_stats, new_stats, stats_list=[]):
     try:
         if stats_list:
             for stat in stats_list:
-                fun_test.simple_assert(stat in old_stats, "Stat %s not present in old stats" % stat)
                 fun_test.simple_assert(stat in new_stats, "Stat %s not present in new stats" % stat)
-                result[stat] = int(new_stats[stat]) - int(old_stats[stat])
+                if stat in old_stats:
+                    result[stat] = int(new_stats[stat]) - int(old_stats[stat])
+                else:
+                    result[stat] = int(new_stats[stat])
         else:
             for key, val in new_stats.iteritems():
                 if isinstance(val, dict):
                     result[key] = get_diff_stats(old_stats=old_stats[key], new_stats=new_stats[key])
-                else:
+                elif key in old_stats:
                     result[key] = int(new_stats[key]) - int(old_stats[key])
+                else:
+                    result[key] = int(new_stats[key])
     except Exception as ex:
         fun_test.critical(str(ex))
     return result

@@ -674,6 +674,7 @@ class Ipv6Header(object):
     NEXT_HEADER_TCP = 6
     NEXT_HEADER_UDP = 17
     NO_NEXT_HEADER = 59
+    PAYLOAD_LENGTH_ERROR = '65535'
     _spirent_handle = None
 
     def __init__(self, destination_address="2000::1", destination_prefix_length=64, flow_label=0, gateway="::0",
