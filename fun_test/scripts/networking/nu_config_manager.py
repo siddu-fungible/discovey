@@ -26,6 +26,8 @@ class NuConfigManager(object):
     FLOW_DIRECTION_FPG_HU = "FPG_HU"
     FLOW_DIRECTION_HU_FPG = "HU_FPG"
     FLOW_DIRECTION_HNU_HNU = "HNU_HNU"
+    FLOW_DIRECTION = "flow_direction"
+    IP_VERSION = "ip_version"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
         self._get_chassis_type()
@@ -223,18 +225,23 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def get_flow_type(self):
-        flow_type = None
+    def get_local_settings_parameters(self, flow_direction=False, ip_version=False):
+        result = {}
         try:
+            fun_test.simple_assert(flow_direction or ip_version, "No parameter provided to be fetcehd from local settings")
             configs = nu_config_obj._get_nu_configs()
             fun_test.simple_assert(configs, "Get NU Configs")
             for config in configs:
                 if config['name'] == "local_settings":
-                    flow_type = config['flow_type']
+                    if flow_direction:
+                        result[self.FLOW_DIRECTION] = config[self.FLOW_DIRECTION]
+                    if ip_version:
+                        result[self.IP_VERSION] = config[self.IP_VERSION]
                     break
         except Exception as ex:
             fun_test.critical(str(ex))
-        return flow_type
+        return result
+
 
 
 
