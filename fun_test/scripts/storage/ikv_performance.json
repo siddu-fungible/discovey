@@ -9,21 +9,21 @@
     "volume_info": [
       {
         "name": "likv-dir-store",
-        "uuid": "0020-0001",
+        "uuid": "00000020-0000001",
         "capacity": 4198400,
         "likv_type": "lvs_dir_store",
         "block_size": 4096
       },
       {
         "name": "likv-lvs-store",
-        "uuid": "0020-0002",
+        "uuid": "00000020-0000002",
         "capacity": 1073741824,
         "likv_type": "lvs_volume",
         "block_size": 4096
       },
       {
         "name": "likv-lvs-allocator",
-        "uuid": "0020-0003",
+        "uuid": "00000020-0000003",
         "capacity": 5623808,
         "likv_type": "lvs_allocator_store",
         "block_size": 4096
