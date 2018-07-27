@@ -638,7 +638,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result = {'result': False, 'pps_count': {}, 'throughput_count': {}}
         try:
             if wait_before_fetching_results:
-                fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
+                fun_test.sleep("Waiting for traffic to reach full throughput", seconds=25)
 
             for stream_obj in stream_objects:
                 checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
