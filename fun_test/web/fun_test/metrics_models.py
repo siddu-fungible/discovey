@@ -367,7 +367,7 @@ class MetricChart(models.Model):
         self.goodness_cache_valid = True
         self.goodness_cache_range = number_of_records
         self.status_cache = json.dumps(status_values)
-        self.save()
+        self.save()  #TODO: Save only if something changed
         try:
             if (goodness_values[-2] > goodness_values[-1]) or (goodness_values[-1] == 0):
                 num_degrades += 1
