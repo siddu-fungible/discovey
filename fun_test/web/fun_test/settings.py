@@ -115,7 +115,7 @@ DATABASES = {
 
 # Sample for postgresql
 if is_performance_server() and True:
-    DATABASES["performance2"] = {
+    DATABASES["performance"] = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': 'fun_test',
             'USER': 'fun_test_user',
