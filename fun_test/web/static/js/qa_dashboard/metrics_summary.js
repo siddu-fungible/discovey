@@ -84,6 +84,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     };
 
     $scope.populateNodeInfoCache = (data) => {
+        if (!(data.metric_id in $scope.cachedNodeInfo)) {
+            $scope.cachedNodeInfo[data.metric_id] = data;
+        }
         angular.forEach(data.children_info, (value, key) => {
            $scope.cachedNodeInfo[key] = value;
            angular.forEach(value.children_info, (v2, key2) => {

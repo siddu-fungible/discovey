@@ -53,7 +53,7 @@ def set_jenkins_hourly_execution_status(status):
 class SchedulerException(Exception):
     def __init__(self, *args):
         super(SchedulerException, self).__init__(*args)
-        scheduler_logger.critical(*args)
+        scheduler_logger.exception(*args)
 
 def get_flat_file_name(path):
     parts = path.split("/")
@@ -110,10 +110,13 @@ def queue_job(suite_path="unknown",
         job_spec["email_on_fail_only"] = email_on_fail_only
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
-
-    f = open("{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION), "w")
-    f.write(json.dumps(job_spec))
-    f.close()
+    try:
+        queued_file_name = "{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION)
+        with open(queued_file_name, "w+") as qf:
+            qf.write(json.dumps(job_spec))
+            qf.close()
+    except Exception as ex:
+        print str(ex)
     print("Job Id: {} suite: {} Queued".format(job_id, suite_path))
     return job_id
 
@@ -150,7 +153,7 @@ def parse_file_to_json(file_name):
             contents = infile.read()
             result = json.loads(contents)
     except Exception as ex:
-        scheduler_logger.critical(str(ex))
+        scheduler_logger.exception(str(ex))
     return result
 
 def process_list(process_name):
