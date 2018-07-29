@@ -19,7 +19,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             $scope.fetchChartInfo().then((chartInfo) => {
                 $timeout(() => {
                     $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo, null);
-                }, Math.random() * $scope.waitTime);
+                }, $scope.waitTime);
             })
         }
 
