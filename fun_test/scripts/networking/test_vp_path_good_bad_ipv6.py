@@ -12,7 +12,7 @@ total_packets = 10
 total_duration = total_packets
 bad_load = 1
 good_load = 40
-aggregate_bad_load = 125
+aggregate_bad_load = 1
 stream_objs = {}
 stream_objs['bad'] = OrderedDict()
 stream_objs['good'] = OrderedDict()
@@ -367,11 +367,11 @@ class Ulv6BadUdpXsum(FunTestCase):
             check_ip_len_counter = None
             if self.current_stream in [UL_IPv6_LEN_ERROR]:
                 check_ip_len_counter = ERP_COUNT_PACKETS_OUTER_IP_LEN_ERROR
-            elif self.current_stream in [UL_v4_OL_v6_IPLEN_ERROR, UL_v4_OL_v6_IPLEN_ERROR]:
+            elif self.current_stream in [UL_v4_OL_v6_IPLEN_ERROR, UL_v6_OL_v6_IPLEN_ERROR]:
                 check_ip_len_counter = ERP_COUNT_PACKETS_INNER_IP_LEN_ERROR
             else:
                 check_layer4_cs_error_counter = ERP_COUNT_PACKETS_INNER_LAYER4_CS_ERROR
-                if self.current_stream in [UL_v6_BAD_TCP_XSUM, UL_v6_BAD_UDP_ZERO_XSUM, UL_v6_BAD_TCP_XSUM,
+                if self.current_stream in [UL_v6_BAD_TCP_XSUM, UL_v6_BAD_UDP_ZERO_XSUM, UL_v6_BAD_UDP_XSUM,
                                            UL_v6_ZERO_UDP_XSUM_OL_v6_GOOD_TCP_XSUM, UL_v6_ZERO_UDP_XSUM_OL_v6_GOOD_UDP_XSUM]:
                     check_layer4_cs_error_counter = ERP_COUNT_PACKETS_OUTER_LAYER4_CS_ERROR
                 if check_layer4_cs_error_counter in erp_stats_1:
@@ -823,11 +823,11 @@ class GoodBad(FunTestCase):
     def cleanup(self):
         pass
 
-    def create_common_streamblock(self, protocol_tcp=False, src_ip=None):
+    def create_common_streamblock(self, protocol_tcp=False, src_ip=None, frame_length=148, insert_sig=False):
         # Streamblock
         self.current_streamblock_obj = StreamBlock(load=good_load, load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND,
                                                    fill_type=StreamBlock.FILL_TYPE_CONSTANT,
-                                                   fixed_frame_length=148, insert_signature=False)
+                                                   fixed_frame_length=frame_length, insert_signature=insert_sig)
 
         streamblock_obj = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj,
                                                               port_handle=port_3)
@@ -889,17 +889,17 @@ class GoodBad(FunTestCase):
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % UL_GOOD_UDP_ZERO_XSUM)
-        self.create_common_streamblock()
+        self.current_streamblock_obj = self.create_common_streamblock()
         custom_header_1 = CustomBytePatternHeader(byte_pattern=custom_headers[UL_GOOD_UDP_ZERO_XSUM][0])
         configure_cust_header = template_obj.stc_manager.configure_frame_stack(
             stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=custom_header_1)
         fun_test.test_assert(configure_cust_header, "Configure custom header")
         stream_objs['good'][UL_GOOD_UDP_ZERO_XSUM] = self.current_streamblock_obj
-
+        '''
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % UL_GOOD_UDP_FFFF_XSUM)
-        self.create_common_streamblock()
+        self.current_streamblock_obj = self.create_common_streamblock()
         for byte_pattern in custom_headers[UL_GOOD_UDP_FFFF_XSUM]:
             cust_header = CustomBytePatternHeader(byte_pattern=byte_pattern)
             configure_cust_header = template_obj.stc_manager.configure_frame_stack(
@@ -929,12 +929,13 @@ class GoodBad(FunTestCase):
         stream_update = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj, update=True)
         fun_test.test_assert(stream_update,
                              message="Updated streamblock %s" % self.current_streamblock_obj._spirent_handle)
-        stream_objs['good'][UL_GOOD_UDP_FFFF_XSUM] = self.current_streamblock_obj
 
+        stream_objs['good'][UL_GOOD_UDP_FFFF_XSUM] = self.current_streamblock_obj
+        '''
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % UL_GOOD_TCP_XSUM)
-        self.create_common_streamblock(protocol_tcp=True)
+        self.current_streamblock_obj = self.create_common_streamblock(protocol_tcp=True)
         tcp = TCP()
         configure_cust_header = template_obj.stc_manager.configure_frame_stack(
             stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=tcp)
@@ -996,7 +997,7 @@ class GoodBad(FunTestCase):
         self.current_streamblock_obj.LoadUnit = self.current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.current_streamblock_obj.FillType = self.current_streamblock_obj.FILL_TYPE_CONSTANT
         self.current_streamblock_obj.FixedFrameLength = 148
-        self.current_streamblock_obj.InsertSig = False
+        self.current_streamblock_obj.InsertSig = True
 
         stream_update = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj, update=True)
         fun_test.test_assert(stream_update,
@@ -1007,7 +1008,7 @@ class GoodBad(FunTestCase):
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % OL_VXLAN_GOOD_UDP_FFFF_XSUM)
-        self.create_common_streamblock()
+        self.current_streamblock_obj = self.create_common_streamblock()
         udp = UDP(destination_port=4789)
         configure_cust_header = template_obj.stc_manager.configure_frame_stack(
             stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=udp)
@@ -1036,70 +1037,18 @@ class GoodBad(FunTestCase):
             fun_test.test_assert(configure_cust_header, "Configure custom header")
 
         # Update streamblock
-        self.current_streamblock_obj = output['streamblock_obj']
         self.current_streamblock_obj.Load = good_load
         self.current_streamblock_obj.LoadUnit = self.current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.current_streamblock_obj.FillType = self.current_streamblock_obj.FILL_TYPE_CONSTANT
         self.current_streamblock_obj.FixedFrameLength = 148
-        self.current_streamblock_obj.InsertSig = False
+        self.current_streamblock_obj.InsertSig = True
 
         stream_update = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj,
                                                             update=True)
         fun_test.test_assert(stream_update,
                              message="Updated streamblock %s" % self.current_streamblock_obj._spirent_handle)
         stream_objs['good'][OL_VXLAN_GOOD_UDP_FFFF_XSUM] = self.current_streamblock_obj
-
-        fun_test.log("========= NEW GOOD STREAM =========")
-        self.current_streamblock_obj = None
-        fun_test.log("Create stream %s" % OL_VXLAN_GOOD_UDP_XSUM)
-        output = template_obj.configure_overlay_frame_stack(port=port_3,
-                                                            overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP)
-        l3_config = spirent_config["l3_config"]["ipv4"]
-        ip_header = Ipv4Header()
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
-        update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
-                                                          header_obj=ip_header, overlay=False,
-                                                          updated_header_attributes_dict=
-                                                          {'destAddr': destination})
-        fun_test.test_assert(update, message="Update ipv4 destination address in underlay")
-
-        # Update streamblock
-        self.current_streamblock_obj = output['streamblock_obj']
-        self.current_streamblock_obj.Load = good_load
-        self.current_streamblock_obj.LoadUnit = self.current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
-        self.current_streamblock_obj.FillType = self.current_streamblock_obj.FILL_TYPE_CONSTANT
-        self.current_streamblock_obj.FixedFrameLength = 148
-        self.current_streamblock_obj.InsertSig = False
-
-        stream_update = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj, update=True)
-        fun_test.test_assert(stream_update,
-                             message="Updated streamblock %s" % self.current_streamblock_obj._spirent_handle)
-
-        udp = UDP()
-        # Add Range Modifier
-        recycle_count = 16000
-        step = 1
-        mask = 65535
-        data = 1
-        range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data, mask=mask)
-        modify_attribute = 'sourcePort'
-        create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
-                                                                         streamblock_obj=self.current_streamblock_obj,
-                                                                         header_obj=udp,
-                                                                         header_attribute=modify_attribute,
-                                                                         overlay=True)
-        fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
-                             % modify_attribute)
-        stream_objs['good'][OL_VXLAN_GOOD_UDP_XSUM] = self.current_streamblock_obj
-
+        
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % OL_VXLAN_GOOD_TCP_XSUM)
@@ -1121,6 +1070,25 @@ class GoodBad(FunTestCase):
                                                           updated_header_attributes_dict=
                                                           {'destAddr': destination})
         fun_test.test_assert(update, message="Update ipv4 destination address in underlay")
+
+        update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
+                                                          header_obj=ip_header, overlay=True,
+                                                          updated_header_attributes_dict=
+                                                          {'destAddr': '2.2.2.2'})
+        fun_test.test_assert(update, message="Update ipv4 destination address in overlay")
+
+        update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
+                                                          header_obj=ip_header, overlay=True,
+                                                          updated_header_attributes_dict=
+                                                          {'sourceAddr': '1.1.1.1'})
+        fun_test.test_assert(update, message="Update ipv4 source address in overlay")
+        ether = Ethernet2Header()
+        update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
+                                                          header_obj=ether, overlay=True,
+                                                          updated_header_attributes_dict=
+                                                          {'dstMac': '00:00:01:00:00:01'})
+        fun_test.test_assert(update, message="Update dest mac in overlay")
+
         tcp = TCP()
         udp = UDP()
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
@@ -1135,21 +1103,11 @@ class GoodBad(FunTestCase):
         self.current_streamblock_obj.LoadUnit = self.current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.current_streamblock_obj.FillType = self.current_streamblock_obj.FILL_TYPE_CONSTANT
         self.current_streamblock_obj.FixedFrameLength = 148
-        self.current_streamblock_obj.InsertSig = False
+        self.current_streamblock_obj.InsertSig = True
 
         stream_update = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj, update=True)
         fun_test.test_assert(stream_update,
                              message="Updated streamblock %s" % self.current_streamblock_obj._spirent_handle)
-
-        range_obj = RangeModifier(recycle_count=65000, step_value=1, data=1)
-        modify_attribute = 'sourcePort'
-        create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
-                                                                         streamblock_obj=self.current_streamblock_obj,
-                                                                         header_obj=tcp,
-                                                                         header_attribute=modify_attribute,
-                                                                         overlay=True)
-        fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
-                             % (tcp._spirent_handle, modify_attribute))
 
         # Add Range Modifier
         recycle_count = 10
@@ -1210,7 +1168,7 @@ class GoodBad(FunTestCase):
         self.current_streamblock_obj.LoadUnit = self.current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
         self.current_streamblock_obj.FillType = self.current_streamblock_obj.FILL_TYPE_CONSTANT
         self.current_streamblock_obj.FixedFrameLength = 148
-        self.current_streamblock_obj.InsertSig = False
+        self.current_streamblock_obj.InsertSig = True
 
         stream_update = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj, update=True)
         fun_test.test_assert(stream_update,
@@ -1226,50 +1184,7 @@ class GoodBad(FunTestCase):
         fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
                              % (tcp._spirent_handle, modify_attribute))
         stream_objs['good'][OL_MPLS_GOOD_UDP_ZERO_XSUM] = self.current_streamblock_obj
-
-        fun_test.log("========= NEW GOOD STREAM =========")
-        self.current_streamblock_obj = None
-        fun_test.log("Create stream %s" % OL_MPLS_GOOD_UDP_XSUM)
-        output = template_obj.configure_overlay_frame_stack(port=port_3,
-                                                            overlay_type=template_obj.MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP,
-                                                            mpls=True)
-        l3_config = spirent_config["l3_config"]["ipv4"]
-        ip_header = Ipv4Header()
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
-        update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
-                                                          header_obj=ip_header, overlay=False,
-                                                          updated_header_attributes_dict=
-                                                          {'destAddr': destination})
-        fun_test.test_assert(update, message="Update ipv4 destination address in underlay")
-
-        udp = UDP()
-        update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
-                                                          header_obj=udp, overlay=False,
-                                                          updated_header_attributes_dict=
-                                                          {'checksum': '0000'})
-        fun_test.test_assert(update, message="Update udp checksum to 0000 in underlay")
-
-        # Update streamblock
-        self.current_streamblock_obj = output['streamblock_obj']
-        self.current_streamblock_obj.Load = good_load
-        self.current_streamblock_obj.LoadUnit = self.current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
-        self.current_streamblock_obj.FillType = self.current_streamblock_obj.FILL_TYPE_CONSTANT
-        self.current_streamblock_obj.FixedFrameLength = 148
-        self.current_streamblock_obj.InsertSig = False
-
-        stream_update = template_obj.configure_stream_block(stream_block_obj=self.current_streamblock_obj, update=True)
-        fun_test.test_assert(stream_update,
-                             message="Updated streamblock %s" % self.current_streamblock_obj._spirent_handle)
-        stream_objs['good'][OL_MPLS_GOOD_UDP_XSUM] = self.current_streamblock_obj
-
+        
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % OL_MPLS_GOOD_TCP_XSUM)
@@ -1304,17 +1219,6 @@ class GoodBad(FunTestCase):
         fun_test.test_assert(stream_update,
                              message="Updated streamblock %s" % self.current_streamblock_obj._spirent_handle)
 
-        # Adding range modifier
-        range_obj = RangeModifier(recycle_count=65000, step_value=1, data=1)
-        modify_attribute = 'sourcePort'
-        create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
-                                                                         streamblock_obj=self.current_streamblock_obj,
-                                                                         header_obj=tcp,
-                                                                         header_attribute=modify_attribute,
-                                                                         overlay=True)
-        fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
-                             % (tcp._spirent_handle, modify_attribute))
-
         udp = UDP()
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=udp, overlay=False,
@@ -1339,10 +1243,10 @@ class GoodBad(FunTestCase):
                              % modify_attribute)
         stream_objs['good'][OL_MPLS_GOOD_TCP_XSUM] = self.current_streamblock_obj
 
-        fun_test.log("========= NEW GOOD STREAM =========")
+        fun_test.log("========= NEW GOOD STREAM =========") 
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % UL_GOOD_TCP_FFFF_XSUM)
-        self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1')
+        self.current_streamblock_obj = self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1')
         custom_header_1 = CustomBytePatternHeader(byte_pattern=custom_headers[UL_GOOD_TCP_FFFF_XSUM])
         configure_cust_header = template_obj.stc_manager.configure_frame_stack(
             stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=custom_header_1)
@@ -1352,7 +1256,7 @@ class GoodBad(FunTestCase):
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % UL_GOOD_TCP_ZERO_XSUM)
-        self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1')
+        self.current_streamblock_obj = self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1')
         custom_header_1 = CustomBytePatternHeader(byte_pattern=custom_headers[UL_GOOD_TCP_ZERO_XSUM])
         configure_cust_header = template_obj.stc_manager.configure_frame_stack(
             stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=custom_header_1)
@@ -1399,7 +1303,7 @@ class GoodBad(FunTestCase):
         stream_result_dict = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_results,
                                                                                 streamblock_handle_list=
                                                                                 good_stream_handle_list,
-                                                                                tx_result=True, rx_result=False)
+                                                                                tx_result=True, rx_result=True)
 
         port_result_dict = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_results,
                                                                        port_handle_list=[port_2], analyzer_result=True)
@@ -1432,16 +1336,11 @@ class GoodBad(FunTestCase):
                                           message="Ensure good packets received are transmitted correctly")
 
         # SPIRENT ASSERT
-        '''
         for good_stream in good_stream_handle_list:
             tx_results = stream_result_dict[good_stream]['tx_result']
             rx_results = stream_result_dict[good_stream]['rx_result']
-            fun_test.log("good tx results for stream %s is %s" % (good_stream, tx_results))
-            fun_test.log("good rx results for stream %s is %s" % (good_stream, rx_results))
-            fun_test.test_assert_expected(expected=int(tx_results['FrameCount']),
-                                          actual=int(rx_results['FrameCount']),
-                                          message="Ensure tx and counter match for %s stream" % good_stream)
-        '''
+            fun_test.log("good tx results for stream %s is %s" % (good_stream, tx_results['FrameCount']))
+            fun_test.log("good rx results for stream %s is %s" % (good_stream, rx_results['FrameCount']))
 
         positive_packets_spirent_tx = 0
         for handle in good_stream_handle_list:
