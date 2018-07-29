@@ -271,7 +271,9 @@
                                         model-name="node.metricModelName"
                                         xaxis-formatter="xAxisFormatter"
                                         tooltip-formatter="tooltipFormatter"
-                                        atomic="atomic" chart-only="true">
+                                        atomic="atomic"
+                                        chart-only="true"
+                                        wait-time="(($parent.$index * numGridColumns) + $index)">
                                 </editable-metric-chart>
                             </td>
                         </tr>

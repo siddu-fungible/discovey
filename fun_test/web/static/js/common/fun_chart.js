@@ -219,6 +219,7 @@
                                 },
                                 plotOptions: {
                                     series: {
+                                        animation: false,
                                         label: {
                                             connectorAllowed: false
                                         },

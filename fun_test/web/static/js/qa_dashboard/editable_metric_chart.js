@@ -1,10 +1,20 @@
 'use strict';
 
 
-function EditableMetricChartController($scope, commonService, $attrs, $window) {
+function EditableMetricChartController($scope, commonService, $attrs, $window, $timeout) {
     let ctrl = this;
 
     ctrl.$onInit = () => {
+        $scope.waitTime = 0;
+        if (ctrl.waitTime) {
+            $scope.waitTime = ctrl.waitTime;
+        }
+        //console.log("Waittime: " + waitTime);
+        //$timeout($scope.doInit, waitTime);
+        $scope.doInit();
+    };
+
+    $scope.doInit = () => {
         $scope.status = "loading";
         $scope.editing = false;
         $scope.chartName = ctrl.chartName;
@@ -33,7 +43,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window) {
             };
         }
 
-
+        console.log("EditableMetric: describeTable in init: " + ctrl.chartName);
         $scope.describeTable().then(function() {
             $scope.fetchChartInfo();
         });
@@ -42,12 +52,15 @@ function EditableMetricChartController($scope, commonService, $attrs, $window) {
         $scope.inner = {};
     };
 
+
     $scope.$watch(function () {
         return ctrl.chartName;
     }, function (newvalue, oldvalue) {
         if (newvalue === oldvalue) {
             console.log(newvalue, oldvalue);
+            return;
         }
+        console.log("Editable Metric watch: " + ctrl.chartName);
         ctrl.$onInit();
     });
 
@@ -66,23 +79,29 @@ function EditableMetricChartController($scope, commonService, $attrs, $window) {
             return;
         }
         $scope.inputs = [];
-        return commonService.apiGet("/metrics/describe_table/" + ctrl.modelName, "fetchMetricsData").then(function (tableInfo) {
-            $scope.status = "idle";
-            $scope.tableInfo = tableInfo;
-            angular.forEach($scope.tableInfo, (fieldInfo, field) => {
-                let oneField = {};
-                oneField.name = field;
-                if ('choices' in fieldInfo && oneField.name.startsWith("input")) {
-                    oneField.choices = fieldInfo.choices.map((choice) => {
-                        return choice[1]
-                    });
-                    $scope.inputs.push(oneField);
-                }
-                if (oneField.name.startsWith("output")) {
-                    $scope.outputList.push(oneField.name);
-                }
+        if (!$scope.tableInfo) {
+            return commonService.apiGet("/metrics/describe_table/" + ctrl.modelName, "fetchMetricsData").then(function (tableInfo) {
+                console.log("Editable metric chart: describe_table:  " + ctrl.modelName);
+                $scope.status = "idle";
+                $scope.tableInfo = tableInfo;
+                angular.forEach($scope.tableInfo, (fieldInfo, field) => {
+                    let oneField = {};
+                    oneField.name = field;
+                    if ('choices' in fieldInfo && oneField.name.startsWith("input")) {
+                        oneField.choices = fieldInfo.choices.map((choice) => {
+                            return choice[1]
+                        });
+                        $scope.inputs.push(oneField);
+                    }
+                    if (oneField.name.startsWith("output")) {
+                        $scope.outputList.push(oneField.name);
+                    }
+                });
             });
-        });
+        } else {
+            return $q.resolve($scope.tableInfo);
+        }
+
 
     };
 
@@ -241,7 +260,8 @@ angular.module('qa-dashboard').component("editableMetricChart", {
         xaxisFormatter: '&',
         tooltipFormatter: '&',
         atomic: '<',
-        chartOnly: '<'
+        chartOnly: '<',
+        waitTime: '='
     },
     controller: EditableMetricChartController
 });

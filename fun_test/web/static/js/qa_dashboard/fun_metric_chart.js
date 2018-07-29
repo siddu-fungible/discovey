@@ -1,14 +1,26 @@
 'use strict';
 
 
-function FunMetricChartController($scope, commonService, $attrs) {
+function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     let ctrl = this;
 
     ctrl.$onInit = function () {
         $scope.status = "idle";
+        $scope.chartInfo = ctrl.chartInfo;
+        $scope.waitTime = 0;
+        if (ctrl.waitTime) {
+            $scope.waitTime = parseInt(ctrl.waitTime);
+            console.log("My wait:" + $scope.waitTime);
+        }
+
         if(ctrl.chartName) {
-            $scope.fetchChartInfo();
+
+            $scope.fetchChartInfo().then((chartInfo) => {
+                $timeout(() => {
+                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo, null);
+                }, Math.random() * $scope.waitTime);
+            })
         }
 
         $scope.values = null;
@@ -19,6 +31,7 @@ function FunMetricChartController($scope, commonService, $attrs) {
         $scope.pointClickCallback = null;
         $scope.xAxisFormatter = null;
         $scope.tooltipFormatter = null;
+        $scope.tableInfo = ctrl.tableInfo;
         if (ctrl.pointClickCallback) {
             $scope.pointClickCallback = (point) => {
                 if(!$attrs.pointClickCallback) return null;
@@ -80,12 +93,16 @@ function FunMetricChartController($scope, commonService, $attrs) {
         payload["chart_name"] = ctrl.chartName;
         // Fetch chart info
         //$scope.status = "Fetching chart info";
-        commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
-            $scope.chartInfo = chartInfo;
-            $scope.status = "idle";
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo, null)
+        if (!$scope.chartInfo) {
+            return commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
+                $scope.chartInfo = chartInfo;
+                $scope.status = "idle";
 
-        })
+            })
+        } else {
+            return $q.resolve($scope.chartInfo);
+        }
+
     };
 
     $scope.getValidatedData = (data, minimum, maximum) => {
@@ -187,13 +204,25 @@ function FunMetricChartController($scope, commonService, $attrs) {
         return finalDates;
     };
 
+    $scope.describeTable = (metricModelName) => {
+        if (!$scope.tableInfo) {
+            return commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
+                console.log("FunMetric: Describe table: " + metricModelName);
+                $scope.tableInfo = tableInfo;
+                return $scope.tableInfo;
+            })
+        } else {
+            return $q.resolve($scope.tableInfo)
+        }
+    };
+
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
         if(!chartName) {
             return;
         }
         //$scope.status = "Fetch table meta-data";
-        commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
+        $scope.describeTable(metricModelName).then(function (tableInfo) {
             $scope.status = "idle";
             $scope.tableInfo = tableInfo;
             let payload = {};
@@ -343,7 +372,10 @@ angular.module('qa-dashboard').component("funMetricChart", {
                     pointClickCallback: '&',
                     xaxisFormatter: '&',
                     tooltipFormatter: '&',
-                    showingTable: '<'
+                    showingTable: '<',
+                    tableInfo: '<',
+                    chartInfo: '<',
+                    waitTime: '='
                   },
         controller: FunMetricChartController
  });

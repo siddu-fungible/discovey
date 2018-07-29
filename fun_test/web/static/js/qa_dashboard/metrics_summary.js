@@ -506,6 +506,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     };
 
     $scope.prepareGridNodes = (flattenedNodes) => {
+        console.log("Prepare Grid nodes");
         let tempGrid = [];
         let rowIndex = 0;
         Object.keys(flattenedNodes).forEach((key) => {
@@ -516,9 +517,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             if (tempGrid[rowIndex].length === $scope.numGridColumns) {
                 rowIndex++;
             }
-
         });
         $scope.grid = tempGrid;
+
     };
 
     $scope._setupGoodnessTrend = (node) => {
