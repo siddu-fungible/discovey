@@ -3,7 +3,7 @@
 
     function FunChartController($scope, $http, $element, $timeout, $attrs) {
         let ctrl = this;
-
+        $scope.genId = null;
         $scope.getRandomId = function () {
             if (!$scope.genId) {
                 let min = Math.ceil(0);
@@ -24,6 +24,9 @@
             , function (newvalue, oldvalue) {
                 if (newvalue === oldvalue) {
                     return;
+                }
+                if (!$scope.genId) {
+                    $scope.getRandomId();
                 }
                 /*ctrl.updateChartsNow = false;*/
                 let layout = {
@@ -218,6 +221,9 @@
                                     enabled: false
                                 },
                                 plotOptions: {
+                                    line: {
+                                        animation: false
+                                    },
                                     series: {
                                         animation: false,
                                         label: {
