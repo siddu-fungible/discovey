@@ -6,6 +6,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
 
     ctrl.$onInit = () => {
         $scope.waitTime = 0;
+        $scope.tableInfo = null;
         if (ctrl.waitTime) {
             $scope.waitTime = ctrl.waitTime;
         }
