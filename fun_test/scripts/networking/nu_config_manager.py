@@ -28,6 +28,7 @@ class NuConfigManager(object):
     FLOW_DIRECTION_HNU_HNU = "HNU_HNU"
     FLOW_DIRECTION = "flow_direction"
     IP_VERSION = "ip_version"
+    INTEGRATION_FLOW_TYPE = "integration_flow"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
         self._get_chassis_type()
@@ -105,6 +106,38 @@ class NuConfigManager(object):
                 if config["name"] == "dut_spirent_map":
                     result.update(config)
                     break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def read_integration_flow_config(self, cc_flow_direction, vp_flow_direction):
+        result = {}
+        try:
+            configs = self._get_nu_configs()
+            fun_test.simple_assert(configs, "Failed to read config spec")
+            for config in configs:
+                if config["type"] == self.DUT_TYPE_PALLADIUM:
+                    result = config
+                    break
+            dut_spirent_map = self.read_dut_spirent_map()
+            result['ports'] = {self.TRANSIT_FLOW_TYPE: [], self.CC_FLOW_TYPE: [], self.VP_FLOW_TYPE: []}
+            # Fetching Transit DUT ports
+            for key, value in sorted(dut_spirent_map[self.TRANSIT_FLOW_TYPE].items()):
+                m = re.search(r'(\d+)', key)
+                if m:
+                    result['ports'][self.TRANSIT_FLOW_TYPE].append(int(m.group(1)))
+
+            # Fetching CC DUT ports
+            for key, value in sorted(dut_spirent_map[self.CC_FLOW_TYPE][cc_flow_direction].iteritems()):
+                m = re.search(r'(\d+)', key)
+                if m:
+                    result['ports'][self.TRANSIT_FLOW_TYPE].append(int(m.group(1)))
+
+            # Fetching VP DUT ports
+            for key, value in sorted(dut_spirent_map[self.VP_FLOW_TYPE][vp_flow_direction].iteritems()):
+                m = re.search(r'(\d+)', key)
+                if m:
+                    result['ports'][self.TRANSIT_FLOW_TYPE].append(int(m.group(1)))
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -219,6 +252,45 @@ class NuConfigManager(object):
                     chassis_ip = value.split('/')[0]
                     if chassis_ip not in spirent_assets['chassis_ips']:
                         raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
+            elif flow_type == self.INTEGRATION_FLOW_TYPE:
+                if type(flow_direction) != dict:
+                    raise Exception("Please provide dict with diff flow directions. E.g {'cc': 'HU_CC', 'vp': 'FPG_HU'}")
+                cc_flow_direction = flow_direction['cc']
+                vp_flow_direction = flow_direction['vp']
+                # Fetching Transit Flow
+                count = 0
+                for key, value in dut_spirent_map[self.TRANSIT_FLOW_TYPE].iteritems():
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
+
+                # Fetching CC Flow
+                count = 0
+                for key, value in dut_spirent_map[self.CC_FLOW_TYPE][cc_flow_direction].iteritems():
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception(
+                            "Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
+
+                # Fetching VP Flow
+                count = 0
+                for key, value in dut_spirent_map[self.VP_FLOW_TYPE][vp_flow_direction].iteritems():
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception(
+                            "Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
                     result[key] = value
                     count += 1
         except Exception as ex:

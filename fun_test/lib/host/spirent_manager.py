@@ -1055,8 +1055,36 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def detach_ports_by_command(self, port_handles):
+        result = False
+        try:
+            if type(port_handles) == list:
+                port_handles = ' '.join(port_handles)
+            fun_test.debug("Releasing %s from project" % port_handles)
+            output = self.stc.perform("DetachPortsCommand", PortList=port_handles)
+            fun_test.simple_assert(output['State'] == 'COMPLETED', "%s detached" % port_handles)
+            if re.search(r'Successfully\s+detached.*', output['Status'], re.IGNORECASE):
+                fun_test.log("%s released successfully" % port_handles)
+                if self.apply_configuration():
+                    result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
-
+    def attach_ports_by_command(self, port_handles, auto_connect_chassis=True):
+        result = False
+        try:
+            if type(port_handles) == list:
+                port_handles = ' '.join(port_handles)
+            fun_test.debug("Releasing %s from project" % port_handles)
+            output = self.stc.perform("AttachPortsCommand", PortList=port_handles, AutoConnect=auto_connect_chassis)
+            fun_test.simple_assert(output['State'] == 'COMPLETED', "%s attached" % port_handles)
+            if re.search(r'Reserving.*.*', output['Status'], re.IGNORECASE):
+                if self.apply_configuration():
+                    result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
 
 if __name__ == "__main__":

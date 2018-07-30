@@ -1277,3 +1277,38 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
+    def setup_ports_using_command(self, no_of_ports_needed, flow_type, flow_direction=None):
+        result = {"result": False, 'port_list': [], 'interface_obj_list': []}
+        try:
+            offline_ports = {}
+            ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
+                                                                  flow_type=flow_type,
+                                                                  flow_direction=flow_direction)
+            physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
+            existing_ports = self.stc_manager.get_port_list()
+            for port_handle in existing_ports:
+                port_info = self.stc_manager.get_port_details(port=port_handle)
+                offline_ports[port_info['Location']] = port_handle
+
+            for key, val in ports_map.iteritems():
+                fun_test.log("Using %s -----> %s" % (key, val))
+                if val in offline_ports:
+                    result['port_list'] = offline_ports[val]
+                else:
+                    port_handle = self.stc_manager.create_port(location=val)
+                    fun_test.test_assert(port_handle, "Create Port: %s" % val)
+                    result['port_list'].append(port_handle)
+                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
+                                                                   port_handle=port_handle)
+                    fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
+                                                                                             port_handle))
+                    result['interface_obj_list'].append(interface_obj)
+
+            ports_attached = self.stc_manager.attach_ports_by_command(port_handles=result['port_list'],
+                                                                      auto_connect_chassis=True)
+            fun_test.test_assert(ports_attached, "%s ports attached successfully" % result['port_list'])
+            result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
