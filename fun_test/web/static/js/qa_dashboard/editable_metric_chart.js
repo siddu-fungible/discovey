@@ -44,7 +44,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
             };
         }
 
-        console.log("EditableMetric: describeTable in init: " + ctrl.chartName);
+        //console.log("EditableMetric: describeTable in init: " + ctrl.chartName);
         $scope.describeTable().then(function() {
             $scope.fetchChartInfo();
         });
@@ -58,10 +58,10 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
         return ctrl.chartName;
     }, function (newvalue, oldvalue) {
         if (newvalue === oldvalue) {
-            console.log(newvalue, oldvalue);
+            //console.log(newvalue, oldvalue);
             return;
         }
-        console.log("Editable Metric watch: " + ctrl.chartName);
+        //console.log("Editable Metric watch: " + ctrl.chartName);
         ctrl.$onInit();
     });
 
@@ -82,7 +82,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
         $scope.inputs = [];
         if (!$scope.tableInfo) {
             return commonService.apiGet("/metrics/describe_table/" + ctrl.modelName, "fetchMetricsData").then(function (tableInfo) {
-                console.log("Editable metric chart: describe_table:  " + ctrl.modelName);
+                //console.log("Editable metric chart: describe_table:  " + ctrl.modelName);
                 $scope.status = "idle";
                 $scope.tableInfo = tableInfo;
                 angular.forEach($scope.tableInfo, (fieldInfo, field) => {
@@ -123,7 +123,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
         let payload = {};
         payload["metric_model_name"] = ctrl.modelName;
         payload["chart_name"] = ctrl.chartName;
-        if ($scope.chartName) {
+        if ($scope.chartName || !$scope.chartInfo) {
             $scope.status = "Fetching chart info";
             commonService.apiPost("/metrics/chart_info", payload, "EditableMetricChartController: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;

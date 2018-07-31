@@ -8,17 +8,18 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     ctrl.$onInit = function () {
         $scope.status = "idle";
         $scope.chartInfo = ctrl.chartInfo;
+        //console.log("OnInit: CI:" + $scope.chartInfo);
         $scope.waitTime = 0;
         if (ctrl.waitTime) {
             $scope.waitTime = parseInt(ctrl.waitTime);
-            console.log("My wait:" + $scope.waitTime);
+            //console.log("My wait:" + $scope.waitTime);
         }
 
         if(ctrl.chartName) {
-
             $scope.fetchChartInfo().then((chartInfo) => {
+                let thisChartInfo = chartInfo;
                 $timeout(() => {
-                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, chartInfo, null);
+                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, thisChartInfo, null);
                 }, $scope.waitTime);
             })
         }
@@ -70,15 +71,23 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     };
 
 
-    $scope.$watch(function () {
+    $scope.$watch(
+        function () {
         return ctrl.previewDataSets;
     }, function (newvalue, oldvalue) {
         if (newvalue === oldvalue) {
             // console.log(newvalue, oldvalue);
             return;
         }
+        if (ctrl.previewDataSets.length < 1) {
+            return;
+        } 
         // let i = 0;
         // console.log(newvalue, oldvalue);
+       
+        $scope.chartInfo = ctrl.chartInfo;
+        $scope.tableInfo = ctrl.tableInfo;
+        //console.log("C I:" + ctrl.chartInfo);
         if($scope.chartInfo) {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
         } else {
@@ -94,10 +103,11 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         // Fetch chart info
         //$scope.status = "Fetching chart info";
         if (!$scope.chartInfo) {
+            //console.log("Fetching CI already");
             return commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;
                 $scope.status = "idle";
-
+                return $scope.chartInfo;
             })
         } else {
             return $q.resolve($scope.chartInfo);
@@ -207,7 +217,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     $scope.describeTable = (metricModelName) => {
         if (!$scope.tableInfo) {
             return commonService.apiGet("/metrics/describe_table/" + metricModelName, "fetchMetricsData").then(function (tableInfo) {
-                console.log("FunMetric: Describe table: " + metricModelName);
+                //console.log("FunMetric: Describe table: " + metricModelName);
                 $scope.tableInfo = tableInfo;
                 return $scope.tableInfo;
             })
@@ -233,8 +243,10 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             if(previewDataSets) {
                 filterDataSets = previewDataSets;
             } else {
+                //console.log("Chart Info:" + chartInfo);
                 if(chartInfo){
                     filterDataSets = chartInfo.data_sets;
+                    //console.log("C DS:" + chartInfo.data_sets);
                 }
             }
             $scope.filterDataSets = filterDataSets;
@@ -269,44 +281,6 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 let chartDataSets = [];
                 let dataSetIndex = 0;
 
-                /*
-                $scope.allData = allDataSets;
-                $scope.status = "Preparing chart data-sets";
-                allDataSets.forEach((oneDataSet) => {
-
-                    let oneChartDataArray = [];
-                    for(let i = 0; i < keyList.length; i++) {
-                        let output = null;
-                        for(let j = 0; j < oneDataSet.length; j++) {
-                            let oneRecord = oneDataSet[j];
-                            if(oneRecord.input_date_time.toString() === keyList[i]) {
-                                let outputName = filterDataSets[dataSetIndex].output.name;
-                                output = oneRecord[outputName];
-                                if (chartInfo && chartInfo.y1axis_title) {
-                                   $scope.chart1YaxisTitle = chartInfo.y1axis_title;
-                                } else {
-                                   $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
-                                }
-                                if (ctrl.y1AxisTitle) {
-                                    $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
-                                }
-
-
-                                $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
-                                break;
-                            }
-                        }
-                        let thisMinimum = filterDataSets[dataSetIndex].output.min;
-                        let thisMaximum = filterDataSets[dataSetIndex].output.max;
-
-                        oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
-                    }
-                    let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
-                    chartDataSets.push(oneChartDataSet);
-                    dataSetIndex++;
-                });
-
-                */
 
                 $scope.allData = allDataSets;
                 $scope.status = "Preparing chart data-sets";
@@ -322,6 +296,9 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                             let oneRecord = oneDataSet[j];
                             if(oneRecord.input_date_time.toString() === keyList[i]) {
                                 matchingDateFound = true;
+                                //console.log("DataSetIndex: " + dataSetIndex);
+                                //console.log("ChartName: " + ctrl.chartName);
+                                //console.log("Filter DataSets: " + filterDataSets);
                                 let outputName = filterDataSets[dataSetIndex].output.name;
                                 output = oneRecord[outputName];
                                 if (chartInfo && chartInfo.y1axis_title) {
