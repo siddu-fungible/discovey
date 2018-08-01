@@ -354,6 +354,11 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_fpg_stats(port_num=port_num, grep_regex=grep_regex)
 
+    def peek_hnu_fpg_stats(self, args):
+        port_num = args.port_num
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_fpg_stats(port_num=port_num, grep_regex=grep_regex, mode='hnu')
+
     def peek_psw_nu_stats(self, args):
         port_num = args.port_num
         queues = args.queues
@@ -549,6 +554,7 @@ class CmdController(Cmd):
 
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
+    peek_hnu_fpg_stats_parser.set_defaults(func=peek_hnu_fpg_stats)
     peek_psw_nu_stats_parser.set_defaults(func=peek_psw_nu_stats)
     peek_psw_hnu_stats_parser.set_defaults(func=peek_psw_hnu_stats)
     peek_meter_nu_stats_parser.set_defaults(func=peek_meter_stats)
@@ -618,7 +624,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.23.102", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

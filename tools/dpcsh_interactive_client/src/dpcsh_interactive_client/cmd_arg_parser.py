@@ -529,8 +529,15 @@ peek_meter_erp_stats_parser.add_argument('-grep', help="Grep regex", default=Non
 
 # Fpg stats
 peek_fpg_stats_parser = peek_stats_parsers.add_parser('fpg', help="NU Peek FPG Port stats")
-peek_fpg_stats_parser.add_argument('port_num', type=int, help="FPG Port num")
-peek_fpg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_fpg_subparsers = peek_fpg_stats_parser.add_subparsers(title='subcommands', help="")
+peek_nu_fpg_stats_parser = peek_fpg_subparsers.add_parser('nu', help="Peek NU FPG stats")
+peek_nu_fpg_stats_parser.add_argument('port_num', type=int, help="FPG Port num")
+peek_nu_fpg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_hnu_fpg_stats_parser = peek_fpg_subparsers.add_parser('hnu', help="Peek HNU FPG stats")
+peek_hnu_fpg_stats_parser.add_argument('port_num', type=int, help="FPG Port num")
+peek_hnu_fpg_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 
 # PSW Stats
 peek_psw_stats_parser = peek_stats_parsers.add_parser('psw', help="NU Peek PSW Stats")
@@ -632,6 +639,7 @@ peek_nwqm_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=
 
 # Nu mpg stats
 peek_mpg_stats_parser = peek_stats_parsers.add_parser('mpg', help='Peek mpg stats')
+peek_mpg_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
 
 # Nu per vppkts
 peek_pervppkts_stats_parser = peek_stats_parsers.add_parser('pervppkts', help='Peek per vppkts stats')
