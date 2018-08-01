@@ -816,9 +816,10 @@ class GoodBad(FunTestCase):
                               """)
 
     def setup(self):
+        pass
         # Enable stream
-        activate = template_obj.activate_stream_blocks()
-        fun_test.test_assert(activate, "Activate all streamblocks")
+        #activate = template_obj.activate_stream_blocks()
+        #fun_test.test_assert(activate, "Activate all streamblocks")
 
     def cleanup(self):
         pass
@@ -895,7 +896,7 @@ class GoodBad(FunTestCase):
             stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=custom_header_1)
         fun_test.test_assert(configure_cust_header, "Configure custom header")
         stream_objs['good'][UL_GOOD_UDP_ZERO_XSUM] = self.current_streamblock_obj
-        '''
+
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % UL_GOOD_UDP_FFFF_XSUM)
@@ -923,6 +924,18 @@ class GoodBad(FunTestCase):
                                                                                  custom_header=True)
                 fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
                                      % (cust_header._spirent_handle, modify_attribute))
+        ipv4 = Ipv4Header()
+        update = template_obj.update_overlay_frame_header(streamblock_obj=self.current_streamblock_obj,
+                                                          header_obj=ipv4, overlay=False,
+                                                          updated_header_attributes_dict=
+                                                          {'gateway': '192.85.1.1'})
+        fun_test.test_assert(update, message="Update gateway in ip header")
+
+        update = template_obj.update_overlay_frame_header(streamblock_obj=self.current_streamblock_obj,
+                                                          header_obj=ipv4, overlay=False,
+                                                          updated_header_attributes_dict=
+                                                          {'sourceAddr': '192.85.1.2'})
+        fun_test.test_assert(update, message="Reapplying source addr in ip header")
 
         self.current_streamblock_obj.FillType = StreamBlock.FILL_TYPE_CONSTANT
         self.current_streamblock_obj.InsertSig = False
@@ -931,7 +944,7 @@ class GoodBad(FunTestCase):
                              message="Updated streamblock %s" % self.current_streamblock_obj._spirent_handle)
 
         stream_objs['good'][UL_GOOD_UDP_FFFF_XSUM] = self.current_streamblock_obj
-        '''
+
         fun_test.log("========= NEW GOOD STREAM =========")
         self.current_streamblock_obj = None
         fun_test.log("Create stream %s" % UL_GOOD_TCP_XSUM)

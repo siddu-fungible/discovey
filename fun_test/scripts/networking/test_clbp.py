@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
-    StreamBlock, GeneratorConfig, Ethernet2Header, TCP, UDP, RangeModifier, Ipv4Header
+    StreamBlock, GeneratorConfig, Ethernet2Header, TCP, RangeModifier, Ipv4Header
 from lib.host.network_controller import NetworkController
 from helper import *
 from nu_config_manager import *
@@ -17,44 +17,59 @@ def compare_spray_values(reference_value, actual_value):
     return result
 
 
-def check_per_vp_pkt_spray(flow_direction, per_vppkt_output_dict, dut_ingress_frame_count):
+def check_per_vp_pkt_spray(flow_direction, old_per_vppkt_output_dict, per_vppkt_output_dict, dut_ingress_frame_count):
     result = False
     try:
         total_pkts_sent = int(dut_ingress_frame_count)
+        fun_test.log("Total packets sent %s on ingress" % total_pkts_sent)
         total_vps = len(per_vppkt_output_dict)
+        fun_test.log("Total vps present %s" % total_vps)
         reference_value = int(total_pkts_sent / total_vps)
+        fun_test.log("Reference value calculated %s" % reference_value)
         for key, val in per_vppkt_output_dict.iteritems():
             total_vp_in = int(val[VP_PACKETS_TOTAL_IN])
+            if VP_PACKETS_TOTAL_IN in old_per_vppkt_output_dict[key]:
+                total_vp_in = int(val[VP_PACKETS_TOTAL_IN]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_TOTAL_IN])
             total_vp_out = int(val[VP_PACKETS_TOTAL_OUT])
+            if VP_PACKETS_TOTAL_OUT in old_per_vppkt_output_dict[key]:
+                total_vp_out = int(val[VP_PACKETS_TOTAL_OUT]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_TOTAL_OUT])
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
                 total_vp_fae_requests = int(val[VP_FAE_REQUESTS_SENT])
+                if VP_FAE_REQUESTS_SENT in old_per_vppkt_output_dict[key]:
+                    total_vp_fae_requests = int(val[VP_FAE_REQUESTS_SENT]) - int(old_per_vppkt_output_dict[key][VP_FAE_REQUESTS_SENT])
                 total_vp_fae_responses = int(val[VP_FAE_RESPONSES_RECEIVED])
+                if VP_FAE_RESPONSES_RECEIVED in old_per_vppkt_output_dict[key]:
+                    total_vp_fae_responses = int(val[VP_FAE_RESPONSES_RECEIVED]) - int(
+                        old_per_vppkt_output_dict[key][VP_FAE_RESPONSES_RECEIVED])
                 total_vp_out_etp = int(val[VP_PACKETS_OUT_ETP])
+                if VP_PACKETS_OUT_ETP in old_per_vppkt_output_dict[key]:
+                    total_vp_out_etp = int(val[VP_PACKETS_OUT_ETP]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_OUT_ETP])
             else:
                 total_vp_fwd_nu_le = int(val[VP_PACKETS_FORWARDING_NU_LE])
-
+                if VP_PACKETS_FORWARDING_NU_LE in old_per_vppkt_output_dict[key]:
+                    total_vp_fwd_nu_le = int(val[VP_PACKETS_FORWARDING_NU_LE]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_FORWARDING_NU_LE])
             fun_test.log("======== Checks on %s =========" % str(key))
             fun_test.test_assert(compare_spray_values(reference_value, total_vp_in),
-                                 "Check counter for %s. Expected value: %s Actual value %s " %
-                                 (VP_PACKETS_TOTAL_IN, reference_value, total_vp_in))
+                                 "Check counter for %s. Expected value: %s Actual value %s for key %s" %
+                                 (VP_PACKETS_TOTAL_IN, reference_value, total_vp_in, key))
             fun_test.test_assert(compare_spray_values(reference_value, total_vp_out),
-                                 "Check counter for %s. Expected value: %s Actual value %s " %
-                                 (VP_PACKETS_TOTAL_OUT, reference_value, total_vp_out))
+                                 "Check counter for %s. Expected value: %s Actual value %s for key %s " %
+                                 (VP_PACKETS_TOTAL_OUT, reference_value, total_vp_out, key))
             if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 fun_test.test_assert(compare_spray_values(reference_value, total_vp_fwd_nu_le),
-                                     "Check counter for %s. Expected value: %s Actual value %s " %
-                                     (VP_PACKETS_FORWARDING_NU_LE, reference_value, total_vp_fwd_nu_le))
+                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
+                                     (VP_PACKETS_FORWARDING_NU_LE, reference_value, total_vp_fwd_nu_le, key))
             else:
                 fun_test.test_assert(compare_spray_values(reference_value, total_vp_fae_requests),
-                                     "Check counter for %s. Expected value: %s Actual value %s " %
-                                     (VP_FAE_REQUESTS_SENT, reference_value, total_vp_fae_requests))
+                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
+                                     (VP_FAE_REQUESTS_SENT, reference_value, total_vp_fae_requests, key))
                 fun_test.test_assert(compare_spray_values(reference_value, total_vp_fae_responses),
-                                     "Check counter for %s. Expected value: %s Actual value %s " %
+                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
                                      (VP_FAE_RESPONSES_RECEIVED, reference_value,
-                                      total_vp_fae_responses))
+                                      total_vp_fae_responses, key))
                 fun_test.test_assert(compare_spray_values(reference_value, total_vp_out_etp),
-                                     "Check counter for %s. Expected value: %s Actual value %s " %
-                                     (VP_PACKETS_OUT_ETP, reference_value, total_vp_out_etp))
+                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
+                                     (VP_PACKETS_OUT_ETP, reference_value, total_vp_out_etp, key))
         result = True
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -111,6 +126,13 @@ class SpirentSetup(FunTestScript):
             buffer = network_controller_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=16380,
                                                                        fcp_xoff_thr=16380)
             fun_test.test_assert(buffer, "Set non fcp xoff threshold")
+
+            # Clear port results on DUT
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
+
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         # Configure Generator
         gen_config_obj = GeneratorConfig()
@@ -177,12 +199,15 @@ class CLBP(FunTestCase):
         # Vary source ip
         l3_config = spirent_config["l3_config"]["ipv4"]
         source_ip = l3_config['source_ip1']
-        destination_ip = l3_config['hu_destination_ip1']
+        dest_ip = l3_config['hu_destination_ip1']
+        temp = dest_ip.split('.')
+        temp[-1] = '100'
+        destination_ip = '.'.join(temp)
         if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
             temp_ip = source_ip
             source_ip = destination_ip
             destination_ip = temp_ip
-        recycle_count = 200
+        recycle_count = 100
         data = source_ip
         step = '0.0.0.1'
         mask = "255.255.255.255"
@@ -237,6 +262,7 @@ class CLBP(FunTestCase):
             erp_stats_1 = get_erp_stats_values(network_controller_obj=network_controller_obj)
             psw_stats_1 = network_controller_obj.peek_psw_global_stats()
             wro_stats_1 = network_controller_obj.peek_wro_global_stats()
+            vp_per_packet_stats_1 = get_vp_per_pkts_stats_values(network_controller_obj=network_controller_obj)
 
         # Modify generator
         gen_config_obj.Duration = clbp_traffic_duration
@@ -296,6 +322,7 @@ class CLBP(FunTestCase):
 
             fun_test.log("Check counters for vp spray")
             counter_check = check_per_vp_pkt_spray(flow_direction=flow_direction, per_vppkt_output_dict=vp_per_packet_stats_2,
+                                                   old_per_vppkt_output_dict=vp_per_packet_stats_1,
                                                    dut_ingress_frame_count=dut_port_1_receive)
             fun_test.test_assert(counter_check, "Check cluster load balancing in per vppkts")
 
@@ -319,7 +346,7 @@ class CLBP(FunTestCase):
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
-    fps = 150
+    fps = 600
     if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
         fps = 50
     elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
