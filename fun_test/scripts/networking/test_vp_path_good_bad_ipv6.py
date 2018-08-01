@@ -816,10 +816,9 @@ class GoodBad(FunTestCase):
                               """)
 
     def setup(self):
-        pass
         # Enable stream
-        #activate = template_obj.activate_stream_blocks()
-        #fun_test.test_assert(activate, "Activate all streamblocks")
+        activate = template_obj.activate_stream_blocks()
+        fun_test.test_assert(activate, "Activate all streamblocks")
 
     def cleanup(self):
         pass
