@@ -113,7 +113,7 @@ class NetworkController(DpcshClient):
             speed_change_args = ["breakoutset", {'portnum': port_num, "shape": shape}, {"brkmode": brk_mode}]
             fun_test.debug("Set Port Speed %d" % port_num)
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_PORT, data=speed_change_args,
-                                                command_duration=self.COMMAND_DURATION)
+                                                command_duration=self.COMMAND_DURATION, tid=1)
             fun_test.simple_assert(json_cmd_result['status'], message="Set Port Speed %d" % port_num)
             speed_changed = True
         except Exception as ex:
