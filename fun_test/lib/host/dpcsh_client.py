@@ -119,15 +119,15 @@ class DpcshClient(object):
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_execute(self, verb, data=None, command_duration=1, sleep_duration=2):
+    def json_execute(self, verb, data=None, command_duration=1, sleep_duration=2, tid=0):
         jdict = None
         if data:
             if type(data) is not list:
-                jdict = {"verb": verb, "arguments": [data], "tid": 0}
+                jdict = {"verb": verb, "arguments": [data], "tid": tid}
             elif type(data) is list:
-                jdict = {"verb": verb, "arguments": data, "tid": 0}
+                jdict = {"verb": verb, "arguments": data, "tid": tid}
         else:
-            jdict = {"verb": verb, "arguments": [], "tid": 0}
+            jdict = {"verb": verb, "arguments": [], "tid": tid}
 
         return self.command('{}'.format(json.dumps(jdict)),
                             command_duration=command_duration, sleep_duration=sleep_duration)
