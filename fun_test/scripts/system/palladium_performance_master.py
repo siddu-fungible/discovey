@@ -3,6 +3,7 @@ from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 import re
@@ -493,6 +494,79 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
 
         set_last_build_status_for_charts(result=self.result, model_name="VoltestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Wu Dispatch Test performance",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            i = 0
+
+            for line in self.lines:
+                m = re.search(
+                    r'Average\s+dispatch\s+WU\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
+                    line)
+                if m:
+                    output_average = int(m.group("average"))
+                    input_app = "dispatch_speed_test"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_average"] = output_average
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    j = 0
+                    MetricHelper(model=WuDispatchTestPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="WuDispatchTestPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="Wu Send Speed Test performance",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            i = 0
+
+            for line in self.lines:
+                m = re.search(
+                    r'Average\s+WU\s+send\s+ungated\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
+                    line)
+                if m:
+                    output_average = int(m.group("average"))
+                    input_app = "wu_send_speed_test"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_average"] = output_average
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    j = 0
+                    MetricHelper(model=WuSendSpeedTestPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="WuSendSpeedTestPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 if __name__ == "__main__":
@@ -503,5 +577,7 @@ if __name__ == "__main__":
     myscript.add_test_case(EcPerformanceTc())
     myscript.add_test_case(EcVolPerformanceTc())
     myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
 
     myscript.run()
