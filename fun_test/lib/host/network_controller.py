@@ -107,6 +107,19 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return port_mtu
 
+    def set_fpg_speed(self, port_num, shape=0, brk_mode="brk_4x10g"):
+        speed_changed = False
+        try:
+            speed_change_args = ["breakoutset", {'portnum': port_num, "shape": shape}, {"brkmode": brk_mode}]
+            fun_test.debug("Set Port Speed %d" % port_num)
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_PORT, data=speed_change_args,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(json_cmd_result['status'], message="Set Port Speed %d" % port_num)
+            speed_changed = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return speed_changed
+
     def enable_link_pause(self, port_num, shape=0):
         link_pause_enabled = False
         try:
