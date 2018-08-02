@@ -9,7 +9,20 @@ from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
 from datetime import datetime, timedelta
+from django.contrib.postgres.fields import JSONField
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+
+class MetricChartStatus(models.Model):
+    metric_id = models.IntegerField(default=-1)
+    chart_name = models.TextField(default="Unknown")
+    data_sets = JSONField()
+    date_time = models.DateTimeField(default=datetime.now)
+    score = models.FloatField(default=-1)
+    valid = models.BooleanField(default=False)
+
+    def __str__(self):
+        s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
+        return s
 
 class MetricChart(models.Model):
     last_build_status = models.CharField(max_length=15, default=RESULTS["PASSED"])
@@ -29,6 +42,8 @@ class MetricChart(models.Model):
     goodness_cache_range = models.IntegerField(default=5)
     goodness_cache_valid = models.BooleanField(default=False)
     status_cache = models.TextField(default="[]")
+    score_cache_valid = models.BooleanField(default=False)
+    last_num_degrades = models.IntegerField(default=0)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -279,8 +294,6 @@ class MetricChart(models.Model):
 
                     today = get_current_time()
                     from_date = today - timedelta(days=number_of_records - 1)
-
-
 
                     for day_index in range(number_of_records - 1):
                         current_date = from_date + timedelta(days=day_index)

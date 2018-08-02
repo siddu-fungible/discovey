@@ -9,7 +9,7 @@ from web.fun_test.metrics_models import UnitTestPerformance
 from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformance, NuTransitPerformance
 from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance
-
+from web.fun_test.metrics_models import MetricChartStatus
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -84,3 +84,7 @@ class VoltestPerformanceAdmin(admin.ModelAdmin):
 @admin.register(ShaxPerformance)
 class ShaxPerformanceAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(MetricChartStatus)
+class MetricStatusAdmin(admin.ModelAdmin):
+    ordering = ('-date_time',)

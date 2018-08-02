@@ -275,24 +275,31 @@ if __name__ == "__main2__":
                 current_date = current_date + timedelta(days=1)
 
 
-def prepare_status(chart):
+def prepare_status(chart, purge_old_status=False):
+    metric_id = chart.metric_id
+    chart_name = chart.chart_name
+    result = {}
+    if purge_old_status:
+        entries = MetricChartStatus.objects.filter(chart_name=chart.chart_name, metric_id=chart.metric_id)
+        entries.all().delete()
     if chart.chart_name == "EC 8:4 Latency":
         j = 0
     # print "Preparing status for: {}".format(chart.chart_name)
     children = json.loads(chart.children)
     children_weights = json.loads(chart.children_weights)
     children_weights = {int(x): y for x, y in children_weights.iteritems()}
+    data_sets = []
 
     sum_of_child_weights = 0
     scores = {}
-    result = {}
+
     result["num_build_failed"] = 0
     result["num_degrades"] = 0
 
     if not chart.leaf:
         for child in children:
             child_metric = MetricChart.objects.get(metric_id=child)
-            child_result = prepare_status(chart=child_metric)
+            child_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
             child_result_scores = child_result["scores"]
             child_last_build_status = child_result["last_build_status"]
             result["num_degrades"] += child_result["num_degrades"]
@@ -306,12 +313,17 @@ def prepare_status(chart):
 
         # Normalize all scores
         for date_time, score in scores.iteritems():
+            final_score = 0
             if sum_of_child_weights:
                 scores[date_time] /= sum_of_child_weights
             else:
                 scores[date_time] = 0
-
-        i = 0
+            mcs = MetricChartStatus(date_time=date_time,
+                                    metric_id=metric_id,
+                                    chart_name=chart_name,
+                                    data_sets=data_sets,
+                                    score=scores[date_time])
+            mcs.save()
     else:
         # print "Reached leaf: {}".format(chart.chart_name)
         data_sets = chart.data_sets
@@ -331,8 +343,7 @@ def prepare_status(chart):
         while current_date <= yesterday:
             last_score = final_score
             # print current_date
-            metric_id = chart.metric_id
-            chart_name = chart.chart_name
+
             data_sets = data_sets
             score = 120
             status_values = []
@@ -342,9 +353,6 @@ def prepare_status(chart):
             children_goodness_map = {}
             num_children_passed = 0
             num_children_failed = 0
-            num_degrades = 0
-            num_child_degrades = 0
-            leaf_status = True
 
             children_info = {}
             data_set_mofified = False
@@ -390,12 +398,19 @@ def prepare_status(chart):
                 final_score = round(data_set_combined_goodness / len(data_sets), 1)
                 scores[current_date] = final_score
 
-
-                if data_set_mofified:
-                    chart.data_sets = json.dumps(data_sets)
-                    # chart.save()
+            if data_set_mofified:
+                chart.data_sets = json.dumps(data_sets)
+                chart.save()
             # print current_date, scores
+            mcs = MetricChartStatus(date_time=current_date,
+                                    metric_id=metric_id,
+                                    chart_name=chart_name,
+                                    data_sets=data_sets,
+                                    score=final_score)
+            mcs.save()
+
             current_date = current_date + timedelta(days=1)
+
 
         # print final_score, last_score
         is_leaf_degrade = final_score < last_score
@@ -407,8 +422,17 @@ def prepare_status(chart):
     if not result["last_build_status"]:
         u = 0
     print "Chart: {} num_degrades: {}".format(chart.chart_name, result["num_degrades"])
+    chart.score_cache_valid = True
+    chart.last_build_status = result["last_build_status"]
+    chart.last_num_degrades = result["num_degrades"]
+    chart.save()
+
     return result
 
 if __name__ == "__main__":
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart)
+    prepare_status(chart=total_chart, purge_old_status=True)
+
+
+if __name__ == "__main2__":
+    pass
