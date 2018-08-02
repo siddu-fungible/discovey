@@ -8,8 +8,9 @@ from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack
 from web.fun_test.metrics_models import UnitTestPerformance
 from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformance, NuTransitPerformance
-from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance
+from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance, WuDispatchTestPerformance
 from web.fun_test.metrics_models import MetricChartStatus
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -80,6 +81,14 @@ class NuTransitPerformanceAdmin(admin.ModelAdmin):
 @admin.register(VoltestPerformance)
 class VoltestPerformanceAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(WuDispatchTestPerformance)
+class WuDispatchTestPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(WuSendSpeedTestPerformance)
+class WuSendSpeedTestPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)
 class ShaxPerformanceAdmin(admin.ModelAdmin):
