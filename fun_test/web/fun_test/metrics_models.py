@@ -24,6 +24,14 @@ class MetricChartStatus(models.Model):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
         return s
 
+
+class MetricChartStatusSerializer(ModelSerializer):
+    date_time = serializers.DateTimeField()
+
+    class Meta:
+        model = MetricChartStatus
+        fields = "__all__"
+
 class MetricChart(models.Model):
     last_build_status = models.CharField(max_length=15, default=RESULTS["PASSED"])
     last_build_date = models.DateTimeField(verbose_name="last_build_date", default=datetime.now)
