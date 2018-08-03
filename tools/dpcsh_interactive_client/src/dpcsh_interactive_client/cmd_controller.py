@@ -446,7 +446,8 @@ class CmdController(Cmd):
 
     def peek_per_vp_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_stats_per_vp(grep_regex=grep_regex)
+        vp_num = args.vp_num
+        self._peek_cmd_obj.peek_stats_per_vp(vp_number=vp_num, grep_regex=grep_regex)
 
     def peek_nwqm_stats(self, args):
         grep_regex = args.grep
@@ -457,7 +458,8 @@ class CmdController(Cmd):
 
     def peek_pervppkts_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_pervppkts_stats(grep_regex=grep_regex)
+        vp_num = args.vp_num
+        self._peek_cmd_obj.peek_pervppkts_stats(vp_number=vp_num, grep_regex=grep_regex)
 
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
