@@ -210,11 +210,12 @@ class PerformanceExcel:
                     choices_str = ""
                 if units == "string".lower():
                     rows.append("{} = models.TextField(verbose_name=\"{}\", default=\"\"{})".format(field_name, self.schema[key]["description"], choices_str))
-                if units == "Gbps".lower():
+                elif units == "Gbps".lower():
                     rows.append("{} = models.FloatField(verbose_name=\"{}\", default=-1{})".format(field_name, self.schema[key]["description"], choices_str))
-                if units == "number".lower() or units == "cycles/block".lower():
+                elif units in ["number", "cycles/block", "ms", "kbps"] :
                     rows.append("{} = models.IntegerField(verbose_name=\"{}\", default=-1{})".format(field_name, self.schema[key]["description"], choices_str))
-
+                else:
+                    raise Exception("Unsupported unit: {}".format(units))
         print "class {}(models.Model):".format(model_name)
         for row in rows:
             print "    " + row
@@ -231,8 +232,8 @@ class PerformanceExcel:
         return choices_list
 
 if __name__ == "__main__":
-    workbook_filename = '/Users/johnabraham/PycharmProjects/fun_test/Integration/fun_test/web/static/logs/shax_perf.xlsx'
-    sheet_name = "SHAx"
+    workbook_filename = '/Users/ash/Desktop/Integration/fun_test/web/static/logs/hu_performance.xlsx'
+    sheet_name = "hu"
     performance_excel = PerformanceExcel(workbook_filename=workbook_filename)
     records = performance_excel.parse(sheet_name=sheet_name, field_names_row_index=10)
     # generic_excel.pretty_print(records)
@@ -241,4 +242,4 @@ if __name__ == "__main__":
     # print performance_excel.get_schema_fields()
     # print performance_excel.get_data_fields()
     # print performance_excel.parse_data()
-    performance_excel.schema_to_django_model(model_name="ShaxPerformance")
+    performance_excel.schema_to_django_model(model_name="HuRawVolumePerformance", interpolation_allowed=True)

@@ -920,6 +920,22 @@ class WuSendSpeedTestPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class HuRawVolumePerformance(models.Model):
+    output_latency = models.IntegerField(verbose_name="Latency", default=-1)
+    output_bandwidth = models.IntegerField(verbose_name="Bandwidth", default=-1)
+    output_iops = models.IntegerField(verbose_name="IO per second", default=-1)
+    input_threads = models.IntegerField(verbose_name="Number of threads", default=-1, choices=[[0, 1.0]])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    tag = "analytics"
+    interpolation_allowed = models.BooleanField(default=True)
+    interpolated = models.BooleanField(default=False)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class ShaxPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
@@ -1078,6 +1094,12 @@ ANALYTICS_MAP = {
         "module": "system",
         "component": "general",
         "verbose_name": "WU Dispatch Performance Test"
+    },
+    "HuRawVolumePerformance": {
+        "model": HuRawVolumePerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "HU Raw Volume Performance"
     },
     "ShaxPerformance": {
         "model": ShaxPerformance,
