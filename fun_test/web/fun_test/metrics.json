@@ -471,6 +471,24 @@
                 "label": "WU Latency: Ungated",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "Average dispatch WU cycles",
+                "metric_model_name": "WuDispatchTestPerformance",
+                "leaf": true,
+                "name": "Average dispatch WU cycles",
+                "label": "Average dispatch WU cycles",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Average WU send ungated cycles",
+                "metric_model_name": "WuSendSpeedTestPerformance",
+                "leaf": true,
+                "name": "Average WU send ungated cycles",
+                "label": "Average WU send ungated cycles",
+                "children": [],
+                "weight": 1
               }
             ]
           }
