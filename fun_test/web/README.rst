@@ -15,6 +15,8 @@ DROP DATABASE
 postgres=# CREATE DATABASE fun_test;
 CREATE DATABASE
 CREATE USER fun_test_user WITH PASSWORD 'fun123';
+GRANT ALL PRIVILEGES ON DATABASE fun_test to fun_test_user;
+alter role fun_test_user superuser;
 
 
 Untar the backup:
