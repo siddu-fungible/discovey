@@ -14,6 +14,7 @@ from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, ShaxPerformance
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
+from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.analytics_models_helper import MetricChartHelper
 
@@ -89,8 +90,16 @@ if __name__ == "__main2__":
         entry.save()
 
 
-if __name__ == "__main__":
+if __name__ == "__main4__":
     entries = ShaxPerformance.objects.all()
     for entry in entries:
         entry.interpolation_allowed = True
+        entry.save()
+
+if __name__ == "__main__":
+    entries = WuDispatchTestPerformance.objects.all()
+    for entry in entries:
+        dt = entry.input_date_time
+        dt = dt.replace(day = dt.day - 1)
+        entry.input_date_time = dt
         entry.save()

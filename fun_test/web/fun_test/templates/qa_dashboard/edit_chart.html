@@ -35,15 +35,15 @@
             <tr>
                 <td>
                     <fun-field type="text" min-length="1" max-length="100" required="true"
-                                       bind-value="y1AxisTitle">
+                                       bind-value="y1AxisTitle"/>
                 </td>
             </tr>
         </table>
         <div ng-if="addDataSet">
-            <table class="table table-nonfluid">
+            <table class="table table-bordered table-nonfluid">
                 <tr>
                     <th>Name</th>
-                    <th>Input</th>
+                    <th colspan="{{addDataSet.inputs.length}}" style="text-align:center;">Input</th>
                     <th>Output</th>
                     <th>Min</th>
                     <th>Max</th>
@@ -51,7 +51,7 @@
                 <tr>
                     <td>
                             <fun-field type="text" min-length="1" max-length="50" required="true"
-                                       bind-value="addDataSet.name">
+                                       bind-value="addDataSet.name"/>
                     </td>
                     <td ng-repeat="input in addDataSet.inputs"><label>{{ input.name }}</label>
                         <select ng-model="input.selectedChoice"
@@ -70,11 +70,11 @@
 
                     <td>
                         <fun-field type="number" min="0" max="999999" required="true"
-                                   bind-value="addDataSet.output.min">
+                                   bind-value="addDataSet.output.min"/>
                     </td>
                     <td>
                         <fun-field type="number" min="0" max="999999" required="true"
-                                   bind-value="addDataSet.output.max">
+                                   bind-value="addDataSet.output.max"/>
                     </td>
                 </tr>
             </table>
