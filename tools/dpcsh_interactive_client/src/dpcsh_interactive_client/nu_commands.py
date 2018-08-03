@@ -1410,7 +1410,19 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
-    def peek_stats_per_vp(self, grep_regex=None):
+    def _get_vp_number_key(self, output_dict, vp_number):
+        result = None
+        try:
+            dict_keys = output_dict.keys()
+            for key in dict_keys:
+                if int(key.split(":")[1]) == int(vp_number):
+                    result = key
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+        return result
+
+    def peek_stats_per_vp(self, vp_number=None, grep_regex=None):
         try:
             prev_result = None
             while True:
@@ -1422,29 +1434,54 @@ class PeekCommands(object):
                     master_table_obj.border = False
                     master_table_obj.header = False
                     if result:
-                        if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            for key in sorted(result):
+                        if vp_number:
+                            vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
+                            result = result[vp_key]
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
                                 table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                                 table_obj.align = 'l'
-                                for _key in sorted(result[key]):
+                                for _key in sorted(result):
                                     if grep_regex:
-                                        if re.search(grep_regex, key, re.IGNORECASE):
-                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key], diff_result[_key]])
                                     else:
-                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
-                        else:
-                            for key in sorted(result):
+                                        table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                master_table_obj.add_row([table_obj])
+                            else:
                                 table_obj = PrettyTable(['Field Name', 'Counter'])
                                 table_obj.align = 'l'
-                                for _key in sorted(result[key]):
+                                for _key in sorted(result):
                                     if grep_regex:
-                                        if re.search(grep_regex, key, re.IGNORECASE):
-                                            table_obj.add_row([_key, result[key][_key]])
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key]])
                                     else:
-                                        table_obj.add_row([_key, result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
+                                        table_obj.add_row([_key, result[_key]])
+                                master_table_obj.add_row([table_obj])
+                        else:
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                for key in sorted(result):
+                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    for _key in sorted(result[key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, key, re.IGNORECASE):
+                                                table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                        else:
+                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
+                            else:
+                                for key in sorted(result):
+                                    table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    table_obj.align = 'l'
+                                    for _key in sorted(result[key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, key, re.IGNORECASE):
+                                                table_obj.add_row([_key, result[key][_key]])
+                                        else:
+                                            table_obj.add_row([_key, result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
                         prev_result = result
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
@@ -1569,7 +1606,7 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_pervppkts_stats(self, grep_regex=None):
+    def peek_pervppkts_stats(self, vp_number=None, grep_regex=None):
         try:
             prev_result = None
             while True:
@@ -1581,29 +1618,55 @@ class PeekCommands(object):
                     master_table_obj.border = False
                     master_table_obj.header = False
                     if result:
-                        if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            for key in sorted(result):
+                        if vp_number:
+                            vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
+                            result = result[vp_key]
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
                                 table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                                 table_obj.align = 'l'
-                                for _key in sorted(result[key]):
+                                for _key in sorted(result):
                                     if grep_regex:
-                                        if re.search(grep_regex, key, re.IGNORECASE):
-                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key], diff_result[_key]])
                                     else:
-                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
-                        else:
-                            for key in sorted(result):
+                                        table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                master_table_obj.add_row([table_obj])
+                            else:
                                 table_obj = PrettyTable(['Field Name', 'Counter'])
                                 table_obj.align = 'l'
-                                for _key in sorted(result[key]):
+                                for _key in sorted(result):
                                     if grep_regex:
-                                        if re.search(grep_regex, key, re.IGNORECASE):
-                                            table_obj.add_row([_key, result[key][_key]])
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key]])
                                     else:
-                                        table_obj.add_row([_key, result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
+                                        table_obj.add_row([_key, result[_key]])
+                                master_table_obj.add_row([table_obj])
+
+                        else:
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                for key in sorted(result):
+                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    for _key in sorted(result[key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, key, re.IGNORECASE):
+                                                table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                        else:
+                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
+                            else:
+                                for key in sorted(result):
+                                    table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    table_obj.align = 'l'
+                                    for _key in sorted(result[key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, key, re.IGNORECASE):
+                                                table_obj.add_row([_key, result[key][_key]])
+                                        else:
+                                            table_obj.add_row([_key, result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
                         prev_result = result
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
