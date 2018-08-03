@@ -213,7 +213,7 @@ class TransitSweep(FunTestCase):
 
         # Adding Ip address and gateway
         ip_header_obj = Ipv4Header(source_address=l3_config['source_ip1'],
-                                   destination_address=l3_config['destination_ip1'],
+                                   destination_address=l3_config['destination_ip2'],
                                    gateway=l3_config['gateway'])
         ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.streamblock_obj_2.spirent_handle,
                                                             header_obj=ip_header_obj, update=True)
