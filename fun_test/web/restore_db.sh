@@ -1,3 +1,4 @@
+tar -xvzf perf_db_backup.json.tgz
 echo "SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity
 WHERE pg_stat_activity.datname = 'fun_test'
