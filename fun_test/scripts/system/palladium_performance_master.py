@@ -3,7 +3,7 @@ from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
-from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 import re
@@ -568,6 +568,45 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="WuSendSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class FunMagentPerformanceATestTC(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Fun Magent Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            i = 0
+
+            for line in self.lines:
+                m = re.search(
+                    r'fun_magent.*=>\s+(?P<latency>\d+)(?P<unit>Kops/sec)\s+\[(?P<metric_name>fun_magent_rate_malloc_free_per_sec)\]',
+                    line)
+                if m:
+                    unit = m.group("unit")
+                    fun_test.test_assert(unit, "Kops/sec", "Valid Unit")
+                    output_latency = int(m.group("latency"))
+                    input_app = "fun_magent_perf_test"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_latency"] = output_latency
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    j = 0
+                    MetricHelper(model=FunMagentPerformanceTest).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="FunMagentPerformanceTest")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 
 if __name__ == "__main__":
     myscript = MyScript()
@@ -579,5 +618,6 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestPerformanceTc())
     myscript.add_test_case(WuDispatchTestPerformanceTc())
     myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceATestTC())
 
     myscript.run()
