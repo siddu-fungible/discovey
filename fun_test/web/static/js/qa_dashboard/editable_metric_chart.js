@@ -131,8 +131,8 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
                 $scope.inner.currentDescription = $scope.chartInfo.description;
-                $scope.negativeGradient = !$scope.chartInfo.positive;
-                $scope.leaf = $scope.chartInfo.leaf;
+                $scope.inner.negativeGradient = !$scope.chartInfo.positive;
+                $scope.inner.leaf = $scope.chartInfo.leaf;
                 $scope.status = "idle";
             });
         } else {
@@ -234,8 +234,8 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
         payload["chart_name"] = $scope.chartName;
         payload["data_sets"] = $scope.previewDataSets;
         payload["description"] = $scope.inner.currentDescription;
-        payload["negative_gradient"] = $scope.negativeGradient;
-        payload["leaf"] = $scope.leaf;
+        payload["negative_gradient"] = $scope.inner.negativeGradient;
+        payload["leaf"] = $scope.inner.leaf;
         commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
             if (data) {
                 alert("Submitted");
