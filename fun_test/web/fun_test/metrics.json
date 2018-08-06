@@ -157,6 +157,42 @@
                   }
                 ],
                 "weight": 1
+              },
+              {
+                "info": "Raw Volume",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Raw Volume",
+                "label": "Raw Volume",
+                "children": [
+                  {
+                    "info": "HU: Raw Volume Latency",
+                    "metric_model_name": "HuRawVolumePerformance",
+                    "leaf": true,
+                    "name": "HU: Raw Volume Latency",
+                    "label": "HU: Raw Volume Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "HU: Raw Volume Bandwidth",
+                    "metric_model_name": "HuRawVolumePerformance",
+                    "leaf": true,
+                    "name": "HU: Raw Volume Bandwidth",
+                    "label": "HU: Raw Volume Bandwidth",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "HU: Raw Volume IOPS",
+                    "metric_model_name": "HuRawVolumePerformance",
+                    "leaf": true,
+                    "name": "HU: Raw Volume IOPS",
+                    "label": "HU: Raw Volume IOPS",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
               }
             ],
             "weight": 1

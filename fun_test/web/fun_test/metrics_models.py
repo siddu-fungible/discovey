@@ -936,6 +936,23 @@ class HuRawVolumePerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class FunMagentPerformanceTest(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="fun_magent_perf_test", choices=[(0, "fun_magent_perf_test")])
+    input_metric_name = models.CharField(max_length=40, default="fun_magent_rate_malloc_free_per_sec",
+                                         choices=[(0, "fun_magent_rate_malloc_free_per_sec")])
+    output_latency = models.IntegerField(verbose_name="Latency", default=-1)
+
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class ShaxPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
@@ -1100,6 +1117,12 @@ ANALYTICS_MAP = {
         "module": "storage",
         "component": "general",
         "verbose_name": "HU Raw Volume Performance"
+    },
+    "FunMagentPerformanceTest": {
+        "model": FunMagentPerformanceTest,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "Fun Magent Performance test"
     },
     "ShaxPerformance": {
         "model": ShaxPerformance,

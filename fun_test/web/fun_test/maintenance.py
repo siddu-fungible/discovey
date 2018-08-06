@@ -96,10 +96,22 @@ if __name__ == "__main4__":
         entry.interpolation_allowed = True
         entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main5__":
     entries = WuDispatchTestPerformance.objects.all()
     for entry in entries:
         dt = entry.input_date_time
         dt = dt.replace(day = dt.day - 1)
         entry.input_date_time = dt
         entry.save()
+
+if __name__ == "__main__":
+    chart_name = "LSV: Op Bandwidth"
+    entries = MetricChart.objects.filter(chart_name=chart_name)
+    for entry in entries:
+        print entry
+    newentry = entries[0]
+    print newentry
+    newentry.chart_name += "_01"
+    newentry.metric_id = 10000
+    newentry.pk = None
+    newentry.save()
