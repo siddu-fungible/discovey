@@ -442,6 +442,24 @@
                 "children": [],
                 "leaf": true,
                 "weight": 1
+              },
+              {
+                "info": "Average dispatch WU cycles",
+                "metric_model_name": "WuDispatchTestPerformance",
+                "leaf": true,
+                "name": "Average dispatch WU cycles",
+                "label": "Average dispatch WU cycles",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Average WU send ungated cycles",
+                "metric_model_name": "WuSendSpeedTestPerformance",
+                "leaf": true,
+                "name": "Average WU send ungated cycles",
+                "label": "Average WU send ungated cycles",
+                "children": [],
+                "weight": 1
               }
             ]
           },
@@ -468,6 +486,24 @@
                 "leaf": true,
                 "name": "Best time for 1 malloc/free (Threaded)",
                 "label": "Best time for 1 malloc/free (Threaded)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Average dispatch WU cycles",
+                "metric_model_name": "WuDispatchTestPerformance",
+                "leaf": true,
+                "name": "Average dispatch WU cycles",
+                "label": "Average dispatch WU cycles",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Average WU send ungated cycles",
+                "metric_model_name": "WuSendSpeedTestPerformance",
+                "leaf": true,
+                "name": "Average WU send ungated cycles",
+                "label": "Average WU send ungated cycles",
                 "children": [],
                 "weight": 1
               }

@@ -1,3 +1,4 @@
+set -e
 tar -xvzf perf_db_backup.json.bkp.tgz
 echo "SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity
