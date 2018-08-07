@@ -646,3 +646,11 @@ peek_mpg_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=N
 peek_pervppkts_stats_parser = peek_stats_parsers.add_parser('pervppkts', help='Peek per vppkts stats')
 peek_pervppkts_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
 peek_pervppkts_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
+
+# nhp stats
+peek_nhp_stats_parser = peek_stats_parsers.add_parser('nhp', help="Peek nhp stats")
+peek_nhp_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
+
+# sse stats
+peek_sse_stats_parser = peek_stats_parsers.add_parser('sse', help='Peek sse stats')
+peek_sse_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
