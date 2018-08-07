@@ -1045,14 +1045,14 @@ class PeekCommands(object):
                 self.dpc_client.disconnect()
                 break
      
-    def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek"):
+    def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek", tid=0):
         try:
             while True:
                 try:
                     if type(cmd) == list:
-                        result = self.dpc_client.execute(verb=verb, arg_list=cmd)
+                        result = self.dpc_client.execute(verb=verb, arg_list=cmd, tid=tid)
                     else:
-                        result = self.dpc_client.execute(verb=verb, arg_list=[cmd])
+                        result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result)
                     if result:
@@ -1299,12 +1299,14 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
-    def peek_parser_nu_stats(self, grep_regex=None):
+    def _get_parser_stats(self, grep_regex=None, hnu=False):
         try:
             prev_result = None
             while True:
                 try:
                     cmd = "stats/prsr/nu"
+                    if hnu:
+                        cmd = "stats/prsr/hnu"
                     result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                     master_table_obj = PrettyTable()
                     master_table_obj.align = 'l'
@@ -1349,9 +1351,11 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
+    def peek_parser_nu_stats(self, grep_regex=None):
+        self._get_parser_stats(grep_regex=grep_regex)
+
     def peek_parser_hnu_stats(self, grep_regex=None):
-        # TODO: Currently this cmd is crashing on palladium. Implement it later
-        pass
+        self._get_parser_stats(grep_regex=grep_regex, hnu=True)
 
     def peek_wred_ecn_stats(self, port_num, queue_num, grep_regex=None):
         cmd = ["get", "wred_ecn_stats", {"port": port_num, "queue": queue_num}]
@@ -1679,8 +1683,13 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
+    def peek_nhp_stats(self, grep_regex=None):
+        cmd = "stats/nhp"
+        self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-
+    def peek_sse_stats(self, grep_regex=None):
+        cmd = "stats/sse"
+        self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
 
 
