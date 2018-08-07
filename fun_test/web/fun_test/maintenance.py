@@ -17,6 +17,7 @@ from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, A
 from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.analytics_models_helper import MetricChartHelper
+from web.fun_test.metrics_models import MetricChartStatus
 
 class MetricHelper(object):
     def __init__(self, model):
@@ -104,7 +105,7 @@ if __name__ == "__main5__":
         entry.input_date_time = dt
         entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main44__":
     chart_name = "LSV: Op Bandwidth"
     entries = MetricChart.objects.filter(chart_name=chart_name)
     for entry in entries:
@@ -115,3 +116,10 @@ if __name__ == "__main__":
     newentry.metric_id = 10000
     newentry.pk = None
     newentry.save()
+
+if __name__ == "__main__":
+    entries = MetricChartStatus.objects.filter(metric_id=108)
+    # entries = MetricChartStatus.objects.all()
+
+    for entry in entries:
+        print entry

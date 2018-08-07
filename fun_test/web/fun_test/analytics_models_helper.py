@@ -75,6 +75,9 @@ class MetricChartHelper(object):
         self.metric_model_name = metric_model_name
         self.chart = MetricChart.objects.get(chart_name=chart_name, metric_model_name=metric_model_name)
 
+    def get_chart(self):
+        return self.chart
+
     def set_output_data_set(self, output_name, min_value, max_value):
         data_sets = json.loads(self.chart.data_sets)
         for data_set in data_sets:

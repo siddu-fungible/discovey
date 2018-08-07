@@ -14,12 +14,14 @@ from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
 from web.fun_test.metrics_models import NuTransitPerformance, NuTransitPerformanceSerializer
 from web.fun_test.metrics_models import ShaxPerformanceSerializer
+from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 from analytics_models_helper import invalidate_goodness_cache
-
+from datetime import datetime
+from dateutil import parser
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 
@@ -188,6 +190,28 @@ def metric_info(request):
     serialized_data["num_child_degrades"] = result["num_child_degrades"]
     serialized_data["children_info"] = result["children_info"]
     return serialized_data
+
+
+
+@csrf_exempt
+@api_safe_json_response
+def scores(request):
+    result = {}
+    request_json = json.loads(request.body)
+    date_range = request_json["date_range"]
+    date_range = [parser.parse(x) for x in date_range]
+    # chart_name = request_json["chart_name"]
+    metric_id = int(request_json["metric_id"])
+    entries = MetricChartStatus.objects.filter(date_time__range=date_range,
+                                               metric_id=metric_id)
+    serialized = MetricChartStatusSerializer(entries, many=True)
+    serialized_data = serialized.data[:]
+    result["scores"] = {}
+    for element in serialized_data:
+        j = dict(element)
+        result["scores"][j["date_time"]] = j
+
+    return result
 
 @csrf_exempt
 @api_safe_json_response

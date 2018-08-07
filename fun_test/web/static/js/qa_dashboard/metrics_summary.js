@@ -4,45 +4,6 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     let ctrl = this;
 
     this.$onInit = function () {
-        /*
-        $scope.treeModel = [
-            {
-                info: "",
-                showInfo: false,
-                label: "Total",
-                trend: "up",
-                goodness: 5.6,
-                "children": [
-                    {
-                        info: "",
-                        showInfo: false,
-                        label: "Software",
-                        goodness: 7.5,
-                        children: [{info: "", label: "Nucleus", trend: "down", goodness: 6.6, children: [{
-                            info: "",
-                            goodness: 1.0,
-                            label: "Best time for 1 malloc/free (WU)",
-                            status: false,
-
-                        }, {
-                            info: "",
-                            goodness: 3.0,
-                            label: "Best time for 1 malloc/free (Threaded)",
-                            status: true,
-
-                        }]},
-                            {info: "", label: "Storage"}]
-                    },
-                    {
-                        info: "",
-                        showInfo: false,
-                        label: "Hardware",
-                        children: [{info: "", label: "leaf3"}]
-                    }
-                ]
-            }
-
-        ];*/
 
         $scope.numGridColumns = 2;
         if(angular.element($window).width() <=1441) {
@@ -138,6 +99,17 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         $scope.collapsedAll = true;
     };
 
+    $scope.getDateBound = (dt, lower) => {
+        let yesterday = new Date(dt);
+        if (lower) {
+            yesterday.setHours(0, 0, 1);
+        } else {
+            yesterday.setHours(23, 59, 59);
+        }
+
+        return yesterday;
+    };
+
     $scope.getNodeFromData = (data) => {
         let newNode = {
             info: data.description,
@@ -163,21 +135,31 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             newNode.info = "<p>Please update the description</p>";
         }
 
+        let today = new Date();
+        console.log(today);
+        let startMonth = 4 - 1;
+        let startDay = 1;
+        let startMinute = 59;
+        let startHour = 23;
+        let startSecond = 1;
+        let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
+        console.log(fromDate);
+        console.log($scope.getDateBound(fromDate, true));
+        console.log($scope.getDateBound(fromDate, false));
+
+        let yesterday = new Date(today);
+        yesterday = yesterday.setDate(yesterday.getDate() - 1);
+        let toDate = new Date(yesterday);
+
+        $scope.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then((data) => {
+
+        });
+
         angular.forEach(newNode.childrenWeights, (info, childId) => {
             newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
         });
 
         $scope.evaluateGoodness(newNode, data.goodness_values, data.children_goodness_map);
-        /*
-        newNode.goodness = Number(data.goodness_values[data.goodness_values.length - 1].toFixed(1));
-        newNode.goodnessValues = data.goodness_values;
-        newNode.trend = "flat";
-        let penultimateGoodness = Number(data.goodness_values[data.goodness_values.length - 2].toFixed(1));
-        if (penultimateGoodness > newNode.goodness) {
-            newNode.trend = "down";
-        } else if (penultimateGoodness < newNode.goodness) {
-            newNode.trend = "up";
-        }*/
 
         //newNode.status = data.status_values[data.status_values.length - 1];
         if (newNode.lastBuildStatus === "PASSED") {
@@ -192,6 +174,15 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         }
 
         return newNode;
+    };
+
+    $scope.fetchScores = (metricId, fromDate, toDate) => {
+        let payload = {};
+        payload.metric_id = metricId;
+        payload.date_range = [fromDate, toDate];
+        return commonService.apiPost('/metrics/scores', payload).then((data) => {
+            return data;
+        });
     };
 
     $scope.getSumChildWeights = (children) => {
@@ -230,7 +221,6 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 node.trend = "down";
             }
         }
-
     };
 
     $scope.getLastElement = (array) => {

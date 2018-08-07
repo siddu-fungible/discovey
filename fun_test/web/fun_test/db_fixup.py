@@ -18,6 +18,7 @@ from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 
+start_month = 4
 start_day = 1
 minute = 59
 hour = 23
@@ -299,7 +300,6 @@ def prepare_status(chart, purge_old_status=False):
     result["num_degrades"] = 0
     result["children_score_map"] = {}
     today = datetime.now()
-    start_month = 4
 
     from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
 
@@ -453,7 +453,7 @@ def prepare_status(chart, purge_old_status=False):
 
 if __name__ == "__main__":
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Nucleus")
-    prepare_status(chart=total_chart, purge_old_status=True)
+    prepare_status(chart=total_chart, purge_old_status=False)
 
 
 if __name__ == "__main2__":
