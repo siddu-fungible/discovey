@@ -461,6 +461,14 @@ class CmdController(Cmd):
         vp_num = args.vp_num
         self._peek_cmd_obj.peek_pervppkts_stats(vp_number=vp_num, grep_regex=grep_regex)
 
+    def peek_stats_nhp(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_nhp_stats(grep_regex=grep_regex)
+
+    def peek_stats_sse(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_sse_stats(grep_regex=grep_regex)
+
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
 
@@ -579,6 +587,8 @@ class CmdController(Cmd):
     peek_nwqm_stats_parser.set_defaults(func=peek_nwqm_stats)
     peek_mpg_stats_parser.set_defaults(func=peek_mpg_stats)
     peek_pervppkts_stats_parser.set_defaults(func=peek_pervppkts_stats)
+    peek_nhp_stats_parser.set_defaults(func=peek_stats_nhp)
+    peek_sse_stats_parser.set_defaults(func=peek_stats_sse)
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
