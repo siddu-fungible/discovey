@@ -134,6 +134,14 @@ set_port_runt_filter_parser.add_argument('buffer_64', type=int, help="Buffer")
 set_port_runt_filter_parser.add_argument('runt_err_en', type=int, help="Runt Error Enable")
 set_port_runt_filter_parser.add_argument('en_delete', type=int, help="Enable Delete")
 
+# Set Port Speed
+brkmode_list = ['no_brk_40g', 'no_brk_100g', 'brk_2x50g', 'brk_4x25g', 'brk_4x10g', 'brk_1x50g_2x25g',
+                'brk_2x25g_1x50g']
+set_port_speed_parser = set_nu_port_parsers.add_parser('speed', help="Set port speed")
+set_port_speed_parser.add_argument('port_num', type=int, help="port_num")
+set_port_speed_parser.add_argument('shape', type=int, help='shape')
+set_port_speed_parser.add_argument('brkmode', type=str, help='Specify brkmode from %s' % brkmode_list)
+
 # -----------------------------------------------------------------------------------------------
 # Set NU QoS sub commands
 set_nu_qos_parsers = set_nu_qos_parser.add_subparsers(title="subcommands", help="")
@@ -465,6 +473,10 @@ get_qos_arb_cfg_parser = get_nu_qos_parsers.add_parser('arb-cfg', help="QoS PFC 
 get_qos_xoff_status_parser = get_nu_qos_parsers.add_parser('xoff_status', help="QoS xoff status")
 get_qos_xoff_status_parser.add_argument('port_num', type=int, help="Port Num")
 get_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
+
+get_port_speed_parser = get_nu_port_parsers.add_parser('speed', help="Get port speed")
+get_port_speed_parser.add_argument('port_num', type=int, help="port_num")
+get_port_speed_parser.add_argument('shape', type=int, help='shape')
 
 
 # -----------------------------------------------------------------------------------------------
