@@ -462,11 +462,11 @@
                 "weight": 1
               },
               {
-                "info": "Malloc Agent Rate",
+                "info": "Malloc agent rate",
                 "metric_model_name": "FunMagentPerformanceTest",
                 "leaf": true,
-                "name": "Malloc Agent Rate",
-                "label": "Malloc Agent Rate",
+                "name": "Malloc agent rate",
+                "label": "Malloc agent rate",
                 "children": [],
                 "weight": 1
               }
@@ -517,11 +517,11 @@
                 "weight": 1
               },
               {
-                "info": "Malloc Agent Rate",
+                "info": "Malloc agent rate",
                 "metric_model_name": "FunMagentPerformanceTest",
                 "leaf": true,
-                "name": "Malloc Agent Rate",
-                "label": "Malloc Agent Rate",
+                "name": "Malloc agent rate",
+                "label": "Malloc agent rate",
                 "children": [],
                 "weight": 1
               }
