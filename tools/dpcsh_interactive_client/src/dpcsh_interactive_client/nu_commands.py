@@ -197,6 +197,19 @@ class PortCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
+    def port_speed(self, port_num, shape, brkmode=None):
+        try:
+            cmd_arg_dict = {"portnum": port_num, "shape": shape}
+            if brkmode is not None:
+                mtu_dict = {"brkmode": brkmode}
+                arg_list = ["breakoutset", cmd_arg_dict, mtu_dict]
+            else:
+                arg_list = ["breakoutget", cmd_arg_dict]
+            result = self.dpc_client.execute(verb="port", arg_list=arg_list)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
 
 class SystemCommands(object):
     def __init__(self, dpc_client):
