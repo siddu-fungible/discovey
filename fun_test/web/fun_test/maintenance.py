@@ -6,6 +6,9 @@ import re
 from datetime import datetime
 from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import get_localized_time
+from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
+import logging
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
@@ -14,7 +17,7 @@ from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, ShaxPerformance
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
-from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance
+from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance, HuRawVolumePerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus
@@ -97,8 +100,8 @@ if __name__ == "__main4__":
         entry.interpolation_allowed = True
         entry.save()
 
-if __name__ == "__main5__":
-    entries = WuDispatchTestPerformance.objects.all()
+if __name__ == "__main__":
+    entries = HuRawVolumePerformance.objects.all()
     for entry in entries:
         dt = entry.input_date_time
         dt = dt.replace(day = dt.day - 1)
@@ -117,9 +120,23 @@ if __name__ == "__main44__":
     newentry.pk = None
     newentry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main55__":
     entries = MetricChartStatus.objects.filter(metric_id=108)
     # entries = MetricChartStatus.objects.all()
 
     for entry in entries:
         print entry
+
+if __name__ == "__main5__":
+    from django.apps import apps
+    for entry in site_state.metric_models.keys():
+        print entry
+'''
+    try:
+        entry = django.apps.apps.get_model(app_label='fun_test', model_name='FunMagentPerformanceTest')
+        print entry
+    except:
+        logger.critical("No data found Model")
+    #for model_name in apps.get_models():
+        #print model_name.objects.filter()'''
+

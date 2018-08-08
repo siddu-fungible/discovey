@@ -49,3 +49,5 @@ SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
 
 REGRESSION_USER = "regression"
 REGRESSION_USER_PASSWORD = "FunPrecious123"
+
+MAIN_WEB_APP = 'fun_test'

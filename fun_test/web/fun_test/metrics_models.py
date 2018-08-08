@@ -1,8 +1,12 @@
+from fun_settings import MAIN_WEB_APP
 from django.db import models
+from django.apps import apps
+#from web.fun_test import apps
 from fun_global import RESULTS, get_current_time, get_localized_time
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import json
+# from web.fun_test.site_state import site_state
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
@@ -11,6 +15,7 @@ import logging
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 class MetricChartStatus(models.Model):
     metric_id = models.IntegerField(default=-1)
@@ -433,7 +438,9 @@ class MetricChart(models.Model):
         if data_set:
             # data_set = data_sets[0]
             inputs = data_set["inputs"]
-            model = ANALYTICS_MAP[self.metric_model_name]["model"]
+            #model = apps.get_model(app_label='fun_test', model_name=self.metric_model_name)
+            model = app_config.get_metric_models()[self.metric_model_name]
+
             today = get_current_time()
             yesterday = today - timedelta(days=1)
             yesterday = yesterday.replace(hour=23, minute=59, second=59)
@@ -924,7 +931,8 @@ class HuRawVolumePerformance(models.Model):
     output_latency = models.IntegerField(verbose_name="Latency", default=-1)
     output_bandwidth = models.IntegerField(verbose_name="Bandwidth", default=-1)
     output_iops = models.IntegerField(verbose_name="IO per second", default=-1)
-    input_threads = models.IntegerField(verbose_name="Number of threads", default=-1, choices=[[0, 1.0]])
+    #input_threads = models.IntegerField(verbose_name="Number of threads", default=-1, choices=[[0, 1.0]])
+    input_testbed = models.CharField(max_length=30, verbose_name="Testbed", default="storage1", choices=[(0, "storage1"),(1.0,"storage2"),(2.0, "storagenw")])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     tag = "analytics"
     interpolation_allowed = models.BooleanField(default=True)
@@ -968,6 +976,7 @@ class BcopyPerformanceSerializer(ModelSerializer):
 
 class VoltestPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = VoltestPerformance
         fields = "__all__"
@@ -975,28 +984,35 @@ class VoltestPerformanceSerializer(ModelSerializer):
 
 class BcopyFloodDmaPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = BcopyFloodDmaPerformance
         fields = "__all__"
 
+
 class LsvZipCryptoPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = LsvZipCryptoPerformance
         fields = "__all__"
 
+
 class EcVolPerformanceSerialzer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = EcVolPerformance
         fields = "__all__"
 
+
 class NuTransitPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = NuTransitPerformance
         fields = "__all__"
-
+'''
 ANALYTICS_MAP = {
     "Performance1": {
         "model": Performance1,
@@ -1131,4 +1147,4 @@ ANALYTICS_MAP = {
         "verbose_name": "Shax Performance"
     }
 }
-
+'''

@@ -460,6 +460,15 @@
                 "label": "Average WU send ungated cycles",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "Malloc Agent Rate",
+                "metric_model_name": "FunMagentPerformanceTest",
+                "leaf": true,
+                "name": "Malloc Agent Rate",
+                "label": "Malloc Agent Rate",
+                "children": [],
+                "weight": 1
               }
             ]
           },
@@ -504,6 +513,15 @@
                 "leaf": true,
                 "name": "Average WU send ungated cycles",
                 "label": "Average WU send ungated cycles",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Malloc Agent Rate",
+                "metric_model_name": "FunMagentPerformanceTest",
+                "leaf": true,
+                "name": "Malloc Agent Rate",
+                "label": "Malloc Agent Rate",
                 "children": [],
                 "weight": 1
               }
