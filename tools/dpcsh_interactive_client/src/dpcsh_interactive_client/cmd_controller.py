@@ -484,6 +484,17 @@ class CmdController(Cmd):
     def clear_nu_all_stats(self, args):
         self._clear_cmd_obj.clear_nu_all_stats()
 
+    def set_port_speed(self, args):
+        port_num = args.port_num
+        shape = args.shape
+        brkmode = args.brkmode
+        self._port_cmd_obj.port_speed(port_num=port_num, shape=shape, brkmode=brkmode)
+
+    def get_port_speed(self, args):
+        port_num = args.port_num
+        shape = args.shape
+        self._port_cmd_obj.port_speed(port_num=port_num, shape=shape)
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -516,6 +527,8 @@ class CmdController(Cmd):
     set_port_ptp_1step_disable_parser.set_defaults(func=disable_port_ptp_1step)
     set_port_runt_filter_parser.set_defaults(func=set_port_runt_filter)
     get_port_runt_filter_parser.set_defaults(func=dump_port_runt_filter)
+    set_port_speed_parser.set_defaults(func=set_port_speed)
+    get_port_speed_parser.set_defaults(func=get_port_speed)
 
     # -------------- System Command Handlers ----------------
     set_system_params_syslog_parser.set_defaults(func=set_system_syslog_level)
@@ -638,6 +651,7 @@ class CmdController(Cmd):
 if __name__ == '__main__':
     cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
+
 
 
 
