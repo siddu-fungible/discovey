@@ -20,7 +20,7 @@ class Performance1Admin(admin.ModelAdmin):
 
 @admin.register(MetricChart)
 class MetricChartAdmin(admin.ModelAdmin):
-    pass
+    ordering = ('-metric_id', )
 
 
 @admin.register(ModelMapping)
@@ -105,4 +105,4 @@ class ShaxPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(MetricChartStatus)
 class MetricStatusAdmin(admin.ModelAdmin):
-    ordering = ('-date_time',)
+    ordering = ('-date_time', '-metric_id')
