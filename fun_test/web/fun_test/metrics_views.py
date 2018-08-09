@@ -1,12 +1,14 @@
 import logging
 import json
+from django.apps import apps
+from fun_settings import MAIN_WEB_APP
 from fun_global import get_localized_time, get_current_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
 from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
-from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer, WuLatencyAllocStack
+from web.fun_test.metrics_models import MetricChart, ModelMapping, VolumePerformanceSerializer, WuLatencyAllocStack
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
@@ -23,6 +25,7 @@ from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime
 from dateutil import parser
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 
 def index(request):
@@ -46,7 +49,7 @@ def metrics_list(request):
 @api_safe_json_response
 def describe_table(request, table_name):
     result = None
-    metric_model = ANALYTICS_MAP[table_name]["model"]
+    metric_model = app_config.get_metric_models()[table_name]
     if metric_model:
         fields = metric_model._meta.get_fields()
         payload = OrderedDict()
@@ -218,7 +221,7 @@ def scores(request):
 def table_data(request, page=None, records_per_page=10):
     request_json = json.loads(request.body)
     model_name = request_json["model_name"]
-    model = ANALYTICS_MAP[model_name]["model"]
+    model = app_config.get_metric_models()[model_name]
     data = {}
     header_list = [x.name for x in model._meta.get_fields()]
     data["headers"] = header_list
@@ -347,7 +350,7 @@ def data(request):
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     except ObjectDoesNotExist:
         pass
-    model = ANALYTICS_MAP[metric_model_name]["model"]
+    model = app_config.get_metric_models()[metric_model_name]
     if preview_data_sets is not None:
         data_sets = preview_data_sets
     else:
