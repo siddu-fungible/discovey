@@ -8,6 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
+import datetime
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -25,8 +26,13 @@ class MetricChartStatus(models.Model):
         return s
 
 
+class TimestampField(serializers.Field):
+    def to_representation(self, value):
+        epoch = get_localized_time(datetime(1970, 1, 1))
+        return int((value - epoch).total_seconds())
+
 class MetricChartStatusSerializer(ModelSerializer):
-    date_time = serializers.DateTimeField()
+    date_time = TimestampField()
 
     class Meta:
         model = MetricChartStatus
