@@ -70,6 +70,7 @@ class SiteState():
                 m.save()
 
     def _do_register_metric(self, metric):
+
         all_metrics_chart = None
         try:
             all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
@@ -98,13 +99,22 @@ class SiteState():
             if description and not m.description:
                 m.description = description
                 m.save()
+            '''
+            if metric_model_name == "MetricContainer":
+                m.leaf = False
+                m.save()
+            else:
+                m.leaf = True
+                m.save()
+            '''
+
         except ObjectDoesNotExist:
-            # if len(children):
-            m = MetricChart(metric_model_name="MetricContainer",
-                            chart_name=metric["name"],
-                            leaf=False, metric_id=LastMetricId.get_next_id(),
-                            description=description)
-            m.save()
+            if len(children):
+                m = MetricChart(metric_model_name="MetricContainer",
+                                chart_name=metric["name"],
+                                leaf=False, metric_id=LastMetricId.get_next_id(),
+                                description=description)
+                m.save()
 
         if "reference" in metric and metric["reference"]:
             pass
@@ -148,6 +158,8 @@ class SiteState():
                                                             chart_name="All metrics")
         if total_chart.chart_name == "Total":
             total_chart.add_child(all_metrics_chart.metric_id)
+
+
 if not site_state:
     site_state = SiteState()
 

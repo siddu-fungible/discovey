@@ -124,8 +124,6 @@ if is_performance_server() and True:
             'PORT': ''}
     DATABASES["default"] = DATABASES["performance"]
 
-
-
 DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
 
 

@@ -299,6 +299,8 @@ def update_chart(request):
                         chart_name=chart_name,
                         data_sets=json.dumps(data_sets),
                         metric_id=LastMetricId.get_next_id())
+        if leaf:
+            c.leaf = leaf
         c.save()
         invalidate_goodness_cache()
     return "Ok"

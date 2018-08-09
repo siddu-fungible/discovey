@@ -228,6 +228,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             payload["negative_gradient"] = $scope.negativeGradient;
             payload["y1_axis_title"] = $scope.y1AxisTitle;
             payload["y2_axis_title"] = $scope.y2AxisTitle;
+            payload["leaf"] = true;
 
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
                 if(data) {
