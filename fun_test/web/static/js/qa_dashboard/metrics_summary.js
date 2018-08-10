@@ -387,11 +387,11 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         let s = "";
         if (node.leaf) {
             if (node.hasOwnProperty("status")) {
-                if (node.status === true) {
-                    s = "Bld: <label class=\"label label-success\">PASSED</label>";
-                } else {
-                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
-                }
+//                if (node.status === true) {
+//                    s = "Bld: <label class=\"label label-success\">PASSED</label>";
+//                } else {
+//                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
+//                }
                 if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
                     s = "<p style='background-color: white' class=\"\">No Data</p>";
                 }
@@ -409,7 +409,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 if (node.numChildDegrades) {
                     s += ",&nbsp";
                 }
-                s += "Bld Failed: <span style='color: red'>" + node.numChildrenFailed + "</span>";
+                s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.numChildrenFailed + "</span>";
             }
         }
         return s;
