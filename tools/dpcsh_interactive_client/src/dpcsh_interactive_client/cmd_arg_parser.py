@@ -666,3 +666,56 @@ peek_nhp_stats_parser.add_argument('-grep', help='Grep regex pattern', default=N
 # sse stats
 peek_sse_stats_parser = peek_stats_parsers.add_parser('sse', help='Peek sse stats')
 peek_sse_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
+
+# Resource stats
+peek_resource_stats_parser = peek_stats_parsers.add_parser('resource', help="Resource Stats")
+peek_resource_stats_parsers = peek_resource_stats_parser.add_subparsers(title='subcommands', help="")
+peek_pc_resource_stats_parser = peek_resource_stats_parsers.add_parser('pc', help='Peek pc resource stats')
+peek_pc_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
+peek_pc_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_cc_resource_stats_parser = peek_resource_stats_parsers.add_parser('cc', help='Peek cc resource stats')
+peek_cc_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_dma_resource_stats_parser = peek_resource_stats_parsers.add_parser('dma', help='Peek dma resource stats')
+peek_dma_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
+peek_dma_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_le_resource_stats_parser = peek_resource_stats_parsers.add_parser('le', help='Peek le resource stats')
+peek_le_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
+peek_le_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_zip_resource_stats_parser = peek_resource_stats_parsers.add_parser('zip', help='Peek zip resource stats')
+peek_zip_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
+peek_zip_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_rgx_resource_stats_parser = peek_resource_stats_parsers.add_parser('rgx', help='Peek rgx resource stats')
+peek_rgx_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
+peek_rgx_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_hnu_resource_stats_parser = peek_resource_stats_parsers.add_parser('hnu', help='Peek hnu resource stats')
+peek_hnu_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id to be specified between 0 and "
+                                                                          "191", default=None)
+peek_hnu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_nu_resource_stats_parser = peek_resource_stats_parsers.add_parser('nu', help='Peek nu resource stats')
+peek_nu_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
+peek_nu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_hu0_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu0', help='Peek hu0 resource stats')
+peek_hu0_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
+peek_hu0_resource_stats_parser.add_argument('-wqsi', help="wqsi", default=None)
+peek_hu0_resource_stats_parser.add_argument('-wqse', help="wqse", default=None)
+peek_hu0_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_hu1_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu1', help='Peek hu1 resource stats')
+peek_hu1_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
+peek_hu1_resource_stats_parser.add_argument('-wqsi', help="wqsi", default=None)
+peek_hu1_resource_stats_parser.add_argument('-wqse', help="wqse", default=None)
+peek_hu1_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_dam_resource_stats_parser = peek_resource_stats_parsers.add_parser('dam', help='Peek dam resource stats')
+peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_bam_resource_stats_parser = peek_resource_stats_parsers.add_parser('bam', help='Peek bam resource stats')
+peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
