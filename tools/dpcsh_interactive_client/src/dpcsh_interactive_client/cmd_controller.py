@@ -469,6 +469,65 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_sse_stats(grep_regex=grep_regex)
 
+    def peek_pc_resource_stats(self, args):
+        grep_regex = args.grep
+        cluster_id = args.cluster_id
+        self._peek_cmd_obj.peek_pc_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+
+    def peek_cc_resource_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_cc_resource_stats(grep_regex=grep_regex)
+
+    def peek_dma_resource_stats(self, args):
+        grep_regex = args.grep
+        cluster_id = args.cluster_id
+        self._peek_cmd_obj.peek_dma_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+
+    def peek_le_resource_stats(self, args):
+        grep_regex = args.grep
+        cluster_id = args.cluster_id
+        self._peek_cmd_obj.peek_le_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+
+    def peek_zip_resource_stats(self, args):
+        grep_regex = args.grep
+        cluster_id = args.cluster_id
+        self._peek_cmd_obj.peek_zip_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+
+    def peek_rgx_resource_stats(self, args):
+        grep_regex = args.grep
+        cluster_id = args.cluster_id
+        self._peek_cmd_obj.peek_rgx_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+
+    def peek_hnu_resource_stats(self, args):
+        grep_regex = args.grep
+        resource_id = args.resource_id
+        self._peek_cmd_obj.peek_hnu_resource_stats(resource_id=resource_id, grep_regex=grep_regex)
+
+    def peek_nu_resource_stats(self, args):
+        grep_regex = args.grep
+        resource_id = args.resource_id
+        self._peek_cmd_obj.peek_nu_resource_stats(resource_id=resource_id, grep_regex=grep_regex)
+
+    def peek_hu0_resource_stats(self, args):
+        grep_regex = args.grep
+        wqsi = args.wqsi
+        wqse = args.wqse
+        resource_id = args.resource_id
+        self._peek_cmd_obj.peek_hu0_resource_stats(wqsi=wqsi, wqse=wqse, resource_id=resource_id,
+                                                   grep_regex=grep_regex)
+
+    def peek_hu1_resource_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_hu1_resource_stats(grep_regex=grep_regex)
+
+    def peek_dam_resource_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_dam_resource_stats(grep_regex=grep_regex)
+
+    def peek_bam_resource_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_bam_resource_stats(grep_regex=grep_regex)
+
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
 
@@ -602,6 +661,18 @@ class CmdController(Cmd):
     peek_pervppkts_stats_parser.set_defaults(func=peek_pervppkts_stats)
     peek_nhp_stats_parser.set_defaults(func=peek_stats_nhp)
     peek_sse_stats_parser.set_defaults(func=peek_stats_sse)
+    peek_pc_resource_stats_parser.set_defaults(func=peek_pc_resource_stats)
+    peek_cc_resource_stats_parser.set_defaults(func=peek_cc_resource_stats)
+    peek_dma_resource_stats_parser.set_defaults(func=peek_dma_resource_stats)
+    peek_le_resource_stats_parser.set_defaults(func=peek_le_resource_stats)
+    peek_zip_resource_stats_parser.set_defaults(func=peek_zip_resource_stats)
+    peek_rgx_resource_stats_parser.set_defaults(func=peek_rgx_resource_stats)
+    peek_hnu_resource_stats_parser.set_defaults(func=peek_hnu_resource_stats)
+    peek_nu_resource_stats_parser.set_defaults(func=peek_nu_resource_stats)
+    peek_hu0_resource_stats_parser.set_defaults(func=peek_hu0_resource_stats)
+    peek_hu1_resource_stats_parser.set_defaults(func=peek_hu1_resource_stats)
+    peek_dam_resource_stats_parser.set_defaults(func=peek_dam_resource_stats)
+    peek_bam_resource_stats_parser.set_defaults(func=peek_bam_resource_stats)
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
