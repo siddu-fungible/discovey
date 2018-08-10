@@ -768,18 +768,39 @@ class PeekCommands(object):
 
         return diff_result
 
-    def _sort_bam_keys(self, result):
-        pool_map = {}
+    def _sort_bam_keys(self, result, au_sort=True):
         sorted_dict = OrderedDict()
-        for key in result:
-            if re.search(r'AU.*', key):
-                k = key.split()[4]
-                pool_map[key] = int(k)
-            else:
-                pool_map[key] = result[key]
-        sorted_keys = sorted(result, key=pool_map.__getitem__)
-        for key in sorted_keys:
-            sorted_dict[key] = result[key]
+        if not au_sort:
+            new_usage_dict = {}
+            new_color_dict = {}
+            usage_dict = {}
+            color_dict = {}
+            for key in result:
+                if re.search(r'usage', key):
+                    new_usage_dict[key] = result[key]
+                    pool_word = key.split(" ")[1]
+                    usage_dict[key] = int(filter(str.isdigit, str(pool_word)))
+                else:
+                    new_color_dict[key] = result[key]
+                    pool_word = key.split(" ")[0]
+                    color_dict[key] = int(filter(str.isdigit, str(pool_word)))
+            sorted_usage_keys = sorted(new_usage_dict, key=usage_dict.__getitem__)
+            sorted_color_keys = sorted(new_color_dict, key=color_dict.__getitem__)
+            for key in sorted_usage_keys:
+                sorted_dict[key] = result[key]
+            for key in sorted_color_keys:
+                sorted_dict[key] = result[key]
+        else:
+            pool_map = {}
+            for key in result:
+                if re.search(r'AU.*', key):
+                    k = key.split()[4]
+                    pool_map[key] = int(k)
+                else:
+                    pool_map[key] = result[key]
+            sorted_keys = sorted(result, key=pool_map.__getitem__)
+            for key in sorted_keys:
+                sorted_dict[key] = result[key]
         return sorted_dict
 
     def peek_fpg_stats(self, port_num, grep_regex=None, mode='nu'):
@@ -1058,7 +1079,7 @@ class PeekCommands(object):
                 self.dpc_client.disconnect()
                 break
      
-    def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek", tid=0):
+    def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek", tid=0, au_sort=True):
         try:
             while True:
                 try:
@@ -1067,7 +1088,7 @@ class PeekCommands(object):
                     else:
                         result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
                     if 'bam' in cmd:
-                        result = self._sort_bam_keys(result=result)
+                        result = self._sort_bam_keys(result=result, au_sort=au_sort)
                     if result:
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
@@ -1511,46 +1532,6 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_nwqm_stats(self, grep_regex=None):
-        try:
-            prev_results = None
-            while True:
-                try:
-                    cmd = "stats/nwqm"
-                    results = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                    result = results[""]
-                    if result:
-                        if prev_results:
-                            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
-                            table_obj.align = 'l'
-                            diff_result = self._get_difference(result=result, prev_result=prev_results)
-                            for key in sorted(result):
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        table_obj.add_row([key, result[key], diff_result[key]])
-                                else:
-                                    table_obj.add_row([key, result[key], diff_result[key]])
-                        else:
-                            table_obj = PrettyTable(['Field Name', 'Counter'])
-                            table_obj.align = 'l'
-                            for key in sorted(result):
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        table_obj.add_row([key, result[key]])
-                                else:
-                                    table_obj.add_row([key, result[key]])
-                        prev_results = result
-                        print table_obj
-                        print "\n########################  %s ########################\n" % \
-                              str(self._get_timestamp())
-                        time.sleep(TIME_INTERVAL)
-                except KeyboardInterrupt:
-                    self.dpc_client.disconnect()
-                    break
-        except Exception as ex:
-            print "ERROR: %s" % str(ex)
-            self.dpc_client.disconnect()
-
     def peek_mpg_stats(self, grep_regex=None):
         try:
             prev_result = None
@@ -1696,6 +1677,102 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
+    def _get_nested_dict_stats(self, cmd, stop_regex="does not exist", grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    master_table_obj = PrettyTable()
+                    master_table_obj.align = 'l'
+                    master_table_obj.border = False
+                    master_table_obj.header = False
+                    if result:
+                        if stop_regex in result:
+                            raise Exception("'%s' seen in output" % result)
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            for key in sorted(result):
+                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result[key]):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                master_table_obj.add_row([key, table_obj])
+                        else:
+                            for key in sorted(result):
+                                table_obj = PrettyTable(['Field Name', 'Counter'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result[key]):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[key][_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[key][_key]])
+                                master_table_obj.add_row([key, table_obj])
+                    else:
+                        print "Empty Result"
+
+                    prev_result = result
+                    print master_table_obj
+                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def _display_list_of_dict_stats(self, cmd, grep_regex=None):
+        # Modified as per dam stats
+        try:
+            prev_result = None
+            while True:
+                try:
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            index = 0
+                            for out in result:
+                                for _key in sorted(out):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            diff_val = int(prev_result[index][_key]) - int(out[_key])
+                                            table_obj.add_row([_key, out[_key], diff_val])
+                                    else:
+                                        diff_val = int(prev_result[index][_key]) - int(out[_key])
+                                        table_obj.add_row([_key, out[_key], diff_val])
+                                index += 1
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counter'])
+                            table_obj.align = 'l'
+                            for out in result:
+                                for _key in sorted(out):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, out[_key]])
+                                    else:
+                                        table_obj.add_row([_key, out[_key]])
+                    else:
+                        print "Empty Result"
+
+                    prev_result = result
+                    print table_obj
+                    print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
     def peek_nhp_stats(self, grep_regex=None):
         cmd = "stats/nhp"
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
@@ -1704,7 +1781,116 @@ class PeekCommands(object):
         cmd = "stats/sse"
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
+    def peek_pc_resource_stats(self, cluster_id, grep_regex=None):
+        cmd = "stats/resource/pc/[%s]" % cluster_id
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
+    def peek_cc_resource_stats(self, grep_regex=None):
+        cmd = "stats/resource/cc"
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_dma_resource_stats(self, cluster_id, grep_regex=None):
+        cmd = "stats/resource/dma/[%s]" % cluster_id
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_le_resource_stats(self, cluster_id, grep_regex=None):
+        cmd = "stats/resource/le/[%s]" % cluster_id
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_zip_resource_stats(self, cluster_id, grep_regex=None):
+        cmd = "stats/resource/zip/[%s]" % cluster_id
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_rgx_resource_stats(self, cluster_id, grep_regex=None):
+        cmd = "stats/resource/rgx/[%s]" % cluster_id
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_hnu_resource_stats(self, resource_id, grep_regex=None):
+        cmd = "stats/resource/hnu/[%s]" % resource_id
+        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_nu_resource_stats(self, resource_id, grep_regex=None):
+        cmd = "stats/resource/nu/[%s]" % resource_id
+        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_hu0_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
+        # TODO: to be implemented as per output
+        try:
+            if wqsi:
+                cmd = "stats/resource/hu0/wqsi"
+            elif wqse:
+                if not resource_id:
+                    raise Exception("Resource id not specified")
+                cmd = "stats/resource/hu0/wqse/[%s]" % resource_id
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        except Exception as ex:
+            print "ERROR:  %s" % str(ex)
+
+    def peek_hu1_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
+        # TODO: to be implemented as per output
+        try:
+            if wqsi:
+                cmd = "stats/resource/hu1/wqsi"
+            elif wqse:
+                if not resource_id:
+                    raise Exception("Resource id not specified")
+                cmd = "stats/resource/hu1/wqse/[%s]" % resource_id
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        except Exception as ex:
+            print "ERROR:  %s" % str(ex)
+
+    def peek_dam_resource_stats(self, grep_regex=None):
+        cmd = "stats/resource/dam"
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_bam_resource_stats(self, grep_regex=None):
+        cmd = "stats/resource/bam"
+        self._display_stats(cmd=cmd, grep_regex=grep_regex, au_sort=False)
+    '''
+    def peek_nwqm_stats(self, grep_regex=None):
+        try:
+            prev_results = None
+            while True:
+                try:
+                    cmd = "stats/nwqm"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    #result = results[""]
+                    if result:
+                        if prev_results:
+                            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            diff_result = self._get_difference(result=result, prev_result=prev_results)
+                            for key in sorted(result):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result[key], diff_result[key]])
+                                else:
+                                    table_obj.add_row([key, result[key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counter'])
+                            table_obj.align = 'l'
+                            for key in sorted(result):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result[key]])
+                                else:
+                                    table_obj.add_row([key, result[key]])
+                        prev_results = result
+                        print table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+    '''
+
+    def peek_nwqm_stats(self, grep_regex=None):
+        cmd = "stats/nwqm"
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
 
 
