@@ -474,11 +474,265 @@ get_qos_xoff_status_parser = get_nu_qos_parsers.add_parser('xoff_status', help="
 get_qos_xoff_status_parser.add_argument('port_num', type=int, help="Port Num")
 get_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
 
+# ------------------------------------------------------------------------------------------------
+# Get NU qos HNU parser
+get_hnu_qos_parser = get_nu_qos_parsers.add_parser('hnu', help="To run qos commands for hnu")
+get_hnu_qos_parsers = get_hnu_qos_parser.add_subparsers(title="subcommands", help="")
+
+get_hnu_qos_egress_parser = get_hnu_qos_parsers.add_parser('egress', help="QoS Egress Buffers")
+get_hnu_qos_egress_parsers = get_hnu_qos_egress_parser.add_subparsers(title='subcommands', help="")
+
+get_hnu_qos_egress_buffer_pool_parser = get_hnu_qos_egress_parsers.add_parser('buffer_pool', help="QoS Egress Buffer Pool")
+
+get_hnu_qos_egress_port_buffer_parser = get_hnu_qos_egress_parsers.add_parser('port_buffer', help="QoS Egress Port Buffer")
+get_hnu_qos_egress_port_buffer_parser.add_argument('port_num', type=int, help="Egress Port Num")
+
+get_hnu_qos_egress_queue_buffer_parser = get_hnu_qos_egress_parsers.add_parser('queue_buffer', help="QoS Egress Queue Buffer")
+get_hnu_qos_egress_queue_buffer_parser.add_argument('port_num', type=int, help="Egress Port Num")
+get_hnu_qos_egress_queue_buffer_parser.add_argument('queue', type=int, help="Egress Queue Num")
+
+get_hnu_qos_egress_priority_map_parser = get_hnu_qos_egress_parsers.add_parser('queue_to_priority_map', help="QoS egress queue map")
+get_hnu_qos_egress_priority_map_parser.add_argument('port_num', type=int, help="Port Num")
+
+# QoS ECN sub commands
+get_hnu_qos_ecn_parser = get_hnu_qos_parsers.add_parser('ecn', help="QoS ECN Config")
+get_hnu_qos_ecn_parsers = get_hnu_qos_ecn_parser.add_subparsers(title='subcommands', help="")
+
+get_hnu_qos_ecn_glb_sh_thresh_parser = get_hnu_qos_ecn_parsers.add_parser('glb_sh_thresh', help="QoS ECN glb sh threshold")
+
+get_hnu_qos_ecn_profile_parser = get_hnu_qos_ecn_parsers.add_parser('profile', help="QoS ECN Profile")
+get_hnu_qos_ecn_profile_parser.add_argument('prof_num', type=int, help="Profile num")
+
+get_hnu_qos_ecn_prob_parser = get_hnu_qos_ecn_parsers.add_parser('prob', help="QoS ECN Prob")
+get_hnu_qos_ecn_prob_parser.add_argument('prob_idx', type=int, help="Prob index")
+
+# QoS WRED sub commands
+get_hnu_qos_wred_parser = get_hnu_qos_parsers.add_parser('wred', help="QoS WRED Config")
+get_hnu_qos_wred_parsers = get_hnu_qos_wred_parser.add_subparsers(title='subcommands', help="")
+
+get_hnu_qos_wred_profile_parser = get_hnu_qos_wred_parsers.add_parser('profile', help="QoS WRED Profile")
+get_hnu_qos_wred_profile_parser.add_argument('prof_num', type=int, help="Profile num")
+
+get_hnu_qos_wred_prob_parser = get_hnu_qos_wred_parsers.add_parser('prob', help="QoS WRED Prob")
+get_hnu_qos_wred_prob_parser.add_argument('prob_idx', type=int, help="Prob index")
+
+get_hnu_qos_wred_queue_config_parser = get_hnu_qos_wred_parsers.add_parser('queue_config', help="QoS WRED Queue Config")
+get_hnu_qos_wred_queue_config_parser.add_argument('port_num', type=int, help="Port Num")
+get_hnu_qos_wred_queue_config_parser.add_argument('queue', type=int, help="Queue Num")
+
+get_hnu_qos_wred_avg_queue_config_parser = get_hnu_qos_wred_parsers.add_parser('avg_q_config', help="QoS WRED Avg Queue Config")
+
+# QoS Scheduler sub commands
+get_hnu_qos_scheduler_config_parser = get_hnu_qos_parsers.add_parser('scheduler', help="QoS Scheduler Config")
+get_hnu_qos_scheduler_config_parser.add_argument('port_num', type=int, help="Port Num")
+get_hnu_qos_scheduler_config_parser.add_argument('queue', type=int, help="Queue Num")
+
+# QoS Ingress sub commands
+get_hnu_qos_ingress_parser = get_hnu_qos_parsers.add_parser('ingress', help="QoS INgress Config")
+get_hnu_qos_ingress_parsers = get_hnu_qos_ingress_parser.add_subparsers(title='subcommands', help="")
+
+get_hnu_qos_ingress_pg_parser = get_hnu_qos_ingress_parsers.add_parser('pg', help="QoS ingress pg")
+get_hnu_qos_ingress_pg_parser.add_argument('port_num', type=int, help="Port Num")
+get_hnu_qos_ingress_pg_parser.add_argument('pg', type=int, help="Pg Num")
+
+get_hnu_qos_ingress_pg_map_parser = get_hnu_qos_ingress_parsers.add_parser('priority_to_pg_map', help="QoS ingress pg map")
+get_hnu_qos_ingress_pg_map_parser.add_argument('port_num', type=int, help="Port Num")
+
+# QoS Pfc sub commands
+get_hnu_qos_pfc_parser = get_hnu_qos_parsers.add_parser('pfc', help="QoS PFC Config")
+
+# QoS Pfc sub commands
+get_hnu_qos_arb_cfg_parser = get_hnu_qos_parsers.add_parser('arb-cfg', help="QoS PFC Config")
+
+# QoS xoff status
+get_hnu_qos_xoff_status_parser = get_hnu_qos_parsers.add_parser('xoff_status', help="QoS xoff status")
+get_hnu_qos_xoff_status_parser.add_argument('port_num', type=int, help="Port Num")
+get_hnu_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
+
+# -----------------------------------------------------------------------------------------------------
+# Qos hnu set commands
+set_hnu_qos_parser = set_nu_qos_parsers.add_parser('hnu', help="To run qos commands for hnu")
+set_hnu_qos_parsers = set_hnu_qos_parser.add_subparsers(title="subcommands", help="")
+
+set_hnu_qos_egress_parser = set_hnu_qos_parsers.add_parser('egress', help="QoS Egress Buffers")
+set_hnu_qos_egress_parsers = set_hnu_qos_egress_parser.add_subparsers(title='subcommands', help="")
+
+set_hnu_qos_egress_buffer_pool_parser = set_hnu_qos_egress_parsers.add_parser('buffer_pool', help="QoS Egress Buffer Pool")
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-sf_thr', type=int, help="Egress Buffer Pool sf_thr", default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-sx_thr', type=int, help="Egress Buffer Pool sx_thr", default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-df_thr', type=int, help="Egress Buffer Pool df_thr", default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-dx_thr', type=int, help="Egress Buffer Pool dx_thr", default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-fcp_thr', type=int, help="Egress Buffer Pool fcp_thr", default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-nonfcp_thr', type=int, help="Egress Buffer Pool nonfcp_thr")
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-sample_copy_thr', type=int, help="Egress Buffer Pool sample_copy_thr",
+                                               default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-sf_xoff_thr', type=int, help="Egress Buffer Pool sf_xoff_thr",
+                                               default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-fcp_xoff_thr', type=int, help="Egress Buffer Pool fcp_xoff_thr",
+                                               default=None)
+set_hnu_qos_egress_buffer_pool_parser.add_argument('-nonfcp_xoff_thr', type=int, help="Egress Buffer Pool nonfcp_xoff_thr",
+                                               default=None)
+
+set_hnu_qos_egress_port_buffer_parser = set_hnu_qos_egress_parsers.add_parser('port_buffer', help="QoS Egress Port Buffer")
+set_hnu_qos_egress_port_buffer_parser.add_argument('port_num', type=int, help="Egress Port Num")
+set_hnu_qos_egress_port_buffer_parser.add_argument('-min_thr', type=int, help="Egress Port Buffer min_thr", default=None)
+set_hnu_qos_egress_port_buffer_parser.add_argument('-shared_thr', type=int, help="Egress Port Buffer shared_thr",
+                                               default=None)
+
+set_hnu_qos_egress_queue_buffer_parser = set_hnu_qos_egress_parsers.add_parser('queue_buffer', help="QoS Egress Queue Buffer")
+set_hnu_qos_egress_queue_buffer_parser.add_argument('port_num', type=int, help="Egress Port Num")
+set_hnu_qos_egress_queue_buffer_parser.add_argument('queue', type=int, help="Egress Queue num")
+set_hnu_qos_egress_queue_buffer_parser.add_argument('-min_thr', type=int, help="Egress Queue Buffer min_thr",
+                                                default=None)
+set_hnu_qos_egress_queue_buffer_parser.add_argument('-static_shared_thr_green', type=int,
+                                                help="Egress Queue Buffer static_shared_thr_green",
+                                                default=None)
+set_hnu_qos_egress_queue_buffer_parser.add_argument('-dynamic_enable', type=int, help="Egress Queue Buffer dynamic_enable",
+                                                default=None)
+set_hnu_qos_egress_queue_buffer_parser.add_argument('-shared_thr_alpha', type=int,
+                                                help="Egress Queue Buffer shared_thr_alpha",
+                                                default=None)
+set_hnu_qos_egress_queue_buffer_parser.add_argument('-shared_thr_offset_yellow', type=int,
+                                                help="Egress Queue Buffer shared_thr_offset_yellow",
+                                                default=None)
+set_hnu_qos_egress_queue_buffer_parser.add_argument('-shared_thr_offset_red', type=int,
+                                                help="Egress Queue Buffer shared_thr_offset_red",
+                                                default=None)
+
+set_hnu_qos_egress_priority_map_parser = set_hnu_qos_egress_parsers.add_parser('queue_to_priority_map', help="QoS egress priority map")
+set_hnu_qos_egress_priority_map_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_egress_priority_map_parser.add_argument('-map_list', nargs='+', help="QoS egress map list E.g [1, 2, 3....N] \n "
+                                                                        "Where n is number of queues, n = 16 for "
+                                                                        "FPG ports and n = 8 for EPG ports \n"
+                                                                        "Please specify space separated list for E.g \n"
+                                                                        "set nu qos egress queue_to_priority_map 6 -map-list 1 2 3 4 5 6 7 7",
+                                           default=None)
+
+# QoS ECN sub commands
+set_hnu_qos_ecn_parser = set_hnu_qos_parsers.add_parser('ecn', help="QoS ECN Config")
+set_hnu_qos_ecn_parsers = set_hnu_qos_ecn_parser.add_subparsers(title='subcommands', help="")
+
+set_hnu_qos_ecn_glb_sh_thresh_parser = set_hnu_qos_ecn_parsers.add_parser('glb_sh_thresh', help="QoS ECN glb sh threshold")
+set_hnu_qos_ecn_glb_sh_thresh_parser.add_argument('-en', type=int, help="glb_sh_thresh en", default=None)
+set_hnu_qos_ecn_glb_sh_thresh_parser.add_argument('-green', type=int, help="glb_sh_thresh green", default=None)
+set_hnu_qos_ecn_glb_sh_thresh_parser.add_argument('-yellow', type=int, help="glb_sh_thresh yellow", default=None)
+set_hnu_qos_ecn_glb_sh_thresh_parser.add_argument('-red', type=int, help="glb_sh_thresh red", default=None)
+
+set_hnu_qos_ecn_profile_parser = set_hnu_qos_ecn_parsers.add_parser('profile', help="QoS ECN Profile")
+set_hnu_qos_ecn_profile_parser.add_argument('prof_num', type=int, help="Profile num")
+set_hnu_qos_ecn_profile_parser.add_argument('-min_thr', type=int, help="Profile min threshold", default=None)
+set_hnu_qos_ecn_profile_parser.add_argument('-max_thr', type=int, help="Profile max threshold", default=None)
+set_hnu_qos_ecn_profile_parser.add_argument('-ecn_prob_index', type=int, help="Profile ECN prob index", default=None)
+
+set_hnu_qos_ecn_prob_parser = set_hnu_qos_ecn_parsers.add_parser('prob', help="QoS ECN Prob")
+set_hnu_qos_ecn_prob_parser.add_argument('prob_idx', type=int, help="Prob index")
+set_hnu_qos_ecn_prob_parser.add_argument('-prob', type=int, help="Prob", default=None)
+
+# QoS WRED sub commands
+set_hnu_qos_wred_parser = set_hnu_qos_parsers.add_parser('wred', help="QoS WRED Config")
+set_hnu_qos_wred_parsers = set_hnu_qos_wred_parser.add_subparsers(title='subcommands', help="")
+
+set_hnu_qos_wred_profile_parser = set_hnu_qos_wred_parsers.add_parser('profile', help="QoS WRED Profile")
+set_hnu_qos_wred_profile_parser.add_argument('prof_num', type=int, help="Profile num")
+set_hnu_qos_wred_profile_parser.add_argument('-min_thr', type=int, help="Profile min threshold", default=None)
+set_hnu_qos_wred_profile_parser.add_argument('-max_thr', type=int, help="Profile max threshold", default=None)
+set_hnu_qos_wred_profile_parser.add_argument('-wred_prob_index', type=int, help="Profile WRED prob index", default=None)
+
+set_hnu_qos_wred_prob_parser = set_hnu_qos_wred_parsers.add_parser('prob', help="QoS WRED Prob")
+set_hnu_qos_wred_prob_parser.add_argument('prob_idx', type=int, help="Prob index")
+set_hnu_qos_wred_prob_parser.add_argument('-prob', type=int, help="Prob", default=None)
+
+set_hnu_qos_wred_queue_config_parser = set_hnu_qos_wred_parsers.add_parser('queue_config', help="QoS WRED Queue Config")
+set_hnu_qos_wred_queue_config_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_wred_queue_config_parser.add_argument('queue', type=int, help="Queue Num")
+set_hnu_qos_wred_queue_config_parser.add_argument('-wred_en', type=int, help="QoS WRED Queue Enable", default=None)
+set_hnu_qos_wred_queue_config_parser.add_argument('-wred_weight', type=int, help="QoS WRED Queue weight", default=None)
+set_hnu_qos_wred_queue_config_parser.add_argument('-wred_prof_num', type=int, help="QoS WRED Queue Profile Num",
+                                              default=None)
+set_hnu_qos_wred_queue_config_parser.add_argument('-ecn_en', type=int, help="QoS WRED Queue ECN enable", default=None)
+set_hnu_qos_wred_queue_config_parser.add_argument('-ecn_prof_num', type=int, help="QoS WRED Queue ECN Prof num",
+                                              default=None)
+
+set_hnu_qos_wred_avg_queue_config_parser = set_hnu_qos_wred_parsers.add_parser('avg_q_config', help="QoS WRED Avg Queue Config")
+set_hnu_qos_wred_avg_queue_config_parser.add_argument('-q_avg_en', type=int, help="QoS WRED Avg Queue Enable",
+                                                  default=None)
+set_hnu_qos_wred_avg_queue_config_parser.add_argument('-cap_avg_sz', type=int, help="QoS WRED Avg Queue cap_avg_sz",
+                                                  default=None)
+set_hnu_qos_wred_avg_queue_config_parser.add_argument('-avg_period', type=int, help="QoS WRED Avg Queue Period",
+                                                  default=None)
+
+# QoS Scheduler sub commands
+set_hnu_qos_scheduler_parser = set_hnu_qos_parsers.add_parser('scheduler', help="QoS Scheduler Config")
+set_hnu_qos_scheduler_parsers = set_hnu_qos_scheduler_parser.add_subparsers(title='subcommands', help="")
+
+# dwrr
+set_hnu_qos_scheduler_dwrr_parser = set_hnu_qos_scheduler_parsers.add_parser('dwrr', help="QoS Scheduler dwrr Config")
+set_hnu_qos_scheduler_dwrr_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_scheduler_dwrr_parser.add_argument('queue', type=int, help="Queue Num")
+set_hnu_qos_scheduler_dwrr_parser.add_argument('weight', type=int, help="Weight")
+
+# Shaper
+set_hnu_qos_scheduler_shaper_parser = set_hnu_qos_scheduler_parsers.add_parser('shaper', help="QoS Scheduler Shaper Config")
+set_hnu_qos_scheduler_shaper_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_scheduler_shaper_parser.add_argument('queue', type=int, help="Queue Num")
+set_hnu_qos_scheduler_shaper_parser.add_argument('-enable', type=int, help="Shaper enable/disable")
+set_hnu_qos_scheduler_shaper_parser.add_argument('-type', type=int, help="Shaper type. 0=min_rate, 1=max_rate")
+set_hnu_qos_scheduler_shaper_parser.add_argument('-rate', type=int, help="Shaper rate in bits")
+set_hnu_qos_scheduler_shaper_parser.add_argument('-thresh', type=int, help="Shaper Threshold")
+
+# Strict priority
+set_hnu_qos_scheduler_strict_priority_parser = set_hnu_qos_scheduler_parsers.add_parser('strict_priority',
+                                                                                help="QoS Scheduler Strict "
+                                                                                     "Priority Config")
+set_hnu_qos_scheduler_strict_priority_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_scheduler_strict_priority_parser.add_argument('queue', type=int, help="Queue Num")
+set_hnu_qos_scheduler_strict_priority_parser.add_argument('-strict_priority_enable', type=int, help="QoS Scheduler Strict "
+                                                                                                "Priority enable",
+                                                      default=None)
+set_hnu_qos_scheduler_strict_priority_parser.add_argument('-extra_bandwidth', type=int, help="QoS Scheduler Strict Priority "
+                                                                                         "Extra Bandawidth",
+                                                      default=None)
+
+# QoS Ingress sub commands
+set_hnu_qos_ingress_parser = set_hnu_qos_parsers.add_parser('ingress', help="QoS INgress Config")
+set_hnu_qos_ingress_parsers = set_hnu_qos_ingress_parser.add_subparsers(title='subcommands', help="")
+
+set_hnu_qos_ingress_pg_parser = set_hnu_qos_ingress_parsers.add_parser('pg', help="QoS ingress pg")
+set_hnu_qos_ingress_pg_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_ingress_pg_parser.add_argument('pg', type=int, help="Pg Num")
+set_hnu_qos_ingress_pg_parser.add_argument('-min_thr', type=int, help="QoS ingress min thr", default=None)
+set_hnu_qos_ingress_pg_parser.add_argument('-shared_thr', type=int, help="QoS ingress shared thr", default=None)
+set_hnu_qos_ingress_pg_parser.add_argument('-headroom_thr', type=int, help="QoS ingress headroom_thr", default=None)
+set_hnu_qos_ingress_pg_parser.add_argument('-xoff_enable', type=int, help="QoS ingress xoff_enable", default=None)
+set_hnu_qos_ingress_pg_parser.add_argument('-shared_xon_thr', type=int, help="QoS ingress shared_xon_thr", default=None)
+
+set_hnu_qos_ingress_pg_map_parser = set_hnu_qos_ingress_parsers.add_parser('priority_to_pg_map', help="QoS ingress pg map")
+set_hnu_qos_ingress_pg_map_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_ingress_pg_map_parser.add_argument('-map_list', nargs='+', help="QoS ingress map list E.g [1, 2, 3....N] \n "
+                                                                        "Where n is number of priorities, n = 16 for "
+                                                                        "FPG ports and n = 8 for EPG ports \n"
+                                                                        "Please specify space separated list for E.g \n"
+                                                                        "set nu qos ingress priority_to_pg_map 6 -map-list 1 2 3 4 5 6 7 7",
+                                           default=None)
+# QoS Pfc sub commands
+set_hnu_qos_pfc_parser = set_hnu_qos_parsers.add_parser('pfc', help="QoS PFC Config")
+set_hnu_qos_pfc_parsers = set_hnu_qos_pfc_parser.add_subparsers(title="subcommands", help="")
+set_hnu_qos_pfc_enable_parser = set_hnu_qos_pfc_parsers.add_parser('enable', help="QoS PFC Enable")
+set_hnu_qos_pfc_disable_parser = set_hnu_qos_pfc_parsers.add_parser('disable', help="QoS PFC Disable")
+
+# QoS arb cfg sub commands
+set_hnu_qos_arb_cfg_parser = set_hnu_qos_parsers.add_parser('arb_cfg', help="QoS arb cfg Config")
+set_hnu_qos_arb_cfg_parser.add_argument('en', type=int, help="QoS arb cfg Enable")
+
+# QoS xoff status
+set_hnu_qos_xoff_status_parser = set_hnu_qos_parsers.add_parser('xoff_status', help="QoS xoff status")
+set_hnu_qos_xoff_status_parser.add_argument('port_num', type=int, help="Port Num")
+set_hnu_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
+set_hnu_qos_xoff_status_parser.add_argument('-status', type=int, help="QoS xoff_status", default=None)
+
 get_port_speed_parser = get_nu_port_parsers.add_parser('speed', help="Get port speed")
 get_port_speed_parser.add_argument('port_num', type=int, help="port_num")
 get_port_speed_parser.add_argument('shape', type=int, help='shape')
-
-
 # -----------------------------------------------------------------------------------------------
 # Get system sub commands
 get_system_parsers = get_system_parser.add_subparsers(title="subcommands", help="")
