@@ -18,6 +18,8 @@ from django.contrib.postgres.fields import JSONField
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
+LAST_ANALYTICS_DB_STATUS_UPDATE = "last_status_update"
+
 class MetricChartStatus(models.Model):
     metric_id = models.IntegerField(default=-1)
     chart_name = models.TextField(default="Unknown")
@@ -25,6 +27,7 @@ class MetricChartStatus(models.Model):
     date_time = models.DateTimeField(default=datetime.now)
     score = models.FloatField(default=-1)
     valid = models.BooleanField(default=False)
+    children_score_map = JSONField(default={})
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
@@ -63,6 +66,8 @@ class MetricChart(models.Model):
     status_cache = models.TextField(default="[]")
     score_cache_valid = models.BooleanField(default=False)
     last_num_degrades = models.IntegerField(default=0)
+    last_status_update_date = models.DateTimeField(verbose_name="last_status_update", default=datetime.now)
+    last_num_build_failed = models.IntegerField(default=0)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -224,7 +229,26 @@ class MetricChart(models.Model):
     def is_same_day(self, d1, d2):
         return (d1.year == d2.year) and (d1.month == d2.month) and (d1.day == d2.day)
 
-    def get_status(self, number_of_records=5):
+
+    def get_status(self):
+        children = json.loads(self.children)
+        children_info = {}
+        if not self.leaf:
+            if len(children):
+                for child in children:
+                    child_metric = MetricChart.objects.get(metric_id=child)
+                    serialized = MetricChartSerializer(child_metric, many=False)
+                    serialized_data = serialized.data
+                    get_status = child_metric.get_status()
+                    serialized_data.update(get_status)
+                    children_info[child] = serialized_data
+        else:
+            pass
+
+        return {
+                "children_info": children_info}
+
+    def get_status2(self, number_of_records=5):
         print ("Get status for: {}".format(self.chart_name))
         goodness_values = []
         status_values = []
@@ -237,23 +261,23 @@ class MetricChart(models.Model):
         num_degrades = 0
         num_child_degrades = 0
         leaf_status = True
-        if self.chart_name == "Nucleus":
-            j = 2
-        if self.chart_name == "SHA Latency":
-            j = 3
+
         children_info = {}
         if not self.leaf:
             if len(children):
                 child_degrades = 0
                 sum_of_child_weights = 0
                 for child in children:
+
                     child_metric = MetricChart.objects.get(metric_id=child)
                     child_weight = children_weights[child] if child in children_weights else 1
                     sum_of_child_weights += child_weight
                     get_status = child_metric.get_status(number_of_records=number_of_records)
+
                     serialized = MetricChartSerializer(child_metric, many=False)
                     serialized_data = serialized.data
                     serialized_data.update(get_status)
+
                     children_info[child] = serialized_data
                     child_status_values, child_goodness_values = get_status["status_values"], \
                                                                  get_status["goodness_values"]

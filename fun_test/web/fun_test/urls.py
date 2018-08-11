@@ -85,6 +85,7 @@ tcm_urls = [
 ]
 
 common_urls = [
+    url(r'^time_keeper/(.*)$', common_views.time_keeper),
     url(r'^alerts_page$', common_views.alerts_page),
     url(r'^add_session_log$', common_views.add_session_log),
     url(r'^get_session_logs$', common_views.get_session_logs),

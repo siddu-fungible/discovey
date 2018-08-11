@@ -10,6 +10,7 @@ from web.fun_test.metrics_models import Performance1, PerformanceIkv, Performanc
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
+from web.fun_test.db_fixup import prepare_status
 
 
 def invalidate_goodness_cache():
@@ -188,8 +189,12 @@ class WuLatencyAllocStackHelper(MetricHelper):
         entry = WuLatencyAllocStack
 
 
+def prepare_status_db():
+    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    prepare_status(chart=total_chart, purge_old_status=True)
 
-if __name__ == "__main__":
+
+if __name__ == "__main2__":
     AllocSpeedPerformanceHelper().clear()
 if __name__ == "__main2__":
     # MetricChart.objects.all().delete()
@@ -364,3 +369,6 @@ if __name__ == "__main2__":
                 metric_model_name="PerformanceIkv").save()
 
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
+
+if __name__ == "__main__":
+    prepare_status_db()

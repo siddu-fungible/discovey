@@ -100,7 +100,7 @@ if __name__ == "__main4__":
         entry.interpolation_allowed = True
         entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     entries = HuRawVolumePerformance.objects.all()
     for entry in entries:
         dt = entry.input_date_time
@@ -126,6 +126,34 @@ if __name__ == "__main55__":
 
     for entry in entries:
         print entry
+
+
+
+if __name__ == "__main2__":
+    # clone charts
+    chart_name = "Best time for 1 malloc/free (WU)"
+    entry = MetricChart.objects.get(chart_name=chart_name)
+
+    chart_id_range = range(10000, 10100)
+    for i in chart_id_range:
+        entry.metric_id = i
+        entry.chart_name = "TestChart{}".format(i)
+        entry.pk = None
+        try:
+            entry.save()
+        except:
+            pass
+
+
+if __name__ == "__main__":
+    chart_name = "Nucleus"
+    entry = MetricChart.objects.get(chart_name=chart_name)
+    chart_id_range = range(10000, 10100)
+    for i in chart_id_range:
+        test_chart_name = "TestChart{}".format(i)
+        test_chart = MetricChart.objects.get(chart_name=test_chart_name)
+        entry.add_child(test_chart.metric_id)
+
 
 if __name__ == "__main5__":
     from django.apps import apps

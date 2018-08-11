@@ -1,11 +1,13 @@
 from lib.system.fun_test import *
 from lib.host.lsf_status_server import LsfStatusServer
-from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance
+from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
+from web.fun_test.analytics_models_helper import prepare_status_db
+from web.fun_test.models import TimeKeeper
 import re
 from datetime import datetime
 
@@ -607,6 +609,23 @@ class FunMagentPerformanceATestTC(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="FunMagentPerformanceTest")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class PrepareDbTc(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=100,
+                              summary="Prepare Status Db",
+                              steps="Steps 1")
+
+    def setup(self):
+        pass
+
+    def run(self):
+        prepare_status_db()
+        TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
+
+    def cleanup(self):
+        pass
+
+
 
 if __name__ == "__main__":
     myscript = MyScript()
@@ -619,5 +638,6 @@ if __name__ == "__main__":
     myscript.add_test_case(WuDispatchTestPerformanceTc())
     myscript.add_test_case(WuSendSpeedTestPerformanceTc())
     myscript.add_test_case(FunMagentPerformanceATestTC())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

@@ -197,7 +197,10 @@
                 </table>
 
             </div>
+            <p>Last updated at: {{ lastStatusUpdateTime }}</p>
         </div>
+
+
         <div ng-if="mode" class="card col-xl-6 col-lg-6 col-xxl-6" ng-switch="mode">
             <div ng-switch-when="showingGoodnessTrend">
                 <fun-chart values="goodnessTrendValues" show-legend="true"
@@ -237,7 +240,7 @@
                 </div>
             </div>
             <div ng-switch-when="showingNonAtomicMetric">
-                <div style="padding-bottom: 10px;"><h4>Aspect: {{ currentNode.chartName }}</h4></div>
+                <!-- div style="padding-bottom: 10px;"><h4>Aspect: {{ currentNode.chartName }}</h4></div-->
 
                 <div id="score-table-parent" class="score-card">
                 <span id="score-table-child">{{ currentNode.goodness }}
@@ -304,11 +307,11 @@
                             </span>
                             </td>
                             <td>
-                                {{ getLastElement(currentNode.childrenGoodnessMap[childId]) | number: 1}}
+                                {{ currentNode.childrenScoreMap[childId] | number: 1}}
                             </td>
                             <td>
-                                {{ info.weight }} * {{ getLastElement(currentNode.childrenGoodnessMap[childId]) |
-                                number: 1 }} = {{ info.weight * getLastElement(currentNode.childrenGoodnessMap[childId])
+                                {{ info.weight }} * {{ currentNode.childrenScoreMap[childId] |
+                                number: 1 }} = {{ info.weight * currentNode.childrenScoreMap[childId]
                                 | number: 1 }}
                             </td>
                             <!-- td>{{ childId }}</td -->
@@ -317,7 +320,7 @@
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td>Total ~ {{ getScoreTotal(currentNode) }}</td>
+                            <td>Total ~ {{ getScoreTotal(currentNode) | number: 1}}</td>
                         </tr>
                         <tr>
                             <td></td>
@@ -329,7 +332,7 @@
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td>Score ~ {{getScoreTotal(currentNode)}} / {{ getSumChildWeights (currentNode.children) }} = {{getScoreTotal(currentNode) /  getSumChildWeights (currentNode.children) | number: 1}}</td>
+                            <td>Score ~ {{getScoreTotal(currentNode) | number: 1}} / {{ getSumChildWeights(currentNode.children) }} = {{getScoreTotal(currentNode) /  getSumChildWeights(currentNode.children) | number: 1}}</td>
                         </tr>
                     </table>
                 </div>
