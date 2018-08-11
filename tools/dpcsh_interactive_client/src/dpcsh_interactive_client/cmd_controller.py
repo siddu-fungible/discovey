@@ -142,8 +142,28 @@ class CmdController(Cmd):
                                              sample_copy_thr=sample_copy_thr, nonfcp_thr=nonfcp_thr,
                                              fcp_xoff_thr=fcp_xoff_thr, sf_xoff_thr=sf_xoff_thr, update_config=True)
 
+    def set_hnu_qos_egress_buffer_pool(self, args):
+        sf_thr = args.sf_thr
+        sx_thr = args.sx_thr
+        df_thr = args.df_thr
+        dx_thr = args.dx_thr
+        fcp_thr = args.fcp_thr
+        nonfcp_thr = args.nonfcp_thr
+        sample_copy_thr = args.sample_copy_thr
+        sf_xoff_thr = args.sf_xoff_thr
+        fcp_xoff_thr = args.fcp_xoff_thr
+        nonfcp_xoff_thr = args.nonfcp_xoff_thr
+        self._qos_cmd_obj.egress_buffer_pool(sf_thr=sf_thr, sx_thr=sx_thr, df_thr=df_thr, dx_thr=dx_thr,
+                                             fcp_thr=fcp_thr, nonfcp_xoff_thr=nonfcp_xoff_thr,
+                                             sample_copy_thr=sample_copy_thr, nonfcp_thr=nonfcp_thr,
+                                             fcp_xoff_thr=fcp_xoff_thr, sf_xoff_thr=sf_xoff_thr, update_config=True,
+                                             mode='hnu')
+
     def get_qos_egress_buffer_pool(self, args):
         self._qos_cmd_obj.egress_buffer_pool(update_config=False)
+
+    def get_hnu_qos_egress_buffer_pool(self, args):
+        self._qos_cmd_obj.egress_buffer_pool(update_config=False, mode='hnu')
 
     def set_qos_egress_port_buffer(self, args):
         port_num = args.port_num
@@ -151,9 +171,19 @@ class CmdController(Cmd):
         shared_thr = args.shared_thr
         self._qos_cmd_obj.egress_port_buffer(port_num=port_num, min_thr=min_thr, shared_thr=shared_thr)
 
+    def set_hnu_qos_egress_port_buffer(self, args):
+        port_num = args.port_num
+        min_thr = args.min_thr
+        shared_thr = args.shared_thr
+        self._qos_cmd_obj.egress_port_buffer(port_num=port_num, min_thr=min_thr, shared_thr=shared_thr, mode='hnu')
+
     def get_qos_egress_port_buffer(self, args):
         port_num = args.port_num
         self._qos_cmd_obj.egress_port_buffer(port_num=port_num, update_config=False)
+
+    def get_hnu_qos_egress_port_buffer(self, args):
+        port_num = args.port_num
+        self._qos_cmd_obj.egress_port_buffer(port_num=port_num, update_config=False, mode='hnu')
 
     def set_qos_egress_queue_buffer(self, args):
         port_num = args.port_num
@@ -170,12 +200,37 @@ class CmdController(Cmd):
                                               shared_thr_offset_red=shared_thr_offset_red,
                                               shared_thr_offset_yellow=shared_thr_offset_yellow)
 
+    def set_hnu_qos_egress_queue_buffer(self, args):
+        port_num = args.port_num
+        queue = args.queue
+        min_thr = args.min_thr
+        static_shared_thr_green = args.static_shared_thr_green
+        dynamic_enable = args.dynamic_enable
+        shared_thr_alpha = args.shared_thr_alpha
+        shared_thr_offset_yellow = args.shared_thr_offset_yellow
+        shared_thr_offset_red = args.shared_thr_offset_red
+        self._qos_cmd_obj.egress_queue_buffer(port_num=port_num, queue=queue,
+                                              min_thr=min_thr, static_shared_thr_green=static_shared_thr_green,
+                                              shared_thr_alpha=shared_thr_alpha, dynamic_enable=dynamic_enable,
+                                              shared_thr_offset_red=shared_thr_offset_red,
+                                              shared_thr_offset_yellow=shared_thr_offset_yellow, mode='hnu')
+
     def get_qos_egress_queue_buffer(self, args):
         port_num = args.port_num
         queue = args.queue
         self._qos_cmd_obj.egress_queue_buffer(port_num=port_num, update_config=False, queue=queue)
 
+    def get_hnu_qos_egress_queue_buffer(self, args):
+        port_num = args.port_num
+        queue = args.queue
+        self._qos_cmd_obj.egress_queue_buffer(port_num=port_num, update_config=False, queue=queue, mode='hnu')
+
     def set_qos_egress_priority_map(self, args):
+        port_num = args.port_num
+        map_list = args.map_list
+        self._qos_cmd_obj.egress_queue_to_priority_map(port_num=port_num, map_list=map_list, update=True)
+
+    def set_hnu_qos_egress_priority_map(self, args):
         port_num = args.port_num
         map_list = args.map_list
         self._qos_cmd_obj.egress_queue_to_priority_map(port_num=port_num, map_list=map_list, update=True)
@@ -184,6 +239,10 @@ class CmdController(Cmd):
         port_num = args.port_num
         self._qos_cmd_obj.egress_queue_to_priority_map(port_num=port_num, update=False)
 
+    def get_hnu_qos_egress_priority_map(self, args):
+        port_num = args.port_num
+        self._qos_cmd_obj.egress_queue_to_priority_map(port_num=port_num, update=False, mode='hnu')
+
     def set_qos_ecn_glb_sh_threshold(self, args):
         en = args.en
         green = args.green
@@ -191,8 +250,18 @@ class CmdController(Cmd):
         yellow = args.yellow
         self._qos_cmd_obj.ecn_glb_sh_threshold(en=en, green=green, red=red, yellow=yellow, update=True)
 
+    def set_hnu_qos_ecn_glb_sh_threshold(self, args):
+        en = args.en
+        green = args.green
+        red = args.red
+        yellow = args.yellow
+        self._qos_cmd_obj.ecn_glb_sh_threshold(en=en, green=green, red=red, yellow=yellow, update=True, mode='hnu')
+
     def get_qos_ecn_glb_sh_threshold(self, args):
         self._qos_cmd_obj.ecn_glb_sh_threshold(update=False)
+
+    def get_hnu_qos_ecn_glb_sh_threshold(self, args):
+        self._qos_cmd_obj.ecn_glb_sh_threshold(update=False, mode='hnu')
 
     def set_qos_ecn_profile(self, args):
         prof_num = args.prof_num
@@ -202,18 +271,39 @@ class CmdController(Cmd):
         self._qos_cmd_obj.ecn_profile(prof_num=prof_num, min_thr=min_thr, max_thr=max_thr,
                                       ecn_prob_index=ecn_prob_index, update=True)
 
+    def set_hnu_qos_ecn_profile(self, args):
+        prof_num = args.prof_num
+        min_thr = args.min_thr
+        max_thr = args.max_thr
+        ecn_prob_index = args.ecn_prob_index
+        self._qos_cmd_obj.ecn_profile(prof_num=prof_num, min_thr=min_thr, max_thr=max_thr,
+                                      ecn_prob_index=ecn_prob_index, update=True, mode='hnu')
+
     def get_qos_ecn_profile(self, args):
         prof_num = args.prof_num
         self._qos_cmd_obj.ecn_profile(prof_num=prof_num, update=False)
+
+    def get_hnu_qos_ecn_profile(self, args):
+        prof_num = args.prof_num
+        self._qos_cmd_obj.ecn_profile(prof_num=prof_num, update=False, mode='hnu')
 
     def set_qos_ecn_prob(self, args):
         prob_idx = args.prob_idx
         prob = args.prob
         self._qos_cmd_obj.ecn_prob(prob=prob, prob_idx=prob_idx, update=True)
 
+    def set_hnu_qos_ecn_prob(self, args):
+        prob_idx = args.prob_idx
+        prob = args.prob
+        self._qos_cmd_obj.ecn_prob(prob=prob, prob_idx=prob_idx, update=True, mode='hnu')
+
     def get_qos_ecn_prob(self, args):
         prob_idx = args.prob_idx
         self._qos_cmd_obj.ecn_prob(prob_idx=prob_idx, update=False)
+
+    def get_hnu_qos_ecn_prob(self, args):
+        prob_idx = args.prob_idx
+        self._qos_cmd_obj.ecn_prob(prob_idx=prob_idx, update=False,mode='hnu')
 
     def set_qos_wred_profile(self, args):
         prof_num = args.prof_num
@@ -223,18 +313,39 @@ class CmdController(Cmd):
         self._qos_cmd_obj.wred_profile(prof_num=prof_num, min_thr=min_thr, max_thr=max_thr,
                                        wred_prob_index=wred_prob_index, update=True)
 
+    def set_hnu_qos_wred_profile(self, args):
+        prof_num = args.prof_num
+        min_thr = args.min_thr
+        max_thr = args.max_thr
+        wred_prob_index = args.wred_prob_index
+        self._qos_cmd_obj.wred_profile(prof_num=prof_num, min_thr=min_thr, max_thr=max_thr,
+                                       wred_prob_index=wred_prob_index, update=True, mode='hnu')
+
     def get_qos_wred_profile(self, args):
         prof_num = args.prof_num
         self._qos_cmd_obj.wred_profile(prof_num=prof_num, update=False)
+
+    def get_hnu_qos_wred_profile(self, args):
+        prof_num = args.prof_num
+        self._qos_cmd_obj.wred_profile(prof_num=prof_num, update=False, mode='hnu')
 
     def set_qos_wred_prob(self, args):
         prob_idx = args.prob_idx
         prob = args.prob
         self._qos_cmd_obj.wred_prob(prob=prob, prob_idx=prob_idx, update=True)
 
+    def set_hnu_qos_wred_prob(self, args):
+        prob_idx = args.prob_idx
+        prob = args.prob
+        self._qos_cmd_obj.wred_prob(prob=prob, prob_idx=prob_idx, update=True, mode='hnu')
+
     def get_qos_wred_prob(self, args):
         prob_idx = args.prob_idx
         self._qos_cmd_obj.wred_prob(prob_idx=prob_idx, update=False)
+
+    def get_hnu_qos_wred_prob(self, args):
+        prob_idx = args.prob_idx
+        self._qos_cmd_obj.wred_prob(prob_idx=prob_idx, update=False, mode='hnu')
 
     def set_qos_wred_queue_config(self, args):
         port_num = args.port_num
@@ -248,10 +359,27 @@ class CmdController(Cmd):
                                             wred_weight=wred_weight, wred_prof_num=wred_prof_num, ecn_en=ecn_en,
                                             ecn_prof_num=ecn_prof_num, update=True)
 
+    def set_hnu_qos_wred_queue_config(self, args):
+        port_num = args.port_num
+        queue_num = args.queue
+        wred_en = args.wred_en
+        wred_weight = args.wred_weight
+        wred_prof_num = args.wred_prof_num
+        ecn_en = args.ecn_en
+        ecn_prof_num = args.ecn_prof_num
+        self._qos_cmd_obj.wred_queue_config(port_num=port_num, queue_num=queue_num, wred_en=wred_en,
+                                            wred_weight=wred_weight, wred_prof_num=wred_prof_num, ecn_en=ecn_en,
+                                            ecn_prof_num=ecn_prof_num, update=True, mode='hnu')
+
     def get_qos_wred_queue_config(self, args):
         port_num = args.port_num
         queue_num = args.queue
         self._qos_cmd_obj.wred_queue_config(port_num=port_num, queue_num=queue_num, update=False)
+
+    def get_hnu_qos_wred_queue_config(self, args):
+        port_num = args.port_num
+        queue_num = args.queue
+        self._qos_cmd_obj.wred_queue_config(port_num=port_num, queue_num=queue_num, update=False, mode='hnu')
 
     def set_qos_wred_avg_q_config(self, args):
         q_avg_en = args.q_avg_en
@@ -260,19 +388,40 @@ class CmdController(Cmd):
         self._qos_cmd_obj.wred_avg_q_config(q_avg_en=q_avg_en, cap_avg_sz=cap_avg_sz, avg_period=avg_period,
                                             update=True)
 
+    def set_hnu_qos_wred_avg_q_config(self, args):
+        q_avg_en = args.q_avg_en
+        cap_avg_sz = args.cap_avg_sz
+        avg_period = args.avg_period
+        self._qos_cmd_obj.wred_avg_q_config(q_avg_en=q_avg_en, cap_avg_sz=cap_avg_sz, avg_period=avg_period,
+                                            update=True, mode='hnu')
+
     def get_qos_wred_avg_q_config(self, args):
         self._qos_cmd_obj.wred_avg_q_config(update=False)
+
+    def get_hnu_qos_wred_avg_q_config(self, args):
+        self._qos_cmd_obj.wred_avg_q_config(update=False, mode='hnu')
 
     def get_qos_scheduler_config(self, args):
         port_num = args.port_num
         queue = args.queue
         self._qos_cmd_obj.get_scheduler_config(port_num=port_num, queue_num=queue)
 
+    def get_hnu_qos_scheduler_config(self, args):
+        port_num = args.port_num
+        queue = args.queue
+        self._qos_cmd_obj.get_scheduler_config(port_num=port_num, queue_num=queue, mode='hnu')
+
     def set_qos_scheduler_config_dwrr(self, args):
         port_num = args.port_num
         queue = args.queue
         weight = args.weight
         self._qos_cmd_obj.scheduler_config_dwrr(port_num=port_num, queue_num=queue, weight=weight)
+
+    def set_hnu_qos_scheduler_config_dwrr(self, args):
+        port_num = args.port_num
+        queue = args.queue
+        weight = args.weight
+        self._qos_cmd_obj.scheduler_config_dwrr(port_num=port_num, queue_num=queue, weight=weight, mode='hnu')
 
     def set_qos_scheduler_config_shaper(self, args):
         port_num = args.port_num
@@ -287,6 +436,19 @@ class CmdController(Cmd):
                                                   shaper_rate=shaper_rate,
                                                   shaper_threshold=shaper_threshold)
 
+    def set_hnu_qos_scheduler_config_shaper(self, args):
+        port_num = args.port_num
+        queue = args.queue
+        shaper_enable = args.enable
+        shaper_type = args.type
+        shaper_rate = args.rate
+        shaper_threshold = args.thresh
+        self._qos_cmd_obj.scheduler_config_shaper(port_num=port_num, queue_num=queue,
+                                                  shaper_enable=shaper_enable,
+                                                  shaper_type=shaper_type,
+                                                  shaper_rate=shaper_rate,
+                                                  shaper_threshold=shaper_threshold, mode='hnu')
+
     def set_qos_scheduler_config_strict_priority(self, args):
         port_num = args.port_num
         queue = args.queue
@@ -295,6 +457,15 @@ class CmdController(Cmd):
         self._qos_cmd_obj.scheduler_config_strict_priority(port_num=port_num, queue_num=queue,
                                                            strict_priority_enable=strict_priority_enable,
                                                            extra_bandwidth=extra_bandwidth)
+
+    def set_hnu_qos_scheduler_config_strict_priority(self, args):
+        port_num = args.port_num
+        queue = args.queue
+        strict_priority_enable = args.strict_priority_enable
+        extra_bandwidth = args.extra_bandwidth
+        self._qos_cmd_obj.scheduler_config_strict_priority(port_num=port_num, queue_num=queue,
+                                                           strict_priority_enable=strict_priority_enable,
+                                                           extra_bandwidth=extra_bandwidth, mode='hnu')
 
     def set_qos_ingress_pg(self, args):
         port_num = args.port_num
@@ -308,35 +479,77 @@ class CmdController(Cmd):
                                                  shared_thr=shared_thr, shared_xon_thr=shared_xon_thr,
                                                  headroom_thr=headroom_thr, xoff_enable=xoff_enable, update=True)
 
+    def set_hnu_qos_ingress_pg(self, args):
+        port_num = args.port_num
+        pg_num = args.pg
+        min_thr = args.min_thr
+        shared_thr = args.shared_thr
+        headroom_thr = args.headroom_thr
+        xoff_enable = args.xoff_enable
+        shared_xon_thr = args.shared_xon_thr
+        self._qos_cmd_obj.ingress_priority_group(port_num=port_num, pg_num=pg_num, min_thr=min_thr,
+                                                 shared_thr=shared_thr, shared_xon_thr=shared_xon_thr,
+                                                 headroom_thr=headroom_thr, xoff_enable=xoff_enable, update=True, mode='hnu')
+
     def get_qos_ingress_pg(self, args):
         port_num = args.port_num
         pg_num = args.pg
         self._qos_cmd_obj.ingress_priority_group(port_num=port_num, pg_num=pg_num, update=False)
+
+    def get_hnu_qos_ingress_pg(self, args):
+        port_num = args.port_num
+        pg_num = args.pg
+        self._qos_cmd_obj.ingress_priority_group(port_num=port_num, pg_num=pg_num, update=False, mode='hnu')
 
     def set_qos_ingress_pg_map(self, args):
         port_num = args.port_num
         map_list = args.map_list
         self._qos_cmd_obj.ingress_priority_to_pg_map(port_num=port_num, map_list=map_list, update=True)
 
+    def set_hnu_qos_ingress_pg_map(self, args):
+        port_num = args.port_num
+        map_list = args.map_list
+        self._qos_cmd_obj.ingress_priority_to_pg_map(port_num=port_num, map_list=map_list, update=True, mode='hnu')
+
     def get_qos_ingress_pg_map(self, args):
         port_num = args.port_num
         self._qos_cmd_obj.ingress_priority_to_pg_map(port_num=port_num, update=False)
 
+    def get_hnu_qos_ingress_pg_map(self, args):
+        port_num = args.port_num
+        self._qos_cmd_obj.ingress_priority_to_pg_map(port_num=port_num, update=False, mode='hnu')
+
     def set_qos_pfc_enable(self, args):
         self._qos_cmd_obj.pfc(enable=True, update=True)
+
+    def set_hnu_qos_pfc_enable(self, args):
+        self._qos_cmd_obj.pfc(enable=True, update=True, mode='hnu')
 
     def set_qos_pfc_disable(self, args):
         self._qos_cmd_obj.pfc(update=True, disable=True)
 
+    def set_hnu_qos_pfc_disable(self, args):
+        self._qos_cmd_obj.pfc(update=True, disable=True, mode='hnu')
+
     def get_qos_pfc(self, args):
         self._qos_cmd_obj.pfc(update=False)
+
+    def get_hnu_qos_pfc(self, args):
+        self._qos_cmd_obj.pfc(update=False, mode='hnu')
 
     def set_qos_arb_cfg(self, args):
         enable = args.en
         self._qos_cmd_obj.arb_cfg(en=enable, update=True)
 
+    def set_hnu_qos_arb_cfg(self, args):
+        enable = args.en
+        self._qos_cmd_obj.arb_cfg(en=enable, update=True, mode='hnu')
+
     def get_qos_arb_cfg(self, args):
         self._qos_cmd_obj.arb_cfg(update=False)
+
+    def get_hnu_qos_arb_cfg(self, args):
+        self._qos_cmd_obj.arb_cfg(update=False, mode='hnu')
 
     def set_qos_xoff_status(self, args):
         port_num = args.port_num
@@ -344,10 +557,21 @@ class CmdController(Cmd):
         status = args.status
         self._qos_cmd_obj.xoff_status(port_num=port_num, pg=pg, status=status, update=True)
 
+    def set_hnu_qos_xoff_status(self, args):
+        port_num = args.port_num
+        pg = args.pg
+        status = args.status
+        self._qos_cmd_obj.xoff_status(port_num=port_num, pg=pg, status=status, update=True, mode='hnu')
+
     def get_qos_xoff_status(self, args):
         port_num = args.port_num
         pg = args.pg
         self._qos_cmd_obj.xoff_status(port_num=port_num, pg=pg, update=False)
+
+    def get_hnu_qos_xoff_status(self, args):
+        port_num = args.port_num
+        pg = args.pg
+        self._qos_cmd_obj.xoff_status(port_num=port_num, pg=pg, update=False, mode='hnu')
 
     def peek_fpg_stats(self, args):
         port_num = args.port_num
@@ -634,6 +858,46 @@ class CmdController(Cmd):
     set_qos_xoff_status_parser.set_defaults(func=set_qos_xoff_status)
     get_qos_xoff_status_parser.set_defaults(func=get_qos_xoff_status)
 
+    # -------------- QoS Command Handlers ----------------
+    set_hnu_qos_egress_buffer_pool_parser.set_defaults(func=set_hnu_qos_egress_buffer_pool)
+    get_hnu_qos_egress_buffer_pool_parser.set_defaults(func=get_hnu_qos_egress_buffer_pool)
+    set_hnu_qos_egress_port_buffer_parser.set_defaults(func=set_hnu_qos_egress_port_buffer)
+    get_hnu_qos_egress_port_buffer_parser.set_defaults(func=get_hnu_qos_egress_port_buffer)
+    set_hnu_qos_egress_queue_buffer_parser.set_defaults(func=set_hnu_qos_egress_queue_buffer)
+    get_hnu_qos_egress_queue_buffer_parser.set_defaults(func=get_hnu_qos_egress_queue_buffer)
+    set_hnu_qos_egress_priority_map_parser.set_defaults(func=set_hnu_qos_egress_priority_map)
+    get_hnu_qos_egress_priority_map_parser.set_defaults(func=get_hnu_qos_egress_priority_map)
+    get_hnu_qos_ecn_glb_sh_thresh_parser.set_defaults(func=get_hnu_qos_ecn_glb_sh_threshold)
+    set_hnu_qos_ecn_glb_sh_thresh_parser.set_defaults(func=set_hnu_qos_ecn_glb_sh_threshold)
+    set_hnu_qos_ecn_profile_parser.set_defaults(func=set_hnu_qos_ecn_profile)
+    get_hnu_qos_ecn_profile_parser.set_defaults(func=get_hnu_qos_ecn_profile)
+    set_hnu_qos_ecn_prob_parser.set_defaults(func=set_hnu_qos_ecn_prob)
+    get_hnu_qos_ecn_prob_parser.set_defaults(func=get_hnu_qos_ecn_prob)
+    set_hnu_qos_wred_profile_parser.set_defaults(func=set_hnu_qos_wred_profile)
+    get_hnu_qos_wred_profile_parser.set_defaults(func=get_hnu_qos_wred_profile)
+    set_hnu_qos_wred_prob_parser.set_defaults(func=set_hnu_qos_wred_prob)
+    get_hnu_qos_wred_prob_parser.set_defaults(func=get_hnu_qos_wred_prob)
+    set_hnu_qos_wred_avg_queue_config_parser.set_defaults(func=set_hnu_qos_wred_avg_q_config)
+    get_hnu_qos_wred_avg_queue_config_parser.set_defaults(func=get_hnu_qos_wred_avg_q_config)
+    set_hnu_qos_wred_queue_config_parser.set_defaults(func=set_hnu_qos_wred_queue_config)
+    get_hnu_qos_wred_queue_config_parser.set_defaults(func=get_hnu_qos_wred_queue_config)
+    get_hnu_qos_scheduler_config_parser.set_defaults(func=get_hnu_qos_scheduler_config)
+    set_hnu_qos_scheduler_dwrr_parser.set_defaults(func=set_hnu_qos_scheduler_config_dwrr)
+    set_hnu_qos_scheduler_shaper_parser.set_defaults(func=set_hnu_qos_scheduler_config_shaper)
+    set_hnu_qos_scheduler_strict_priority_parser.set_defaults(func=set_hnu_qos_scheduler_config_strict_priority)
+    set_hnu_qos_ingress_pg_parser.set_defaults(func=set_hnu_qos_ingress_pg)
+    get_hnu_qos_ingress_pg_parser.set_defaults(func=get_hnu_qos_ingress_pg)
+    set_hnu_qos_ingress_pg_map_parser.set_defaults(func=set_hnu_qos_ingress_pg_map)
+    get_hnu_qos_ingress_pg_map_parser.set_defaults(func=get_hnu_qos_ingress_pg_map)
+    set_hnu_qos_pfc_enable_parser.set_defaults(func=set_hnu_qos_pfc_enable)
+    set_hnu_qos_pfc_disable_parser.set_defaults(func=set_hnu_qos_pfc_disable)
+    get_hnu_qos_pfc_parser.set_defaults(func=get_hnu_qos_pfc)
+    set_hnu_qos_arb_cfg_parser.set_defaults(func=set_hnu_qos_arb_cfg)
+    get_hnu_qos_arb_cfg_parser.set_defaults(func=get_hnu_qos_arb_cfg)
+    set_hnu_qos_xoff_status_parser.set_defaults(func=set_hnu_qos_xoff_status)
+    get_hnu_qos_xoff_status_parser.set_defaults(func=get_hnu_qos_xoff_status)
+
+
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
     peek_hnu_fpg_stats_parser.set_defaults(func=peek_hnu_fpg_stats)
@@ -720,7 +984,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.67", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
