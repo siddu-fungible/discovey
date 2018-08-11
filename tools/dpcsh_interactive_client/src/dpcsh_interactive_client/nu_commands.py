@@ -246,9 +246,11 @@ class QosCommands(object):
 
     def egress_buffer_pool(self, sf_thr=None, sx_thr=None, df_thr=None, dx_thr=None, fcp_thr=None, nonfcp_thr=None,
                            sample_copy_thr=None, sf_xoff_thr=None, fcp_xoff_thr=None, nonfcp_xoff_thr=None,
-                           update_config=True):
+                           update_config=True, mode='nu'):
         try:
             get_cmd_arg_list = ['get', 'egress_buffer_pool']
+            if not mode == 'nu':
+                get_cmd_arg_list.insert(1, mode)
             buffer_config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_arg_list)
             if update_config:
                 if sf_thr is not None:
@@ -273,6 +275,8 @@ class QosCommands(object):
                     buffer_config['nonfcp_xoff_thr'] = nonfcp_xoff_thr
 
                 set_cmd_arg_list = ['set', 'egress_buffer_pool', buffer_config]
+                if not mode == 'nu':
+                    set_cmd_arg_list.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_arg_list)
                 print result
             else:
@@ -290,9 +294,11 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def egress_port_buffer(self, port_num, min_thr=None, shared_thr=None, update_config=True):
+    def egress_port_buffer(self, port_num, min_thr=None, shared_thr=None, update_config=True, mode='nu'):
         try:
             get_cmd_arg_list = ['get', 'egress_port_buffer', {"port": port_num}]
+            if not mode == 'nu':
+                get_cmd_arg_list.insert(1, mode)
             buffer_config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_arg_list)
             buffer_config['port'] = port_num
             if update_config:
@@ -302,6 +308,8 @@ class QosCommands(object):
                     buffer_config['shared_thr'] = shared_thr
 
                 set_cmd_arg_list = ['set', 'egress_port_buffer', buffer_config]
+                if not mode == 'nu':
+                    set_cmd_arg_list.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_arg_list)
                 print result
             else:
@@ -311,9 +319,11 @@ class QosCommands(object):
 
     def egress_queue_buffer(self, port_num, queue, min_thr=None, static_shared_thr_green=None, dynamic_enable=None,
                             shared_thr_alpha=None, shared_thr_offset_yellow=None, shared_thr_offset_red=None,
-                            update_config=True):
+                            update_config=True, mode='nu'):
         try:
             get_cmd_arg_list = ['get', 'egress_queue_buffer', {"port": port_num, "queue": queue}]
+            if not mode == 'nu':
+                get_cmd_arg_list.insert(1, mode)
             buffer_config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_arg_list)
             buffer_config['port'] = port_num
             buffer_config['queue'] = queue
@@ -332,6 +342,8 @@ class QosCommands(object):
                     buffer_config['shared_thr_offset_red'] = shared_thr_offset_red
 
                 set_cmd_arg_list = ['set', 'egress_queue_buffer', buffer_config]
+                if not mode == 'nu':
+                    set_cmd_arg_list.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_arg_list)
                 print result
             else:
@@ -339,15 +351,19 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def egress_queue_to_priority_map(self, port_num, map_list=None, update=True):
+    def egress_queue_to_priority_map(self, port_num, map_list=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'queue_to_priority_map', {"port": port_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['port'] = port_num
             if update:
                 if map_list:
                     config["map"] = [int(x) for x in map_list] 
                 set_cmd_args = ['set', 'queue_to_priority_map', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -355,9 +371,11 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def ecn_glb_sh_threshold(self, en=None, green=None, red=None, yellow=None, update=True):
+    def ecn_glb_sh_threshold(self, en=None, green=None, red=None, yellow=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'ecn_glb_sh_thresh']
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
                 if en is not None:
@@ -370,6 +388,8 @@ class QosCommands(object):
                     config['yellow'] = yellow
 
                 set_cmd_args = ['set', 'ecn_glb_sh_thresh', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -377,9 +397,11 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def ecn_profile(self, prof_num, min_thr=None, max_thr=None, ecn_prob_index=None, update=True):
+    def ecn_profile(self, prof_num, min_thr=None, max_thr=None, ecn_prob_index=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'ecn_profile', {'prof_num': prof_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prof_num'] = prof_num
             if update:
@@ -391,6 +413,8 @@ class QosCommands(object):
                     config['ecn_prob_index'] = ecn_prob_index
 
                 set_cmd_args = ['set', 'ecn_profile', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -398,15 +422,19 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def ecn_prob(self, prob_idx, prob=None, update=True):
+    def ecn_prob(self, prob_idx, prob=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'ecn_prob', {'prob_idx': prob_idx}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prob_idx'] = prob_idx
             if update:
                 if prob is not None:
                     config['prob'] = prob
                 set_cmd_args = ['set', 'ecn_prob', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -414,9 +442,11 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def wred_profile(self, prof_num, min_thr=None, max_thr=None, wred_prob_index=None, update=True):
+    def wred_profile(self, prof_num, min_thr=None, max_thr=None, wred_prob_index=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'wred_profile', {'prof_num': prof_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prof_num'] = prof_num
             if update:
@@ -428,6 +458,8 @@ class QosCommands(object):
                     config['wred_prob_index'] = wred_prob_index
 
                 set_cmd_args = ['set', 'wred_profile', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -435,15 +467,19 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def wred_prob(self, prob_idx, prob=None, update=True):
+    def wred_prob(self, prob_idx, prob=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'wred_prob', {'prob_idx': prob_idx}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['prob_idx'] = prob_idx
             if update:
                 if prob is not None:
                     config['prob'] = prob
                 set_cmd_args = ['set', 'wred_prob', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -452,9 +488,11 @@ class QosCommands(object):
             print "ERROR: %s" % str(ex)
 
     def wred_queue_config(self, port_num, queue_num, wred_en=None, wred_weight=None, wred_prof_num=None, ecn_en=None,
-                          ecn_prof_num=None, update=True):
+                          ecn_prof_num=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'wred_queue_config', {'port': port_num, "queue": queue_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['port'] = port_num
             config['queue'] = queue_num
@@ -471,6 +509,8 @@ class QosCommands(object):
                     config['ecn_prof_num'] = ecn_prof_num
 
                 set_cmd_args = ['set', 'wred_queue_config', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -478,9 +518,11 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def wred_avg_q_config(self, q_avg_en=None, cap_avg_sz=None, avg_period=None, update=True):
+    def wred_avg_q_config(self, q_avg_en=None, cap_avg_sz=None, avg_period=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'wred_avg_q_config']
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
                 if q_avg_en is not None:
@@ -491,6 +533,8 @@ class QosCommands(object):
                 if avg_period is not None:
                     config['avg_period'] = avg_period
                 set_cmd_args = ['set', 'wred_avg_q_config', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -498,9 +542,11 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def get_scheduler_config(self, port_num, queue_num, scheduler_type=None):
+    def get_scheduler_config(self, port_num, queue_num, scheduler_type=None, mode='nu'):
         try:
             get_cmd_args = ['get', 'scheduler_config', {'port': port_num, 'queue': queue_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if scheduler_type == self.SCHEDULER_TYPE_DWRR:
                 config = result['dwrr']
@@ -535,21 +581,25 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def scheduler_config_dwrr(self, port_num, queue_num, weight):
+    def scheduler_config_dwrr(self, port_num, queue_num, weight, mode='nu'):
         try:
             get_cmd_args = ['get', 'scheduler_config', {'port': port_num, 'queue': queue_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             dwrr_config = result['dwrr']
             dwrr_config['weight'] = weight
             dwrr_config['port'] = port_num
             dwrr_config['queue'] = queue_num
             set_cmd_args = ['set', 'scheduler_config', 'dwrr', dwrr_config]
+            if not mode == 'nu':
+                set_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
             print result
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def scheduler_config_shaper(self, port_num, queue_num, shaper_enable=None, shaper_type=0, shaper_rate=None, shaper_threshold=None):
+    def scheduler_config_shaper(self, port_num, queue_num, shaper_enable=None, shaper_type=0, shaper_rate=None, shaper_threshold=None, mode='nu'):
         try:
             shaper_config = {}
             shaper_config['port'] = port_num
@@ -562,14 +612,18 @@ class QosCommands(object):
             if shaper_threshold is not None:
                 shaper_config['thresh'] = shaper_threshold
             set_cmd_args = ['set', 'scheduler_config', 'shaper', shaper_config]
+            if not mode == 'nu':
+                set_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
             print result
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def scheduler_config_strict_priority(self, port_num, queue_num, strict_priority_enable=None, extra_bandwidth=None):
+    def scheduler_config_strict_priority(self, port_num, queue_num, strict_priority_enable=None, extra_bandwidth=None, mode='nu'):
         try:
             get_cmd_args = ['get', 'scheduler_config', {'port': port_num, 'queue': queue_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             strict_priority_config = result['strict_priority']
             strict_priority_config['port'] = port_num
@@ -579,15 +633,19 @@ class QosCommands(object):
             if extra_bandwidth is not None:
                 strict_priority_config['extra_bandwidth'] = extra_bandwidth
             set_cmd_args = ['set', 'scheduler_config', 'shaper', strict_priority_config]
+            if not mode == 'nu':
+                set_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
             print result
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
     def ingress_priority_group(self, port_num, pg_num, min_thr=None, shared_thr=None, headroom_thr=None,
-                               xoff_enable=None, shared_xon_thr=None, update=True):
+                               xoff_enable=None, shared_xon_thr=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'ingress_priority_group', {"port": port_num, "pg": pg_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['port'] = port_num
             config['pg'] = pg_num
@@ -603,6 +661,8 @@ class QosCommands(object):
                 if shared_xon_thr is not None:
                     config['shared_xon_thr'] = shared_xon_thr
                 set_cmd_args = ['set', 'ingress_priority_group', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -610,15 +670,19 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def ingress_priority_to_pg_map(self, port_num, map_list=None, update=True):
+    def ingress_priority_to_pg_map(self, port_num, map_list=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'priority_to_pg_map', {"port": port_num}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['port'] = port_num
             if update:
                 if map_list is not None:
                     config["map"] = [int(x) for x in map_list]
                 set_cmd_args = ['set', 'priority_to_pg_map', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -626,7 +690,7 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def pfc(self, enable=None, update=True, disable=None):
+    def pfc(self, enable=None, update=True, disable=None, mode='nu'):
         try:
             if update:
                 config = {}
@@ -635,23 +699,31 @@ class QosCommands(object):
                 elif disable is not None:
                     config['enable'] = 0
                 set_cmd_args = ['set', 'pfc', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
                 get_cmd_args = ['get', 'pfc']
+                if not mode == 'nu':
+                    get_cmd_args.insert(1, mode)
                 config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
                 self._display_qos_config(config_dict=config)
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def arb_cfg(self, en=None, update=True):
+    def arb_cfg(self, en=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'arb_cfg']
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
                 if en is not None:
                     config["en"] = en
                 set_cmd_args = ['set', 'arb_cfg', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
@@ -659,9 +731,11 @@ class QosCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
-    def xoff_status(self, port_num, pg, status=None, update=True):
+    def xoff_status(self, port_num, pg, status=None, update=True, mode='nu'):
         try:
             get_cmd_args = ['get', 'xoff_status', {'port': port_num, 'pg': pg}]
+            if not mode == 'nu':
+                get_cmd_args.insert(1, mode)
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             config['port'] = port_num
             config['pg'] = pg
@@ -669,6 +743,8 @@ class QosCommands(object):
                 if status is not None:
                     config["status"] = status
                 set_cmd_args = ['set', 'xoff_status', config]
+                if not mode == 'nu':
+                    set_cmd_args.insert(1, mode)
                 result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
                 print result
             else:
