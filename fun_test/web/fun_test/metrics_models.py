@@ -923,7 +923,8 @@ class VoltestPerformance(models.Model):
     output_VOL_TYPE_BLK_EC_read_Bandwidth_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth avg", default=0)
     output_VOL_TYPE_BLK_EC_read_Bandwidth_total = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth total", default=-1)
 
-
+    def __str__(self):
+        return "{}: {}".format(self.input_date_time, self.output_VOL_TYPE_BLK_LSV_write_Bandwidth_total)
 
 class WuDispatchTestPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
