@@ -22,10 +22,10 @@ start_month = 4
 start_day = 1
 minute = 59
 hour = 23
-second = 1
+second = 59
 
 def get_rounded_time(dt):
-    rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, microsecond=0)
+    rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=second)
     rounded_d = get_localized_time(rounded_d)
     return rounded_d
 
@@ -107,7 +107,7 @@ def prepare_status(chart, purge_old_status=False):
         chart.save()
         entries = MetricChartStatus.objects.filter(chart_name=chart.chart_name, metric_id=chart.metric_id)
         entries.all().delete()
-    if chart.chart_name == "BLK_EC: Latency":
+    if chart.chart_name == "BLK_LSV: Bandwidth":
         j = 0
     # print "Preparing status for: {}".format(chart.chart_name)
     children = json.loads(chart.children)
@@ -131,6 +131,9 @@ def prepare_status(chart, purge_old_status=False):
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
     current_date = get_rounded_time(from_date)
+
+    data_sets = chart.data_sets
+    data_sets = json.loads(data_sets)
 
     if not chart.score_cache_valid:
         if not chart.leaf:
@@ -169,8 +172,7 @@ def prepare_status(chart, purge_old_status=False):
                 mcs.save()
         else:
             # print "Reached leaf: {}".format(chart.chart_name)
-            data_sets = chart.data_sets
-            data_sets = json.loads(data_sets)
+
             model = app_config.get_metric_models()[chart.metric_model_name]
 
             previous_score = 0
@@ -193,6 +195,8 @@ def prepare_status(chart, purge_old_status=False):
                 if len(data_sets):
                     data_set_combined_goodness = 0
                     for data_set in data_sets:
+                        if current_date > get_localized_time(datetime(year=2018, month=8, day=10)):
+                            j = 0
                         # print "Processing data-set: {}".format(json.dumps(data_set))
                         entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
                         score = -1
@@ -243,6 +247,7 @@ def prepare_status(chart, purge_old_status=False):
                                         score=final_score)
                 mcs.save()
                 current_date = current_date + timedelta(days=1)
+                # current_date = get_localized_time(current_date)
 
 
             # print final_score, previous_score
